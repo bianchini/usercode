@@ -1,0 +1,108 @@
+# This is an example PAT configuration showing the usage of PF2PAT+PAT
+
+# Starting with a skeleton process which gets imported with the following line
+from PhysicsTools.PatAlgos.patTemplate_cfg import *
+
+
+# utilities to print the generator information
+process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
+process.printTree1 = cms.EDAnalyzer("ParticleListDrawer",
+                                    src = cms.InputTag("genParticles"),
+                                    maxEventsToPrint  = cms.untracked.int32(20)
+                                    )
+
+process.printTree2 = cms.EDAnalyzer("ParticleTreeDrawer",
+                                    src = cms.InputTag('genParticles'),
+                                    printP4 = cms.untracked.bool(False),
+                                    printPtEtaPhi =  cms.untracked.bool(True),
+                                    printVertex = cms.untracked.bool(False),
+                                    printStatus = cms.untracked.bool(False),
+                                    printIndex = cms.untracked.bool(False),
+                                    status = cms.untracked.vint32( 3, 2 )
+                                    )
+
+
+
+readFiles = cms.untracked.vstring()
+readFilesReReco = cms.untracked.vstring()
+
+
+readFiles.extend([
+    'rfio:/castor/cern.ch/user/b/bianchi/Zee_2/ZeeSummer09_1.root',
+    'rfio:/castor/cern.ch/user/b/bianchi/Zee_2/ZeeSummer09_2.root',
+    'rfio:/castor/cern.ch/user/b/bianchi/Zee_2/ZeeSummer09_3.root',
+    'rfio:/castor/cern.ch/user/b/bianchi/Zee_2/ZeeSummer09_4.root',
+    'rfio:/castor/cern.ch/user/b/bianchi/Zee_2/ZeeSummer09_5.root']
+                 )
+
+readFilesReReco.extend([
+    'rfio:/castor/cern.ch/user/b/bianchi/ReReco/ZeeSummer09_ReReco.root'
+    ]
+                       )
+
+process.source = cms.Source("PoolSource", 
+                            fileNames = readFiles
+                            #fileNames = readFilesReReco
+)
+
+
+# process.load("PhysicsTools.PFCandProducer.Sources.source_ZtoMus_DBS_cfi")
+process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(False))
+
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
+process.out.fileName = cms.untracked.string('/tmp/bianchi/patLayer/patLayer1_fromAOD_PF2PAT_full.root')
+#process.out.fileName = cms.untracked.string('/tmp/bianchi/patLayer/patLayer1_fromAOD_PF2PAT_full_ReReco.root')
+
+# load the PAT config
+process.load("PhysicsTools.PatAlgos.patSequences_cff")
+
+# Configure PAT to use PF2PAT instead of AOD sources
+# this function will modify the PAT sequences. It is currently 
+# not possible to run PF2PAT+PAT and standart PAT at the same time
+from PhysicsTools.PatAlgos.tools.pfTools import *
+
+usePF2PAT(process,runPF2PAT=True, jetAlgo='AK5', runOnMC=True) 
+
+# remove isolation from PAT
+process.pfIsolatedElectrons.combinedIsolationCut = cms.double(9999)
+process.pfIsolatedElectrons.isolationCuts = cms.vdouble(9999,9999)
+
+# turn to false when running on data
+process.patElectrons.embedGenMatch = True
+process.patMuons.embedGenMatch = True
+
+process.patPFParticles.embedGenMatch = True
+#process.patPFParticle.genParticleMatch = 'electronMatch'
+
+
+# Let it run
+process.p = cms.Path(
+    process.patDefaultSequence
+    #process.printTree1
+    #process.printTree2
+)
+
+
+# Add PF2PAT output to the created file
+from PhysicsTools.PatAlgos.patEventContent_cff import patEventContentNoCleaning
+#process.load("PhysicsTools.PFCandProducer.PF2PAT_EventContent_cff")
+#process.out.outputCommands =  cms.untracked.vstring('drop *')
+process.out.outputCommands = cms.untracked.vstring('drop *',
+                                                   #'keep recoGenParticles_genParticles_*_*',
+                                                   'keep *_offlinePrimaryVerticesWithBS_*_*',
+                                                   'keep *_offlinePrimaryVertices_*_*',
+                                                   'keep *_particleflow_*_',
+                                                   'keep *_generalTracks_*_*',
+                                                   *patEventContentNoCleaning
+                                                   ) 
+
+# In addition you usually want to change the following parameters:
+#
+#   process.GlobalTag.globaltag =  ...      (according to https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideFrontierConditions)
+#   process.source.fileNames = [ ... ]      (e.g. 'file:AOD.root')
+#   process.maxEvents.input = ...           (e.g. -1 to run on all events)
+#   process.out.outputCommands = [ ... ]    (e.g. taken from PhysicsTools/PatAlgos/python/patEventContent_cff.py)
+#   process.out.fileName = ...              (e.g. 'myTuple.root')
+#   process.options.wantSummary = False     (to suppress the long output at the end of the job)
+
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
