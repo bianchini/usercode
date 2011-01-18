@@ -35,7 +35,7 @@ runOnMC           = True
 
 ### TnP
 ##########################
-makeEtoTauFakeRate= False
+makeEtoTauFakeRate= True
 ###########       ########
 makeMCtrees       = True
 makeUnbiased      = False
@@ -48,7 +48,7 @@ process.printTree1 = cms.EDAnalyzer("ParticleListDrawer",
                                     maxEventsToPrint  = cms.untracked.int32(1)
                                     )
 
-process.load("Bianchi.PFAnalyses.VBFHTauTau.filters_ZmumuPlusJets_cff")
+process.load("Bianchi.eToTaufakeRate.filters_ZmumuPlusJets_cff")
 
 from PhysicsTools.PatAlgos.tools.coreTools import *
 
@@ -84,7 +84,7 @@ process.patDefaultSequence.replace(process.patCandidates,
                                    process.patCandidates)
 
 process.makePatTaus.remove(process.patPFCandidateIsoDepositSelection)
-from Bianchi.PFAnalyses.VBFHTauTau.customizePAT import *
+from Bianchi.eToTaufakeRate.customizePAT import *
 addSelectedPFlowParticle(process)
 
 from PhysicsTools.PatAlgos.tools.metTools import *
@@ -251,7 +251,7 @@ addTriggerMatchingMuon(process,postfix)
 getattr(process,"muonTriggerMatchHLTMuons"+postfix).pathNames=cms.vstring('*')
 
 process.patElectrons.embedGsfTrack = True
-from Bianchi.PFAnalyses.VBFHTauTau.electrons import *
+from Bianchi.eToTaufakeRate.electrons import *
 addCutBasedID(process)
 addPFElectronIsolation(process,process.patElectrons)
 addPFElectron(process,postfix)
@@ -331,7 +331,7 @@ process.pat = cms.Sequence(
 if not runOnMC:
     process.pat.remove(process.printTree1)
 
-from Bianchi.PFAnalyses.VBFHTauTau.tnpEtoTau.addTnPSequences import addTnPSequences
+from Bianchi.eToTaufakeRate.tnpEtoTau.addTnPSequences import addTnPSequences
 if makeEtoTauFakeRate:
     addTnPSequences(process,"pat",makeMCtrees,makeUnbiased,removeWenuFilters)
 else:
