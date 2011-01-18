@@ -1,0 +1,29 @@
+<use name=FWCore/Framework>
+<use name=FWCore/ParameterSet>
+<use name=FWCore/FWLite>
+<use name=boost>
+
+<use name=SimDataFormats/GeneratorProducts>	
+
+<use name=DataFormats/CLHEP>
+<use name=DataFormats/EgammaCandidates>
+<use name=DataFormats/TrackReco>
+<use name=DataFormats/JetReco>
+<use name=DataFormats/BTauReco>
+<use name=DataFormats/Common>
+<use name=DataFormats/FWLite>
+<use name=DataFormats/METReco>
+
+<use name=CondFormats/JetMETObjects>
+
+
+<use name=PhysicsTools/HepMCCandAlgos>
+
+<use name=PFAnalyses/VBFHTauTau>	
+<use name=PFAnalyses/CommonTools>
+
+<library file="*.cc" name=PFAnalysesVBFHTauTauPlugins>
+  <flags EDM_PLUGIN=1>
+</library>
+
+
