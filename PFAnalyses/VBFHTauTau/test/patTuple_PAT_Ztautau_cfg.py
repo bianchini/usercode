@@ -84,7 +84,7 @@ process.patDefaultSequence.replace(process.patCandidates,
                                    process.patCandidates)
 
 process.makePatTaus.remove(process.patPFCandidateIsoDepositSelection)
-from PFAnalyses.VBFHTauTau.vbfDiTauPATTools import *
+from PFAnalyses.VBFHTauTau.customizePAT import *
 addSelectedPFlowParticle(process)
 
 from PhysicsTools.PatAlgos.tools.metTools import *
@@ -242,7 +242,6 @@ getattr(process,"patTaus").tauIDSources = cms.PSet(
     byTaNCfrTenthPercent = cms.InputTag("shrinkingConePFTauDiscriminationByTaNCfrTenthPercent")
     )
 
-from PFAnalyses.VBFHTauTau.vbfDiTauPATTools import *
 process.patMuons.embedTrack = True
 addPFMuonIsolation(process,process.patMuons)
 addPFMuon(process,postfix)
