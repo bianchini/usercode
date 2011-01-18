@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 
-#hltMatching = cms.string('(triggerObjectMatchesByPath("HLT_Ele10_SW_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele10_LW_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele10_SW_EleId_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele10_LW_EleId_L1R").size()!=0 ||  triggerObjectMatchesByPath("HLT_Ele12_SW_TightEleIdIsol_L1R").size()!=0 ||  triggerObjectMatchesByPath("HLT_Ele12_SW_TighterEleIdIsol_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele15_SW_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele15_SW_CaloEleId_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele17_SW_CaloEleId_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele17_SW_TightEleId_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele17_SW_TightEleId_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele17_SW_TighterEleIdIsol_L1R_v2").size()!=0 || triggerObjectMatchesByPath("HLT_Ele17_SW_TighterEleIdIsol_L1R_v3").size()!=0)')
+hltMatching = cms.string('(triggerObjectMatchesByPath("HLT_Ele10_SW_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele10_LW_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele10_SW_EleId_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele10_LW_EleId_L1R").size()!=0 ||  triggerObjectMatchesByPath("HLT_Ele12_SW_TightEleIdIsol_L1R").size()!=0 ||  triggerObjectMatchesByPath("HLT_Ele12_SW_TighterEleIdIsol_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele15_SW_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele15_SW_CaloEleId_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele17_SW_CaloEleId_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele17_SW_TightEleId_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele17_SW_TightEleId_L1R").size()!=0 || triggerObjectMatchesByPath("HLT_Ele17_SW_TighterEleIdIsol_L1R_v2").size()!=0 || triggerObjectMatchesByPath("HLT_Ele17_SW_TighterEleIdIsol_L1R_v3").size()!=0)')
 
 '''
     * HLT_Ele10_LW_L1R for runs [136033,139980]           (~0.1/pb)
@@ -13,7 +13,7 @@ import FWCore.ParameterSet.Config as cms
     * HLT_Ele17_SW_TighterEleIdIsol_L1R_v3 for runs [149181,149442]
 '''
 
-hltMatching = cms.string('pt>0 ')
+#hltMatching = cms.string('pt>0 ')
 
 tagAnyElec = cms.EDFilter("PATElectronRefSelector",
                           src = cms.InputTag("selectedPatElectronsTriggerMatch"),

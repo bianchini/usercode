@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 10
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -31,13 +31,13 @@ process.source.fileNames = cms.untracked.vstring(
 
 postfix           = "PFlow"
 sample            = ""
-runOnMC           = True
+runOnMC           = False
 
 ### TnP
 ##########################
 makeEtoTauFakeRate= True
 ###########       ########
-makeMCtrees       = True
+makeMCtrees       = False
 makeUnbiased      = False
 removeWenuFilters = False
 ##########################
