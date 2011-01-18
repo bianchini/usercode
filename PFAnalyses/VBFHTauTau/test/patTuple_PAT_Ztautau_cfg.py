@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -13,13 +13,13 @@ process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
 
 process.source.fileNames = cms.untracked.vstring(
-    'file:/data_CMS/cms/lbianchini/DY_ZTauTau_Fall10_RECO.root'
+    #'file:/data_CMS/cms/lbianchini/DY_ZTauTau_Fall10_RECO.root'
     #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_1.root',
     #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_2.root',
     #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_3.root',
     #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_4.root',
     #'file:/data_CMS/cms/lbianchini/F41A3437-7AED-DF11-A50D-002618943894.root',
-    #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_1.root',
+    'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_1.root',
     #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_2.root',
     #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_3.root',
     #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_4.root',
@@ -48,7 +48,7 @@ process.printTree1 = cms.EDAnalyzer("ParticleListDrawer",
                                     maxEventsToPrint  = cms.untracked.int32(1)
                                     )
 
-process.load("PFAnalyses.VBFHTauTau.filters_ZmumuPlusJets_cff")
+process.load("Bianchi.PFAnalyses.VBFHTauTau.filters_ZmumuPlusJets_cff")
 
 from PhysicsTools.PatAlgos.tools.coreTools import *
 
@@ -84,7 +84,7 @@ process.patDefaultSequence.replace(process.patCandidates,
                                    process.patCandidates)
 
 process.makePatTaus.remove(process.patPFCandidateIsoDepositSelection)
-from PFAnalyses.VBFHTauTau.customizePAT import *
+from Bianchi.PFAnalyses.VBFHTauTau.customizePAT import *
 addSelectedPFlowParticle(process)
 
 from PhysicsTools.PatAlgos.tools.metTools import *
@@ -251,7 +251,7 @@ addTriggerMatchingMuon(process,postfix)
 getattr(process,"muonTriggerMatchHLTMuons"+postfix).pathNames=cms.vstring('*')
 
 process.patElectrons.embedGsfTrack = True
-from PFAnalyses.VBFHTauTau.electrons import *
+from Bianchi.PFAnalyses.VBFHTauTau.electrons import *
 addCutBasedID(process)
 addPFElectronIsolation(process,process.patElectrons)
 addPFElectron(process,postfix)
@@ -323,15 +323,15 @@ process.pat = cms.Sequence(
     process.primaryVertexFilter+
     process.scrapping +
     process.makeSCs +
-    process.patDefaultSequence*
-    process.makeEtoTauEff+
-    process.printTree1
+    process.patDefaultSequence
+    #*process.makeEtoTauEff+
+    #process.printTree1
     )
 
 if not runOnMC:
     process.pat.remove(process.printTree1)
 
-from PFAnalyses.VBFHTauTau.tnpEtoTau.addTnPSequences import addTnPSequences
+from Bianchi.PFAnalyses.VBFHTauTau.tnpEtoTau.addTnPSequences import addTnPSequences
 if makeEtoTauFakeRate:
     addTnPSequences(process,"pat",makeMCtrees,makeUnbiased,removeWenuFilters)
 else:

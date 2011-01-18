@@ -326,6 +326,7 @@ def addTriggerMatchingElectron(process,postfix="",verbose=False):
         , maxDPtRel = cms.double( 999 )
         , maxDeltaR = cms.double( 0.5 )
         , resolveAmbiguities    = cms.bool( False )
+        , resolveByMatchQuality = cms.bool( False )
         )
 
     setattr(process,"muonTriggerMatchHLTElectrons"+postfix,muonMatch.clone()) 
