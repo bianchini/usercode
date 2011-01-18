@@ -94,10 +94,11 @@ from PhysicsTools.PatAlgos.tools.jetTools import *
 switchJetCollection(process,cms.InputTag('ak5PFJets'),
                     doJTA        = True,
                     doBTagging   = True,
-                    jetCorrLabel = ('AK5', 'PF'),
+                    jetCorrLabel = ('AK5PF', ['L2Relative', 'L3Absolute',]),
                     doType1MET   = False,
                     genJetCollection=cms.InputTag("ak5GenJets"),
-                    doJetID      = True
+                    doJetID      = True,
+                    jetIdLabel   = 'ak5'
                     )
 
 from PhysicsTools.PatAlgos.tools.tauTools import *
