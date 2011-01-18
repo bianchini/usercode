@@ -4,14 +4,14 @@ import FWCore.ParameterSet.Config as cms
 
 def addTnPSequences(process,makePAT="pat",makeMCtrees=True,makeUnbiased=True,removeWenuFilters=False):
 
-    process.load("PFAnalyses.VBFHTauTau.tnpEtoTau.tags_cff")
-    process.load("PFAnalyses.VBFHTauTau.tnpEtoTau.probes_cff")
-    process.load("PFAnalyses.VBFHTauTau.tnpEtoTau.tagAndProbes_cff")
-    process.load("PFAnalyses.VBFHTauTau.tnpEtoTau.mcMatches_cff")
-    process.load("PFAnalyses.VBFHTauTau.tnpEtoTau.oneTpFilters_cff")
-    process.load("PFAnalyses.VBFHTauTau.tnpEtoTau.filtersForTnP_cff")
-    process.load("PFAnalyses.VBFHTauTau.tnpEtoTau.treeProducers_cff")
-    process.load("PFAnalyses.VBFHTauTau.tnpEtoTau.EtoTauTnPSequences_cff")
+    process.load("Bianchi.eToTaufakeRate.tnpEtoTau.tags_cff")
+    process.load("Bianchi.eToTaufakeRate.tnpEtoTau.probes_cff")
+    process.load("Bianchi.eToTaufakeRate.tnpEtoTau.tagAndProbes_cff")
+    process.load("Bianchi.eToTaufakeRate.tnpEtoTau.mcMatches_cff")
+    process.load("Bianchi.eToTaufakeRate.tnpEtoTau.oneTpFilters_cff")
+    process.load("Bianchi.eToTaufakeRate.tnpEtoTau.filtersForTnP_cff")
+    process.load("Bianchi.eToTaufakeRate.tnpEtoTau.treeProducers_cff")
+    process.load("Bianchi.eToTaufakeRate.tnpEtoTau.EtoTauTnPSequences_cff")
 
 
     process.etoTauMargLoose90.isMC = cms.bool( makeMCtrees ) 

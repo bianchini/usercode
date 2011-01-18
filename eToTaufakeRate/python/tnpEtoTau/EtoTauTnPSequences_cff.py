@@ -5,25 +5,25 @@ import FWCore.ParameterSet.Config as cms
 #from PFAnalyses.Z.EtoTauTemplate_cff import *
 
 ### tags
-from PFAnalyses.VBFHTauTau.tnpEtoTau.tags_cff import *
+from Bianchi.eToTaufakeRate.tnpEtoTau.tags_cff import *
 
 ### probes
-from PFAnalyses.VBFHTauTau.tnpEtoTau.probes_cff import *
+from Bianchi.eToTaufakeRate.tnpEtoTau.probes_cff import *
 
 ### tag&probes
-from PFAnalyses.VBFHTauTau.tnpEtoTau.tagAndProbes_cff import *
+from Bianchi.eToTaufakeRate.tnpEtoTau.tagAndProbes_cff import *
 
 ### matches
-from PFAnalyses.VBFHTauTau.tnpEtoTau.mcMatches_cff import *
+from Bianchi.eToTaufakeRate.tnpEtoTau.mcMatches_cff import *
 
 ### one tag&probe filters
-from PFAnalyses.VBFHTauTau.tnpEtoTau.oneTpFilters_cff import *
+from Bianchi.eToTaufakeRate.tnpEtoTau.oneTpFilters_cff import *
 
 ### anti-Wenu filters
-from PFAnalyses.VBFHTauTau.tnpEtoTau.filtersForTnP_cff import *
+from Bianchi.eToTaufakeRate.tnpEtoTau.filtersForTnP_cff import *
 
 ### tree producers
-from PFAnalyses.VBFHTauTau.tnpEtoTau.treeProducers_cff import *
+from Bianchi.eToTaufakeRate.tnpEtoTau.treeProducers_cff import *
 
 
 tightestMatchedID = cms.EDProducer("MatchedIDComputer",

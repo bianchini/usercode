@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-from PFAnalyses.VBFHTauTau.tnpEtoTau.variablesForTnP_cff import *
+from Bianchi.eToTaufakeRate.tnpEtoTau.variablesForTnP_cff import *
 
 
 ## HPS

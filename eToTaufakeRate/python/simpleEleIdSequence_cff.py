@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-from PFAnalyses.VBFHTauTau.simpleCutBasedElectronIDSpring10_cfi import *
+from Bianchi.eToTaufakeRate.simpleCutBasedElectronIDSpring10_cfi import *
 
 
 simpleEleId95relIso = simpleCutBasedElectronID.clone()
