@@ -61,6 +61,7 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
 			     double xHigh_          = 120,
 			     float deltaAlpha_      = 0.0,
 			     float deltaN_          = 0.0,
+			     float scale_           = 0.0, 
 			     bool doBinned_         = true,
 			     bool isData_           = true,
 			     bool fitInFail_        = false
@@ -184,7 +185,7 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
   RooArgSet FitParamQcd(ResQcdFit->floatParsFinal());
   RooRealVar* meanLQcdFit   = (RooRealVar*)(&FitParamQcd["meanLQcd"]);
   RooRealVar* sigmaLQcdFit  = (RooRealVar*)(&FitParamQcd["sigmaLQcd"]);
-  RooConstVar meanLQcd_C("meanLQcd_C","",meanLQcdFit->getVal());
+  RooConstVar meanLQcd_C("meanLQcd_C","",meanLQcdFit->getVal()*(1+scale_));
   RooConstVar sigmaLQcd_C("sigmaLQcd_C","",sigmaLQcdFit->getVal());
 
   RooLandau qcdPdf("qcdPdf","",mass, meanLQcd_C,sigmaLQcd_C);
@@ -324,8 +325,8 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
   RooRealVar* alfaWenFit  = (RooRealVar*)(&FitParamWen["alfaWen"]);
   RooRealVar* nWenFit     = (RooRealVar*)(&FitParamWen["nWen"]);
  
-  RooConstVar m1Wen_C("m1Wen_C","",m1WenFit->getVal());
-  RooConstVar sigmaWen_C("sigmaWen_C","",sigmaWenFit->getVal());
+  RooConstVar m1Wen_C("m1Wen_C","",m1WenFit->getVal()*(1+scale_));
+  RooConstVar sigmaWen_C("sigmaWen_C","",sigmaWenFit->getVal()*(1+scale_));
   RooConstVar alfaWen_C("alfaWen_C","",alfaWenFit->getVal());
   RooConstVar nWen_C("nWen_C","",nWenFit->getVal());
 
@@ -355,8 +356,8 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
   RooRealVar* alfaZttFit  = (RooRealVar*)(&FitParamZtt["alfaZtt"]);
   RooRealVar* nZttFit     = (RooRealVar*)(&FitParamZtt["nZtt"]);
  
-  RooConstVar m1Ztt_C("m1Ztt_C","",m1ZttFit->getVal());
-  RooConstVar sigmaZtt_C("sigmaZtt_C","",sigmaZttFit->getVal());
+  RooConstVar m1Ztt_C("m1Ztt_C","",m1ZttFit->getVal()*(1+scale_));
+  RooConstVar sigmaZtt_C("sigmaZtt_C","",sigmaZttFit->getVal()*(1+scale_));
   RooConstVar alfaZtt_C("alfaZtt_C","",alfaZttFit->getVal());
   RooConstVar nZtt_C("nZtt_C","",nZttFit->getVal());
 
@@ -396,8 +397,8 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
   RooRealVar* alfasgnFakeFit  = (RooRealVar*)(&FitParamsgnFake["alfasgnFake"]);
   RooRealVar* nsgnFakeFit     = (RooRealVar*)(&FitParamsgnFake["nsgnFake"]);
  
-  RooConstVar m1sgnFake_C("m1sgnFake_C","",m1sgnFakeFit->getVal());
-  RooConstVar sigmasgnFake_C("sigmasgnFake_C","",sigmasgnFakeFit->getVal());
+  RooConstVar m1sgnFake_C("m1sgnFake_C","",m1sgnFakeFit->getVal()*(1+scale_));
+  RooConstVar sigmasgnFake_C("sigmasgnFake_C","",sigmasgnFakeFit->getVal()*(1+scale_));
   RooConstVar alfasgnFake_C("alfasgnFake_C","",alfasgnFakeFit->getVal());
   RooConstVar nsgnFake_C("nsgnFake_C","",nsgnFakeFit->getVal());
 
@@ -417,11 +418,11 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
   RooConstVar expWen_cv("expWen_cv","",expWen);
   RooConstVar expTTb_cv("expTTb_cv","",expTTb);
   RooConstVar expSgnFake_cv("expSgnFake_cv","",expSgnFake);
-  RooConstVar expQCD_err_cv("expQCD_err_cv","",expQCD*(1+2));
-  RooConstVar expZtt_err_cv("expZtt_err_cv","",expZtt*(1+.3));//.3
-  RooConstVar expWen_err_cv("expWen_err_cv","",expWen*(1+.5)); //2.
-  RooConstVar expTTb_err_cv("expTTb_err_cv","",expTTb*(1+2)); //2
-  RooConstVar expSgnFake_err_cv("expSgnFake_err_cv","",expSgnFake*(1+.5));
+  RooConstVar expQCD_err_cv("expQCD_err_cv","",expQCD*(1 + 4));    // 2
+  RooConstVar expZtt_err_cv("expZtt_err_cv","",expZtt*(1 + 0.5));  //-0.6
+  RooConstVar expWen_err_cv("expWen_err_cv","",expWen*(1 + 0.5));  //-0.5
+  RooConstVar expTTb_err_cv("expTTb_err_cv","",expTTb*(1 + 2));  // 0
+  RooConstVar expSgnFake_err_cv("expSgnFake_err_cv","",expSgnFake*(1 + 0.5)); //-0.2
 
   RooGaussian NqcdConstraint("NqcdConstraint","",Nqcd,expQCD_cv,expQCD_err_cv) ;
   RooGaussian NzttConstraint("NzttConstraint","",Nztt,expZtt_cv,expZtt_err_cv) ;
@@ -437,8 +438,11 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
 
   RooRealVar Nsgn("Nsgn","",1000,0,1000000);
   RooRealVar Nbkg("Nbkg","",1000,0,1000000);
-
-  RooAddPdf sum("sum","",RooArgList(sgnPdf,bkgPdf),RooArgList(Nsgn,Nbkg));
+  RooRealVar purity("purity","",0.5,0,1);
+  
+  //RooAddPdf sum("sum","",RooArgList(sgnPdf,bkgPdf),RooArgList(Nsgn,Nbkg));
+  RooAddPdf sum("sum","",RooArgList(sgnPdf,qcdPdf,zttPdf,wenPdf,ttbPdf,sgnFakePdf),RooArgList(Nsgn,Nqcd,Nztt,Nwen,Nttb,NsgnFake));
+  //RooAddPdf sum("sum","",RooArgList(sgnPdf,bkgPdf),purity);
   
   RooAddPdf sumFail("sumFail","",RooArgList(sgnPdf,cbZtt),RooArgList(Nsgn,Nbkg));
 
