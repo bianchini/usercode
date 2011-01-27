@@ -67,12 +67,19 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
 			     bool fitInFail_        = false
 			     ){
   
-  TCanvas *c2 = new TCanvas("fitCanvasTemplate","canvas",10,30,650,600);
+  TCanvas *c2 = new TCanvas("fitCanvasTemplate2","canvas",10,30,650,600);
   c2->SetGrid(0,0);
   c2->SetFillStyle(4000);
   c2->SetFillColor(10);
   c2->SetTicky();
   c2->SetObjectStat(0);
+
+  TCanvas *c1 = new TCanvas("fitCanvasTemplate1","canvas",10,30,650,600);
+  c1->SetGrid(0,0);
+  c1->SetFillStyle(4000);
+  c1->SetFillColor(10);
+  c1->SetTicky();
+  c1->SetObjectStat(0);
 
   // signal
   TFile fsgn("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_DYToEE-PYTHIA-PILEUP-NOHLT.root");
@@ -185,7 +192,7 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
   RooArgSet FitParamQcd(ResQcdFit->floatParsFinal());
   RooRealVar* meanLQcdFit   = (RooRealVar*)(&FitParamQcd["meanLQcd"]);
   RooRealVar* sigmaLQcdFit  = (RooRealVar*)(&FitParamQcd["sigmaLQcd"]);
-  RooConstVar meanLQcd_C("meanLQcd_C","",meanLQcdFit->getVal()*(1+scale_));
+  RooConstVar meanLQcd_C("meanLQcd_C","",meanLQcdFit->getVal() );
   RooConstVar sigmaLQcd_C("sigmaLQcd_C","",sigmaLQcdFit->getVal());
 
   RooLandau qcdPdf("qcdPdf","",mass, meanLQcd_C,sigmaLQcd_C);
@@ -234,8 +241,8 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
 
   RooRealVar m1Sgn_C("m1Sgn_C","m1",/*m1SgnFit->getVal()*/0,-10,10);
   RooRealVar sigmaSgn_C("sigmaSgn_C","sigma",/*sigmaSgnFit->getVal()*/0.5,0,20);
-  RooConstVar alfaSgn_C("alfaSgn_C","alfa",alfaSgnFit->getVal()*(1+deltaAlpha_));
-  RooConstVar nSgn_C("nSgn_C","n",nSgnFit->getVal()*(1+deltaN_));
+  RooConstVar alfaSgn_C("alfaSgn_C","alfa",alfaSgnFit->getVal()*(1+deltaAlpha_)/*,0,20*/);
+  RooConstVar nSgn_C("nSgn_C","n",nSgnFit->getVal()*(1+deltaN_)/*,0,50*/);
   //RooConstVar fSgn_C("fSgn_C","n",fSgnFit->getVal());
   //RooConstVar sigmaLSgn_C("sigmaLSgn_C","n",sigmaLSgnFit->getVal());
 
@@ -252,26 +259,6 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
   RooGaussian resolMod("resolModP","",mass,meanRes,sigmaRes);
   //RooFFTConvPdf sgnPdf("sgnPdf","",mass,sgnTemplatePdf,resolMod);
 
-
-
-  /////////////////////////////////////////
-  //      mix
-  /////////////////////////////////////////
-
-  mass.setBins( nBins_ );
-  RooDataSet mixDataSet("sgnDataSet","dataset for signal-pass template", RooArgSet(mass), Import( *fullTreeMixCut ) );
-  if(!isData_) mixDataSet.append( *(qcdPdf.generate( mass, (int)(fractionQCD*mixDataSet.numEntries()) )) );
-  RooDataHist mixDataHist("sgnDataHist","",RooArgSet(mass),mixDataSet, 1.0);
-  RooHistPdf  mixPdf("mixPdf","",RooArgSet(mass),mixDataHist);
-
-  //////////////////////////////////////
-  //      bkg + qcd
-  //////////////////////////////////////
-
-  mass.setBins( nBins_ );
-  RooDataSet bkgDataSet("bkgDataSet","dataset for bkg-pass template", RooArgSet(mass), Import( *fullTreeBkgCut ) );
-  bkgDataSet.append( *(qcdPdf.generate( mass, (int)(fractionQCD*mixDataSet.numEntries()) )) );
-  RooDataHist bkgDataHist("bkgDataHist","",RooArgSet(mass),bkgDataSet, 1.0);
 
   /////////////////////////////////////////
   //      Wen
@@ -330,7 +317,7 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
   RooConstVar alfaWen_C("alfaWen_C","",alfaWenFit->getVal());
   RooConstVar nWen_C("nWen_C","",nWenFit->getVal());
 
-  RooCBShape wenPdf("cb","",mass,m1Wen_C,sigmaWen_C,alfaWen_C,nWen_C);
+  RooCBShape wenPdf("wenPdf","",mass,m1Wen_C,sigmaWen_C,alfaWen_C,nWen_C);
 
 
   /////////////////////////////////////////
@@ -361,7 +348,7 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
   RooConstVar alfaZtt_C("alfaZtt_C","",alfaZttFit->getVal());
   RooConstVar nZtt_C("nZtt_C","",nZttFit->getVal());
 
-  //RooCBShape zttPdf("cb","",mass,m1Ztt_C,sigmaZtt_C,alfaZtt_C,nZtt_C);
+  //RooCBShape zttPdf("zttPdf","",mass,m1Ztt_C,sigmaZtt_C,alfaZtt_C,nZtt_C);
   
 
   /////////////////////////////////////////
@@ -402,33 +389,75 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
   RooConstVar alfasgnFake_C("alfasgnFake_C","",alfasgnFakeFit->getVal());
   RooConstVar nsgnFake_C("nsgnFake_C","",nsgnFakeFit->getVal());
 
-  RooCBShape sgnFakePdf("cb","",mass,m1sgnFake_C,sigmasgnFake_C,alfasgnFake_C,nsgnFake_C);
+  RooCBShape sgnFakePdf("sgnFakePdf","",mass,m1sgnFake_C,sigmasgnFake_C,alfasgnFake_C,nsgnFake_C);
 
   ////////////////////////////////////////////////////////////////
+
+  /////////////////////////////////////////
+  //      mix
+  /////////////////////////////////////////
+  
+  mass.setBins( nBins_ );
+  RooDataSet mixDataSet("sgnDataSet","dataset for signal-pass template", RooArgSet(mass), Import( *fullTreeMixCut ) );
+  if(!isData_){
+    // this is not necessary, but good x-check
+    mixDataSet.reset();
+    mixDataSet.append( *((RooDataSet*)sgnDataSet.reduce(EventRange(1,(int)expSgn)))  );
+    mixDataSet.append( *((RooDataSet*)wenDataSet.reduce(EventRange(1,(int)expWen)) ));
+    mixDataSet.append( *((RooDataSet*)zttDataSet.reduce(EventRange(1 ,(int)expZtt)) ));
+    mixDataSet.append( *((RooDataSet*)sgnFakeDataSet.reduce(EventRange(1 , (int)expSgnFake)))  );
+    mixDataSet.append( *((RooDataSet*)ttbDataSet.reduce(EventRange(1 , (int)expTTb)))  );
+    
+    mixDataSet.append( *(qcdPdf.generate( mass, (int)(fractionQCD*mixDataSet.numEntries()) )) );
+  }
+  RooDataHist mixDataHist("sgnDataHist","",RooArgSet(mass),mixDataSet, 1.0);
+  RooHistPdf  mixPdf("mixPdf","",RooArgSet(mass),mixDataHist);
+
+
+  //////////////////////////////////////
+  //      bkg + qcd
+  //////////////////////////////////////
+
+  mass.setBins( nBins_ );
+  RooDataSet bkgDataSet("bkgDataSet","dataset for bkg-pass template", RooArgSet(mass), Import( *fullTreeBkgCut ) );
+  bkgDataSet.append( *(qcdPdf.generate( mass, (int)(fractionQCD*mixDataSet.numEntries()) )) );
+  RooDataHist bkgDataHist("bkgDataHist","",RooArgSet(mass),bkgDataSet, 1.0);
 
   // bkg pdf
   RooRealVar Nqcd("Nqcd","",100,0,10000);
   RooRealVar Nztt("Nztt","",100,0,10000);
   RooRealVar Nwen("Nwen","",100,0,10000);
   RooRealVar Nttb("Nttb","",100,0,10000);
-  RooRealVar NsgnFake("sgnFake","",100,0,10000);
+  RooRealVar NsgnFake("NsgnFake","",100,0,10000);
 
   RooConstVar expQCD_cv("expQCD_cv","",expQCD);
   RooConstVar expZtt_cv("expZtt_cv","",expZtt);
   RooConstVar expWen_cv("expWen_cv","",expWen);
   RooConstVar expTTb_cv("expTTb_cv","",expTTb);
   RooConstVar expSgnFake_cv("expSgnFake_cv","",expSgnFake);
-  RooConstVar expQCD_err_cv("expQCD_err_cv","",expQCD*(1 + 4));    // 2
-  RooConstVar expZtt_err_cv("expZtt_err_cv","",expZtt*(1 + 0.5));  //-0.6
-  RooConstVar expWen_err_cv("expWen_err_cv","",expWen*(1 + 0.5));  //-0.5
-  RooConstVar expTTb_err_cv("expTTb_err_cv","",expTTb*(1 + 2));  // 0
-  RooConstVar expSgnFake_err_cv("expSgnFake_err_cv","",expSgnFake*(1 + 0.5)); //-0.2
 
-  RooGaussian NqcdConstraint("NqcdConstraint","",Nqcd,expQCD_cv,expQCD_err_cv) ;
-  RooGaussian NzttConstraint("NzttConstraint","",Nztt,expZtt_cv,expZtt_err_cv) ;
-  RooGaussian NwenConstraint("NwenConstraint","",Nwen,expWen_cv,expWen_err_cv) ;
-  RooGaussian NttbConstraint("NttbConstraint","",Nttb,expTTb_cv,expTTb_err_cv) ;
-  RooGaussian NsgnFakeConstraint("NsgnFakeConstraint","",NsgnFake,expSgnFake_cv,expSgnFake_err_cv) ;
+  RooFormulaVar NzttN("Nztt","","Nztt/expZtt_cv",RooArgList(Nztt,expZtt_cv));
+  RooConstVar NzttN_mean("NzttN_mean","",1.0);
+  RooFormulaVar NqcdN("NqcdN","Nqcd/expQCD_cv",RooArgSet(Nqcd,expQCD_cv));
+  RooConstVar NqcdN_mean("NqcdN_mean","",1.0);
+  RooFormulaVar NwenN("Nwen","Nwen/expWen_cv",RooArgSet(Nwen,expWen_cv));
+  RooConstVar NwenN_mean("NwenN_mean","",1.0);
+  RooFormulaVar NttbN("NttbN","Nttb/expTTb_cv",RooArgSet(Nttb,expTTb_cv));
+  RooConstVar NttbN_mean("NttbN_mean","",1.0);
+  RooFormulaVar NsgnFakeN("NsgnFakeN","NsgnFake/expSgnFake_cv",RooArgSet(NsgnFake,expSgnFake_cv));
+  RooConstVar NsgnFakeN_mean("NsgnFakeN_mean","",1.0);
+
+  RooConstVar expQCD_err_cv("expQCD_err_cv","",         4.0 );    // 4.0 // 4.0
+  RooConstVar expZtt_err_cv("expZtt_err_cv","",         0.4 );    // 0.4 // 0.4
+  RooConstVar expWen_err_cv("expWen_err_cv","",         1.0 );    // 1.0 // 2.0
+  RooConstVar expTTb_err_cv("expTTb_err_cv","",         2.0 );    // 2.0 // 1.0 
+  RooConstVar expSgnFake_err_cv("expSgnFake_err_cv","", 1.0 );    // 1.0 // 1.0
+
+  RooGaussian NqcdConstraint("NqcdConstraint","",NqcdN,NqcdN_mean,expQCD_err_cv) ;
+  RooGaussian NzttConstraint("NzttConstraint","",NzttN, NzttN_mean , expZtt_err_cv) ;
+  RooGaussian NwenConstraint("NwenConstraint","",NwenN,NwenN_mean,expWen_err_cv) ;
+  RooGaussian NttbConstraint("NttbConstraint","",NttbN,NttbN_mean,expTTb_err_cv) ;
+  RooGaussian NsgnFakeConstraint("NsgnFakeConstraint","",NsgnFakeN,NsgnFakeN_mean,expSgnFake_err_cv) ;
 
   RooAddPdf bkgPdf("bkgPdf","",RooArgList(qcdPdf,zttPdf,wenPdf,ttbPdf,sgnFakePdf),RooArgList(Nqcd,Nztt,Nwen,Nttb,NsgnFake));
 
@@ -446,14 +475,14 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
   
   RooAddPdf sumFail("sumFail","",RooArgList(sgnPdf,cbZtt),RooArgList(Nsgn,Nbkg));
 
-  RooPlot* frameBkg     = mass.frame(  Bins(nBins_) );
-  RooPlot* frameSgn     = mass.frame(  Bins(nBins_) );
-  RooPlot* frameMix     = mass.frame(  Bins(nBins_) );
-  RooPlot* frameQcd     = mass.frame(  Bins(nBins_) );
-  RooPlot* frameWen     = mass.frame(  Bins(nBins_) );
-  RooPlot* frameZtt     = mass.frame(  Bins(nBins_) );
-  RooPlot* frameTTb     = mass.frame(  Bins(nBins_) );
-  RooPlot* frameSgnFake = mass.frame(  Bins(nBins_) );
+  RooPlot* frameBkg     = mass.frame(  Bins(nBins_), Title("Sum of backgrounds (MC) + fit to data") );
+  RooPlot* frameSgn     = mass.frame(  Bins(nBins_), Title("Signal template (MC) + fit to data") );
+  RooPlot* frameMix     = mass.frame(  Bins(nBins_), Title("Data set") );
+  RooPlot* frameQcd     = mass.frame(  Bins(nBins_), Title("QCD template (data)") );
+  RooPlot* frameWen     = mass.frame(  Bins(nBins_), Title("Wenu template (MC)") );
+  RooPlot* frameZtt     = mass.frame(  Bins(nBins_), Title("Z#tau#tau template (MC)") );
+  RooPlot* frameTTb     = mass.frame(  Bins(nBins_), Title("t#bar{t} template (MC)") );
+  RooPlot* frameSgnFake = mass.frame(  Bins(nBins_), Title("jet->#tau in Z->ee template (MC)") );
 
   mass.setBins( nBins_ );
   
@@ -469,23 +498,37 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
   }
   //RooArgSet fitParam(fitRes->floatParsFinal());
   
-  
+  c1->cd();
+  mixDataSet.plotOn(frameMix);
+  sum.plotOn(frameMix,LineColor(kBlue));
+  sum.plotOn(frameMix,LineColor(kRed),  Components("sgnPdf"));
+  sum.plotOn(frameMix,LineColor(kGreen),Components("zttPdf"),LineStyle(kDashed));
+  sum.plotOn(frameMix,LineColor(kBlack),Components("qcdPdf"),LineStyle(kDashed));
+  sum.plotOn(frameMix,LineColor(kMagenta),Components("ttbPdf"),LineStyle(kDashed));
+  sum.plotOn(frameMix,LineColor(kYellow),Components("wenPdf"),LineStyle(kDashed));
+  sum.plotOn(frameMix,LineColor(kRed),Components("sgnFakePdf"),LineStyle(kDotted));
+  frameMix->Draw();
+  c1->Draw();
 
   c2->Divide(2,4);
 
   c2->cd(1);
   bkgDataSet.plotOn(frameBkg);
-  bkgPdf.plotOn(frameBkg,LineColor(kRed));
+  bkgPdf.plotOn(frameBkg,LineColor(kBlue),LineStyle(kDashed));
   frameBkg->Draw();
   c2->cd(2);
   sgnDataSet.plotOn(frameSgn);
-  sgnPdf.plotOn(frameSgn);
+  sgnPdf.plotOn(frameSgn,LineColor(kRed),LineStyle(kSolid));
   frameSgn->Draw();
   c2->cd(3);
   mixDataSet.plotOn(frameMix);
   sum.plotOn(frameMix,LineColor(kBlue));
   sum.plotOn(frameMix,LineColor(kRed),  Components("sgnPdf"));
-  sum.plotOn(frameMix,LineColor(kGreen),Components("bkgPdf"));
+  sum.plotOn(frameMix,LineColor(kGreen),Components("zttPdf"),LineStyle(kDashed));
+  sum.plotOn(frameMix,LineColor(kBlack),Components("qcdPdf"),LineStyle(kDashed));
+  sum.plotOn(frameMix,LineColor(kMagenta),Components("ttbPdf"),LineStyle(kDashed));
+  sum.plotOn(frameMix,LineColor(kYellow),Components("wenPdf"),LineStyle(kDashed));
+  sum.plotOn(frameMix,LineColor(kRed),Components("sgnFakePdf"),LineStyle(kDotted));
   frameMix->Draw();
   c2->cd(4);
   qcdDataHist.plotOn(frameQcd);
