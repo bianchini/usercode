@@ -436,7 +436,7 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauSCMargNoCracks80",
   RooConstVar expTTb_cv("expTTb_cv","",expTTb);
   RooConstVar expSgnFake_cv("expSgnFake_cv","",expSgnFake);
 
-  RooFormulaVar NzttN("Nztt","","Nztt/expZtt_cv",RooArgList(Nztt,expZtt_cv));
+  RooFormulaVar NzttN("NzttN","","Nztt/expZtt_cv",RooArgList(Nztt,expZtt_cv));
   RooConstVar NzttN_mean("NzttN_mean","",1.0);
   RooFormulaVar NqcdN("NqcdN","Nqcd/expQCD_cv",RooArgSet(Nqcd,expQCD_cv));
   RooConstVar NqcdN_mean("NqcdN_mean","",1.0);
