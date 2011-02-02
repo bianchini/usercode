@@ -27,6 +27,7 @@
 #include "RooDataHist.h"
 #include "RooGenericPdf.h"
 #include "RooConstVar.h"
+#include "RooLognormal.h"
 
 #include "TTree.h"
 #include "TFile.h"
@@ -77,6 +78,7 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
 
   // signal
   TFile fsgn("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_DYToEE-PYTHIA-PILEUP-NOHLT.root");
+  //TFile fsgn("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_DYToEE-PYTHIA.root");
   TTree *fullTreeSgn  = (TTree*)fsgn.Get((tnp_+"/fitter_tree").c_str());
 
   // QCD ~33 pb
@@ -101,11 +103,12 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
 
   // soup
   TFile fmix("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_soup_tauAntiEMVA_PILEUP.root");
+  //TFile fmix("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_soup_tauAntiEMVA.root");
   TTree *fullTreeMix = (TTree*)fmix.Get((tnp_+"/fitter_tree").c_str());
 
   // data
-  TFile fdat("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_Run2010AB-HLT.root");
-  //TFile fdat("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_Run2010B_39X.root");
+  //TFile fdat("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_Run2010AB-HLT.root");
+  TFile fdat("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_Data.root");
   TTree *fullTreeData = (TTree*)fdat.Get((tnp_+"/fitter_tree").c_str());
   TTree *fullTreeDataForTemplate = (TTree*)fdat.Get("etoTauMargTightNoCracks60/fitter_tree");
   /////////////////////////////////////////////////
@@ -366,12 +369,19 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   RooRealVar m1Sgn_C("m1Sgn_C","m1",m1SgnFit->getVal(),-10,10);
   RooRealVar sigmaSgn_C("sigmaSgn_C","sigma",sigmaSgnFit->getVal(),0,20);
   // choose to let it float or not
-  RooConstVar alfaSgn_C("alfaSgn_C","alfa",alfaSgnFit->getVal()*(1+deltaAlpha_)/*,0,20*/);
-  RooConstVar nSgn_C("nSgn_C","n",nSgnFit->getVal()*(1+deltaN_)/*,0,50*/);
+  RooRealVar alfaSgn_C("alfaSgn_C","alfa",alfaSgnFit->getVal()*(1+deltaAlpha_),0,20);
+  RooRealVar nSgn_C("nSgn_C","n",nSgnFit->getVal()*(1+deltaN_),0,50);
+  RooConstVar alfaSgnMc_C("alfaSgnMc_C","alfa",alfaSgnFit->getVal()*(1+deltaAlpha_)/*,0,20*/);
+  RooConstVar nSgnMc_C("nSgnMc_C","n",nSgnFit->getVal()*(1+deltaN_)/*,0,50*/);
   RooCBShape cbSgn_C("cbSgn_C","",mass,m1Sgn_C,sigmaSgn_C,alfaSgn_C,nSgn_C);
+  RooCBShape cbSgnMc_C("cbSgn_C","",mass,m1Sgn_C,sigmaSgn_C,alfaSgnMc_C,nSgnMc_C);
+
+  RooLognormal alfaSgn_CPdf("alfaSgn_CPdf","",alfaSgn_C,RooConst(alfaSgnFit->getVal()),RooConst(1.5));
+  RooLognormal nSgn_CPdf("nSgn_CPdf","",nSgn_C,RooConst(nSgnFit->getVal()),RooConst(1.5));
 
   // fitted BW (X) CB 
   RooFFTConvPdf sgnPdfP("sgnPdfP","",mass,bwSgn, cbSgn_C);
+  RooFFTConvPdf sgnMcPdfP("sgnMcPdfP","",mass,bwSgn, cbSgnMc_C);
 
   //////////////////////////////////////////
   //  soup -- data
@@ -424,12 +434,19 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   RooFormulaVar McNttbN("McNttbN","Nttb/McExpTTb_cv",   RooArgSet(Nttb,McExpTTb_cv));
   RooFormulaVar McNsgnFakeN("McNsgnFakeN","NsgnFake/McExpSgnFake_cv",RooArgSet(NsgnFake,McExpSgnFake_cv));
 
+  /*
   RooGaussian McNqcdConstraint("McNqcdConstraint","",McNqcdN,Nqcd_m,Nqcd_s) ;
   RooGaussian McNzttConstraint("McNzttConstraint","",McNzttN,Nztt_m,Nztt_s) ;
   RooGaussian McNwenConstraint("McNwenConstraint","",McNwenN,Nwen_m,Nwen_s) ;
   RooGaussian McNttbConstraint("McNttbConstraint","",McNttbN,Nttb_m,Nttb_s) ;
   RooGaussian McNsgnFakeConstraint("McNsgnFakeConstraint","",McNsgnFakeN,NsgnFake_m,NsgnFake_s) ;
+  */
 
+  RooLognormal McNqcdConstraint("McNqcdConstraint","",Nqcd,McExpQCD_cv,RooConst(4)) ;
+  RooLognormal McNzttConstraint("McNzttConstraint","",Nztt,McExpZtt_cv,RooConst(1.4)) ;
+  RooLognormal McNwenConstraint("McNwenConstraint","",Nwen,McExpWen_cv,RooConst(2)) ;
+  RooLognormal McNttbConstraint("McNttbConstraint","",Nttb,McExpTTb_cv,RooConst(2)) ;
+  RooLognormal McNsgnFakeConstraint("McNsgnFakeConstraint","",NsgnFake,McExpSgnFake_cv,RooConst(2)) ;
 
   // data
   RooConstVar DataExpQCD_cv("DataExpQCD_cv","",expQcd*33.);
@@ -444,11 +461,19 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   RooFormulaVar DataNttbN("DataNttbN","Nttb/DataExpTTb_cv",RooArgSet(Nttb,DataExpTTb_cv));
   RooFormulaVar DataNsgnFakeN("DataNsgnFakeN","NsgnFake/DataExpSgnFake_cv",RooArgSet(NsgnFake,DataExpSgnFake_cv));
 
+  /*
   RooGaussian DataNqcdConstraint("DataNqcdConstraint","",DataNqcdN,Nqcd_m,Nqcd_s) ;
   RooGaussian DataNzttConstraint("DataNzttConstraint","",DataNzttN,Nztt_m,Nztt_s) ;
   RooGaussian DataNwenConstraint("DataNwenConstraint","",DataNwenN,Nwen_m,Nwen_s) ;
   RooGaussian DataNttbConstraint("DataNttbConstraint","",DataNttbN,Nttb_m,Nttb_s) ;
   RooGaussian DataNsgnFakeConstraint("DataNsgnFakeConstraint","",DataNsgnFakeN,NsgnFake_m,NsgnFake_s) ;
+  */
+
+  RooLognormal DataNqcdConstraint("DataNqcdConstraint","",Nqcd,DataExpQCD_cv,RooConst(4)) ;
+  RooLognormal DataNzttConstraint("DataNzttConstraint","",Nztt,DataExpZtt_cv,RooConst(1.4)) ;
+  RooLognormal DataNwenConstraint("DataNwenConstraint","",Nwen,DataExpWen_cv,RooConst(2)) ;
+  RooLognormal DataNttbConstraint("DataNttbConstraint","",Nttb,DataExpTTb_cv,RooConst(2)) ;
+  RooLognormal DataNsgnFakeConstraint("DataNsgnFakeConstraint","",NsgnFake,DataExpSgnFake_cv,RooConst(2)) ;
 
 
   RooRealVar McCF("McCF","",0);
@@ -498,8 +523,8 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   RooFormulaVar McNumSgnF("McNumSgnF","(1-McEfficiency)*McNumSgn",RooArgSet(McEfficiency,McNumSgn));
  
 
-  RooAddPdf McModelP("McModelP","",RooArgList(sgnPdfP,qcdPdfP,zttPdfP,wenPdfP,ttbPdfP,sgnFakePdfP),RooArgList(McNumSgnP,Nqcd,Nztt,Nwen,Nttb,NsgnFake));
-  RooAddPdf McModelF("McModelF","",RooArgList(sgnPdfF,McBackgroundPdfF),RooArgList(McNumSgnF,McNumBkgF));
+  RooAddPdf McModelP("McModelP","",RooArgList(sgnMcPdfP,qcdPdfP,zttPdfP,wenPdfP,ttbPdfP,sgnFakePdfP),RooArgList(McNumSgnP,Nqcd,Nztt,Nwen,Nttb,NsgnFake));
+  RooAddPdf McModelF("McModelF","",RooArgList(sgnPdfF_raw,McBackgroundPdfF),RooArgList(McNumSgnF,McNumBkgF));
 
   RooDataHist McCombData("McCombData","combined data",mass,Index(category),Import("pass", *(mixDataSetP.createHistogram("histoSoupP",mass))) ,Import("fail", *(mixDataSetF.createHistogram("histoSoupF",mass))) ) ;
 
@@ -507,7 +532,7 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   McSimPdf.addPdf(McModelP,"pass") ;
   McSimPdf.addPdf(McModelF,"fail") ;
 
-  RooFitResult* ResMcCombinedFit = McSimPdf.fitTo(McCombData , Extended(1), Minos(1), Save(1), NumCPU(4), ExternalConstraints( RooArgSet(McNqcdConstraint,McNzttConstraint,McNwenConstraint,McNttbConstraint,McNsgnFakeConstraint) ) );
+  RooFitResult* ResMcCombinedFit = McSimPdf.fitTo(McCombData , Extended(1), Minos(1), Save(1), NumCPU(4), ExternalConstraints( RooArgSet(McNqcdConstraint,McNzttConstraint,McNwenConstraint,McNttbConstraint,McNsgnFakeConstraint/*,alfaSgn_CPdf,nSgn_CPdf*/) ) );
   outFile_->cd(Form("bin%.2f",binCenter_));
   ResMcCombinedFit->Write("McFitResults_Combined");
 
@@ -519,7 +544,7 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   RooPlot* McFrameP = mass.frame(Bins(nBins_),Title("MC: passing sample"));
   McCombData.plotOn(McFrameP,Cut("category==category::pass"));
   McSimPdf.plotOn(McFrameP,Slice(category,"pass"), ProjWData(category,McCombData), LineColor(kBlue));
-  McSimPdf.plotOn(McFrameP,Slice(category,"pass"), ProjWData(category,McCombData), Components("sgnPdfP"), LineColor(kRed), LineStyle(kSolid));
+  McSimPdf.plotOn(McFrameP,Slice(category,"pass"), ProjWData(category,McCombData), Components("sgnMcPdfP"), LineColor(kRed), LineStyle(kSolid));
   McSimPdf.plotOn(McFrameP,Slice(category,"pass"), ProjWData(category,McCombData), Components("qcdPdfP"), LineColor(kBlack), LineStyle(4));
   McSimPdf.plotOn(McFrameP,Slice(category,"pass"), ProjWData(category,McCombData), Components("zttPdfP"), LineColor(kYellow), LineStyle(5));
   McSimPdf.plotOn(McFrameP,Slice(category,"pass"), ProjWData(category,McCombData), Components("wenPdfP"), LineColor(kGreen), LineStyle(6));
@@ -529,13 +554,13 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   RooPlot* McFrameF = mass.frame(Bins(nBins_),Title("MC: failing sample"));
   McCombData.plotOn(McFrameF,Cut("category==category::fail"));
   McSimPdf.plotOn(McFrameF,Slice(category,"fail"), ProjWData(category,McCombData), LineColor(kBlue));
-  McSimPdf.plotOn(McFrameF,Slice(category,"fail"), ProjWData(category,McCombData), Components("sgnPdfF"), LineColor(kRed), LineStyle(kSolid));
+  McSimPdf.plotOn(McFrameF,Slice(category,"fail"), ProjWData(category,McCombData), Components("sgnPdfF_raw"), LineColor(kRed), LineStyle(kSolid));
 
   ////////////////////////////////////////////////
   //                 Data
   ////////////////////////////////////////////////
 
-  RooRealVar DataNumBkgF("DataNumBkgF","",0.01); // was 0.0
+  RooRealVar DataNumBkgF("DataNumBkgF","",0); // was 0.01
   RooRealVar DataNumSgn("DataNumSgn","",0,1000000);
   RooRealVar DataEfficiency("DataEfficiency","",0.04,0,1);
 
@@ -557,8 +582,8 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
 
   //mass.setBins( 10000, "fft" );
   RooFitResult* ResDataCombinedFit =  0;
-  if(doBinned_)  ResDataCombinedFit = DataSimPdf.fitTo(DataCombData , Extended(1), Minos(1), Save(1), NumCPU(4), ExternalConstraints( RooArgSet(DataNqcdConstraint,DataNzttConstraint,DataNwenConstraint,DataNttbConstraint,DataNsgnFakeConstraint) )  );
-  else ResDataCombinedFit = DataSimPdf.fitTo(DataCombDataUnBinned , Extended(1), Minos(1), Save(1), NumCPU(4),  ExternalConstraints( RooArgSet(DataNqcdConstraint,DataNzttConstraint,DataNwenConstraint,DataNttbConstraint,DataNsgnFakeConstraint) ) );
+  if(doBinned_)  ResDataCombinedFit = DataSimPdf.fitTo(DataCombData , Extended(1), Minos(1), Save(1), NumCPU(4), ExternalConstraints( RooArgSet(DataNqcdConstraint,DataNzttConstraint,DataNwenConstraint,DataNttbConstraint,DataNsgnFakeConstraint,alfaSgn_CPdf,nSgn_CPdf) )  );
+  else ResDataCombinedFit = DataSimPdf.fitTo(DataCombDataUnBinned , Extended(1), Minos(1), Save(1), NumCPU(4),  ExternalConstraints( RooArgSet(DataNqcdConstraint,DataNzttConstraint,DataNwenConstraint,DataNttbConstraint,DataNsgnFakeConstraint,alfaSgn_CPdf,nSgn_CPdf) ) );
   outFile_->cd(Form("bin%.2f",binCenter_));
   ResDataCombinedFit->Write("DataFitResults_Combined");
 
@@ -733,17 +758,17 @@ void makePlot(const string tnp_      = "etoTauMargLooseNoCracks70",
   
   TGraphAsymmErrors* graph_truthMC = new TGraphAsymmErrors(2,truthMC_x,truthMC_y, truthMC_xL,truthMC_xH,truthMC_yL,truthMC_yH);
   graph_truthMC->SetMarkerColor(kBlue);
-  graph_truthMC->SetMarkerStyle(kFullCircle);
+  graph_truthMC->SetMarkerStyle(kOpenCircle);
   graph_truthMC->SetMarkerSize(1.5);
   ///////////////////////////////////////////////////////
   TGraphAsymmErrors* graph_tnpMC = new TGraphAsymmErrors(2,tnpMC_x,tnpMC_y,tnpMC_xL,tnpMC_xH,tnpMC_yL,tnpMC_yH);
   graph_tnpMC->SetMarkerColor(kRed);
-  graph_tnpMC->SetMarkerStyle(kFullTriangleDown);
+  graph_tnpMC->SetMarkerStyle(kOpenSquare);
   graph_tnpMC->SetMarkerSize(1.2);
   ///////////////////////////////////////////////////////
   TGraphAsymmErrors* graph_tnpDATA = new TGraphAsymmErrors(2,tnpDATA_x, tnpDATA_y,tnpDATA_xL,tnpDATA_xH,tnpDATA_yL,tnpDATA_yH);
   graph_tnpDATA->SetMarkerColor(kBlack);
-  graph_tnpDATA->SetMarkerStyle(kFullTriangleUp);
+  graph_tnpDATA->SetMarkerStyle(kFullTriangleDown);
   graph_tnpDATA->SetMarkerSize(1.5);
 
   c1->cd();
@@ -755,16 +780,16 @@ void makePlot(const string tnp_      = "etoTauMargLooseNoCracks70",
   graph_tnpDATA->Draw("PSAME");
   TH1F* h1mcTruth = new TH1F("h1mcTruth","",1,0,1);
   h1mcTruth->SetLineColor(kBlue);
-  h1mcTruth->SetMarkerStyle(20);
-  h1mcTruth->SetMarkerSize(1);
+  h1mcTruth->SetMarkerStyle(kOpenCircle);
+  h1mcTruth->SetMarkerSize(1.2);
   TH1F* h1tnpMC = new TH1F("h1tnpMC","",1,0,1);
   h1tnpMC->SetLineColor(kRed);
-  h1tnpMC->SetMarkerStyle(21);
-  h1tnpMC->SetMarkerSize(1);
+  h1tnpMC->SetMarkerStyle(kOpenSquare);
+  h1tnpMC->SetMarkerSize(1.2);
   TH1F* h1tnpDATA = new TH1F("h1tnpDATA","",1,0,1);
   h1tnpDATA->SetLineColor(kBlack);
-  h1tnpDATA->SetMarkerStyle(22);
-  h1tnpDATA->SetMarkerSize(1);
+  h1tnpDATA->SetMarkerStyle(kFullTriangleDown);
+  h1tnpDATA->SetMarkerSize(1.2);
 
   string discr = "" ;
   if(category_.find("tauAntiEMVA")!=string::npos) discr="passing #xi<-0.1";
@@ -775,7 +800,7 @@ void makePlot(const string tnp_      = "etoTauMargLooseNoCracks70",
   else tau="Shrinking-Cone #tau-candidate";
   leg->SetHeader(Form("#splitline{CMS Preliminary L=33 pb^{-1}}{%s %s}",tau.c_str(),discr.c_str()));
   leg->AddEntry(h1mcTruth,"MC-truth");
-  leg->AddEntry(h1tnpMC,"t&p: simulation");
+  leg->AddEntry(h1tnpMC,"t&p: simulation (L_{equiv}=500 pb^{-1})");
   leg->AddEntry(h1tnpDATA,"t&p: 7 TeV Data");
   leg->Draw();
 
