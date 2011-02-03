@@ -77,8 +77,8 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
 
 
   // signal
-  TFile fsgn("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_DYToEE-PYTHIA-PILEUP-NOHLT.root");
-  //TFile fsgn("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_DYToEE-PYTHIA.root");
+  //TFile fsgn("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_DYToEE-PYTHIA-PILEUP-NOHLT.root");
+  TFile fsgn("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_DYToEE-PYTHIA.root");
   TTree *fullTreeSgn  = (TTree*)fsgn.Get((tnp_+"/fitter_tree").c_str());
 
   // QCD ~33 pb
@@ -102,8 +102,8 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   TTree *fullTreeLS = (TTree*)fLS.Get("etoTauMargLooseNoCracks90/fitter_tree");
 
   // soup
-  TFile fmix("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_soup_tauAntiEMVA_PILEUP.root");
-  //TFile fmix("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_soup_tauAntiEMVA.root");
+  //TFile fmix("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_soup_tauAntiEMVA_PILEUP.root");
+  TFile fmix("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_soup_tauAntiEMVA.root");
   TTree *fullTreeMix = (TTree*)fmix.Get((tnp_+"/fitter_tree").c_str());
 
   // data
