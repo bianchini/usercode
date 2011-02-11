@@ -150,6 +150,7 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   RooRealVar pt("pt","",0,200);
   RooRealVar abseta("abseta","",0,10);
 
+
   RooRealVar mass("mass","m_{tp} (GeV/c^{2})",xLow_,xHigh_);
   mass.setBins( 10000, "fft" );
   mass.setBins( nBins_ );
@@ -180,15 +181,7 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   // using selection not presetn in LS samples 
   TTree* fullTreeLSCutP = fullTreeLS->CopyTree( Form("(%s>=%f && %s)",category_.c_str(),cutValue_,bin_.c_str()) );
   //TTree* fullTreeLSCutP = fullTreeLS->CopyTree( Form("(tauAntiEMVA>=0.5 && %s)",bin_.c_str()) );
-
-  TTree* fullTreeMixCutP = fullTreeMix->CopyTree( Form("(%s>=%f && %s)",category_.c_str(),cutValue_,bin_.c_str()) );
-  TTree* fullTreeMixCutF = fullTreeMix->CopyTree( Form("(%s<%f && %s)",category_.c_str(),cutValue_,bin_.c_str()) );
-  TTree* fullTreeDataCutP = fullTreeData->CopyTree( Form("(%s>=%f && %s)",category_.c_str(),cutValue_,bin_.c_str()) );
   TTree* fullTreeDataCutTemplP = fullTreeDataForTemplate->CopyTree( Form("(%s>=%f && %s && (leadPFChargedHadrCandTrackPt>25 && leadPFCandPt>15 && signalPFChargedHadrCands<1.5))",category_.c_str(),cutValue_,bin_.c_str()) );
-  // using selection not presetn in LS samples 
-  TTree* fullTreeDataCutF = fullTreeData->CopyTree( Form("(%s<%f && %s)",category_.c_str(),cutValue_,bin_.c_str()) );
-  //TTree* fullTreeDataCutF = fullTreeData->CopyTree( Form("(tauAntiEMVA<0.5 && %s)",bin_.c_str()) );
-
 
   // expected yields
 
@@ -227,6 +220,39 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   float readEventsSgn = totalEventsSgnFake->GetBinContent(1);
   float expSgnP = fullTreeSgnCutP->GetEntries()/(readEventsSgn/(1300.*1.33));
   float expSgnF = fullTreeSgnCutF->GetEntries()/(readEventsSgn/(1300.*1.33));
+
+  // intermadiate yields
+  RooRealVar Nqcd("Nqcd","",        100,0,10000);
+  RooRealVar Nztt("Nztt","",        100,0,10000);
+  RooRealVar Nwen("Nwen","",        100,0,10000);
+  RooRealVar Nttb("Nttb","",        100,0,10000);
+  RooRealVar NsgnFake("NsgnFake","",100,0,10000);
+
+  // mix 
+  RooConstVar McExpQCD_cv("McExpQCD_cv","",expQcdP*Lumi);
+  RooConstVar McExpZtt_cv("McExpZtt_cv","",expZttP*Lumi);
+  RooConstVar McExpWen_cv("McExpWen_cv","",expWenP*Lumi);
+  RooConstVar McExpTTb_cv("McExpTTb_cv","",expTTbP*Lumi);
+  RooConstVar McExpSgnFake_cv("McExpSgnFake_cv","",expSgnFakeP*Lumi);
+
+  RooLognormal McNqcdConstraint("McNqcdConstraint","",Nqcd,McExpQCD_cv,RooConst(1.5)) ;//4
+  RooLognormal McNzttConstraint("McNzttConstraint","",Nztt,McExpZtt_cv,RooConst(1.2));//1.4
+  RooLognormal McNwenConstraint("McNwenConstraint","",Nwen,McExpWen_cv,RooConst(2)) ;//2
+  RooLognormal McNttbConstraint("McNttbConstraint","",Nttb,McExpTTb_cv,RooConst(2)) ;//2
+  RooLognormal McNsgnFakeConstraint("McNsgnFakeConstraint","",NsgnFake,McExpSgnFake_cv,RooConst(2)) ;//2
+
+  // data
+  RooConstVar DataExpQCD_cv("DataExpQCD_cv","",expQcdP*33.);
+  RooConstVar DataExpZtt_cv("DataExpZtt_cv","",expZttP*33.);
+  RooConstVar DataExpWen_cv("DataExpWen_cv","",expWenP*33.);
+  RooConstVar DataExpTTb_cv("DataExpTTb_cv","",expTTbP*33.);
+  RooConstVar DataExpSgnFake_cv("DataExpSgnFake_cv","",expSgnFakeP*33.);
+
+  RooLognormal DataNqcdConstraint("DataNqcdConstraint","",Nqcd,DataExpQCD_cv,RooConst(1.5)) ;//4
+  RooLognormal DataNzttConstraint("DataNzttConstraint","",Nztt,DataExpZtt_cv,RooConst(1.2)) ;//1.4
+  RooLognormal DataNwenConstraint("DataNwenConstraint","",Nwen,DataExpWen_cv,RooConst(2)) ;//2
+  RooLognormal DataNttbConstraint("DataNttbConstraint","",Nttb,DataExpTTb_cv,RooConst(2)) ;//2
+  RooLognormal DataNsgnFakeConstraint("DataNsgnFakeConstraint","",NsgnFake,DataExpSgnFake_cv,RooConst(2)) ;//2
 
   templFile->cd();
   //////////////////////////////////////
@@ -423,100 +449,6 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   // fitted BW (X) CB 
   RooFFTConvPdf sgnPdfP("sgnPdfP","",mass,bwSgn, cbSgn_C);
   RooFFTConvPdf sgnMcPdfP("sgnMcPdfP","",mass,bwSgn, cbSgnMc_C);
-
-  //////////////////////////////////////////
-  //  soup -- data
-  //////////////////////////////////////////
-
-  mass.setBins( nBins_ );
-  RooDataSet mixDataSetP("mixDataSetP","dataset for mix pass", RooArgSet(mass), Import( *fullTreeMixCutP ) );
-  ////////////////////////////////////////////////////////////////////
-  mixDataSetP.reset();
-  cout << "sgn ==> " << sgnDataSetP.numEntries() << " --- req. " << (int)(expSgnP*Lumi) << endl;
-  mixDataSetP.append( *((RooDataSet*)sgnDataSetP.reduce(EventRange(1,(int)(expSgnP*Lumi))))  );
-  cout << "Wen ==> " << wenDataSetP.numEntries() << " --- req. " << (int)(expWenP*Lumi) << endl;
-  mixDataSetP.append( *((RooDataSet*)wenDataSetP.reduce(EventRange(1,(int)(expWenP*Lumi))) ));
-  cout << "Ztt ==> " << zttDataSetP.numEntries() << " --- req. " << (int)(expZttP*Lumi) << endl;
-  mixDataSetP.append( *((RooDataSet*)zttDataSetP.reduce(EventRange(1 ,(int)(expZttP*Lumi))) ));
-  cout << "sgnFake ==> " << sgnFakeDataSetP.numEntries() << " --- req. " << (int)(expSgnFakeP*Lumi) << endl;
-  mixDataSetP.append( *((RooDataSet*)sgnFakeDataSetP.reduce(EventRange(1 , (int)(expSgnFakeP*Lumi))))  );
-  cout << "ttb ==> " << ttbDataSetP.numEntries() << " --- req. " << (int)(expTTbP*Lumi) << endl;
-  mixDataSetP.append( *((RooDataSet*)ttbDataSetP.reduce(EventRange(1 , (int)(expTTbP*Lumi))))  );
-  cout << "qcd ==> at will --- req. " << (int)(expQcdP*Lumi) << endl;
-  mixDataSetP.append( *(qcdPdfP.generate( mass, (int)(expQcdP*Lumi) )) );
-  ////////////////////////////////////////////////////////////////////
-  RooDataHist mixDataHistP("mixDataHistP","",RooArgSet(mass),mixDataSetP, 1.0);
-  
-  RooDataSet mixDataSetF("mixDataSetF","dataset for mix fail", RooArgSet(mass), Import( *fullTreeMixCutF ) );
-  ////////////////////////////////////////////////////////////////////
-  mixDataSetF.reset();
-  cout << "sgn ==> " << sgnDataSetF.numEntries() << " --- req. " << (int)(expSgnF*Lumi) << endl;
-  mixDataSetF.append( *((RooDataSet*)sgnDataSetF.reduce(EventRange(1,(int)(expSgnF*Lumi))))  );
-  cout << "Wen ==> " << wenDataSetF.numEntries() << " --- req. " << (int)(expWenF*Lumi) << endl;
-  mixDataSetF.append( *((RooDataSet*)wenDataSetF.reduce(EventRange(1,(int)(expWenF*Lumi))) ));
-  cout << "Ztt ==> " << zttDataSetF.numEntries() << " --- req. " << (int)(expZttF*Lumi) << endl;
-  mixDataSetF.append( *((RooDataSet*)zttDataSetF.reduce(EventRange(1 ,(int)(expZttF*Lumi))) ));
-  cout << "sgnFake ==> " << sgnFakeDataSetF.numEntries() << " --- req. " << (int)(expSgnFakeF*Lumi) << endl;
-  mixDataSetF.append( *((RooDataSet*)sgnFakeDataSetF.reduce(EventRange(1 , (int)(expSgnFakeF*Lumi))))  );
-  cout << "ttb ==> " << ttbDataSetF.numEntries() << " --- req. " << (int)(expTTbF*Lumi) << endl;
-  mixDataSetF.append( *((RooDataSet*)ttbDataSetF.reduce(EventRange(1 , (int)(expTTbF*Lumi))))  );
-  cout << "qcd ==> at will --- req. " << (int)(expQcdF*Lumi) << endl;
-  mixDataSetF.append( *(qcdPdfP.generate( mass, (int)(expQcdF*Lumi)) )) ;
-  ////////////////////////////////////////////////////////////////////
-  RooDataHist mixDataHistF("mixDataHistF","",RooArgSet(mass),mixDataSetF, 1.0);
-
-  mass.setBins( nBins_ );
-  RooDataSet DataDataSetP("DataDataSetP","dataset for Data pass", RooArgSet(mass), Import( *fullTreeDataCutP ) );
-  //std::cout << "data dataset Pass " << DataDataSetP.numEntries() << "  " << std::cout;
-  //return out;
-  RooDataHist DataDataHistP("DataDataHistP","",RooArgSet(mass),DataDataSetP, 1.0);
-  RooDataSet DataDataSetF("DataDataSetF","dataset for Data fail", RooArgSet(mass), Import( *fullTreeDataCutF ) );
-  RooDataHist DataDataHistF("DataDataHistF","",RooArgSet(mass),DataDataSetF, 1.0);
-
-  // intermadiate yields
-  RooRealVar Nqcd("Nqcd","",        100,0,10000);
-  RooRealVar Nztt("Nztt","",        100,0,10000);
-  RooRealVar Nwen("Nwen","",        100,0,10000);
-  RooRealVar Nttb("Nttb","",        100,0,10000);
-  RooRealVar NsgnFake("NsgnFake","",100,0,10000);
-
-  // mix 
-  RooConstVar McExpQCD_cv("McExpQCD_cv","",expQcdP*500.);
-  RooConstVar McExpZtt_cv("McExpZtt_cv","",expZttP*500.);
-  RooConstVar McExpWen_cv("McExpWen_cv","",expWenP*500.);
-  RooConstVar McExpTTb_cv("McExpTTb_cv","",expTTbP*500.);
-  RooConstVar McExpSgnFake_cv("McExpSgnFake_cv","",expSgnFakeP*500.);
-
-  RooLognormal McNqcdConstraint("McNqcdConstraint","",Nqcd,McExpQCD_cv,RooConst(4)) ;//4
-  RooLognormal McNzttConstraint("McNzttConstraint","",Nztt,McExpZtt_cv,RooConst(1.4));//1.4
-  RooLognormal McNwenConstraint("McNwenConstraint","",Nwen,McExpWen_cv,RooConst(2)) ;//2
-  RooLognormal McNttbConstraint("McNttbConstraint","",Nttb,McExpTTb_cv,RooConst(2)) ;//2
-  RooLognormal McNsgnFakeConstraint("McNsgnFakeConstraint","",NsgnFake,McExpSgnFake_cv,RooConst(2)) ;//2
-
-  // data
-  RooConstVar DataExpQCD_cv("DataExpQCD_cv","",expQcdP*33.);
-  RooConstVar DataExpZtt_cv("DataExpZtt_cv","",expZttP*33.);
-  RooConstVar DataExpWen_cv("DataExpWen_cv","",expWenP*33.);
-  RooConstVar DataExpTTb_cv("DataExpTTb_cv","",expTTbP*33.);
-  RooConstVar DataExpSgnFake_cv("DataExpSgnFake_cv","",expSgnFakeP*33.);
-
-  RooLognormal DataNqcdConstraint("DataNqcdConstraint","",Nqcd,DataExpQCD_cv,RooConst(4)) ;//4
-  RooLognormal DataNzttConstraint("DataNzttConstraint","",Nztt,DataExpZtt_cv,RooConst(1.4)) ;//1.4
-  RooLognormal DataNwenConstraint("DataNwenConstraint","",Nwen,DataExpWen_cv,RooConst(2)) ;//2
-  RooLognormal DataNttbConstraint("DataNttbConstraint","",Nttb,DataExpTTb_cv,RooConst(2)) ;//2
-  RooLognormal DataNsgnFakeConstraint("DataNsgnFakeConstraint","",NsgnFake,DataExpSgnFake_cv,RooConst(2)) ;//2
-
-
-  RooRealVar McCF("McCF","",0);
-  RooExponential McBackgroundPdfF("McBackgroundPdfF","",mass,McCF);
-
-  ////////////////////////////////////////////////
-
-  RooRealVar DataCF("DataCF","",0);
-  RooExponential DataBackgroundPdfF("DataBackgroundPdfF","",mass,DataCF);
-
-  ////////////////////////////////////////////////
-
  
 
   RooPlot* TemplateFrameP = mass.frame(Bins(nBins_),Title("Template passing"));
@@ -538,6 +470,8 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   c2->Write();
   ////////////////////////////////////////////////
 
+
+  
   RooCategory category("category","category") ;
   category.defineType("pass") ;
   category.defineType("fail") ;
@@ -546,24 +480,67 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   //                 Soup
   ////////////////////////////////////////////////
 
+  RooRealVar McCF("McCF","",0);
+  RooExponential McBackgroundPdfF("McBackgroundPdfF","",mass,McCF);
 
-  RooRealVar McNumBkgF("McNumBkgF","",(expQcdF+expZttF+expWenF+expTTbF+expSgnFakeF)*350.);
+  RooRealVar McNumBkgF("McNumBkgF","",(expQcdF+expZttF+expWenF+expTTbF+expSgnFakeF)*Lumi);
   RooRealVar McNumSgn("McNumSgn","",0,1000000);
   RooRealVar McEfficiency("McEfficiency","",0.04,0,1);
   RooFormulaVar McNumSgnP("McNumSgnP","McEfficiency*McNumSgn",RooArgSet(McEfficiency,McNumSgn));
   RooFormulaVar McNumSgnF("McNumSgnF","(1-McEfficiency)*McNumSgn",RooArgSet(McEfficiency,McNumSgn));
  
-
   RooAddPdf McModelP("McModelP","",RooArgList(sgnMcPdfP,qcdPdfP,zttPdfP,wenPdfP,ttbPdfP,sgnFakePdfP),RooArgList(McNumSgnP,Nqcd,Nztt,Nwen,Nttb,NsgnFake));
   RooAddPdf McModelF("McModelF","",RooArgList(sgnPdfF_raw,McBackgroundPdfF),RooArgList(McNumSgnF,McNumBkgF));
 
-  RooDataHist McCombData("McCombData","combined data",mass,Index(category),Import("pass", *(mixDataSetP.createHistogram("histoSoupP",mass))) ,Import("fail", *(mixDataSetF.createHistogram("histoSoupF",mass))) ) ;
+  TFile* dummyMix = new TFile("dummyMix.root","RECREATE");
+
+  TTree* fullTreeMixCutP = fullTreeMix->CopyTree( Form("(%s>=%f && %s)",category_.c_str(),cutValue_,bin_.c_str()) );
+  TTree* fullTreeMixCutF = fullTreeMix->CopyTree( Form("(%s<%f && %s)",category_.c_str(),cutValue_,bin_.c_str()) );
+
+  RooDataSet mixDataSetP("mixDataSetP","dataset for mix pass", RooArgSet(mass), Import( *fullTreeMixCutP ) );
+  ////////////////////////////////////////////////////////////////////
+  mixDataSetP.reset();
+  cout << "sgn ==> " << sgnDataSetP.numEntries() << " --- req. " << (int)(expSgnP*Lumi) << endl;
+  mixDataSetP.append( *((RooDataSet*)sgnDataSetP.reduce(EventRange(1,(int)(expSgnP*Lumi))))  );
+  cout << "Wen ==> " << wenDataSetP.numEntries() << " --- req. " << (int)(expWenP*Lumi) << endl;
+  mixDataSetP.append( *((RooDataSet*)wenDataSetP.reduce(EventRange(1,(int)(expWenP*Lumi))) ));
+  cout << "Ztt ==> " << zttDataSetP.numEntries() << " --- req. " << (int)(expZttP*Lumi) << endl;
+  mixDataSetP.append( *((RooDataSet*)zttDataSetP.reduce(EventRange(1 ,(int)(expZttP*Lumi))) ));
+  cout << "sgnFake ==> " << sgnFakeDataSetP.numEntries() << " --- req. " << (int)(expSgnFakeP*Lumi) << endl;
+  mixDataSetP.append( *((RooDataSet*)sgnFakeDataSetP.reduce(EventRange(1 , (int)(expSgnFakeP*Lumi))))  );
+  cout << "ttb ==> " << ttbDataSetP.numEntries() << " --- req. " << (int)(expTTbP*Lumi) << endl;
+  mixDataSetP.append( *((RooDataSet*)ttbDataSetP.reduce(EventRange(1 , (int)(expTTbP*Lumi))))  );
+  cout << "qcd ==> at will --- req. " << (int)(expQcdP*Lumi) << endl;
+  mixDataSetP.append( *(qcdPdfP.generate( mass, (int)(expQcdP*Lumi) )) );
+  ////////////////////////////////////////////////////////////////////
+  mass.setBins( nBins_ );
+  RooDataHist mixDataHistP("mixDataHistP","",RooArgSet(mass),mixDataSetP, 1.0);
+  
+  RooDataSet mixDataSetF("mixDataSetF","dataset for mix fail", RooArgSet(mass), Import( *fullTreeMixCutF ) );
+  ////////////////////////////////////////////////////////////////////
+  mixDataSetF.reset();
+  cout << "sgn ==> " << sgnDataSetF.numEntries() << " --- req. " << (int)(expSgnF*Lumi) << endl;
+  mixDataSetF.append( *((RooDataSet*)sgnDataSetF.reduce(EventRange(1,(int)(expSgnF*Lumi))))  );
+  cout << "Wen ==> " << wenDataSetF.numEntries() << " --- req. " << (int)(expWenF*Lumi) << endl;
+  mixDataSetF.append( *((RooDataSet*)wenDataSetF.reduce(EventRange(1,(int)(expWenF*Lumi))) ));
+  cout << "Ztt ==> " << zttDataSetF.numEntries() << " --- req. " << (int)(expZttF*Lumi) << endl;
+  mixDataSetF.append( *((RooDataSet*)zttDataSetF.reduce(EventRange(1 ,(int)(expZttF*Lumi))) ));
+  cout << "sgnFake ==> " << sgnFakeDataSetF.numEntries() << " --- req. " << (int)(expSgnFakeF*Lumi) << endl;
+  mixDataSetF.append( *((RooDataSet*)sgnFakeDataSetF.reduce(EventRange(1 , (int)(expSgnFakeF*Lumi))))  );
+  cout << "ttb ==> " << ttbDataSetF.numEntries() << " --- req. " << (int)(expTTbF*Lumi) << endl;
+  mixDataSetF.append( *((RooDataSet*)ttbDataSetF.reduce(EventRange(1 , (int)(expTTbF*Lumi))))  );
+  cout << "qcd ==> at will --- req. " << (int)(expQcdF*Lumi) << endl;
+  mixDataSetF.append( *(qcdPdfP.generate( mass, (int)(expQcdF*Lumi)) )) ;
+  ////////////////////////////////////////////////////////////////////
+  RooDataHist mixDataHistF("mixDataHistF","",RooArgSet(mass),mixDataSetF, 1.0);
+
+  RooDataHist McCombData("McCombData","combined data",mass,Index(category),Import("pass", *(mixDataSetP.createHistogram("histoSoupP",mass))) ,Import("fail", *(mixDataSetF.createHistogram("histoSoupF",mass))), Weight(0.5) ) ;
 
   RooSimultaneous McSimPdf("McSimPdf","simultaneous pdf",category) ;
   McSimPdf.addPdf(McModelP,"pass") ;
   McSimPdf.addPdf(McModelF,"fail") ;
 
-  RooFitResult* ResMcCombinedFit = McSimPdf.fitTo(McCombData , Extended(1), Minos(1), Save(1), NumCPU(4), ExternalConstraints( RooArgSet(McNqcdConstraint,McNzttConstraint,McNwenConstraint,McNttbConstraint,McNsgnFakeConstraint/*,alfaSgn_CPdf,nSgn_CPdf*/) ) );
+  RooFitResult* ResMcCombinedFit = McSimPdf.fitTo(McCombData , Extended(1), Minos(1), Save(1), NumCPU(4), ExternalConstraints( RooArgSet(McNqcdConstraint,McNzttConstraint,McNwenConstraint,McNttbConstraint,McNsgnFakeConstraint/*,alfaSgn_CPdf,nSgn_CPdf*/) ), SumW2Error(1) );
   outFile_->cd(Form("bin%.2f",binCenter_));
   ResMcCombinedFit->Write("McFitResults_Combined");
 
@@ -591,6 +568,9 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   //                 Data
   ////////////////////////////////////////////////
 
+  RooRealVar DataCF("DataCF","",0);
+  RooExponential DataBackgroundPdfF("DataBackgroundPdfF","",mass,DataCF);
+
   RooRealVar DataNumBkgF("DataNumBkgF","",(expQcdF+expZttF+expWenF+expTTbF+expSgnFakeF)*33.); // was 0.01
   RooRealVar DataNumSgn("DataNumSgn","",0,1000000);
   RooRealVar DataEfficiency("DataEfficiency","",0.04,0,1);
@@ -601,11 +581,31 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   RooAddPdf DataModelP("DataModelP","",RooArgList(sgnPdfP,qcdPdfP,zttPdfP,wenPdfP,ttbPdfP,sgnFakePdfP),RooArgList(DataNumSgnP,Nqcd,Nztt,Nwen,Nttb,NsgnFake));
   RooAddPdf DataModelF("DataModelF","",RooArgList(sgnPdfF,DataBackgroundPdfF),RooArgList(DataNumSgnF,DataNumBkgF));
 
+
+  TFile* dummyData = new TFile("dummyData.root","RECREATE");
+
+  TTree* fullTreeDataCutP = fullTreeData->CopyTree( Form("(%s>=%f && %s)",category_.c_str(),cutValue_,bin_.c_str()) ); 
+  TTree* fullTreeDataCutF = fullTreeData->CopyTree( Form("(%s<%f && %s)",category_.c_str(),cutValue_,bin_.c_str()) );
+
+  RooDataSet DataDataSetP("DataDataSetP","dataset for Data pass", RooArgSet(mass), Import( *fullTreeDataCutP ) );
+  std::cout << "data dataset Pass " << DataDataSetP.numEntries() << "  " << std::endl;
+  //return out;
+  RooDataHist DataDataHistP("DataDataHistP","",RooArgSet(mass),DataDataSetP, 1.0);
+  RooDataSet DataDataSetF("DataDataSetF","dataset for Data fail", RooArgSet(mass), Import( *fullTreeDataCutF ) );
+  std::cout << "data dataset Fail " << DataDataSetF.numEntries() << "  " << std::endl;
+  RooDataHist DataDataHistF("DataDataHistF","",RooArgSet(mass),DataDataSetF, 1.0);
+  
   mass.setBins( nBins_ );
   // binned combined dataset
-  RooDataHist DataCombData("DataCombData","combined data",mass,Index(category),Import("pass", *(DataDataSetP.createHistogram("histoDataP",mass)) ) ,Import("fail", *(DataDataSetF.createHistogram("histoDataF",mass))) ) ;
+  RooDataHist DataCombData("DataCombData","combined data",mass,Index(category),Import("pass", *(DataDataSetP.createHistogram("histoDataP",mass)) ) ,Import("fail", *(DataDataSetF.createHistogram("histoDataF",mass))), Weight(0.5) ) ;
+  std::cout << "data dataHist Comb " << DataCombData.sumEntries() << "  " << std::endl;
+  std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
   // unbinned combined dataset
   RooDataSet DataCombDataUnBinned("DataCombDataUnBinned","combined data",mass,Index(category),Import("pass", DataDataSetP ) ,Import("fail",DataDataSetF) ) ;
+  std::cout << "data dataset Comb " << DataCombDataUnBinned.numEntries() << "  " << std::endl;
+  std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+  //return out;
+
 
   RooSimultaneous DataSimPdf("DataSimPdf","simultaneous pdf",category) ;
   DataSimPdf.addPdf(DataModelP,"pass") ;
@@ -613,7 +613,7 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
 
   //mass.setBins( 10000, "fft" );
   RooFitResult* ResDataCombinedFit =  0;
-  if(doBinned_)  ResDataCombinedFit = DataSimPdf.fitTo(DataCombData , Extended(1), Minos(1), Save(1), NumCPU(4), ExternalConstraints( RooArgSet(DataNqcdConstraint,DataNzttConstraint,DataNwenConstraint,DataNttbConstraint,DataNsgnFakeConstraint,alfaSgn_CPdf,nSgn_CPdf) )  );
+  if(doBinned_)  ResDataCombinedFit = DataSimPdf.fitTo(DataCombData , Extended(1), Minos(1), Save(1), NumCPU(4), ExternalConstraints( RooArgSet(DataNqcdConstraint,DataNzttConstraint,DataNwenConstraint,DataNttbConstraint,DataNsgnFakeConstraint,alfaSgn_CPdf,nSgn_CPdf) )  ,SumW2Error(1));
   else ResDataCombinedFit = DataSimPdf.fitTo(DataCombDataUnBinned , Extended(1), Minos(1), Save(1), NumCPU(4),  ExternalConstraints( RooArgSet(DataNqcdConstraint,DataNzttConstraint,DataNwenConstraint,DataNttbConstraint,DataNsgnFakeConstraint,alfaSgn_CPdf,nSgn_CPdf) ) );
   outFile_->cd(Form("bin%.2f",binCenter_));
   ResDataCombinedFit->Write("DataFitResults_Combined");
@@ -725,6 +725,8 @@ void makePlot(const string tnp_      = "etoTauMargLooseNoCracks70",
 	      double yHigh_          = 0.06
 	      ){
   
+  float Lumi = 350.;
+
     // output file
   TFile *outFile = new TFile( Form("EtoTauPlots_%s_%s_%s.root",tnp_.c_str(),category_.c_str(),var_.c_str()),"RECREATE");
 
@@ -832,7 +834,7 @@ void makePlot(const string tnp_      = "etoTauMargLooseNoCracks70",
   else tau="Shrinking-Cone #tau-candidate";
   leg->SetHeader(Form("#splitline{CMS Preliminary L=33 pb^{-1}}{%s %s}",tau.c_str(),discr.c_str()));
   leg->AddEntry(h1mcTruth,"MC-truth");
-  leg->AddEntry(h1tnpMC,"t&p: simulation (L_{equiv}=500 pb^{-1})");
+  leg->AddEntry(h1tnpMC,Form("t&p: simulation (L_{equiv}=%.0f pb^{-1})",Lumi));
   leg->AddEntry(h1tnpDATA,"t&p: 7 TeV Data");
   leg->Draw();
 
