@@ -70,6 +70,7 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   
   // luminosity for the mix 
   float Lumi = 350.;
+  float Stat =  31.;
 
   TCanvas *c2 = new TCanvas("fitCanvasTemplate","canvas",10,30,650,600);
   c2->SetGrid(0,0);
@@ -115,8 +116,8 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   TTree *fullTreeMix = (TTree*)fmix.Get((tnp_+"/fitter_tree").c_str());
 
   // data
-  //TFile fdat("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_Run2010AB-HLT.root");
-  TFile fdat("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_Data.root");
+  TFile fdat("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_Run2010AB-HLT.root");
+  //TFile fdat("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_Data.root");
   //TFile fdat("/data_CMS/cms/lbianchini/35pb/Htt/testNewWriteFromPAT_Run2010B-HLT-Htt.root");
   TTree *fullTreeData = (TTree*)fdat.Get((tnp_+"/fitter_tree").c_str());
   TTree *fullTreeDataForTemplate = (TTree*)fdat.Get("etoTauMargTightNoCracks60/fitter_tree");
@@ -185,13 +186,14 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
 
   // expected yields
 
+  // QCD samples BC->e and em-enrich are added in fQcd for an eq.L=33 pb(LO cs)
   fQcd.cd();
   TH1F* hQcdP = new TH1F("hQcdP","",1,0,200);
   TH1F* hQcdF = new TH1F("hQcdF","",1,0,200);
   fullTreeQcdCutP->Draw("mass>>hQcdP","weight");
   fullTreeQcdCutF->Draw("mass>>hQcdF","weight");
-  float expQcdP = hQcdP->Integral()/33.;
-  float expQcdF = hQcdF->Integral()/33.;
+  float expQcdP = hQcdP->Integral()/33.*(1+0.2);
+  float expQcdF = hQcdF->Integral()/33.*(1+0.2);
   delete hQcdP; delete hQcdF;
 
   fWen.cd("allEventsFilter");
@@ -203,8 +205,8 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   fZtt.cd("allEventsFilter");
   TH1F* totalEventsZtt = (TH1F*)gDirectory->Get("totalEvents");
   float readEventsZtt = totalEventsZtt->GetBinContent(1);
-  float expZttP = fullTreeZttCutP->GetEntries()/(readEventsZtt/(1300.*1.33));
-  float expZttF = fullTreeZttCutF->GetEntries()/(readEventsZtt/(1300.*1.33));
+  float expZttP = fullTreeZttCutP->GetEntries()/(readEventsZtt/(1300.*1.28));
+  float expZttF = fullTreeZttCutF->GetEntries()/(readEventsZtt/(1300.*1.28));
 
   fTTb.cd("allEventsFilter");
   TH1F* totalEventsTTb = (TH1F*)gDirectory->Get("totalEvents");
@@ -215,11 +217,11 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   fsgn.cd("allEventsFilter");
   TH1F* totalEventsSgnFake = (TH1F*)gDirectory->Get("totalEvents");
   float readEventsSgnFake = totalEventsSgnFake->GetBinContent(1);
-  float expSgnFakeP = fullTreeSgnFakeCutP->GetEntries()/(readEventsSgnFake/(1300.*1.33));
-  float expSgnFakeF = fullTreeSgnFakeCutF->GetEntries()/(readEventsSgnFake/(1300.*1.33));
+  float expSgnFakeP = fullTreeSgnFakeCutP->GetEntries()/(readEventsSgnFake/(1300.*1.28));
+  float expSgnFakeF = fullTreeSgnFakeCutF->GetEntries()/(readEventsSgnFake/(1300.*1.28));
   float readEventsSgn = totalEventsSgnFake->GetBinContent(1);
-  float expSgnP = fullTreeSgnCutP->GetEntries()/(readEventsSgn/(1300.*1.33));
-  float expSgnF = fullTreeSgnCutF->GetEntries()/(readEventsSgn/(1300.*1.33));
+  float expSgnP = fullTreeSgnCutP->GetEntries()/(readEventsSgn/(1300.*1.28));
+  float expSgnF = fullTreeSgnCutF->GetEntries()/(readEventsSgn/(1300.*1.28));
 
   // intermadiate yields
   RooRealVar Nqcd("Nqcd","",        100,0,10000);
@@ -242,11 +244,11 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   RooLognormal McNsgnFakeConstraint("McNsgnFakeConstraint","",NsgnFake,McExpSgnFake_cv,RooConst(2)) ;//2
 
   // data
-  RooConstVar DataExpQCD_cv("DataExpQCD_cv","",expQcdP*33.);
-  RooConstVar DataExpZtt_cv("DataExpZtt_cv","",expZttP*33.);
-  RooConstVar DataExpWen_cv("DataExpWen_cv","",expWenP*33.);
-  RooConstVar DataExpTTb_cv("DataExpTTb_cv","",expTTbP*33.);
-  RooConstVar DataExpSgnFake_cv("DataExpSgnFake_cv","",expSgnFakeP*33.);
+  RooConstVar DataExpQCD_cv("DataExpQCD_cv","",expQcdP*Stat);
+  RooConstVar DataExpZtt_cv("DataExpZtt_cv","",expZttP*Stat);
+  RooConstVar DataExpWen_cv("DataExpWen_cv","",expWenP*Stat);
+  RooConstVar DataExpTTb_cv("DataExpTTb_cv","",expTTbP*Stat);
+  RooConstVar DataExpSgnFake_cv("DataExpSgnFake_cv","",expSgnFakeP*Stat);
 
   RooLognormal DataNqcdConstraint("DataNqcdConstraint","",Nqcd,DataExpQCD_cv,RooConst(1.5)) ;//4
   RooLognormal DataNzttConstraint("DataNzttConstraint","",Nztt,DataExpZtt_cv,RooConst(1.2)) ;//1.4
@@ -571,7 +573,7 @@ vector<Double_t*> simFit(TFile *outFile_        = 0,
   RooRealVar DataCF("DataCF","",0);
   RooExponential DataBackgroundPdfF("DataBackgroundPdfF","",mass,DataCF);
 
-  RooRealVar DataNumBkgF("DataNumBkgF","",(expQcdF+expZttF+expWenF+expTTbF+expSgnFakeF)*33.); // was 0.01
+  RooRealVar DataNumBkgF("DataNumBkgF","",(expQcdF+expZttF+expWenF+expTTbF+expSgnFakeF)*Stat); // was 0.01
   RooRealVar DataNumSgn("DataNumSgn","",0,1000000);
   RooRealVar DataEfficiency("DataEfficiency","",0.04,0,1);
 
