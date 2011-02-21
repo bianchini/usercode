@@ -75,7 +75,7 @@ void plot(){
 
 }
 
-void plotVBTFWP(){
+void plotVBTFWP(const string tau_ = "HPS"){
 
 
   TCanvas *c1 = new TCanvas("c1","Canvas",10,30,650,600);
@@ -84,22 +84,22 @@ void plotVBTFWP(){
   c1->SetFillColor(10);
   c1->SetTicky();
   c1->SetObjectStat(0);
+  c1->SetLogx(1);
 
-
-  TLegend* leg = new TLegend(0.4,0.6,0.89,0.89,NULL,"brNDC");
+  TLegend* leg = new TLegend(0.36,0.15,0.80,0.5,NULL,"brNDC");
   leg->SetFillStyle(4000);
   leg->SetBorderSize(0);
-  //leg->SetFillColor(10);
+  leg->SetFillColor(10);
   leg->SetTextSize(0.03);
 
-  TFile* f_Zee     = new TFile("../tagAndProbe/testNewWriteFromPAT_DYToEE-PYTHIA-TAUEFF.root");
-  TFile* f_Ztautau = new TFile("../tagAndProbe/testNewWriteFromPAT_DYToTauTau-PYTHIA-TAUEFF.root");
+  TFile* f_Zee     = new TFile("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_DYToEE-PYTHIA-TAUEFF.root");
+  TFile* f_Ztautau = new TFile("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_DYToTauTau-PYTHIA-TAUEFF.root");
 
 
   f_Zee->cd();
-  TTree* tree_Zee     = (TTree*) gDirectory->Get("tauFakeRateAnalyzerSHC/tree"); 
+  TTree* tree_Zee     = (TTree*) gDirectory->Get( ("tauFakeRateAnalyzer"+tau_+"/tree").c_str() ); 
   f_Ztautau->cd();
-  TTree* tree_Ztautau = (TTree*) gDirectory->Get("tauFakeRateAnalyzerSHC/tree"); 
+  TTree* tree_Ztautau = (TTree*) gDirectory->Get( ("tauFakeRateAnalyzer"+tau_+"/tree").c_str() ); 
 
   TH2F* h2 = new TH2F("h2","",220,0,1.1,220,0,1.1);
 
@@ -125,9 +125,9 @@ void plotVBTFWP(){
     std::cout << Form("leadPFChargedHadrMva<=%f: ",-0.1+cut) <<ZeeCut/ZeeAll << " --- " << ZtautauCut/ZtautauAll << std::endl;
   }
 
-  h2->SetXTitle("electrons fake-rate");
-  h2->SetYTitle("tau-jet efficiency");
-  h2->SetAxisRange(0,0.3,"X");
+  h2->SetXTitle("e#rightarrow #tau_{had} fake-rate");
+  h2->SetYTitle("#tau_{had} efficiency");
+  h2->SetAxisRange(0.02,1.0,"X");
   h2->SetAxisRange(0.95,1.01,"Y");
   h2->Draw();
 
@@ -147,20 +147,25 @@ void plotVBTFWP(){
   TVectorF vy(45,vyF);
   TGraph* graph = new TGraph(vx,vy);
   TGraph* graph_VBTF = new TGraph(vx_VBTF,vy_VBTF);
-  graph->SetMarkerStyle(kFullCircle);
-  graph->SetMarkerSize(1.0);
-  graph->SetMarkerColor(kRed);
+  if( tau_.find("HPS")!=string::npos) graph->SetMarkerStyle(kOpenCircle);
+  else  graph->SetMarkerStyle(kOpenSquare);
+  graph->SetMarkerSize(1.2);
+  if( tau_.find("HPS")!=string::npos) graph->SetMarkerColor(kRed);
+  else graph->SetMarkerColor(kBlue);
   graph_VBTF->SetMarkerStyle(kFullStar);
-  graph_VBTF->SetMarkerSize(1.2);
+  graph_VBTF->SetMarkerSize(1.8);
   graph_VBTF->SetMarkerColor(kBlack);
   graph->Draw("P");
   graph_VBTF->Draw("P");
 
-  leg->SetHeader("Shrinking Cone #tau passing tau-ID and loose iso");
-  leg->AddEntry(graph,"#splitline{discriminator by mva_e_pi}{-0.1<mva_e_pi<1.0, 2.5#times10^{-2} step}","P");
-  leg->AddEntry(graph_VBTF,"#splitline{discriminator by VBTF ID}{WP 95,90,85,80,70 ID-only}","P");
+  string tau = tau_.find("HPS")!=string::npos ? "HPS" : "Shrinking Cone";
+  leg->SetHeader( ("#splitline{Simulation: "+tau+" #tau_{had}-candidates}{passing tau-ID and loose isolation}").c_str() );
+  leg->AddEntry(graph,"#splitline{discriminator by #xi^{lch}}{-0.1#leq #xi^{lch}_{cut} #leq1.0}","P");
+  leg->AddEntry(graph_VBTF,"#splitline{cut-based discriminator}{WP95,90,85,80,70,60 (ID-only)}","P");
   leg->Draw();
 }
+
+
 
 
 void plot2D(string type = "HPS",  float WP = 0.3){
@@ -431,7 +436,7 @@ void plotMVALeadVsMVAChargROC(){
 
 
 
-void plotSHCvsHPS(){
+void plotSHCvsHPS(const string pion_ = "ch"){
 
   TCanvas *c1 = new TCanvas("c1","Canvas",10,30,650,600);
   c1->SetGrid(0,0);
@@ -439,15 +444,16 @@ void plotSHCvsHPS(){
   c1->SetFillColor(10);
   c1->SetTicky();
   c1->SetObjectStat(0);
+  c1->SetLogx(1);
 
-  TLegend* leg = new TLegend(0.4,0.6,0.89,0.89,NULL,"brNDC");
+  TLegend* leg = new TLegend(0.36,0.15,0.80,0.5,NULL,"brNDC");
   leg->SetFillStyle(4000);
   leg->SetBorderSize(0);
-  //leg->SetFillColor(10);
+  leg->SetFillColor(0);
   leg->SetTextSize(0.03);
 
-  TFile* f_Zee     = new TFile("../tagAndProbe/testNewWriteFromPAT_DYToEE-PYTHIA-TAUEFF.root");
-  TFile* f_Ztautau = new TFile("../tagAndProbe/testNewWriteFromPAT_DYToTauTau-PYTHIA-TAUEFF.root");
+  TFile* f_Zee     = new TFile("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_DYToEE-PYTHIA-TAUEFF.root");
+  TFile* f_Ztautau = new TFile("/data_CMS/cms/lbianchini/35pb/testNewWriteFromPAT_DYToTauTau-PYTHIA-TAUEFF.root");
 
 
   f_Zee->cd();
@@ -464,30 +470,32 @@ void plotSHCvsHPS(){
   float vxF_C[45];
   float vyF_C[45];
 
-  float ZeeAll_SHC     = (float)tree_Zee_SHC->GetEntries("");
-  float ZtautauAll_SHC = (float)tree_Ztautau_SHC->GetEntries("");
-  float ZeeAll_HPS     = (float)tree_Zee_HPS->GetEntries("");
-  float ZtautauAll_HPS = (float)tree_Ztautau_HPS->GetEntries("");
+  float ZeeAll_SHC     = (float)tree_Zee_SHC->GetEntries("leadPFChargedHadrTrackPt>3");
+  float ZtautauAll_SHC = (float)tree_Ztautau_SHC->GetEntries("leadPFChargedHadrTrackPt>3");
+  float ZeeAll_HPS     = (float)tree_Zee_HPS->GetEntries("leadPFChargedHadrTrackPt>3");
+  float ZtautauAll_HPS = (float)tree_Ztautau_HPS->GetEntries("leadPFChargedHadrTrackPt>3");
+
+  string pion = pion_.find("ch")!=string::npos ? "leadPFChargedHadrMva" : "leadPFCandMva"; 
 
   for(int i = 0; i<=44; i++){
     float cut = 0.025*i;
-    float ZeeCut = (float)     tree_Zee_SHC->GetEntries(Form("leadPFChargedHadrMva<=%f",-0.1+cut));
-    float ZtautauCut = (float) tree_Ztautau_SHC->GetEntries(Form("leadPFChargedHadrMva<=%f ",-0.1+cut));
+    float ZeeCut = (float)     tree_Zee_SHC->GetEntries(Form("%s<=%f && leadPFChargedHadrTrackPt>3",pion.c_str(),-0.1+cut));
+    float ZtautauCut = (float) tree_Ztautau_SHC->GetEntries(Form("%s<=%f  && leadPFChargedHadrTrackPt>3",pion.c_str(),-0.1+cut));
     vxF_C[i]=ZeeCut/ZeeAll_SHC;
     vyF_C[i]=ZtautauCut/ZtautauAll_SHC;
   }
   for(int i = 0; i<=44; i++){
     float cut = 0.025*i;
-    float ZeeCut = (float) tree_Zee_HPS->GetEntries(Form("leadPFChargedHadrMva<=%f",-0.1+cut));
-    float ZtautauCut = (float) tree_Ztautau_HPS->GetEntries(Form("leadPFChargedHadrMva<=%f",-0.1+cut));
+    float ZeeCut = (float) tree_Zee_HPS->GetEntries(Form("%s<=%f && leadPFChargedHadrTrackPt>3",pion.c_str(),-0.1+cut));
+    float ZtautauCut = (float) tree_Ztautau_HPS->GetEntries(Form("%s<=%f && leadPFChargedHadrTrackPt>3",pion.c_str(),-0.1+cut));
     vxF_L[i]=ZeeCut/ZeeAll_HPS;
     vyF_L[i]=ZtautauCut/ZtautauAll_HPS;
   }
 
-  h2->SetXTitle("electrons fake-rate");
-  h2->SetYTitle("tau-jet efficiency");
-  h2->SetAxisRange(0,1.0,"X");
-  h2->SetAxisRange(0.96,1.01,"Y");
+  h2->SetXTitle("e#rightarrow#tau_{had} fake-rate");
+  h2->SetYTitle("#tau_{had} efficiency");
+  h2->SetAxisRange(0.02,1.0,"X");
+  h2->SetAxisRange(0.95,1.01,"Y");
   h2->Draw();
 
   TVectorF vx_L(45,vxF_L);
@@ -496,18 +504,19 @@ void plotSHCvsHPS(){
   TVectorF vx_C(45,vxF_C);
   TVectorF vy_C(45,vyF_C);
   TGraph* graph_C = new TGraph(vx_C,vy_C);
-  graph_C->SetMarkerStyle(kFullCircle);
-  graph_C->SetMarkerSize(1.0);
-  graph_C->SetMarkerColor(kRed);
+  graph_C->SetMarkerStyle(kOpenSquare);
+  graph_C->SetMarkerSize(1.2);
+  graph_C->SetMarkerColor(kBlue);
   graph_C->Draw("P");
-  graph_L->SetMarkerStyle(kFullSquare);
-  graph_L->SetMarkerSize(1.0);
-  graph_L->SetMarkerColor(kBlue);
+  graph_L->SetMarkerStyle(kOpenCircle);
+  graph_L->SetMarkerSize(1.2);
+  graph_L->SetMarkerColor(kRed);
   graph_L->Draw("P");
 
-  leg->SetHeader("Shrinking Cone Vs HPS, passing tau-ID and loose iso");
-  leg->AddEntry(graph_C,"SHC: discr by mva_e_pi leading PF candidate","P");
-  leg->AddEntry(graph_L,"HPS: discr by mva_e_pi leading PF candidate","P");
+  string xi = pion_.find("ch")!=string::npos ? "#xi^{lch}" : "#xi^{lh}" ;
+  leg->SetHeader(("Simulation: discriminator by "+xi).c_str());
+  leg->AddEntry(graph_L,"#splitline{HPS #tau_{had}-candidates}{passing tau-ID and loose isolation}","P");
+  leg->AddEntry(graph_C,"#splitline{Shrinking Cone #tau_{had}-candidates}{passing tau-ID and loose isolation}","P");
   leg->Draw();
 
 }
