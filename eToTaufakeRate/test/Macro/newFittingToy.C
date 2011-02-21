@@ -39,6 +39,7 @@
 #include "RooLognormal.h"
 #include "RooCurve.h"
 #include "RooNLLVar.h"
+#include "RooChiSquarePdf.h"
 
 #include "TTree.h"
 #include "TFile.h"
@@ -404,10 +405,10 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauMargLooseNoCracks70
   RooAddPdf sum("sum","",RooArgList(sgnPdf,qcdPdf,zttPdf,wenPdf,ttbPdf,sgnFakePdf),RooArgList(Nsgn,Nqcd,Nztt,Nwen,Nttb,NsgnFake));
   RooProdPdf sumTimesConstr("sumTimesConstr","",RooArgList(sum,NqcdConstraint,NzttConstraint,NwenConstraint,NttbConstraint,NsgnFakeConstraint,alfaSgn_CPdf,nSgn_CPdf));
   
-  TH1F* h1 = new TH1F("h1","pull Nsgn",80,-4,4);
+  TH1F* h1 = new TH1F("h1","pull Nsgn",160,-4,4);
   TH1F* h3 = new TH1F("h3","pull alfaSgn",80,-4,4);
   TH1F* h4 = new TH1F("h4","pull nSgn",80,-4,4);
-  TH1F* h2 = new TH1F("h2","-2ln(L/L^{sat})",60,-20,100);
+  TH1F* h2 = new TH1F("h2","-2ln(L/L^{sat})",100,0,100);
 
   RooDataSet mixDataSet("mixDataSet", "", RooArgSet(mass) );
 
@@ -460,11 +461,21 @@ void fitStudyTemplatesFromMC(const string tnp_      = "etoTauMargLooseNoCracks70
     RooRealVar* numSgnFit_i  = (RooRealVar*)(&fitParam["Nsgn"]);
     RooRealVar* alfaSgnFit_i = (RooRealVar*)(&fitParam["alfaSgn_C"]);
     RooRealVar* nSgnFit_i    = (RooRealVar*)(&fitParam["nSgn_C"]);
-    h1->Fill( (numSgnFit_i->getVal()  - expSgn)/numSgnFit_i->getError()  );
+    h1->Fill( (numSgnFit_i->getVal()  - expSgn)/expSgn/*numSgnFit_i->getError()*/  );
     h3->Fill( (alfaSgnFit_i->getVal() - alfaSgnFit->getVal())/alfaSgnFit_i->getError()  );
     h4->Fill( (nSgnFit_i->getVal()    - nSgnFit->getVal())/nSgnFit_i->getError()  );
       
   }
+
+  RooRealVar chi2("chi2","",0,100);
+  RooRealVar ndof("ndof","",0,100);
+  RooDataHist chi2Hist("chi2Hist","",chi2,h2,1.0);
+  RooChiSquarePdf chi2Pdf("chi2Pdf","",chi2,ndof);
+  RooFitResult* chi2fit = chi2Pdf.fitTo(chi2Hist, Save(1));
+  RooArgSet fitParamChi2(chi2fit->floatParsFinal());
+  RooRealVar* ndofFit  = (RooRealVar*)(&fitParamChi2["ndof"]);
+  cout << "fitted ndof " << ndofFit->getVal() << endl;
+
 
   c2->Divide(2,2);
   c2->cd(1);
