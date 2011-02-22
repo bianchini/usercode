@@ -3,34 +3,34 @@ import copy
 
 from TauAnalysis.CandidateTools.svFitAlgorithm_cfi import *
 
-svFitLikelihoodDiTauPairKinematicsPhaseSpace = copy.deepcopy(svFitLikelihoodDiTauKinematicsPhaseSpace)
-svFitLikelihoodDiTauPairKinematicsPhaseSpace.pluginType = "SVfitLikelihoodDiTauPairKinematics"
-svFitLikelihoodDiTauPairKinematicsPhaseSpace.leg1.pluginType = "SVfitTauLikelihoodPhaseSpace"
-svFitLikelihoodDiTauPairKinematicsPhaseSpace.leg2.pluginType = "SVfitTauLikelihoodPhaseSpace"
+svFitLikelihoodElecTauPairKinematicsPhaseSpace = copy.deepcopy(svFitLikelihoodDiTauKinematicsPhaseSpace)
+svFitLikelihoodElecTauPairKinematicsPhaseSpace.pluginType = "SVfitLikelihoodElecTauPairKinematics"
+svFitLikelihoodElecTauPairKinematicsPhaseSpace.leg1.pluginType = "SVfitElectronLikelihoodPhaseSpace"
+svFitLikelihoodElecTauPairKinematicsPhaseSpace.leg2.pluginType = "SVfitTauLikelihoodPhaseSpace"
 
-svFitLikelihoodDiTauPairKinematicsPolarized = copy.deepcopy(svFitLikelihoodDiTauKinematicsPolarized)
-svFitLikelihoodDiTauPairKinematicsPolarized.pluginType = "SVfitLikelihoodDiTauPairKinematics"
-svFitLikelihoodDiTauPairKinematicsPolarized.leg2.pluginType = "SVfitTauLikelihoodPolarization"
-svFitLikelihoodDiTauPairKinematicsPolarized.leg1 = svFitLikelihoodDiTauPairKinematicsPolarized.leg2
+svFitLikelihoodDiCandidatePairKinematicsPolarized = copy.deepcopy(svFitLikelihoodDiTauKinematicsPolarized)
+svFitLikelihoodDiCandidatePairKinematicsPolarized.pluginType = "SVfitLikelihoodDiCandidatePairKinematics"
+svFitLikelihoodDiCandidatePairKinematicsPolarized.leg2.pluginType = "SVfitCandidateLikelihoodPolarization"
+svFitLikelihoodDiCandidatePairKinematicsPolarized.leg1 = svFitLikelihoodDiCandidatePairKinematicsPolarized.leg2
 
-svFitLikelihoodDiTauPairMEt = copy.deepcopy(svFitLikelihoodMEt)
-svFitLikelihoodDiTauPairMEt.pluginType = cms.string("SVfitLikelihoodMEtDiTau")
+svFitLikelihoodDiCandidatePairMEt = copy.deepcopy(svFitLikelihoodMEt)
+svFitLikelihoodDiCandidatePairMEt.pluginType = cms.string("SVfitLikelihoodMEtDiCandidate")
 
-svFitLikelihoodDiTauPairPtBalance = copy.deepcopy(svFitLikelihoodDiTauPtBalance)
-svFitLikelihoodDiTauPairPtBalance.pluginType = cms.string("SVfitLikelihoodDiTauPairPtBalance")
+svFitLikelihoodDiCandidatePairPtBalance = copy.deepcopy(svFitLikelihoodDiTauPtBalance)
+svFitLikelihoodDiCandidatePairPtBalance.pluginType = cms.string("SVfitLikelihoodDiCandidatePairPtBalance")
 
-svFitLikelihoodDiTauPairZprod = copy.deepcopy(svFitLikelihoodDiTauProdZ0)
-svFitLikelihoodDiTauPairZprod.pluginType = cms.string("SVfitLikelihoodDiTauPairProd")
-svFitLikelihoodDiTauPairZprod.process = cms.string("Z0")
+svFitLikelihoodDiCandidatePairZprod = copy.deepcopy(svFitLikelihoodDiTauProdZ0)
+svFitLikelihoodDiCandidatePairZprod.pluginType = cms.string("SVfitLikelihoodDiCandidatePairProd")
+svFitLikelihoodDiCandidatePairZprod.process = cms.string("Z0")
 
 #--------------------------------------------------------------------------------
 # produce combinations of tau-jet + tau-jet pairs
 #--------------------------------------------------------------------------------
 
-allDiTauPairs = cms.EDProducer("DiCandidatePairProducer",
+allDiTauPairs = cms.EDProducer("PATElecTauPairProducer",
                                useLeadingTausOnly = cms.bool(False),
-                               srcLeg1 = cms.InputTag('patTaus'),
-                               srcLeg2 = cms.InputTag('patElectrons'),
+                               srcLeg1 = cms.InputTag('patElectrons'),
+                               srcLeg2 = cms.InputTag('patTaus'),
                                dRmin12 = cms.double(0.3),
                                srcMET = cms.InputTag('patMETs'),
                                srcPrimaryVertex = cms.InputTag("offlinePrimaryVerticesWithBS"),
@@ -42,31 +42,32 @@ allDiTauPairs = cms.EDProducer("DiCandidatePairProducer",
                                svFit = cms.PSet(
     psKine = cms.PSet(
     likelihoodFunctions = cms.VPSet(
-    svFitLikelihoodDiTauPairKinematicsPhaseSpace         
+    #svFitLikelihoodDiTauPairKinematicsPhaseSpace
+    svFitLikelihoodElecTauPairKinematicsPhaseSpace
     ),
     estUncertainties = cms.PSet(
     numSamplings = cms.int32(-1)
     )
     ),
-    psKine_MEt = cms.PSet(
-    likelihoodFunctions = cms.VPSet(
-    svFitLikelihoodDiTauPairKinematicsPhaseSpace,
-    svFitLikelihoodDiTauPairMEt
-    ),
-    estUncertainties = cms.PSet(
-    numSamplings = cms.int32(-1)
-    )
-    ),
-    psKine_MEt_ptBalance = cms.PSet(
-    likelihoodFunctions = cms.VPSet(
-    svFitLikelihoodDiTauPairKinematicsPhaseSpace,
-    svFitLikelihoodDiTauPairMEt,
-    svFitLikelihoodDiTauPairPtBalance
-    ),
-    estUncertainties = cms.PSet(
-    numSamplings = cms.int32(-1)
-    )
-    )
+    #psKine_MEt = cms.PSet(
+    #likelihoodFunctions = cms.VPSet(
+    #svFitLikelihoodDiCandidatePairKinematicsPhaseSpace,
+    #svFitLikelihoodDiCandidatePairMEt
+    #),
+    #estUncertainties = cms.PSet(
+    #numSamplings = cms.int32(-1)
+    #)
+    #),
+    #psKine_MEt_ptBalance = cms.PSet(
+    #likelihoodFunctions = cms.VPSet(
+    #svFitLikelihoodDiCandidatePairKinematicsPhaseSpace,
+    #svFitLikelihoodDiCandidatePairMEt,
+    #svFitLikelihoodDiCandidatePairPtBalance
+    #),
+    #estUncertainties = cms.PSet(
+    #numSamplings = cms.int32(-1)
+    #)
+    #)
     ),
                                
                                

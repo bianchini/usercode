@@ -80,8 +80,8 @@ from PhysicsTools.PatAlgos.tools.jetTools import *
 switchJetCollection(process,cms.InputTag('ak5PFJets'),
                     doJTA        = True,
                     doBTagging   = True,
-                    #jetCorrLabel = ('AK5PF', ['L2Relative', 'L3Absolute',]),
-                    jetCorrLabel = ('AK5', 'PF'),
+                    jetCorrLabel = ('AK5PF', ['L2Relative', 'L3Absolute',]),
+                    #jetCorrLabel = ('AK5', 'PF'),
                     doType1MET   = False,
                     genJetCollection=cms.InputTag("ak5GenJets"),
                     doJetID      = True,
@@ -268,11 +268,15 @@ getattr(process,"selectedPatElectronsTriggerMatch"+postfix).cut = cms.string('(e
 getattr(process,"selectedPatElectronsTriggerMatch").cut = cms.string('(eta<2.4&&eta>-2.4 && !isEBEEGap) && et>10')
 
 
-from Bianchi.Utilities.diTausReconstruction_cff import allDiTauPairs
-process.selectedDiTauPairsHadEl = allDiTauPairs.clone(
+#from PFAnalyses.VBFHTauTau.recoDiTauReconstruction_cff import recoDiTau
+from Bianchi.Utilities.diTausReconstruction_cff import allDiTauPairs as recoDiTau
+
+process.selectedDiTauPairsHadEl = recoDiTau.clone(
     srcLeg1 = cms.InputTag("patElectrons"),
     srcLeg2 = cms.InputTag("patTaus")
     )
+
+
 
 
 process.pat = cms.Sequence(
@@ -301,7 +305,7 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_electronGsfTracks_*_*',
     'keep recoTrackExtras_*_*_*',
     'keep recoGsfTrackExtras_*_*_*',
-    'keep TrackingRecHitsOwned_*_*_*',
+    #'keep TrackingRecHitsOwned_*_*_*',
     'keep *_selectedSuperClusters_*_*',
     'keep *_offlineBeamSpot_*_*',
     'keep *_offlinePrimaryVertices*_*_*',
@@ -309,10 +313,11 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_pfAllMuons_*_*',
     'keep *_pfAllElectrons_*_*',
     'keep *_tauGenJets_*_*',
-    'keep *_genTauDecaysToElectron_*_*',
-    'keep *_genTauDecaysToMuon_*_*',
-    'keep *_genTauDecaysToHadrons_*_*',
+    #'keep *_genTauDecaysToElectron_*_*',
+    #'keep *_genTauDecaysToMuon_*_*',
+    #'keep *_genTauDecaysToHadrons_*_*',
     'keep *_selectedSuperClusters_*_*',
+    'keep *_selectedDiTauPairsHadEl_*_*'
     )
                                    )
 
