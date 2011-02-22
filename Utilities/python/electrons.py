@@ -50,7 +50,7 @@ def addCutBasedID( process ):
     process.eidClassBased90.electronQuality = cms.string('Eff90Cuts')
 
     #ele ID + ISO + Conv Removal
-    process.load("Bianchi.TauTauStudies.simpleEleIdSequence_cff")
+    process.load("Bianchi.Utilities.simpleEleIdSequence_cff")
 
     process.patElectronId = cms.Sequence(
         process.simpleEleIdSequence +

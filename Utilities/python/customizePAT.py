@@ -103,9 +103,9 @@ def addPFMuon(process,postfix,verbose=False):
     cloneProcessingSnippet(process, process.makePatMuons, postfix)
     getattr(process,"patMuons"+postfix).useParticleFlow = True
     pfSelectedMuons = cms.EDFilter( #dummy selector
-        "GenericPFCandidateSelector",
+        "PtMinPFCandidateSelector",
         src = cms.InputTag('pfAllMuons'),
-        cut = cms.string('')
+        ptMin = cms.double(0.0)
         )
     setattr(process,"pfSelectedMuons"+postfix,pfSelectedMuons.clone())
     getattr(process,"patMuons"+postfix).pfMuonSource = "pfSelectedMuons"+postfix
@@ -216,9 +216,9 @@ def addPFElectron(process,postfix,verbose=False):
     cloneProcessingSnippet(process, process.makePatElectrons, postfix)
     getattr(process,"patElectrons"+postfix).useParticleFlow = True
     pfSelectedElectrons = cms.EDFilter( #dummy selector
-        "GenericPFCandidateSelector",
+        "PtMinPFCandidateSelector",
         src = cms.InputTag('pfAllElectrons'),
-        cut = cms.string('')
+        ptMin = cms.double(0.0)
         )
     setattr(process,"pfSelectedElectrons"+postfix,pfSelectedElectrons.clone())
     getattr(process,"patElectrons"+postfix).pfElectronSource = "pfSelectedElectrons"+postfix

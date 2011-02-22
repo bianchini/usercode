@@ -18,9 +18,6 @@
 <use name=rootrflx>
 
 
-<library name=BianchiTauTauAnalysis file=*.cc>
-    <flags EDM_PLUGIN=1>	
-</library>
 
 
 

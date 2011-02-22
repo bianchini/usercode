@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -17,9 +17,9 @@ process.source.fileNames = cms.untracked.vstring(
     #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_1.root',
     #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_2.root',
     #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_3.root',
-    #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_4.root',
+    'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_4.root',
     #'file:/data_CMS/cms/lbianchini/F41A3437-7AED-DF11-A50D-002618943894.root',
-    'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_1.root',
+    #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_1.root',
     #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_2.root',
     #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_3.root',
     #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_4.root',
@@ -31,7 +31,7 @@ process.source.fileNames = cms.untracked.vstring(
 
 postfix           = "PFlow"
 sample            = ""
-runOnMC           = False
+runOnMC           = True
 
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
@@ -68,7 +68,7 @@ removeCleaning(process,
 
 restrictInputToAOD(process, ['All'])
 
-from Bianchi.Utilities.customizePAT.py  import *
+from Bianchi.Utilities.customizePAT  import *
 addSelectedPFlowParticle(process)
 
 process.makePatTaus.remove(process.patPFCandidateIsoDepositSelection)
@@ -80,7 +80,8 @@ from PhysicsTools.PatAlgos.tools.jetTools import *
 switchJetCollection(process,cms.InputTag('ak5PFJets'),
                     doJTA        = True,
                     doBTagging   = True,
-                    jetCorrLabel = ('AK5PF', ['L2Relative', 'L3Absolute',]),
+                    #jetCorrLabel = ('AK5PF', ['L2Relative', 'L3Absolute',]),
+                    jetCorrLabel = ('AK5', 'PF'),
                     doType1MET   = False,
                     genJetCollection=cms.InputTag("ak5GenJets"),
                     doJetID      = True,
@@ -156,25 +157,14 @@ getattr(process,"patTaus").embedIsolationPFNeutralHadrCands = True
 getattr(process,"patTaus").embedIsolationPFGammaCands = True
 getattr(process,"patTaus").embedGenJetMatch = cms.bool(True)
 
-setattr(process,"hpsPFTauDiscriminationAgainstElectron2D",
-        getattr(process,"hpsPFTauDiscriminationAgainstElectron").clone(
-    ApplyCut_ElectronPreID_2D = cms.bool(True),
-    ApplyCut_PFElectronMVA =  cms.bool(False)
-    )
-            )
+
 setattr(process,"hpsPFTauDiscriminationAgainstElectronCrackRem",
         getattr(process,"hpsPFTauDiscriminationAgainstElectron").clone(
     ApplyCut_EcalCrackCut = cms.bool(True),
     ApplyCut_PFElectronMVA =  cms.bool(False)
     )
         )
-    
-setattr(process,"shrinkingConePFTauDiscriminationAgainstElectron2D",
-        getattr(process,"shrinkingConePFTauDiscriminationAgainstElectron").clone(
-    ApplyCut_ElectronPreID_2D = cms.bool(True),
-    ApplyCut_PFElectronMVA =  cms.bool(False)
-    )
-        )
+
 setattr(process,"shrinkingConePFTauDiscriminationAgainstElectronCrackRem",
         getattr(process,"shrinkingConePFTauDiscriminationAgainstElectron").clone(
     ApplyCut_EcalCrackCut = cms.bool(True),
@@ -182,9 +172,7 @@ setattr(process,"shrinkingConePFTauDiscriminationAgainstElectronCrackRem",
     )
         )
 
-process.patHPSPFTauDiscrimination += process.hpsPFTauDiscriminationAgainstElectron2D
 process.patHPSPFTauDiscrimination += process.hpsPFTauDiscriminationAgainstElectronCrackRem
-process.patShrinkingConePFTauDiscrimination += process.shrinkingConePFTauDiscriminationAgainstElectron2D
 process.patShrinkingConePFTauDiscrimination += process.shrinkingConePFTauDiscriminationAgainstElectronCrackRem
 
 getattr(process,"makePatTaus"+postfix).replace(
@@ -203,7 +191,6 @@ getattr(process,"patTaus"+postfix).tauIDSources = cms.PSet(
     byMediumIsolation = cms.InputTag("hpsPFTauDiscriminationByMediumIsolation"),
     byTightIsolation = cms.InputTag("hpsPFTauDiscriminationByTightIsolation"),
     againstElectron = cms.InputTag("hpsPFTauDiscriminationAgainstElectron"),
-    againstElectron2D = cms.InputTag("hpsPFTauDiscriminationAgainstElectron2D"),
     againstElectronCrackRem = cms.InputTag("hpsPFTauDiscriminationAgainstElectronCrackRem"),
     againstMuon = cms.InputTag("hpsPFTauDiscriminationAgainstMuon")
     )
@@ -219,7 +206,6 @@ getattr(process,"patTaus").tauIDSources = cms.PSet(
     byIsolation = cms.InputTag("shrinkingConePFTauDiscriminationByIsolation"),
     byIsolationUsingLeadingPion = cms.InputTag("shrinkingConePFTauDiscriminationByIsolationUsingLeadingPion"),
     againstElectron = cms.InputTag("shrinkingConePFTauDiscriminationAgainstElectron"),
-    againstElectron2D = cms.InputTag("shrinkingConePFTauDiscriminationAgainstElectron2D"),
     againstElectronCrackRem = cms.InputTag("shrinkingConePFTauDiscriminationAgainstElectronCrackRem"),
     againstMuon = cms.InputTag("shrinkingConePFTauDiscriminationAgainstMuon"),
     byTaNC = cms.InputTag("shrinkingConePFTauDiscriminationByTaNC"),
@@ -282,12 +268,20 @@ getattr(process,"selectedPatElectronsTriggerMatch"+postfix).cut = cms.string('(e
 getattr(process,"selectedPatElectronsTriggerMatch").cut = cms.string('(eta<2.4&&eta>-2.4 && !isEBEEGap) && et>10')
 
 
+from Bianchi.Utilities.diTausReconstruction_cff import allDiTauPairs
+process.selectedDiTauPairsHadEl = allDiTauPairs.clone(
+    srcLeg1 = cms.InputTag("patElectrons"),
+    srcLeg2 = cms.InputTag("patTaus")
+    )
+
+
 process.pat = cms.Sequence(
     process.allEventsFilter+
     process.primaryVertexFilter+
     process.scrapping +
     process.makeSCs +
-    process.patDefaultSequence
+    process.patDefaultSequence*
+    process.selectedDiTauPairsHadEl
     #process.printTree1
     )
 
@@ -332,5 +326,5 @@ process.out.SelectEvents = cms.untracked.PSet(
 
 process.out.fileName = cms.untracked.string('patTuples_'+sample+'.root')
 
-process.outpath = cms.EndPath()
+process.outpath = cms.EndPath(process.out)
 
