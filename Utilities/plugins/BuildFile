@@ -11,6 +11,8 @@
 <use name=DataFormats/GsfTrackReco>
 <use name=DataFormats/Math>
 <use name=CommonTools/UtilAlgos>
+<use name=GeneratorInterface/LHEInterface>
+<use name=SimDataFormats/GeneratorProducts>
 
 <use name=TauAnalysis/CandidateTools>
 
