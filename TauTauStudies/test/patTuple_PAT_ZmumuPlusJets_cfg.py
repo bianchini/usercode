@@ -1,13 +1,13 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 10
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = 'START38_V13::All'
+process.GlobalTag.globaltag = 'START38_V12::All'
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
@@ -33,21 +33,25 @@ process.printTree1 = cms.EDAnalyzer("ParticleListDrawer",
                                     maxEventsToPrint  = cms.untracked.int32(1)
                                     )
 
-process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
-                                           vertexCollection = cms.InputTag('offlinePrimaryVertices'),
-                                           minimumNDOF = cms.uint32(4) ,
-                                           maxAbsZ = cms.double(24),
-                                           maxd0 = cms.double(2)
-                                           )
+process.primaryVertexFilter = cms.EDFilter(
+    "GoodVertexFilter",
+    vertexCollection = cms.InputTag('offlinePrimaryVertices'),
+    minimumNDOF = cms.uint32(4) ,
+    maxAbsZ = cms.double(24),
+    maxd0 = cms.double(2)
+    )
 
-process.scrapping = cms.EDFilter("FilterOutScraping",
-                         applyfilter = cms.untracked.bool(True),
-                         debugOn = cms.untracked.bool(False),
-                         numtrack = cms.untracked.uint32(10),
-                         thresh = cms.untracked.double(0.25)
-                         )
+process.scrapping = cms.EDFilter(
+    "FilterOutScraping",
+    applyfilter = cms.untracked.bool(True),
+    debugOn = cms.untracked.bool(False),
+    numtrack = cms.untracked.uint32(10),
+    thresh = cms.untracked.double(0.25)
+    )
 
-process.allEventsFilter = cms.EDFilter("AllEventsFilter")
+process.allEventsFilter = cms.EDFilter(
+    "AllEventsFilter"
+    )
 
 from PhysicsTools.PatAlgos.tools.coreTools import *
 
@@ -172,13 +176,15 @@ process.selectedPatJetsNoMuons = cms.EDProducer(
     minDeltaR = cms.double(0.3)
     )
 
-
-
 process.zPlusJetsAnalyzer = cms.EDAnalyzer(
     "ZmumuPlusJetsAnalyzer",
     diMuons =  cms.InputTag("diMuonsPFlow"),
     jets =  cms.InputTag("selectedPatJetsNoMuons"),
-    isMC = cms.bool(runOnMC)
+    isMC = cms.bool(runOnMC),
+    applyResidualJEC =  cms.bool(True),
+    minCorrPt = cms.untracked.double(20.),
+    minJetID  = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
+    verbose =  cms.untracked.bool(False),
     )
 
 process.pat = cms.Sequence(
@@ -224,7 +230,7 @@ process.out.outputCommands.extend( cms.vstring(
                                    )
 
 process.TFileService = cms.Service("TFileService",
-                                   fileName = cms.string("outfile.root")
+                                   fileName = cms.string("treeZmumuPlusJets.root")
                                    )
 
 process.out.SelectEvents = cms.untracked.PSet(

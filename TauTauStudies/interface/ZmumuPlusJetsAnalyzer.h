@@ -9,7 +9,6 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
-
 #include "DataFormats/Math/interface/LorentzVector.h"
 
 #include "DataFormats/RecoCandidate/interface/IsoDepositVetos.h"
@@ -54,7 +53,13 @@ class ZmumuPlusJetsAnalyzer : public edm::EDAnalyzer{
   const reco::GenParticle *tagQuark1_, *tagQuark2_;
 
   bool isMC_;
+  bool verbose_;
+  bool applyResidualJEC_;
+  float minCorrPt_;
+  float minJetID_;
 
+  std::vector< double >* jetsBtagHE_;
+  std::vector< double >* jetsBtagHP_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* tagJetsIDP4_;
@@ -64,8 +69,14 @@ class ZmumuPlusJetsAnalyzer : public edm::EDAnalyzer{
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* muonsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diMuonP4_; 
 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* METP4_;
+  
   float run_,event_;
-  float Zmass_,ZdeltaPhi_,MET_;
+  float Zmass_,ZdeltaPhi_,sumEt_;
+  float chIsoLeg1_,nhIsoLeg1_,phIsoLeg1_;
+  float chIsoLeg2_,nhIsoLeg2_,phIsoLeg2_;
+  float dxy1_,dxy2_;
+  float MtLeg1_,MtLeg2_;
   float numPV_;
 
 };
