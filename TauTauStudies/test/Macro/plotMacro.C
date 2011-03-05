@@ -42,14 +42,16 @@ void plotDEta(  FileList fileList_  , float Lumi_ = 30 ){
   pad1->cd();
   pad1->SetLogy(1);
 
-  TLegend* leg = new TLegend(0.60,0.50,0.85,0.85,NULL,"brNDC");
+  TLegend* leg = new TLegend(0.60,0.55,0.85,0.88,NULL,"brNDC");
   leg->SetFillStyle(0);
   leg->SetBorderSize(0);
   leg->SetFillColor(10);
   leg->SetTextSize(0.04);
   leg->SetHeader("N^{jet}>1, p^{jet}_{T}>30 GeV");
   
-  THStack* aStack = new THStack("aStack",Form("#sqrt{s}=7 TeV L=%.0f pb^{-1}   CMS Preliminary",Lumi_));
+  THStack* aStack = new THStack("aStack",Form("CMS Preliminary    #sqrt{s}=7 TeV L=%.0f pb^{-1}",Lumi_));
+  TH1F* hData = new TH1F();
+  TH1F* hSiml = new TH1F();
 
   for(unsigned int i = 0 ; i < fileList_.size() ; i++){
 
@@ -60,7 +62,7 @@ void plotDEta(  FileList fileList_  , float Lumi_ = 30 ){
 
     TTree* currentTree = (TTree*)currentFile->Get("zPlusJetsAnalyzer/tree");
     string h1Name = "h1_"+(fileList_[i].second).first;
-    TH1F* h1 = new TH1F( h1Name.c_str() ,Form(" ; |#Delta #eta| ; Events/(%.0f units)", (10./25.) ), 25 ,0,10);
+    TH1F* h1 = new TH1F( h1Name.c_str() ,"", 16 ,0 , 8);
 
     if( ((fileList_[i].second).first).find("Zjets")!=string::npos ) {
       h1->SetFillColor(kRed);
@@ -82,21 +84,36 @@ void plotDEta(  FileList fileList_  , float Lumi_ = 30 ){
       h1->SetFillColor(kBlack);
       leg->AddEntry(h1,"PYTHIA QCD","F");
     }
+    if( ((fileList_[i].second).first).find("data")!=string::npos ) {
+      h1->SetMarkerColor(kBlack);
+      h1->SetMarkerStyle(kFullCircle);
+      h1->SetMarkerSize(0.8);
+      leg->AddEntry(h1,"DATA","lep");
+    }
 
     currentTree->Draw( Form("abs(jetsIDP4[0].eta()-jetsIDP4[1].eta())>>%s",h1Name.c_str()), 
 		       "jetsIDP4@.size()>1 && jetsIDP4[jetsIDP4@.size()-1].pt()>30" );
 
+    if(((fileList_[i].second).first).find("data")!=string::npos){
+      hData = h1;
+      hData->Sumw2();
+      continue;
+    }
+
     h1->Scale( Lumi_ / (totalEvents/((fileList_[i].second).second)) );
+   
+    if(i==0) hSiml=(TH1F*)h1->Clone("hSiml");
+    else hSiml->Add(h1);
 
     aStack->Add(h1);
 
   }
 
-
   aStack->Draw("HIST");
+  hData->Draw("PSAME");
   TH1F* hStack = (TH1F*)aStack->GetHistogram();
   hStack->SetXTitle("|#Delta #eta_{jj}|");
-  hStack->SetYTitle(Form(" Events/(%.2f units)", (10./25.) ) );
+  hStack->SetYTitle(Form(" Events/(%.1f units)", hStack->GetBinWidth(1) ) );
   hStack->SetTitleSize(0.05,"X");
   hStack->SetTitleSize(0.05,"Y");
   hStack->SetTitleOffset(0.75,"Y");
@@ -106,13 +123,26 @@ void plotDEta(  FileList fileList_  , float Lumi_ = 30 ){
   TH1F* hRatio = new TH1F("hRatio", " ; ; #frac{(DATA-MC)}{MC}",
 			  hStack->GetNbinsX(), 
 			  hStack->GetXaxis()->GetXmin(), hStack->GetXaxis()->GetXmax());
+  hRatio->SetMarkerStyle(kFullCircle);
+  hRatio->SetMarkerSize(0.8);
   hRatio->SetLabelSize(0.12,"X");
   hRatio->SetLabelSize(0.10,"Y");
   hRatio->SetTitleSize(0.12,"Y");
   hRatio->SetTitleOffset(0.36,"Y");
+  TH1F* hDataClone = (TH1F*)hData->Clone("hDataClone");
+  hDataClone->Add(hSiml,-1);
+  hRatio->Divide( hDataClone ,hSiml,1.0,1.0);
+  hRatio->SetAxisRange(-3,3,"Y");
 
   hRatio->Draw();
+  TF1* line = new TF1("line","0",hRatio->GetXaxis()->GetXmin(),hStack->GetXaxis()->GetXmax());
+  line->SetLineStyle(3);
+  line->SetLineWidth(1.5);
+  line->SetLineColor(kBlack);
+  line->Draw("SAME");
+
 }
+
 
 void plotJetMultiplicity(  FileList fileList_  , float Lumi_ = 30 , float cutOff_ = 30.){
 
@@ -142,7 +172,9 @@ void plotJetMultiplicity(  FileList fileList_  , float Lumi_ = 30 , float cutOff
   leg->SetTextSize(0.04);
   leg->SetHeader( Form("p^{jet}_{T}>%.0f GeV/c",cutOff_) );
   
-  THStack* aStack = new THStack("aStack",Form("#sqrt{s}=7 TeV L=%.0f pb^{-1}   CMS Preliminary",Lumi_));
+  THStack* aStack = new THStack("aStack",Form("CMS Preliminary    #sqrt{s}=7 TeV L=%.0f pb^{-1}",Lumi_));
+  TH1F* hData = new TH1F();
+  TH1F* hSiml = new TH1F();
 
   for(unsigned int i = 0 ; i < fileList_.size() ; i++){
 
@@ -175,9 +207,21 @@ void plotJetMultiplicity(  FileList fileList_  , float Lumi_ = 30 , float cutOff
       h1->SetFillColor(kBlack);
       leg->AddEntry(h1,"PYTHIA QCD","F");
     }
+    if( ((fileList_[i].second).first).find("data")!=string::npos ) {
+      h1->SetMarkerColor(kBlack);
+      h1->SetMarkerStyle(kFullCircle);
+      h1->SetMarkerSize(0.8);
+      leg->AddEntry(h1,"DATA","lep");
+    }
 
     currentTree->Draw( Form("jetsIDP4@.size()>>%s",h1Name.c_str()), 
 		       Form("jetsIDP4@.size()<1 || (jetsIDP4@.size()>0 && jetsIDP4[jetsIDP4@.size()-1].pt()>%f)",cutOff_) );
+
+    if(((fileList_[i].second).first).find("data")!=string::npos){
+      hData = h1;
+      hData->Sumw2();
+      continue;
+    }
 
     h1->Scale( Lumi_ / (totalEvents/((fileList_[i].second).second)) );
 
@@ -853,6 +897,7 @@ void plotJetVeto(  FileList fileList_  , float Lumi_ = 30 , float cutOff_ = 30. 
 
 void mainPlot(){
 
+  TFile* fData   = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/treeZmumuPlusJets_Mu-Run2010AB.root","READ");
   TFile* fDYJets = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/treeZmumuPlusJets_DYJets-madgraph-50-PU-v2.root","READ");
   TFile* fTT     = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/treeZmumuPlusJets_TT-madgraph-PU-v2.root","READ");
   TFile* fWJets  = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/treeZmumuPlusJets_WJets-madgraph-PU-v2.root","READ");
@@ -865,10 +910,10 @@ void mainPlot(){
   fileList.push_back( make_pair(fT,      make_pair("tW",        10.6 )  ));
   fileList.push_back( make_pair(fTT,     make_pair("ttbar",    157.5 )  ));
   fileList.push_back( make_pair(fDYJets, make_pair("Zjets",   3048.0 )  ));
-
-  /*
+  fileList.push_back( make_pair(fData,    make_pair("data",       -99 )  ));
+  
   plotDEta( fileList , 36.);
-
+  /*
   
   plotBtag( fileList, 36. , 30.);
   plotBtag2( fileList, 36. , 30.);
@@ -887,10 +932,11 @@ void mainPlot(){
 
   plotZeppZ(  fileList, 36. , 30.);
 
-  */
+  
 
-  //plotJetMultiplicity( fileList, 36. , 30.);
+  plotJetMultiplicity( fileList, 36. , 30.);
   plotJetVeto(  fileList, 36. , 30., 2.0 ); 
+  */
 
 }
 
