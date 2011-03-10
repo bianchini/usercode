@@ -48,6 +48,8 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
 
     aMuon.addUserFloat("PFRelIso03",(chIso+nhIso+phIso)/aMuon.pt());
 
+    aMuon.addUserFloat("isInRun",iEvent.run());
+
     muonsUserEmbeddedColl->push_back(aMuon);
 
   }
