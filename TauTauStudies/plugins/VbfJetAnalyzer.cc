@@ -5,6 +5,8 @@
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
 
+#include <DataFormats/Candidate/interface/Candidate.h>
+
 #include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/JetReco/interface/GenJet.h"
@@ -25,6 +27,7 @@
 using namespace std;
 using namespace reco;
 
+typedef std::map<double, math::XYZTLorentzVectorD ,VbfJetAnalyzer::more>::iterator CImap;
 
 VbfJetAnalyzer::VbfJetAnalyzer(const edm::ParameterSet & iConfig){
   verbose_ =  iConfig.getUntrackedParameter<bool>("verbose",false);
@@ -53,13 +56,12 @@ VbfJetAnalyzer::~VbfJetAnalyzer(){
 
 void VbfJetAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
 
+  std::map<double, math::XYZTLorentzVectorD ,VbfJetAnalyzer::more> sortedJets;
+  std::map<double, math::XYZTLorentzVectorD ,VbfJetAnalyzer::more> sortedTagJets;
 
   jetsP4_->clear();
   tagjetsP4_->clear();
 
-  tagQuark1_ = 0;
-  tagQuark2_ = 0;
-  
   const reco::PFJetCollection* pfJets = 0;
   edm::Handle<reco::PFJetCollection> pfJetHandle;
   iEvent.getByLabel(edm::InputTag("ak5PFJets"),pfJetHandle);
@@ -141,8 +143,8 @@ void VbfJetAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & 
    }
    if(isMatchedToTau) continue; 
 
-   jetsP4_->push_back(ci->p4()*scale);
-
+   sortedJets.insert( make_pair(ci->pt()*scale,ci->p4()*scale) );
+ 
    int counter = 0;
    for(unsigned j = 1 ; j <tagParticles.size(); j++){
      if( (tagParticles[j]!=0 &&  Geom::deltaR(tagParticles[j]->p4(), ci->p4()) < 0.5)  ){
@@ -153,8 +155,15 @@ void VbfJetAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & 
        counter++;
      }
    }
-   if(counter>0) tagjetsP4_->push_back(ci->p4()*scale);
+   if(counter>0)  sortedTagJets.insert( make_pair(ci->pt()*scale,ci->p4()*scale) );
  }
+
+ for(CImap it = sortedJets.begin(); it != sortedJets.end() ; it++){
+   jetsP4_->push_back( it->second );
+ }
+ for(CImap it = sortedTagJets.begin(); it != sortedTagJets.end() ; it++){
+    tagjetsP4_->push_back( it->second );
+  }
 
  run_   = iEvent.run();
  event_ = (iEvent.eventAuxiliary()).event();

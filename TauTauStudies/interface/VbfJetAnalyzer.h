@@ -10,8 +10,6 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
 
-#include <DataFormats/Candidate/interface/Candidate.h>
-
 #include "DataFormats/JetReco/interface/PFJet.h"
 
 #include "TFile.h"
@@ -43,8 +41,7 @@ class VbfJetAnalyzer : public edm::EDAnalyzer{
  private:
 
   TTree* tree_;
-  const reco::Candidate *tagQuark1_, *tagQuark2_;
-  
+   
   bool verbose_; 
   float run_,event_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsP4_; 
