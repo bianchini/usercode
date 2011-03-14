@@ -21,7 +21,7 @@
 <use name=rootrflx>
 
 
-<library name=BianchiUtilities file=*.cc>
+<library name=BianchiUtilitiesPlugins file=*.cc>
     <flags EDM_PLUGIN=1>	
 </library>
 

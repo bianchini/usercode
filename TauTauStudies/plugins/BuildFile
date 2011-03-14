@@ -22,7 +22,7 @@
 <use name=rootcore>
 <use name=rootrflx>
 
-<library name=BianchiTauTauStudies file=*.cc>
+<library name=BianchiTauTauStudiesPlugins file=*.cc>
     <flags EDM_PLUGIN=1>	
 </library>
 
