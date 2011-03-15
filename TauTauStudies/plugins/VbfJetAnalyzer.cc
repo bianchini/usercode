@@ -18,6 +18,7 @@
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 #include "JetMETCorrections/Objects/interface/JetCorrector.h"
+#include "DataFormats/JetReco/interface/Jet.h"
 
 
 #include <vector>
@@ -123,11 +124,30 @@ void VbfJetAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & 
    
  }
 
- const JetCorrector* corrector = JetCorrector::getJetCorrector("ak5PFL2L3", iSetup);
+ const JetCorrector* corrector0 = JetCorrector::getJetCorrector("ak5PFL2L3", iSetup);
+ const JetCorrector* corrector1 = JetCorrector::getJetCorrector("ak5PFL2L3Residual", iSetup);
+ const JetCorrector* corrector2 = JetCorrector::getJetCorrector("ak5PFL1FastL2L3", iSetup);
+ const JetCorrector* corrector3 = JetCorrector::getJetCorrector("ak5PFL1FastL2L3Residual", iSetup);
+
 
  for(reco::PFJetCollection::const_iterator ci = pfJets->begin(); ci!=pfJets->end(); ci++){
 
-   double scale =  corrector->correction( ci->p4() ) ;
+   int index = ci - pfJets->begin();
+   edm::RefToBase<reco::Jet> jetRef(edm::Ref< PFJetCollection >(pfJets,index));
+
+   double scale0 =  corrector0->correction( *ci,jetRef,iEvent,iSetup ) ;
+   double scale1 =  corrector1->correction( *ci,jetRef,iEvent,iSetup ) ;
+   double scale2 =  corrector2->correction( *ci,jetRef,iEvent,iSetup ) ;
+   double scale3 =  corrector3->correction( *ci,jetRef,iEvent,iSetup ) ;
+   double scale=scale2;
+
+   if(verbose_){
+     cout << "ak5PFL2L3 ==> " << scale1 << endl; 
+     cout << "ak5PFL2L3Residual ==> " << scale2 << endl; 
+     cout << "ak5PFL1FastL2L3 ==> " << scale0 << endl; 
+     cout << "ak5PFL1FastL2L3Residual ==> " << scale3 << endl; 
+   }
+   //double scale =  corrector->correction( ci->p4() ) ;
 
    if( jetID(&(*ci), scale )<0.5 ){
      if(verbose_) cout << "jet does not pass loose id" << endl;
