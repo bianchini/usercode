@@ -6,13 +6,24 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load("Configuration.StandardSequences.Geometry_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
-process.GlobalTag.globaltag = 'START38_V13::All'
+from Configuration.PyReleaseValidation.autoCond import autoCond
+process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
+process.load('RecoJets.Configuration.RecoPFJets_cff')
 
+process.ak5PFL1Fastjet.useCondDB = False
+process.kt6PFJets.doRhoFastjet = True
+
+process.kt6PFJets.doRhoFastjet = True
+process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
+process.kt6PFJets.Ghost_EtaMax = cms.double(5.0)
+process.ak5PFJets.doAreaFastjet = True
+process.ak5PFJets.Rho_EtaMax = cms.double(4.4)
+process.ak5PFJets.Ghost_EtaMax = cms.double(5.0)
 
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 500
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.printTree1 = cms.EDAnalyzer("ParticleListDrawer",
@@ -20,7 +31,7 @@ process.printTree1 = cms.EDAnalyzer("ParticleListDrawer",
                                     maxEventsToPrint  = cms.untracked.int32(1)
                                     )
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 
 
 process.source = cms.Source(
@@ -43,6 +54,7 @@ process.vbfJetAnalyzer = cms.EDAnalyzer(
     )
 
 process.p = cms.Path(
+    (process.kt6PFJets * process.ak5PFJets )*
     process.vbfJetAnalyzer
     #+process.printTree1
     )
