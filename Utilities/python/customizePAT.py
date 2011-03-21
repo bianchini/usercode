@@ -79,6 +79,67 @@ def addPFMuonIsolation(process,module,postfix="",verbose=False):
                          getattr(process,"patMuonIsolationFromDepositsSequence"+postfix)
                          )
             )
+    
+    getattr(process,"isoDepMuonWithCharged"+postfix).ExtractorPSet = cms.PSet(
+        Diff_z = cms.double(99999.99),
+        ComponentName = cms.string('CandViewExtractor'),
+        DR_Max = cms.double(1.0),
+        Diff_r = cms.double(99999.99),
+        inputCandView = cms.InputTag("pfAllChargedHadrons"),
+        DR_Veto = cms.double(1e-05),
+        DepositLabel = cms.untracked.string('')
+        )
+    getattr(process,"isoDepMuonWithNeutral"+postfix).ExtractorPSet = cms.PSet(
+        Diff_z = cms.double(99999.99),
+        ComponentName = cms.string('CandViewExtractor'),
+        DR_Max = cms.double(1.0),
+        Diff_r = cms.double(99999.99),
+        inputCandView = cms.InputTag("pfAllNeutralHadrons"),
+        DR_Veto = cms.double(0.08),
+        DepositLabel = cms.untracked.string('')
+        )
+    getattr(process,"isoDepMuonWithPhotons"+postfix).ExtractorPSet = cms.PSet(
+        Diff_z = cms.double(99999.99),
+        ComponentName = cms.string('CandViewExtractor'),
+        DR_Max = cms.double(1.0),
+        Diff_r = cms.double(99999.99),
+        inputCandView = cms.InputTag("pfAllPhotons"),
+        DR_Veto = cms.double(0.05),
+        DepositLabel = cms.untracked.string('')
+        )
+    
+    getattr(process,"isoValMuonWithPhotons"+postfix).deposits = cms.VPSet(
+        cms.PSet(
+        src = cms.InputTag("isoDepMuonWithPhotons"+postfix),
+        deltaR = cms.double(0.4),
+        weight = cms.string('1'),
+        vetos = cms.vstring('Threshold(1.0)'),
+        skipDefaultVeto = cms.bool(True),
+        mode = cms.string('sum')
+        )
+        )
+    getattr(process,"isoValMuonWithNeutral"+postfix).deposits = cms.VPSet(
+        cms.PSet(
+        src = cms.InputTag("isoDepMuonWithNeutral"+postfix),
+        deltaR = cms.double(0.4),
+        weight = cms.string('1'),
+        vetos = cms.vstring('Threshold(1.0)'),
+        skipDefaultVeto = cms.bool(True),
+        mode = cms.string('sum')
+        )
+        )
+    getattr(process,"isoValMuonWithCharged"+postfix).deposits = cms.VPSet(
+        cms.PSet(
+        src = cms.InputTag("isoDepMuonWithCharged"+postfix),
+        deltaR = cms.double(0.4),
+        weight = cms.string('1'),
+        vetos = cms.vstring('Threshold(0.5)'),
+        skipDefaultVeto = cms.bool(True),
+        mode = cms.string('sum')
+        )
+        )
+
+    
 
     module.isoDeposits = cms.PSet(
         pfChargedHadrons = cms.InputTag("isoDepMuonWithCharged"+postfix),
@@ -193,6 +254,65 @@ def addPFElectronIsolation(process,module,postfix="",verbose=False):
                          )
             )
 
+    getattr(process,"isoDepElectronWithCharged"+postfix).ExtractorPSet = cms.PSet(
+        Diff_z = cms.double(99999.99),
+        ComponentName = cms.string('CandViewExtractor'),
+        DR_Max = cms.double(1.0),
+        Diff_r = cms.double(99999.99),
+        inputCandView = cms.InputTag("pfAllChargedHadrons"),
+        DR_Veto = cms.double(1e-05),
+        DepositLabel = cms.untracked.string('')
+        )
+    getattr(process,"isoDepElectronWithNeutral"+postfix).ExtractorPSet = cms.PSet(
+        Diff_z = cms.double(99999.99),
+        ComponentName = cms.string('CandViewExtractor'),
+        DR_Max = cms.double(1.0),
+        Diff_r = cms.double(99999.99),
+        inputCandView = cms.InputTag("pfAllNeutralHadrons"),
+        DR_Veto = cms.double(0.08),
+        DepositLabel = cms.untracked.string('')
+        )
+    getattr(process,"isoDepElectronWithPhotons"+postfix).ExtractorPSet = cms.PSet(
+        Diff_z = cms.double(99999.99),
+        ComponentName = cms.string('CandViewExtractor'),
+        DR_Max = cms.double(1.0),
+        Diff_r = cms.double(99999.99),
+        inputCandView = cms.InputTag("pfAllPhotons"),
+        DR_Veto = cms.double(0.05),
+        DepositLabel = cms.untracked.string('')
+        )
+    
+    getattr(process,"isoValElectronWithPhotons"+postfix).deposits = cms.VPSet(
+        cms.PSet(
+        src = cms.InputTag("isoDepElectronWithPhotons"+postfix),
+        deltaR = cms.double(0.4),
+        weight = cms.string('1'),
+        vetos = cms.vstring('Threshold(1.0)'),
+        skipDefaultVeto = cms.bool(True),
+        mode = cms.string('sum')
+        )
+        )
+    getattr(process,"isoValElectronWithNeutral"+postfix).deposits = cms.VPSet(
+        cms.PSet(
+        src = cms.InputTag("isoDepElectronWithNeutral"+postfix),
+        deltaR = cms.double(0.4),
+        weight = cms.string('1'),
+        vetos = cms.vstring('Threshold(1.0)'),
+        skipDefaultVeto = cms.bool(True),
+        mode = cms.string('sum')
+        )
+        )
+    getattr(process,"isoValElectronWithCharged"+postfix).deposits = cms.VPSet(
+        cms.PSet(
+        src = cms.InputTag("isoDepElectronWithCharged"+postfix),
+        deltaR = cms.double(0.4),
+        weight = cms.string('1'),
+        vetos = cms.vstring('Threshold(0.5)'),
+        skipDefaultVeto = cms.bool(True),
+        mode = cms.string('sum')
+        )
+        )
+
     module.isoDeposits = cms.PSet(
         pfChargedHadrons = cms.InputTag("isoDepElectronWithCharged"+postfix),
         pfNeutralHadrons = cms.InputTag("isoDepElectronWithNeutral"+postfix),
@@ -269,13 +389,16 @@ def addTriggerMatchingMuon(process,postfix="",verbose=False):
         , filterIdsEnum  = cms.vstring( 'TriggerMuon' )
         , filterIds      = cms.vint32( 0 )
         , filterLabels   = cms.vstring( '*' )
-        , pathNames      = cms.vstring( 'HLT_Mu9','HLT_Mu11','HLT_IsoMu9','HLT_Mu11_PFTau15','HLT_IsoMu9_PFTau15')
-        #, pathNames      = cms.vstring( '*')
+        #, pathNames      = cms.vstring( 'HLT_Mu9','HLT_Mu11')
+        , pathNames      = cms.vstring('HLT_Mu9','HLT_Mu11','HLT_Mu13','HLT_Mu15','HLT_Mu17','HLT_Mu19','HLT_Mu21','HLT_Mu25',
+                                       'HLT_Mu13_v1','HLT_Mu15_v1','HLT_Mu17_v1','HLT_Mu19_v1','HLT_Mu21_v1','HLT_Mu25_v1',
+                                       'HLT_L1Mu7','HLT_L1Mu7_1','HLT_L2Mu7','HLT_L2Mu7_v1')
         , collectionTags = cms.vstring( '*' )
+        #, pathLastFilterAcceptedOnly = cms.bool( True )
         , maxDPtRel = cms.double( 0.5 )
-        , maxDeltaR = cms.double( 0.5 )
-        , resolveAmbiguities    = cms.bool( False )
-        , resolveByMatchQuality = cms.bool( False )
+        , maxDeltaR = cms.double( 0.2 )
+        , resolveAmbiguities    = cms.bool( True )
+        , resolveByMatchQuality = cms.bool( True )
         )
 
     setattr(process,"muonTriggerMatchHLTMuons"+postfix,muonMatch.clone()) 
