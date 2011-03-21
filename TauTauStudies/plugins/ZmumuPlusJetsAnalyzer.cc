@@ -11,12 +11,13 @@
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 
-#include "JetMETCorrections/Objects/interface/JetCorrector.h"
-
-#include "DataFormats/JetReco/interface/GenJet.h"
-#include "DataFormats/JetReco/interface/GenJetCollection.h"
-
 #include "DataFormats/GeometryVector/interface/VectorUtil.h"
+
+#include "DataFormats/RecoCandidate/interface/IsoDeposit.h"
+#include "DataFormats/RecoCandidate/interface/IsoDepositFwd.h"
+#include "DataFormats/RecoCandidate/interface/IsoDepositDirection.h"
+#include "DataFormats/RecoCandidate/interface/IsoDepositVetos.h"
+
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
@@ -35,7 +36,6 @@ ZmumuPlusJetsAnalyzer::ZmumuPlusJetsAnalyzer(const edm::ParameterSet & iConfig){
   diMuonTag_ = iConfig.getParameter<edm::InputTag>("diMuons");
   jetsTag_ = iConfig.getParameter<edm::InputTag>("jets");
   isMC_ =  iConfig.getParameter<bool>("isMC");
-  applyResidualJEC_ =  iConfig.getParameter<bool>("applyResidualJEC");
   minCorrPt_  =  iConfig.getUntrackedParameter<double>("minCorrPt",10.);
   minJetID_   =  iConfig.getUntrackedParameter<double>("minJetID",0.5);
   verbose_ =  iConfig.getUntrackedParameter<bool>("verbose",false);
@@ -51,7 +51,6 @@ void ZmumuPlusJetsAnalyzer::beginJob(){
 
   jetsP4_          = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   jetsIDP4_        = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  tagJetsIDP4_     = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   jetsIDbyMjjP4_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   jetsIDbyDEtaP4_  = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
     
@@ -64,8 +63,7 @@ void ZmumuPlusJetsAnalyzer::beginJob(){
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
   tree_->Branch("jetsIDbyMjjP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDbyMjjP4_);
   tree_->Branch("jetsIDbyDEtaP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDbyDEtaP4_);
-  tree_->Branch("tagJetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&tagJetsIDP4_);
-
+  
   tree_->Branch("jetsBtagHE","std::vector<double> ",&jetsBtagHE_);
   tree_->Branch("jetsBtagHP","std::vector<double> ",&jetsBtagHP_);
 
@@ -97,19 +95,15 @@ void ZmumuPlusJetsAnalyzer::beginJob(){
 
 ZmumuPlusJetsAnalyzer::~ZmumuPlusJetsAnalyzer(){
   delete jetsP4_; delete muonsP4_; delete jetsIDP4_; 
-  delete tagJetsIDP4_;  delete jetsIDbyMjjP4_; delete jetsIDbyDEtaP4_; 
+  delete jetsIDbyMjjP4_; delete jetsIDbyDEtaP4_; 
   delete METP4_; delete diMuonP4_;
 }
 
 void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
 
-  //if true select as tag jets those matched to the tag quarks, 
-  //else just check genJet matching
-  bool isVBFH = false;
 
   jetsP4_->clear();
   jetsIDP4_->clear();
-  tagJetsIDP4_->clear();
   jetsIDbyMjjP4_->clear();
   jetsIDbyDEtaP4_->clear();
   jetsBtagHE_->clear();
@@ -118,11 +112,7 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   diMuonP4_->clear();
   METP4_->clear();
 
-  tagQuark1_ = 0;
-  tagQuark2_ = 0;
   
-  const JetCorrector* corrector = JetCorrector::getJetCorrector("ak5PFResidual", iSetup);
-
   edm::Handle<CompositeCandidateCollection> diMuonHandle;
   iEvent.getByLabel(diMuonTag_,diMuonHandle);
   if( !diMuonHandle.isValid() )  
@@ -145,26 +135,6 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       << "No PV label available \n";
   const reco::VertexCollection* vertexes = pvHandle.product();
   numPV_ = vertexes->size();
-
-  const reco::GenParticleCollection* genParticles = 0;
-  edm::Handle<reco::GenParticleCollection> genHandle;
-  edm::InputTag genTag("genParticles");
-  iEvent.getByLabel(genTag,genHandle);
-  if( isVBFH && isMC_ && genHandle.isValid() ){
-    genParticles = genHandle.product();
-    const reco::GenParticle *g1 = 0; 
-    const reco::GenParticle *g2 = 0; 
-    for(reco::GenParticleCollection::const_iterator ci = genParticles->begin(); ci!=genParticles->end(); ci++){
-      if(ci->pdgId() == 25){
-	g1 = &(*(ci++));
-	g2 = &(*((ci++)++));
-	tagQuark1_ = g1->pt()>g2->pt() ? g1 : g2;
-	tagQuark2_ = g1->pt()>g2->pt() ? g2 : g1;
-	if(verbose_) cout << "tag1 " << tagQuark1_->pdgId() << " tag2 " << tagQuark2_->pdgId() << endl;
-	break;
-      }
-    }
-  }
 
   edm::Handle<pat::METCollection> metHandle;
   iEvent.getByLabel(edm::InputTag("patMETsPFlow"),metHandle);
@@ -206,19 +176,50 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   dxy1_ = vertexes->size()!=0 ? leg1->globalTrack()->dxy( (*vertexes)[0].position() ) : -999;
   dxy2_ = vertexes->size()!=0 ? leg2->globalTrack()->dxy( (*vertexes)[0].position() ) : -999;
 
+  isodeposit::AbsVetos vetosChargedLeg1; 
+  isodeposit::AbsVetos vetosNeutralLeg1; 
+  isodeposit::AbsVetos vetosPhotonLeg1;
+  isodeposit::AbsVetos vetosChargedLeg2; 
+  isodeposit::AbsVetos vetosNeutralLeg2;
+  isodeposit::AbsVetos vetosPhotonLeg2; 
+  vetosChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
+  vetosNeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
+  vetosNeutralLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
+  vetosPhotonLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.05));
+  vetosPhotonLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
+
+  vetosChargedLeg2.push_back(new isodeposit::ThresholdVeto(0.5)); 
+  vetosNeutralLeg2.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg2->eta(),leg2->phi()),0.08));
+  vetosNeutralLeg2.push_back(new isodeposit::ThresholdVeto(1.0));
+  vetosPhotonLeg2.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg2->eta(),leg2->phi()),0.05));
+  vetosPhotonLeg2.push_back(new isodeposit::ThresholdVeto(1.0));
+
   chIsoLeg1_ = 
-    leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,reco::IsoDeposit::Vetos(),false ).first;
+    leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetosChargedLeg1).first;
   nhIsoLeg1_ = 
-    leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,reco::IsoDeposit::Vetos(),false ).first;
+    leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetosNeutralLeg1).first;
   phIsoLeg1_ = 
-    leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,reco::IsoDeposit::Vetos(),false ).first;
+    leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetosPhotonLeg1).first;
   chIsoLeg2_ = 
-    leg2->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,reco::IsoDeposit::Vetos(),false ).first;
+    leg2->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetosChargedLeg2).first;
   nhIsoLeg2_ = 
-    leg2->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,reco::IsoDeposit::Vetos(),false ).first;
+    leg2->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetosNeutralLeg2).first;
   phIsoLeg2_ = 
-    leg2->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,reco::IsoDeposit::Vetos(),false ).first;
-  
+    leg2->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetosPhotonLeg2 ).first;
+
+  // cleaning
+  for(unsigned int i = 0; i <vetosChargedLeg1.size(); i++){
+    delete vetosChargedLeg1[i];
+    delete vetosChargedLeg2[i];
+  }
+  for(unsigned int i = 0; i <vetosNeutralLeg1.size(); i++){
+    delete vetosNeutralLeg1[i];
+    delete vetosNeutralLeg2[i];
+    delete vetosPhotonLeg1[i];
+    delete vetosPhotonLeg2[i];
+  }
+  //
+
   muonsP4_->push_back(theDiMuon->daughter(0)->p4());
   muonsP4_->push_back(theDiMuon->daughter(1)->p4());
   diMuonP4_->push_back(theDiMuon->daughter(0)->p4()+theDiMuon->daughter(1)->p4());
@@ -228,37 +229,28 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   
   std::map<double, math::XYZTLorentzVectorD ,ZmumuPlusJetsAnalyzer::more> sortedJets;
   std::map<double, math::XYZTLorentzVectorD ,ZmumuPlusJetsAnalyzer::more> sortedJetsID;
-  std::map<double, math::XYZTLorentzVectorD ,ZmumuPlusJetsAnalyzer::more> sortedTagJetsID;
 
   for(unsigned int it = 0; it < jets->size() ; it++){
-    double scale = (!isMC_ && applyResidualJEC_) ?  corrector->correction( (*jets)[it].p4() ) : 1.0 ;
 
     if(verbose_){
-      std::cout << "L2L3Residual corrections " << scale << std::endl;
       pat::Jet* jet = const_cast<pat::Jet*>(&(*jets)[it]);
       std::cout << "Raw " << jet->correctedJet("raw").pt() << std::endl;
       std::cout << "Rel " << jet->correctedJet("rel").pt() << std::endl;
       std::cout << "Abs " << jet->correctedJet("abs").pt() << std::endl; 
     }
 
-    if((*jets)[it].p4().Pt()*scale < minCorrPt_) continue;
-    
-    sortedJets.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4() ) );
+    if((*jets)[it].p4().Pt() < minCorrPt_) continue;
 
     //add b-tag info
     jetsBtagHE_->push_back((*jets)[it].bDiscriminator("trackCountingHighEffBJetTags"));
     jetsBtagHP_->push_back((*jets)[it].bDiscriminator("trackCountingHighPurBJetTags"));
-                                            
-    if( jetID( &(*jets)[it], scale ) > minJetID_ ){
-      
-      sortedJetsID.insert( make_pair( (*jets)[it].p4().Pt()*scale ,scale*(*jets)[it].p4() ) );
+    
+    sortedJets.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4() ) );
+                                        
+    if( jetID( &(*jets)[it] ) < minJetID_ )  continue;
+
+    sortedJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4() ) );
      
-      if( isVBFH && isMC_ && (*jets)[it].genJet()!=0 && tagQuark1_!=0 && tagQuark2_!=0 &&
-	  (Geom::deltaR(tagQuark1_->p4(), ((*jets)[it].genJet())->p4()) < 0.3 ||
-	   Geom::deltaR(tagQuark2_->p4(), ((*jets)[it].genJet())->p4()) < 0.3)
-	  ) sortedTagJetsID.insert( make_pair( (*jets)[it].p4().Pt()*scale ,scale*(*jets)[it].p4() ) );
-      if( !isVBFH && isMC_ && (*jets)[it].genJet()!=0 ) sortedTagJetsID.insert( make_pair( (*jets)[it].p4().Pt()*scale ,scale*(*jets)[it].p4() ) );
-    }
   }
   
   for(CImap it = sortedJets.begin(); it != sortedJets.end() ; it++){
@@ -266,9 +258,6 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   }
   for(CImap it = sortedJetsID.begin(); it != sortedJetsID.end() ; it++){
     jetsIDP4_->push_back( it->second );
-  }
-  for(CImap it = sortedTagJetsID.begin(); it != sortedTagJetsID.end() ; it++){
-    tagJetsIDP4_->push_back( it->second );
   }
 
   double Mass = 0; double DEta = 0; CImap tag1,tag2;
@@ -313,9 +302,9 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 }
 
 
-unsigned int ZmumuPlusJetsAnalyzer::jetID( const pat::Jet* jet, const double scale){
+unsigned int ZmumuPlusJetsAnalyzer::jetID( const pat::Jet* jet){
 
-  if( (jet->pt()*scale)<10 ) return 99; // always pass jet ID
+  if( (jet->pt())<10 ) return 99; // always pass jet ID
 
   std::vector<reco::PFCandidatePtr> pfCandPtrs = jet->getPFConstituents();
 

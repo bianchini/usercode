@@ -40,8 +40,8 @@ void TMVAClassification(std::string ordering_ = "Pt"){
   factory->AddSpectator( "eta1",  "#eta_{tag1}" , 'F' );
   factory->AddSpectator( "eta2",  "#eta_{tag2}" , 'F' );
 
-  TString fSignalName        = "/data_CMS/cms/lbianchini/VbfJetsStudy/nTupleVbf_2525.root";
-  TString fBackgroundName    = "/data_CMS/cms/lbianchini/VbfJetsStudy/nTupleZJets_2525.root";
+  TString fSignalName        = "/data_CMS/cms/lbianchini/VbfJetsStudy/nTupleVbf.root";
+  TString fBackgroundName    = "/data_CMS/cms/lbianchini/VbfJetsStudy/nTupleZJets.root";
 
   TFile *fSignal(0); 
   TFile *fBackground(0); 

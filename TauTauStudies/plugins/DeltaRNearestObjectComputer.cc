@@ -84,14 +84,17 @@ DeltaRNearestObjectComputer<T>::produce(edm::Event & iEvent, const edm::EventSet
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
+#include "DataFormats/PatCandidates/interface/Tau.h"
 
 typedef DeltaRNearestObjectComputer<reco::Candidate>    DeltaRNearestCandidateComputer;
 typedef DeltaRNearestObjectComputer<pat::Muon>          DeltaRNearestMuonComputer;
 typedef DeltaRNearestObjectComputer<pat::Electron>      DeltaRNearestElectronComputer;
 typedef DeltaRNearestObjectComputer<pat::Jet>           DeltaRNearestJetComputer;
+typedef DeltaRNearestObjectComputer<pat::Tau>           DeltaRNearestTauComputer;
 
 #include "FWCore/Framework/interface/MakerMacros.h"
 DEFINE_FWK_MODULE(DeltaRNearestCandidateComputer);          
 DEFINE_FWK_MODULE(DeltaRNearestMuonComputer);          
 DEFINE_FWK_MODULE(DeltaRNearestElectronComputer);          
 DEFINE_FWK_MODULE(DeltaRNearestJetComputer);          
+DEFINE_FWK_MODULE(DeltaRNearestTauComputer);          

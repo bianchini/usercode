@@ -7,14 +7,26 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = 'START38_V13::All'
+from Configuration.PyReleaseValidation.autoCond import autoCond
+process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
+process.load('RecoJets.Configuration.RecoPFJets_cff')
+process.kt6PFJets.doRhoFastjet = True
+process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
+process.kt6PFJets.Ghost_EtaMax = cms.double(5.0)
+process.ak5PFJets.doAreaFastjet = True
+process.ak5PFJets.Rho_EtaMax = cms.double(4.4)
+process.ak5PFJets.Ghost_EtaMax = cms.double(5.0)
 
+process.ak5PFL1Fastjet.useCondDB = False
+
+process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets)
 
 process.source.fileNames = cms.untracked.vstring(
     #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_1.root',
-    'file:/data_CMS/cms/lbianchini/ZMuMu_RelVal386.root',
+    #'file:/data_CMS/cms/lbianchini/ZMuMu_RelVal386.root',
+    'file:/data_CMS/cms/lbianchini/F41A3437-7AED-DF11-A50D-002618943894.root',
     #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_1.root',
     )
 
@@ -24,7 +36,7 @@ process.source.fileNames = cms.untracked.vstring(
 
 postfix           = "PFlow"
 sample            = ""
-runOnMC           = True
+runOnMC           = False
 
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
@@ -75,22 +87,28 @@ from PhysicsTools.PatAlgos.tools.jetTools import *
 switchJetCollection(process,cms.InputTag('ak5PFJets'),
                     doJTA        = True,
                     doBTagging   = True,
-                    #jetCorrLabel = ('AK5PF', ['L2Relative', 'L3Absolute',]),
-                    jetCorrLabel = ('AK5', 'PF'),
+                    jetCorrLabel = ('AK5PF', ['L2Relative', 'L3Absolute',]),
                     doType1MET   = False,
                     genJetCollection=cms.InputTag("ak5GenJets"),
                     doJetID      = True,
                     jetIdLabel   = 'ak5'
                     )
 
+JEClevels = cms.vstring(['L2Relative', 'L3Absolute'])
+if runOnMC:
+    JEClevels = ['L1FastJet', 'L2Relative', 'L3Absolute']
+else:
+    JEClevels = ['L1FastJet', 'L2Relative', 'L3Absolute','L2L3Residual']
+
+process.patJetCorrFactors.levels = JEClevels
+process.patJetCorrFactors.rho = cms.InputTag('kt6PFJets','rho')
+
 addPFMuonIsolation(process,process.patMuons)
 addPFMuon(process,postfix)
 addTriggerMatchingMuon(process)
 getattr(process,"patMuons").embedTrack = True
 getattr(process,"patMuons"+postfix).embedTrack = True
-getattr(process,"muonTriggerMatchHLTMuons").pathNames=cms.vstring('*')
 addTriggerMatchingMuon(process,postfix)
-getattr(process,"muonTriggerMatchHLTMuons"+postfix).pathNames=cms.vstring('*')
 
 from Bianchi.Utilities.electrons import *
 addCutBasedID(process)
@@ -120,53 +138,52 @@ process.selectedSuperClusters = cms.EDFilter(
     )
 process.makeSCs = cms.Sequence(process.mergedSuperClusters*process.selectedSuperClusters)
 
-
-
     
 #########
 ## PAT
 
-process.selectedPatMuonsTriggerMatchUserEmbeddedPFlow = cms.EDProducer(
+process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
     "MuonsUserEmbedded",
-    muonTag = cms.InputTag("selectedPatMuonsTriggerMatchPFlow"),
+    muonTag = cms.InputTag("selectedPatMuonsTriggerMatch"),
     vertexTag = cms.InputTag("offlinePrimaryVertices")
     )
 
-process.tightMuonsPFlow = cms.EDFilter(
+process.tightMuons = cms.EDFilter(
     "PATMuonSelector",
-    src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbeddedPFlow"),
-    cut = cms.string("pt>20 && (eta<2.1&&eta>-2.1) && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.normalizedChi2<=10 && userFloat('dxyWrtPV')<0.2 &&  userFloat('PFRelIso03')<0.15 && (triggerObjectMatchesByPath('HLT_Mu7').size()!=0 || triggerObjectMatchesByPath('HLT_Mu11').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15').size()!=0)"),
+    src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
+    cut = cms.string("pt>20 && (eta<2.1&&eta>-2.1) && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.normalizedChi2<=10 && userFloat('dxyWrtPV')<0.2 && (ecalIso+hcalIso+trackIso)/pt<0.15 && (triggerObjectMatchesByPath('HLT_Mu11').size()!=0 || triggerObjectMatchesByPath('HLT_Mu9').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15_v1').size()!=0)"),
     filter = cms.bool(False)
     )
 
-process.looseMuonsPFlow = cms.EDFilter(
+process.looseMuons = cms.EDFilter(
     "PATMuonSelector",
-    src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbeddedPFlow"),
-    cut = cms.string("pt>20 && (eta<2.4&&eta>-2.4) && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.normalizedChi2<=10 && userFloat('dxyWrtPV')<0.2"),
+    src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
+    cut = cms.string("pt>10 && (eta<2.4&&eta>-2.4) && isGlobalMuon && globalTrack.isNonnull"),
     filter = cms.bool(False)
     )
 
-process.diMuonsPFlow = cms.EDProducer(
+process.diMuons = cms.EDProducer(
     "CandViewShallowCloneCombiner",
-    decay = cms.string("tightMuonsPFlow@- looseMuonsPFlow@+"),
+    decay = cms.string("tightMuons@- looseMuons@+"),
     cut   = cms.string("60 < mass < 120"),
     )
 
+
 process.atLeast1diMuon = cms.EDFilter(
     "CandViewCountFilter",
-    src = cms.InputTag("diMuonsPFlow"),
+    src = cms.InputTag("diMuons"),
     minNumber = cms.uint32(1),
     )
 
 getattr(process,"selectedPatElectronsTriggerMatch"+postfix).cut = cms.string('(eta<2.4&&eta>-2.4 && !isEBEEGap) && et>10')
 getattr(process,"selectedPatElectronsTriggerMatch").cut = cms.string('(eta<2.4&&eta>-2.4 && !isEBEEGap) && et>10')
 
-getattr(process,"selectedPatJets").cut = cms.string('pt>10')
+getattr(process,"selectedPatJets").cut = cms.string('pt>5')
 
 process.deltaRJetMuons = cms.EDProducer(
     "DeltaRNearestMuonComputer",
     probes = cms.InputTag("selectedPatJets"),
-    objects = cms.InputTag("looseMuonsPFlow"),
+    objects = cms.InputTag("looseMuons"),
     )
 
 process.selectedPatJetsNoMuons = cms.EDProducer(
@@ -178,11 +195,10 @@ process.selectedPatJetsNoMuons = cms.EDProducer(
 
 process.zPlusJetsAnalyzer = cms.EDAnalyzer(
     "ZmumuPlusJetsAnalyzer",
-    diMuons =  cms.InputTag("diMuonsPFlow"),
+    diMuons =  cms.InputTag("diMuons"),
     jets =  cms.InputTag("selectedPatJetsNoMuons"),
     isMC = cms.bool(runOnMC),
-    applyResidualJEC =  cms.bool(True),
-    minCorrPt = cms.untracked.double(20.),
+    minCorrPt = cms.untracked.double(5.),
     minJetID  = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
     verbose =  cms.untracked.bool(False),
     )
@@ -192,10 +208,11 @@ process.pat = cms.Sequence(
     process.primaryVertexFilter+
     process.scrapping +
     process.makeSCs +
+    process.fjSequence*
     process.patDefaultSequence*
-    process.selectedPatMuonsTriggerMatchUserEmbeddedPFlow*
-    (process.looseMuonsPFlow + process.tightMuonsPFlow)*
-    process.diMuonsPFlow*
+    process.selectedPatMuonsTriggerMatchUserEmbedded*
+    (process.looseMuons+ process.tightMuons)*
+    process.diMuons*
     process.atLeast1diMuon*
     process.deltaRJetMuons*
     process.selectedPatJetsNoMuons*
@@ -225,7 +242,7 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_offlinePrimaryVertices*_*_*',
     'keep *_particleFlow_*_*',
     'keep *_selectedPatJetsNoMuons_*_*',
-    'keep *_diMuonsPFlow_*_*'
+    'keep *_diMuons_*_*',
     )
                                    )
 

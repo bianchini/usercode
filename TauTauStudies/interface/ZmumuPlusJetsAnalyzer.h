@@ -15,9 +15,6 @@
 #include "DataFormats/RecoCandidate/interface/IsoDeposit.h"
 #include "DataFormats/PatCandidates/interface/Isolation.h"
 
-#include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
-#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
-
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1F.h"
@@ -38,7 +35,7 @@ class ZmumuPlusJetsAnalyzer : public edm::EDAnalyzer{
   explicit ZmumuPlusJetsAnalyzer(const edm::ParameterSet&);
   ~ZmumuPlusJetsAnalyzer();
 
-  unsigned int jetID( const pat::Jet* jet, const double scale);
+  unsigned int jetID( const pat::Jet* jet);
 
   void beginJob() ;
   void analyze(const edm::Event&  iEvent, const edm::EventSetup& iSetup);
@@ -50,11 +47,9 @@ class ZmumuPlusJetsAnalyzer : public edm::EDAnalyzer{
   TTree* tree_;
   edm::InputTag diMuonTag_;
   edm::InputTag jetsTag_;
-  const reco::GenParticle *tagQuark1_, *tagQuark2_;
 
   bool isMC_;
   bool verbose_;
-  bool applyResidualJEC_;
   float minCorrPt_;
   float minJetID_;
 
@@ -62,7 +57,6 @@ class ZmumuPlusJetsAnalyzer : public edm::EDAnalyzer{
   std::vector< double >* jetsBtagHP_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDP4_; 
-  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* tagJetsIDP4_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDbyMjjP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDbyDEtaP4_; 
 
