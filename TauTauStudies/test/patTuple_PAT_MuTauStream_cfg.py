@@ -1,9 +1,9 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 10
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(500) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
@@ -65,6 +65,25 @@ process.scrapping = cms.EDFilter(
 process.allEventsFilter = cms.EDFilter(
     "AllEventsFilter"
     )
+process.vertexScrapingFilter = cms.EDFilter(
+    "AllEventsFilter"
+    )
+process.oneMuonFilter = cms.EDFilter(
+    "AllEventsFilter"
+    )
+process.noElecFilter = cms.EDFilter(
+    "AllEventsFilter"
+    )
+process.muonLegFilter = cms.EDFilter(
+    "AllEventsFilter"
+    )
+process.tauLegFilter = cms.EDFilter(
+    "AllEventsFilter"
+    )
+process.atLeastOneDiTauFilter = cms.EDFilter(
+    "AllEventsFilter"
+    )
+
 
 from PhysicsTools.PatAlgos.tools.coreTools import *
 
@@ -219,6 +238,7 @@ process.tauLeg = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("selectedPatTaus"),
     cut = cms.string("pt>20 && (eta<2.3&&eta>-2.3) && tauID('leadingTrackFinding')>0.5 && tauID('byLooseIsolation')>0.5 && tauID('againstMuon') && leadPFChargedHadrCand.mva_e_pi < 0.6 && tauID('againstElectronCrackRem')>0.5 "),
+    #cut = cms.string("pt>20 && (eta<2.3&&eta>-2.3) "),
     filter = cms.bool(False)
     )
 
@@ -238,7 +258,18 @@ process.noElectronVeto = cms.EDFilter(
     minNumber = cms.uint32(0),
     maxNumber = cms.uint32(0),
     )
-
+process.oneMuonLeg = cms.EDFilter(
+    "CandViewCountFilter",
+    src = cms.InputTag("muonLeg"),
+    minNumber = cms.uint32(1),
+    maxNumber = cms.uint32(999),
+    )
+process.oneTauLeg = cms.EDFilter(
+    "CandViewCountFilter",
+    src = cms.InputTag("tauLeg"),
+    minNumber = cms.uint32(1),
+    maxNumber = cms.uint32(999),
+    )
 
 process.load("Bianchi.Utilities.diTausReconstruction_cff")
 process.diTau = process.muTauPairs.clone()
@@ -290,27 +321,28 @@ process.selectedPatJetsNoMuonsNoTaus = cms.EDProducer(
 process.muTauStreamAnalyzer = cms.EDAnalyzer(
     "MuTauStreamAnalyzer",
     diTaus =  cms.InputTag("selectedDiTau"),
-    jets =  cms.InputTag("selectedPatJetsNoMuonsNoTaus"),
+    jets =  cms.InputTag("selectedPatJetsNoMuons"),
     isMC = cms.bool(runOnMC),
+    deltaRLegJet  = cms.untracked.double(0.3),
     minCorrPt = cms.untracked.double(5.),
     minJetID  = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
-    verbose =  cms.untracked.bool(True),
+    verbose =  cms.untracked.bool(False),
     )
 
 process.pat = cms.Sequence(
     process.allEventsFilter+
-    process.primaryVertexFilter+
-    process.scrapping +
+    (process.primaryVertexFilter+process.scrapping)*
+    process.vertexScrapingFilter +
     process.makeSCs +
     process.fjSequence*
     process.patDefaultSequence*
     process.selectedPatMuonsTriggerMatchUserEmbedded*
     process.looseMuons*
-    process.secondLeptonVeto*
-    process.noElectronVeto*
-    (process.muonLeg+process.tauLeg)*
-    (process.diTau*process.selectedDiTau)*
-    process.atLeast1selectedDiTau+
+    (process.secondLeptonVeto*process.oneMuonFilter) +
+    (process.noElectronVeto*process.noElecFilter) +
+    (process.muonLeg * process.oneMuonLeg * process.muonLegFilter) +
+    (process.tauLeg * process.oneTauLeg * process.tauLegFilter) +
+    (process.diTau*process.selectedDiTau*process.atLeast1selectedDiTau*process.atLeastOneDiTauFilter) +
     (process.deltaRJetMuons*process.selectedPatJetsNoMuons)*
     (process.deltaRJetTaus*process.selectedPatJetsNoMuonsNoTaus)*
     process.muTauStreamAnalyzer+
