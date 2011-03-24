@@ -52,6 +52,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   bool verbose_;
   float minCorrPt_;
   float minJetID_;
+  float deltaRLegJet_;
 
   std::vector< double >* jetsBtagHE_;
   std::vector< double >* jetsBtagHP_;
@@ -60,7 +61,12 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
  
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauVisP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauCAP4_; 
-  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauSVfitP4_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauICAP4_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauSVfit1P4_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauSVfit2P4_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauSVfit3P4_; 
+
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauLegsP4_; 
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* METP4_;
   
@@ -72,6 +78,9 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   float MtLeg1_;
   float numPV_;
   int numOfDiTaus_;
+  int decayMode_;
+  float visibleTauMass_;
+  int tightestHPSWP_;
 
 };
 

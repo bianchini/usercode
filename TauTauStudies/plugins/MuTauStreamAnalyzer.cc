@@ -20,6 +20,7 @@
 #include "DataFormats/RecoCandidate/interface/IsoDepositDirection.h"
 #include "DataFormats/RecoCandidate/interface/IsoDepositVetos.h"
 
+#include "DataFormats/TauReco/interface/PFTauTagInfo.h"
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
@@ -38,6 +39,7 @@ MuTauStreamAnalyzer::MuTauStreamAnalyzer(const edm::ParameterSet & iConfig){
   diTauTag_ = iConfig.getParameter<edm::InputTag>("diTaus");
   jetsTag_ = iConfig.getParameter<edm::InputTag>("jets");
   isMC_ =  iConfig.getParameter<bool>("isMC");
+  deltaRLegJet_  =  iConfig.getUntrackedParameter<double>("deltaRLegJet",0.3);
   minCorrPt_  =  iConfig.getUntrackedParameter<double>("minCorrPt",10.);
   minJetID_   =  iConfig.getUntrackedParameter<double>("minJetID",0.5);
   verbose_ =  iConfig.getUntrackedParameter<bool>("verbose",false);
@@ -56,7 +58,13 @@ void MuTauStreamAnalyzer::beginJob(){
 
   diTauVisP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   diTauCAP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  diTauSVfitP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  diTauICAP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  diTauSVfit1P4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  diTauSVfit2P4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  diTauSVfit3P4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+
+  diTauLegsP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  METP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
 
   tree_->Branch("jetsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsP4_);
@@ -67,7 +75,12 @@ void MuTauStreamAnalyzer::beginJob(){
 
   tree_->Branch("diTauVisP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",  &diTauVisP4_);
   tree_->Branch("diTauCAP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",   &diTauCAP4_);
-  tree_->Branch("diTauSVfitP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diTauSVfitP4_);
+  tree_->Branch("diTauICAP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",   &diTauICAP4_);
+  tree_->Branch("diTauSVfit1P4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diTauSVfit1P4_);
+  tree_->Branch("diTauSVfit2P4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diTauSVfit2P4_);
+  tree_->Branch("diTauSVfit3P4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diTauSVfit3P4_);
+
+  tree_->Branch("diTauLegsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diTauLegsP4_);
 
   tree_->Branch("METP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&METP4_);
   tree_->Branch("sumEt",&sumEt_,"sumEt/F");
@@ -86,22 +99,32 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("event",&event_,"event/F");
   tree_->Branch("numPV",&numPV_,"numPV/F");
   tree_->Branch("numOfDiTaus",&numOfDiTaus_,"numOfDiTaus/I");
+  tree_->Branch("decayMode",&decayMode_,"decayMode/I");
+  tree_->Branch("tightestHPSWP",&tightestHPSWP_,"tightestHPSWP/I");
+  tree_->Branch("visibleTauMass",&visibleTauMass_,"visibleTauMass/F");
 
 }
 
 
 MuTauStreamAnalyzer::~MuTauStreamAnalyzer(){
-  delete jetsP4_; delete METP4_; delete diTauVisP4_; delete diTauCAP4_; delete diTauSVfitP4_;
+  delete jetsP4_; delete jetsIDP4_; delete METP4_; delete diTauVisP4_; delete diTauCAP4_; delete diTauICAP4_; 
+  delete diTauSVfit1P4_; delete diTauSVfit2P4_; delete diTauSVfit3P4_;
+  delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_;
 }
 
 void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
+
 
 
   jetsP4_->clear();
   jetsIDP4_->clear();
   diTauVisP4_->clear();
   diTauCAP4_->clear();
-  diTauSVfitP4_->clear();
+  diTauICAP4_->clear();
+  diTauSVfit1P4_->clear();
+  diTauSVfit2P4_->clear();
+  diTauSVfit3P4_->clear();
+  diTauLegsP4_->clear();
   METP4_->clear();
 
   
@@ -141,9 +164,66 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     cout << " No diTau !!! " << endl;
     return;
   } else if(diTaus->size()>1 && verbose_){
-    cout << "WARNING: "<< diTaus->size() << "  diTaus found in the event !!! " << endl;
+    cout << "WARNING: "<< diTaus->size() << "  diTaus found in the event !!! We will select only one" << endl;
   }
-  theDiTau = &(*diTaus)[0];
+  // choose the diTau with most isolated tau leg
+
+  double sumIsoTau = 999.;
+  double highestPt = 0.;
+  unsigned int index = 0;
+
+  std::vector<const pat::Tau*> identifiedTaus;
+  std::vector<const pat::Tau*> not_identifiedTaus;
+
+  for(unsigned int i=0; i<diTaus->size(); i++){
+    const pat::Tau*  tau_i = dynamic_cast<const pat::Tau*>(  ((*diTaus)[i].leg2()).get() );
+    if(tau_i->tauID("leadingTrackFinding")>0.5) identifiedTaus.push_back(tau_i);
+    else not_identifiedTaus.push_back(tau_i);
+  }
+
+  for(unsigned int i=0; i<identifiedTaus.size(); i++){
+    if(verbose_) cout << "Testing isolation of " << i << "th tau" << endl;
+
+    const pat::Tau*  tau_i = identifiedTaus[i];
+
+    double sumIsoTau_i = 0.;
+    sumIsoTau_i += tau_i->isolationPFChargedHadrCandsPtSum();
+    sumIsoTau_i += tau_i->isolationPFGammaCandsEtSum();
+    //sumIsoTau_i += tau_i->isolationPFNeutrHadrCandsEtSum();
+    if(sumIsoTau_i<sumIsoTau){
+      index = i;
+      sumIsoTau = sumIsoTau_i;
+    } 
+  }
+
+  for(unsigned int i=0; i<not_identifiedTaus.size(); i++){ // choose the PFTau with the highest pt charged hadron
+
+    if(identifiedTaus.size()>0) continue;
+    if(verbose_) cout << "Testing max pt of charged hadron in the " << i << "th tau" << endl;
+    const pat::Tau*  tau_i = not_identifiedTaus[i];
+    double highestPt_i = 0.;
+  
+    if(!(tau_i->pfTauTagInfoRef()).isNonnull()) continue;
+    const PFCandidateRefVector pfChTau_i = tau_i->pfTauTagInfoRef()->PFChargedHadrCands();
+
+    for(unsigned k = 0; k<pfChTau_i.size(); k++){
+      PFCandidateRef hadron = pfChTau_i.at(k);
+      if(hadron->pt()>highestPt_i){
+	highestPt_i = hadron->pt();
+      }
+    }
+
+    if(highestPt_i>highestPt){
+      index = i;
+      highestPt = highestPt_i;
+    }
+  }
+
+
+  if(verbose_) cout << "Chosen index " << index << endl;
+  identifiedTaus.clear(); not_identifiedTaus.clear();
+
+  theDiTau = &(*diTaus)[index];
 
   numOfDiTaus_ = diTaus->size();
   METP4_->push_back((*met)[0].p4());
@@ -152,6 +232,22 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
   const pat::Muon* leg1 = dynamic_cast<const pat::Muon*>( (theDiTau->leg1()).get() );
   const pat::Tau*  leg2 = dynamic_cast<const pat::Tau*>(  (theDiTau->leg2()).get() );
+
+  diTauLegsP4_->push_back(leg1->p4());
+  diTauLegsP4_->push_back(leg2->p4());
+
+  if((leg2->signalPFChargedHadrCands()).size()==1 && (leg2->signalPFGammaCands()).size()==0) decayMode_ = 0; 
+  else if((leg2->signalPFChargedHadrCands()).size()==1 && (leg2->signalPFGammaCands()).size()>0)  decayMode_ = 1; 
+  else if((leg2->signalPFChargedHadrCands()).size()==3) decayMode_ = 2; 
+  else  decayMode_ = -99;
+
+  visibleTauMass_ = leg2->mass();
+
+  tightestHPSWP_ = 0;
+  if(leg2->tauID("byLooseIsolation")>0.5)  tightestHPSWP_++;
+  if(leg2->tauID("byMediumIsolation")>0.5) tightestHPSWP_++;
+  if(leg2->tauID("byTightIsolation")>0.5)  tightestHPSWP_++;
+
 
   dxy1_ = vertexes->size()!=0 ? leg1->globalTrack()->dxy( (*vertexes)[0].position() ) : -999;
   dxy2_ = (vertexes->size()!=0 && 
@@ -168,7 +264,6 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   vetosNeutralLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
   vetosPhotonLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.05));
   vetosPhotonLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
-
   
 
   chIsoLeg1_ = 
@@ -193,8 +288,11 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   //
 
   diTauVisP4_->push_back( theDiTau->p4Vis() );
-  diTauCAP4_->push_back( theDiTau->p4ImprovedCollinearApprox() );
-  diTauSVfitP4_->push_back( theDiTau->svFitSolution("psKine_MEt_ptBalance","",0)->p4()  );
+  diTauCAP4_->push_back( theDiTau->p4CollinearApprox() );
+  diTauICAP4_->push_back( theDiTau->p4ImprovedCollinearApprox() );
+  diTauSVfit1P4_->push_back( theDiTau->svFitSolution("psKine","",0)->p4()  );
+  diTauSVfit2P4_->push_back( theDiTau->svFitSolution("psKine_MEt","",0)->p4()  );
+  diTauSVfit3P4_->push_back( theDiTau->svFitSolution("psKine_MEt_ptBalance","",0)->p4()  );
 
   run_   = iEvent.run();
   event_ = (iEvent.eventAuxiliary()).event();
@@ -203,6 +301,14 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedJetsID;
 
   for(unsigned int it = 0; it < jets->size() ; it++){
+
+    math::XYZTLorentzVectorD leg2p4 = ((leg2->pfTauTagInfoRef()).isNonnull() && (leg2->pfTauTagInfoRef()->pfjetRef()).isNonnull()) ? leg2->pfTauTagInfoRef()->pfjetRef()->p4() : leg2->p4();
+
+    if( Geom::deltaR((*jets)[it].p4(),leg1->p4())<deltaRLegJet_ || 
+	Geom::deltaR((*jets)[it].p4(), leg2p4 )<deltaRLegJet_ ){
+      if(verbose_) cout << "The jet at (" <<(*jets)[it].pt()<<","<<(*jets)[it].eta()<<") is closer than "<<deltaRLegJet_ << " from one of the legs" << endl;  
+      continue;
+    }
 
     if(verbose_){
       pat::Jet* jet = const_cast<pat::Jet*>(&(*jets)[it]);
