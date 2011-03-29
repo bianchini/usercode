@@ -173,6 +173,11 @@ getattr(process,"patTaus").tauIDSources = cms.PSet(
     againstMuon = cms.InputTag("hpsPFTauDiscriminationAgainstMuon")
     )
 
+process.tauMatch.maxDeltaR = 0.5
+process.tauMatch.resolveAmbiguities = cms.bool(False)
+process.tauGenJetMatch.resolveAmbiguities = cms.bool(False)
+process.tauGenJetMatch.maxDeltaR = 0.15
+process.tauGenJetMatch.maxDPtRel = 999
 ## <\tau part>
 
 addPFMuonIsolation(process,process.patMuons)
@@ -230,15 +235,16 @@ process.looseMuons = cms.EDFilter(
 process.muonLeg = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
-    cut = cms.string("pt>15 && (eta<2.1&&eta>-2.1) && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.normalizedChi2<=10 && userFloat('dxyWrtPV')<0.2 && userFloat('PFRelIso04')<0.1 && (triggerObjectMatchesByPath('HLT_Mu11').size()!=0 || triggerObjectMatchesByPath('HLT_Mu9').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15_v1').size()!=0)"),
+    #cut = cms.string("pt>15 && (eta<2.1&&eta>-2.1) && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.normalizedChi2<=10 && userFloat('dxyWrtPV')<0.2 && userFloat('PFRelIso04')<0.1 && (triggerObjectMatchesByPath('HLT_Mu11').size()!=0 || triggerObjectMatchesByPath('HLT_Mu9').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15_v1').size()!=0)"),
+    cut = cms.string("pt>15 && (eta<2.1&&eta>-2.1) && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.normalizedChi2<=10 && userFloat('dxyWrtPV')<0.2 && userFloat('PFRelIso04')<999 && (triggerObjectMatchesByPath('HLT_Mu11').size()!=0 || triggerObjectMatchesByPath('HLT_Mu9').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15_v1').size()!=0)"),
     filter = cms.bool(False)
     )
 
 process.tauLeg = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("selectedPatTaus"),
-    cut = cms.string("pt>20 && (eta<2.3&&eta>-2.3) && tauID('leadingTrackFinding')>0.5 && tauID('byLooseIsolation')>0.5 && tauID('againstMuon') && leadPFChargedHadrCand.mva_e_pi < 0.6 && tauID('againstElectronCrackRem')>0.5 "),
-    #cut = cms.string("pt>20 && (eta<2.3&&eta>-2.3) "),
+    #cut = cms.string("pt>20 && (eta<2.3&&eta>-2.3) && tauID('leadingTrackFinding')>0.5 && tauID('byLooseIsolation')>0.5 && tauID('againstMuon') && leadPFChargedHadrCand.mva_e_pi < 0.6 && tauID('againstElectronCrackRem')>0.5 "),
+    cut = cms.string("pt>20 && (eta<2.3&&eta>-2.3) && tauID('leadingTrackFinding')>0.5 && tauID('byLooseIsolation')>-1 && tauID('againstMuon') && leadPFChargedHadrCand.mva_e_pi < 0.6 && tauID('againstElectronCrackRem')>0.5 "),
     filter = cms.bool(False)
     )
 
@@ -282,7 +288,8 @@ if not runOnMC:
 process.selectedDiTau = cms.EDFilter(
     "MuTauPairSelector",
     src = cms.InputTag("diTau"),
-    cut = cms.string("charge==0 && mt1MET<40")
+    #cut = cms.string("charge==0 && mt1MET<40")
+    cut = cms.string("charge>-99")
     )
 
 process.atLeast1selectedDiTau = cms.EDFilter(
@@ -326,7 +333,8 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     deltaRLegJet  = cms.untracked.double(0.3),
     minCorrPt = cms.untracked.double(5.),
     minJetID  = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
-    verbose =  cms.untracked.bool(False),
+    applyTauSignalSel =  cms.bool( True ),
+    verbose =  cms.untracked.bool( False ),
     )
 
 process.pat = cms.Sequence(

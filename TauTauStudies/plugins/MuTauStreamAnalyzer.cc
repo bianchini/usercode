@@ -20,6 +20,9 @@
 #include "DataFormats/RecoCandidate/interface/IsoDepositDirection.h"
 #include "DataFormats/RecoCandidate/interface/IsoDepositVetos.h"
 
+#include "DataFormats/JetReco/interface/GenJet.h"
+#include "DataFormats/JetReco/interface/GenJetCollection.h"
+
 #include "DataFormats/TauReco/interface/PFTauTagInfo.h"
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -42,6 +45,7 @@ MuTauStreamAnalyzer::MuTauStreamAnalyzer(const edm::ParameterSet & iConfig){
   deltaRLegJet_  =  iConfig.getUntrackedParameter<double>("deltaRLegJet",0.3);
   minCorrPt_  =  iConfig.getUntrackedParameter<double>("minCorrPt",10.);
   minJetID_   =  iConfig.getUntrackedParameter<double>("minJetID",0.5);
+  applyTauSignalSel_ = iConfig.getParameter<bool>("applyTauSignalSel");
   verbose_ =  iConfig.getUntrackedParameter<bool>("verbose",false);
 }
 
@@ -50,11 +54,14 @@ void MuTauStreamAnalyzer::beginJob(){
   edm::Service<TFileService> fs;
   tree_ = fs->make<TTree>("tree","qqH tree");
 
+  tRandom_ = new TRandom3();
+ 
   jetsBtagHE_  = new std::vector< double >();
   jetsBtagHP_  = new std::vector< double >();
 
   jetsP4_          = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   jetsIDP4_        = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  genJetsIDP4_       = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
   diTauVisP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   diTauCAP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
@@ -64,11 +71,14 @@ void MuTauStreamAnalyzer::beginJob(){
   diTauSVfit3P4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
   diTauLegsP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  genDiTauLegsP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   METP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  genMETP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
 
   tree_->Branch("jetsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsP4_);
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
+  tree_->Branch("genJetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genJetsIDP4_);
   
   tree_->Branch("jetsBtagHE","std::vector<double> ",&jetsBtagHE_);
   tree_->Branch("jetsBtagHP","std::vector<double> ",&jetsBtagHP_);
@@ -81,8 +91,10 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("diTauSVfit3P4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diTauSVfit3P4_);
 
   tree_->Branch("diTauLegsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diTauLegsP4_);
+  tree_->Branch("genDiTauLegsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genDiTauLegsP4_);
 
   tree_->Branch("METP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&METP4_);
+  tree_->Branch("genMETP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genMETP4_);
   tree_->Branch("sumEt",&sumEt_,"sumEt/F");
   tree_->Branch("MtLeg1",&MtLeg1_,"MtLeg1/F");
 
@@ -103,6 +115,11 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("tightestHPSWP",&tightestHPSWP_,"tightestHPSWP/I");
   tree_->Branch("visibleTauMass",&visibleTauMass_,"visibleTauMass/F");
 
+  tree_->Branch("isTauLegMatched",&isTauLegMatched_,"isTauLegMatched/I");
+  tree_->Branch("isMuLegMatched",&isMuLegMatched_,"isMuLegMatched/I");
+
+  tree_->Branch("diTauCharge",&diTauCharge_,"diTauCharge/F");
+
 }
 
 
@@ -110,6 +127,8 @@ MuTauStreamAnalyzer::~MuTauStreamAnalyzer(){
   delete jetsP4_; delete jetsIDP4_; delete METP4_; delete diTauVisP4_; delete diTauCAP4_; delete diTauICAP4_; 
   delete diTauSVfit1P4_; delete diTauSVfit2P4_; delete diTauSVfit3P4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_;
+  delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;
+  delete tRandom_ ;
 }
 
 void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -127,6 +146,9 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   diTauLegsP4_->clear();
   METP4_->clear();
 
+  genJetsIDP4_->clear();
+  genDiTauLegsP4_->clear();
+  genMETP4_->clear();
   
   edm::Handle<PATMuTauPairCollection> diTauHandle;
   iEvent.getByLabel(diTauTag_,diTauHandle);
@@ -158,6 +180,12 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       << "No MET label available \n";
   const pat::METCollection* met = metHandle.product();
 
+  edm::Handle<reco::GenJetCollection> tauGenJetsHandle;
+  iEvent.getByLabel(edm::InputTag("tauGenJetsSelectorAllHadrons"),tauGenJetsHandle);
+  if( !tauGenJetsHandle.isValid() )  
+    edm::LogError("DataNotAvailable")
+      << "No gen jet label available \n";
+  const reco::GenJetCollection* tauGenJets = tauGenJetsHandle.product();
   
   const PATMuTauPair *theDiTau = 0;
   if(diTaus->size()<1){
@@ -169,72 +197,122 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   // choose the diTau with most isolated tau leg
 
   double sumIsoTau = 999.;
-  double highestPt = 0.;
+  //double highestPt = 0.;
   unsigned int index = 0;
 
-  std::vector<const pat::Tau*> identifiedTaus;
-  std::vector<const pat::Tau*> not_identifiedTaus;
+  std::vector<unsigned int> identifiedTaus;
+  std::vector<unsigned int> looseIsoTaus;
+  //std::vector<unsigned int> not_identifiedTaus;
 
   for(unsigned int i=0; i<diTaus->size(); i++){
     const pat::Tau*  tau_i = dynamic_cast<const pat::Tau*>(  ((*diTaus)[i].leg2()).get() );
-    if(tau_i->tauID("leadingTrackFinding")>0.5) identifiedTaus.push_back(tau_i);
-    else not_identifiedTaus.push_back(tau_i);
+    if(tau_i->tauID("leadingTrackFinding")<0.5) continue;
+    identifiedTaus.push_back(i);
+    if(tau_i->tauID("byLooseIsolation")>0.5) looseIsoTaus.push_back(i);
+    //else not_identifiedTaus.push_back(i);
   }
 
-  for(unsigned int i=0; i<identifiedTaus.size(); i++){
-    if(verbose_) cout << "Testing isolation of " << i << "th tau" << endl;
-
-    const pat::Tau*  tau_i = identifiedTaus[i];
-
-    double sumIsoTau_i = 0.;
-    sumIsoTau_i += tau_i->isolationPFChargedHadrCandsPtSum();
-    sumIsoTau_i += tau_i->isolationPFGammaCandsEtSum();
-    //sumIsoTau_i += tau_i->isolationPFNeutrHadrCandsEtSum();
-    if(sumIsoTau_i<sumIsoTau){
-      index = i;
-      sumIsoTau = sumIsoTau_i;
-    } 
+  if(looseIsoTaus.size()>0 /*&& applyTauSignalSel_*/ ){
+    identifiedTaus.swap(looseIsoTaus);
+    if(verbose_) cout << identifiedTaus.size() << "  isolated taus found..." << endl;
+    for(unsigned int i=0; i<identifiedTaus.size(); i++){
+      if(verbose_) cout << "Testing isolation of " << i << "th tau" << endl;
+      const pat::Tau*  tau_i = dynamic_cast<const pat::Tau*>(  ((*diTaus)[ identifiedTaus[i] ].leg2()).get() );
+      double sumIsoTau_i = 0.;
+      sumIsoTau_i += tau_i->isolationPFChargedHadrCandsPtSum();
+      sumIsoTau_i += tau_i->isolationPFGammaCandsEtSum();
+      //sumIsoTau_i += tau_i->isolationPFNeutrHadrCandsEtSum();
+      if(sumIsoTau_i<sumIsoTau){
+	index = identifiedTaus[i];
+	sumIsoTau = sumIsoTau_i;
+      } 
+    }
+  } 
+  else if(identifiedTaus.size()>0 /*&& !applyTauSignalSel_*/ ) {
+    index = tRandom_->Integer( identifiedTaus.size() );
+    if(verbose_) cout << "Random selection has chosen index " << index << endl;   
   }
 
-  for(unsigned int i=0; i<not_identifiedTaus.size(); i++){ // choose the PFTau with the highest pt charged hadron
-
-    if(identifiedTaus.size()>0) continue;
-    if(verbose_) cout << "Testing max pt of charged hadron in the " << i << "th tau" << endl;
-    const pat::Tau*  tau_i = not_identifiedTaus[i];
-    double highestPt_i = 0.;
-  
-    if(!(tau_i->pfTauTagInfoRef()).isNonnull()) continue;
-    const PFCandidateRefVector pfChTau_i = tau_i->pfTauTagInfoRef()->PFChargedHadrCands();
-
-    for(unsigned k = 0; k<pfChTau_i.size(); k++){
+    /*
+      for(unsigned int i=0; identifiedTaus.size()>0 && !applyTauSignalSel_ && i<not_identifiedTaus.size(); i++){ 
+      //if(identifiedTaus.size()>0) continue;
+      if(verbose_) cout << "Testing max pt of charged hadron in the " << i << "th tau" << endl;
+      const pat::Tau*  tau_i = dynamic_cast<const pat::Tau*>(  ((*diTaus)[ not_identifiedTaus[i] ].leg2()).get() );
+      double highestPt_i = 0.;
+      if(!(tau_i->pfTauTagInfoRef()).isNonnull()) continue;
+      const PFCandidateRefVector pfChTau_i = tau_i->pfTauTagInfoRef()->PFChargedHadrCands();
+      for(unsigned k = 0; k<pfChTau_i.size(); k++){
       PFCandidateRef hadron = pfChTau_i.at(k);
       if(hadron->pt()>highestPt_i){
-	highestPt_i = hadron->pt();
+      highestPt_i = hadron->pt();
       }
-    }
-
-    if(highestPt_i>highestPt){
-      index = i;
+      }
+      if(highestPt_i>highestPt){
+      index =  not_identifiedTaus[i] ;
       highestPt = highestPt_i;
-    }
-  }
+      }
+      }
+    */
 
 
   if(verbose_) cout << "Chosen index " << index << endl;
-  identifiedTaus.clear(); not_identifiedTaus.clear();
+  identifiedTaus.clear(); /*not_identifiedTaus.clear(); */ looseIsoTaus.clear();
 
   theDiTau = &(*diTaus)[index];
 
   numOfDiTaus_ = diTaus->size();
+  diTauCharge_ = theDiTau->charge();
   METP4_->push_back((*met)[0].p4());
+  if(isMC_) genMETP4_->push_back( (*met)[0].genMET()->p4() );
   sumEt_  = (*met)[0].sumEt();
   MtLeg1_ =  theDiTau->mt1MET();
+  isMuLegMatched_  = 0;
+  isTauLegMatched_ = 0;
 
   const pat::Muon* leg1 = dynamic_cast<const pat::Muon*>( (theDiTau->leg1()).get() );
   const pat::Tau*  leg2 = dynamic_cast<const pat::Tau*>(  (theDiTau->leg2()).get() );
 
   diTauLegsP4_->push_back(leg1->p4());
   diTauLegsP4_->push_back(leg2->p4());
+  
+  if(isMC_){
+    if( (leg1->genParticleById(13,0,true)).isNonnull() ){
+      genDiTauLegsP4_->push_back( leg1->genParticleById(13,0,true)->p4() );
+      isMuLegMatched_ = 1;
+    }
+    else{
+      genDiTauLegsP4_->push_back( math::XYZTLorentzVectorD(0,0,0,0) );
+      if(verbose_){
+	for(unsigned int l = 0; l < leg1->genParticlesSize() ; l++){
+	  if((leg1->genParticleRefs())[l]->pt() < 0.5 ) continue;
+	  cout << "Mu leg matchged to particle " << (leg1->genParticleRefs())[l]->pdgId() 
+	       << " with pt " << (leg1->genParticleRefs())[l]->pt()
+	       << endl;
+	}
+      }
+    }
+
+    if( leg2->genJet() !=0 ) genDiTauLegsP4_->push_back(leg2->genJet()->p4());
+    else{
+      genDiTauLegsP4_->push_back( math::XYZTLorentzVectorD(0,0,0,0) );
+      if(verbose_) cout << "WARNING: no genJet matched to the leg2 with eta,phi " << leg2->eta() << ", " << leg2->phi() << endl;
+    }
+
+    bool tauHadMatched = false;
+    for(unsigned int k = 0; k < tauGenJets->size(); k++){
+      if( Geom::deltaR( (*tauGenJets)[k].p4(),leg2->p4() ) < 0.15 ) tauHadMatched = true;
+    }
+
+    if( (leg2->genParticleById(15,0,true)).isNonnull() && tauHadMatched ) isTauLegMatched_ = 1;
+    else if(verbose_){
+      for(unsigned int l = 0; l < leg2->genParticlesSize() ; l++){
+	if((leg2->genParticleRefs())[l]->pt() < 0.5 ) continue;
+	cout << "Tau leg matchged to particle " << (leg2->genParticleRefs())[l]->pdgId() 
+	     << " with pt " << (leg2->genParticleRefs())[l]->pt()
+	     << endl;
+      }
+    }
+  }
 
   if((leg2->signalPFChargedHadrCands()).size()==1 && (leg2->signalPFGammaCands()).size()==0) decayMode_ = 0; 
   else if((leg2->signalPFChargedHadrCands()).size()==1 && (leg2->signalPFGammaCands()).size()>0)  decayMode_ = 1; 
@@ -299,6 +377,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   
   std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedJets;
   std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedJetsID;
+  std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedGenJetsID;
 
   for(unsigned int it = 0; it < jets->size() ; it++){
 
@@ -332,6 +411,10 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     jetsBtagHP_->push_back((*jets)[it].bDiscriminator("trackCountingHighPurBJetTags"));
                                 
     sortedJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4() ) );
+    if(isMC_){
+      if((*jets)[it].genJet() != 0) sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].genJet()->p4() ) );
+      else sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Pt() , math::XYZTLorentzVectorD(0,0,0,0) ) );
+    }
      
   }
   
@@ -340,6 +423,9 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   }
   for(CImap it = sortedJetsID.begin(); it != sortedJetsID.end() ; it++){
     jetsIDP4_->push_back( it->second );
+  }
+  for(CImap it = sortedGenJetsID.begin(); it != sortedGenJetsID.end() ; it++){
+    genJetsIDP4_->push_back( it->second );
   }
 
 

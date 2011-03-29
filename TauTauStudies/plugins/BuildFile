@@ -8,6 +8,7 @@
 <use name=DataFormats/PatCandidates>
 <use name=DataFormats/RecoCandidate>
 <use name=DataFormats/JetReco>
+<use name=DataFormats/TauReco>
 <use name=DataFormats/HepMCCandidate>
 <use name=DataFormats/GsfTrackReco>
 <use name=DataFormats/Math>

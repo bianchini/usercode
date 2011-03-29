@@ -18,6 +18,8 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1F.h"
+#include <TRandom3.h>
+
 
 #include <string>
 
@@ -45,6 +47,9 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
 
   TFile* file_;
   TTree* tree_;
+
+  TRandom3* tRandom_;
+ 
   edm::InputTag diTauTag_;
   edm::InputTag jetsTag_;
 
@@ -57,7 +62,8 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< double >* jetsBtagHE_;
   std::vector< double >* jetsBtagHP_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsP4_; 
-  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDP4_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDP4_;
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* genJetsIDP4_; 
  
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauVisP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauCAP4_; 
@@ -67,8 +73,10 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauSVfit3P4_; 
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauLegsP4_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* genDiTauLegsP4_; 
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* METP4_;
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* genMETP4_;
   
   float run_,event_;
   float sumEt_;
@@ -81,6 +89,11 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   int decayMode_;
   float visibleTauMass_;
   int tightestHPSWP_;
+  bool applyTauSignalSel_;
+  int isTauLegMatched_;
+  int isMuLegMatched_;
+
+  float diTauCharge_;
 
 };
 
