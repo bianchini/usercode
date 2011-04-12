@@ -1,8 +1,0 @@
-cmsrel CMSSW_3_9_7
-cd src
-cvs co -r Lorenzo21Feb -d Bianchi/eToTaufakeRate/ UserCode/Bianchi/eToTaufakeRate/
-cvs co -r V00-03-00      ElectroWeakAnalysis/WENu
-cvs co -r CMSSW_3_9_7    PhysicsTools/PatAlgos
-cvs co -r V03-01-01      PhysicsTools/TagAndProbe
-cvs co -r V00-03-19      RecoEgamma/ElectronIdentification
-scram b -j 4
