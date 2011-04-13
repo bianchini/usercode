@@ -23,8 +23,6 @@
 #include "DataFormats/JetReco/interface/GenJet.h"
 #include "DataFormats/JetReco/interface/GenJetCollection.h"
 
-#include "DataFormats/TauReco/interface/PFTauTagInfo.h"
-
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
@@ -381,7 +379,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
   for(unsigned int it = 0; it < jets->size() ; it++){
 
-    math::XYZTLorentzVectorD leg2p4 = ((leg2->pfTauTagInfoRef()).isNonnull() && (leg2->pfTauTagInfoRef()->pfjetRef()).isNonnull()) ? leg2->pfTauTagInfoRef()->pfjetRef()->p4() : leg2->p4();
+    math::XYZTLorentzVectorD leg2p4 = ((leg2->pfJetRef()).isNonnull()) ? leg2->pfJetRef()->p4() : leg2->p4();
 
     if( Geom::deltaR((*jets)[it].p4(),leg1->p4())<deltaRLegJet_ || 
 	Geom::deltaR((*jets)[it].p4(), leg2p4 )<deltaRLegJet_ ){

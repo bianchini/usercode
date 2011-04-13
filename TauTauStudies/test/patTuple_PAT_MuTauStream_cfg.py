@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -11,6 +11,7 @@ from Configuration.PyReleaseValidation.autoCond import autoCond
 process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
+process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 process.load('RecoJets.Configuration.RecoPFJets_cff')
 process.kt6PFJets.doRhoFastjet = True
 process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
@@ -26,7 +27,8 @@ process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets)
 process.source.fileNames = cms.untracked.vstring(
     #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_1.root',
     #'file:/data_CMS/cms/lbianchini/ZMuMu_RelVal386.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall10/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/GEN-SIM-RECO/START38_V12-v1/0000/044E940A-55EC-DF11-89D6-0023AEFDEE60.root',
+     'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall10/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/GEN-SIM-RECO/START38_V12-v1/0000/044E940A-55EC-DF11-89D6-0023AEFDEE60.root',
     #'file:/data_CMS/cms/lbianchini/F41A3437-7AED-DF11-A50D-002618943894.root',
     #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_1.root',
     )
@@ -98,7 +100,7 @@ removeCleaning(process,
 restrictInputToAOD(process, ['All'])
 
 from Bianchi.Utilities.customizePAT  import *
-addSelectedPFlowParticle(process)
+#addSelectedPFlowParticle(process)
 
 from PhysicsTools.PatAlgos.tools.metTools import *
 addPfMET(process, postfix)
@@ -148,30 +150,38 @@ getattr(process,"patTaus").embedIsolationPFNeutralHadrCands = True
 getattr(process,"patTaus").embedIsolationPFGammaCands = True
 getattr(process,"patTaus").embedGenJetMatch = cms.bool(True)
 
-
-setattr(process,"hpsPFTauDiscriminationAgainstElectronCrackRem",
-        getattr(process,"hpsPFTauDiscriminationAgainstElectron").clone(
+from RecoTauTag.RecoTau.PFRecoTauDiscriminationAgainstElectron_cfi import pfRecoTauDiscriminationAgainstElectron
+process.hpsPFTauDiscriminationAgainstElectronCrackRem = pfRecoTauDiscriminationAgainstElectron.clone(
+    PFTauProducer = cms.InputTag('hpsPFTauProducer'),
+    Prediscriminants = cms.PSet(
+    BooleanOperator = cms.string("and"),
+    leadTrack = cms.PSet(
+    Producer = cms.InputTag('hpsPFTauDiscriminationByDecayModeFinding'),
+    cut = cms.double(0.5)
+    )
+    ),
     ApplyCut_EcalCrackCut = cms.bool(True),
     ApplyCut_PFElectronMVA =  cms.bool(False)
     )
-        )
 
-process.patHPSPFTauDiscrimination += process.hpsPFTauDiscriminationAgainstElectronCrackRem
+# add the crack-rem sequence before running patTau
+process.patDefaultSequence.replace(process.patTaus,
+                                   process.hpsPFTauDiscriminationAgainstElectronCrackRem+process.patTaus)
 
-getattr(process,"makePatTaus").replace(
-    getattr(process,"patTaus"),
-    process.patHPSPFTauDiscrimination + getattr(process,"patTaus")
-    )
 
 getattr(process,"patTaus").tauIDSources = cms.PSet(
     leadingTrackFinding = cms.InputTag("hpsPFTauDiscriminationByDecayModeFinding"),
     byLooseIsolation = cms.InputTag("hpsPFTauDiscriminationByLooseIsolation"),
     byMediumIsolation = cms.InputTag("hpsPFTauDiscriminationByMediumIsolation"),
     byTightIsolation = cms.InputTag("hpsPFTauDiscriminationByTightIsolation"),
-    againstElectron = cms.InputTag("hpsPFTauDiscriminationAgainstElectron"),
+    againstElectronLoose = cms.InputTag("hpsPFTauDiscriminationByLooseElectronRejection"),
+    againstElectronMedium = cms.InputTag("hpsPFTauDiscriminationByMediumElectronRejection"),
+    againstElectronTight = cms.InputTag("hpsPFTauDiscriminationByTightElectronRejection"),
     againstElectronCrackRem = cms.InputTag("hpsPFTauDiscriminationAgainstElectronCrackRem"),
-    againstMuon = cms.InputTag("hpsPFTauDiscriminationAgainstMuon")
+    againstMuonLoose = cms.InputTag("hpsPFTauDiscriminationByLooseMuonRejection"),
+    againstMuonTight = cms.InputTag("hpsPFTauDiscriminationByTightMuonRejection")
     )
+
 
 process.tauMatch.maxDeltaR = 0.5
 process.tauMatch.resolveAmbiguities = cms.bool(False)
@@ -181,22 +191,26 @@ process.tauGenJetMatch.maxDPtRel = 999
 ## <\tau part>
 
 addPFMuonIsolation(process,process.patMuons)
-addPFMuon(process,postfix)
+
+
+#addPFMuon(process,postfix)
 addTriggerMatchingMuon(process)
 getattr(process,"patMuons").embedTrack = True
-getattr(process,"patMuons"+postfix).embedTrack = True
-addTriggerMatchingMuon(process,postfix)
+#getattr(process,"patMuons"+postfix).embedTrack = True
+#addTriggerMatchingMuon(process,postfix)
 
 from Bianchi.Utilities.electrons import *
 addCutBasedID(process)
 addPFElectronIsolation(process,process.patElectrons)
-addPFElectron(process,postfix)
+
+
+#addPFElectron(process,postfix)
 getattr(process,"patElectrons").embedTrack = True
-getattr(process,"patElectrons"+postfix).embedTrack = True
+#getattr(process,"patElectrons"+postfix).embedTrack = True
 getattr(process,"patElectrons").embedGsfTrack = True
-getattr(process,"patElectrons"+postfix).embedGsfTrack = True
+#getattr(process,"patElectrons"+postfix).embedGsfTrack = True
 addTriggerMatchingElectron(process)
-addTriggerMatchingElectron(process,postfix)
+#addTriggerMatchingElectron(process,postfix)
 
 if hasattr(process,"patTrigger"):
     process.patTrigger.processName = '*'
@@ -236,7 +250,7 @@ process.muonLeg = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
     #cut = cms.string("pt>15 && (eta<2.1&&eta>-2.1) && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.normalizedChi2<=10 && userFloat('dxyWrtPV')<0.2 && userFloat('PFRelIso04')<0.1 && (triggerObjectMatchesByPath('HLT_Mu11').size()!=0 || triggerObjectMatchesByPath('HLT_Mu9').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15_v1').size()!=0)"),
-    cut = cms.string("pt>15 && (eta<2.1&&eta>-2.1) && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.normalizedChi2<=10 && userFloat('dxyWrtPV')<0.2 && userFloat('PFRelIso04')<999 && (triggerObjectMatchesByPath('HLT_Mu11').size()!=0 || triggerObjectMatchesByPath('HLT_Mu9').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15_v1').size()!=0)"),
+    cut = cms.string("pt>15 && (eta<2.1&&eta>-2.1) && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.normalizedChi2<=10 && userFloat('dxyWrtPV')<0.2 && userFloat('PFRelIso04')<999 && (triggerObjectMatchesByPath('HLT_Mu11').size()!=0 || triggerObjectMatchesByPath('HLT_Mu9').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15_v1').size()!=0 || triggerObjectMatchesByPath('HLT_Mu11_PFTau15_v2').size()!=0)"),
     filter = cms.bool(False)
     )
 
@@ -244,12 +258,12 @@ process.tauLeg = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("selectedPatTaus"),
     #cut = cms.string("pt>20 && (eta<2.3&&eta>-2.3) && tauID('leadingTrackFinding')>0.5 && tauID('byLooseIsolation')>0.5 && tauID('againstMuon') && leadPFChargedHadrCand.mva_e_pi < 0.6 && tauID('againstElectronCrackRem')>0.5 "),
-    cut = cms.string("pt>20 && (eta<2.3&&eta>-2.3) && tauID('leadingTrackFinding')>0.5 && tauID('byLooseIsolation')>-1 && tauID('againstMuon') && leadPFChargedHadrCand.mva_e_pi < 0.6 && tauID('againstElectronCrackRem')>0.5 "),
+    cut = cms.string("pt>20 && (eta<2.3&&eta>-2.3) && tauID('leadingTrackFinding')>0.5 && tauID('byLooseIsolation')>-1 && tauID('againstMuonTight')>0.5 &&  tauID('againstElectronLoose')>0.5 && tauID('againstElectronCrackRem')>0.5 "),
     filter = cms.bool(False)
     )
 
 
-getattr(process,"selectedPatElectronsTriggerMatch"+postfix).cut = cms.string("(eta<2.4&&eta>-2.4) && !isEBEEGap && et>15 && electronID('simpleEleId95relIso')>6.5")
+#getattr(process,"selectedPatElectronsTriggerMatch"+postfix).cut = cms.string("(eta<2.4&&eta>-2.4) && !isEBEEGap && et>15 && electronID('simpleEleId95relIso')>6.5")
 getattr(process,"selectedPatElectronsTriggerMatch").cut = cms.string("(eta<2.4&&eta>-2.4) && !isEBEEGap && et>15 && electronID('simpleEleId95relIso')>6.5")
 
 process.secondLeptonVeto = cms.EDFilter(
@@ -343,6 +357,7 @@ process.pat = cms.Sequence(
     process.vertexScrapingFilter +
     process.makeSCs +
     process.fjSequence*
+    process.PFTau*
     process.patDefaultSequence*
     process.selectedPatMuonsTriggerMatchUserEmbedded*
     process.looseMuons*

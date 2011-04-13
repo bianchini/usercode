@@ -18,11 +18,11 @@ svFitLikelihoodMuTauPairKinematicsPhaseSpace.leg2.pluginType = "SVfitTauLikeliho
 #svFitLikelihoodDiCandidatePairKinematicsPolarized.leg2.pluginType = "SVfitCandidateLikelihoodPolarization"
 #svFitLikelihoodDiCandidatePairKinematicsPolarized.leg1 = svFitLikelihoodDiCandidatePairKinematicsPolarized.leg2
 
-svFitLikelihoodElecTauPairMEt = copy.deepcopy(svFitLikelihoodMEt)
-svFitLikelihoodElecTauPairMEt.pluginType = cms.string("SVfitLikelihoodMEtElecTau")
+svFitLikelihoodElecTauPairMEt = copy.deepcopy(svFitLikelihoodDiTauMEt)
+svFitLikelihoodElecTauPairMEt.pluginType = cms.string("SVfitLikelihoodElecTauPairMEt")
 
-svFitLikelihoodMuTauPairMEt = copy.deepcopy(svFitLikelihoodMEt)
-svFitLikelihoodMuTauPairMEt.pluginType = cms.string("SVfitLikelihoodMEtMuTau")
+svFitLikelihoodMuTauPairMEt = copy.deepcopy(svFitLikelihoodDiTauMEt)
+svFitLikelihoodMuTauPairMEt.pluginType = cms.string("SVfitLikelihoodMuTauPairMEt")
 
 #svFitLikelihoodDiCandidatePairMEt = copy.deepcopy(svFitLikelihoodMEt)
 #svFitLikelihoodDiCandidatePairMEt.pluginType = cms.string("SVfitLikelihoodMEtDiCandidate")

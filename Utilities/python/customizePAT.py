@@ -25,9 +25,13 @@ def addSelectedPFlowParticle(process,verbose=False):
     process.pfAllMuons.src = "particleFlow"
     process.pfAllElectrons.src = "particleFlow"
     
-    process.patDefaultSequence.replace(process.patCandidates,
+    #process.patDefaultSequence.replace(process.patCandidates,
+    #                                   process.pfCandidateSelectionByType+
+    #                                   process.patCandidates)
+    process.patDefaultSequence.replace(process.electronMatch,
                                        process.pfCandidateSelectionByType+
-                                       process.patCandidates)
+                                       process.electronMatch)
+    
 
 ###################a#################################################
 def addPFMuonIsolation(process,module,postfix="",verbose=False):
@@ -385,18 +389,10 @@ def addTriggerMatchingMuon(process,postfix="",verbose=False):
         "PATTriggerMatcherDRLessByR"
         , src     = cms.InputTag( "selectedPatMuons"+postfix )
         , matched = cms.InputTag( "patTrigger" )
-        , andOr          = cms.bool( False ) 
-        , filterIdsEnum  = cms.vstring( 'TriggerMuon' )
-        , filterIds      = cms.vint32( 0 )
-        , filterLabels   = cms.vstring( '*' )
-        #, pathNames      = cms.vstring( 'HLT_Mu9','HLT_Mu11')
-        , pathNames      = cms.vstring('HLT_Mu9','HLT_Mu11','HLT_Mu13','HLT_Mu15','HLT_Mu17','HLT_Mu19','HLT_Mu21','HLT_Mu25',
-                                       'HLT_Mu13_v1','HLT_Mu15_v1','HLT_Mu17_v1','HLT_Mu19_v1','HLT_Mu21_v1','HLT_Mu25_v1',
-                                       'HLT_L1Mu7','HLT_L1Mu7_1','HLT_L2Mu7','HLT_L2Mu7_v1')
-        , collectionTags = cms.vstring( '*' )
-        #, pathLastFilterAcceptedOnly = cms.bool( True )
-        , maxDPtRel = cms.double( 0.5 )
-        , maxDeltaR = cms.double( 0.2 )
+        #, matchedCuts    = cms.string('path("HLT_Mu9") || path("HLT_Mu11") || path("HLT_IsoMu9") || path("HLT_Mu15_v*")')
+        , matchedCuts    = cms.string('path("HLT_Mu11_PFTau15_v*",0) && type("TriggerMuon")')
+        , maxDPtRel = cms.double( 999 )
+        , maxDeltaR = cms.double( 0.5 )
         , resolveAmbiguities    = cms.bool( True )
         , resolveByMatchQuality = cms.bool( True )
         )
@@ -436,24 +432,19 @@ def addTriggerMatchingElectron(process,postfix="",verbose=False):
         print "[Info] Addting trigger matching to patElectron with postfix '"+postfix+"'"
     
     process.load( "PhysicsTools.PatAlgos.triggerLayer1.triggerProducer_cfi" )
-    muonMatch = cms.EDProducer(
+    eleMatch = cms.EDProducer(
         "PATTriggerMatcherDRLessByR"
         , src     = cms.InputTag( "selectedPatElectrons"+postfix )
         , matched = cms.InputTag( "patTrigger" )
-        , andOr          = cms.bool( False ) 
-        , filterIdsEnum  = cms.vstring( 'TriggerElectron' )
-        , filterIds      = cms.vint32( 0 )
-        , filterLabels   = cms.vstring( '*' )
-        , pathNames      = cms.vstring( 'HLT_Ele10_LW_L1R','HLT_Ele15_SW_L1R','HLT_Ele15_SW_CaloEleId_L1R',
-                                        'HLT_Ele17_SW_CaloEleId_L1R')
-        , collectionTags = cms.vstring( '*' )
-        , maxDPtRel = cms.double( 0.5 )
-        , maxDeltaR = cms.double( 0.52)
+        #, matchedCuts = cms.string( 'path("HLT_Ele10_SW_L1R_v*") || path("HLT_Ele15_SW_L1R") || path("HLT_Ele17_SW_L1R_v*") || path("HLT_Ele17_SW_Isol_L1R_v*") || path("HLT_Ele17_SW_TighterEleIdIsol_L1R_v*") || path("HLT_Ele22_SW_L1R_v*")' )
+        , matchedCuts = cms.string( 'path("HLT_IsoEle12_PFTau15_v*",0) && type("TriggerElectron")' )
+        , maxDPtRel = cms.double( 999 )
+        , maxDeltaR = cms.double( 0.5)
         , resolveAmbiguities    = cms.bool( True )
         , resolveByMatchQuality = cms.bool( True )
         )
 
-    setattr(process,"muonTriggerMatchHLTElectrons"+postfix,muonMatch.clone()) 
+    setattr(process,"eleTriggerMatchHLTElectrons"+postfix,eleMatch.clone()) 
     if not hasattr(process,"patTriggerSequence"):
         setattr(process,"patTriggerSequence",
                 cms.Sequence(process.patTrigger))
@@ -461,15 +452,15 @@ def addTriggerMatchingElectron(process,postfix="",verbose=False):
 
     if not hasattr(process,"patTriggerMatcher"):
         setattr(process,"patTriggerMatcher",
-                cms.Sequence(getattr(process,"muonTriggerMatchHLTElectrons"+postfix)))
+                cms.Sequence(getattr(process,"eleTriggerMatchHLTElectrons"+postfix)))
         process.patTriggerSequence += process.patTriggerMatcher
     else:
-        process.patTriggerMatcher += getattr(process,"muonTriggerMatchHLTElectrons"+postfix)
+        process.patTriggerMatcher += getattr(process,"eleTriggerMatchHLTElectrons"+postfix)
 
     setattr(process,"selectedPatElectronsTriggerMatch"+postfix,
             cms.EDProducer("PATTriggerMatchElectronEmbedder",
                            src = cms.InputTag( "selectedPatElectrons"+postfix ),
-                           matches = cms.VInputTag("muonTriggerMatchHLTElectrons"+postfix)
+                           matches = cms.VInputTag("eleTriggerMatchHLTElectrons"+postfix)
                            ))
     if not hasattr(process,"patTriggerMatchEmbedder"):
         setattr(process,"patTriggerMatchEmbedder",

@@ -76,11 +76,16 @@ def addCutBasedID( process ):
         )
 
 
-    process.makePatElectrons.replace(process.patElectrons,
-                                     process.patElectronId*
-                                     process.patElectrons
-                                     )
-
+    #process.makePatElectrons.replace(process.patElectrons,
+    #                                 process.patElectronId*
+    #                                 process.patElectrons
+    #                                 )
+    process.patDefaultSequence.replace(process.patElectrons,
+                                       process.patElectronId*
+                                       process.patElectrons
+                                       )
+    
+    
     #process.patElectrons.embedTrack = True
     process.electronMatch.maxDeltaR = 0.5
     process.electronMatch.maxDPtRel = 0.5
