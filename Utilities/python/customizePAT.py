@@ -444,12 +444,13 @@ def addTriggerMatchingElectron(process,postfix="",verbose=False):
         , filterIdsEnum  = cms.vstring( 'TriggerElectron' )
         , filterIds      = cms.vint32( 0 )
         , filterLabels   = cms.vstring( '*' )
-        , pathNames      = cms.vstring( '*')
+        , pathNames      = cms.vstring( 'HLT_Ele10_LW_L1R','HLT_Ele15_SW_L1R','HLT_Ele15_SW_CaloEleId_L1R',
+                                        'HLT_Ele17_SW_CaloEleId_L1R')
         , collectionTags = cms.vstring( '*' )
-        , maxDPtRel = cms.double( 999 )
-        , maxDeltaR = cms.double( 0.5 )
-        , resolveAmbiguities    = cms.bool( False )
-        , resolveByMatchQuality = cms.bool( False )
+        , maxDPtRel = cms.double( 0.5 )
+        , maxDeltaR = cms.double( 0.52)
+        , resolveAmbiguities    = cms.bool( True )
+        , resolveByMatchQuality = cms.bool( True )
         )
 
     setattr(process,"muonTriggerMatchHLTElectrons"+postfix,muonMatch.clone()) 
