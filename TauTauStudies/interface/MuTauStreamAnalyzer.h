@@ -61,6 +61,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
 
   std::vector< double >* jetsBtagHE_;
   std::vector< double >* jetsBtagHP_;
+  std::vector< int >* tauXTriggers_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDP4_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* genJetsIDP4_; 

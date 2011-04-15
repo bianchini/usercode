@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 10
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -191,22 +191,17 @@ process.tauGenJetMatch.maxDPtRel = 999
 ## <\tau part>
 
 addPFMuonIsolation(process,process.patMuons)
-#addPFMuon(process,postfix)
 addTriggerMatchingMuon(process)
 getattr(process,"patMuons").embedTrack = True
-#getattr(process,"patMuons"+postfix).embedTrack = True
-#addTriggerMatchingMuon(process,postfix)
 
 from Bianchi.Utilities.electrons import *
 addCutBasedID(process)
 addPFElectronIsolation(process,process.patElectrons)
-#addPFElectron(process,postfix)
 getattr(process,"patElectrons").embedTrack = True
-#getattr(process,"patElectrons"+postfix).embedTrack = True
 getattr(process,"patElectrons").embedGsfTrack = True
-#getattr(process,"patElectrons"+postfix).embedGsfTrack = True
 addTriggerMatchingElectron(process)
-#addTriggerMatchingElectron(process,postfix)
+
+addTriggerMatchingTau(process)
 
 if hasattr(process,"patTrigger"):
     process.patTrigger.processName = '*'
@@ -258,14 +253,15 @@ process.looseElectrons = cms.EDFilter(
 process.electronLeg = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("looseElectrons"),
-    #cut = cms.string("( (electronID('simpleEleId80relIso')>4.5 && electronID('simpleEleId80relIso')<5.5) || electronID('simpleEleId80relIso')>6.5 ) && userFloat('dxyWrtPV')<0.2 && userFloat('PFRelIso04')<999 && (triggerObjectMatchesByPath('HLT_IsoEle12_PFTau15_v3').size()!=0)"),
+    #cut = cms.string("( (electronID('simpleEleId80relIso')>4.5 && electronID('simpleEleId80relIso')<5.5) || electronID('simpleEleId80relIso')>6.5 ) && userFloat('dxyWrtPV')<0.2 && userFloat('PFRelIso04')<999 && (triggerObjectMatchesByPath('HLT_IsoEle12_PFTau15_v3',0).size()!=0)"),
     cut = cms.string("( (electronID('simpleEleId80relIso')>4.5 && electronID('simpleEleId80relIso')<5.5) || electronID('simpleEleId80relIso')>6.5 ) && userFloat('dxyWrtPV')<0.2 && userFloat('PFRelIso04')<999"),
     filter = cms.bool(False)
     )
 
 process.tauLeg = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("selectedPatTaus"),
+    #src = cms.InputTag("selectedPatTaus"),
+    src = cms.InputTag("selectedPatTausTriggerMatch"),
     #cut = cms.string("pt>20 && (eta<2.3&&eta>-2.3) && tauID('leadingTrackFinding')>0.5 && tauID('byLooseIsolation')>0.5 && tauID('againstMuon') && tauID('againstElectronTight')>0.5 && tauID('againstElectronCrackRem')>0.5 "),
     cut = cms.string("pt>20 && (eta<2.3&&eta>-2.3) && tauID('leadingTrackFinding')>0.5 && tauID('byLooseIsolation')>-1 && tauID('againstMuonLoose')>0.5 &&  tauID('againstElectronTight')>0.5 && tauID('againstElectronCrackRem')>0.5 "),
     filter = cms.bool(False)

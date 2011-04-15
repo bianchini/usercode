@@ -13,6 +13,8 @@
 #include "DataFormats/PatCandidates/interface/Tau.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 
+#include <DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h>
+
 #include "DataFormats/GeometryVector/interface/VectorUtil.h"
 
 #include "DataFormats/RecoCandidate/interface/IsoDeposit.h"
@@ -57,6 +59,8 @@ void ElecTauStreamAnalyzer::beginJob(){
   jetsBtagHE_  = new std::vector< double >();
   jetsBtagHP_  = new std::vector< double >();
 
+  tauXTriggers_= new std::vector< int >();
+
   jetsP4_          = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   jetsIDP4_        = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genJetsIDP4_       = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
@@ -80,6 +84,8 @@ void ElecTauStreamAnalyzer::beginJob(){
   
   tree_->Branch("jetsBtagHE","std::vector<double> ",&jetsBtagHE_);
   tree_->Branch("jetsBtagHP","std::vector<double> ",&jetsBtagHP_);
+
+  tree_->Branch("tauXTriggers","std::vector<int> ",&tauXTriggers_);
 
   tree_->Branch("diTauVisP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",  &diTauVisP4_);
   tree_->Branch("diTauCAP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",   &diTauCAP4_);
@@ -124,14 +130,12 @@ void ElecTauStreamAnalyzer::beginJob(){
 ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
   delete jetsP4_; delete jetsIDP4_; delete METP4_; delete diTauVisP4_; delete diTauCAP4_; delete diTauICAP4_; 
   delete diTauSVfit1P4_; delete diTauSVfit2P4_; delete diTauSVfit3P4_;
-  delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_;
+  delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_;
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;
   delete tRandom_ ;
 }
 
 void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
-
-
 
   jetsP4_->clear();
   jetsIDP4_->clear();
@@ -147,6 +151,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   genJetsIDP4_->clear();
   genDiTauLegsP4_->clear();
   genMETP4_->clear();
+  jetsBtagHE_->clear();
+  jetsBtagHP_->clear();
+  tauXTriggers_->clear();
   
   edm::Handle<PATElecTauPairCollection> diTauHandle;
   iEvent.getByLabel(diTauTag_,diTauHandle);
@@ -231,27 +238,6 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     if(verbose_) cout << "Random selection has chosen index " << index << endl;   
   }
 
-    /*
-      for(unsigned int i=0; identifiedTaus.size()>0 && !applyTauSignalSel_ && i<not_identifiedTaus.size(); i++){ 
-      //if(identifiedTaus.size()>0) continue;
-      if(verbose_) cout << "Testing max pt of charged hadron in the " << i << "th tau" << endl;
-      const pat::Tau*  tau_i = dynamic_cast<const pat::Tau*>(  ((*diTaus)[ not_identifiedTaus[i] ].leg2()).get() );
-      double highestPt_i = 0.;
-      if(!(tau_i->pfTauTagInfoRef()).isNonnull()) continue;
-      const PFCandidateRefVector pfChTau_i = tau_i->pfTauTagInfoRef()->PFChargedHadrCands();
-      for(unsigned k = 0; k<pfChTau_i.size(); k++){
-      PFCandidateRef hadron = pfChTau_i.at(k);
-      if(hadron->pt()>highestPt_i){
-      highestPt_i = hadron->pt();
-      }
-      }
-      if(highestPt_i>highestPt){
-      index =  not_identifiedTaus[i] ;
-      highestPt = highestPt_i;
-      }
-      }
-    */
-
 
   if(verbose_) cout << "Chosen index " << index << endl;
   identifiedTaus.clear(); /*not_identifiedTaus.clear(); */ looseIsoTaus.clear();
@@ -270,6 +256,45 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   const pat::Electron* leg1 = dynamic_cast<const pat::Electron*>( (theDiTau->leg1()).get() );
   const pat::Tau*  leg2 = dynamic_cast<const pat::Tau*>(  (theDiTau->leg2()).get() );
 
+  vector<string> triggerPaths;
+  if(isMC_){
+    triggerPaths.push_back("HLT_IsoEle12_PFTau15_v*");
+  }
+  else{
+    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*");
+    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
+  }
+
+  for(unsigned int m = 0; m<triggerPaths.size(); m++){
+    if((leg1->triggerObjectMatchesByPath(triggerPaths[m],false)).size()!=0 && 
+       (leg2->triggerObjectMatchesByPath(triggerPaths[m],false)).size()!=0) tauXTriggers_->push_back(1);
+    else if((leg1->triggerObjectMatchesByPath(triggerPaths[m],false)).size()!=0 && 
+	    (leg2->triggerObjectMatchesByPath(triggerPaths[m],false)).size()==0)  tauXTriggers_->push_back(2);
+    else if((leg1->triggerObjectMatchesByPath(triggerPaths[m],false)).size()==0 && 
+	    (leg2->triggerObjectMatchesByPath(triggerPaths[m],false)).size()!=0)  tauXTriggers_->push_back(3);
+    else tauXTriggers_->push_back(0);
+  }
+
+  // triggers Elec
+  if(verbose_){
+    const pat::TriggerObjectStandAloneCollection trColl = leg1->triggerObjectMatchesByType(82);
+    for(pat::TriggerObjectStandAloneCollection::const_iterator it = trColl.begin(); it != trColl.end(); it++){
+      for(unsigned int k = 0; k < (it->pathNames(true)).size(); k++){
+	cout << (it->pathNames(true))[k] << endl;
+      }
+    }
+  }
+  // triggers Tau
+  if(verbose_){
+    const pat::TriggerObjectStandAloneCollection trColl = leg2->triggerObjectMatchesByType(84);
+    cout << "Tau triggers" << endl;
+    for(pat::TriggerObjectStandAloneCollection::const_iterator it = trColl.begin(); it != trColl.end(); it++){
+      for(unsigned int k = 0; k < (it->pathNames(false)).size(); k++){
+	cout << (it->pathNames(false))[k] << endl;
+      }
+    }
+  }
+  
   diTauLegsP4_->push_back(leg1->p4());
   diTauLegsP4_->push_back(leg2->p4());
   
