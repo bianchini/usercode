@@ -28,6 +28,8 @@
 #include "TMVA/Tools.h"
 #endif
 
+#define VERBOSE true
+
 void fakeStudy( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",
 		Double_t effS_ = 0.5,
 		TCut Cuts_ = "pt1>0",
@@ -78,11 +80,11 @@ void fakeStudy( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQCD_Cu
 
   // define histos
 
-  TString fSignalName              = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/nTupleVBFH115-PU-L_Open.root";
-  TString fBackgroundNameDYJets    = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/nTupleDYJets-madgraph-50-PU-L_Open.root";
-  TString fBackgroundNameWJets     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/nTupleWJets-madgraph-PU-L_Open.root";
-  TString fBackgroundNameQCD       = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/nTupleQCD-pythia-PU-L_Open.root";
-  TString fBackgroundNameTTbar     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/nTupleTT-madgraph-PU-L_Open.root";
+  TString fSignalName              = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/nTupleVBFH115-PU-L_Open_v2.root";
+  TString fBackgroundNameDYJets    = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/nTupleDYJets-madgraph-50-PU-L_Open_v2.root";
+  TString fBackgroundNameWJets     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/nTupleWJets-madgraph-PU-L_Open_v2.root";
+  TString fBackgroundNameQCD       = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/nTupleQCD-pythia-PU-L_Open_v2.root";
+  TString fBackgroundNameTTbar     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/nTupleTT-madgraph-PU-L_Open_v2.root";
 
 
   TFile *fSignal(0); 
@@ -128,7 +130,7 @@ void fakeStudy( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQCD_Cu
 
   Float_t pt1_, pt2_;
   Float_t Deta_, Mjj_;
-  Float_t Dphi,diTauSVFitPt,diTauSVFitEta,diTauSVFitMass,ptL1,ptL2,etaL1,etaL2,diTauCharge,MtLeg1,numPV,combRelIsoLeg1,sampleWeight;
+  Float_t Dphi,diTauSVFitPt,diTauSVFitEta,diTauVisMass,diTauSVFitMass,ptL1,ptL2,etaL1,etaL2,diTauCharge,MtLeg1,numPV,combRelIsoLeg1,sampleWeight,ptVeto;
   Int_t tightestHPSWP;
 
   std::map<TString,Float_t> vMap;
@@ -149,8 +151,9 @@ void fakeStudy( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQCD_Cu
     currentTree->SetBranchAddress( "Deta",&Deta_ );
     currentTree->SetBranchAddress( "Mjj", &Mjj_ );
     currentTree->SetBranchAddress( "diTauSVFitPt",&diTauSVFitPt);
-    currentTree->SetBranchAddress( "diTauSVFitEta",&diTauSVFitEta);
+    //currentTree->SetBranchAddress( "diTauSVFitEta",&diTauSVFitEta);
     currentTree->SetBranchAddress( "diTauSVFitMass",&diTauSVFitMass);
+    currentTree->SetBranchAddress( "diTauVisMass",&diTauVisMass);
     currentTree->SetBranchAddress( "ptL1", &ptL1 );
     currentTree->SetBranchAddress( "ptL2",  &ptL2 );
     currentTree->SetBranchAddress( "etaL1", &etaL1 );
@@ -161,6 +164,7 @@ void fakeStudy( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQCD_Cu
     currentTree->SetBranchAddress( "MtLeg1",&MtLeg1);
     currentTree->SetBranchAddress( "numPV",&numPV);
     currentTree->SetBranchAddress( "sampleWeight",&sampleWeight);
+    currentTree->SetBranchAddress( "ptVeto",&ptVeto);
 
     for (Long64_t ievt=0; ievt<currentTree->GetEntries();ievt++) {
 
@@ -177,8 +181,9 @@ void fakeStudy( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQCD_Cu
 
       vMap["Dphi"]= Dphi;
       vMap["diTauSVFitPt"]= diTauSVFitPt;
-      vMap["diTauSVFitEta"]= diTauSVFitEta;
+      //vMap["diTauSVFitEta"]= diTauSVFitEta;
       vMap["diTauSVFitMass"]= diTauSVFitMass;
+      vMap["diTauVisMass"]= diTauVisMass;
       vMap["ptL1"]= ptL1;
       vMap["ptL2"]= ptL2;
       vMap["etaL1"]= etaL1;
@@ -192,6 +197,7 @@ void fakeStudy( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQCD_Cu
       vMap["pt2_"]= pt2;
       vMap["Deta_"]= Deta;
       vMap["Mjj_"]= Mjj;
+      vMap["ptVeto"]= ptVeto;
 
       if(reader->EvaluateMVA( "Cuts", effS_ )){
 	counter++;
@@ -241,8 +247,17 @@ void fakeStudy( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQCD_Cu
     else hSiml->Add(h1);
 
     aStack->Add(h1);
-   
+
+    if(VERBOSE) cout<<(it->first) << " ==> " 
+		   << h1->Integral() << " +/- " 
+		   << TMath::Sqrt(h1->GetEntries())*(h1->Integral()/h1->GetEntries())
+		   << endl;
   }
+
+  if(VERBOSE) cout<< "S/sqrt(B) ==> " 
+		  << hSgn->Integral()/ TMath::Sqrt(hSiml->Integral()) << " +/- " 
+		  << (1./2)*TMath::Sqrt(hSiml->GetEntries())*(hSiml->GetSumOfWeights())/hSiml->Integral()*( hSgn->Integral()/ TMath::Sqrt(hSiml->Integral())  )
+		  << endl;
 
   aStack->Draw("HIST");
   hSgn->Draw("HISTSAME");
