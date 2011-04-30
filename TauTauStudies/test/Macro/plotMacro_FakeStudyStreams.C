@@ -231,7 +231,11 @@ void fakeStudyElec( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQC
       vMap["Mjj_"]= Mjj;
       vMap["ptVeto"]= ptVeto;
 
-      if(reader->EvaluateMVA( "Cuts", effS_ )){
+      // if efficiency is more than 0 use the optimized cuts
+      // else use VBF  preselection
+      bool pass = effS_>0 ? reader->EvaluateMVA( "Cuts", effS_ ) : (pt1>0);
+
+      if(pass){
 	counter++;
 	h1->Fill( vMap[variable_], sampleWeight);
       }
@@ -520,7 +524,11 @@ void fakeStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQCD_
       vMap["Mjj_"]= Mjj;
       vMap["ptVeto"]= ptVeto;
 
-      if(reader->EvaluateMVA( "Cuts", effS_ )){
+      // if efficiency is more than 0 use the optimized cuts
+      // else use VBF  preselection
+      bool pass = effS_>0 ? reader->EvaluateMVA( "Cuts", effS_ ) : (pt1>0);
+
+      if(pass){
 	counter++;
 	h1->Fill( vMap[variable_], sampleWeight);
       }
