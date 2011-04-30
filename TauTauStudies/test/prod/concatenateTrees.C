@@ -20,7 +20,7 @@
 using namespace std;
 
 
-void makeTree(string sample = "Zjets", float Lumi = 1000){
+void makeElecTauStreamTree(string sample = "Zjets", float Lumi = 1000){
 
   vector<pair<string,float> > files;
   
@@ -36,6 +36,12 @@ void makeTree(string sample = "Zjets", float Lumi = 1000){
     files.push_back( make_pair("Z3Jets-ptZ-100to300-alpgen-PUS1.root",      (3.951e+00 	*Lumi)  ) );
     files.push_back( make_pair("Z3Jets-ptZ-300to800-alpgen-PUS1.root",      (8.344e-02 	*Lumi)  ) );
     files.push_back( make_pair("Z3Jets-ptZ-800to1600-alpgen-PUS1.root",     (2.480e-04 *Lumi)  ) );
+  }
+
+  if(sample.find("DiBoson")!=string::npos){
+    files.push_back( make_pair("WW-pythia-PUS1.root",        ( 2.9   *Lumi)  ) );
+    files.push_back( make_pair("WZ-pythia-PUS1.root",        (10.4   *Lumi)  ) );
+    files.push_back( make_pair("ZZ-pythia-PUS1.root",        ( 4.297 *Lumi)  ) );
   }
   
   if(sample.find("Wjets")!=string::npos){
@@ -61,7 +67,7 @@ void makeTree(string sample = "Zjets", float Lumi = 1000){
     files.push_back( make_pair("QCDbc-pythia-3080-PUS1.root",             (59480000*0.00230 *Lumi)) );
     files.push_back( make_pair("QCDbc-pythia-80170-PUS1.root",            (900000*0.0104 *Lumi)) );
     files.push_back( make_pair("QCDem-pythia-2030-PUS1.root",             (236000000*0.0104*Lumi)) );
-    files.push_back( make_pair("QCDem-pythia-3080-PUS1.root",             (59480000*0.065*Lumi)) );
+    files.push_back( make_pair("QCDem-pythia-3080-PUS1-v2.root",             (59480000*0.065*Lumi)) );
     files.push_back( make_pair("QCDem-pythia-80170-PUS1.root",            (900000*0.155*Lumi)) );
   }
   
@@ -76,13 +82,18 @@ void makeTree(string sample = "Zjets", float Lumi = 1000){
 
   
   directories.push_back("allEventsFilter");
+  directories.push_back("vertexScrapingFilter");
+  directories.push_back("oneElectronFilter");
   directories.push_back("noMuonFilter");
-
-
+  directories.push_back("electronLegFilter");
+  directories.push_back("tauLegFilter");
+  directories.push_back("atLeastOneDiTauFilter");
 
 
   TFile *outFile = new TFile(("treeElecTauStream_"+sample+".root").c_str(),"RECREATE");
   TChain* outChain = new TChain("elecTauStreamAnalyzer/tree");
+
+  float fraction = 0.25;
 
   for(unsigned int i = 0; i<files.size();i++){
 
@@ -98,7 +109,6 @@ void makeTree(string sample = "Zjets", float Lumi = 1000){
     TH1F* totalEvents = (TH1F*)gDirectory->Get("totalEvents");
     float readEvents = totalEvents->GetBinContent(1);
     float currentWeight = (files[i].second/readEvents);
-    float fraction = .2;
     
     currentFile->cd("elecTauStreamAnalyzer");
     TTree* currentTree =  (TTree*)gDirectory->Get("tree");
@@ -130,7 +140,7 @@ void makeTree(string sample = "Zjets", float Lumi = 1000){
     delete currentFile;
     delete newFile;
 
- }
+  }
 
   
   TDirectory* dir = (TDirectory*) outFile->mkdir("elecTauStreamAnalyzer");  
@@ -164,8 +174,8 @@ void makeTree(string sample = "Zjets", float Lumi = 1000){
 	TH1F* totalEvents = (TH1F*)gDirectory->Get("totalEvents");
 	float readEvents = totalEvents->GetBinContent(1);
 	float currentWeight;
-	currentWeight = Lumi*(files[i].second/readEvents);
-
+	currentWeight = (files[i].second/readEvents);
+	currentWeight/=fraction;
 	currentFile->cd(directories[j].c_str());
 	TH1F* currentHisto =  (TH1F*)gDirectory->Get("totalEvents");
 	if(i==0){
@@ -176,7 +186,176 @@ void makeTree(string sample = "Zjets", float Lumi = 1000){
 	else{
 	  filterHisto->Add(currentHisto,currentWeight);
 	}
+	cout<<"Adding "<<currentHisto->GetEntries() << endl;
+	cout<<"SubTot "<<filterHisto->GetEntries() << endl;
+      } // file
 
+      outFile->cd(directories[j].c_str());
+      filterHisto->Write();  
+
+    }
+   
+
+  }//directories
+
+  
+  outFile->Write();
+  outFile->Close();
+  delete outFile;
+
+}
+
+
+void makeMuTauStreamTree(string sample = "Zjets", float Lumi = 1000){
+
+  vector<pair<string,float> > files;
+  
+
+  vector<string> directories;
+  
+  if(sample.find("Zjets")!=string::npos){
+    files.push_back( make_pair("Z2Jets-Mu-ptZ-0to100-alpgen-PUS1.root",        (1.035e+02 *Lumi)  ) );
+    files.push_back( make_pair("Z2Jets-Mu-ptZ-100to300-alpgen-PUS1.root",      (8.534e+00 	*Lumi)  ) );
+    files.push_back( make_pair("Z2Jets-Mu-ptZ-300to800-alpgen-PUS1.root",      (1.151e-01*Lumi)  ) );
+    files.push_back( make_pair("Z2Jets-Mu-ptZ-800to1600-alpgen-PUS1.root",     (3.023e-04 *Lumi)  ) );
+    files.push_back( make_pair("Z3Jets-Mu-ptZ-0to100-alpgen-PUS1.root",        (2.289e+01 	*Lumi)  ) );
+    files.push_back( make_pair("Z3Jets-Mu-ptZ-100to300-alpgen-PUS1.root",      (3.951e+00 	*Lumi)  ) );
+    files.push_back( make_pair("Z3Jets-Mu-ptZ-300to800-alpgen-PUS1.root",      (8.344e-02 	*Lumi)  ) );
+    files.push_back( make_pair("Z3Jets-Mu-ptZ-800to1600-alpgen-PUS1.root",     (2.480e-04 *Lumi)  ) );
+  }
+
+  if(sample.find("DiBoson")!=string::npos){
+    files.push_back( make_pair("WW-Mu-pythia-PUS1.root",        ( 2.9   *Lumi)  ) );
+    files.push_back( make_pair("WZ-Mu-pythia-PUS1.root",        (10.4   *Lumi)  ) );
+    files.push_back( make_pair("ZZ-Mu-pythia-PUS1.root",        ( 4.297 *Lumi)  ) );
+  }
+  
+  if(sample.find("Wjets")!=string::npos){
+    files.push_back( make_pair("W1Jets_ptW-0to100.root",       (3.693e+03*0.44*Lumi)  ) );
+    files.push_back( make_pair("W1Jets_ptW-100to300.root",     (7.197e+01*0.58*Lumi)  ) );
+    files.push_back( make_pair("W1Jets_ptW-300to800.root",     (5.658e-01*0.73*Lumi)  ) );
+    files.push_back( make_pair("W2Jets_ptW-0to100.root",       (9.434e+02*0.46*Lumi)  ) );
+    files.push_back( make_pair("W2Jets_ptW-100to300.root",     (6.718e+01*0.59*Lumi)  ) );
+    files.push_back( make_pair("W2Jets_ptW-300to800.root",     (8.553e-01*0.75*Lumi)  ) );
+    files.push_back( make_pair("W3Jets_ptW-0to100.root",       (2.087e+02*0.48*Lumi)  ) );
+    files.push_back( make_pair("W3Jets_ptW-100to300.root",     (3.243e+01*0.60*Lumi)  ) );
+    files.push_back( make_pair("W3Jets_ptW-300to800.root",     (6.229e-01*0.76*Lumi)  ) );
+    files.push_back( make_pair("W4Jets_ptW-0to100.root",       (4.446e+01*0.50*Lumi)  ) );
+    files.push_back( make_pair("W4Jets_ptW-100to300.root",     (1.138e+01*0.61*Lumi)  ) );
+    files.push_back( make_pair("W4Jets_ptW-300to800.root",     (2.950e-01*0.77*Lumi)  ) );
+    files.push_back( make_pair("W5Jets_ptW-0to100.root",       (1.111e+01*0.53*Lumi)  ) );
+    files.push_back( make_pair("W5Jets_ptW-100to300.root",     (3.789e+00*0.65*Lumi)  ) );
+    files.push_back( make_pair("W5Jets_ptW-300to800.root",     (1.565e-01*0.79*Lumi)  ) );
+  }
+
+  
+  directories.push_back("allEventsFilter");
+  directories.push_back("vertexScrapingFilter");
+  directories.push_back("oneMuonFilter");
+  directories.push_back("noElecFilter");
+  directories.push_back("muonLegFilter");
+  directories.push_back("tauLegFilter");
+  directories.push_back("atLeastOneDiTauFilter");
+
+
+  TFile *outFile = new TFile(("treeMuTauStream_"+sample+".root").c_str(),"RECREATE");
+  TChain* outChain = new TChain("muTauStreamAnalyzer/tree");
+
+  float fraction = 1.0;
+
+  for(unsigned int i = 0; i<files.size();i++){
+
+    TFile *currentFile = new TFile(("/data_CMS/cms/lbianchini/MuTauStream2011/treeMuTauStream_"+files[i].first).c_str(),"READ");
+    
+    // protection
+    if(currentFile->IsZombie()){
+      cout << "No file " << files[i].first << " is found" << endl;
+      continue;
+    }
+
+    currentFile->cd("allEventsFilter");
+    TH1F* totalEvents = (TH1F*)gDirectory->Get("totalEvents");
+    float readEvents = totalEvents->GetBinContent(1);
+    float currentWeight = (files[i].second/readEvents);
+    
+    currentFile->cd("muTauStreamAnalyzer");
+    TTree* currentTree =  (TTree*)gDirectory->Get("tree");
+
+    TFile *newFile = new TFile( ("treeMuTauStream_"+files[i].first+"new").c_str(), "RECREATE");
+    TDirectory* dir = (TDirectory*) newFile->mkdir("muTauStreamAnalyzer");
+    int entries =  currentTree->GetEntries(); 
+    TTree *tree = currentTree->CloneTree( (int)(fraction*entries) );
+    float weight;
+    TBranch *newBranch = tree->Branch("weight",&weight,"weight/F");
+    int Entries = tree->GetEntries();
+    for(int n=0; n< Entries ; n++ ){
+      tree->GetEntry(n);
+      if(n%5000==0) cout << "Processing event " << n << " with weight " << currentWeight/fraction << endl;
+      weight=currentWeight/fraction;
+      newBranch->Fill();
+    }
+
+    dir->cd();
+    tree->Write();
+    newFile->Write();
+
+    outChain->AddFile( ("treeMuTauStream_"+files[i].first+"new").c_str() );
+    cout << " outChain has " << outChain->GetEntries() 
+	 << endl;
+
+    currentFile->Close();
+    newFile->Close();
+    delete currentFile;
+    delete newFile;
+
+ }
+
+  
+  TDirectory* dir = (TDirectory*) outFile->mkdir("muTauStreamAnalyzer");  
+  TTree* outTree = (TTree*) outChain->CopyTree("");
+    
+  dir->cd();
+  outTree->Write("", TObject::kOverwrite);
+
+
+
+  for(unsigned int j = 0; j<directories.size(); j++){
+
+    cout << "Directory " <<  directories[j] << endl;
+    outFile->mkdir(directories[j].c_str());
+
+    // CASE 1: a filter directory
+    if( directories[j].find("Filter")!=string::npos){
+      TH1F* filterHisto = new TH1F();
+
+      // loop over the files
+      for(unsigned int i = 0; i<files.size();i++){
+	TFile *currentFile = new TFile(("/data_CMS/cms/lbianchini/MuTauStream2011/treeMuTauStream_"+files[i].first).c_str(),"READ");
+
+	// protection
+	if(currentFile->IsZombie()){
+	  cout << "No file " << files[i].first << " is found" << endl;
+	  continue;
+	}
+
+	currentFile->cd("allEventsFilter");
+	TH1F* totalEvents = (TH1F*)gDirectory->Get("totalEvents");
+	float readEvents = totalEvents->GetBinContent(1);
+	float currentWeight;
+	currentWeight = (files[i].second/readEvents);
+	currentWeight/=fraction;
+	currentFile->cd(directories[j].c_str());
+	TH1F* currentHisto =  (TH1F*)gDirectory->Get("totalEvents");
+	if(i==0){
+	  filterHisto = (TH1F*)currentHisto->Clone("totalEvents_v2");
+	  filterHisto->Scale(currentWeight);
+	  filterHisto->SetName("totalEvents");
+	}
+	else{
+	  filterHisto->Add(currentHisto,currentWeight);
+	}
+	cout<<"Adding "<<currentHisto->GetEntries() << endl;
+	cout<<"SubTot "<<filterHisto->GetEntries() << endl;
       } // file
 
       outFile->cd(directories[j].c_str());
