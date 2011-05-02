@@ -186,11 +186,14 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   const pat::METCollection* met = metHandle.product();
 
   edm::Handle<reco::GenJetCollection> tauGenJetsHandle;
-  iEvent.getByLabel(edm::InputTag("tauGenJetsSelectorAllHadrons"),tauGenJetsHandle);
-  if( !tauGenJetsHandle.isValid() )  
-    edm::LogError("DataNotAvailable")
-      << "No gen jet label available \n";
-  const reco::GenJetCollection* tauGenJets = tauGenJetsHandle.product();
+  const reco::GenJetCollection* tauGenJets = 0;
+  if(isMC_){
+    iEvent.getByLabel(edm::InputTag("tauGenJetsSelectorAllHadrons"),tauGenJetsHandle);
+    if( !tauGenJetsHandle.isValid() )  
+      edm::LogError("DataNotAvailable")
+	<< "No gen jet label available \n";
+    tauGenJets = tauGenJetsHandle.product();
+  }
   
   const PATElecTauPair *theDiTau = 0;
   if(diTaus->size()<1){

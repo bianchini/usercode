@@ -28,18 +28,17 @@ def addSelectedPFlowParticle(process,verbose=False):
     #process.patDefaultSequence.replace(process.patCandidates,
     #                                   process.pfCandidateSelectionByType+
     #                                   process.patCandidates)
-    process.patDefaultSequence.replace(process.electronMatch,
-                                       process.pfCandidateSelectionByType+
-                                       process.electronMatch)
+    #process.patDefaultSequence.replace(process.electronMatch,
+    #                                   process.pfCandidateSelectionByType+
+    #                                   process.electronMatch)
     
-
 ###################a#################################################
 def addPFMuonIsolation(process,module,postfix="",verbose=False):
     if verbose:
         print "[Info] Adding particle isolation to muon with postfix '"+postfix+"'"
 
-    if not hasattr(process, "pfCandidateSelectionByType"):
-        addSelectedPFlowParticle(process,verbose=verbose)
+    #if not hasattr(process, "pfCandidateSelectionByType"):
+    #    addSelectedPFlowParticle(process,verbose=verbose)
         
     #setup correct src of isolated object
     setattr(process,"isoDepMuonWithCharged"+postfix,
@@ -160,6 +159,10 @@ def addPFMuonIsolation(process,module,postfix="",verbose=False):
                                        getattr(process,"patMuonIsolationSequence"+postfix)+
                                        module
                                        )
+    process.patDefaultSequence.replace(process.isoDepMuonWithCharged,
+                                       process.pfCandidateSelectionByType+
+                                       process.isoDepMuonWithCharged)
+
 
 ####################################################################
 def addPFMuon(process,postfix,verbose=False):
@@ -212,8 +215,8 @@ def addPFElectronIsolation(process,module,postfix="",verbose=False):
     if verbose:
         print "[Info] Adding particle isolation to electron with postfix '"+postfix+"'"
 
-    if not hasattr(process, "pfCandidateSelectionByType"):
-        addSelectedPFlowParticle(process,verbose=verbose)
+    #if not hasattr(process, "pfCandidateSelectionByType"):
+    #    addSelectedPFlowParticle(process,verbose=verbose)
         
     #setup correct src of isolated object
     setattr(process,"isoDepElectronWithCharged"+postfix,
@@ -332,6 +335,10 @@ def addPFElectronIsolation(process,module,postfix="",verbose=False):
                                        getattr(process,"patElectronIsolationSequence"+postfix)+
                                        module
                                        )
+
+    process.patDefaultSequence.replace(process.isoDepElectronWithCharged,
+                                       process.pfCandidateSelectionByType+
+                                       process.isoDepElectronWithCharged)
 
 ####################################################################
 def addPFElectron(process,postfix,verbose=False):

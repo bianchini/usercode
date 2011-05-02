@@ -39,7 +39,7 @@ process.source.fileNames = cms.untracked.vstring(
 
 postfix           = "PFlow"
 sample            = ""
-runOnMC           = True
+runOnMC           = False
 
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
@@ -100,7 +100,7 @@ removeCleaning(process,
 restrictInputToAOD(process, ['All'])
 
 from Bianchi.Utilities.customizePAT  import *
-#addSelectedPFlowParticle(process)
+addSelectedPFlowParticle(process)
 
 from PhysicsTools.PatAlgos.tools.metTools import *
 addPfMET(process, postfix)

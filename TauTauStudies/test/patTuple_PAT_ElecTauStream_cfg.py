@@ -28,6 +28,10 @@ process.source.fileNames = cms.untracked.vstring(
     #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_1.root',
     #'file:/data_CMS/cms/lbianchini/ZMuMu_RelVal386.root',
     'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/0053C2AC-423C-E011-976F-00215E21DB3A.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/00DCEC58-433B-E011-8FF8-E41F13181A70.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/02300FF5-423B-E011-B949-00215E2221E4.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/023A43AC-433B-E011-A582-00215E21DD26.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall10/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/GEN-SIM-RECO/START38_V12-v1/0000/044E940A-55EC-DF11-89D6-0023AEFDEE60.root',
     #'file:/data_CMS/cms/lbianchini/F41A3437-7AED-DF11-A50D-002618943894.root',
     #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_1.root',
@@ -39,7 +43,7 @@ process.source.fileNames = cms.untracked.vstring(
 
 postfix           = "PFlow"
 sample            = ""
-runOnMC           = True
+runOnMC           = False
 
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
@@ -100,7 +104,7 @@ removeCleaning(process,
 restrictInputToAOD(process, ['All'])
 
 from Bianchi.Utilities.customizePAT  import *
-#addSelectedPFlowParticle(process)
+addSelectedPFlowParticle(process)
 
 from PhysicsTools.PatAlgos.tools.metTools import *
 addPfMET(process, postfix)
@@ -277,8 +281,8 @@ process.secondLeptonVeto = cms.EDFilter(
 process.noMuonVeto = cms.EDFilter(
     "CandViewCountFilter",
     src = cms.InputTag("looseMuons"),
-    minNumber = cms.uint32(0),
-    maxNumber = cms.uint32(0),
+    minNumber = cms.uint32(1),
+    maxNumber = cms.uint32(999),
     )
 process.oneElectronLeg = cms.EDFilter(
     "CandViewCountFilter",
