@@ -390,7 +390,8 @@ def addTriggerMatchingMuon(process,postfix="",verbose=False):
         , src     = cms.InputTag( "selectedPatMuons"+postfix )
         , matched = cms.InputTag( "patTrigger" )
         #, matchedCuts    = cms.string('path("HLT_Mu9") || path("HLT_Mu11") || path("HLT_IsoMu9") || path("HLT_Mu15_v*")')
-        , matchedCuts    = cms.string('path("HLT_Mu11_PFTau15_v*",0) && type("TriggerMuon")')
+        #, matchedCuts    = cms.string('path("HLT_Mu11_PFTau15_v*",0) && type("TriggerMuon")')
+        , matchedCuts    = cms.string('type("TriggerMuon")')
         , maxDPtRel = cms.double( 999 )
         , maxDeltaR = cms.double( 0.5 )
         , resolveAmbiguities    = cms.bool( True )
@@ -437,7 +438,9 @@ def addTriggerMatchingElectron(process,postfix="",verbose=False):
         , src     = cms.InputTag( "selectedPatElectrons"+postfix )
         , matched = cms.InputTag( "patTrigger" )
         #, matchedCuts = cms.string( 'path("HLT_Ele10_SW_L1R_v*") || path("HLT_Ele15_SW_L1R") || path("HLT_Ele17_SW_L1R_v*") || path("HLT_Ele17_SW_Isol_L1R_v*") || path("HLT_Ele17_SW_TighterEleIdIsol_L1R_v*") || path("HLT_Ele22_SW_L1R_v*")' )
-        , matchedCuts = cms.string( 'path("HLT_IsoEle12_PFTau15_v*",0) && type("TriggerElectron")' )
+        #, matchedCuts = cms.string( '(path("HLT_IsoEle12_PFTau15_v*",0) || path("HLT_Ele12_TightIdIso_PFTau15") || path("HLT_Ele12_TightIdIso_PFTau15_v*") || path("HLT_Ele12_TighterIdIso_PFTau15") || path("HLT_Ele12_TighterIdIso_PFTau15_v*")) && type("TriggerElectron")' )
+        #, matchedCuts = cms.string( 'path("HLT_IsoEle12_PFTau15_v3",0) && type("TriggerElectron")' )
+        , matchedCuts = cms.string( 'type("TriggerElectron")' )
         , maxDPtRel = cms.double( 999 )
         , maxDeltaR = cms.double( 0.5)
         , resolveAmbiguities    = cms.bool( True )
@@ -474,4 +477,47 @@ def addTriggerMatchingElectron(process,postfix="",verbose=False):
 
 
 ####################################################################
+def addTriggerMatchingTau(process,postfix="",verbose=False):
+    if verbose:
+        print "[Info] Addting trigger matching to patTau with postfix '"+postfix+"'"
+    
+    process.load( "PhysicsTools.PatAlgos.triggerLayer1.triggerProducer_cfi" )
+    tauMatch = cms.EDProducer(
+        "PATTriggerMatcherDRLessByR"
+        , src     = cms.InputTag( "selectedPatTaus"+postfix )
+        , matched = cms.InputTag( "patTrigger" )
+        , matchedCuts    = cms.string('type("TriggerTau")')
+        , maxDPtRel = cms.double( 999 )
+        , maxDeltaR = cms.double( 0.5 )
+        , resolveAmbiguities    = cms.bool( True )
+        , resolveByMatchQuality = cms.bool( True )
+        )
 
+    setattr(process,"tauTriggerMatchHLTTaus"+postfix,tauMatch.clone()) 
+    if not hasattr(process,"patTriggerSequence"):
+        setattr(process,"patTriggerSequence",
+                cms.Sequence(process.patTrigger))
+        process.patDefaultSequence += process.patTriggerSequence
+
+    if not hasattr(process,"patTriggerMatcher"):
+        setattr(process,"patTriggerMatcher",
+                cms.Sequence(getattr(process,"tauTriggerMatchHLTTaus"+postfix)))
+        process.patTriggerSequence += process.patTriggerMatcher
+    else:
+        process.patTriggerMatcher += getattr(process,"tauTriggerMatchHLTTaus"+postfix)
+
+    setattr(process,"selectedPatTausTriggerMatch"+postfix,
+            cms.EDProducer("PATTriggerMatchTauEmbedder",
+                           src = cms.InputTag( "selectedPatTaus"+postfix ),
+                           matches = cms.VInputTag("tauTriggerMatchHLTTaus"+postfix)
+                           ))
+    if not hasattr(process,"patTriggerMatchEmbedder"):
+        setattr(process,"patTriggerMatchEmbedder",
+                cms.Sequence(getattr(process,"selectedPatTausTriggerMatch"+postfix)))
+        process.patTriggerSequence += process.patTriggerMatchEmbedder
+    else:
+        process.patTriggerMatchEmbedder += getattr(process,"selectedPatTausTriggerMatch"+postfix)
+    
+
+    process.patTrigger.onlyStandAlone = True
+#################################################################################
