@@ -29,6 +29,7 @@
 #endif
 
 #define VERBOSE true
+#define SAVE true
 
 void fakeStudyElec( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",
 		    Double_t effS_ = 0.5,
@@ -49,7 +50,7 @@ void fakeStudyElec( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQC
   c1->SetObjectStat(0);
   c1->SetLogy(logy_);
 
-  TLegend* leg = new TLegend(0.60,0.47,0.90,0.85,NULL,"brNDC");
+  TLegend* leg = new TLegend(0.55,0.47,0.85,0.85,NULL,"brNDC");
   leg->SetFillStyle(0);
   leg->SetBorderSize(0);
   leg->SetFillColor(10);
@@ -79,19 +80,19 @@ void fakeStudyElec( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQC
   reader->AddSpectator("eta1",&eta1);
   reader->AddSpectator("eta2",&eta2);
 
-  reader->BookMVA( "Cuts", TString("weights/")+weightFile ); 
+  reader->BookMVA( "Cuts", TString("/home/llr/cms/lbianchini/CMSSW_3_9_9/src/Bianchi/TauTauStudies/test/Macro/weights/")+weightFile ); 
 
   // define histos
 
-  TString fSignalNameVBF           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/nTupleVBFH115-powheg-PUS1_Open_ElecTauStream.root";
-  TString fSignalNameGGH           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/nTupleGGFH115-powheg-PUS1_Open_ElecTauStream.root";
-  TString fBackgroundNameDYTauTau  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/nTupleDYToTauTau-20-PUS1_Open_ElecTauStream.root";
-  TString fBackgroundNameDYEleEle  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/nTupleDYToEE-20-PUS1_Open_ElecTauStream.root";
-  TString fBackgroundNameWJets     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/nTupleWJets-madgraph-PUS1_Open_ElecTauStream.root";
-  TString fBackgroundNameQCD       = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/nTupleQCD_Open_ElecTauStream.root";
-  TString fBackgroundNameG1J       = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/nTupleG1Jet_Open_ElecTauStream.root";
-  TString fBackgroundNameTTbar     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/nTupleTTJets-madgraph-PUS1_Open_ElecTauStream.root";
-  TString fBackgroundNameDiBoson   = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/nTupleDiBoson_Open_ElecTauStream.root";
+  TString fSignalNameVBF           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleVBFH115-powheg-PUS1_Open_ElecTauStream.root";
+  TString fSignalNameGGH           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleGGFH115-powheg-PUS1_Open_ElecTauStream.root";
+  TString fBackgroundNameDYTauTau  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleDYToTauTau-20-PUS1_Open_ElecTauStream.root";
+  TString fBackgroundNameDYEleEle  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleDYToEE-20-PUS1_Open_ElecTauStream.root";
+  TString fBackgroundNameWJets     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleWJets-madgraph-PUS1_Open_ElecTauStream.root";
+  TString fBackgroundNameQCD       = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleQCD_Open_ElecTauStream.root";
+  TString fBackgroundNameG1J       = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleG1Jet_Open_ElecTauStream.root";
+  TString fBackgroundNameTTbar     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleTTJets-madgraph-PUS1_Open_ElecTauStream.root";
+  TString fBackgroundNameDiBoson   = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleDiBoson_Open_ElecTauStream.root";
 
 
 
@@ -351,7 +352,7 @@ void fakeStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQCD_
   c1->SetObjectStat(0);
   c1->SetLogy(logy_);
 
-  TLegend* leg = new TLegend(0.60,0.47,0.90,0.85,NULL,"brNDC");
+  TLegend* leg = new TLegend(0.55,0.47,0.85,0.85,NULL,"brNDC");
   leg->SetFillStyle(0);
   leg->SetBorderSize(0);
   leg->SetFillColor(10);
@@ -381,18 +382,18 @@ void fakeStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQCD_
   reader->AddSpectator("eta1",&eta1);
   reader->AddSpectator("eta2",&eta2);
 
-  reader->BookMVA( "Cuts", TString("weights/")+weightFile ); 
+  reader->BookMVA( "Cuts", TString("/home/llr/cms/lbianchini/CMSSW_3_9_9/src/Bianchi/TauTauStudies/test/Macro/weights/")+weightFile ); 
 
   // define histos
 
-  TString fSignalNameVBF           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/nTupleVBFH115-Mu-powheg-PUS1_Open_MuTauStream.root";
-  TString fSignalNameGGH           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/nTupleGGFH115-Mu-powheg-PUS1_Open_MuTauStream.root";
-  TString fBackgroundNameDYTauTau  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/nTupleDYToTauTau-Mu-20-PUS1_Open_MuTauStream.root";
-  TString fBackgroundNameDYMuMu    = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/nTupleDYToMuMu-20-PUS1_Open_MuTauStream.root";
-  TString fBackgroundNameWJets     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/nTupleWJets-Mu-madgraph-PUS1_Open_MuTauStream.root";
-  TString fBackgroundNameQCD       = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/nTupleQCDmu_Open_MuTauStream.root";
-  TString fBackgroundNameTTbar     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/nTupleTTJets-Mu-madgraph-PUS1_Open_MuTauStream.root";
-  TString fBackgroundNameDiBoson   = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/nTupleDiBoson-Mu_Open_MuTauStream.root";
+  TString fSignalNameVBF           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleVBFH115-Mu-powheg-PUS1_Open_MuTauStream.root";
+  TString fSignalNameGGH           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleGGFH115-Mu-powheg-PUS1_Open_MuTauStream.root";
+  TString fBackgroundNameDYTauTau  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleDYToTauTau-Mu-20-PUS1_Open_MuTauStream.root";
+  TString fBackgroundNameDYMuMu    = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleDYToMuMu-20-PUS1_Open_MuTauStream.root";
+  TString fBackgroundNameWJets     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleWJets-Mu-madgraph-PUS1_Open_MuTauStream.root";
+  TString fBackgroundNameQCD       = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleQCDmu_Open_MuTauStream.root";
+  TString fBackgroundNameTTbar     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleTTJets-Mu-madgraph-PUS1_Open_MuTauStream.root";
+  TString fBackgroundNameDiBoson   = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleDiBoson-Mu_Open_MuTauStream.root";
 
 
   TFile *fSignalVBF(0); 
@@ -616,4 +617,71 @@ void fakeStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQCD_
 }
 
 
+void doAllPlotsElecTauStream(){
+
+  fakeStudyElec("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1<0.04))","diTauVisMass","visible mass ","GeV",20,0,200,1,0);
+  if(SAVE) gPad->SaveAs("plot_ElecTauStream_visibleMassEleIso.png");
+  fakeStudyElec("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1<0.04)) && tightestHPSWP>0","diTauVisMass","visible mass ","GeV",20,0,200,1,0);
+  if(SAVE) gPad->SaveAs("plot_ElecTauStream_visibleMassEleIsoTauISo.png");
+  fakeStudyElec("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1<0.04)) && tightestHPSWP>0 && MtLeg1<40","diTauVisMass","visible mass ","GeV",20,0,200,1,0);
+  if(SAVE) gPad->SaveAs("plot_ElecTauStream_visibleMassEleIsoTauISoMt.png");
+  fakeStudyElec("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1<0.04)) && tightestHPSWP>0 && MtLeg1<40 && diTauCharge==0","diTauVisMass","visible mass ","GeV",20,0,200,1,0);
+  if(SAVE) gPad->SaveAs("plot_ElecTauStream_visibleMassEleIsoTauISoMtOS.png");
+  fakeStudyElec("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",0.2,"pt1>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1<0.04)) && tightestHPSWP>0 && MtLeg1<40 && diTauCharge==0","diTauVisMass","visible mass ","GeV",20,0,200,1,0);
+  if(SAVE) gPad->SaveAs("plot_ElecTauStream_visibleMassEleIsoTauISoMtOSVBF.png");
+  fakeStudyElec("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",0.2,"pt1>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1<0.04)) && tightestHPSWP>0 && MtLeg1<40 && diTauCharge==0 && ptVeto<20","diTauVisMass","visible mass ","GeV",20,0,200,1,0);
+  if(SAVE) gPad->SaveAs("plot_ElecTauStream_visibleMassEleIsoTauISoMtOSVBFJetVeto.png");
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  fakeStudyElec("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1<0.04))","diTauVisMass","visible mass ","GeV",20,0,200,1,1);
+  if(SAVE) gPad->SaveAs("plot_ElecTauStream_visibleMassEleIso_log.png");
+  fakeStudyElec("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1<0.04)) && tightestHPSWP>0","diTauVisMass","visible mass ","GeV",20,0,200,1,1);
+  if(SAVE) gPad->SaveAs("plot_ElecTauStream_visibleMassEleIsoTauISo_log.png");
+  fakeStudyElec("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1<0.04)) && tightestHPSWP>0 && MtLeg1<40","diTauVisMass","visible mass ","GeV",20,0,200,1,1);
+  if(SAVE) gPad->SaveAs("plot_ElecTauStream_visibleMassEleIsoTauISoMt_log.png");
+  fakeStudyElec("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1<0.04)) && tightestHPSWP>0 && MtLeg1<40 && diTauCharge==0","diTauVisMass","visible mass ","GeV",20,0,200,1,1);
+  if(SAVE) gPad->SaveAs("plot_ElecTauStream_visibleMassEleIsoTauISoMtOS_log.png");
+  fakeStudyElec("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",0.2,"pt1>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1<0.04)) && tightestHPSWP>0 && MtLeg1<40 && diTauCharge==0","diTauVisMass","visible mass ","GeV",20,0,200,1,1);
+  if(SAVE) gPad->SaveAs("plot_ElecTauStream_visibleMassEleIsoTauISoMtOSVBF_log.png");
+  fakeStudyElec("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",0.2,"pt1>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1<0.04)) && tightestHPSWP>0 && MtLeg1<40 && diTauCharge==0 && ptVeto<20","diTauVisMass","visible mass ","GeV",20,0,200,1,1);
+  if(SAVE) gPad->SaveAs("plot_ElecTauStream_visibleMassEleIsoTauISoMtOSVBFJetVeto_log.png");
+
+  return;
+
+}
+
+
+
+void doAllPlotsMuTauStream(){
+
+  fakeStudyMu("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && (combRelIsoLeg1<0.10)","diTauVisMass","visible mass ","GeV",20,0,200,1,0);
+  if(SAVE) gPad->SaveAs("plot_MuTauStream_visibleMassEleIso.png");
+  fakeStudyMu("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && (combRelIsoLeg1<0.10) && tightestHPSWP>0","diTauVisMass","visible mass ","GeV",20,0,200,1,0);
+  if(SAVE) gPad->SaveAs("plot_MuTauStream_visibleMassEleIsoTauISo.png");
+  fakeStudyMu("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && (combRelIsoLeg1<0.10) && tightestHPSWP>0 && MtLeg1<40","diTauVisMass","visible mass ","GeV",20,0,200,1,0);
+  if(SAVE) gPad->SaveAs("plot_MuTauStream_visibleMassEleIsoTauISoMt.png");
+  fakeStudyMu("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && (combRelIsoLeg1<0.10) && tightestHPSWP>0 && MtLeg1<40 && diTauCharge==0","diTauVisMass","visible mass ","GeV",20,0,200,1,0);
+  if(SAVE) gPad->SaveAs("plot_MuTauStream_visibleMassEleIsoTauISoMtOS.png");
+  fakeStudyMu("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",0.2,"pt1>0 && (combRelIsoLeg1<0.10) && tightestHPSWP>0 && MtLeg1<40 && diTauCharge==0","diTauVisMass","visible mass ","GeV",20,0,200,1,0);
+  if(SAVE) gPad->SaveAs("plot_MuTauStream_visibleMassEleIsoTauISoMtOSVBF.png");
+  fakeStudyMu("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",0.2,"pt1>0 && (combRelIsoLeg1<0.10) && tightestHPSWP>0 && MtLeg1<40 && diTauCharge==0 && ptVeto<20","diTauVisMass","visible mass ","GeV",20,0,200,1,0);
+  if(SAVE) gPad->SaveAs("plot_MuTauStream_visibleMassEleIsoTauISoMtOSVBFJetVeto.png");
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  fakeStudyMu("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && (combRelIsoLeg1<0.10)","diTauVisMass","visible mass ","GeV",20,0,200,1,1);
+  if(SAVE) gPad->SaveAs("plot_MuTauStream_visibleMassEleIso_log.png");
+  fakeStudyMu("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && (combRelIsoLeg1<0.10) && tightestHPSWP>0","diTauVisMass","visible mass ","GeV",20,0,200,1,1);
+  if(SAVE) gPad->SaveAs("plot_MuTauStream_visibleMassEleIsoTauISo_log.png");
+  fakeStudyMu("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && (combRelIsoLeg1<0.10) && tightestHPSWP>0 && MtLeg1<40","diTauVisMass","visible mass ","GeV",20,0,200,1,1);
+  if(SAVE) gPad->SaveAs("plot_MuTauStream_visibleMassEleIsoTauISoMt_log.png");
+  fakeStudyMu("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",-1,"pt1>0 && (combRelIsoLeg1<0.10) && tightestHPSWP>0 && MtLeg1<40 && diTauCharge==0","diTauVisMass","visible mass ","GeV",20,0,200,1,1);
+  if(SAVE) gPad->SaveAs("plot_MuTauStream_visibleMassEleIsoTauISoMtOS_log.png");
+  fakeStudyMu("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",0.2,"pt1>0 && (combRelIsoLeg1<0.10) && tightestHPSWP>0 && MtLeg1<40 && diTauCharge==0","diTauVisMass","visible mass ","GeV",20,0,200,1,1);
+  if(SAVE) gPad->SaveAs("plot_MuTauStream_visibleMassEleIsoTauISoMtOSVBF_log.png");
+  fakeStudyMu("TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",0.2,"pt1>0 && (combRelIsoLeg1<0.10) && tightestHPSWP>0 && MtLeg1<40 && diTauCharge==0 && ptVeto<20","diTauVisMass","visible mass ","GeV",20,0,200,1,1);
+  if(SAVE) gPad->SaveAs("plot_MuTauStream_visibleMassEleIsoTauISoMtOSVBFJetVeto_log.png");
+
+  return;
+
+}
 
