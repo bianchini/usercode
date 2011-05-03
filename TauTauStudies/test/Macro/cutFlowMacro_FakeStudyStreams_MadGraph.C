@@ -565,10 +565,10 @@ void cutFlowStudyElec( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZt
 
 
 void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQCD_Cuts.weights.xml",
-		     Double_t effS_ = 0.3) 
+		     Double_t effS_ = 0.41) 
 {
   
-  ofstream out("cutFlow-MuTauStream-MadGraph.txt");
+  ofstream out("cutFlow-MuTauStream-MadGraph-Data.txt");
   out.precision(4);
 
   TMVA::Tools::Instance();
@@ -586,6 +586,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
   reader->AddSpectator("eta2",&eta2);
   reader->BookMVA( "Cuts", TString("/home/llr/cms/lbianchini/CMSSW_3_9_9/src/Bianchi/TauTauStudies/test/Macro/weights/")+weightFile ); 
  
+  TFile *fFullData                = new TFile("/data_CMS/cms/lbianchini//MuTauStream2011/treeMuTauStream_Run2011-PDMuon.root","READ"); 
   TFile *fFullSignalVBF           = new TFile("/data_CMS/cms/lbianchini//MuTauStream2011/treeMuTauStream_VBFH115-Mu-powheg-PUS1.root","READ"); 
   TFile *fFullSignalGGH           = new TFile("/data_CMS/cms/lbianchini//MuTauStream2011/treeMuTauStream_GGFH115-Mu-powheg-PUS1.root","READ");  
   TFile *fFullBackgroundDYTauTau  = new TFile("/data_CMS/cms/lbianchini/MuTauStream2011/treeMuTauStream_DYJets-Mu-50-madgraph-PUS1.root","READ"); 
@@ -596,6 +597,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
   TFile *fFullBackgroundDiBoson   = new TFile("/data_CMS/cms/lbianchini//MuTauStream2011/treeMuTauStream_DiBoson-Mu.root","READ"); 
 
   // OpenNTuples
+  TString fDataName                = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleRun2011-PDMuon_Open_MuTauStream.root";
   TString fSignalNameVBF           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleVBFH115-Mu-powheg-PUS1_Open_MuTauStream.root";
   TString fSignalNameGGH           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleGGFH115-Mu-powheg-PUS1_Open_MuTauStream.root";
   TString fBackgroundNameDYTauTau  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleDYJets-Mu-50-madgraph-PUS1_Open_MuTauStream.root";
@@ -605,6 +607,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
   TString fBackgroundNameTTbar     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleTTJets-Mu-madgraph-PUS1_Open_MuTauStream.root";
   TString fBackgroundNameDiBoson   = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleDiBoson-Mu_Open_MuTauStream.root";
 
+  TFile *fData(0); 
   TFile *fSignalVBF(0); 
   TFile *fSignalGGH(0); 
   TFile *fBackgroundDYTauTau(0);
@@ -614,6 +617,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
   TFile *fBackgroundTTbar(0);
   TFile *fBackgroundDiBoson(0);
  
+  fData               = TFile::Open( fDataName ); 
   fSignalVBF          = TFile::Open( fSignalNameVBF ); 
   fSignalGGH          = TFile::Open( fSignalNameGGH ); 
   fBackgroundDYTauTau = TFile::Open( fBackgroundNameDYTauTau ); 
@@ -624,13 +628,14 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
   fBackgroundDiBoson  = TFile::Open( fBackgroundNameDiBoson ); 
 
   if(!fSignalVBF || !fBackgroundDYTauTau || !fBackgroundWJets || !fBackgroundQCD || !fBackgroundTTbar ||
-     !fSignalGGH || !fBackgroundDYMuMu || !fBackgroundDiBoson ){
+     !fSignalGGH || !fBackgroundDYMuMu || !fBackgroundDiBoson || !fData){
     std::cout << "ERROR: could not open files" << std::endl;
     exit(1);
   }
 
   TString tree = "outTreePtOrd";
 
+  TTree *data                = (TTree*)fData->Get(tree);
   TTree *signalVBF           = (TTree*)fSignalVBF->Get(tree);
   TTree *signalGGH           = (TTree*)fSignalGGH->Get(tree);
 
@@ -646,6 +651,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
 
   // here I define the map between a sample name and its tree
   std::map<std::string,TTree*> tMap;
+  tMap["Data"]=data;
   tMap["ggH115"]=signalGGH;
   tMap["qqH115"]=signalVBF;
   tMap["Ztautau"]=backgroundDYTauTau;
@@ -676,6 +682,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
   samples.push_back("ZfakeTau");
   samples.push_back("Ztautau");
   samples.push_back("QCD");
+  samples.push_back("Data");
 
   std::map<std::string,float> crossSec;
   crossSec["ggH115"]=( 7.65e-02 * 18.13 );
@@ -686,8 +693,9 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
   crossSec["ZfakeTau"]=( 3048  );
   crossSec["Ztautau"]=( 3048  );
   crossSec["QCD"]=( 296600000*0.0002855 );
+  crossSec["Data"]=( 0 );
 
-  float Lumi = 1000;
+  float Lumi = 36.;
 
 
   // here I choose the order in the stack
@@ -710,10 +718,11 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
 
   // here I define the map between a sample name and its file ptr
   std::map<std::string,TFile*> fullMap;
+  fullMap["Data"]     = fFullData;
   fullMap["ggH115"]   = fFullSignalGGH;
   fullMap["qqH115"]   = fFullSignalVBF;
   fullMap["Ztautau"]  = fFullBackgroundDYTauTau;
-  fullMap["ZfakeTau"]    = fFullBackgroundDYMuMu;
+  fullMap["ZfakeTau"] = fFullBackgroundDYMuMu;
   fullMap["Wjets"]    = fFullBackgroundWJets;
   fullMap["QCD"]      = fFullBackgroundQCD;
   fullMap["TTbar"]    = fFullBackgroundTTbar;
@@ -829,7 +838,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
     TH1F* allEvents = (TH1F*)(it->second)->Get("allEventsFilter/totalEvents");
     float totalEvents = allEvents->GetBinContent(1);
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  (crossSec[it->first]>0) ?  "(chIsoLeg1+nhIsoLeg1+phIsoLeg1)/diTauLegsP4[0].Pt()<0.1"
+    TCut cut =  (crossSec[it->first]>=0) ?  "(chIsoLeg1+nhIsoLeg1+phIsoLeg1)/diTauLegsP4[0].Pt()<0.1"
       : "weight*((chIsoLeg1+nhIsoLeg1+phIsoLeg1)/diTauLegsP4[0].Pt()<0.1)";
 
     TCut isRealTau = "isTauLegMatched>0.5";
@@ -842,7 +851,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
     if(crossSec[it->first]>0){
       tot *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
       //totalEquivalentEvents *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
-    }
+    } else if (crossSec[it->first]<0) tot *= Lumi/1000; 
     cutMap_ElecIso[it->first] = tot;
     cutMap_ElecIsoE[it->first] = totalEquivalentEvents>0 ? sqrt(totalEquivalentEvents)*(tot/totalEquivalentEvents) : 0;
     delete h1;
@@ -854,7 +863,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
     TH1F* allEvents = (TH1F*)(it->second)->Get("allEventsFilter/totalEvents");
     float totalEvents = allEvents->GetBinContent(1);
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  (crossSec[it->first]>0) ?  "(chIsoLeg1+nhIsoLeg1+phIsoLeg1)/diTauLegsP4[0].Pt()<0.1 && tightestHPSWP>0"
+    TCut cut =  (crossSec[it->first]>=0) ?  "(chIsoLeg1+nhIsoLeg1+phIsoLeg1)/diTauLegsP4[0].Pt()<0.1 && tightestHPSWP>0"
       : "weight*((chIsoLeg1+nhIsoLeg1+phIsoLeg1)/diTauLegsP4[0].Pt()<0.1 && tightestHPSWP>0)";
 
     TCut isRealTau = "isTauLegMatched>0.5";
@@ -867,7 +876,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
     if(crossSec[it->first]>0){
       tot *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
       //totalEquivalentEvents *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
-    }
+    } else if (crossSec[it->first]<0) tot *= Lumi/1000; 
     cutMap_TauIso[it->first] = tot;
     cutMap_TauIsoE[it->first] = totalEquivalentEvents>0 ? sqrt(totalEquivalentEvents)*(tot/totalEquivalentEvents) : 0;
     delete h1;
@@ -879,7 +888,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
     TH1F* allEvents = (TH1F*)(it->second)->Get("allEventsFilter/totalEvents");
     float totalEvents = allEvents->GetBinContent(1);
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  (crossSec[it->first]>0) ?  "(chIsoLeg1+nhIsoLeg1+phIsoLeg1)/diTauLegsP4[0].Pt()<0.1 && tightestHPSWP>0 && MtLeg1<40"
+    TCut cut =  (crossSec[it->first]>=0) ?  "(chIsoLeg1+nhIsoLeg1+phIsoLeg1)/diTauLegsP4[0].Pt()<0.1 && tightestHPSWP>0 && MtLeg1<40"
       : "weight*((chIsoLeg1+nhIsoLeg1+phIsoLeg1)/diTauLegsP4[0].Pt()<0.1 && tightestHPSWP>0 && MtLeg1<40)";
 
     TCut isRealTau = "isTauLegMatched>0.5";
@@ -892,7 +901,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
     if(crossSec[it->first]>0){
       tot *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
       //totalEquivalentEvents *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
-    }
+    } else if (crossSec[it->first]<0) tot *= Lumi/1000; 
     cutMap_Mt[it->first] = tot;
     cutMap_MtE[it->first] = totalEquivalentEvents>0 ? sqrt(totalEquivalentEvents)*(tot/totalEquivalentEvents) : 0;
     delete h1;
@@ -904,7 +913,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
     TH1F* allEvents = (TH1F*)(it->second)->Get("allEventsFilter/totalEvents");
     float totalEvents = allEvents->GetBinContent(1);
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  (crossSec[it->first]>0) ?  "(chIsoLeg1+nhIsoLeg1+phIsoLeg1)/diTauLegsP4[0].Pt()<0.1 && tightestHPSWP>0 && diTauCharge==0 && MtLeg1<40"
+    TCut cut =  (crossSec[it->first]>=0) ?  "(chIsoLeg1+nhIsoLeg1+phIsoLeg1)/diTauLegsP4[0].Pt()<0.1 && tightestHPSWP>0 && diTauCharge==0 && MtLeg1<40"
       : "weight*((chIsoLeg1+nhIsoLeg1+phIsoLeg1)/diTauLegsP4[0].Pt()<0.1 && tightestHPSWP>0 && diTauCharge==0 && MtLeg1<40)";
 
     TCut isRealTau = "isTauLegMatched>0.5";
@@ -917,7 +926,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
     if(crossSec[it->first]>0){
       tot *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
       //totalEquivalentEvents *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
-    }
+    } else if (crossSec[it->first]<0) tot *= Lumi/1000; 
     cutMap_OS[it->first] = tot;
     cutMap_OSE[it->first] = totalEquivalentEvents>0 ? sqrt(totalEquivalentEvents)*(tot/totalEquivalentEvents) : 0;
     delete h1;
@@ -929,6 +938,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*(pt1>0 && combRelIsoLeg1<0.1 && tightestHPSWP>0 && diTauCharge==0 && MtLeg1<40)"; 
     jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_VBFPre[jt->first] = tot;
@@ -987,6 +997,8 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
       pt2  = pt2_;
       Deta = Deta_;
       Mjj  = Mjj_;
+
+      if((jt->first).find("Data")==string::npos) sampleWeight *= (Lumi/1000); 
 
       bool pass = effS_>0 ? reader->EvaluateMVA( "Cuts", effS_ ) : (pt1>0);
 
@@ -1051,15 +1063,28 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
   allFiltersE.push_back(cutMap_JetVetoE);
   allFiltersE.push_back(cutMap_HLTE);
 
+
+  std::vector<std::pair<float,float> > SMsums;
+
+  for(int i = 0; i < allFilters.size(); i++){
+    float SM=0,SME2=0;
+   for(int k = 0 ; k < samples.size()-1; k++){
+     SM+=(allFilters[i].find(samples[k]))->second;
+     SME2+=(allFiltersE[i].find(samples[k]))->second*(allFiltersE[i].find(samples[k]))->second;
+   }
+   SMsums.push_back( make_pair(SM,SME2 ));
+  }
+
+
   //out<<"\\begin{center}"<<endl;
   out<<"\\begin{tabular}[!htbp]{|c";
   for(int k = 0 ; k < samples.size(); k++) out<<"|c";
-  out<<"|} \\hline"<<endl;
+  out<<"|c|} \\hline"<<endl;
   out<< "Cut & ";
   for(int k = 0 ; k < samples.size(); k++){
     out << (fullMap.find(samples[k]))->first;
     if(k!=samples.size()-1) out <<" & " ;
-    else out << " \\\\ " << endl;
+    else out << " & $\\Sigma$ SM \\\\ " << endl;
   }
   out <<  " \\hline" << endl;
 
@@ -1069,7 +1094,7 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
     for(int k = 0 ; k < samples.size(); k++){
       out << (allFilters[i].find(samples[k]))->second << " $\\pm$ " << (allFiltersE[i].find(samples[k]))->second;
       if(k!=samples.size()-1) out <<" & " ;
-      else out << " \\\\ " << endl;
+      else out << " & " << SMsums[i].first << "$\\pm$" <<  sqrt(SMsums[i].second) << " \\\\ " << endl;
     }
     out <<  " \\hline" << endl;
 
@@ -1077,7 +1102,103 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
   
   out<<"\\end{tabular}"<<endl;
   //out<<"\\end{center}"<<endl;
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////
+  TCanvas *c1 = new TCanvas("c1CutFlowMass","",5,30,650,600);
+  c1->SetGrid(0,0);
+  c1->SetFillStyle(4000);
+  c1->SetFillColor(10);
+  c1->SetTicky();
+  c1->SetObjectStat(0);
+  c1->SetLogy(1);
  
+  TLegend* leg = new TLegend(0.55,0.55,0.80,0.88,NULL,"brNDC");
+  leg->SetFillStyle(0);
+  leg->SetBorderSize(0);
+  leg->SetFillColor(10);
+  leg->SetTextSize(0.04);
+  leg->SetHeader( "#mu+#tau" );
+
+  THStack* aStack = new THStack("aStack",Form("CMS Preliminary 2011    #sqrt{s}=7 TeV L=%.0f pb^{-1}",Lumi));
+
+  std::vector<TH1F*> histos;
+  for(int k = 0 ; k < samples.size(); k++){
+    TH1F* h1 = new TH1F( ("h1_"+samples[k]).c_str(), Form("CMS Preliminary 2011    #sqrt{s}=7 TeV L=%.0f pb^{-1} ; ; Events",Lumi) , filters.size(), 0, filters.size());
+
+    if( (samples[k]).find("ZfakeTau")!=string::npos ) {
+      h1->SetFillColor(7);
+      leg->AddEntry(h1,"Z+jets, fake-#tau","F");
+    }
+    if( (samples[k]).find("Ztautau")!=string::npos ) {
+      h1->SetFillColor(kRed);
+      leg->AddEntry(h1,"Z+jets, genuine #tau","F");
+    }
+    if( (samples[k]).find("TTbar")!=string::npos ) {
+      h1->SetFillColor(kBlue);
+      leg->AddEntry(h1,"t#bar{t}+jets","F");
+    }
+    if( (samples[k]).find("Wjets")!=string::npos ) {
+      h1->SetFillColor(kGreen);
+      leg->AddEntry(h1,"W+jets","F");
+    }
+    if( (samples[k]).find("DiBoson")!=string::npos ) {
+      h1->SetFillColor(38);
+      leg->AddEntry(h1,"Di-Boson","F");
+    }
+    if( (samples[k]).find("QCD")!=string::npos ) {
+      h1->SetFillColor(42);
+      leg->AddEntry(h1,"QCD-multijets","F");
+    }
+    if((samples[k]).find("qqH115")!=string::npos){
+      h1->SetLineWidth(2);
+      h1->SetLineColor(kBlack);
+      h1->SetFillColor(kBlack);     
+      h1->SetFillStyle(3004);
+      leg->AddEntry(h1,"qqH(115)","F");
+    }
+    if((samples[k]).find("ggH115")!=string::npos){
+      h1->SetLineWidth(2);
+      h1->SetLineColor(kBlack);  
+      h1->SetFillColor(kBlack);     
+      h1->SetFillStyle(3005);
+      leg->AddEntry(h1,"ggH(115)","F");
+    }
+    
+
+    //h1->SetLineWidth(1.4);
+    for(int v = 0; v < filters.size(); v++){
+      h1->GetXaxis()->SetBinLabel(v+1,filters[v].c_str());
+      h1->SetBinContent(v+1, (allFilters[v].find(samples[k]))->second );
+    }
+    if(samples[k].find("Data")!=string::npos){
+      h1->Sumw2();
+      h1->SetMarkerStyle(20);
+      h1->SetMarkerSize(1.2);
+      h1->SetMarkerColor(kBlack);
+      h1->SetLineColor(kBlack);
+      leg->AddEntry(h1,"DATA","P");
+    }
+    //else leg->AddEntry(h1,samples[k].c_str(),"L");
+    histos.push_back(h1);
+  }
+
+  for(int k = 0 ; k < histos.size(); k++){
+    string histoName =  std::string( histos[k]->GetName() );
+    if( histoName.find("Data")== string::npos) aStack->Add(histos[k]);
+  }
+  aStack->Draw("HIST");
+  TH1F* hStack = (TH1F*)aStack->GetHistogram();
+  aStack->GetYaxis()->SetRangeUser(0.01,10000000);
+
+  for(int k = 0 ; k < histos.size(); k++){
+    string histoName =  std::string( histos[k]->GetName() );
+    if( histoName.find("Data")!= string::npos){
+      histos[k]->Sumw2();
+      histos[k]->Draw("PSAME");
+    }
+  }
+
+  leg->Draw();
 
   return;
 
