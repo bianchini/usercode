@@ -37,8 +37,10 @@ using namespace std;
 void makeTrees_ElecTauStream(int index = 4){
 
   std::vector<std::string> samples;
+  samples.push_back("DYJets-50-madgraph-PUS1");
   samples.push_back("DYToEE-20-PUS1");
   samples.push_back("DYToTauTau-20-PUS1");
+  samples.push_back("Zjets-alpgen-PUS1");
   samples.push_back("TTJets-madgraph-PUS1");
   samples.push_back("WJets-madgraph-PUS1");
   //samples.push_back("WW-pythia-PUS1");
@@ -54,8 +56,10 @@ void makeTrees_ElecTauStream(int index = 4){
   samples.push_back("GGFH130-powheg-PUS1");
 
   std::vector<float> crossSec;
+  crossSec.push_back( 3048  );
   crossSec.push_back( 1666  );
   crossSec.push_back( 1666  );
+  crossSec.push_back( -1  );
   crossSec.push_back( 157.5 );
   crossSec.push_back( 31314.0);
   crossSec.push_back( -1 );
@@ -90,6 +94,8 @@ void makeTrees_ElecTauStream(int index = 4){
   int tightestHPSWP_;
   float jetsBtagHE1,jetsBtagHE2;
   float ptVeto;
+  float HLT;
+  int isTauLegMatched_;
 
   outTreePtOrd->Branch("pt1",  &pt1,"pt1/F");
   outTreePtOrd->Branch("pt2",  &pt2,"pt2/F");
@@ -111,6 +117,8 @@ void makeTrees_ElecTauStream(int index = 4){
   outTreePtOrd->Branch("sampleWeight",  &sampleWeight,"sampleWeight/F"); 
   outTreePtOrd->Branch("combRelIsoLeg1",  &combRelIsoLeg1,"combRelIsoLeg1/F");
   outTreePtOrd->Branch("tightestHPSWP",  &tightestHPSWP_,"tightestHPSWP/I");
+  outTreePtOrd->Branch("HLT", &HLT,"HLT/F");
+  outTreePtOrd->Branch("isTauLegMatched", &isTauLegMatched_,"isTauLegMatched/I");
 
   //outTreePtOrd->Branch("diTauVisPt",    &diTauVisPt,"diTauVisPt/F");
   //outTreePtOrd->Branch("diTauVisEta",   &diTauVisEta,"diTauVisEta/F");
@@ -167,9 +175,10 @@ void makeTrees_ElecTauStream(int index = 4){
   currentTree->SetBranchStatus("decayMode",0);
   //currentTree->SetBranchStatus("tightestHPSWP",0);
   currentTree->SetBranchStatus("visibleTauMass",0);
-  currentTree->SetBranchStatus("isTauLegMatched",0);
+  //currentTree->SetBranchStatus("isTauLegMatched",0);
   currentTree->SetBranchStatus("isElecLegMatched",0);
   //currentTree->SetBranchStatus("diTauCharge",0);
+  //currentTree->SetBranchStatus("tauXTriggers",0);
 
   //std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jets;
   //std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauLegsP4;
@@ -183,6 +192,7 @@ void makeTrees_ElecTauStream(int index = 4){
   float  diTauCharge, MtLeg1; 
   float numPV;
   float weight;
+  int isTauLegMatched;
 
   std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jets        = new std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   currentTree->SetBranchAddress("jetsIDP4",   &jets);
@@ -191,9 +201,12 @@ void makeTrees_ElecTauStream(int index = 4){
   std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauVisP4  =  new std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   currentTree->SetBranchAddress("diTauVisP4",&diTauVisP4);
   std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauICAP4 =  new std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  currentTree->SetBranchAddress("diTauICAP4",&diTauICAP4);
+  //currentTree->SetBranchAddress("diTauICAP4",&diTauICAP4);
   std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauSVfit3P4 =  new std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   currentTree->SetBranchAddress("diTauSVfit3P4",&diTauSVfit3P4);
+  std::vector< int >* tauXTriggers =  new std::vector< int >();
+  currentTree->SetBranchAddress("tauXTriggers",&tauXTriggers);
+
 
   //currentTree->SetBranchAddress("jetsBtagHE",&jetsBtagHE);
 
@@ -204,6 +217,7 @@ void makeTrees_ElecTauStream(int index = 4){
   currentTree->SetBranchAddress("diTauCharge",&diTauCharge);
   currentTree->SetBranchAddress("MtLeg1",&MtLeg1);
   currentTree->SetBranchAddress("numPV",&numPV);
+  currentTree->SetBranchAddress("isTauLegMatched",&isTauLegMatched);
 
 
   if(crossSec[index]<0) currentTree->SetBranchAddress("weight",&weight);
@@ -217,7 +231,7 @@ void makeTrees_ElecTauStream(int index = 4){
     diTauSVFitMass = -99;diTauSVFitPt=-99;diTauSVFitEta=-99;diTauVisMass=-99;
     ptL1=-99;ptL2=-99;etaL1=-99;etaL2=-99;diTauCharge_=-99;MtLeg1_=-99;
     tightestHPSWP_=-99;numPV_=-99;combRelIsoLeg1=-99;sampleWeight=-99;
-    ptVeto=-99;
+    ptVeto=-99;HLT=-99;isTauLegMatched_=-99;
 
     if(jets->size()>1 && (*jets)[0].Et()>MINPt1 && (*jets)[1].Et()>MINPt2 && (*jets)[0].Eta()*(*jets)[1].Eta()<0 ){
       pt1  = (*jets)[0].Pt();
@@ -239,8 +253,8 @@ void makeTrees_ElecTauStream(int index = 4){
       diTauVisMass  = (*diTauVisP4)[0].M();
       diTauVisPt  = (*diTauVisP4)[0].Pt();
       diTauVisEta = (*diTauVisP4)[0].Eta();
-      diTauCAPt  = (*diTauICAP4)[0].Pt();
-      diTauCAEta = (*diTauICAP4)[0].Eta();
+      //diTauCAPt  = (*diTauICAP4)[0].Pt();
+      //diTauCAEta = (*diTauICAP4)[0].Eta();
       diTauSVFitPt  = (*diTauSVfit3P4)[0].Pt();
       diTauSVFitEta = (*diTauSVfit3P4)[0].Eta();
       diTauSVFitMass = (*diTauSVfit3P4)[0].M();
@@ -256,7 +270,9 @@ void makeTrees_ElecTauStream(int index = 4){
       numPV_ = numPV;
       combRelIsoLeg1 = (chIsoLeg1+nhIsoLeg1+phIsoLeg1)/(*diTauLegsP4)[0].Pt();
       sampleWeight = (scaleFactor>0) ? scaleFactor : weight;
-   
+      HLT=float((*tauXTriggers)[0]);   
+      isTauLegMatched_ = isTauLegMatched;
+
       outTreePtOrd->Fill();
       continue;
     }
@@ -270,7 +286,7 @@ void makeTrees_ElecTauStream(int index = 4){
  if(SAVE) outFile->Write();
  outFile->Close();
 
- delete jets; delete diTauLegsP4; delete diTauVisP4; delete diTauICAP4; delete diTauSVfit3P4;
+ delete jets; delete diTauLegsP4; delete diTauVisP4; delete diTauICAP4; delete diTauSVfit3P4; delete tauXTriggers;
   
 }
 
@@ -278,8 +294,10 @@ void makeTrees_ElecTauStream(int index = 4){
 void makeTrees_MuTauStream(int index = 4){
 
   std::vector<std::string> samples;
+  samples.push_back("DYJets-Mu-50-madgraph-PUS1");
   samples.push_back("DYToMuMu-20-PUS1");
   samples.push_back("DYToTauTau-Mu-20-PUS1");
+  samples.push_back("Zjets-Mu-alpgen-PUS1");
   samples.push_back("TTJets-Mu-madgraph-PUS1");
   samples.push_back("WJets-Mu-madgraph-PUS1");
   samples.push_back("DiBoson-Mu");
@@ -292,8 +310,10 @@ void makeTrees_MuTauStream(int index = 4){
   samples.push_back("GGFH130-Mu-powheg-PUS1");
 
   std::vector<float> crossSec;
+  crossSec.push_back( 3048  );
   crossSec.push_back( 1666  );
   crossSec.push_back( 1666  );
+  crossSec.push_back( -1 );
   crossSec.push_back( 157.5 );
   crossSec.push_back( 31314.0);
   crossSec.push_back( -1 );
@@ -325,7 +345,9 @@ void makeTrees_MuTauStream(int index = 4){
   int tightestHPSWP_;
   float jetsBtagHE1,jetsBtagHE2;
   float ptVeto;
-
+  float HLT;
+  int isTauLegMatched_;
+ 
   outTreePtOrd->Branch("pt1",  &pt1,"pt1/F");
   outTreePtOrd->Branch("pt2",  &pt2,"pt2/F");
   outTreePtOrd->Branch("eta1", &eta1,"eta1/F");
@@ -346,6 +368,8 @@ void makeTrees_MuTauStream(int index = 4){
   outTreePtOrd->Branch("sampleWeight",  &sampleWeight,"sampleWeight/F"); 
   outTreePtOrd->Branch("combRelIsoLeg1",  &combRelIsoLeg1,"combRelIsoLeg1/F");
   outTreePtOrd->Branch("tightestHPSWP",  &tightestHPSWP_,"tightestHPSWP/I");
+  outTreePtOrd->Branch("HLT", &HLT,"HLT/F");
+  outTreePtOrd->Branch("isTauLegMatched", &isTauLegMatched_,"isTauLegMatched/I");
 
   //outTreePtOrd->Branch("diTauVisPt",    &diTauVisPt,"diTauVisPt/F");
   //outTreePtOrd->Branch("diTauVisEta",   &diTauVisEta,"diTauVisEta/F");
@@ -402,9 +426,10 @@ void makeTrees_MuTauStream(int index = 4){
   currentTree->SetBranchStatus("decayMode",0);
   //currentTree->SetBranchStatus("tightestHPSWP",0);
   currentTree->SetBranchStatus("visibleTauMass",0);
-  currentTree->SetBranchStatus("isTauLegMatched",0);
+  //currentTree->SetBranchStatus("isTauLegMatched",0);
   currentTree->SetBranchStatus("isMuLegMatched",0);
   //currentTree->SetBranchStatus("diTauCharge",0);
+  //currentTree->SetBranchStatus("tauXTriggers",0);
 
   //std::vector<double>* jetsBtagHE;
  
@@ -413,6 +438,7 @@ void makeTrees_MuTauStream(int index = 4){
   float  diTauCharge, MtLeg1; 
   float numPV;
   float weight;
+  int isTauLegMatched;
 
   std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jets        = new std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   currentTree->SetBranchAddress("jetsIDP4",   &jets);
@@ -421,9 +447,11 @@ void makeTrees_MuTauStream(int index = 4){
   std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauVisP4  =  new std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   currentTree->SetBranchAddress("diTauVisP4",&diTauVisP4);
   std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauICAP4 =  new std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  currentTree->SetBranchAddress("diTauICAP4",&diTauICAP4);
+  //currentTree->SetBranchAddress("diTauICAP4",&diTauICAP4);
   std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauSVfit3P4 =  new std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   currentTree->SetBranchAddress("diTauSVfit3P4",&diTauSVfit3P4);
+  std::vector< int >* tauXTriggers =  new std::vector< int >();
+  currentTree->SetBranchAddress("tauXTriggers",&tauXTriggers);
 
   //currentTree->SetBranchAddress("jetsBtagHE",&jetsBtagHE);
 
@@ -434,7 +462,7 @@ void makeTrees_MuTauStream(int index = 4){
   currentTree->SetBranchAddress("diTauCharge",&diTauCharge);
   currentTree->SetBranchAddress("MtLeg1",&MtLeg1);
   currentTree->SetBranchAddress("numPV",&numPV);
-
+  currentTree->SetBranchAddress("isTauLegMatched",&isTauLegMatched);
 
   if(crossSec[index]<0) currentTree->SetBranchAddress("weight",&weight);
 
@@ -447,7 +475,7 @@ void makeTrees_MuTauStream(int index = 4){
     diTauSVFitMass = -99;diTauSVFitPt=-99;diTauSVFitEta=-99;diTauVisMass=-99;
     ptL1=-99;ptL2=-99;etaL1=-99;etaL2=-99;diTauCharge_=-99;MtLeg1_=-99;
     tightestHPSWP_=-99;numPV_=-99;combRelIsoLeg1=-99;sampleWeight=-99;
-    ptVeto=-99;
+    ptVeto=-99;HLT=-99;isTauLegMatched_=-99;
 
     if(jets->size()>1 && (*jets)[0].Et()>MINPt1 && (*jets)[1].Et()>MINPt2 && (*jets)[0].Eta()*(*jets)[1].Eta()<0 ){
       pt1  = (*jets)[0].Pt();
@@ -469,8 +497,8 @@ void makeTrees_MuTauStream(int index = 4){
       diTauVisMass  = (*diTauVisP4)[0].M();
       diTauVisPt  = (*diTauVisP4)[0].Pt();
       diTauVisEta = (*diTauVisP4)[0].Eta();
-      diTauCAPt  = (*diTauICAP4)[0].Pt();
-      diTauCAEta = (*diTauICAP4)[0].Eta();
+      //diTauCAPt  = (*diTauICAP4)[0].Pt();
+      //diTauCAEta = (*diTauICAP4)[0].Eta();
       diTauSVFitPt  = (*diTauSVfit3P4)[0].Pt();
       diTauSVFitEta = (*diTauSVfit3P4)[0].Eta();
       diTauSVFitMass = (*diTauSVfit3P4)[0].M();
@@ -486,7 +514,9 @@ void makeTrees_MuTauStream(int index = 4){
       numPV_ = numPV;
       combRelIsoLeg1 = (chIsoLeg1+nhIsoLeg1+phIsoLeg1)/(*diTauLegsP4)[0].Pt();
       sampleWeight = (scaleFactor>0) ? scaleFactor : weight;
-   
+      HLT=float((*tauXTriggers)[0]);  
+      isTauLegMatched_ = isTauLegMatched;
+
       outTreePtOrd->Fill();
       continue;
     }
@@ -500,7 +530,7 @@ void makeTrees_MuTauStream(int index = 4){
  if(SAVE) outFile->Write();
  outFile->Close();
 
- delete jets; delete diTauLegsP4; delete diTauVisP4; delete diTauICAP4; delete diTauSVfit3P4;
+ delete jets; delete diTauLegsP4; delete diTauVisP4; delete diTauICAP4; delete diTauSVfit3P4; delete tauXTriggers;
   
 }
 
@@ -508,7 +538,7 @@ void makeTrees_MuTauStream(int index = 4){
 
 void doAllSamplesElec(){
  
-  for( unsigned int k = 0; k < 13 ; k++)  makeTrees_ElecTauStream(k);
+  for( unsigned int k = 0; k < 12 ; k++)  makeTrees_ElecTauStream(k);
 
   return;
 
@@ -516,7 +546,7 @@ void doAllSamplesElec(){
 
 void doAllSamplesMu(){
  
-  for( unsigned int k = 0; k < 10 ; k++)  makeTrees_MuTauStream(k);
+  for( unsigned int k = 0; k < 11 ; k++)  makeTrees_MuTauStream(k);
 
   return;
 

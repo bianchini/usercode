@@ -93,7 +93,7 @@ void makeElecTauStreamTree(string sample = "Zjets", float Lumi = 1000){
   TFile *outFile = new TFile(("treeElecTauStream_"+sample+".root").c_str(),"RECREATE");
   TChain* outChain = new TChain("elecTauStreamAnalyzer/tree");
 
-  float fraction = 0.25;
+  float fraction = 1.0;
 
   for(unsigned int i = 0; i<files.size();i++){
 
