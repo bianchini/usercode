@@ -281,8 +281,8 @@ process.secondLeptonVeto = cms.EDFilter(
 process.noMuonVeto = cms.EDFilter(
     "CandViewCountFilter",
     src = cms.InputTag("looseMuons"),
-    minNumber = cms.uint32(1),
-    maxNumber = cms.uint32(999),
+    minNumber = cms.uint32(0),
+    maxNumber = cms.uint32(0),
     )
 process.oneElectronLeg = cms.EDFilter(
     "CandViewCountFilter",
