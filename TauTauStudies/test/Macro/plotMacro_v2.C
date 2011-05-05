@@ -362,7 +362,7 @@ void plotDEta(  FileList fileList  , float Lumi_ = 30 , float cutOff_ = 30., flo
   TH1F* hDataClone = (TH1F*)hData->Clone("hDataClone");
   hDataClone->Add(hSiml,-1);
   hRatio->Divide( hDataClone ,hSiml,1.0,1.0);
-  hRatio->SetAxisRange(-0.5,0.5,"Y");
+  hRatio->SetAxisRange(-1,1,"Y");
   hRatio->Draw();
   
   TF1* line = new TF1("line","0",hRatio->GetXaxis()->GetXmin(),hStack->GetXaxis()->GetXmax());
@@ -441,7 +441,7 @@ void plotMass(FileList fileList,  float Lumi_ = 30 , float cutOff_ = 30, float m
 
     TTree* currentTree = (TTree*)currentFile->Get("zPlusJetsAnalyzer/tree");
     string h1Name = "h1_"+(fileList_[i].second).first;
-    TH1F* h1 = new TH1F( h1Name.c_str() ,"", 40 ,0 , 800);
+    TH1F* h1 = new TH1F( h1Name.c_str() ,"", 30 ,0 , 600);
 
     int nEntries = currentTree->GetEntries() ;
 
@@ -481,19 +481,16 @@ void plotMass(FileList fileList,  float Lumi_ = 30 , float cutOff_ = 30, float m
     }
 
     std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jets;
-    //std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diMu;
     currentTree->SetBranchAddress("jetsIDP4",&jets);
-    //currentTree->SetBranchAddress("diMuonP4",&diMu);
 
     for (int n = 0; n < nEntries ; n++) {
-      //if(n%100==0) cout << n << endl;
       currentTree->GetEntry(n);
       XYZTVector q;
       if( jets->size()>1 && 
 	  (*jets)[0].Et()> cutOff_ &&
 	  (*jets)[1].Et()> cutOff_ && 
 	  abs((*jets)[0].Eta())<maxEta_ && 
-	  abs((*jets)[1].Eta())<maxEta_ /* && ((*jets)[0]+(*jets)[1]).Pt()>30 && abs((*diMu)[0].Pt()-90.)<10*/
+	  abs((*jets)[1].Eta())<maxEta_
 	  ) h1->Fill(  ((*jets)[0]+(*jets)[1]).M());
     }
 
@@ -513,11 +510,8 @@ void plotMass(FileList fileList,  float Lumi_ = 30 , float cutOff_ = 30, float m
 
   }
 
-  cout << "Exp bkg = " << hSiml->Integral() << " --- DATA = " << hData->GetEntries() << endl;
-
   aStack->Draw("HIST");
   hData->Draw("PSAME");
-
   TH1F* hStack = (TH1F*)aStack->GetHistogram();
   hStack->SetXTitle("M_{j1,j2} (GeV/c^{2})");
   hStack->SetYTitle(Form(" Events/(%.0f GeV/c^{2})", hStack->GetBinWidth(1) ) );
@@ -539,7 +533,7 @@ void plotMass(FileList fileList,  float Lumi_ = 30 , float cutOff_ = 30, float m
   TH1F* hDataClone = (TH1F*)hData->Clone("hDataClone");
   hDataClone->Add(hSiml,-1);
   hRatio->Divide( hDataClone ,hSiml,1.0,1.0);
-  hRatio->SetAxisRange(-0.5,0.5,"Y");
+  hRatio->SetAxisRange(-1,1,"Y");
 
   hRatio->Draw();
   TF1* line = new TF1("line","0",hRatio->GetXaxis()->GetXmin(),hStack->GetXaxis()->GetXmax());
@@ -553,187 +547,7 @@ void plotMass(FileList fileList,  float Lumi_ = 30 , float cutOff_ = 30, float m
 }
 
 
-void plotBtagInMassBump(FileList fileList,  float Lumi_ = 30 , float cutOff_ = 30, float maxEta_ = 4.5, float corrFactor_ = 1.0){
-
-  for(int i = 0; i<fileList.size(); i++){
-    (fileList[i].first)->Close();
-    delete (fileList[i].first);
-  }
-  
-  TFile* fData   = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_Mu-Run2010.root","READ");
-  TFile* fDYJets = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_DYJets-madgraph-50-PU.root","READ");
-  TFile* fTT     = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_TT-madgraph-PU.root","READ");
-  TFile* fWJets  = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_WJets-madgraph-PU.root","READ");
-  TFile* fWZ     = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_WZ-pythia-PU.root","READ");
-  TFile* fWW     = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_WW-pythia-PU.root","READ");
-  TFile* fT      = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_TToBLNu-tW-madhraph-PU.root","READ");
-  TFile* fQCD    = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_QCD-pythia-PU.root","READ");
-
-  FileList fileList_;
-  fileList_.push_back( make_pair(fWW   ,  make_pair("WW"   ,      2.9 )  ));
-  fileList_.push_back( make_pair(fWZ,     make_pair("WZ",        10.4 )  ));
-  fileList_.push_back( make_pair(fT,      make_pair("tW",        10.6 )  ));
-  fileList_.push_back( make_pair(fQCD,    make_pair("QCD",   349988.0 )  ));
-  fileList_.push_back( make_pair(fWJets,  make_pair("Wjets",  31314.0 )  ));
-  fileList_.push_back( make_pair(fTT,     make_pair("ttbar",    157.5 )  ));
-  fileList_.push_back( make_pair(fDYJets, make_pair("Zjets",   3048.0 )  ));
-  fileList_.push_back( make_pair(fData,   make_pair("data",       -99 )  ));
-
-  TCanvas *c1 = new TCanvas(Form("c1BtagInMassBumpPt%.0f_Eta%.1f",cutOff_,maxEta_),"",5,30,650,600);
-  c1->SetGrid(0,0);
-  c1->SetFillStyle(4000);
-  c1->SetFillColor(10);
-  c1->SetTicky();
-  c1->SetObjectStat(0);
-  c1->SetLogy(1);
-
-
-  TPad* pad1 = new TPad(Form("pad1BtagInMassBumpPt%.0f_Eta%.1f",cutOff_,maxEta_),"",0.05,0.27,0.96,0.97);
-  TPad* pad2 = new TPad(Form("pad2BtagInMassBumpPt%.0f_Eta%.1f",cutOff_,maxEta_),"",0.05,0.02,0.96,0.26);
-  pad1->SetFillColor(0);
-  pad2->SetFillColor(0);
-  pad1->Draw();
-  pad2->Draw();
-
-  pad1->cd();
-  pad1->SetLogy(1);
-
-  TLegend* leg = new TLegend(0.60,0.55,0.90,0.90,NULL,"brNDC");
-  leg->SetFillStyle(0);
-  leg->SetBorderSize(0);
-  leg->SetFillColor(10);
-  leg->SetTextSize(0.04);
-  leg->SetHeader(Form("E^{j1,j2}_{T}>%.0f GeV, |#eta^{j1,j2}|<%.1f",cutOff_,maxEta_));
-  
-  THStack* aStack = new THStack("aStack",Form("CMS Preliminary    #sqrt{s}=7 TeV L=%.0f pb^{-1}",Lumi_));
-  TH1F* hData = new TH1F();
-  TH1F* hSiml = new TH1F();
-
-  for(unsigned int i = 0 ; i < fileList_.size() ; i++){
-
-    TFile* currentFile = (TFile*)fileList_[i].first ;
-    if( currentFile->IsZombie() ) continue;
-    TH1F* allEvents = (TH1F*)currentFile->Get("allEventsFilter/totalEvents");
-    float totalEvents = allEvents->GetBinContent(1);
-
-    TTree* currentTree = (TTree*)currentFile->Get("zPlusJetsAnalyzer/tree");
-    string h1Name = "h1_"+(fileList_[i].second).first;
-    TH1F* h1 = new TH1F( h1Name.c_str() ,"", 16,-4,4);
-
-    int nEntries = currentTree->GetEntries() ;
-
-    if( ((fileList_[i].second).first).find("Zjets")!=string::npos ) {
-      h1->SetFillColor(kRed);
-      leg->AddEntry(h1,"MadGraph Z+jets","F");
-    }
-    if( ((fileList_[i].second).first).find("ttbar")!=string::npos ) {
-      h1->SetFillColor(kBlue);
-      leg->AddEntry(h1,"MadGraph t#bar{t}+jets","F");
-    }
-    if( ((fileList_[i].second).first).find("Wjets")!=string::npos ) {
-      h1->SetFillColor(kGreen);
-      leg->AddEntry(h1,"MadGraph W+jets","F");
-    }
-    if( ((fileList_[i].second).first).find("WW")!=string::npos ) {
-      h1->SetFillColor(42);
-      leg->AddEntry(h1,"Pythia WW","F");
-    }
-    if( ((fileList_[i].second).first).find("WZ")!=string::npos ) {
-      h1->SetFillColor(38);
-      leg->AddEntry(h1,"Pythia WZ","F");
-    }
-    if( ((fileList_[i].second).first).find("tW")!=string::npos ){
-      h1->SetFillColor(kYellow);
-      leg->AddEntry(h1,"MadGraph single-t","F");
-    }
-    if( ((fileList_[i].second).first).find("QCD")!=string::npos ) {
-      h1->SetFillColor(kBlack);
-      leg->AddEntry(h1,"PYTHIA QCD","F");
-    }
-    if( ((fileList_[i].second).first).find("data")!=string::npos ) {
-      h1->SetMarkerColor(kBlack);
-      h1->SetMarkerStyle(kFullCircle);
-      h1->SetMarkerSize(0.8);
-      leg->AddEntry(h1,"DATA","lep");
-    }
-
-    std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jets;
-    std::vector<double>* bTag;
-    currentTree->SetBranchAddress("jetsIDP4",&jets);
-    currentTree->SetBranchAddress("jetsBtagHE",&bTag);
-
-    for (int n = 0; n < nEntries ; n++) {
-      currentTree->GetEntry(n);
-      XYZTVector q;
-      if( jets->size()>1 && 
-	  (*jets)[0].Et()> cutOff_ &&
-	  (*jets)[1].Et()> cutOff_ && 
-	  abs((*jets)[0].Eta())<maxEta_ && 
-	  abs((*jets)[1].Eta())<maxEta_ &&
-	  ((*jets)[0]+(*jets)[1]).M()>200 &&
-	  ((*jets)[0]+(*jets)[1]).M()<280
-	  ) //h1->Fill( 2*((*jets)[0].Et()-(*jets)[1].Et())/((*jets)[0].Et()+(*jets)[1].Et()) );//(*bTag)[0]
-	h1->Fill( (*jets)[0].Eta() );//(*bTag)[0]
-    }
-
-
-    if(((fileList_[i].second).first).find("data")!=string::npos){
-      hData = h1;
-      hData->Sumw2();
-      continue;
-    }
-
-    h1->Scale( Lumi_ / (totalEvents/((fileList_[i].second).second)) * corrFactor_ );
-   
-    if(i==0) hSiml=(TH1F*)h1->Clone("hSiml");
-    else hSiml->Add(h1);
-
-    aStack->Add(h1);
-
-  }
-
-  cout << "Exp bkg = " << hSiml->Integral() << " --- DATA = " << hData->GetEntries() << endl;
-
-  aStack->Draw("HIST");
-  hData->Draw("PSAME");
-  TH1F* hStack = (TH1F*)aStack->GetHistogram();
-  hStack->SetXTitle("b-tagger TCHE");
-  hStack->SetYTitle(Form(" Events/(%.1f unities)", hStack->GetBinWidth(1) ) );
-  hStack->SetTitleSize(0.04,"X");
-  hStack->SetTitleSize(0.05,"Y");
-  hStack->SetTitleOffset(0.75,"Y");
-  leg->Draw();
-
-  pad2->cd();
-  TH1F* hRatio = new TH1F("hRatio", " ; ; #frac{(DATA-MC)}{MC}",
-			  hStack->GetNbinsX(), 
-			  hStack->GetXaxis()->GetXmin(), hStack->GetXaxis()->GetXmax());
-  hRatio->SetMarkerStyle(kFullCircle);
-  hRatio->SetMarkerSize(0.8);
-  hRatio->SetLabelSize(0.12,"X");
-  hRatio->SetLabelSize(0.10,"Y");
-  hRatio->SetTitleSize(0.12,"Y");
-  hRatio->SetTitleOffset(0.36,"Y");
-  TH1F* hDataClone = (TH1F*)hData->Clone("hDataClone");
-  hDataClone->Add(hSiml,-1);
-  hRatio->Divide( hDataClone ,hSiml,1.0,1.0);
-  hRatio->SetAxisRange(-0.5,0.5,"Y");
-
-  hRatio->Draw();
-  TF1* line = new TF1("line","0",hRatio->GetXaxis()->GetXmin(),hStack->GetXaxis()->GetXmax());
-  line->SetLineStyle(3);
-  line->SetLineWidth(1.5);
-  line->SetLineColor(kBlack);
-  line->Draw("SAME");
-
-  if(SAVE) c1->SaveAs(Form("Zmm_BtagInMassBump_%.0f_Eta%.0f.png",cutOff_,maxEta_*10));
-
-}
-
-
-
 void plotLeadingJetEt(  FileList fileList_  , float Lumi_ = 30 , float etaCutLow_=0.0, float etaCutHigh_=5.0,float corrFactor_ = 1.0){
-
 
   TCanvas *c1 = new TCanvas(Form("c1LeadingJetEt%f",etaCutLow_),"",5,30,650,600);
   c1->SetGrid(0,0);
@@ -853,7 +667,7 @@ void plotLeadingJetEt(  FileList fileList_  , float Lumi_ = 30 , float etaCutLow
   TH1F* hDataClone = (TH1F*)hData->Clone("hDataClone");
   hDataClone->Add(hSiml,-1);
   hRatio->Divide( hDataClone ,hSiml,1.0,1.0);
-  hRatio->SetAxisRange(-0.5,0.5,"Y");
+  hRatio->SetAxisRange(-1,1,"Y");
 
   hRatio->Draw();
   TF1* line = new TF1("line","0",hRatio->GetXaxis()->GetXmin(),hStack->GetXaxis()->GetXmax());
@@ -988,7 +802,7 @@ void plotSubLeadingJetEt(  FileList fileList_  , float Lumi_ = 30 , float etaCut
   TH1F* hDataClone = (TH1F*)hData->Clone("hDataClone");
   hDataClone->Add(hSiml,-1);
   hRatio->Divide( hDataClone ,hSiml,1.0,1.0);
-  hRatio->SetAxisRange(-0.5,0.5,"Y");
+  hRatio->SetAxisRange(-1,1,"Y");
 
   hRatio->Draw();
   TF1* line = new TF1("line","0",hRatio->GetXaxis()->GetXmin(),hStack->GetXaxis()->GetXmax());
@@ -999,144 +813,6 @@ void plotSubLeadingJetEt(  FileList fileList_  , float Lumi_ = 30 , float etaCut
 
   if(SAVE) c1->SaveAs(Form("Zmm_SubLeadJetEt_%.0f.png",etaCutLow_));
 }
-
-
-void plotZPt(  FileList fileList_  , float Lumi_ = 30 , float cutOff_ = 30., float etaCutLow_=0.0, float etaCutHigh_=5.0,float corrFactor_ = 1.0){
-
-
-  TCanvas *c1 = new TCanvas(Form("c1ZPt%f",etaCutLow_),"",5,30,650,600);
-  c1->SetGrid(0,0);
-  c1->SetFillStyle(4000);
-  c1->SetFillColor(10);
-  c1->SetTicky();
-  c1->SetObjectStat(0);
-  c1->SetLogy(1);
-
-
-  TPad* pad1 = new TPad(Form("pad1ZPt%f",etaCutLow_),"",0.05,0.27,0.96,0.97);
-  TPad* pad2 = new TPad(Form("pad2ZPt%f",etaCutLow_),"",0.05,0.02,0.96,0.26);
-  pad1->SetFillColor(0);
-  pad2->SetFillColor(0);
-  pad1->Draw();
-  pad2->Draw();
-
-  pad1->cd();
-  pad1->SetLogy(1);
-
-  TLegend* leg = new TLegend(0.60,0.50,0.85,0.85,NULL,"brNDC");
-  leg->SetFillStyle(0);
-  leg->SetBorderSize(0);
-  leg->SetFillColor(10);
-  leg->SetTextSize(0.04);
-  leg->SetHeader( Form("E^{j1,j2}_{T}>%.0f GeV, |#eta^{j1,j2}|<%.1f",cutOff_,etaCutHigh_) );
-  
-  THStack* aStack = new THStack("aStack",Form("CMS Preliminary 2010   #sqrt{s}=7 TeV L=%.0f pb^{-1}",Lumi_));
-  TH1F* hData = new TH1F();
-  TH1F* hSiml = new TH1F();
-
-  for(unsigned int i = 0 ; i < fileList_.size() ; i++){
-
-    TFile* currentFile = (TFile*)fileList_[i].first ;
-    if( currentFile->IsZombie() ) continue;
-    TH1F* allEvents = (TH1F*)currentFile->Get("allEventsFilter/totalEvents");
-    float totalEvents = allEvents->GetBinContent(1);
-
-    TTree* currentTree = (TTree*)currentFile->Get("zPlusJetsAnalyzer/tree");
-    string h1Name = "h1_"+(fileList_[i].second).first;
-    TH1F* h1 = new TH1F( h1Name.c_str() ,"", 12 ,10, 250);
-
-    if( ((fileList_[i].second).first).find("Zjets")!=string::npos ) {
-      h1->SetFillColor(kRed);
-      leg->AddEntry(h1,"MadGraph Z+jets","F");
-    }
-    if( ((fileList_[i].second).first).find("ttbar")!=string::npos ) {
-      h1->SetFillColor(kBlue);
-      leg->AddEntry(h1,"MadGraph t#bar{t}+jets","F");
-    }
-    if( ((fileList_[i].second).first).find("Wjets")!=string::npos ) {
-      h1->SetFillColor(kGreen);
-      leg->AddEntry(h1,"MadGraph W+jets","F");
-    }
-    if( ((fileList_[i].second).first).find("WW")!=string::npos ) {
-      h1->SetFillColor(42);
-      leg->AddEntry(h1,"Pythia WW","F");
-    }
-    if( ((fileList_[i].second).first).find("WZ")!=string::npos ) {
-      h1->SetFillColor(38);
-      leg->AddEntry(h1,"Pythia WZ","F");
-    }
-    if( ((fileList_[i].second).first).find("tW")!=string::npos ){
-      h1->SetFillColor(kYellow);
-      leg->AddEntry(h1,"MadGraph single-t","F");
-    }
-    if( ((fileList_[i].second).first).find("QCD")!=string::npos ) {
-      h1->SetFillColor(kBlack);
-      leg->AddEntry(h1,"PYTHIA QCD","F");
-    }
-    if( ((fileList_[i].second).first).find("data")!=string::npos ) {
-      h1->SetMarkerColor(kBlack);
-      h1->SetMarkerStyle(kFullCircle);
-      h1->SetMarkerSize(0.8);
-      leg->AddEntry(h1,"DATA","lep");
-    }
-
-    currentTree->Draw( Form("diMuonP4[0].Pt()>>%s",h1Name.c_str()), 
-		       Form("jetsIDP4@.size()>1 && jetsIDP4[0].Et()>%f && jetsIDP4[1].Et()>%f && abs(jetsIDP4[0].eta())<%f && abs(jetsIDP4[0].eta())>%f",cutOff_,cutOff_,etaCutHigh_,etaCutLow_ ) );
-
-    if(((fileList_[i].second).first).find("data")!=string::npos){
-      hData = h1;
-      hData->Sumw2();
-      continue;
-    }
-    
-    h1->Scale( Lumi_ / (totalEvents/((fileList_[i].second).second)) * corrFactor_  );
-
-    if(i==0) hSiml=(TH1F*)h1->Clone("hSiml");
-    else hSiml->Add(h1);
-
-    aStack->Add(h1);
-
-  }
-
-
-  aStack->Draw("HIST");
-  hData->Draw("PSAME");
-  TH1F* hStack = (TH1F*)aStack->GetHistogram();
-  hStack->SetXTitle("p_{T}^{#mu#mu}");
-  hStack->SetYTitle(Form(" Events/(%.0f GeV)", hStack->GetBinWidth(1) ) );
-  hStack->SetTitleSize(0.05,"X");
-  hStack->SetTitleSize(0.05,"Y");
-  hStack->SetTitleOffset(0.75,"Y");
-  leg->Draw();
-
-  pad2->cd();
-  TH1F* hRatio = new TH1F("hRatio", " ; ; #frac{(DATA-MC)}{MC}",
-			  hStack->GetNbinsX(), 
-			  hStack->GetXaxis()->GetXmin(), hStack->GetXaxis()->GetXmax());
-  hRatio->SetMarkerStyle(kFullCircle);
-  hRatio->SetMarkerSize(0.8);
-  hRatio->SetLabelSize(0.12,"X");
-  hRatio->SetLabelSize(0.10,"Y");
-  hRatio->SetTitleSize(0.12,"Y");
-  hRatio->SetTitleOffset(0.36,"Y");
-  TH1F* hDataClone = (TH1F*)hData->Clone("hDataClone");
-  hDataClone->Add(hSiml,-1);
-  hRatio->Divide( hDataClone ,hSiml,1.0,1.0);
-  hRatio->SetAxisRange(-0.5,0.5,"Y");
-
-  hRatio->Draw();
-  TF1* line = new TF1("line","0",hRatio->GetXaxis()->GetXmin(),hStack->GetXaxis()->GetXmax());
-  line->SetLineStyle(3);
-  line->SetLineWidth(1.5);
-  line->SetLineColor(kBlack);
-  line->Draw("SAME");
-
-  if(SAVE) c1->SaveAs(Form("Zmm_ZPt_%.0f.png",etaCutLow_));
-}
-
-
-
-
 
 void plotJetVeto(  FileList fileList  , float Lumi_ = 30 , float cutOff_ = 30. , float minDEta_ = 1.0, float maxEta_ = 5.0){
 
@@ -1436,8 +1112,8 @@ void plotJetVeto(  FileList fileList  , float Lumi_ = 30 , float cutOff_ = 30. ,
   hRatio->GetXaxis()->SetBinLabel(1,"1");
   hRatio->GetXaxis()->SetBinLabel(2,"2-4");
   hRatio->GetXaxis()->SetBinLabel(3,">4");
-  hRatio->SetLabelSize(0.13,"X");
-  hRatio->SetLabelSize(0.13,"Y");
+  hRatio->SetLabelSize(0.4,"X");
+  hRatio->SetLabelSize(0.4,"Y");
 
   Double_t numX=0;
   Double_t numY=0;
@@ -1525,13 +1201,12 @@ void mainPlot(){
   FileList dummyFileList;
   dummyFileList.clear();
   //plotJetMultiplicity( dummyFileList, 36. , 30.,  2.4, 0.9795 );
-  plotJetMultiplicity( dummyFileList, 36. , 30.,  4.5, 0.9795 );
+  //plotJetMultiplicity( dummyFileList, 36. , 30.,  4.5, 0.9795 );
   //plotDEta( dummyFileList, 36. , 30.,  4.5, 0.9795 );
   //plotDEta( dummyFileList, 36. , 30.,  2.4, 0.9795 );
   //plotMass( dummyFileList, 36. , 30.,  2.4, 0.9795 );
   //plotMass( dummyFileList, 36. , 30.,  4.5, 0.9795 );
-  //plotBtagInMassBump( dummyFileList, 36. , 30.,  4.5, 0.9795 );
-  //plotJetVeto( dummyFileList , 36 , 30. , 2.4, 4.5);
+  plotJetVeto( dummyFileList , 36 , 30. , 2.4, 4.5);
 
   return;
 
@@ -1554,9 +1229,8 @@ void mainPlot(){
   fileList.push_back( make_pair(fDYJets, make_pair("Zjets",   3048.0 )  ));
   fileList.push_back( make_pair(fData,   make_pair("data",     -99   )  ));
  
-  //plotZPt( fileList, 36. , 30 ,  0.0, 4.5,0.9795);
-  // plotLeadingJetEt( fileList, 36. ,    0.0, 2.4,0.9795);
-  // plotSubLeadingJetEt( fileList, 36. , 0.0, 2.4,0.9795);
+  //plotLeadingJetEt( fileList, 36. ,    0.0, 2.4,0.9795);
+  //plotSubLeadingJetEt( fileList, 36. , 0.0, 2.4,0.9795);
   //plotLeadingJetEt( fileList, 36. ,    3.0, 4.5,0.9795);
   //plotSubLeadingJetEt( fileList, 36. , 3.0, 4.5,0.9795);
   
