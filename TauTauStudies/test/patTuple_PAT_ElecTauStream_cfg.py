@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -11,6 +11,30 @@ from Configuration.PyReleaseValidation.autoCond import autoCond
 process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
+
+## temporary JEC
+process.load("CondCore.DBCommon.CondDBCommon_cfi")
+process.jec = cms.ESSource(
+    "PoolDBESSource",
+    DBParameters = cms.PSet(
+    messageLevel = cms.untracked.int32(0)
+    ),
+    timetype = cms.string('runnumber'),
+    toGet = cms.VPSet(
+    cms.PSet(
+    record = cms.string('JetCorrectionsRecord'),
+    tag    = cms.string('JetCorrectorParametersCollection_Jec10V3_AK5PF'),
+    label  = cms.untracked.string('AK5PF')
+    )
+    ),
+    ## here you add as many jet types as you need (AK5Calo, AK5JPT, AK7PF, AK7Calo, KT4PF, KT4Calo, KT6PF, KT6Calo)
+    connect = cms.string('sqlite_file:Jec10V3.db')
+    )
+
+process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
+
+
+
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 process.load('RecoJets.Configuration.RecoPFJets_cff')
 process.kt6PFJets.doRhoFastjet = True
@@ -20,9 +44,14 @@ process.ak5PFJets.doAreaFastjet = True
 process.ak5PFJets.Rho_EtaMax = cms.double(4.4)
 process.ak5PFJets.Ghost_EtaMax = cms.double(5.0)
 
+## re-run kt4PFJets within lepton acceptance to compute rho
+process.load('RecoJets.JetProducers.kt4PFJets_cfi')
+process.kt6PFJetsCentral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet = True )
+process.kt6PFJetsCentral.Rho_EtaMax = cms.double(2.5)
+
 process.ak5PFL1Fastjet.useCondDB = False
 
-process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets)
+process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets+process.kt6PFJetsCentral)
 
 process.source.fileNames = cms.untracked.vstring(
     #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_1.root',
@@ -43,8 +72,12 @@ process.source.fileNames = cms.untracked.vstring(
 
 postfix           = "PFlow"
 sample            = ""
-runOnMC           = False
+runOnMC           = True
 
+if runOnMC:
+    process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
+else:
+    process.GlobalTag.globaltag = cms.string(autoCond[ 'com10' ])
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.printTree1 = cms.EDAnalyzer("ParticleListDrawer",
@@ -187,7 +220,7 @@ getattr(process,"patTaus").tauIDSources = cms.PSet(
     againstMuonTight = cms.InputTag("hpsPFTauDiscriminationByTightMuonRejection")
     )
 
-process.tauMatch.maxDeltaR = 0.5
+process.tauMatch.maxDeltaR = 0.15
 process.tauMatch.resolveAmbiguities = cms.bool(False)
 process.tauGenJetMatch.resolveAmbiguities = cms.bool(False)
 process.tauGenJetMatch.maxDeltaR = 0.15
@@ -237,36 +270,43 @@ process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
 process.looseMuons = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
-    cut = cms.string("pt>15 && (eta<2.4&&eta>-2.4) && isGlobalMuon && globalTrack.isNonnull"),
+    cut = cms.string("pt>15 && (eta<2.4&&eta>-2.4) && isGlobalMuon && globalTrack.isNonnull && userFloat('PFRelIso04')<0.2 && userFloat('dxyWrtPV')<0.2"),
     filter = cms.bool(False)
     )
 
 process.selectedPatElectronsTriggerMatchUserEmbedded = cms.EDProducer(
     "ElectronsUserEmbedded",
     electronTag = cms.InputTag("selectedPatElectronsTriggerMatch"),
-    vertexTag = cms.InputTag("offlinePrimaryVertices")
+    vertexTag = cms.InputTag("offlinePrimaryVertices"),
+    isMC = cms.bool(runOnMC)
     )
+
+## electrons passing WP95 (cut-based || likelyhood)
+simpleCutsWP95 = "(userFloat('nHits')==0 && ( (isEB && userFloat('sihih')<0.012 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007) || (isEE && userFloat('sihih')<0.031 && userFloat('dPhi')<0.7  && userFloat('dEta')<0.011)  ))"
+simpleCutsWP80 = "(userFloat('nHits')==0 && userFloat('dist')>0.02 && userFloat('dcot')>0.02 &&  ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.027 && userFloat('dEta')<0.005) || (isEE && userFloat('sihih')<0.031 && userFloat('dPhi')<0.021  && userFloat('dEta')<0.006)  ))"
+likelihoodWP95 = "(userFloat('nHits')==0 && ( (isEB && ((numberOfBrems==0 && electronID('electronIDLH')>-4.274) || (numberOfBrems>0 && electronID('electronIDLH')>-3.773 ) )  )  || (isEE && ((numberOfBrems==0 && electronID('electronIDLH')>-5.092) || (numberOfBrems>0 && electronID('electronIDLH')>-2.796 ) )) ) )"
+likelihoodWP80 = "(userFloat('nHits')==0 && userFloat('dist')>0.02 && userFloat('dcot')>0.02 && ( (isEB && ((numberOfBrems==0 && electronID('electronIDLH')>1.193) || (numberOfBrems>0 && electronID('electronIDLH')>1.345 ) ) )  || (isEE && ((numberOfBrems==0 && electronID('electronIDLH')>0.810) || (numberOfBrems>0 && electronID('electronIDLH')>3.021) )) ) )"
+
 
 process.looseElectrons = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("selectedPatElectronsTriggerMatchUserEmbedded"),
-    cut = cms.string("pt>15 && (eta<2.4&&eta>-2.4)  && !isEBEEGap  && ( (electronID('simpleEleId95relIso')>4.5 && electronID('simpleEleId95relIso')<5.5) || electronID('simpleEleId95relIso')>6.5 )"),
+    cut = cms.string("pt>15 && (eta<2.4&&eta>-2.4) && !isEBEEGap  && userFloat('dxyWrtPV')<0.2 && ("+simpleCutsWP95+" || "+likelihoodWP95+")"),
+    #cut = cms.string("pt>15 && (eta<2.4&&eta>-2.4)  && !isEBEEGap  && ( (electronID('simpleEleId95relIso')>4.5 && electronID('simpleEleId95relIso')<5.5) || electronID('simpleEleId95relIso')>6.5 )"),
     filter = cms.bool(False)
     )
 
 process.electronLeg = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("looseElectrons"),
-    #cut = cms.string("( (electronID('simpleEleId80relIso')>4.5 && electronID('simpleEleId80relIso')<5.5) || electronID('simpleEleId80relIso')>6.5 ) && userFloat('dxyWrtPV')<0.2 && userFloat('PFRelIso04')<999 && (triggerObjectMatchesByPath('HLT_IsoEle12_PFTau15_v3',0).size()!=0)"),
-    cut = cms.string("( (electronID('simpleEleId80relIso')>4.5 && electronID('simpleEleId80relIso')<5.5) || electronID('simpleEleId80relIso')>6.5 ) && userFloat('dxyWrtPV')<0.2 && userFloat('PFRelIso04')<999"),
+    cut = cms.string("("+simpleCutsWP80+" || "+likelihoodWP80+")"),
+    #cut = cms.string("( (electronID('simpleEleId80relIso')>4.5 && electronID('simpleEleId80relIso')<5.5) || electronID('simpleEleId80relIso')>6.5 ) && userFloat('dxyWrtPV')<0.2 && userFloat('PFRelIso04')<999"),
     filter = cms.bool(False)
     )
 
 process.tauLeg = cms.EDFilter(
     "PATTauSelector",
-    #src = cms.InputTag("selectedPatTaus"),
     src = cms.InputTag("selectedPatTausTriggerMatch"),
-    #cut = cms.string("pt>20 && (eta<2.3&&eta>-2.3) && tauID('leadingTrackFinding')>0.5 && tauID('byLooseIsolation')>0.5 && tauID('againstMuon') && tauID('againstElectronTight')>0.5 && tauID('againstElectronCrackRem')>0.5 "),
     cut = cms.string("pt>20 && (eta<2.3&&eta>-2.3) && tauID('leadingTrackFinding')>0.5 && tauID('byLooseIsolation')>-1 && tauID('againstMuonLoose')>0.5 &&  tauID('againstElectronTight')>0.5 && tauID('againstElectronCrackRem')>0.5 "),
     filter = cms.bool(False)
     )
@@ -281,8 +321,8 @@ process.secondLeptonVeto = cms.EDFilter(
 process.noMuonVeto = cms.EDFilter(
     "CandViewCountFilter",
     src = cms.InputTag("looseMuons"),
-    minNumber = cms.uint32(0),
-    maxNumber = cms.uint32(0),
+    minNumber = cms.uint32(1),
+    maxNumber = cms.uint32(999),
     )
 process.oneElectronLeg = cms.EDFilter(
     "CandViewCountFilter",
@@ -351,7 +391,7 @@ process.elecTauStreamAnalyzer = cms.EDAnalyzer(
     jets =  cms.InputTag("selectedPatJetsNoElectrons"),
     isMC = cms.bool(runOnMC),
     deltaRLegJet  = cms.untracked.double(0.3),
-    minCorrPt = cms.untracked.double(5.),
+    minCorrPt = cms.untracked.double(10.),
     minJetID  = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
     applyTauSignalSel =  cms.bool( True ),
     verbose =  cms.untracked.bool( False ),
@@ -370,7 +410,7 @@ process.pat = cms.Sequence(
     process.looseMuons*
     process.looseElectrons*
     (process.secondLeptonVeto*process.oneElectronFilter) +
-    (process.noMuonVeto*process.noMuonFilter) +
+    (~process.noMuonVeto*process.noMuonFilter) +
     (process.electronLeg * process.oneElectronLeg * process.electronLegFilter) +
     (process.tauLeg * process.oneTauLeg * process.tauLegFilter) +
     (process.diTau*process.selectedDiTau*process.atLeast1selectedDiTau*process.atLeastOneDiTauFilter) +

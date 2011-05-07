@@ -494,9 +494,9 @@ void makeTrees_MuTauStream(int index = 4){
     tightestHPSWP_=-99;numPV_=-99;combRelIsoLeg1=-99;sampleWeight=-99;
     ptVeto=-99;HLT=-99;isTauLegMatched_=-99;event_=-99;run_=-99;
 
-    if(jets->size()>1 && (*jets)[0].Et()>MINPt1 && (*jets)[1].Et()>MINPt2 && (*jets)[0].Eta()*(*jets)[1].Eta()<0 ){
-      pt1  = (*jets)[0].Pt();
-      pt2  = (*jets)[1].Pt();
+    if(jets->size()>1 && (*jets)[0].Pt()>MINPt1 && (*jets)[1].Pt()>MINPt2 && (*jets)[0].Eta()*(*jets)[1].Eta()<0 ){ //watch out
+      pt1  = (*jets)[0].Pt();//watch out
+      pt2  = (*jets)[1].Pt();//watch out
       eta1 = (*jets)[0].Eta();
       eta2 = (*jets)[1].Eta();
       Deta = abs(eta1-eta2);
@@ -531,7 +531,7 @@ void makeTrees_MuTauStream(int index = 4){
       numPV_ = numPV;
       combRelIsoLeg1 = (chIsoLeg1+nhIsoLeg1+phIsoLeg1)/(*diTauLegsP4)[0].Pt();
       sampleWeight = (scaleFactor>=0) ? scaleFactor : weight;
-      HLT=float((*tauXTriggers)[1]);//watch out !!!!  
+      HLT=float((*tauXTriggers)[0]);//watch out !!!!  
       isTauLegMatched_ = isTauLegMatched;
       event_=event;
       run_=run;

@@ -22,15 +22,23 @@
 <use   name="DataFormats/CLHEP"/>
 <use   name="GeneratorInterface/LHEInterface"/>
 <use   name="SimDataFormats/GeneratorProducts"/>
+<use   name="SimDataFormats/PileupSummaryInfo"/>
 <use   name="TrackingTools/TrajectoryState"/>
 <use   name="TrackingTools/TransientTrack"/>
 <use   name="TrackingTools/Records"/>
 <use   name="AnalysisDataFormats/TauAnalysis"/>
 <use   name="TauAnalysis/CandidateTools"/>
+<use   name="MagneticField/Records"/>
+<use   name="MagneticField/Engine"/>
+<use   name="DataFormats/EgammaCandidates"/>
+<use   name="DataFormats/Scalers"/>
+<use   name="DataFormats/TrackReco"/>
+<use   name="RecoEgamma/EgammaTools"/>
 <use   name="lhapdf"/>
 <use   name="boost"/>
 <use   name="rootcore"/>
 <use   name="rootrflx"/>
+<use   name="Bianchi/Utilities"/>
 <library   name="BianchiTauTauStudiesPlugins" file="*.cc">
   <flags   EDM_PLUGIN="1"/>
 </library>

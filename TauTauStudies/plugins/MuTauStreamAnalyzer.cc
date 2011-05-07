@@ -25,6 +25,8 @@
 #include "DataFormats/JetReco/interface/GenJet.h"
 #include "DataFormats/JetReco/interface/GenJetCollection.h"
 
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
@@ -77,6 +79,7 @@ void MuTauStreamAnalyzer::beginJob(){
   METP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genMETP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
+  fpuweight_ = new PUWeight();
 
   tree_->Branch("jetsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsP4_);
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
@@ -105,6 +108,10 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("chIsoLeg1",&chIsoLeg1_,"chIsoLeg1/F");
   tree_->Branch("nhIsoLeg1",&nhIsoLeg1_,"nhIsoLeg1/F");
   tree_->Branch("phIsoLeg1",&phIsoLeg1_,"phIsoLeg1/F");
+  tree_->Branch("chIsoPULeg1",&chIsoPULeg1_,"chIsoPULeg1/F");
+  tree_->Branch("nhIsoPULeg1",&nhIsoPULeg1_,"nhIsoPULeg1/F");
+  tree_->Branch("phIsoPULeg1",&phIsoPULeg1_,"phIsoPULeg1/F");
+
   tree_->Branch("chIsoLeg2",&chIsoLeg2_,"chIsoLeg2/F");
   tree_->Branch("nhIsoLeg2",&nhIsoLeg2_,"nhIsoLeg2/F");
   tree_->Branch("phIsoLeg2",&phIsoLeg2_,"phIsoLeg2/F");
@@ -113,16 +120,22 @@ void MuTauStreamAnalyzer::beginJob(){
 
   tree_->Branch("run",&run_,"run/F");
   tree_->Branch("event",&event_,"event/F");
+  tree_->Branch("lumi",&lumi_,"lumi/F");
   tree_->Branch("numPV",&numPV_,"numPV/F");
   tree_->Branch("numOfDiTaus",&numOfDiTaus_,"numOfDiTaus/I");
   tree_->Branch("decayMode",&decayMode_,"decayMode/I");
   tree_->Branch("tightestHPSWP",&tightestHPSWP_,"tightestHPSWP/I");
   tree_->Branch("visibleTauMass",&visibleTauMass_,"visibleTauMass/F");
+  tree_->Branch("leadPFChargedHadrCandTrackPt",&leadPFChargedHadrCandTrackPt_,"leadPFChargedHadrCandTrackPt/F");
+  
 
   tree_->Branch("isTauLegMatched",&isTauLegMatched_,"isTauLegMatched/I");
   tree_->Branch("isMuLegMatched",&isMuLegMatched_,"isMuLegMatched/I");
 
   tree_->Branch("diTauCharge",&diTauCharge_,"diTauCharge/F");
+  tree_->Branch("rhoFastJet",&rhoFastJet_,"rhoFastJet/F");
+  tree_->Branch("mcPUweight",&mcPUweight_,"mcPUweight/F");
+
 
 }
 
@@ -132,7 +145,7 @@ MuTauStreamAnalyzer::~MuTauStreamAnalyzer(){
   delete diTauSVfit1P4_; delete diTauSVfit2P4_; delete diTauSVfit3P4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_;
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;
-  delete tRandom_ ;
+  delete tRandom_ ; delete fpuweight_;
 }
 
 void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -188,14 +201,41 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   const pat::METCollection* met = metHandle.product();
 
   edm::Handle<reco::GenJetCollection> tauGenJetsHandle;
+  edm::Handle<std::vector<PileupSummaryInfo> > puInfoH;
+  nPUVertices_= -99;
+  nOOTPUVertices_=-99;
+
   const reco::GenJetCollection* tauGenJets = 0;
   if(isMC_){
+    // tag gen jets
     iEvent.getByLabel(edm::InputTag("tauGenJetsSelectorAllHadrons"),tauGenJetsHandle);
     if( !tauGenJetsHandle.isValid() )  
       edm::LogError("DataNotAvailable")
 	<< "No gen jet label available \n";
     tauGenJets = tauGenJetsHandle.product();
+
+    // PU infos
+    iEvent.getByType(puInfoH);
+    if(puInfoH.isValid()){
+      for(std::vector<PileupSummaryInfo>::const_iterator it = puInfoH->begin(); it != puInfoH->end(); it++){
+	if(it->getBunchCrossing() ==0) nPUVertices_ = it->getPU_NumInteractions();
+	else  nOOTPUVertices_ = it->getPU_NumInteractions();
+      }
+    }
   }
+  //cout << "Num of PU = " << nPUVertices_ << endl;
+  //cout << "Num of OOT PU = " << nOOTPUVertices_ << endl;
+  mcPUweight_ = fpuweight_->GetWeight(nPUVertices_);
+  //cout << "Weight: " << weight << endl;
+
+
+  edm::Handle<double> rhoFastJetHandle;
+  iEvent.getByLabel(edm::InputTag("kt6PFJetsCentral","rho", ""), rhoFastJetHandle);
+  if( !rhoFastJetHandle.isValid() )  
+    edm::LogError("DataNotAvailable")
+      << "No rho label available \n";
+  rhoFastJet_ = (*rhoFastJetHandle);
+  
   
   const PATMuTauPair *theDiTau = 0;
   if(diTaus->size()<1){
@@ -371,6 +411,8 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   else  decayMode_ = -99;
 
   visibleTauMass_ = leg2->mass();
+  leadPFChargedHadrCandTrackPt_ = (leg2->leadPFChargedHadrCand()->trackRef()).isNonnull() ?
+    leg2->leadPFChargedHadrCand()->trackRef()->pt() : -99;
 
   tightestHPSWP_ = 0;
   if(leg2->tauID("byLooseIsolation")>0.5)  tightestHPSWP_++;
@@ -395,12 +437,19 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   vetosPhotonLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
   
 
-  chIsoLeg1_ = 
+  chIsoLeg1_   = 
     leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetosChargedLeg1).first;
   nhIsoLeg1_ = 
     leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetosNeutralLeg1).first;
   phIsoLeg1_ = 
     leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetosPhotonLeg1).first;
+  chIsoPULeg1_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosChargedLeg1).first;
+  nhIsoPULeg1_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosNeutralLeg1).first;
+  phIsoPULeg1_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosPhotonLeg1).first;
+
   chIsoLeg2_ = -99;
   nhIsoLeg2_ = -99;
   phIsoLeg2_ = -99;
@@ -425,7 +474,8 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
   run_   = iEvent.run();
   event_ = (iEvent.eventAuxiliary()).event();
-  
+  lumi_ = iEvent.luminosityBlock();
+
   std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedJets;
   std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedJetsID;
   std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedGenJetsID;

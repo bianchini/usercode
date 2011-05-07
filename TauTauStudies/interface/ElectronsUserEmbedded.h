@@ -4,6 +4,7 @@
 #include "FWCore/Framework/interface/EDProducer.h"
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
@@ -22,8 +23,11 @@ class ElectronsUserEmbedded : public edm::EDProducer{
 
   virtual void produce(edm::Event & iEvent, const edm::EventSetup & iSetup);
 
+
   edm::InputTag electronTag_;
   edm::InputTag vertexTag_;
+  bool isMC_;
+
 
 };
 

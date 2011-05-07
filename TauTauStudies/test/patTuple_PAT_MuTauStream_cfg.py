@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -11,6 +11,29 @@ from Configuration.PyReleaseValidation.autoCond import autoCond
 process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
+
+## temporary JEC
+process.load("CondCore.DBCommon.CondDBCommon_cfi")
+process.jec = cms.ESSource(
+    "PoolDBESSource",
+    DBParameters = cms.PSet(
+    messageLevel = cms.untracked.int32(0)
+    ),
+    timetype = cms.string('runnumber'),
+    toGet = cms.VPSet(
+    cms.PSet(
+    record = cms.string('JetCorrectionsRecord'),
+    tag    = cms.string('JetCorrectorParametersCollection_Jec10V3_AK5PF'),
+    label  = cms.untracked.string('AK5PF')
+    )
+    ),
+    ## here you add as many jet types as you need (AK5Calo, AK5JPT, AK7PF, AK7Calo, KT4PF, KT4Calo, KT6PF, KT6Calo)
+    connect = cms.string('sqlite_file:Jec10V3.db')
+    )
+
+process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
+
+
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 process.load('RecoJets.Configuration.RecoPFJets_cff')
 process.kt6PFJets.doRhoFastjet = True
@@ -22,7 +45,12 @@ process.ak5PFJets.Ghost_EtaMax = cms.double(5.0)
 
 process.ak5PFL1Fastjet.useCondDB = False
 
-process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets)
+## re-run kt4PFJets within lepton acceptance to compute rho
+process.load('RecoJets.JetProducers.kt4PFJets_cfi')
+process.kt6PFJetsCentral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet = True )
+process.kt6PFJetsCentral.Rho_EtaMax = cms.double(2.5)
+
+process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets+process.kt6PFJetsCentral)
 
 process.source.fileNames = cms.untracked.vstring(
     #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_1.root',
@@ -39,8 +67,12 @@ process.source.fileNames = cms.untracked.vstring(
 
 postfix           = "PFlow"
 sample            = ""
-runOnMC           = False
+runOnMC           = True
 
+if runOnMC:
+    process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
+else:
+    process.GlobalTag.globaltag = cms.string(autoCond[ 'com10' ])
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.printTree1 = cms.EDAnalyzer("ParticleListDrawer",
@@ -183,7 +215,7 @@ getattr(process,"patTaus").tauIDSources = cms.PSet(
     )
 
 
-process.tauMatch.maxDeltaR = 0.5
+process.tauMatch.maxDeltaR = 0.15
 process.tauMatch.resolveAmbiguities = cms.bool(False)
 process.tauGenJetMatch.resolveAmbiguities = cms.bool(False)
 process.tauGenJetMatch.maxDeltaR = 0.15
@@ -235,7 +267,7 @@ process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
 process.looseMuons = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
-    cut = cms.string("pt>15 && (eta<2.4&&eta>-2.4) && isGlobalMuon && globalTrack.isNonnull"),
+    cut = cms.string("pt>15 && (eta<2.4&&eta>-2.4) && isGlobalMuon && globalTrack.isNonnull && userFloat('dxyWrtPV')<0.2 "),
     filter = cms.bool(False)
     )
 
@@ -243,7 +275,7 @@ process.muonLeg = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
     #cut = cms.string("pt>15 && (eta<2.1&&eta>-2.1) && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.normalizedChi2<=10 && userFloat('dxyWrtPV')<0.2 && userFloat('PFRelIso04')<0.1 && (triggerObjectMatchesByPath('HLT_Mu11').size()!=0 || triggerObjectMatchesByPath('HLT_Mu9').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15').size()!=0 || triggerObjectMatchesByPath('HLT_Mu15_v1').size()!=0)"),
-    cut = cms.string("pt>15 && (eta<2.1&&eta>-2.1) && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.normalizedChi2<=10 && userFloat('dxyWrtPV')<0.2 && userFloat('PFRelIso04')<999"),
+    cut = cms.string("pt>15 && (eta<2.1&&eta>-2.1) && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.hitPattern.numberOfValidTrackerHits>10 && globalTrack.normalizedChi2<=10"),
     filter = cms.bool(False)
     )
 
@@ -256,7 +288,8 @@ process.tauLeg = cms.EDFilter(
     filter = cms.bool(False)
     )
 
-getattr(process,"selectedPatElectronsTriggerMatch").cut = cms.string("(eta<2.4&&eta>-2.4) && !isEBEEGap && et>15 && electronID('simpleEleId95relIso')>6.5")
+simpleCutsWP95 = "(userFloat('nHits')==0 && ( (isEB && userFloat('sihih')<0.012 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007) || (isEE && userFloat('sihih')<0.031 && userFloat('dPhi')<0.7  && userFloat('dEta')<0.011)  ))"
+getattr(process,"selectedPatElectronsTriggerMatch").cut = cms.string("(eta<2.4&&eta>-2.4) && !isEBEEGap && pt>15 && "+simpleCutsWP95+" && userFloat('PFRelIso04')<0.2")
 
 process.secondLeptonVeto = cms.EDFilter(
     "CandViewCountFilter",
@@ -267,8 +300,8 @@ process.secondLeptonVeto = cms.EDFilter(
 process.noElectronVeto = cms.EDFilter(
     "CandViewCountFilter",
     src = cms.InputTag("selectedPatElectronsTriggerMatch"),
-    minNumber = cms.uint32(0),
-    maxNumber = cms.uint32(0),
+    minNumber = cms.uint32(1),
+    maxNumber = cms.uint32(999),
     )
 process.oneMuonLeg = cms.EDFilter(
     "CandViewCountFilter",
@@ -337,7 +370,7 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     jets =  cms.InputTag("selectedPatJetsNoMuons"),
     isMC = cms.bool(runOnMC),
     deltaRLegJet  = cms.untracked.double(0.3),
-    minCorrPt = cms.untracked.double(5.),
+    minCorrPt = cms.untracked.double(10.),
     minJetID  = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
     applyTauSignalSel =  cms.bool( True ),
     verbose =  cms.untracked.bool( False ),
@@ -354,7 +387,7 @@ process.pat = cms.Sequence(
     process.selectedPatMuonsTriggerMatchUserEmbedded*
     process.looseMuons*
     (process.secondLeptonVeto*process.oneMuonFilter) +
-    (process.noElectronVeto*process.noElecFilter) +
+    (~process.noElectronVeto*process.noElecFilter) +
     (process.muonLeg * process.oneMuonLeg * process.muonLegFilter) +
     (process.tauLeg * process.oneTauLeg * process.tauLegFilter) +
     (process.diTau*process.selectedDiTau*process.atLeast1selectedDiTau*process.atLeastOneDiTauFilter) +

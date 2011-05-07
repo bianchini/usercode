@@ -20,6 +20,8 @@
 #include "TH1F.h"
 #include <TRandom3.h>
 
+#include "Bianchi/Utilities/interface/PUWeight.h"
+
 
 #include <string>
 
@@ -79,9 +81,10 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* METP4_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* genMETP4_;
   
-  float run_,event_;
+  float run_,event_,lumi_;
   float sumEt_;
   float chIsoLeg1_,nhIsoLeg1_,phIsoLeg1_;
+  float chIsoPULeg1_,nhIsoPULeg1_,phIsoPULeg1_;
   float chIsoLeg2_,nhIsoLeg2_,phIsoLeg2_;
   float dxy1_,dxy2_;
   float MtLeg1_;
@@ -89,12 +92,31 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   int numOfDiTaus_;
   int decayMode_;
   float visibleTauMass_;
+  float leadPFChargedHadrCandTrackPt_;
   int tightestHPSWP_;
   bool applyTauSignalSel_;
   int isTauLegMatched_;
   int isElecLegMatched_;
 
+  // ele specific variables
+  float nBrehm_;
+  float likelihood_;
+  float nHits_;
+  float sihih_;
+  float dPhi_;
+  float dEta_;
+  float HoE_;
+  float EoP_;
+  float fbrem_;
+  int isEleLikelihoodID_;
+
   float diTauCharge_;
+  float rhoFastJet_;
+  int nPUVertices_;
+  int nOOTPUVertices_;
+
+  PUWeight* fpuweight_;
+  float mcPUweight_;
 
 };
 
