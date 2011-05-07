@@ -43,22 +43,32 @@ def setupEleTrigger(process, hltProcessName ):
 def addCutBasedID( process ):
 
     #ele ID only
-    process.load("RecoEgamma.ElectronIdentification.electronIdCutBasedClassBasedExt_cfi")
-    process.eidClassBased95 = process.eidCutBasedClassBasedExt.clone()
-    process.eidClassBased95.electronQuality = cms.string('Eff95Cuts')
-    process.eidClassBased90 = process.eidCutBasedClassBasedExt.clone()
-    process.eidClassBased90.electronQuality = cms.string('Eff90Cuts')
+    #process.load("RecoEgamma.ElectronIdentification.electronIdCutBasedClassBasedExt_cfi")
+    #process.eidClassBased95 = process.eidCutBasedClassBasedExt.clone()
+    #process.eidClassBased95.electronQuality = cms.string('Eff95Cuts')
+    #process.eidClassBased90 = process.eidCutBasedClassBasedExt.clone()
+    #process.eidClassBased90.electronQuality = cms.string('Eff90Cuts')
 
     #ele ID + ISO + Conv Removal
     process.load("Bianchi.Utilities.simpleEleIdSequence_cff")
 
+    process.load("RecoEgamma.ElectronIdentification.likelihoodPdfsDB_cfi")
+    process.load("RecoEgamma.ElectronIdentification.likelihoodESetup_cfi")
+
+    from RecoEgamma.ElectronIdentification.electronIdLikelihoodExt_cfi import eidLikelihoodExt
+    process.egammaIDLikelihood   = eidLikelihoodExt.clone()
+    process.electronIDLHSequence = cms.Sequence( process.egammaIDLikelihood )
+
+
     process.patElectronId = cms.Sequence(
         process.simpleEleIdSequence +
-        process.eidClassBased95 +
-        process.eidClassBased90
+        process.electronIDLHSequence
+        #process.eidClassBased95 +
+        #process.eidClassBased90
         )
 
     process.patElectrons.electronIDSources = cms.PSet(
+        
         simpleEleId95relIso= cms.InputTag("simpleEleId95relIso"),
         simpleEleId90relIso= cms.InputTag("simpleEleId90relIso"),
         simpleEleId85relIso= cms.InputTag("simpleEleId85relIso"),
@@ -71,8 +81,9 @@ def addCutBasedID( process ):
         simpleEleId80cIso= cms.InputTag("simpleEleId80cIso"),
         simpleEleId70cIso= cms.InputTag("simpleEleId70cIso"),
         simpleEleId60cIso= cms.InputTag("simpleEleId60cIso"),
-        eidLoose = cms.InputTag("eidClassBased95"),
-        eidTight = cms.InputTag("eidClassBased90")
+        electronIDLH = cms.InputTag("egammaIDLikelihood"),
+        #eidLoose = cms.InputTag("eidClassBased95"),
+        #eidTight = cms.InputTag("eidClassBased90")
         )
 
 

@@ -11,11 +11,23 @@ def addSelectedPFlowParticle(process,verbose=False):
         print "[Info] Adding pf-particles (for pf-isolation and pf-seed pat-leptons)"
     process.load("PhysicsTools.PFCandProducer.ParticleSelectors.pfSortByType_cff")
     process.load("PhysicsTools.PFCandProducer.pfNoPileUp_cff")
+
+    process.pfPU = cms.EDProducer(
+        "TPPFCandidatesOnPFCandidates",
+        enable =  cms.bool( True ),
+        verbose = cms.untracked.bool( False ),
+        name = cms.untracked.string("puPFCandidates"),
+        topCollection = cms.InputTag("pfNoPileUp"),
+        bottomCollection = cms.InputTag("particleFlow"),
+        )
+    process.pfAllChargedHadronsPU = process.pfAllChargedHadrons.clone(src='pfPU')
+
     process.pfCandidateSelectionByType = cms.Sequence(
         process.pfNoPileUpSequence *
         ( process.pfAllNeutralHadrons +
           process.pfAllChargedHadrons +
-          process.pfAllPhotons
+          process.pfAllPhotons +
+          (process.pfPU * process.pfAllChargedHadronsPU )
           )  +
         process.pfAllMuons +
         process.pfAllElectrons
@@ -44,6 +56,9 @@ def addPFMuonIsolation(process,module,postfix="",verbose=False):
     setattr(process,"isoDepMuonWithCharged"+postfix,
             isoDepositReplace(module.muonSource,
                               'pfAllChargedHadrons'))
+    setattr(process,"isoDepMuonWithChargedPU"+postfix,
+            isoDepositReplace(module.muonSource,
+                              'pfAllChargedHadronsPU'))
     setattr(process,"isoDepMuonWithNeutral"+postfix,
             isoDepositReplace(module.muonSource,
                               'pfAllNeutralHadrons'))
@@ -53,19 +68,27 @@ def addPFMuonIsolation(process,module,postfix="",verbose=False):
 
     #compute isolation values form deposits
     process.load("PhysicsTools.PFCandProducer.Isolation.pfMuonIsolationFromDeposits_cff")
+    setattr(process,"isoValMuonWithChargedPU",
+            process.isoValMuonWithCharged.clone())
+    getattr(process,"isoValMuonWithChargedPU").deposits[0].src="isoDepMuonWithChargedPU"
+
     if postfix!="":
         setattr(process,"isoValMuonWithCharged"+postfix,
                 process.isoValMuonWithCharged.clone())
-        getattr(process,"isoValMuonWithCharged"+postfix).deposits.src="isoDepMuonWithCharged"+postfix
+        getattr(process,"isoValMuonWithCharged"+postfix).deposits[0].src="isoDepMuonWithCharged"+postfix
+        setattr(process,"isoValMuonWithChargedPU"+postfix,
+                process.isoValMuonWithChargedPU.clone())
+        getattr(process,"isoValMuonWithChargedPU"+postfix).deposits[0].src="isoDepMuonWithChargedPU"+postfix
         setattr(process,"isoValMuonWithNeutral"+postfix,
                 process.isoValMuonWithNeutral.clone())
-        getattr(process,"isoValMuonWithNeutral"+postfix).deposits.src="isoDepMuonWithNeutral"+postfix
+        getattr(process,"isoValMuonWithNeutral"+postfix).deposits[0].src="isoDepMuonWithNeutral"+postfix
         setattr(process,"isoValMuonWithPhotons"+postfix,
                 process.isoValMuonWithPhotons.clone())
-        getattr(process,"isoValMuonWithPhotons"+postfix).deposits.src="isoDepMuonWithPhotons"+postfix
+        getattr(process,"isoValMuonWithPhotons"+postfix).deposits[0].src="isoDepMuonWithPhotons"+postfix
         
     setattr(process,"patMuonIsolationFromDepositsSequence"+postfix,
             cms.Sequence(getattr(process,"isoValMuonWithCharged"+postfix) +
+                         getattr(process,"isoValMuonWithChargedPU"+postfix) +
                          getattr(process,"isoValMuonWithNeutral"+postfix) +
                          getattr(process,"isoValMuonWithPhotons"+postfix)
                          )
@@ -73,6 +96,7 @@ def addPFMuonIsolation(process,module,postfix="",verbose=False):
 
     setattr(process,"patMuonIsoDepositsSequence"+postfix,
             cms.Sequence(getattr(process,"isoDepMuonWithCharged"+postfix) +
+                         getattr(process,"isoDepMuonWithChargedPU"+postfix) +
                          getattr(process,"isoDepMuonWithNeutral"+postfix) +
                          getattr(process,"isoDepMuonWithPhotons"+postfix)
                          )
@@ -141,15 +165,19 @@ def addPFMuonIsolation(process,module,postfix="",verbose=False):
         mode = cms.string('sum')
         )
         )
+    getattr(process,"isoValMuonWithChargedPU"+postfix).deposits[0].vetos = getattr(
+        process,"isoValMuonWithCharged"+postfix).deposits[0].vetos
 
     
 
     module.isoDeposits = cms.PSet(
+        pfAllParticles = cms.InputTag("isoDepMuonWithChargedPU"+postfix),
         pfChargedHadrons = cms.InputTag("isoDepMuonWithCharged"+postfix),
         pfNeutralHadrons = cms.InputTag("isoDepMuonWithNeutral"+postfix),
         pfPhotons = cms.InputTag("isoDepMuonWithPhotons"+postfix)
         )
     module.isolationValues = cms.PSet(
+        pfAllParticles = cms.InputTag("isoValMuonWithChargedPU"+postfix),
         pfChargedHadrons = cms.InputTag("isoValMuonWithCharged"+postfix),
         pfNeutralHadrons = cms.InputTag("isoValMuonWithNeutral"+postfix),
         pfPhotons = cms.InputTag("isoValMuonWithPhotons"+postfix)
@@ -222,6 +250,9 @@ def addPFElectronIsolation(process,module,postfix="",verbose=False):
     setattr(process,"isoDepElectronWithCharged"+postfix,
             isoDepositReplace(module.electronSource,
                               'pfAllChargedHadrons'))
+    setattr(process,"isoDepElectronWithChargedPU"+postfix,
+            isoDepositReplace(module.electronSource,
+                              'pfAllChargedHadronsPU'))
     setattr(process,"isoDepElectronWithNeutral"+postfix,
             isoDepositReplace(module.electronSource,
                               'pfAllNeutralHadrons'))
@@ -231,19 +262,30 @@ def addPFElectronIsolation(process,module,postfix="",verbose=False):
 
     #compute isolation values form deposits
     process.load("PhysicsTools.PFCandProducer.Isolation.pfElectronIsolationFromDeposits_cff")
+    setattr(process,"isoValElectronWithChargedPU",
+            process.isoValElectronWithCharged.clone())
+    getattr(process,"isoValElectronWithChargedPU").deposits[0].src="isoDepElectronWithChargedPU"
+    
+    #compute isolation values form deposits
+    process.load("PhysicsTools.PFCandProducer.Isolation.pfElectronIsolationFromDeposits_cff")
     if postfix!="":
         setattr(process,"isoValElectronWithCharged"+postfix,
                 process.isoValElectronWithCharged.clone())
-        getattr(process,"isoValElectronWithCharged"+postfix).deposits.src="isoDepElectronWithCharged"+postfix
+        getattr(process,"isoValElectronWithCharged"+postfix).deposits[0].src="isoDepElectronWithCharged"+postfix
+        setattr(process,"isoValElectronWithChargedPU"+postfix,
+                process.isoValElectronWithChargedPU.clone())
+        getattr(process,"isoValElectronWithChargedPU"+postfix).deposits[0].src="isoDepElectronWithChargedPU"+postfix,
+     
         setattr(process,"isoValElectronWithNeutral"+postfix,
                 process.isoValElectronWithNeutral.clone())
-        getattr(process,"isoValElectronWithNeutral"+postfix).deposits.src="isoDepElectronWithNeutral"+postfix
+        getattr(process,"isoValElectronWithNeutral"+postfix).deposits[0].src="isoDepElectronWithNeutral"+postfix
         setattr(process,"isoValElectronWithPhotons"+postfix,
                 process.isoValElectronWithPhotons.clone())
-        getattr(process,"isoValElectronWithPhotons"+postfix).deposits.src="isoDepElectronWithPhotons"+postfix
+        getattr(process,"isoValElectronWithPhotons"+postfix).deposits[0].src="isoDepElectronWithPhotons"+postfix
         
     setattr(process,"patElectronIsolationFromDepositsSequence"+postfix,
             cms.Sequence(getattr(process,"isoValElectronWithCharged"+postfix) +
+                         getattr(process,"isoValElectronWithChargedPU"+postfix) +
                          getattr(process,"isoValElectronWithNeutral"+postfix) +
                          getattr(process,"isoValElectronWithPhotons"+postfix)
                          )
@@ -251,6 +293,7 @@ def addPFElectronIsolation(process,module,postfix="",verbose=False):
 
     setattr(process,"patElectronIsoDepositsSequence"+postfix,
             cms.Sequence(getattr(process,"isoDepElectronWithCharged"+postfix) +
+                         getattr(process,"isoDepElectronWithChargedPU"+postfix) +
                          getattr(process,"isoDepElectronWithNeutral"+postfix) +
                          getattr(process,"isoDepElectronWithPhotons"+postfix)
                          )
@@ -319,13 +362,17 @@ def addPFElectronIsolation(process,module,postfix="",verbose=False):
         mode = cms.string('sum')
         )
         )
+    getattr(process,"isoValElectronWithChargedPU"+postfix).deposits[0].vetos = getattr(
+        process,"isoValElectronWithCharged"+postfix).deposits[0].vetos
 
     module.isoDeposits = cms.PSet(
+        pfAllParticles = cms.InputTag("isoDepElectronWithChargedPU"+postfix),
         pfChargedHadrons = cms.InputTag("isoDepElectronWithCharged"+postfix),
         pfNeutralHadrons = cms.InputTag("isoDepElectronWithNeutral"+postfix),
         pfPhotons = cms.InputTag("isoDepElectronWithPhotons"+postfix)
         )
     module.isolationValues = cms.PSet(
+        pfAllParticles = cms.InputTag("isoValElectronWithChargedPU"+postfix),
         pfChargedHadrons = cms.InputTag("isoValElectronWithCharged"+postfix),
         pfNeutralHadrons = cms.InputTag("isoValElectronWithNeutral"+postfix),
         pfPhotons = cms.InputTag("isoValElectronWithPhotons"+postfix)
