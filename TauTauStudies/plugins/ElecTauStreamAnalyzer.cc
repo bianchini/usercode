@@ -25,6 +25,8 @@
 #include "DataFormats/JetReco/interface/GenJet.h"
 #include "DataFormats/JetReco/interface/GenJetCollection.h"
 
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
@@ -77,6 +79,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   METP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genMETP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
+  fpuweight_ = new PUWeight();
 
   tree_->Branch("jetsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsP4_);
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
@@ -105,24 +108,45 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("chIsoLeg1",&chIsoLeg1_,"chIsoLeg1/F");
   tree_->Branch("nhIsoLeg1",&nhIsoLeg1_,"nhIsoLeg1/F");
   tree_->Branch("phIsoLeg1",&phIsoLeg1_,"phIsoLeg1/F");
+  tree_->Branch("chIsoPULeg1",&chIsoPULeg1_,"chIsoPULeg1/F");
+  tree_->Branch("nhIsoPULeg1",&nhIsoPULeg1_,"nhIsoPULeg1/F");
+  tree_->Branch("phIsoPULeg1",&phIsoPULeg1_,"phIsoPULeg1/F");
+
   tree_->Branch("chIsoLeg2",&chIsoLeg2_,"chIsoLeg2/F");
   tree_->Branch("nhIsoLeg2",&nhIsoLeg2_,"nhIsoLeg2/F");
   tree_->Branch("phIsoLeg2",&phIsoLeg2_,"phIsoLeg2/F");
   tree_->Branch("dxy1",&dxy1_,"dxy1/F");
   tree_->Branch("dxy2",&dxy2_,"dxy2/F");
 
+  // electron specific variables
+  tree_->Branch("nBrehm",&nBrehm_,"nBrehm/F");
+  tree_->Branch("likelihood",&likelihood_,"likelihood/F");
+  tree_->Branch("nHits",&nHits_,"nHits/F");
+  tree_->Branch("sihih",&sihih_,"sihih/F");
+  tree_->Branch("dPhi",&dPhi_,"dPhi/F");
+  tree_->Branch("dEta",&dEta_,"dEta/F");
+  tree_->Branch("HoE",&HoE_,"HoE/F");
+  tree_->Branch("EoP",&EoP_,"EoP/F");
+  tree_->Branch("fbrem",&fbrem_,"fbrem/F");
+  tree_->Branch("isEleLikelihoodID",&isEleLikelihoodID_,"isEleLikelihoodID/I");
+
   tree_->Branch("run",&run_,"run/F");
   tree_->Branch("event",&event_,"event/F");
+  tree_->Branch("lumi",&lumi_,"lumi/F");
   tree_->Branch("numPV",&numPV_,"numPV/F");
   tree_->Branch("numOfDiTaus",&numOfDiTaus_,"numOfDiTaus/I");
   tree_->Branch("decayMode",&decayMode_,"decayMode/I");
   tree_->Branch("tightestHPSWP",&tightestHPSWP_,"tightestHPSWP/I");
   tree_->Branch("visibleTauMass",&visibleTauMass_,"visibleTauMass/F");
+  tree_->Branch("leadPFChargedHadrCandTrackPt",&leadPFChargedHadrCandTrackPt_,"leadPFChargedHadrCandTrackPt/F");
 
   tree_->Branch("isTauLegMatched",&isTauLegMatched_,"isTauLegMatched/I");
   tree_->Branch("isElecLegMatched",&isElecLegMatched_,"isElecLegMatched/I");
 
   tree_->Branch("diTauCharge",&diTauCharge_,"diTauCharge/F");
+  tree_->Branch("rhoFastJet",&rhoFastJet_,"rhoFastJet/F");
+  tree_->Branch("mcPUweight",&mcPUweight_,"mcPUweight/F");
+
 
 }
 
@@ -132,7 +156,7 @@ ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
   delete diTauSVfit1P4_; delete diTauSVfit2P4_; delete diTauSVfit3P4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_;
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;
-  delete tRandom_ ;
+  delete tRandom_ ; delete fpuweight_;
 }
 
 void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -186,6 +210,10 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   const pat::METCollection* met = metHandle.product();
 
   edm::Handle<reco::GenJetCollection> tauGenJetsHandle;
+  edm::Handle<std::vector<PileupSummaryInfo> > puInfoH;
+  nPUVertices_= -99;
+  nOOTPUVertices_=-99;
+
   const reco::GenJetCollection* tauGenJets = 0;
   if(isMC_){
     iEvent.getByLabel(edm::InputTag("tauGenJetsSelectorAllHadrons"),tauGenJetsHandle);
@@ -193,7 +221,25 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       edm::LogError("DataNotAvailable")
 	<< "No gen jet label available \n";
     tauGenJets = tauGenJetsHandle.product();
+
+    // PU infos
+    iEvent.getByType(puInfoH);
+    if(puInfoH.isValid()){
+      for(std::vector<PileupSummaryInfo>::const_iterator it = puInfoH->begin(); it != puInfoH->end(); it++){
+	if(it->getBunchCrossing() ==0) nPUVertices_ = it->getPU_NumInteractions();
+	else  nOOTPUVertices_ = it->getPU_NumInteractions();
+      }
+    }
   }
+
+  mcPUweight_ = fpuweight_->GetWeight(nPUVertices_);
+
+  edm::Handle<double> rhoFastJetHandle;
+  iEvent.getByLabel(edm::InputTag("kt6PFJetsCentral","rho",""), rhoFastJetHandle);
+  if( !rhoFastJetHandle.isValid() )  
+    edm::LogError("DataNotAvailable")
+      << "No rho label available \n";
+  rhoFastJet_ = (*rhoFastJetHandle);
   
   const PATElecTauPair *theDiTau = 0;
   if(diTaus->size()<1){
@@ -346,6 +392,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   else  decayMode_ = -99;
 
   visibleTauMass_ = leg2->mass();
+  leadPFChargedHadrCandTrackPt_ = (leg2->leadPFChargedHadrCand()->trackRef()).isNonnull() ?
+    leg2->leadPFChargedHadrCand()->trackRef()->pt() : -99;
 
   tightestHPSWP_ = 0;
   if(leg2->tauID("byLooseIsolation")>0.5)  tightestHPSWP_++;
@@ -376,6 +424,14 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetosNeutralLeg1).first;
   phIsoLeg1_ = 
     leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetosPhotonLeg1).first;
+  chIsoPULeg1_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosChargedLeg1).first;
+  nhIsoPULeg1_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosNeutralLeg1).first;
+  phIsoPULeg1_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosPhotonLeg1).first;
+
+
   chIsoLeg2_ = -99;
   nhIsoLeg2_ = -99;
   phIsoLeg2_ = -99;
@@ -390,6 +446,18 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     delete vetosPhotonLeg1[i];
   }
   //
+  nBrehm_= leg1->numberOfBrems();
+  likelihood_ = leg1->electronID("electronIDLH");
+  nHits_ = leg1->userFloat("nHits");
+  sihih_ = leg1->userFloat("sihih");
+  dPhi_  = leg1->userFloat("dPhi");
+  dEta_  = leg1->userFloat("dEta");
+  HoE_   = leg1->hadronicOverEm();
+  EoP_   = leg1->eSuperClusterOverP();
+  fbrem_ = leg1->fbrem();
+
+  if(verbose_) cout << "Anti-conv parameters: " << leg1->userFloat("dist") << " --- " << leg1->userFloat("dcot") << endl;
+  isEleLikelihoodID_ = leg1->userFloat("nHits")==0 && leg1->userFloat("dist")>0.02 && leg1->userFloat("dcot")>0.02 && ( (leg1->isEB() && ((leg1->numberOfBrems()==0 && leg1->electronID("electronIDLH")>1.193) || (leg1->numberOfBrems()>0 && leg1->electronID("electronIDLH")>1.345 ) ) )  || (leg1->isEE() && ((leg1->numberOfBrems()==0 && leg1->electronID("electronIDLH")>0.810) || (leg1->numberOfBrems()>0 && leg1->electronID("electronIDLH")>3.021) )) ) ? 1 : 0 ; 
 
   diTauVisP4_->push_back( theDiTau->p4Vis() );
   diTauCAP4_->push_back( theDiTau->p4CollinearApprox() );
