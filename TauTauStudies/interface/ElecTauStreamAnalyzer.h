@@ -54,6 +54,8 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
  
   edm::InputTag diTauTag_;
   edm::InputTag jetsTag_;
+  edm::InputTag triggerResultsTag_;
+
 
   bool isMC_;
   bool verbose_;
@@ -64,6 +66,8 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< double >* jetsBtagHE_;
   std::vector< double >* jetsBtagHP_;
   std::vector< int >* tauXTriggers_;
+  std::vector< int >* triggerBits_;
+
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDP4_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* genJetsIDP4_; 
@@ -80,6 +84,9 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* METP4_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* genMETP4_;
+
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* extraElectrons_; 
+
   
   float run_,event_,lumi_;
   float sumEt_;
@@ -87,9 +94,13 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   float chIsoPULeg1_,nhIsoPULeg1_,phIsoPULeg1_;
   float chIsoLeg2_,nhIsoLeg2_,phIsoLeg2_;
   float dxy1_,dxy2_;
+  float dz1_,dz2_;
   float MtLeg1_;
+  float pZeta_;
+  float pZetaVis_;
   float numPV_;
   int numOfDiTaus_;
+  int numOfLooseIsoDiTaus_;
   int decayMode_;
   float visibleTauMass_;
   float leadPFChargedHadrCandTrackPt_;
@@ -97,6 +108,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   bool applyTauSignalSel_;
   int isTauLegMatched_;
   int isElecLegMatched_;
+  int elecFlag_;
 
   // ele specific variables
   float nBrehm_;
@@ -108,7 +120,8 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   float HoE_;
   float EoP_;
   float fbrem_;
-  int isEleLikelihoodID_;
+  //int isEleLikelihoodID_;
+  //int isEleCutBasedID_;
 
   float diTauCharge_;
   float rhoFastJet_;

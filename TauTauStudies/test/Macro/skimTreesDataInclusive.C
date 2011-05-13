@@ -37,11 +37,11 @@ using namespace std;
 void makeTrees_ElecTauStream(int index = 4){
 
   std::vector<std::string> samples;
-  samples.push_back("Run2011-PDMuon");
+  samples.push_back("Run2011-Elec-v6");
   samples.push_back("DYJets-50-madgraph-PUS1");
   samples.push_back("DYToEE-20-PUS1");
   samples.push_back("DYToTauTau-20-PUS1");
-  samples.push_back("Zjets-alpgen-PUS1");
+  //samples.push_back("Zjets-alpgen-PUS1");
   samples.push_back("TTJets-madgraph-PUS1");
   samples.push_back("WJets-madgraph-PUS1");
   //samples.push_back("WW-pythia-PUS1");
@@ -61,7 +61,7 @@ void makeTrees_ElecTauStream(int index = 4){
   crossSec.push_back( 3048  );
   crossSec.push_back( 1666  );
   crossSec.push_back( 1666  );
-  crossSec.push_back( -1  );
+  //crossSec.push_back( -1  );
   crossSec.push_back( 157.5 );
   crossSec.push_back( 31314.0);
   crossSec.push_back( -1 );
@@ -82,12 +82,13 @@ void makeTrees_ElecTauStream(int index = 4){
 
 
   //TString outName = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/nTuple"+sample+"_Open_ElecTauStream.root";
-  TString outName = "nTuple"+sample+"_Open_ElecTauStream.root";
+  TString outName = "nTuple"+sample+"_Open_ElecTauStream_Inclusive.root";
   TFile *outFile = new TFile(outName,"RECREATE");
   TTree* outTreePtOrd     = new TTree("outTreePtOrd","tree jets pT-ord");
  
-  float pt1,pt2,eta1,eta2,Deta,Mjj;
-  float Dphi,diTauSVFitMass,diTauVisPt,diTauVisEta,diTauCAPt,diTauCAEta,diTauSVFitPt,diTauSVFitEta;
+  //float pt1,pt2,eta1,eta2,Deta,Mjj;
+  //float Dphi;
+  float diTauSVFitMass,diTauVisPt,diTauVisEta,diTauCAPt,diTauCAEta,diTauSVFitPt,diTauSVFitEta;
   float diTauVisMass;
   float ptL1,ptL2,etaL1,etaL2;
   float diTauCharge_,MtLeg1_;
@@ -95,17 +96,17 @@ void makeTrees_ElecTauStream(int index = 4){
   float sampleWeight,combRelIsoLeg1;
   int tightestHPSWP_;
   float jetsBtagHE1,jetsBtagHE2;
-  float ptVeto;
+  //float ptVeto;
   float HLT;
   int isTauLegMatched_;
 
-  outTreePtOrd->Branch("pt1",  &pt1,"pt1/F");
-  outTreePtOrd->Branch("pt2",  &pt2,"pt2/F");
-  outTreePtOrd->Branch("eta1", &eta1,"eta1/F");
-  outTreePtOrd->Branch("eta2", &eta2,"eta2/F");
-  outTreePtOrd->Branch("Deta", &Deta,"Deta/F");
-  outTreePtOrd->Branch("Mjj",  &Mjj,"Mjj/F");
-  outTreePtOrd->Branch("ptVeto", &ptVeto,"ptVeto/F");
+  //outTreePtOrd->Branch("pt1",  &pt1,"pt1/F");
+  //outTreePtOrd->Branch("pt2",  &pt2,"pt2/F");
+  //outTreePtOrd->Branch("eta1", &eta1,"eta1/F");
+  //outTreePtOrd->Branch("eta2", &eta2,"eta2/F");
+  //outTreePtOrd->Branch("Deta", &Deta,"Deta/F");
+  //outTreePtOrd->Branch("Mjj",  &Mjj,"Mjj/F");
+  //outTreePtOrd->Branch("ptVeto", &ptVeto,"ptVeto/F");
   outTreePtOrd->Branch("diTauVisMass",    &diTauVisMass,"diTauVisMass/F");
   outTreePtOrd->Branch("diTauSVFitPt",  &diTauSVFitPt,"diTauSVFitPt/F");
   outTreePtOrd->Branch("diTauSVFitMass",  &diTauSVFitMass,"diTauSVFitMass/F");
@@ -148,7 +149,7 @@ void makeTrees_ElecTauStream(int index = 4){
 
   //currentTree->SetBranchStatus("diTauVisP4",0);
   currentTree->SetBranchStatus("diTauCAP4",0);
-  //currentTree->SetBranchStatus("diTauICAP4",0);
+  currentTree->SetBranchStatus("diTauICAP4",0);
   currentTree->SetBranchStatus("diTauSVfit1P4",0);
   currentTree->SetBranchStatus("diTauSVfit2P4",0);
   //currentTree->SetBranchStatus("diTauSVfit3P4",0);
@@ -181,13 +182,6 @@ void makeTrees_ElecTauStream(int index = 4){
   currentTree->SetBranchStatus("isElecLegMatched",0);
   //currentTree->SetBranchStatus("diTauCharge",0);
   //currentTree->SetBranchStatus("tauXTriggers",0);
-
-  //std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jets;
-  //std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauLegsP4;
-  //std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauVisP4;
-  //std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauICAP4;
-  //std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauSVfit3P4;
-  //std::vector<double>* jetsBtagHE;
  
   float chIsoLeg1,nhIsoLeg1,phIsoLeg1; 
   int tightestHPSWP; 
@@ -197,7 +191,7 @@ void makeTrees_ElecTauStream(int index = 4){
   int isTauLegMatched;
 
   std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jets        = new std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  currentTree->SetBranchAddress("jetsIDP4",   &jets);
+  //currentTree->SetBranchAddress("jetsIDP4",   &jets);
   std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauLegsP4 = new std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   currentTree->SetBranchAddress("diTauLegsP4",&diTauLegsP4);
   std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauVisP4  =  new std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
@@ -228,29 +222,30 @@ void makeTrees_ElecTauStream(int index = 4){
   for (int n = 0; n < nEntries ; n++) {
     currentTree->GetEntry(n);
     if(n%1000==0) cout << n << endl;
-    pt1=-99;pt2=-99;eta1=-99,eta2=-99;Deta=-99;Dphi=-99;Mjj=-99;
+    //pt1=-99;pt2=-99;eta1=-99,eta2=-99;Deta=-99;Dphi=-99;Mjj=-99;
     diTauVisPt=-99;diTauVisEta=-99;diTauCAPt=-99;diTauCAEta=-99;
     diTauSVFitMass = -99;diTauSVFitPt=-99;diTauSVFitEta=-99;diTauVisMass=-99;
     ptL1=-99;ptL2=-99;etaL1=-99;etaL2=-99;diTauCharge_=-99;MtLeg1_=-99;
     tightestHPSWP_=-99;numPV_=-99;combRelIsoLeg1=-99;sampleWeight=-99;
-    ptVeto=-99;HLT=-99;isTauLegMatched_=-99;
+    //ptVeto=-99;
+    HLT=-99;isTauLegMatched_=-99;
 
-    if(jets->size()>1 && (*jets)[0].Et()>MINPt1 && (*jets)[1].Et()>MINPt2 && (*jets)[0].Eta()*(*jets)[1].Eta()<0 ){
-      pt1  = (*jets)[0].Pt();
-      pt2  = (*jets)[1].Pt();
-      eta1 = (*jets)[0].Eta();
-      eta2 = (*jets)[1].Eta();
-      Deta = abs(eta1-eta2);
-      Dphi = abs((*jets)[0].Phi()-(*jets)[1].Phi()) > TMath::Pi() ? 
-	-abs( (*jets)[0].Phi()-(*jets)[1].Phi() ) + 2*TMath::Pi()  :
-	abs( (*jets)[0].Phi()-(*jets)[1].Phi() ) ;
-      Mjj  = ((*jets)[0]+(*jets)[1]).M();
 
-      for(unsigned k=0; k < jets->size(); k++){
-	if(k>1 && 
-	   (  ((*jets)[k].Eta()>(*jets)[1].Eta()+0.5 &&  (*jets)[k].Eta()<(*jets)[0].Eta()-0.5) || 
-	      ((*jets)[k].Eta()>(*jets)[0].Eta()+0.5 &&  (*jets)[k].Eta()<(*jets)[1].Eta()-0.5) ) && (*jets)[k].Et()>ptVeto) ptVeto=(*jets)[k].Et();  
-      }
+    //pt1  = (*jets)[0].Pt();
+    //pt2  = (*jets)[1].Pt();
+    //eta1 = (*jets)[0].Eta();
+    //eta2 = (*jets)[1].Eta();
+    //Deta = abs(eta1-eta2);
+    //Dphi = abs((*jets)[0].Phi()-(*jets)[1].Phi()) > TMath::Pi() ? 
+    //-abs( (*jets)[0].Phi()-(*jets)[1].Phi() ) + 2*TMath::Pi()  :
+    //abs( (*jets)[0].Phi()-(*jets)[1].Phi() ) ;
+    //Mjj  = ((*jets)[0]+(*jets)[1]).M();
+
+    // for(unsigned k=0; k < jets->size(); k++){
+    //if(k>1 && 
+    //   (  ((*jets)[k].Eta()>(*jets)[1].Eta()+0.5 &&  (*jets)[k].Eta()<(*jets)[0].Eta()-0.5) || 
+    //      ((*jets)[k].Eta()>(*jets)[0].Eta()+0.5 &&  (*jets)[k].Eta()<(*jets)[1].Eta()-0.5) ) && (*jets)[k].Et()>ptVeto) ptVeto=(*jets)[k].Et();  
+    //}
 
       diTauVisMass  = (*diTauVisP4)[0].M();
       diTauVisPt  = (*diTauVisP4)[0].Pt();
@@ -272,14 +267,11 @@ void makeTrees_ElecTauStream(int index = 4){
       numPV_ = numPV;
       combRelIsoLeg1 = (chIsoLeg1+nhIsoLeg1+phIsoLeg1)/(*diTauLegsP4)[0].Pt();
       sampleWeight = (scaleFactor>=0) ? scaleFactor : weight;
-      HLT=float((*tauXTriggers)[0]);   
+      HLT = (std::string(sample.Data())).find("Data")!=string::npos ? 
+	float((*tauXTriggers)[0]) : float((*tauXTriggers)[0]);//<---      
       isTauLegMatched_ = isTauLegMatched;
 
       outTreePtOrd->Fill();
-      continue;
-    }
-    
-    outTreePtOrd->Fill();
   }
 
 
@@ -300,7 +292,7 @@ void makeTrees_MuTauStream(int index = 4){
   samples.push_back("DYJets-Mu-50-madgraph-PUS1");
   samples.push_back("DYToMuMu-20-PUS1");
   samples.push_back("DYToTauTau-Mu-20-PUS1");
-  samples.push_back("Zjets-Mu-alpgen-PUS1");
+  //samples.push_back("Zjets-Mu-alpgen-PUS1");
   samples.push_back("TTJets-Mu-madgraph-PUS1");
   samples.push_back("WJets-Mu-madgraph-PUS1");
   samples.push_back("DiBoson-Mu");
@@ -317,7 +309,7 @@ void makeTrees_MuTauStream(int index = 4){
   crossSec.push_back( 3048  );
   crossSec.push_back( 1666  );
   crossSec.push_back( 1666  );
-  crossSec.push_back( -1 );
+  //crossSec.push_back( -1 );
   crossSec.push_back( 157.5 );
   crossSec.push_back( 31314.0);
   crossSec.push_back( -1 );
@@ -519,7 +511,8 @@ void makeTrees_MuTauStream(int index = 4){
       numPV_ = numPV;
       combRelIsoLeg1 = (chIsoLeg1+nhIsoLeg1+phIsoLeg1)/(*diTauLegsP4)[0].Pt();
       sampleWeight = (scaleFactor>=0) ? scaleFactor : weight;
-      HLT=float((*tauXTriggers)[1]);//  
+      HLT = (std::string(sample.Data())).find("Data")!=string::npos ? 
+	float((*tauXTriggers)[1]) : float((*tauXTriggers)[0]);//<---
       isTauLegMatched_ = isTauLegMatched;
 
       outTreePtOrd->Fill();
@@ -540,7 +533,7 @@ void makeTrees_MuTauStream(int index = 4){
 
 void doAllSamplesElec(){
  
-  for( unsigned int k = 0; k < 12 ; k++)  makeTrees_ElecTauStream(k);
+  for( unsigned int k = 0; k < 13 ; k++)  makeTrees_ElecTauStream(k);
 
   return;
 
@@ -548,7 +541,7 @@ void doAllSamplesElec(){
 
 void doAllSamplesMu(){
  
-  for( unsigned int k = 1; k < 13 ; k++)  makeTrees_MuTauStream(k);
+  for( unsigned int k = 0; k < 12 ; k++)  makeTrees_MuTauStream(k);
 
   return;
 

@@ -97,7 +97,7 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     float dPhi  = aElectron.deltaPhiSuperClusterTrackAtVtx();
     float dEta  = aElectron.deltaEtaSuperClusterTrackAtVtx();
     float sihih = aElectron.sigmaIetaIeta();
-
+    float HoE   = aElectron.hadronicOverEm();
     //cout << "dEta " << dEta << " dPhi " << dPhi << " -- dcot " << els_conv_dcot << " -- nHits " << nHits << endl;
 
     aElectron.addUserFloat("nHits",nHits);
@@ -106,15 +106,22 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     aElectron.addUserFloat("dPhi",abs(dPhi));
     aElectron.addUserFloat("dEta",abs(dEta));
     aElectron.addUserFloat("sihih",sihih);
+    aElectron.addUserFloat("HoE",HoE);
 
     double dxyWrtPV =  -99.;
+    double dzWrtPV =  -99.;
 
-    if(vertexes->size()!=0 && (aElectron.gsfTrack()).isNonnull() )  
+    if(vertexes->size()!=0 && (aElectron.gsfTrack()).isNonnull() ){
       dxyWrtPV = (aElectron.gsfTrack())->dxy( (*vertexes)[0].position() ) ;
-    else if (vertexes->size()!=0 && (aElectron.track()).isNonnull() )
+      dzWrtPV  = (aElectron.gsfTrack())->dz( (*vertexes)[0].position() ) ;
+    }
+    else if (vertexes->size()!=0 && (aElectron.track()).isNonnull() ){
       dxyWrtPV = (aElectron.track())->dxy( (*vertexes)[0].position() ) ;
+      dzWrtPV  = (aElectron.track())->dz( (*vertexes)[0].position() ) ;
+    }
 
     aElectron.addUserFloat("dxyWrtPV",dxyWrtPV);
+    aElectron.addUserFloat("dzWrtPV",dzWrtPV);
 
     reco::isodeposit::AbsVetos vetosCharged; 
     reco::isodeposit::AbsVetos vetosNeutral;  

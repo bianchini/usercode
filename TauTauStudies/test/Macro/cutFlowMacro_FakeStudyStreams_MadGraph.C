@@ -64,16 +64,16 @@ void cutFlowStudyElec( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZt
   TFile *fFullBackgroundDiBoson   = new TFile("/data_CMS/cms/lbianchini//ElecTauStream2011/treeElecTauStream_DiBoson.root","READ"); 
 
   // OpenNTuples
-  TString fDataName                = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleRun2011-Elec-v6_Open_ElecTauStream.root";
-  TString fSignalNameVBF           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleVBFH115-powheg-PUS1_Open_ElecTauStream.root";
-  TString fSignalNameGGH           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleGGFH115-powheg-PUS1_Open_ElecTauStream.root";
-  TString fBackgroundNameDYTauTau  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleDYJets-50-madgraph-PUS1_Open_ElecTauStream.root";
-  TString fBackgroundNameDYEleEle  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleDYJets-50-madgraph-PUS1_Open_ElecTauStream.root";
-  TString fBackgroundNameWJets     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleWJets-madgraph-PUS1_Open_ElecTauStream.root";
-  TString fBackgroundNameQCD       = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleQCD_Open_ElecTauStream.root";
-  TString fBackgroundNameG1J       = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleG1Jet_Open_ElecTauStream.root";
-  TString fBackgroundNameTTbar     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleTTJets-madgraph-PUS1_Open_ElecTauStream.root";
-  TString fBackgroundNameDiBoson   = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/v2/nTupleDiBoson_Open_ElecTauStream.root";
+  TString fDataName                = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/VbfPre/nTupleRun2011-Elec-v6_Open_ElecTauStream.root";
+  TString fSignalNameVBF           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/VbfPre/nTupleVBFH115-powheg-PUS1_Open_ElecTauStream.root";
+  TString fSignalNameGGH           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/VbfPre/nTupleGGFH115-powheg-PUS1_Open_ElecTauStream.root";
+  TString fBackgroundNameDYTauTau  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/VbfPre/nTupleDYJets-50-madgraph-PUS1_Open_ElecTauStream.root";
+  TString fBackgroundNameDYEleEle  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/VbfPre/nTupleDYJets-50-madgraph-PUS1_Open_ElecTauStream.root";
+  TString fBackgroundNameWJets     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/VbfPre/nTupleWJets-madgraph-PUS1_Open_ElecTauStream.root";
+  TString fBackgroundNameQCD       = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/VbfPre/nTupleQCD_Open_ElecTauStream.root";
+  TString fBackgroundNameG1J       = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/VbfPre/nTupleG1Jet_Open_ElecTauStream.root";
+  TString fBackgroundNameTTbar     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/VbfPre/nTupleTTJets-madgraph-PUS1_Open_ElecTauStream.root";
+  TString fBackgroundNameDiBoson   = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011/VbfPre/nTupleDiBoson_Open_ElecTauStream.root";
 
   TFile *fData(0); 
   TFile *fSignalVBF(0); 
@@ -322,8 +322,9 @@ void cutFlowStudyElec( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZt
     if((it->first).find("ZfakeTau")!=string::npos) cut = cut && (!isRealTau);
     else if((it->first).find("Ztautau")!=string::npos) cut = cut && (isRealTau);
   
-      ((TTree*) (it->second->Get("elecTauStreamAnalyzer/tree")) )->Draw("diTauLegsP4[0].Eta()>>h1",cut);
+    ((TTree*) (it->second->Get("elecTauStreamAnalyzer/tree")) )->Draw("diTauLegsP4[0].Eta()>>h1",cut);
     float tot = h1->Integral();
+    //cout<<"Ele-iso "<<tot<<endl;
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     if(crossSec[it->first]>0){
       tot *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
@@ -349,6 +350,7 @@ void cutFlowStudyElec( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZt
 
     ((TTree*) (it->second->Get("elecTauStreamAnalyzer/tree")) )->Draw("diTauLegsP4[0].Eta()>>h1",cut);
     float tot = h1->Integral();
+    //cout<<"Ele-iso+tau-iso "<<tot<<endl;
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     if(crossSec[it->first]>0){
       tot *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
@@ -374,6 +376,7 @@ void cutFlowStudyElec( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZt
 
     ((TTree*) (it->second->Get("elecTauStreamAnalyzer/tree")) )->Draw("diTauLegsP4[0].Eta()>>h1",cut);
     float tot = h1->Integral();
+    //cout<<"Ele-iso+tau-iso+Mt "<<tot<<endl;
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     if(crossSec[it->first]>0){
       tot *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
@@ -398,6 +401,7 @@ void cutFlowStudyElec( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZt
 
     ((TTree*) (it->second->Get("elecTauStreamAnalyzer/tree")) )->Draw("diTauLegsP4[0].Eta()>>h1",cut);
     float tot = h1->Integral();
+    //cout<<"Ele-iso+tau-iso+Mt+OS "<<tot<<endl;
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     if(crossSec[it->first]>0){
       tot *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
@@ -756,15 +760,15 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
   TFile *fFullBackgroundDiBoson   = new TFile("/data_CMS/cms/lbianchini//MuTauStream2011/treeMuTauStream_DiBoson-Mu.root","READ"); 
 
   // OpenNTuples
-  TString fDataName                = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleRun2011-PDMuon_Open_MuTauStream.root";
-  TString fSignalNameVBF           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleVBFH115-Mu-powheg-PUS1_Open_MuTauStream.root";
-  TString fSignalNameGGH           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleGGFH115-Mu-powheg-PUS1_Open_MuTauStream.root";
-  TString fBackgroundNameDYTauTau  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleDYJets-Mu-50-madgraph-PUS1_Open_MuTauStream.root";
-  TString fBackgroundNameDYMuMu    = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleDYJets-Mu-50-madgraph-PUS1_Open_MuTauStream.root";
-  TString fBackgroundNameWJets     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleWJets-Mu-madgraph-PUS1_Open_MuTauStream.root";
-  TString fBackgroundNameQCD       = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleQCDmu_Open_MuTauStream.root";
-  TString fBackgroundNameTTbar     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleTTJets-Mu-madgraph-PUS1_Open_MuTauStream.root";
-  TString fBackgroundNameDiBoson   = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/v2/nTupleDiBoson-Mu_Open_MuTauStream.root";
+  TString fDataName                = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/VbfPre/nTupleRun2011-PDMuon_Open_MuTauStream.root";
+  TString fSignalNameVBF           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/VbfPre/nTupleVBFH115-Mu-powheg-PUS1_Open_MuTauStream.root";
+  TString fSignalNameGGH           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/VbfPre/nTupleGGFH115-Mu-powheg-PUS1_Open_MuTauStream.root";
+  TString fBackgroundNameDYTauTau  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/VbfPre/nTupleDYJets-Mu-50-madgraph-PUS1_Open_MuTauStream.root";
+  TString fBackgroundNameDYMuMu    = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/VbfPre/nTupleDYJets-Mu-50-madgraph-PUS1_Open_MuTauStream.root";
+  TString fBackgroundNameWJets     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/VbfPre/nTupleWJets-Mu-madgraph-PUS1_Open_MuTauStream.root";
+  TString fBackgroundNameQCD       = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/VbfPre/nTupleQCDmu_Open_MuTauStream.root";
+  TString fBackgroundNameTTbar     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/VbfPre/nTupleTTJets-Mu-madgraph-PUS1_Open_MuTauStream.root";
+  TString fBackgroundNameDiBoson   = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011/VbfPre/nTupleDiBoson-Mu_Open_MuTauStream.root";
 
   TFile *fData(0); 
   TFile *fSignalVBF(0); 
@@ -1007,11 +1011,13 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
 
     ((TTree*) (it->second->Get("muTauStreamAnalyzer/tree")) )->Draw("diTauLegsP4[0].Eta()>>h1",cut);
     float tot = h1->Integral();
+    //cout<<"Mu-iso "<<tot<<endl;
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     if(crossSec[it->first]>0){
       tot *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
       //totalEquivalentEvents *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
     } else if (crossSec[it->first]<0) tot *= Lumi/1000; 
+    //cout<<"Mu-iso Rescaled"<<tot<<endl;
     cutMap_ElecIso[it->first] = tot;
     cutMap_ElecIsoE[it->first] = totalEquivalentEvents>0 ? sqrt(totalEquivalentEvents)*(tot/totalEquivalentEvents) : 0;
     delete h1;
@@ -1032,11 +1038,13 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
 
     ((TTree*) (it->second->Get("muTauStreamAnalyzer/tree")) )->Draw("diTauLegsP4[0].Eta()>>h1",cut);
     float tot = h1->Integral();
+    //cout<<"Mu-iso+tau-iso "<<tot<<endl;
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     if(crossSec[it->first]>0){
       tot *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
       //totalEquivalentEvents *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
     } else if (crossSec[it->first]<0) tot *= Lumi/1000; 
+    //cout<<"Mu-iso+tau-iso Rescaled"<<tot<<endl;
     cutMap_TauIso[it->first] = tot;
     cutMap_TauIsoE[it->first] = totalEquivalentEvents>0 ? sqrt(totalEquivalentEvents)*(tot/totalEquivalentEvents) : 0;
     delete h1;
@@ -1057,11 +1065,13 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
 
     ((TTree*) (it->second->Get("muTauStreamAnalyzer/tree")) )->Draw("diTauLegsP4[0].Eta()>>h1",cut);
     float tot = h1->Integral();
+    //cout<<"Mu-iso+tau-iso+Mt "<<tot<<endl;
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     if(crossSec[it->first]>0){
       tot *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
       //totalEquivalentEvents *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
     } else if (crossSec[it->first]<0) tot *= Lumi/1000; 
+    //cout<<"Mu-iso+tau-iso+Mt Rescaled"<<tot<<endl;
     cutMap_Mt[it->first] = tot;
     cutMap_MtE[it->first] = totalEquivalentEvents>0 ? sqrt(totalEquivalentEvents)*(tot/totalEquivalentEvents) : 0;
     delete h1;
@@ -1082,11 +1092,13 @@ void cutFlowStudyMu( TString weightFile = "TMVAClassificationPtOrd_qqH115vsWZttQ
 
     ((TTree*) (it->second->Get("muTauStreamAnalyzer/tree")) )->Draw("diTauLegsP4[0].Eta()>>h1",cut);
     float tot = h1->Integral();
+    cout<<"Mu-iso+tau-iso+Mt+OS "<<tot<<endl;
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     if(crossSec[it->first]>0){
       tot *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
       //totalEquivalentEvents *= (Lumi/ (totalEvents/crossSec[it->first])  ) ;
     } else if (crossSec[it->first]<0) tot *= Lumi/1000; 
+    cout<<"Mu-iso+tau-iso+Mt+OS Rescaled"<<tot<<endl;
     cutMap_OS[it->first] = tot;
     cutMap_OSE[it->first] = totalEquivalentEvents>0 ? sqrt(totalEquivalentEvents)*(tot/totalEquivalentEvents) : 0;
     delete h1;

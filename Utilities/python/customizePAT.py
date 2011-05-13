@@ -434,7 +434,7 @@ def addPFElectron(process,postfix,verbose=False):
 
     
 ####################################################################
-def addTriggerMatchingMuon(process,postfix="",verbose=False):
+def addTriggerMatchingMuon(process,isMC=False,postfix="",verbose=False):
     if verbose:
         print "[Info] Addting trigger matching to patMuon with postfix '"+postfix+"'"
     
@@ -443,14 +443,17 @@ def addTriggerMatchingMuon(process,postfix="",verbose=False):
         "PATTriggerMatcherDRLessByR"
         , src     = cms.InputTag( "selectedPatMuons"+postfix )
         , matched = cms.InputTag( "patTrigger" )
-        #, matchedCuts    = cms.string('path("HLT_Mu9") || path("HLT_Mu11") || path("HLT_IsoMu9") || path("HLT_Mu15_v*")')
-        #, matchedCuts    = cms.string('path("HLT_Mu11_PFTau15_v*",0) && type("TriggerMuon")')
-        , matchedCuts    = cms.string('type("TriggerMuon")')
+        , matchedCuts    = cms.string('(path("HLT_IsoMu12_LooseIsoPFTau10_v*",0) || path("HLT_Mu15_LooseIsoPFTau20_v*",0)) && (filter("hltSingleMuIsoL3IsoFiltered12") || filter("hltL3Muon15")) && type("TriggerMuon")')
+        #, matchedCuts    = cms.string('path("HLT_Mu11_PFTau15_v*",0) && filter("hltSingleMu11L3Filtered11") && type("TriggerMuon")')
         , maxDPtRel = cms.double( 999 )
-        , maxDeltaR = cms.double( 0.5 )
+        , maxDeltaR = cms.double( 0.3 )
         , resolveAmbiguities    = cms.bool( True )
         , resolveByMatchQuality = cms.bool( True )
         )
+
+    if isMC:
+        muonMatch.matchedCuts  = cms.string('(path("HLT_Mu11_PFTau15_v*",0) || path("HLT_IsoMu9_PFTau15_v*",0)) && (filter("hltSingleMu11L3Filtered11") ) && type("TriggerMuon")')
+
 
     setattr(process,"muonTriggerMatchHLTMuons"+postfix,muonMatch.clone()) 
     if not hasattr(process,"patTriggerSequence"):
@@ -482,7 +485,7 @@ def addTriggerMatchingMuon(process,postfix="",verbose=False):
 
 
 ####################################################################
-def addTriggerMatchingElectron(process,postfix="",verbose=False):
+def addTriggerMatchingElectron(process,isMC=False,postfix="",verbose=False):
     if verbose:
         print "[Info] Addting trigger matching to patElectron with postfix '"+postfix+"'"
     
@@ -491,15 +494,18 @@ def addTriggerMatchingElectron(process,postfix="",verbose=False):
         "PATTriggerMatcherDRLessByR"
         , src     = cms.InputTag( "selectedPatElectrons"+postfix )
         , matched = cms.InputTag( "patTrigger" )
-        #, matchedCuts = cms.string( 'path("HLT_Ele10_SW_L1R_v*") || path("HLT_Ele15_SW_L1R") || path("HLT_Ele17_SW_L1R_v*") || path("HLT_Ele17_SW_Isol_L1R_v*") || path("HLT_Ele17_SW_TighterEleIdIsol_L1R_v*") || path("HLT_Ele22_SW_L1R_v*")' )
-        #, matchedCuts = cms.string( '(path("HLT_IsoEle12_PFTau15_v*",0) || path("HLT_Ele12_TightIdIso_PFTau15") || path("HLT_Ele12_TightIdIso_PFTau15_v*") || path("HLT_Ele12_TighterIdIso_PFTau15") || path("HLT_Ele12_TighterIdIso_PFTau15_v*")) && type("TriggerElectron")' )
         #, matchedCuts = cms.string( 'path("HLT_IsoEle12_PFTau15_v3",0) && type("TriggerElectron")' )
-        , matchedCuts = cms.string( 'type("TriggerElectron")' )
+        #, matchedCuts = cms.string( 'type("TriggerElectron")' )
+        #, matchedCuts = cms.string( 'type("TriggerTau")' )
+        , matchedCuts = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*", 0) || path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*",0)) && filter("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter") && type("TriggerElectron")')
         , maxDPtRel = cms.double( 999 )
-        , maxDeltaR = cms.double( 0.5)
+        , maxDeltaR = cms.double( 0.3)
         , resolveAmbiguities    = cms.bool( True )
         , resolveByMatchQuality = cms.bool( True )
         )
+
+    if isMC:
+        eleMatch.matchedCuts = cms.string('(path("HLT_IsoEle12_PFTau15_v*",0)) && type("TriggerElectron")')
 
     setattr(process,"eleTriggerMatchHLTElectrons"+postfix,eleMatch.clone()) 
     if not hasattr(process,"patTriggerSequence"):
@@ -531,7 +537,7 @@ def addTriggerMatchingElectron(process,postfix="",verbose=False):
 
 
 ####################################################################
-def addTriggerMatchingTau(process,postfix="",verbose=False):
+def addTriggerMatchingTau(process,isMC=False,postfix="",XtriggerMu=False,verbose=False):
     if verbose:
         print "[Info] Addting trigger matching to patTau with postfix '"+postfix+"'"
     
@@ -540,12 +546,23 @@ def addTriggerMatchingTau(process,postfix="",verbose=False):
         "PATTriggerMatcherDRLessByR"
         , src     = cms.InputTag( "selectedPatTaus"+postfix )
         , matched = cms.InputTag( "patTrigger" )
-        , matchedCuts    = cms.string('type("TriggerTau")')
+        #, matchedCuts    = cms.string('type("TriggerTau")')
+        , matchedCuts    = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*", 0) || path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*",0)) && (filter("hltOverlapFilterIsoEle15IsoPFTau15") || filter("hltOverlapFilterIsoEle15IsoPFTau20")) && type("TriggerTau")')
         , maxDPtRel = cms.double( 999 )
-        , maxDeltaR = cms.double( 0.5 )
+        , maxDeltaR = cms.double( 0.3 )
         , resolveAmbiguities    = cms.bool( True )
         , resolveByMatchQuality = cms.bool( True )
         )
+
+
+    if XtriggerMu and (not isMC):
+        tauMatch.matchedCuts  = cms.string('(path("HLT_IsoMu12_LooseIsoPFTau10_v*",0) || path("HLT_Mu15_LooseIsoPFTau20_v*",0)) && (filter("hltOverlapFilterIsoMu12IsoPFTau10") || filter("hltOverlapFilterMu15IsoPFTau20") ) && type("TriggerTau")')
+
+    if XtriggerMu and isMC:
+        tauMatch.matchedCuts  = cms.string('path("HLT_Mu11_PFTau15_v*",0) && filter("hltOverlapFilterMu11PFTau15") && type("TriggerTau")')
+    if (not XtriggerMu) and isMC:
+        tauMatch.matchedCuts    = cms.string('path("HLT_IsoEle12_PFTau15_v*",0) && type("TriggerTau")')
+
 
     setattr(process,"tauTriggerMatchHLTTaus"+postfix,tauMatch.clone()) 
     if not hasattr(process,"patTriggerSequence"):

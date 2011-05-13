@@ -31,13 +31,19 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
     pat::Muon aMuon( (*muons)[i] );
    
     double dxyWrtPV =  -99.;
+    double dzWrtPV  =  -99.;
 
-    if(vertexes->size()!=0 && aMuon.isGlobalMuon())  
+    if(vertexes->size()!=0 && aMuon.isGlobalMuon()){
       dxyWrtPV = (aMuon.globalTrack())->dxy( (*vertexes)[0].position() ) ;
-    else if (vertexes->size()!=0 && aMuon.isTrackerMuon())
+      dzWrtPV  = (aMuon.globalTrack())->dxy( (*vertexes)[0].position() ) ;
+    }
+    else if (vertexes->size()!=0 && aMuon.isTrackerMuon()){
       dxyWrtPV = (aMuon.innerTrack())->dxy( (*vertexes)[0].position() ) ;
+      dzWrtPV  = (aMuon.innerTrack())->dxy( (*vertexes)[0].position() ) ;
+    }
 
     aMuon.addUserFloat("dxyWrtPV",dxyWrtPV);
+    aMuon.addUserFloat("dzWrtPV",dzWrtPV);
 
     reco::isodeposit::AbsVetos vetosCharged; 
     reco::isodeposit::AbsVetos vetosNeutral;  
