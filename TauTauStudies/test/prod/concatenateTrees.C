@@ -43,6 +43,12 @@ void makeElecTauStreamTree(string sample = "Zjets", float Lumi = 1000){
     files.push_back( make_pair("WZ-pythia-PUS1.root",        (10.4   *Lumi)  ) );
     files.push_back( make_pair("ZZ-pythia-PUS1.root",        ( 4.297 *Lumi)  ) );
   }
+
+  if(sample.find("SingleTop")!=string::npos){
+    files.push_back( make_pair("TToBLNu-s-PUS1.root",        ( 1.4   *Lumi)  ) ); 
+    files.push_back( make_pair("TToBLNu-t-PUS1.root",        ( 20.9   *Lumi)  ) ); 
+    files.push_back( make_pair("TToBLNu-tW-PUS1.root",       ( 10.6  *Lumi)  ) );
+  }
   
   if(sample.find("Wjets")!=string::npos){
     files.push_back( make_pair("W1Jets_ptW-0to100.root",       (3.693e+03*0.44*Lumi)  ) );
@@ -67,7 +73,7 @@ void makeElecTauStreamTree(string sample = "Zjets", float Lumi = 1000){
     files.push_back( make_pair("QCDbc-pythia-3080-PUS1.root",             (59480000*0.00230 *Lumi)) );
     files.push_back( make_pair("QCDbc-pythia-80170-PUS1.root",            (900000*0.0104 *Lumi)) );
     files.push_back( make_pair("QCDem-pythia-2030-PUS1.root",             (236000000*0.0104*Lumi)) );
-    files.push_back( make_pair("QCDem-pythia-3080-PUS1-v2.root",             (59480000*0.065*Lumi)) );
+    files.push_back( make_pair("QCDem-pythia-3080-PUS1-v2.root",          (59480000*0.065*Lumi)) );
     files.push_back( make_pair("QCDem-pythia-80170-PUS1.root",            (900000*0.155*Lumi)) );
   }
   
@@ -80,15 +86,18 @@ void makeElecTauStreamTree(string sample = "Zjets", float Lumi = 1000){
     files.push_back( make_pair("G1Jet-300to5000-alpgen-PUS1.root",        (5.450e-01 *Lumi)) );
   }
 
-  
+
   directories.push_back("allEventsFilter");
   directories.push_back("vertexScrapingFilter");
-  directories.push_back("oneElectronFilter");
-  directories.push_back("noMuonFilter");
-  directories.push_back("electronLegFilter");
-  directories.push_back("tauLegFilter");
-  directories.push_back("atLeastOneDiTauFilter");
-
+  directories.push_back("atLeastOneElecTauFilter");
+  directories.push_back("elecPtEtaFilter");
+  directories.push_back("elecPtEtaIDFilter");
+  directories.push_back("tauPtEtaFilter");
+  directories.push_back("tauPtEtaIDFilter");
+  directories.push_back("tauPtEtaIDAgMuFilter");
+  directories.push_back("tauPtEtaIDAgMuAgElecFilter");
+  //directories.push_back("atLeast1selectedDiTauFilter");
+  
 
   TFile *outFile = new TFile(("treeElecTauStream_"+sample+".root").c_str(),"RECREATE");
   TChain* outChain = new TChain("elecTauStreamAnalyzer/tree");
@@ -97,7 +106,7 @@ void makeElecTauStreamTree(string sample = "Zjets", float Lumi = 1000){
 
   for(unsigned int i = 0; i<files.size();i++){
 
-    TFile *currentFile = new TFile(("/data_CMS/cms/lbianchini/ElecTauStream2011/treeElecTauStream_"+files[i].first).c_str(),"READ");
+    TFile *currentFile = new TFile(("/data_CMS/cms/lbianchini/ElecTauStream2011_iter2/treeElecTauStream_"+files[i].first).c_str(),"READ");
     
     // protection
     if(currentFile->IsZombie()){
@@ -162,7 +171,7 @@ void makeElecTauStreamTree(string sample = "Zjets", float Lumi = 1000){
 
       // loop over the files
       for(unsigned int i = 0; i<files.size();i++){
-	TFile *currentFile = new TFile(("/data_CMS/cms/lbianchini/ElecTauStream2011/treeElecTauStream_"+files[i].first).c_str(),"READ");
+	TFile *currentFile = new TFile(("/data_CMS/cms/lbianchini/ElecTauStream2011_iter2/treeElecTauStream_"+files[i].first).c_str(),"READ");
 
 	// protection
 	if(currentFile->IsZombie()){
@@ -229,6 +238,12 @@ void makeMuTauStreamTree(string sample = "Zjets", float Lumi = 1000){
     files.push_back( make_pair("WZ-Mu-pythia-PUS1.root",        (10.4   *Lumi)  ) );
     files.push_back( make_pair("ZZ-Mu-pythia-PUS1.root",        ( 4.297 *Lumi)  ) );
   }
+
+  if(sample.find("SingleTop")!=string::npos){
+    files.push_back( make_pair("TToBLNu-Mu-s-PUS1.root",        ( 1.4   *Lumi)  ) ); 
+    files.push_back( make_pair("TToBLNu-Mu-t-PUS1.root",        ( 20.9   *Lumi)  ) ); 
+    files.push_back( make_pair("TToBLNu-Mu-tW-PUS1.root",       ( 10.6  *Lumi)  ) );
+  }
   
   if(sample.find("Wjets")!=string::npos){
     files.push_back( make_pair("W1Jets_ptW-0to100.root",       (3.693e+03*0.44*Lumi)  ) );
@@ -251,11 +266,14 @@ void makeMuTauStreamTree(string sample = "Zjets", float Lumi = 1000){
   
   directories.push_back("allEventsFilter");
   directories.push_back("vertexScrapingFilter");
-  directories.push_back("oneMuonFilter");
-  directories.push_back("noElecFilter");
-  directories.push_back("muonLegFilter");
-  directories.push_back("tauLegFilter");
-  directories.push_back("atLeastOneDiTauFilter");
+  directories.push_back("atLeastOneMuTauFilter");
+  directories.push_back("muPtEtaFilter");
+  directories.push_back("muPtEtaIDFilter");
+  directories.push_back("tauPtEtaFilter");
+  directories.push_back("tauPtEtaIDFilter");
+  directories.push_back("tauPtEtaIDAgMuFilter");
+  directories.push_back("tauPtEtaIDAgMuAgElecFilter");
+  directories.push_back("atLeast1selectedDiTauFilter");
 
 
   TFile *outFile = new TFile(("treeMuTauStream_"+sample+".root").c_str(),"RECREATE");
@@ -265,7 +283,7 @@ void makeMuTauStreamTree(string sample = "Zjets", float Lumi = 1000){
 
   for(unsigned int i = 0; i<files.size();i++){
 
-    TFile *currentFile = new TFile(("/data_CMS/cms/lbianchini/MuTauStream2011/treeMuTauStream_"+files[i].first).c_str(),"READ");
+    TFile *currentFile = new TFile(("/data_CMS/cms/lbianchini/MuTauStream2011_iter2/treeMuTauStream_"+files[i].first).c_str(),"READ");
     
     // protection
     if(currentFile->IsZombie()){
@@ -330,7 +348,7 @@ void makeMuTauStreamTree(string sample = "Zjets", float Lumi = 1000){
 
       // loop over the files
       for(unsigned int i = 0; i<files.size();i++){
-	TFile *currentFile = new TFile(("/data_CMS/cms/lbianchini/MuTauStream2011/treeMuTauStream_"+files[i].first).c_str(),"READ");
+	TFile *currentFile = new TFile(("/data_CMS/cms/lbianchini/MuTauStream2011_iter2/treeMuTauStream_"+files[i].first).c_str(),"READ");
 
 	// protection
 	if(currentFile->IsZombie()){
