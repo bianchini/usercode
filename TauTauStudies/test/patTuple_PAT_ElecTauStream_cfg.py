@@ -444,6 +444,8 @@ process.load("Bianchi.Utilities.diTausReconstruction_cff")
 process.diTau = process.elecTauPairs.clone()
 process.diTau.srcLeg1 = cms.InputTag("elecPtEtaID")
 process.diTau.srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecCrackRem")
+process.diTau.srcMET  = cms.InputTag("patMETsPFlow")
+
 if not runOnMC:
         process.diTau.srcGenParticles = ""
 

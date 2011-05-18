@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 2000
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -55,8 +55,10 @@ process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets+process.kt
 process.source.fileNames = cms.untracked.vstring(
     #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_1.root',
     #'file:/data_CMS/cms/lbianchini/ZMuMu_RelVal386.root',
-     'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root',
-     'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/02700D19-A756-E011-B4D5-0030486792B6.root'
+    # 'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root',
+    # 'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/02700D19-A756-E011-B4D5-0030486792B6.root'
+    #'file:goodDataEvents_84_1_yHS.root'
+    'file:/data_CMS/cms/akalinow/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/PU_S1_START311_V1G1-v1/AOD/8EC598C7-3453-E011-AC82-002481E14F8C.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall10/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/GEN-SIM-RECO/START38_V12-v1/0000/044E940A-55EC-DF11-89D6-0023AEFDEE60.root',
     #'file:/data_CMS/cms/lbianchini/F41A3437-7AED-DF11-A50D-002618943894.root',
     #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_1.root',
@@ -414,6 +416,8 @@ process.load("Bianchi.Utilities.diTausReconstruction_cff")
 process.diTau = process.muTauPairs.clone()
 process.diTau.srcLeg1 = cms.InputTag("muPtEtaID")
 process.diTau.srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElec")
+process.diTau.srcMET  = cms.InputTag("patMETsPFlow")
+
 if not runOnMC:
     process.diTau.srcGenParticles = ""
 
@@ -485,6 +489,8 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     verbose =  cms.untracked.bool( False ),
     )
 
+process.load("Bianchi.TauTauStudies.preselectionSeq_cff")
+
 process.pat = cms.Sequence(
     process.allEventsFilter+
     (process.primaryVertexFilter+process.scrapping)*
@@ -494,6 +500,7 @@ process.pat = cms.Sequence(
     process.PFTau*
     process.patDefaultSequence*
     process.selectedPatMuonsTriggerMatchUserEmbedded*
+    process.arturPreselection*
     process.alLeastOneMuTauSequence*
     process.muLegSequence*
     process.tauLegSequence*
