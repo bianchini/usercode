@@ -489,7 +489,7 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     verbose =  cms.untracked.bool( False ),
     )
 
-process.load("Bianchi.TauTauStudies.preselectionSeq_cff")
+#process.load("Bianchi.TauTauStudies.preselectionSeq_cff")
 
 process.pat = cms.Sequence(
     process.allEventsFilter+
@@ -500,7 +500,7 @@ process.pat = cms.Sequence(
     process.PFTau*
     process.patDefaultSequence*
     process.selectedPatMuonsTriggerMatchUserEmbedded*
-    process.arturPreselection*
+    #process.arturPreselection*
     process.alLeastOneMuTauSequence*
     process.muLegSequence*
     process.tauLegSequence*
