@@ -39,9 +39,9 @@ void makeElecTauStreamTree(string sample = "Zjets", float Lumi = 1000){
   }
 
   if(sample.find("DiBoson")!=string::npos){
-    files.push_back( make_pair("WW-pythia-PUS1.root",        ( 2.9   *Lumi)  ) );
-    files.push_back( make_pair("WZ-pythia-PUS1.root",        (10.4   *Lumi)  ) );
-    files.push_back( make_pair("ZZ-pythia-PUS1.root",        ( 4.297 *Lumi)  ) );
+    files.push_back( make_pair("WW-pythia-PUS1.root",        ( 4.4   *Lumi)  ) );
+    files.push_back( make_pair("WZ-pythia-PUS1.root",        (18.2   *Lumi)  ) );
+    files.push_back( make_pair("ZZ-pythia-PUS1.root",        ( 5.9   *Lumi)  ) );
   }
 
   if(sample.find("SingleTop")!=string::npos){
@@ -234,9 +234,9 @@ void makeMuTauStreamTree(string sample = "Zjets", float Lumi = 1000){
   }
 
   if(sample.find("DiBoson")!=string::npos){
-    files.push_back( make_pair("WW-Mu-pythia-PUS1.root",        ( 2.9   *Lumi)  ) );
-    files.push_back( make_pair("WZ-Mu-pythia-PUS1.root",        (10.4   *Lumi)  ) );
-    files.push_back( make_pair("ZZ-Mu-pythia-PUS1.root",        ( 4.297 *Lumi)  ) );
+    files.push_back( make_pair("WW-Mu-pythia-PUS1.root",        ( 4.4   *Lumi)  ) );
+    files.push_back( make_pair("WZ-Mu-pythia-PUS1.root",        (18.2   *Lumi)  ) );
+    files.push_back( make_pair("ZZ-Mu-pythia-PUS1.root",        ( 5.9   *Lumi)  ) );
   }
 
   if(sample.find("SingleTop")!=string::npos){

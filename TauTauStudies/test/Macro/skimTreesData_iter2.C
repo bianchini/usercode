@@ -302,7 +302,10 @@ void makeTrees_ElecTauStream(int index = 4){
     etaL1 = (*diTauLegsP4)[0].Eta();
     etaL2 = (*diTauLegsP4)[1].Eta();
     diTauCharge_ = diTauCharge;
-    MtLeg1_ = MtLeg1;
+    float scalarSumPt = (*diTauLegsP4)[0].Pt() + (*METP4)[0].Pt();
+    float vectorSumPt = ((*diTauLegsP4)[0] + (*METP4)[0]).Pt() ;
+    MtLeg1_ = TMath::Sqrt( scalarSumPt*scalarSumPt - vectorSumPt*vectorSumPt ) ;
+    //MtLeg1_ = MtLeg1;
     pZetaCutVar = pZeta - 1.5*pZetaVis;
     MEt = (*METP4)[0].Et();
     tightestHPSWP_ = tightestHPSWP;
@@ -633,7 +636,10 @@ void makeTrees_MuTauStream(int index = 4){
     etaL1 = (*diTauLegsP4)[0].Eta();
     etaL2 = (*diTauLegsP4)[1].Eta();
     diTauCharge_ = diTauCharge;
-    MtLeg1_ = MtLeg1;
+    float scalarSumPt = (*diTauLegsP4)[0].Pt() + (*METP4)[0].Pt();
+    float vectorSumPt = ((*diTauLegsP4)[0] + (*METP4)[0]).Pt() ;
+    MtLeg1_ = TMath::Sqrt( scalarSumPt*scalarSumPt - vectorSumPt*vectorSumPt ) ;
+    //MtLeg1_ = MtLeg1;
     pZetaCutVar = pZeta - 1.5*pZetaVis;
     MEt = (*METP4)[0].Et();
     tightestHPSWP_ = tightestHPSWP;
@@ -712,7 +718,7 @@ void doAllSamplesElec(){
 
 void doAllSamplesMu(){
  
-  for( unsigned int k = 0; k < 9 ; k++)  makeTrees_MuTauStream(k);
+  for( unsigned int k = 0; k < 10 ; k++)  makeTrees_MuTauStream(k);
 
   return;
 
