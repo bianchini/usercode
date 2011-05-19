@@ -30,12 +30,13 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-void cutFlowStudyElec( Double_t hltEff_=0.8 ) 
+void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 ) 
 {
-  
+
   ofstream out("cutFlow_ElecTauStream_iter2.txt");
   out.precision(4);
 
+  TCut hlt("HLTx==1");
 
   TFile *fFullData                = new TFile("/data_CMS/cms/lbianchini//ElecTauStream2011_iter2/treeElecTauStream_Run2011-Elec.root","READ"); 
   TFile *fFullSignalVBF           = new TFile("/data_CMS/cms/lbianchini//ElecTauStream2011_iter2/treeElecTauStream_VBFH115-powheg-PUS1.root","READ"); 
@@ -102,7 +103,7 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 )
 
   TFile* dummy1 = new TFile("dummy1.root","RECREATE");
   TTree *backgroundDYTauTau  = ((TTree*)fBackgroundDYTauTau->Get(tree))->CopyTree("isTauLegMatched>0.5");
-  TTree *backgroundDYEleEle    = ((TTree*)fBackgroundDYEleEle->Get(tree))->CopyTree("isTauLegMatched<0.5");
+  TTree *backgroundDYEleEle  = ((TTree*)fBackgroundDYEleEle->Get(tree))->CopyTree("isTauLegMatched<0.5");
   cout <<backgroundDYTauTau->GetEntries() << " -- " << backgroundDYEleEle->GetEntries() << endl;
 
   TTree *backgroundWJets     = (TTree*)fBackgroundWJets->Get(tree);
@@ -153,7 +154,7 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 )
   crossSec["ZfakeTau"]=( 3048  );
   crossSec["Ztautau"]=( 3048  );
   crossSec["G1J"]=( -1 );
-  crossSec["QCD"]=( 296600000*0.0002855 );
+  crossSec["QCD"]=( -1 );
   crossSec["Data"]=( 0 );
 
   float Lumi = 185.37;
@@ -180,7 +181,7 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 )
   filters.push_back("VBF cuts");
   filters.push_back("jet-veto");
   filters.push_back("anti-b tag");
-  filters.push_back("HLT");
+  filters.push_back("HLT-matching");
 
   // here I define the map between a sample name and its file ptr
   std::map<std::string,TFile*> fullMap;
@@ -312,8 +313,9 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0)";
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -325,8 +327,9 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) )";
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -338,8 +341,9 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && elecFlag==0)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0)"; 
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -351,8 +355,9 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && elecFlag==0 && MtLeg1<40)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40)"; 
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -364,8 +369,9 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && elecFlag==0 && MtLeg1<40 && diTauCharge==0)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0)"; 
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -377,8 +383,9 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15)"; 
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -390,8 +397,9 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1  && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15 && eta1*eta2<0)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04))  && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15 && eta1*eta2<0)"; 
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -403,8 +411,9 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520)"; 
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -416,8 +425,9 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20)"; 
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -429,8 +439,9 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1)"; 
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -442,8 +453,9 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  (jt->first).find("Data")!=string::npos ? "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20  && jetsBtagHE1<2.1 && HLTmatch==1 && HLTx==1)" : "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1  && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  (jt->first).find("Data")!=string::npos ? "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20  && jetsBtagHE1<2.1 && HLTmatch==1)" : "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04))  && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1)"; 
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -633,12 +645,13 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 )
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void cutFlowStudyMu( Double_t hltEff_=0.9218 ) 
+void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 ) 
 {
   
   ofstream out("cutFlow_MuTauStream_iter2.txt");
   out.precision(4);
 
+  TCut hlt("((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261))");
  
   TFile *fFullData                = new TFile("/data_CMS/cms/lbianchini//MuTauStream2011_iter2/treeMuTauStream_Run2011-Mu.root","READ"); 
   TFile *fFullSignalVBF           = new TFile("/data_CMS/cms/lbianchini//MuTauStream2011_iter2/treeMuTauStream_VBFH115-Mu-powheg-PUS1.root","READ"); 
@@ -773,7 +786,7 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218 )
   filters.push_back("VBF cuts");
   filters.push_back("jet-veto");
   filters.push_back("anti-b tag");
-  filters.push_back("HLT");
+  filters.push_back("HLT-matching");
 
   // here I define the map between a sample name and its file ptr
   std::map<std::string,TFile*> fullMap;
@@ -904,8 +917,9 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0)";
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -918,7 +932,8 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -931,7 +946,8 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -944,7 +960,8 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -957,7 +974,8 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -970,7 +988,8 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -983,7 +1002,8 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1  && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15 && eta1*eta2<0)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -996,7 +1016,8 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -1009,7 +1030,8 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -1022,7 +1044,8 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
@@ -1034,8 +1057,9 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  (jt->first).find("Data")!=string::npos ? "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20  && jetsBtagHE1<2.1 && HLTmatch==1 && ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)))" : "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1  && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1)"; 
-    jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  (jt->first).find("Data")!=string::npos ? "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20  && jetsBtagHE1<2.1 && HLTmatch==1)" : "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1  && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1)";
+    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
+    else jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();

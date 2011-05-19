@@ -3,8 +3,12 @@
 
 {
 
+  using namespace std;
+  using namespace RooFit;
 
   float Lumi = 24.86+159.15;
+
+  float hltCorr = 0.92*0.9;
 
   TCut hlt("( ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) )");
   
@@ -47,27 +51,27 @@
   //////////////// DiBoson + TTbar + SingleTop
  
   treeDiBoson->Draw("etaL1>>h1",signal_region);
-  float N_DiBoson_signal_region = (float)h1->Integral()*(Lumi/1000.);
+  float N_DiBoson_signal_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
   treeDiBoson->Draw("etaL1>>h1",Wenrich_OS_region);
-  float N_DiBoson_Wenrich_OS_region = (float)h1->Integral()*(Lumi/1000.);
+  float N_DiBoson_Wenrich_OS_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
   treeTTbar->Draw("etaL1>>h1",signal_region);
-  float N_TTbar_signal_region = (float)h1->Integral()*(Lumi/1000.);
+  float N_TTbar_signal_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
   treeTTbar->Draw("etaL1>>h1",Wenrich_OS_region);
-  float N_TTbar_Wenrich_OS_region = (float)h1->Integral()*(Lumi/1000.);
+  float N_TTbar_Wenrich_OS_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
   treeSingleTop->Draw("etaL1>>h1",signal_region);
-  float N_SingleTop_signal_region = (float)h1->Integral()*(Lumi/1000.);
+  float N_SingleTop_signal_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
   treeSingleTop->Draw("etaL1>>h1",Wenrich_OS_region);
-  float N_SingleTop_Wenrich_OS_region = (float)h1->Integral()*(Lumi/1000.);
+  float N_SingleTop_Wenrich_OS_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
 
@@ -96,7 +100,7 @@
 
   treeZFakes->Draw("etaL1>>h1",signal_region);
   float Exp_ZFake_signal_region = (float)h1->Integral();
-  Exp_ZFake_signal_region *= (Lumi/1000.*0.92);
+  Exp_ZFake_signal_region *= (Lumi/1000.*hltCorr);
   h1->Reset();
 
   cout << "N_ZMuMuFakeJet_signal_region = " << N_ZMuMuFakeJet_signal_region << endl;
@@ -195,9 +199,160 @@
 
   treeZTauTau->Draw("etaL1>>h1",signal_region);
   float Exp_Z_signal_region = (float)h1->Integral();
-  Exp_Z_signal_region *= (Lumi/1000.*0.92);
+  Exp_Z_signal_region *= (Lumi/1000.*hltCorr);
   h1->Reset();
 
-  cout << "Estimated ==> " << N_Z_signal_region << " --- Expected ---"   << Exp_Z_signal_region << endl;
+
+  TFile* dummy1 = new TFile("dummy2.root","RECREATE");
+  TTree *treeDataCut = (TTree*)treeData->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && ( ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) ))");
+  TTree *treeQCDCut = (TTree*)treeData->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta>0.15 && muFlag==0 && MtLeg1<40 && diTauCharge!=0)");
+  TTree *treeQCDIsoCut = (TTree*)treeData->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && MtLeg1<40 && diTauCharge!=0)");
+  TTree *treeZTauTauCut = (TTree*)treeZTauTau->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
+  TTree *treeZFakesCut = (TTree*)treeZFakes->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
+  TTree *treeDiBosonCut = (TTree*)treeDiBoson->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
+  TTree *treeTTbarCut = (TTree*)treeTTbar->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
+  TTree *treeSingleTopCut = (TTree*)treeSingleTop->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
+  TTree *treeWJetsCut = (TTree*)treeWJets->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
+
+  RooRealVar Nqcd("Nqcd","",        100,0,10000);
+  RooRealVar Nztt("Nztt","",        100,0,10000);
+  RooRealVar Nwen("Nwen","",        100,0,10000);
+  RooRealVar Nttb("Nttb","",        100,0,10000);
+  RooRealVar Nstp("Nstp","",        100,0,10000);
+  RooRealVar Ndib("Ndib","",        100,0,10000);
+  RooRealVar Nzfk("Nzfk","",        100,0,10000);
+
+  RooLognormal McNqcdConstraint("McNqcdConstraint","",Nqcd,RooConst(N_QCD_signal_region),RooConst(1.5)) ;
+  RooLognormal McNzttConstraint("McNzttConstraint","",Nztt,RooConst(N_Z_signal_region),RooConst(1.5));
+  RooLognormal McNwenConstraint("McNwenConstraint","",Nwen,RooConst(N_WMuNu_signal_region+N_WTauNu_signal_region),RooConst(1.5)) ;
+  RooLognormal McNttbConstraint("McNttbConstraint","",Nttb,RooConst(N_TTbar_signal_region),RooConst(1.5)) ;
+  RooLognormal McNstpConstraint("McNstbConstraint","",Nstp,RooConst(N_SingleTop_signal_region),RooConst(1.5)) ;
+  RooLognormal McNdibConstraint("McNdibConstraint","",Ndib,RooConst(N_DiBoson_signal_region),RooConst(1.5)) ;
+  RooLognormal McNzfkConstraint("McNzfkConstraint","",Nzfk,RooConst(N_ZMuMuFakeJet_signal_region+N_ZMuMuFakeMu_signal_region),RooConst(1.5)) ;
+
+  RooRealVar mass("diTauVisMass","visible mass (GeV/c^{2})", 0 , 200);
+  mass.setBins(40);
+
+  TH1F* data_SS = new TH1F("data_SS","",40,0,200);
+  treeQCDIsoCut->Draw("diTauVisMass>>data_SS");
+  TH1F* W_SS = (TH1F*)data_SS->Clone("W_SS");
+  treeWJets->Draw("diTauVisMass>>W_SS",signal_SS_region);
+  W_SS->Scale((N_WMuNu_signal_SS_region+N_WTauNu_signal_SS_region)/W_SS->Integral());
+  data_SS->Add(W_SS, -1 );
+  TH1F* dataNotIso_SS = (TH1F*)data_SS->Clone("dataNotIso_SS");
+  treeQCDCut->Draw("diTauVisMass>>dataNotIso_SS");
+
+  //dataNotIso_SS->SetLineColor(kRed);
+  //W_SS->SetLineColor(kBlue);
+  //data_SS->DrawNormalized();
+  //W_SS->DrawNormalized("SAME");
+  //dataNotIso_SS->DrawNormalized("SAME");
+
+
+
+  RooDataSet qcdDataSet("qcdDataSet","dataset for qcd", RooArgSet(mass), Import( *treeQCDCut ) );
+  //RooDataHist qcdDataHist("qcdDataHist","",RooArgSet(mass),qcdDataSet, 1.0);
+  RooDataHist qcdDataHist("qcdDataHist","",RooArgSet(mass), Import(*data_SS));
+  RooHistPdf  qcdPdf("qcdPdf","",RooArgSet(mass),qcdDataHist);
+
+  RooDataSet zttDataSet("zttDataSet","dataset for Ztautau", RooArgSet(mass), Import( *treeZTauTauCut ) );
+  RooDataHist zttDataHist("zttDataHist","",RooArgSet(mass),zttDataSet, 1.0);
+  RooHistPdf  zttPdf("zttPdf","",RooArgSet(mass),zttDataHist);
+
+  RooDataSet zFakesDataSet("zFakesDataSet","dataset for Ztautau", RooArgSet(mass), Import( *treeZFakesCut ) );
+  RooDataHist zFakesDataHist("zFakesDataHist","",RooArgSet(mass),zFakesDataSet, 1.0);
+  RooHistPdf  zFakesPdf("zFakesPdf","",RooArgSet(mass),zFakesDataHist);
+
+  RooDataSet dibDataSet("dibDataSet","dataset for Ztautau", RooArgSet(mass), Import( *treeDiBosonCut ) );
+  RooDataHist dibDataHist("dibDataHist","",RooArgSet(mass), dibDataSet, 1.0);
+  RooHistPdf  dibPdf("dibPdf","",RooArgSet(mass),dibDataHist);
+
+  RooDataSet ttbDataSet("DataSet","dataset for Ztautau", RooArgSet(mass), Import( *treeTTbarCut ) );
+  RooDataHist ttbDataHist("ttbDataHist","",RooArgSet(mass), ttbDataSet, 1.0);
+  RooHistPdf  ttbPdf("ttbPdf","",RooArgSet(mass),ttbDataHist);
+
+  RooDataSet stpDataSet("stpDataSet","dataset for Ztautau", RooArgSet(mass), Import( *treeSingleTopCut ) );
+  RooDataHist stpDataHist("stpDataHist","",RooArgSet(mass), stpDataSet, 1.0);
+  RooHistPdf  stpPdf("stpPdf","",RooArgSet(mass),stpDataHist);
+
+  RooDataSet wenDataSet("wenDataSet","dataset for Ztautau", RooArgSet(mass), Import( *treeWJetsCut ) );
+  RooDataHist wenDataHist("wenDataHist","",RooArgSet(mass), wenDataSet, 1.0);
+  RooHistPdf  wenPdf("wenPdf","",RooArgSet(mass),wenDataHist);
+
+  RooDataSet dataDataSet("dataDataSet","dataset for qcd", RooArgSet(mass), Import( *treeDataCut ) );
+  RooDataHist dataDataHist("dataDataHist","",RooArgSet(mass), dataDataSet, 1.0);
+
+  RooAddPdf model("model","",RooArgList(zttPdf,qcdPdf,wenPdf,ttbPdf,zFakesPdf,dibPdf,stpPdf),RooArgList(Nztt,Nqcd,Nwen,Nttb,Nzfk,Ndib,Nstp));
+
+  RooFitResult* res = model.fitTo(dataDataHist , Extended(1), Minos(1), Save(1), NumCPU(4), ExternalConstraints( RooArgSet(McNqcdConstraint,McNzttConstraint,McNwenConstraint,McNttbConstraint,McNstpConstraint,McNdibConstraint,McNzfkConstraint) )  ,SumW2Error(1));
+
+  RooArgSet fitParam(res->floatParsFinal());
+  RooRealVar* Fit_Z_signal_region = (RooRealVar*)(&fitParam["Nztt"]);
+
+
+  RooPlot* frame = mass.frame(Bins(40),Title("Data: #mu+#tau"));
+
+  dataDataHist.plotOn(frame);
+  model.plotOn(frame, LineColor(kBlue),  LineStyle(kSolid));
+  model.plotOn(frame, Components("zttPdf"), LineColor(kRed),  LineStyle(kSolid));
+  model.plotOn(frame, Components("zFakesPdf"), LineColor(kRed),  LineStyle(kDashed));
+  model.plotOn(frame, Components("qcdPdf"), LineColor(kBlack), LineStyle(4));
+  model.plotOn(frame, Components("wenPdf"), LineColor(kGreen), LineStyle(5));
+  model.plotOn(frame, Components("ttbPdf"), LineColor(kYellow), LineStyle(6));
+  model.plotOn(frame, Components("stpPdf"), LineColor(kMagenta), LineStyle(7));
+  model.plotOn(frame, Components("dibPdf"), LineColor(kBlack), LineStyle(8));
+
+  frame->Draw();
+
+  cout << "Estimated ==> " << N_Z_signal_region 
+       << " --- Expected --- "   << Exp_Z_signal_region 
+       << " --- Fit --- " <<  Fit_Z_signal_region->getVal() << " +/- " << Fit_Z_signal_region->getError()
+       << endl;
+
+  TH1F* h_1 = new TH1F("h_1","",1,0,1);
+  h_1->SetLineColor(kRed);
+  h_1->SetLineWidth(3);
+  h_1->SetLineStyle(kSolid);
+  TH1F* h_2 = new TH1F("h_2","",1,0,1);
+  h_2->SetLineColor(kRed);
+  h_2->SetLineWidth(3);
+  h_2->SetLineStyle(kDashed);
+  TH1F* h_3 = new TH1F("h_3","",1,0,1);
+  h_3->SetLineColor(kBlack);
+  h_3->SetLineWidth(3);
+  h_3->SetLineStyle(4);
+  TH1F* h_4 = new TH1F("h_4","",1,0,1);
+  h_4->SetLineColor(kGreen);
+  h_4->SetLineWidth(3);
+  h_4->SetLineStyle(5);
+  TH1F* h_5 = new TH1F("h_5","",1,0,1);
+  h_5->SetLineColor(kYellow);
+  h_5->SetLineWidth(3);
+  h_5->SetLineStyle(6);
+  TH1F* h_6 = new TH1F("h_6","",1,0,1);
+  h_6->SetLineColor(kMagenta);
+  h_6->SetLineWidth(3);
+  h_6->SetLineStyle(7);
+  TH1F* h_7 = new TH1F("h_7","",1,0,1);
+  h_7->SetLineColor(kBlack);
+  h_7->SetLineWidth(3);
+  h_7->SetLineStyle(8);
+
+  TLegend* leg = new TLegend(0.55,0.47,0.85,0.85,NULL,"brNDC");
+  leg->SetFillStyle(0);
+  leg->SetBorderSize(0);
+  leg->SetFillColor(10);
+  leg->SetTextSize(0.04);
+
+  leg->SetHeader(Form("Exp: %.0f - Est: %.0f - Fit:%.0f#pm%.0f",Exp_Z_signal_region,N_Z_signal_region,Fit_Z_signal_region->getVal(),Fit_Z_signal_region->getError()));
+  leg->AddEntry(h_1,"Z#tau#tau","L");
+  leg->AddEntry(h_2,"Z+fakes","L");
+  leg->AddEntry(h_3,"QCD SS","L");
+  leg->AddEntry(h_4,"W+jets","L");
+  leg->AddEntry(h_5,"t#bar{t}","L");
+  leg->AddEntry(h_6,"Single-t","L");
+  leg->AddEntry(h_7,"Di-Boson","L");
+
+  leg->Draw();
 
 }

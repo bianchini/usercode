@@ -31,8 +31,36 @@
 using namespace ROOT::Math;
 using namespace std;
 
+typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LV;
 
 
+float* computeZeta(LV leg1, LV leg2, LV MEt){
+
+  float* result = new float[2];
+
+  float cos1 = leg1.Px()/leg1.Pt();
+  float cos2 = leg2.Px()/leg2.Pt();
+  float sen1 = leg1.Py()/leg1.Pt();
+  float sen2 = leg2.Py()/leg2.Pt();
+
+  float bisecX = cos1 + cos2;
+  float bisecY = sen1 + sen2;
+
+  float norm = TMath::Sqrt(bisecX*bisecX + bisecY*bisecY);
+
+  if(norm>0.){
+    bisecX /= norm;
+    bisecY /= norm;
+  }
+
+  float pZetaVis = (leg1+leg2).Px()*bisecX + (leg1+leg2).Py()*bisecY;
+  float pZeta    = (leg1+leg2+MEt).Px()*bisecX + (leg1+leg2+MEt).Py()*bisecY; 
+
+  result[0] = pZetaVis;
+  result[1] = pZeta;
+
+  return result;
+}
 
 
 void makeTrees_ElecTauStream(int index = 4){
@@ -73,7 +101,7 @@ void makeTrees_ElecTauStream(int index = 4){
   float Dphi,diTauSVFitMass,diTauVisPt,diTauVisEta,diTauCAPt,diTauCAEta,diTauSVFitPt,diTauSVFitEta;
   float diTauVisMass;
   float ptL1,ptL2,etaL1,etaL2,leadTrackPt;
-  float diTauCharge_,MtLeg1_,pZetaCutVar,MEt;
+  float diTauCharge_,MtLeg1_,pZeta_,pZetaVis_,MEt;
   float numPV_; 
   float sampleWeight,puWeight;
   float combRelIsoLeg1Raw,combRelIsoLeg1,combRelIsoLeg1Beta,combRelIsoLeg1DBeta,combRelIsoLeg1Rho;
@@ -105,7 +133,8 @@ void makeTrees_ElecTauStream(int index = 4){
   outTreePtOrd->Branch("Dphi", &Dphi,"Dphi/F");
   outTreePtOrd->Branch("diTauCharge",  &diTauCharge_,"diTauCharge/F");
   outTreePtOrd->Branch("MtLeg1",  &MtLeg1_,"MtLeg1/F");
-  outTreePtOrd->Branch("pZetaCutVar",  &pZetaCutVar,"pZetaCutVar/F");
+  outTreePtOrd->Branch("pZeta",  &pZeta_,"pZeta/F");
+  outTreePtOrd->Branch("pZetaVis",  &pZetaVis_,"pZetaVis/F");
   outTreePtOrd->Branch("MEt",  &MEt,"MEt/F");
   outTreePtOrd->Branch("numPV",  &numPV_,"numPV/F");
   outTreePtOrd->Branch("sampleWeight",  &sampleWeight,"sampleWeight/F"); 
@@ -255,7 +284,7 @@ void makeTrees_ElecTauStream(int index = 4){
     diTauVisPt=-99;diTauVisEta=-99;diTauCAPt=-99;diTauCAEta=-99;
     diTauSVFitMass = -99;diTauSVFitPt=-99;diTauSVFitEta=-99;diTauVisMass=-99;
     ptL1=-99;ptL2=-99;etaL1=-99;etaL2=-99;leadTrackPt=-99;
-    diTauCharge_=-99;MtLeg1_=-99;pZetaCutVar=-99;MEt=-99;
+    diTauCharge_=-99;MtLeg1_=-99;pZeta_=-99;pZetaVis_=-99;MEt=-99;
     numPV_=-99;sampleWeight=-99;puWeight=-99;
     combRelIsoLeg1=-99;combRelIsoLeg1Raw=-99;combRelIsoLeg1Beta=-99;combRelIsoLeg1DBeta=-99; combRelIsoLeg1Rho = -99;
     tightestHPSWP_=-99;ptVeto=-99;
@@ -306,7 +335,10 @@ void makeTrees_ElecTauStream(int index = 4){
     float vectorSumPt = ((*diTauLegsP4)[0] + (*METP4)[0]).Pt() ;
     MtLeg1_ = TMath::Sqrt( scalarSumPt*scalarSumPt - vectorSumPt*vectorSumPt ) ;
     //MtLeg1_ = MtLeg1;
-    pZetaCutVar = pZeta - 1.5*pZetaVis;
+
+    pZetaVis_ = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[0]))[0];
+    pZeta_    = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[0]))[1];
+
     MEt = (*METP4)[0].Et();
     tightestHPSWP_ = tightestHPSWP;
     numPV_ = numPV;
@@ -379,17 +411,17 @@ void makeTrees_MuTauStream(int index = 4){
 
   samples.push_back("Run2011-Mu");                 crossSec.push_back( 0  );
   samples.push_back("DYJets-Mu-50-madgraph-PUS1"); crossSec.push_back( 3048  );
-  //samples.push_back("DYToMuMu-20-PUS1");         crossSec.push_back( 1666  );
-  //samples.push_back("DYToTauTau-Mu-20-PUS1");    crossSec.push_back( 1666  );
-  //samples.push_back("Zjets-Mu-alpgen-PUS1");     crossSec.push_back( -1 );
   samples.push_back("TTJets-Mu-madgraph-PUS1");    crossSec.push_back( 157.5 );
   samples.push_back("SingleTop-Mu");               crossSec.push_back( -1 );
-  samples.push_back("WJets-Mu-madgraph-PUS1");     crossSec.push_back( 31314.0);
+  samples.push_back("WJets-Mu-madgraph-PUS1");     crossSec.push_back( 31314.0); 
   samples.push_back("DiBoson-Mu");                 crossSec.push_back( -1 );
-  samples.push_back("SingleTop-Mu");               crossSec.push_back( -1 );
   samples.push_back("QCDmu");                      crossSec.push_back( 84679 );
   samples.push_back("VBFH115-Mu-powheg-PUS1");     crossSec.push_back( 0.1012);
   samples.push_back("GGFH115-Mu-powheg-PUS1");     crossSec.push_back( 1.39 );
+
+  //samples.push_back("DYToMuMu-20-PUS1");         crossSec.push_back( 1666  );
+  //samples.push_back("DYToTauTau-Mu-20-PUS1");    crossSec.push_back( 1666  );
+  //samples.push_back("Zjets-Mu-alpgen-PUS1");     crossSec.push_back( -1 );
   samples.push_back("VBFH135-Mu-powheg-PUS1");     crossSec.push_back( 0.05049);
   samples.push_back("GGFH130-Mu-powheg-PUS1");     crossSec.push_back( 0.624 );
 
@@ -406,7 +438,7 @@ void makeTrees_MuTauStream(int index = 4){
   float Dphi,diTauSVFitMass,diTauVisPt,diTauVisEta,diTauCAPt,diTauCAEta,diTauSVFitPt,diTauSVFitEta;
   float diTauVisMass;
   float ptL1,ptL2,etaL1,etaL2,leadTrackPt;
-  float diTauCharge_,MtLeg1_,pZetaCutVar,MEt;
+  float diTauCharge_,MtLeg1_,pZeta_,pZetaVis_,MEt;
   float numPV_; 
   float sampleWeight,puWeight;
   float combRelIsoLeg1Raw,combRelIsoLeg1,combRelIsoLeg1Beta,combRelIsoLeg1DBeta,combRelIsoLeg1Rho;
@@ -438,7 +470,8 @@ void makeTrees_MuTauStream(int index = 4){
   outTreePtOrd->Branch("Dphi", &Dphi,"Dphi/F");
   outTreePtOrd->Branch("diTauCharge",  &diTauCharge_,"diTauCharge/F");
   outTreePtOrd->Branch("MtLeg1",  &MtLeg1_,"MtLeg1/F");
-  outTreePtOrd->Branch("pZetaCutVar",  &pZetaCutVar,"pZetaCutVar/F");
+  outTreePtOrd->Branch("pZeta",  &pZeta_,"pZeta/F");
+  outTreePtOrd->Branch("pZetaVis",  &pZetaVis_,"pZetaVis/F");
   outTreePtOrd->Branch("MEt",  &MEt,"MEt/F");
   outTreePtOrd->Branch("numPV",  &numPV_,"numPV/F");
   outTreePtOrd->Branch("sampleWeight",  &sampleWeight,"sampleWeight/F"); 
@@ -589,7 +622,7 @@ void makeTrees_MuTauStream(int index = 4){
     diTauVisPt=-99;diTauVisEta=-99;diTauCAPt=-99;diTauCAEta=-99;
     diTauSVFitMass = -99;diTauSVFitPt=-99;diTauSVFitEta=-99;diTauVisMass=-99;
     ptL1=-99;ptL2=-99;etaL1=-99;etaL2=-99;leadTrackPt=-99;
-    diTauCharge_=-99;MtLeg1_=-99;pZetaCutVar=-99;MEt=-99;
+    diTauCharge_=-99;MtLeg1_=-99;pZeta_=-99;pZetaVis_=-99;MEt=-99;
     numPV_=-99;sampleWeight=-99;puWeight=-99;
     combRelIsoLeg1=-99;combRelIsoLeg1Raw=-99;combRelIsoLeg1Beta=-99;combRelIsoLeg1DBeta=-99; combRelIsoLeg1Rho = -99;
     tightestHPSWP_=-99;ptVeto=-99;
@@ -640,7 +673,10 @@ void makeTrees_MuTauStream(int index = 4){
     float vectorSumPt = ((*diTauLegsP4)[0] + (*METP4)[0]).Pt() ;
     MtLeg1_ = TMath::Sqrt( scalarSumPt*scalarSumPt - vectorSumPt*vectorSumPt ) ;
     //MtLeg1_ = MtLeg1;
-    pZetaCutVar = pZeta - 1.5*pZetaVis;
+    
+    pZetaVis_ = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[0]))[0];
+    pZeta_    = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[0]))[1];
+
     MEt = (*METP4)[0].Et();
     tightestHPSWP_ = tightestHPSWP;
     numPV_ = numPV;
@@ -653,7 +689,7 @@ void makeTrees_MuTauStream(int index = 4){
     float scaled_nhIsoLeg1 = std::max( nhIsoLeg1*(1-PUtoPVratio), float(0.0));
     float scaled_phIsoLeg1 = std::max( phIsoLeg1*(1-PUtoPVratio), float(0.0));
     combRelIsoLeg1Beta = (chIsoLeg1+scaled_nhIsoLeg1+scaled_phIsoLeg1)/(*diTauLegsP4)[0].Pt();
-    combRelIsoLeg1DBeta =(chIsoLeg1+ std::max( nhIsoLeg1+phIsoLeg1-0.5*(nhIsoPULeg1+phIsoPULeg1),double(0.0)))/(*diTauLegsP4)[0].Pt();
+    combRelIsoLeg1DBeta =(chIsoLeg1+ std::max( nhIsoLeg1+phIsoLeg1-0.5*0.5*(nhIsoPULeg1+phIsoPULeg1),double(0.0)))/(*diTauLegsP4)[0].Pt();
     float EffArea = TMath::Pi()*0.4*0.4;
     EffArea = 0.27/0.79; // from fit to MC: ( <iso>/#vtx ) / ( <rho>/#vtx )
     combRelIsoLeg1Rho = std::max(((chIsoLeg1+chIsoPULeg1+nhIsoLeg1+phIsoLeg1) - rhoFastJet*EffArea),float(0.0))/(*diTauLegsP4)[0].Pt();
@@ -708,6 +744,8 @@ void makeTrees_MuTauStream(int index = 4){
 
 
 
+
+
 void doAllSamplesElec(){
  
   for( unsigned int k = 0; k < 10 ; k++)  makeTrees_ElecTauStream(k);
@@ -718,7 +756,7 @@ void doAllSamplesElec(){
 
 void doAllSamplesMu(){
  
-  for( unsigned int k = 0; k < 10 ; k++)  makeTrees_MuTauStream(k);
+  for( unsigned int k = 0; k < 9 ; k++)  makeTrees_MuTauStream(k);
 
   return;
 
