@@ -203,7 +203,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   const pat::JetCollection* jets = jetsHandle.product();
 
   edm::Handle<reco::VertexCollection> pvHandle;
-  edm::InputTag pvTag("offlinePrimaryVerticesWithBS");
+  edm::InputTag pvTag("offlinePrimaryVertices");
   iEvent.getByLabel(pvTag,pvHandle);
   if( !pvHandle.isValid() )  
     edm::LogError("DataNotAvailable")
