@@ -1,4 +1,4 @@
-#include "Bianchi/TauTauStudies/interface/ZmumuPlusJetsAnalyzer.h"
+#include "Bianchi/TauTauStudies/interface/ZelelPlusJetsAnalyzer.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/Utilities/interface/Exception.h"
 
@@ -8,7 +8,7 @@
 #include "DataFormats/Candidate/interface/CompositeCandidateFwd.h"
 #include "DataFormats/Candidate/interface/CompositeCandidate.h"
 
-#include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 
 #include "DataFormats/GeometryVector/interface/VectorUtil.h"
@@ -36,11 +36,11 @@
 using namespace std;
 using namespace reco;
 
-typedef std::map<double, math::XYZTLorentzVectorD ,ZmumuPlusJetsAnalyzer::more>::iterator CImap;
+typedef std::map<double, math::XYZTLorentzVectorD ,ZelelPlusJetsAnalyzer::more>::iterator CImap;
 
-ZmumuPlusJetsAnalyzer::ZmumuPlusJetsAnalyzer(const edm::ParameterSet & iConfig){
+ZelelPlusJetsAnalyzer::ZelelPlusJetsAnalyzer(const edm::ParameterSet & iConfig){
 
-  diMuonTag_ = iConfig.getParameter<edm::InputTag>("diMuons");
+  diElectronTag_ = iConfig.getParameter<edm::InputTag>("diElectrons");
   jetsTag_ = iConfig.getParameter<edm::InputTag>("jets");
   triggerResultsTag_ = iConfig.getParameter<edm::InputTag>("triggerResults"); 
   deltaRLegJet_  =  iConfig.getUntrackedParameter<double>("deltaRLegJet",0.3);
@@ -50,10 +50,10 @@ ZmumuPlusJetsAnalyzer::ZmumuPlusJetsAnalyzer(const edm::ParameterSet & iConfig){
   verbose_ =  iConfig.getUntrackedParameter<bool>("verbose",false);
 }
 
-void ZmumuPlusJetsAnalyzer::beginJob(){
+void ZelelPlusJetsAnalyzer::beginJob(){
 
   edm::Service<TFileService> fs;
-  tree_ = fs->make<TTree>("tree","Z mumu plus jets tree");
+  tree_ = fs->make<TTree>("tree","Z elel plus jets tree");
 
   jetsBtagHE_  = new std::vector< double >();
   jetsBtagHP_  = new std::vector< double >();
@@ -65,32 +65,26 @@ void ZmumuPlusJetsAnalyzer::beginJob(){
   jetsP4_          = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   jetsIDP4_        = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genJetsIDP4_     = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  extraMuons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  extraElectrons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
-  
- //jetsIDbyMjjP4_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  //jetsIDbyDEtaP4_  = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-    
-  //muonsP4_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  diMuonLegsP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  diElectronLegsP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   METP4_        = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   
-
   tree_->Branch("jetsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsP4_);
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
   tree_->Branch("genJetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genJetsIDP4_);
-  tree_->Branch("triggerBits","std::vector<int>",&triggerBits_);
-  tree_->Branch("jetsBtagHE","std::vector<double> ",&jetsBtagHE_);
+  tree_->Branch("triggerBits","std::vector<int>",&triggerBits_); 
+ tree_->Branch("jetsBtagHE","std::vector<double> ",&jetsBtagHE_);
   tree_->Branch("jetsBtagHP","std::vector<double> ",&jetsBtagHP_);
-  tree_->Branch("diMuonLegsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diMuonLegsP4_);
-  tree_->Branch("extraMuons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&extraMuons_);
-  
+  tree_->Branch("diElectronLegsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diElectronLegsP4_);
+  tree_->Branch("extraElectrons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&extraElectrons_);
   tree_->Branch("METP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&METP4_);
   tree_->Branch("sumEt",&sumEt_,"sumEt/F");
   tree_->Branch("MtLeg1",&MtLeg1_,"MtLeg1/F");
   tree_->Branch("MtLeg2",&MtLeg2_,"MtLeg2/F");
   tree_->Branch("Zmass",&Zmass_,"Zmass/F");
   tree_->Branch("isLegFromTau",&isLegFromTau_,"isLegFromTau/I");
+  
 
   tree_->Branch("chIsoLeg1",&chIsoLeg1_,"chIsoLeg1/F");
   tree_->Branch("nhIsoLeg1",&nhIsoLeg1_,"nhIsoLeg1/F");
@@ -116,6 +110,7 @@ void ZmumuPlusJetsAnalyzer::beginJob(){
   tree_->Branch("event",&event_,"event/F");
   tree_->Branch("lumi",&lumi_,"lumi/F");
 
+  //tree_->Branch("ZdeltaPhi",&ZdeltaPhi_,"ZdeltaPhi/F");
   tree_->Branch("numPV",&numPV_,"numPV/F");
   tree_->Branch("rhoFastJet",&rhoFastJet_,"rhoFastJet/F");
   tree_->Branch("mcPUweight",&mcPUweight_,"mcPUweight/F");
@@ -123,34 +118,34 @@ void ZmumuPlusJetsAnalyzer::beginJob(){
 }
 
 
-ZmumuPlusJetsAnalyzer::~ZmumuPlusJetsAnalyzer(){
+ZelelPlusJetsAnalyzer::~ZelelPlusJetsAnalyzer(){
   delete jetsP4_; delete jetsIDP4_; delete jetsBtagHE_; delete jetsBtagHP_;
-  delete diMuonLegsP4_ ; delete genJetsIDP4_;delete extraMuons_;
+  delete diElectronLegsP4_ ; delete genJetsIDP4_;delete extraElectrons_;
   delete METP4_;  delete triggerBits_; 
   delete fpuweight_;
 }
 
-void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
+void ZelelPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
 
 
   jetsP4_->clear();
   jetsIDP4_->clear();
   jetsBtagHE_->clear();
   jetsBtagHP_->clear();
-  diMuonLegsP4_->clear();
+  diElectronLegsP4_->clear();
   METP4_->clear();
-  extraMuons_->clear();
+  extraElectrons_->clear();
   triggerBits_->clear();
   jetsBtagHE_->clear();
   jetsBtagHP_->clear();
 
   
-  edm::Handle<CompositeCandidateCollection> diMuonHandle;
-  iEvent.getByLabel(diMuonTag_,diMuonHandle);
-  if( !diMuonHandle.isValid() )  
+  edm::Handle<CompositeCandidateCollection> diElectronHandle;
+  iEvent.getByLabel(diElectronTag_,diElectronHandle);
+  if( !diElectronHandle.isValid() )  
     edm::LogError("DataNotAvailable")
-      << "No diMuon label available \n";
-  const CompositeCandidateCollection* diMuons = diMuonHandle.product();
+      << "No diElectron label available \n";
+  const CompositeCandidateCollection* diElectrons = diElectronHandle.product();
 
   edm::Handle<pat::JetCollection> jetsHandle;
   iEvent.getByLabel(jetsTag_,jetsHandle);
@@ -205,54 +200,54 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   rhoFastJet_ = (*rhoFastJetHandle);
 
   std::map< double, const CompositeCandidate*, less<double> > visMassMap;
-  const CompositeCandidate *theDiMuon = 0;
-  for(unsigned int it = 0; it < diMuons->size() ; it++){
-    visMassMap.insert( make_pair(TMath::Abs(((*diMuons)[it]).mass()-91.2),
-				 &(*diMuons)[it]) );
+  const CompositeCandidate *theDiElectron = 0;
+  for(unsigned int it = 0; it < diElectrons->size() ; it++){
+    visMassMap.insert( make_pair(TMath::Abs(((*diElectrons)[it]).mass()-91.2),
+				 &(*diElectrons)[it]) );
   }
 
-  theDiMuon = visMassMap.size()>0 ?  &(*(visMassMap.begin()->second)) : 0;
+  theDiElectron = visMassMap.size()>0 ?  &(*(visMassMap.begin()->second)) : 0;
 
 
-  for(unsigned int it = 0; it < diMuons->size() ; it++){
+  for(unsigned int it = 0; it < diElectrons->size() ; it++){
 
     bool leg1IsThere = false;
     bool leg2IsThere = false;
 
-    for(unsigned int jt = 0; jt < extraMuons_->size() ; jt++){
-      if( Geom::deltaR( (*extraMuons_)[jt], ((*diMuons)[it].daughter(0))->p4() )<0.01 ) leg1IsThere = true; 
-      if( Geom::deltaR( (*extraMuons_)[jt], ((*diMuons)[it].daughter(1))->p4() )<0.01 ) leg2IsThere = true; 
+    for(unsigned int jt = 0; jt < extraElectrons_->size() ; jt++){
+      if( Geom::deltaR( (*extraElectrons_)[jt], ((*diElectrons)[it].daughter(0))->p4() )<0.01 ) leg1IsThere = true; 
+      if( Geom::deltaR( (*extraElectrons_)[jt], ((*diElectrons)[it].daughter(1))->p4() )<0.01 ) leg2IsThere = true; 
     }
 
-    if( Geom::deltaR( ((*diMuons)[it].daughter(0))->p4(),(theDiMuon->daughter(0))->p4() )>0.01 &&
-	Geom::deltaR( ((*diMuons)[it].daughter(0))->p4(),(theDiMuon->daughter(1))->p4() )>0.01 && !leg1IsThere
-	) extraMuons_->push_back( ((*diMuons)[it].daughter(0))->p4() );
-    if(	Geom::deltaR( ((*diMuons)[it].daughter(1))->p4(),(theDiMuon->daughter(0))->p4() )>0.01 &&
-	Geom::deltaR( ((*diMuons)[it].daughter(1))->p4(),(theDiMuon->daughter(1))->p4() )>0.01 && !leg2IsThere
-	) extraMuons_->push_back( ((*diMuons)[it].daughter(1))->p4() ); 
+    if( Geom::deltaR( ((*diElectrons)[it].daughter(0))->p4(),(theDiElectron->daughter(0))->p4() )>0.01 &&
+	Geom::deltaR( ((*diElectrons)[it].daughter(0))->p4(),(theDiElectron->daughter(1))->p4() )>0.01 && !leg1IsThere
+	) extraElectrons_->push_back( ((*diElectrons)[it].daughter(0))->p4() );
+    if(	Geom::deltaR( ((*diElectrons)[it].daughter(1))->p4(),(theDiElectron->daughter(0))->p4() )>0.01 &&
+	Geom::deltaR( ((*diElectrons)[it].daughter(1))->p4(),(theDiElectron->daughter(1))->p4() )>0.01 && !leg2IsThere
+	) extraElectrons_->push_back( ((*diElectrons)[it].daughter(1))->p4() ); 
   }
 
 
-  if(theDiMuon==0 || theDiMuon->numberOfDaughters()<2){
-    cout << " No valid diMuon !!! " << endl;
+  if(theDiElectron==0 || theDiElectron->numberOfDaughters()<2){
+    cout << " No valid diElectron !!! " << endl;
     return;
   }
+  
 
-  Zmass_ = theDiMuon->mass();
+  Zmass_ = theDiElectron->mass();
   METP4_->push_back((*met)[0].p4());
   sumEt_  = (*met)[0].sumEt();
-  MtLeg1_ = TMath::Sqrt( (theDiMuon->daughter(0)->pt() + (*met)[0].pt() )*
-			 (theDiMuon->daughter(0)->pt() + (*met)[0].pt() )- 
-			 (theDiMuon->daughter(0)->p4() + (*met)[0].p4()).pt()*
-			 (theDiMuon->daughter(0)->p4() + (*met)[0].p4()).pt()  );
-  MtLeg2_ = TMath::Sqrt( (theDiMuon->daughter(1)->pt() + (*met)[0].pt() )*
-			 (theDiMuon->daughter(1)->pt() + (*met)[0].pt() )- 
-			 (theDiMuon->daughter(1)->p4() + (*met)[0].p4()).pt()*
-			 (theDiMuon->daughter(1)->p4() + (*met)[0].p4()).pt()  );
+  MtLeg1_ = TMath::Sqrt( (theDiElectron->daughter(0)->pt() + (*met)[0].pt() )*
+			 (theDiElectron->daughter(0)->pt() + (*met)[0].pt() )- 
+			 (theDiElectron->daughter(0)->p4() + (*met)[0].p4()).pt()*
+			 (theDiElectron->daughter(0)->p4() + (*met)[0].p4()).pt()  );
+  MtLeg2_ = TMath::Sqrt( (theDiElectron->daughter(1)->pt() + (*met)[0].pt() )*
+			 (theDiElectron->daughter(1)->pt() + (*met)[0].pt() )- 
+			 (theDiElectron->daughter(1)->p4() + (*met)[0].p4()).pt()*
+			 (theDiElectron->daughter(1)->p4() + (*met)[0].p4()).pt()  );
 
-  const pat::Muon* leg1 = dynamic_cast<const pat::Muon*>( (theDiMuon->daughter(0)->masterClone()).get() );
-  const pat::Muon* leg2 = dynamic_cast<const pat::Muon*>( (theDiMuon->daughter(1)->masterClone()).get() );
-
+  const pat::Electron* leg1 = dynamic_cast<const pat::Electron*>( (theDiElectron->daughter(0)->masterClone()).get() );
+  const pat::Electron* leg2 = dynamic_cast<const pat::Electron*>( (theDiElectron->daughter(1)->masterClone()).get() );
 
   isLegFromTau_ = ( (leg1->genParticleById(15,0,true)).isNonnull() ||
 		    (leg1->genParticleById(-15,0,true)).isNonnull() ||
@@ -260,10 +255,11 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 		    (leg2->genParticleById(-15,0,true)).isNonnull()
 		    ) ? 1 : 0;
 
-  dxy1_ = vertexes->size()!=0 ? leg1->globalTrack()->dxy( (*vertexes)[0].position() ) : -999;
-  dxy2_ = vertexes->size()!=0 ? leg2->globalTrack()->dxy( (*vertexes)[0].position() ) : -999;
-  dz1_  = vertexes->size()!=0 ? leg1->globalTrack()->dz( (*vertexes)[0].position() ) : -999;
-  dz2_  = vertexes->size()!=0 ? leg2->globalTrack()->dz( (*vertexes)[0].position() ) : -999;
+
+  dxy1_ = vertexes->size()!=0 ? leg1->gsfTrack()->dxy( (*vertexes)[0].position() ) : -999;
+  dxy2_ = vertexes->size()!=0 ? leg2->gsfTrack()->dxy( (*vertexes)[0].position() ) : -999;
+  dz1_  = vertexes->size()!=0 ? leg1->gsfTrack()->dz( (*vertexes)[0].position() ) : -999;
+  dz2_  = vertexes->size()!=0 ? leg2->gsfTrack()->dz( (*vertexes)[0].position() ) : -999;
 
 
   isodeposit::AbsVetos vetosChargedLeg1; 
@@ -326,18 +322,19 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
   vector<string> triggerPaths;
   if(isMC_){
-    triggerPaths.push_back("HLT_Mu11");
-    triggerPaths.push_back("HLT_Mu15_v1");
-    triggerPaths.push_back("HLT_Mu17_v1");
-    triggerPaths.push_back("HLT_isoMu11_v4");
-    triggerPaths.push_back("HLT_isoMu15_v4");
-    triggerPaths.push_back("HLT_isoMu17_v4");
+    triggerPaths.push_back("HLT_Ele17_SW_TightCaloEleId_Ele8HE_L1R_v2");
+    triggerPaths.push_back("HLT_DoubleEle17_SW_L1R_v1");
+    triggerPaths.push_back("HLT_Ele17_SW_TighterEleIdIsol_L1R_v3");
+    triggerPaths.push_back("HLT_Ele17_SW_Isol_L1R_v2");
+    triggerPaths.push_back("HLT_Ele17_SW_L1R_v2");
   }
   else{
-    triggerPaths.push_back("HLT_isoMu15_v5");
-    triggerPaths.push_back("HLT_isoMu15_v5");
-    triggerPaths.push_back("HLT_isoMu17_v5");
-    triggerPaths.push_back("HLT_isoMu17_v6");
+    triggerPaths.push_back("HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v1");
+    triggerPaths.push_back("HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v2");
+    triggerPaths.push_back("HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v3");
+    triggerPaths.push_back("HLT_Ele17_CaloIdVT_CaloIsoVT_TrkIdT_TrkIsoVT_SC8_Mass30_v1");
+    triggerPaths.push_back("HLT_Ele17_CaloIdVT_CaloIsoVT_TrkIdT_TrkIsoVT_SC8_Mass30_v2");
+    triggerPaths.push_back("HLT_Ele17_CaloIdVT_CaloIsoVT_TrkIdT_TrkIsoVT_SC8_Mass30_v3");    
   }
 
   for(unsigned int i=0;i<triggerPaths.size();i++){
@@ -364,22 +361,23 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   }
   
 
-  diMuonLegsP4_->push_back(leg1->p4());
-  diMuonLegsP4_->push_back(leg2->p4());
+  diElectronLegsP4_->push_back(leg1->p4());
+  diElectronLegsP4_->push_back(leg2->p4());
 
   run_   = iEvent.run();
   event_ = (iEvent.eventAuxiliary()).event();
   lumi_ = iEvent.luminosityBlock();
 
-  std::map<double, math::XYZTLorentzVectorD ,ZmumuPlusJetsAnalyzer::more> sortedJets;
-  std::map<double, math::XYZTLorentzVectorD ,ZmumuPlusJetsAnalyzer::more> sortedJetsID;
-  std::map<double, math::XYZTLorentzVectorD ,ZmumuPlusJetsAnalyzer::more> sortedGenJetsID;
-  std::map<double, std::pair<float,float> ,  ZmumuPlusJetsAnalyzer::more> bTaggers;
+  std::map<double, math::XYZTLorentzVectorD ,ZelelPlusJetsAnalyzer::more> sortedJets;
+  std::map<double, math::XYZTLorentzVectorD ,ZelelPlusJetsAnalyzer::more> sortedJetsID;
+  std::map<double, math::XYZTLorentzVectorD ,ZelelPlusJetsAnalyzer::more> sortedGenJetsID;
+  std::map<double, std::pair<float,float> ,  ZelelPlusJetsAnalyzer::more> bTaggers;
 
   for(unsigned int it = 0; it < jets->size() ; it++){
 
     if(verbose_){
       pat::Jet* jet = const_cast<pat::Jet*>(&(*jets)[it]);
+      std::cout << "Jet pt "      << jet->et() << std::endl;
       std::cout << "L1FastJet "   << jet->correctedJet("L1FastJet").et() << std::endl;
       std::cout << "L2Relative "  << jet->correctedJet("L2Relative").et() << std::endl; 
       std::cout << "L3Absolute "  << jet->correctedJet("L3Absolute").et() << std::endl; 
@@ -427,7 +425,7 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 }
 
 
-unsigned int ZmumuPlusJetsAnalyzer::jetID( const pat::Jet* jet){
+unsigned int ZelelPlusJetsAnalyzer::jetID( const pat::Jet* jet){
 
   if( (jet->et())<10 ) return 99; // always pass jet ID
 
@@ -537,11 +535,11 @@ unsigned int ZmumuPlusJetsAnalyzer::jetID( const pat::Jet* jet){
 
 
 
-void ZmumuPlusJetsAnalyzer::endJob(){}
+void ZelelPlusJetsAnalyzer::endJob(){}
 
 
 #include "FWCore/Framework/interface/MakerMacros.h"
  
-DEFINE_FWK_MODULE(ZmumuPlusJetsAnalyzer);
+DEFINE_FWK_MODULE(ZelelPlusJetsAnalyzer);
 
 

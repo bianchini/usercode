@@ -140,8 +140,6 @@ process.patJetCorrFactors.rho = cms.InputTag('kt6PFJets','rho')
 
 addPFMuonIsolation(process,process.patMuons)
 addTriggerMatchingMuon(process,isMC=runOnMC)
-
-process.muonTriggerMatchHLTMuons.matchedCuts =  cms.string('(path("HLT_Mu11_v*") || path("HLT_Mu15_v*") || path("HLT_Mu17_v*") || path("HLT_isoMu11_v*") || path("HLT_isoMu15_v*") || path("HLT_isoMu17_v*")) && type("TriggerMuon")')
 getattr(process,"patMuons").embedTrack = True
 
 from Bianchi.Utilities.electrons import *
@@ -178,61 +176,63 @@ process.makeSCs = cms.Sequence(process.mergedSuperClusters*process.selectedSuper
 #########
 ## PAT
 
-process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
-    "MuonsUserEmbedded",
-    muonTag = cms.InputTag("selectedPatMuonsTriggerMatch"),
-    vertexTag = cms.InputTag("offlinePrimaryVertices")
+simpleCutsWP95 = "(userFloat('nHits')<=1 && userFloat('dist')>-999 && userFloat('dcot')>-999 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.7 && userFloat('dEta')<0.01 && userFloat('HoE')<0.15) ))"
+simpleCutsWP80 = "(userFloat('nHits')==0 && userFloat('dist')>0.02 && userFloat('dcot')>0.02 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.06 && userFloat('dEta')<0.004 && userFloat('HoE')<0.04) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.03 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) ))"
+
+process.selectedPatElectronsTriggerMatchUserEmbedded = cms.EDProducer(
+    "ElectronsUserEmbedded",
+    electronTag = cms.InputTag("selectedPatElectronsTriggerMatch"),
+    vertexTag = cms.InputTag("offlinePrimaryVertices"),
+    isMC = cms.bool(runOnMC)
     )
 
-process.tightMuons = cms.EDFilter(
-    "PATMuonSelector",
-    src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
-    cut = cms.string("pt>15 && abs(eta)<2.1 && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.hitPattern.numberOfValidTrackerHits>=10 && globalTrack.normalizedChi2<10 && globalTrack.ptError/globalTrack.pt<0.1 && abs(userFloat('dxyWrtPV'))<0.02 && abs(userFloat('dzWrtPV'))<0.2"),
+process.tightElectrons = cms.EDFilter(
+    "PATElectronSelector",
+    src = cms.InputTag("selectedPatElectronsTriggerMatchUserEmbedded"),
+    cut = cms.string("pt>17 && abs(eta)<2.4 && !isEBEEGap &&  abs(userFloat('dxyWrtPV'))<0.02 && abs(userFloat('dzWrtPV'))<0.2 &&"+simpleCutsWP80),
     filter = cms.bool(False)
     )
 
-process.looseMuons = cms.EDFilter(
-    "PATMuonSelector",
-    src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
+process.looseElectrons = cms.EDFilter(
+    "PATElectronSelector",
+    src = cms.InputTag("selectedPatElectronsTriggerMatchUserEmbedded"),
     #cut = cms.string("pt>10 && (eta<2.4&&eta>-2.4) && isGlobalMuon && globalTrack.isNonnull"),
-    cut = cms.string("pt>10 && abs(eta)<2.4 && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.hitPattern.numberOfValidTrackerHits>=10 && globalTrack.normalizedChi2<10 && globalTrack.ptError/globalTrack.pt<0.1 && abs(userFloat('dxyWrtPV'))<0.02 && abs(userFloat('dzWrtPV'))<0.2"),
+    cut = cms.string("pt>10 && abs(eta)<2.4 && !isEBEEGap &&  abs(userFloat('dxyWrtPV'))<0.02 && abs(userFloat('dzWrtPV'))<0.2 &&"+simpleCutsWP95),
     filter = cms.bool(False)
     )
 
-process.diMuons = cms.EDProducer(
+process.diElectrons = cms.EDProducer(
     "CandViewShallowCloneCombiner",
-    decay = cms.string("tightMuons@- looseMuons@+"),
+    decay = cms.string("tightElectrons@- looseElectrons@+"),
     cut   = cms.string("(60<mass && mass<120) && sqrt((daughter(0).eta-daughter(1).eta)*(daughter(0).eta-daughter(1).eta)+(daughter(0).phi-daughter(1).phi)*(daughter(0).phi-daughter(1).phi))>0.3"),
     )
 
-process.atLeast1diMuon = cms.EDFilter(
+process.atLeast1diElectron = cms.EDFilter(
     "CandViewCountFilter",
-    src = cms.InputTag("diMuons"),
+    src = cms.InputTag("diElectrons"),
     minNumber = cms.uint32(1),
     maxNumber = cms.uint32(999),
     )
 
-simpleCutsWP95 = "(userFloat('nHits')<=1 && userFloat('dist')>-999 && userFloat('dcot')>-999 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.7 && userFloat('dEta')<0.01 && userFloat('HoE')<0.15) ))"
-getattr(process,"selectedPatElectronsTriggerMatch").cut = cms.string('(eta<2.4&&eta>-2.4 && !isEBEEGap) && et>10 && '+simpleCutsWP95)
 
 getattr(process,"selectedPatJets").cut = cms.string('et>10 && abs(eta)<5.0')
 
-process.deltaRJetMuons = cms.EDProducer(
-    "DeltaRNearestMuonComputer",
+process.deltaRJetElectrons = cms.EDProducer(
+    "DeltaRNearestElectronComputer",
     probes = cms.InputTag("selectedPatJets"),
-    objects = cms.InputTag("looseMuons"),
+    objects = cms.InputTag("looseElectrons"),
     )
 
-process.selectedPatJetsNoMuons = cms.EDProducer(
+process.selectedPatJetsNoElectrons = cms.EDProducer(
     "JetsCleaner",
     jets =  cms.InputTag("selectedPatJets"),
-    valueMap = cms.InputTag("deltaRJetMuons"),
+    valueMap = cms.InputTag("deltaRJetElectrons"),
     minDeltaR = cms.double(0.3)
     )
 
 process.zPlusJetsAnalyzer = cms.EDAnalyzer(
-    "ZmumuPlusJetsAnalyzer",
-    diMuons =  cms.InputTag("diMuons"),
+    "ZelelPlusJetsAnalyzer",
+    diElectrons =  cms.InputTag("diElectrons"),
     jets =  cms.InputTag("selectedPatJets"),
     triggerResults = cms.InputTag("patTriggerEvent"),
     isMC = cms.bool(runOnMC),
@@ -249,12 +249,12 @@ process.pat = cms.Sequence(
     process.makeSCs +
     process.fjSequence*
     process.patDefaultSequence*
-    process.selectedPatMuonsTriggerMatchUserEmbedded*
-    (process.looseMuons+process.tightMuons)*
-    process.diMuons*
-    process.atLeast1diMuon*
-    process.deltaRJetMuons*
-    process.selectedPatJetsNoMuons*
+    process.selectedPatElectronsTriggerMatchUserEmbedded*
+    (process.looseElectrons+process.tightElectrons)*
+    process.diElectrons*
+    process.atLeast1diElectron*
+    process.deltaRJetElectrons*
+    process.selectedPatJetsNoElectrons*
     process.zPlusJetsAnalyzer+
     process.printTree1
     )
@@ -286,7 +286,7 @@ process.out.outputCommands.extend( cms.vstring(
                                    )
 
 process.TFileService = cms.Service("TFileService",
-                                   fileName = cms.string("treeZmumuPlusJets.root")
+                                   fileName = cms.string("treeZelelPlusJets.root")
                                    )
 
 process.out.SelectEvents = cms.untracked.PSet(

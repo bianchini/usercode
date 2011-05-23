@@ -1,5 +1,5 @@
-#ifndef Bianchi_TauTauStudies_ZmumuPlusJetsAnalyzer_h
-#define Bianchi_TauTauStudies_ZmumuPlusJetsAnalyzer_h
+#ifndef Bianchi_TauTauStudies_ZelelPlusJetsAnalyzer_h
+#define Bianchi_TauTauStudies_ZelelPlusJetsAnalyzer_h
 
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Utilities/interface/InputTag.h"
@@ -18,12 +18,13 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1F.h"
+#include "TMath.h"
 
 #include <string>
 #include "Bianchi/Utilities/interface/PUWeight.h"
 
 
-class ZmumuPlusJetsAnalyzer : public edm::EDAnalyzer{
+class ZelelPlusJetsAnalyzer : public edm::EDAnalyzer{
 
 
  public:
@@ -33,8 +34,8 @@ class ZmumuPlusJetsAnalyzer : public edm::EDAnalyzer{
     {return lhs>rhs;}
   };
 
-  explicit ZmumuPlusJetsAnalyzer(const edm::ParameterSet&);
-  ~ZmumuPlusJetsAnalyzer();
+  explicit ZelelPlusJetsAnalyzer(const edm::ParameterSet&);
+  ~ZelelPlusJetsAnalyzer();
 
   unsigned int jetID( const pat::Jet* jet);
 
@@ -46,7 +47,7 @@ class ZmumuPlusJetsAnalyzer : public edm::EDAnalyzer{
 
   TFile* file_;
   TTree* tree_;
-  edm::InputTag diMuonTag_;
+  edm::InputTag diElectronTag_;
   edm::InputTag jetsTag_;
   edm::InputTag triggerResultsTag_;
 
@@ -64,10 +65,10 @@ class ZmumuPlusJetsAnalyzer : public edm::EDAnalyzer{
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* genJetsIDP4_; 
-  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diMuonLegsP4_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diElectronLegsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* METP4_;
 
-  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* extraMuons_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* extraElectrons_; 
 
   float run_,event_,lumi_;
   float Zmass_,sumEt_;
