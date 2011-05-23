@@ -543,7 +543,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   diTauLegsP4_->push_back(leg2->p4());
   
   if(isMC_){
-    if( (leg1->genParticleById(13,0,true)).isNonnull() ){
+    if( (leg1->genParticleById(13,0,true)).isNonnull() ||  (leg1->genParticleById(-13,0,true)).isNonnull() ){
       genDiTauLegsP4_->push_back( leg1->genParticleById(13,0,true)->p4() );
       isMuLegMatched_ = 1;
     }
@@ -570,7 +570,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       if( Geom::deltaR( (*tauGenJets)[k].p4(),leg2->p4() ) < 0.15 ) tauHadMatched = true;
     }
 
-    if( (leg2->genParticleById(15,0,true)).isNonnull() && tauHadMatched ) isTauLegMatched_ = 1;
+    if( ( (leg2->genParticleById(15,0,true)).isNonnull() || (leg2->genParticleById(-15,0,true)).isNonnull() ) && tauHadMatched ) isTauLegMatched_ = 1;
     else if(verbose_){
       for(unsigned int l = 0; l < leg2->genParticlesSize() ; l++){
 	if((leg2->genParticleRefs())[l]->pt() < 0.5 ) continue;
