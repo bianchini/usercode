@@ -203,7 +203,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   const pat::JetCollection* jets = jetsHandle.product();
 
   edm::Handle<reco::VertexCollection> pvHandle;
-  edm::InputTag pvTag("offlinePrimaryVertices");
+  edm::InputTag pvTag("offlinePrimaryVerticesDA");
   iEvent.getByLabel(pvTag,pvHandle);
   if( !pvHandle.isValid() )  
     edm::LogError("DataNotAvailable")
@@ -587,8 +587,11 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   else  decayMode_ = -99;
 
   visibleTauMass_ = leg2->mass();
-  leadPFChargedHadrCandTrackPt_ = (leg2->leadPFChargedHadrCand()->trackRef()).isNonnull() ?
-    leg2->leadPFChargedHadrCand()->trackRef()->pt() : -99;
+  if((leg2->leadPFChargedHadrCand()->trackRef()).isNonnull()){
+    leadPFChargedHadrCandTrackPt_ = leg2->leadPFChargedHadrCand()->trackRef()->pt();
+  } else if((leg2->leadPFChargedHadrCand()->gsfTrackRef()).isNonnull()){
+    leadPFChargedHadrCandTrackPt_ = leg2->leadPFChargedHadrCand()->gsfTrackRef()->pt();
+  } else leadPFChargedHadrCandTrackPt_ = -99;
 
   tightestHPSWP_ = 0;
   if(leg2->tauID("byLooseIsolation")>0.5)  tightestHPSWP_++;
@@ -670,7 +673,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
     if( Geom::deltaR((*jets)[it].p4(),leg1->p4())<deltaRLegJet_ || 
 	Geom::deltaR((*jets)[it].p4(), leg2p4 )<deltaRLegJet_ ){
-      if(verbose_) cout << "The jet at (" <<(*jets)[it].et()<<","<<(*jets)[it].eta()<<") is closer than "<<deltaRLegJet_ << " from one of the legs" << endl;  
+      if(verbose_) cout << "The jet at (" <<(*jets)[it].pt()<<","<<(*jets)[it].eta()<<") is closer than "<<deltaRLegJet_ << " from one of the legs" << endl;  
       continue;
     }
 
@@ -679,26 +682,26 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       //for(unsigned int i = 0; i < (jet->availableJECLevels()).size() ; i++ ){
       //std::cout << (jet->availableJECLevels())[i] << std::endl;
       //}
-      std::cout << "Uncorrected " << jet->correctedJet("Uncorrected").et() << std::endl;
-      std::cout << "L1FastJet "   << jet->correctedJet("L1FastJet").et() << std::endl;
-      std::cout << "L2Relative "  << jet->correctedJet("L2Relative").et() << std::endl; 
-      std::cout << "L3Absolute "  << jet->correctedJet("L3Absolute").et() << std::endl; 
+      std::cout << "Uncorrected " << jet->correctedJet("Uncorrected").pt() << std::endl;
+      std::cout << "L1FastJet "   << jet->correctedJet("L1FastJet").pt() << std::endl;
+      std::cout << "L2Relative "  << jet->correctedJet("L2Relative").pt() << std::endl; 
+      std::cout << "L3Absolute "  << jet->correctedJet("L3Absolute").pt() << std::endl; 
     }
 
     if( jetID( &(*jets)[it] ) < minJetID_ )  continue;
 
-    sortedJets.insert( make_pair( (*jets)[it].correctedJet("Uncorrected").p4().Et() ,(*jets)[it].correctedJet("Uncorrected").p4() ) );
+    sortedJets.insert( make_pair( (*jets)[it].correctedJet("Uncorrected").p4().Pt() ,(*jets)[it].correctedJet("Uncorrected").p4() ) );
 
-    if((*jets)[it].p4().Et() < minCorrPt_) continue;
+    if((*jets)[it].p4().Pt() < minCorrPt_) continue;
 
     //add b-tag info
     jetsBtagHE_->push_back((*jets)[it].bDiscriminator("trackCountingHighEffBJetTags"));
     jetsBtagHP_->push_back((*jets)[it].bDiscriminator("trackCountingHighPurBJetTags"));
                                 
-    sortedJetsID.insert( make_pair( (*jets)[it].p4().Et() ,(*jets)[it].p4() ) );
+    sortedJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4() ) );
     if(isMC_){
-      if((*jets)[it].genJet() != 0) sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Et() ,(*jets)[it].genJet()->p4() ) );
-      else sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Et() , math::XYZTLorentzVectorD(0,0,0,0) ) );
+      if((*jets)[it].genJet() != 0) sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].genJet()->p4() ) );
+      else sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Pt() , math::XYZTLorentzVectorD(0,0,0,0) ) );
     }
      
   }
@@ -721,7 +724,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
 unsigned int MuTauStreamAnalyzer::jetID( const pat::Jet* jet){
 
-  if( (jet->et())<10 ) return 99; // always pass jet ID
+  if( (jet->pt())<10 ) return 99; // always pass jet ID
 
   std::vector<reco::PFCandidatePtr> pfCandPtrs = jet->getPFConstituents();
 

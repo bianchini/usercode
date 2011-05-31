@@ -187,7 +187,7 @@ process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
 process.tightMuons = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
-    cut = cms.string("pt>15 && abs(eta)<2.1 && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.hitPattern.numberOfValidTrackerHits>=10 && globalTrack.normalizedChi2<10 && globalTrack.ptError/globalTrack.pt<0.1 && abs(userFloat('dxyWrtPV'))<0.02 && abs(userFloat('dzWrtPV'))<0.2"),
+    cut = cms.string("pt>15 && abs(eta)<2.1 && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.hitPattern.numberOfValidTrackerHits>10 && globalTrack.normalizedChi2<10 && globalTrack.ptError/globalTrack.pt<0.1 && abs(userFloat('dxyWrtPV'))<0.02 && abs(userFloat('dzWrtPV'))<0.2"),
     filter = cms.bool(False)
     )
 
@@ -195,7 +195,7 @@ process.looseMuons = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
     #cut = cms.string("pt>10 && (eta<2.4&&eta>-2.4) && isGlobalMuon && globalTrack.isNonnull"),
-    cut = cms.string("pt>10 && abs(eta)<2.4 && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.hitPattern.numberOfValidTrackerHits>=10 && globalTrack.normalizedChi2<10 && globalTrack.ptError/globalTrack.pt<0.1 && abs(userFloat('dxyWrtPV'))<0.02 && abs(userFloat('dzWrtPV'))<0.2"),
+    cut = cms.string("pt>10 && abs(eta)<2.4 && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.hitPattern.numberOfValidTrackerHits>10 && globalTrack.normalizedChi2<10 && globalTrack.ptError/globalTrack.pt<0.1 && abs(userFloat('dxyWrtPV'))<0.02 && abs(userFloat('dzWrtPV'))<0.2"),
     filter = cms.bool(False)
     )
 

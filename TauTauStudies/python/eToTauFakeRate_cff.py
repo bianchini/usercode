@@ -138,7 +138,8 @@ etoTau70IDLoose = cms.EDAnalyzer("TagProbeFitTreeProducer",
     tauAntiMuTight   =  cms.string('tauID("againstMuonTight")>0.5'),
     ),
                                  tagVariables = cms.PSet(
-    hlt = cms.string('triggerObjectMatchesByPath("HLT_Ele27_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_v*").size()'),
+    hlt1 = cms.string('triggerObjectMatchesByPath("HLT_Ele27_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_v*").size()'),
+    hlt2 = cms.string('triggerObjectMatchesByPath("HLT_Ele32_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_v*").size()'),
     pt = cms.string("pt"), 
     eta = cms.string("eta"),
     phi = cms.string("phi"),
@@ -150,11 +151,13 @@ etoTau70IDLoose = cms.EDAnalyzer("TagProbeFitTreeProducer",
     dEta= cms.string("userFloat('dEta')"),
     HoE= cms.string("userFloat('HoE')"),
     pfRelIso =  cms.string("userFloat('PFRelIso04')"),
+    Mt =  cms.InputTag("addUserVariables","Mt"),
+    puMCWeight =  cms.InputTag("addUserVariables","puMCWeight")
     ),
                                  tagFlags = cms.PSet(),
                                  pairVariables = cms.PSet(
     tnpCharge = cms.string('charge'),
-    deltaR = cms.string('sqrt((daughter(0).eta-daughter(1).eta)*(daughter(0).eta-daughter(1).eta)+(daughter(0).phi-daughter(1).phi)*(daughter(0).phi-daughter(1).phi))')
+    deltaR = cms.string('sqrt((daughter(0).eta-daughter(1).eta)*(daughter(0).eta-daughter(1).eta)+  min( abs(daughter(0).phi-daughter(1).phi), 2*3.141 - abs(daughter(0).phi-daughter(1).phi)  ) *  min( abs(daughter(0).phi-daughter(1).phi), 2*3.141 - abs(daughter(0).phi-daughter(1).phi)  )  )')
     ),
                                  pairFlags = cms.PSet(),
                                  isMC = cms.bool( True ),
@@ -180,16 +183,25 @@ etoTau70IDTight = etoTau70IDLoose.clone(
     )
 #############################################################################
 
-tag70METPair = cms.EDProducer("CandViewShallowCloneCombiner",
-                              decay = cms.string("tag70 patMETsPFlow"),
-                              cut   = cms.string('sqrt((daughter(0).pt+daughter(1).pt)*(daughter(0).pt+daughter(1).pt)-pt*pt)>50'),
-                              checkCharge = cms.bool(False)
-                              )
+tag70METPair = cms.EDProducer(
+    "CandViewShallowCloneCombiner",
+    decay = cms.string("tag70 patMETsPFlow"),
+    cut   = cms.string('sqrt((daughter(0).pt+daughter(1).pt)*(daughter(0).pt+daughter(1).pt)-pt*pt)>50'),
+    checkCharge = cms.bool(False)
+    )
 
-tag70METPairFilter = cms.EDFilter("CandViewCountFilter",
-                                  src = cms.InputTag("tag70METPair"),
-                                  minNumber = cms.uint32(1),
-                                  )
+tag70METPairFilter = cms.EDFilter(
+    "CandViewCountFilter",
+    src = cms.InputTag("tag70METPair"),
+    minNumber = cms.uint32(1),
+    )
+
+addUserVariables = cms.EDProducer(
+    "UserDefinedVariables",
+    objects = cms.InputTag("selectedPatElectronsTriggerMatchUserEmbedded"),
+    met = cms.InputTag("patMETsPFlow"),
+    isMC = cms.bool(True)
+    )
 
 #############################################################################
 
@@ -197,7 +209,8 @@ sequence70 = cms.Sequence(
     (tag70+probeIDLoose+probeIDMedium+probeIDTight)*
     (tnp70IDLoose+tnp70IDMedium+tnp70IDTight)*
     oneTp70IDLoose+
-    (tag70METPair*(~tag70METPairFilter))+
+    #(tag70METPair*(~tag70METPairFilter))+
+    addUserVariables*
     (tag70McMatch+probeIDLooseMcMatch+probeIDMediumMcMatch+probeIDTightMcMatch)*
     (etoTau70IDLoose+etoTau70IDMedium+etoTau70IDTight)                           
     )

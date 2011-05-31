@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -19,7 +19,9 @@ process.source.fileNames = cms.untracked.vstring(
     #'file:/data_CMS/cms/lbianchini/ZMuMu_RelVal386.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root',
     #'file:goodDataEvents_84_1_yHS.root'
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/0053C2AC-423C-E011-976F-00215E21DB3A.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/VBF_ToHToZZTo4L_M-550_7TeV-powheg-pythia6/AODSIM/PU_S1_START311_V1G1-v1/0034/126992AB-6554-E011-BD51-003048D476B8.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/0053C2AC-423C-E011-976F-00215E21DB3A.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/00DCEC58-433B-E011-8FF8-E41F13181A70.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/02300FF5-423B-E011-B949-00215E2221E4.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/023A43AC-433B-E011-A582-00215E21DD26.root',
@@ -34,7 +36,7 @@ process.source.fileNames = cms.untracked.vstring(
 
 postfix           = "PFlow"
 runOnMC           = True
-doEfficiency      = True
+doEfficiency      = False
 
 if not doEfficiency:
     FileName = "treeEtoTauTnP.root"
@@ -45,7 +47,7 @@ if runOnMC:
     process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 else:
     #process.GlobalTag.globaltag = cms.string(autoCond[ 'com10' ])
-    process.GlobalTag.globaltag = cms.string('GR_R_41_V0')
+    process.GlobalTag.globaltag = cms.string('GR_R_41_V0::All')
 
 process.primaryVertexFilter = cms.EDFilter(
     "GoodVertexFilter",
@@ -146,7 +148,7 @@ process.pfPileUp.Vertices = "offlinePrimaryVerticesDA"
 getattr(process,"patElectrons").embedTrack = True
 getattr(process,"patElectrons").embedGsfTrack = True
 addTriggerMatchingElectron(process,isMC=runOnMC)
-process.eleTriggerMatchHLTElectrons.matchedCuts =  cms.string('path("HLT_Ele27_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_v*") && type("TriggerElectron")')
+process.eleTriggerMatchHLTElectrons.matchedCuts =  cms.string('(path("HLT_Ele27_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_v*") || path("HLT_Ele32_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_v*") ) && type("TriggerElectron")')
 
 
 if hasattr(process,"patTrigger"):
@@ -199,9 +201,13 @@ if (not doEfficiency) and (not runOnMC):
     process.sequence70.remove(process.probeIDLooseMcMatch)
     process.sequence70.remove(process.probeIDMediumMcMatch)
     process.sequence70.remove(process.probeIDTightMcMatch)
+    process.etoTau70IDLoose.isMC = cms.bool(False)
+    process.etoTau70IDMedium.isMC = cms.bool(False)
+    process.etoTau70IDTight.isMC = cms.bool(False)
     process.etoTau70IDLoose.makeMCUnbiasTree = cms.bool(False)
     process.etoTau70IDMedium.makeMCUnbiasTree= cms.bool(False)
     process.etoTau70IDTight.makeMCUnbiasTree = cms.bool(False)
+    process.addUserVariables.isMC = cms.bool(False)
 
 process.pat = cms.Sequence(
     process.allEventsFilter+

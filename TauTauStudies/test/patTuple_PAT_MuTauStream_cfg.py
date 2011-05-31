@@ -13,37 +13,35 @@ process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
 ## temporary JEC
-process.load("CondCore.DBCommon.CondDBCommon_cfi")
-process.jec = cms.ESSource(
-    "PoolDBESSource",
-    DBParameters = cms.PSet(
-    messageLevel = cms.untracked.int32(0)
-    ),
-    timetype = cms.string('runnumber'),
-    toGet = cms.VPSet(
-    cms.PSet(
-    record = cms.string('JetCorrectionsRecord'),
-    tag    = cms.string('JetCorrectorParametersCollection_Jec10V3_AK5PF'),
-    label  = cms.untracked.string('AK5PF')
-    )
-    ),
+#process.load("CondCore.DBCommon.CondDBCommon_cfi")
+#process.jec = cms.ESSource(
+#    "PoolDBESSource",
+#    DBParameters = cms.PSet(
+#    messageLevel = cms.untracked.int32(0)
+#    ),
+#    timetype = cms.string('runnumber'),
+#    toGet = cms.VPSet(
+#    cms.PSet(
+#    record = cms.string('JetCorrectionsRecord'),
+#    tag    = cms.string('JetCorrectorParametersCollection_Jec10V3_AK5PF'),
+#    label  = cms.untracked.string('AK5PF')
+#    )
+#    ),
     ## here you add as many jet types as you need (AK5Calo, AK5JPT, AK7PF, AK7Calo, KT4PF, KT4Calo, KT6PF, KT6Calo)
-    connect = cms.string('sqlite_file:Jec10V3.db')
-    )
-
-process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
+#    connect = cms.string('sqlite_file:Jec10V3.db')
+#    )
+#process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
 
 
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 process.load('RecoJets.Configuration.RecoPFJets_cff')
 process.kt6PFJets.doRhoFastjet = True
 process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
-process.kt6PFJets.Ghost_EtaMax = cms.double(5.0)
+#process.kt6PFJets.Ghost_EtaMax = cms.double(5.0)
 process.ak5PFJets.doAreaFastjet = True
 process.ak5PFJets.Rho_EtaMax = cms.double(4.4)
-process.ak5PFJets.Ghost_EtaMax = cms.double(5.0)
-
-process.ak5PFL1Fastjet.useCondDB = False
+#process.ak5PFJets.Ghost_EtaMax = cms.double(5.0)
+#process.ak5PFL1Fastjet.useCondDB = False
 
 ## re-run kt4PFJets within lepton acceptance to compute rho
 process.load('RecoJets.JetProducers.kt4PFJets_cfi')
@@ -70,14 +68,15 @@ process.source.fileNames = cms.untracked.vstring(
 #    )
 
 postfix           = "PFlow"
-sample            = ""
 runOnMC           = True
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
+    #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
+    process.GlobalTag.globaltag = cms.string('START41_V0::All')
 else:
     #process.GlobalTag.globaltag = cms.string(autoCond[ 'com10' ])
-     process.GlobalTag.globaltag = cms.string('GR_R_311_V4::All')
+    #process.GlobalTag.globaltag = cms.string('GR_R_311_V4::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_41_V0::All')
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.printTree1 = cms.EDAnalyzer("ParticleListDrawer",
@@ -87,7 +86,7 @@ process.printTree1 = cms.EDAnalyzer("ParticleListDrawer",
 
 process.primaryVertexFilter = cms.EDFilter(
     "GoodVertexFilter",
-    vertexCollection = cms.InputTag('offlinePrimaryVertices'),
+    vertexCollection = cms.InputTag('offlinePrimaryVerticesDA'),
     minimumNDOF = cms.uint32(4) ,
     maxAbsZ = cms.double(24),
     maxd0 = cms.double(2)
@@ -171,6 +170,15 @@ else:
 process.patJetCorrFactors.levels = JEClevels
 process.patJetCorrFactors.rho = cms.InputTag('kt6PFJets','rho')
 
+if runOnMC:
+    process.load("RecoJets.Configuration.GenJetParticles_cff")
+    process.load("RecoJets.Configuration.RecoGenJets_cff")
+    process.genJetsNoNu = cms.Sequence(process.genParticlesForJetsNoNu*
+                                       process.ak5GenJetsNoNu)
+    process.patDefaultSequence.replace(process.patJetGenJetMatch,
+                                       process.genJetsNoNu*
+                                       process.patJetGenJetMatch)
+    process.patJetGenJetMatch.matched = cms.InputTag("ak5GenJetsNoNu")
 
 ## <tau part>
 from PhysicsTools.PatAlgos.tools.tauTools import *
@@ -237,6 +245,9 @@ process.tauGenJetMatch.maxDPtRel = 999
 ## <\tau part>
 
 addPFMuonIsolation(process,process.patMuons)
+
+process.pfPileUp.Vertices = "offlinePrimaryVerticesDA"
+
 addTriggerMatchingMuon(process,isMC=runOnMC)
 getattr(process,"patMuons").embedTrack = True
 
@@ -274,15 +285,18 @@ process.makeSCs = cms.Sequence(process.mergedSuperClusters*process.selectedSuper
     
 ########### PAT
 
+#process.patMuons.pvSrc = cms.InputTag("offlinePrimaryVerticesDA")
+#process.patElectrons.pvSrc = cms.InputTag("offlinePrimaryVerticesDA")
+
 process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
     "MuonsUserEmbedded",
     muonTag = cms.InputTag("selectedPatMuonsTriggerMatch"),
-    vertexTag = cms.InputTag("offlinePrimaryVertices")
+    vertexTag = cms.InputTag("offlinePrimaryVerticesDA")
     )
 
 process.atLeastOneMuTau = cms.EDProducer("CandViewShallowCloneCombiner",
                                          decay = cms.string("selectedPatMuonsTriggerMatch selectedPatTausTriggerMatch"),
-                                         cut   = cms.string("sqrt((daughter(0).eta-daughter(1).eta)*(daughter(0).eta-daughter(1).eta)+(daughter(0).phi-daughter(1).phi)*(daughter(0).phi-daughter(1).phi))>0.3"),
+                                         cut = cms.string("sqrt((daughter(0).eta-daughter(1).eta)*(daughter(0).eta-daughter(1).eta)+  min( abs(daughter(0).phi-daughter(1).phi), 2*3.141 - abs(daughter(0).phi-daughter(1).phi)  ) *  min( abs(daughter(0).phi-daughter(1).phi), 2*3.141 - abs(daughter(0).phi-daughter(1).phi)  )  )>0.3"),
                                          checkCharge = cms.bool(False)
                                          )
 
@@ -396,6 +410,12 @@ process.tauPtEtaIDAgMuAgElecCounter = cms.EDFilter(
     maxNumber = cms.uint32(999),
     )
 
+process.atLeastOneGoodVertexSequence = cms.Sequence(
+    process.primaryVertexFilter*process.vertexScrapingFilter
+    )
+process.PFTau.replace(process.offlinePrimaryVerticesDA,
+                      process.offlinePrimaryVerticesDA*process.atLeastOneGoodVertexSequence)
+
 process.alLeastOneMuTauSequence = cms.Sequence(
     process.atLeastOneMuTau*process.atLeastOneMuTauCounter*process.atLeastOneMuTauFilter
     )
@@ -443,7 +463,7 @@ process.diTauSequence = cms.Sequence(
     )
 
 
-getattr(process,"selectedPatJets").cut = cms.string('et>10 && abs(eta)<5.0')
+getattr(process,"selectedPatJets").cut = cms.string('pt>15 && abs(eta)<5.0')
 
 process.deltaRJetMuons = cms.EDProducer(
     "DeltaRNearestMuonComputer",
@@ -483,24 +503,20 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     triggerResults = cms.InputTag("patTriggerEvent"),
     isMC = cms.bool(runOnMC),
     deltaRLegJet  = cms.untracked.double(0.3),
-    minCorrPt = cms.untracked.double(10.), # is Et !!
+    minCorrPt = cms.untracked.double(15.),
     minJetID  = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
     applyTauSignalSel =  cms.bool( True ),
     verbose =  cms.untracked.bool( False ),
     )
 
-#process.load("Bianchi.TauTauStudies.preselectionSeq_cff")
 
 process.pat = cms.Sequence(
     process.allEventsFilter+
-    (process.primaryVertexFilter+process.scrapping)*
-    process.vertexScrapingFilter +
-    process.makeSCs +
-    process.fjSequence*
+    #process.makeSCs +
     process.PFTau*
+    process.fjSequence*
     process.patDefaultSequence*
     process.selectedPatMuonsTriggerMatchUserEmbedded*
-    #process.arturPreselection*
     process.alLeastOneMuTauSequence*
     process.muLegSequence*
     process.tauLegSequence*
@@ -510,6 +526,9 @@ process.pat = cms.Sequence(
     process.printTree1
     )
 
+massSearchReplaceAnyInputTag(process.pat,
+                             "offlinePrimaryVertices",
+                             "offlinePrimaryVerticesDA",verbose=True)
 
 if not runOnMC:
     process.pat.remove(process.printTree1)
@@ -545,7 +564,7 @@ process.out.SelectEvents = cms.untracked.PSet(
     SelectEvents = cms.vstring('p')
     )
 
-process.out.fileName = cms.untracked.string('patTuples_'+sample+'.root')
+process.out.fileName = cms.untracked.string('patTuples_MuTauStream.root')
 
 #process.outpath = cms.EndPath(process.out)
 process.outpath = cms.EndPath()

@@ -6,6 +6,11 @@
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
 #include "DataFormats/PatCandidates/interface/Tau.h"
 
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+
+#include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/VertexReco/interface/VertexFwd.h"
+
 #include "DataFormats/JetReco/interface/GenJet.h"
 #include "DataFormats/JetReco/interface/GenJetCollection.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
@@ -34,6 +39,9 @@ TauFakeRateAnalyzer::TauFakeRateAnalyzer(const edm::ParameterSet & iConfig){
     iConfig.getParameter<string>("matchTo") : "default";
   tauTag_ = iConfig.getParameter<edm::InputTag>("tauTag");
   electronsTag_ = iConfig.getParameter<edm::InputTag>("electronsTag");
+
+  fpuweight_ = new PUWeight();
+
 }
 
 void TauFakeRateAnalyzer::beginJob(){
@@ -50,14 +58,17 @@ void TauFakeRateAnalyzer::beginJob(){
   tree_->Branch("leadPFCandEcalEnergy",&leadPFCandEcalEnergy_,"leadPFCandEcalEnergy/D");
   tree_->Branch("leadPFCandPt",&leadPFCandPt_,"leadPFCandPt/D");
   tree_->Branch("leadPFCandP",&leadPFCandP_,"leadPFCandP/D");
-  tree_->Branch("hasGsf",&hasGsf_,"hasGsf/D");
+  //tree_->Branch("hasGsf",&hasGsf_,"hasGsf/D");
   tree_->Branch("matchedID",&matchedID_,"matchedID/D");
-  tree_->Branch("fbrem",&fbrem_,"fbrem/D");
+  //tree_->Branch("fbrem",&fbrem_,"fbrem/D");
   tree_->Branch("signalPFChargedHadrCands",&signalPFChargedHadrCands_,"signalPFChargedHadrCands/I");
   tree_->Branch("signalPFGammaCands",&signalPFGammaCands_,"signalPFGammaCands/I");
   tree_->Branch("visMass",&visMass_,"visMass/D"); 
   tree_->Branch("pt",&pt_,"pt/D");
   tree_->Branch("eta",&eta_,"eta/D");
+
+  tree_->Branch("numPV",&numPV_,"numPV/I");
+  tree_->Branch("mcPUweight",&mcPUweight_,"mcPUweight/D");
 
   tree_->Branch("tightestHPSWP",&tightestHPSWP_,"tightestHPSWP/I");
   tree_->Branch("tightestAntiEWP",&tightestAntiEWP_,"tightestAntiEWP/I");
@@ -66,7 +77,9 @@ void TauFakeRateAnalyzer::beginJob(){
 }
 
 
-TauFakeRateAnalyzer::~TauFakeRateAnalyzer(){}
+TauFakeRateAnalyzer::~TauFakeRateAnalyzer(){
+  delete fpuweight_;
+}
 
 void TauFakeRateAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
 
@@ -86,6 +99,27 @@ void TauFakeRateAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     edm::LogError("DataNotAvailable")
       << "No electrons label available \n";
   const pat::ElectronCollection* electrons = electronsHandle.product();
+
+  int nPUVertices = -99;
+  int nOOTPUVertices = -99;
+  edm::Handle<std::vector<PileupSummaryInfo> > puInfoH;
+  iEvent.getByLabel(edm::InputTag("addPileupInfo"), puInfoH);
+  if(puInfoH.isValid()){
+    for(std::vector<PileupSummaryInfo>::const_iterator it = puInfoH->begin(); it != puInfoH->end(); it++){
+      if(it->getBunchCrossing() ==0) nPUVertices = it->getPU_NumInteractions();
+      else  nOOTPUVertices = it->getPU_NumInteractions();
+    }
+  }
+  mcPUweight_ = fpuweight_->GetWeight(nPUVertices);
+
+  edm::Handle<reco::VertexCollection> pvHandle;
+  edm::InputTag pvTag("offlinePrimaryVerticesDA");
+  iEvent.getByLabel(pvTag,pvHandle);
+  if( !pvHandle.isValid() )  
+    edm::LogError("DataNotAvailable")
+      << "No PV label available \n";
+  const reco::VertexCollection* vertexes = pvHandle.product();
+  numPV_ = vertexes->size();
 
   if(matchTo_.find("default")!=string::npos || matchTo_.find("tau")!=string::npos){
     edm::Handle<reco::GenJetCollection> tauGenJetsHandle;
@@ -127,7 +161,7 @@ void TauFakeRateAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
   for(unsigned int i = 0; i< taus->size(); i++){
 
-    if( ((*taus)[i].leadPFChargedHadrCand()).isNull() || (((*taus)[i].leadPFChargedHadrCand())->trackRef()).isNull() ){
+    if( ((*taus)[i].leadPFChargedHadrCand()).isNull() ){
       //if( ((*taus)[i].leadPFChargedHadrCand()).isNull() )  cout << "Null ref to charged" << endl;
       //if( (((*taus)[i].leadPFChargedHadrCand())->trackRef()).isNull() ) cout << "Null ref to track" << endl;
       continue;
@@ -136,7 +170,7 @@ void TauFakeRateAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
     bool matched = false;
     for(unsigned int j = 0; j<genMatchP4s.size() ; j++){
-      if( !matched && ROOT::Math::VectorUtil::DeltaR( (*taus)[i].p4(), genMatchP4s[i] )<0.15){
+      if( !matched && ROOT::Math::VectorUtil::DeltaR( (*taus)[i].p4(), genMatchP4s[j] )<0.15){
 
 	matched = true;
 	matchedID_ = 1.0;
@@ -145,23 +179,25 @@ void TauFakeRateAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	// if so, save the tightest cut-based WP, else 1.0
 	for(unsigned int k = 0; k<electrons->size() ; k++){
 
-	  if(((*electrons)[k].gsfTrack()).isNull()){
-	    cout << "Null gsf trak for the electron!!!!" << endl;
-	    continue;
-	  }
+	  //if(((*electrons)[k].gsfTrack()).isNull()){
+	  //  cout << "Null gsf trak for the electron!!!!" << endl;
+	  //  continue;
+	  //}
 
 	  // match by gsfTrack
-	  bool matchedGsf        = ((((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()).isNull() ) ? false : (TMath::Abs(((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()->eta()-(*electrons)[k].gsfTrack()->eta()) < 1e-04 && TMath::Abs(((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()->phi()-(*electrons)[k].gsfTrack()->phi()) < 1e-04);
+	  //bool matchedGsf        = ((((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()).isNull() ) ? false : (TMath::Abs(((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()->eta()-(*electrons)[k].gsfTrack()->eta()) < 1e-04 && TMath::Abs(((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()->phi()-(*electrons)[k].gsfTrack()->phi()) < 1e-04);
 	  // match by track
-	  bool matchedTrack      = (TMath::Abs(((*taus)[i].leadPFChargedHadrCand())->trackRef()->eta()-(*electrons)[k].gsfTrack()->eta()) < 1e-04 && TMath::Abs(((*taus)[i].leadPFChargedHadrCand())->trackRef()->phi()-(*electrons)[k].gsfTrack()->phi()) < 1e-04);
+	  //bool matchedTrack      = (TMath::Abs(((*taus)[i].leadPFChargedHadrCand())->trackRef()->eta()-(*electrons)[k].gsfTrack()->eta()) < 1e-04 && TMath::Abs(((*taus)[i].leadPFChargedHadrCand())->trackRef()->phi()-(*electrons)[k].gsfTrack()->phi()) < 1e-04);
 	  // match by ambiguous gsfTrack
-	  bool matchedAmbGsf     = false;
-	  for( reco::GsfTrackRefVector::const_iterator it = (*electrons)[k].ambiguousGsfTracksBegin() ; 
-	       it!=(*electrons)[k].ambiguousGsfTracksEnd(); it++ ){
-	    bool checkThis = ((((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()).isNull() ) ? false : ((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()==(*it);
-	    matchedAmbGsf |= checkThis;
-	  }
-	  if( matchedGsf || matchedAmbGsf || matchedTrack ){
+	  //bool matchedAmbGsf     = false;
+	  //for( reco::GsfTrackRefVector::const_iterator it = (*electrons)[k].ambiguousGsfTracksBegin() ; 
+	  //     it!=(*electrons)[k].ambiguousGsfTracksEnd(); it++ ){
+	  //  bool checkThis = ((((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()).isNull() ) ? false : ((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()==(*it);
+	  //  matchedAmbGsf |= checkThis;
+	  //}
+	  //if( matchedGsf || matchedAmbGsf || matchedTrack ){
+
+	  if( ROOT::Math::VectorUtil::DeltaR( (*taus)[i].p4(), (*electrons)[k].p4() )<0.15  ){
 	    for(int id = 0; id<6; id++){
 	      int match = checkVBTFWP(&(*electrons)[k], ids[id]);
 	      //cout << match << endl;
@@ -188,8 +224,8 @@ void TauFakeRateAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	leadPFChargedHadrMva_        =   (*taus)[i].electronPreIDOutput() ;	
 	leadPFChargedHadrHcalEnergy_ =  ((*taus)[i].leadPFChargedHadrCand())->hcalEnergy() ;
 	leadPFChargedHadrEcalEnergy_ =  ((*taus)[i].leadPFChargedHadrCand())->ecalEnergy() ;
-	leadPFChargedHadrTrackPt_    =  ((*taus)[i].leadPFChargedHadrCand())->trackRef()->pt();
-	leadPFChargedHadrTrackP_     =  ((*taus)[i].leadPFChargedHadrCand())->trackRef()->p();
+	leadPFChargedHadrTrackPt_    =  ((*taus)[i].leadPFChargedHadrCand())->pt();
+	leadPFChargedHadrTrackP_     =  ((*taus)[i].leadPFChargedHadrCand())->p();
 	if( ((*taus)[i].leadPFCand()).isNonnull() ){
 	  leadPFCandMva_               =  ((*taus)[i].leadPFCand())->mva_e_pi() ;	
 	  leadPFCandHcalEnergy_        =  ((*taus)[i].leadPFCand())->hcalEnergy() ;
@@ -204,13 +240,13 @@ void TauFakeRateAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	  leadPFCandPt_= -99;
 	  leadPFCandP_= -99;
 	}
-	hasGsf_ = (((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()).isNonnull() ?
-	  1 : 0;
-	fbrem_ = (((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()).isNonnull() ?
-	  ( ((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()->p() - 
-	    ((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()->outerP() ) :
-	  ( ((*taus)[i].leadPFChargedHadrCand())->trackRef()->p() - 
-	    ((*taus)[i].leadPFChargedHadrCand())->trackRef()->outerP() ) ;
+	//hasGsf_ = (((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()).isNonnull() ?
+	//  1 : 0;
+	//fbrem_ = (((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()).isNonnull() ?
+	//  ( ((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()->p() - 
+	//    ((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()->outerP() ) :
+	//  ( ((*taus)[i].leadPFChargedHadrCand())->trackRef()->p() - 
+	//    ((*taus)[i].leadPFChargedHadrCand())->trackRef()->outerP() ) ;
 
 	pt_  = (*taus)[i].pt();
 	eta_ = (*taus)[i].eta();

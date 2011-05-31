@@ -329,15 +329,15 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     triggerPaths.push_back("HLT_Mu11");
     triggerPaths.push_back("HLT_Mu15_v1");
     triggerPaths.push_back("HLT_Mu17_v1");
-    triggerPaths.push_back("HLT_isoMu11_v4");
-    triggerPaths.push_back("HLT_isoMu15_v4");
-    triggerPaths.push_back("HLT_isoMu17_v4");
+    triggerPaths.push_back("HLT_IsoMu11_v4");
+    triggerPaths.push_back("HLT_IsoMu15_v4");
+    triggerPaths.push_back("HLT_IsoMu17_v4");
   }
   else{
-    triggerPaths.push_back("HLT_isoMu15_v5");
-    triggerPaths.push_back("HLT_isoMu15_v5");
-    triggerPaths.push_back("HLT_isoMu17_v5");
-    triggerPaths.push_back("HLT_isoMu17_v6");
+    triggerPaths.push_back("HLT_IsoMu15_v5");
+    triggerPaths.push_back("HLT_IsoMu15_v5");
+    triggerPaths.push_back("HLT_IsoMu17_v5");
+    triggerPaths.push_back("HLT_IsoMu17_v6");
   }
 
   for(unsigned int i=0;i<triggerPaths.size();i++){

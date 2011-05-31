@@ -2,12 +2,12 @@ import FWCore.ParameterSet.Config as cms
 
 
 ######################################################################################
-tag = cms.EDFilter("PATElectronRefSelector",
+tag = cms.EDFilter("PATMuonRefSelector",
                    src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
                    cut = cms.string('pt>20.0 && abs(eta)<2.1 && abs(userFloat("dxyWrtPV"))<0.02 && abs(userFloat("dzWrtPV"))<0.2'),
                    filter = cms.bool(False)
                    )
-tagVBTF = cms.EDFilter("PATElectronRefSelector",
+tagVBTF = cms.EDFilter("PATMuonRefSelector",
                        src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
                        cut = cms.string(tag.cut.value()+" && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.hitPattern.numberOfValidTrackerHits>10 && globalTrack.normalizedChi2<10 && globalTrack.ptError/globalTrack.pt<0.1"),
                        filter = cms.bool(False)
@@ -134,16 +134,19 @@ etoTauVBTFIDLoose = cms.EDAnalyzer("TagProbeFitTreeProducer",
     tauAntiMuTight   =  cms.string('tauID("againstMuonTight")>0.5'),
     ),
                                  tagVariables = cms.PSet(
-    hlt = cms.string('triggerObjectMatchesByPath("HLT_isoMu17_v*").size()'),
+    hlt1 = cms.string('triggerObjectMatchesByPath("HLT_IsoMu17_v*").size()'),
+    hlt2 = cms.string('triggerObjectMatchesByPath("HLT_IsoMu24_v*").size()'),
     pt = cms.string("pt"), 
     eta = cms.string("eta"),
     phi = cms.string("phi"),
     pfRelIso =  cms.string("userFloat('PFRelIso04')"),
+    Mt =  cms.InputTag("addUserVariables","Mt"),
+    puMCWeight =  cms.InputTag("addUserVariables","puMCWeight")
     ),
                                  tagFlags = cms.PSet(),
                                  pairVariables = cms.PSet(
     tnpCharge = cms.string('charge'),
-    deltaR = cms.string('sqrt((daughter(0).eta-daughter(1).eta)*(daughter(0).eta-daughter(1).eta)+(daughter(0).phi-daughter(1).phi)*(daughter(0).phi-daughter(1).phi))')
+    deltaR = cms.string('sqrt((daughter(0).eta-daughter(1).eta)*(daughter(0).eta-daughter(1).eta)+  min( abs(daughter(0).phi-daughter(1).phi), 2*3.141 - abs(daughter(0).phi-daughter(1).phi)  ) *  min( abs(daughter(0).phi-daughter(1).phi), 2*3.141 - abs(daughter(0).phi-daughter(1).phi)  )  )')
     ),
                                  pairFlags = cms.PSet(),
                                  isMC = cms.bool( True ),
@@ -179,6 +182,12 @@ tagVBTFMETPairFilter = cms.EDFilter("CandViewCountFilter",
                                   src = cms.InputTag("tagVBTFMETPair"),
                                   minNumber = cms.uint32(1),
                                   )
+addUserVariables = cms.EDProducer(
+    "UserDefinedVariables",
+    objects = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
+    met = cms.InputTag("patMETsPFlow"),
+    isMC = cms.bool(True)
+    )
 
 #############################################################################
 
@@ -186,7 +195,8 @@ sequenceVBTF = cms.Sequence(
     (tagVBTF+probeIDLoose+probeIDMedium+probeIDTight)*
     (tnpVBTFIDLoose+tnpVBTFIDMedium+tnpVBTFIDTight)*
     oneTpVBTFIDLoose+
-    (tagVBTFMETPair*(~tagVBTFMETPairFilter))+
+    #(tagVBTFMETPair*(~tagVBTFMETPairFilter))+
+    addUserVariables*
     (tagVBTFMcMatch+probeIDLooseMcMatch+probeIDMediumMcMatch+probeIDTightMcMatch)*
     (etoTauVBTFIDLoose+etoTauVBTFIDMedium+etoTauVBTFIDTight)                           
     )

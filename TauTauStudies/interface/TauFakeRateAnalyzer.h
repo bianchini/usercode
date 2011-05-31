@@ -13,6 +13,9 @@
 
 #include "DataFormats/PatCandidates/interface/Electron.h"
 
+#include "Bianchi/Utilities/interface/PUWeight.h"
+
+
 #include "TFile.h"
 #include "TTree.h"
 
@@ -51,6 +54,9 @@ class TauFakeRateAnalyzer : public edm::EDAnalyzer{
   double leadPFCandP_;
   int signalPFChargedHadrCands_;
   int signalPFGammaCands_;
+  int numPV_;
+
+  double mcPUweight_;
   
   double visMass_;
   double fbrem_;
@@ -62,6 +68,8 @@ class TauFakeRateAnalyzer : public edm::EDAnalyzer{
   int tightestAntiEWP_;
   int tightestAntiMWP_;
   double matchedID_;
+
+  PUWeight* fpuweight_;
 
 };
 
