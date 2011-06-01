@@ -1,14 +1,14 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 10
+process.MessageLogger.cerr.FwkReport.reportEvery = 500
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-from Configuration.PyReleaseValidation.autoCond import autoCond
-process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
+#from Configuration.PyReleaseValidation.autoCond import autoCond
+#process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
@@ -86,7 +86,7 @@ process.printTree1 = cms.EDAnalyzer("ParticleListDrawer",
 
 process.primaryVertexFilter = cms.EDFilter(
     "GoodVertexFilter",
-    vertexCollection = cms.InputTag('offlinePrimaryVerticesDA'),
+    vertexCollection = cms.InputTag('offlinePrimaryVertices'),
     minimumNDOF = cms.uint32(4) ,
     maxAbsZ = cms.double(24),
     maxd0 = cms.double(2)
@@ -187,8 +187,8 @@ switchToPFTauHPS(process,
                  pfTauLabelNew = 'hpsPFTauProducer'
                  )
 
-getattr(process,"patTaus").embedIsolationTracks = cms.bool(True)
-getattr(process,"patTaus").embedSignalTracks = cms.bool(True)
+getattr(process,"patTaus").embedIsolationTracks = cms.bool(False)
+getattr(process,"patTaus").embedSignalTracks = cms.bool(False)
 getattr(process,"patTaus").embedGenMatch = cms.bool(True)
 getattr(process,"patTaus").embedLeadTrack = cms.bool(True)
 getattr(process,"patTaus").embedLeadPFCand = True
@@ -246,8 +246,6 @@ process.tauGenJetMatch.maxDPtRel = 999
 
 addPFMuonIsolation(process,process.patMuons)
 
-process.pfPileUp.Vertices = "offlinePrimaryVerticesDA"
-
 addTriggerMatchingMuon(process,isMC=runOnMC)
 getattr(process,"patMuons").embedTrack = True
 
@@ -285,13 +283,11 @@ process.makeSCs = cms.Sequence(process.mergedSuperClusters*process.selectedSuper
     
 ########### PAT
 
-#process.patMuons.pvSrc = cms.InputTag("offlinePrimaryVerticesDA")
-#process.patElectrons.pvSrc = cms.InputTag("offlinePrimaryVerticesDA")
 
 process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
     "MuonsUserEmbedded",
     muonTag = cms.InputTag("selectedPatMuonsTriggerMatch"),
-    vertexTag = cms.InputTag("offlinePrimaryVerticesDA")
+    vertexTag = cms.InputTag("offlinePrimaryVertices")
     )
 
 process.atLeastOneMuTau = cms.EDProducer("CandViewShallowCloneCombiner",
@@ -410,12 +406,6 @@ process.tauPtEtaIDAgMuAgElecCounter = cms.EDFilter(
     maxNumber = cms.uint32(999),
     )
 
-process.atLeastOneGoodVertexSequence = cms.Sequence(
-    process.primaryVertexFilter*process.vertexScrapingFilter
-    )
-process.PFTau.replace(process.offlinePrimaryVerticesDA,
-                      process.offlinePrimaryVerticesDA*process.atLeastOneGoodVertexSequence)
-
 process.alLeastOneMuTauSequence = cms.Sequence(
     process.atLeastOneMuTau*process.atLeastOneMuTauCounter*process.atLeastOneMuTauFilter
     )
@@ -436,7 +426,7 @@ process.load("Bianchi.Utilities.diTausReconstruction_cff")
 process.diTau = process.muTauPairs.clone()
 process.diTau.srcLeg1 = cms.InputTag("muPtEtaID")
 process.diTau.srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElec")
-process.diTau.srcMET  = cms.InputTag("patMETsPFlow")
+process.diTau.srcMET  = cms.InputTag("patMETs"+postfix)
 
 if not runOnMC:
     process.diTau.srcGenParticles = ""
@@ -444,8 +434,8 @@ if not runOnMC:
 process.selectedDiTau = cms.EDFilter(
     "MuTauPairSelector",
     src = cms.InputTag("diTau"),
-    #cut = cms.string("charge==0 && mt1MET<40")
-    cut = cms.string("charge>-99")
+    #cut = cms.string("dR12>0.3 && charge==0 && mt1MET<40")
+    cut = cms.string("dR12>0.3")
     )
 
 process.atLeast1selectedDiTau = cms.EDFilter(
@@ -509,9 +499,12 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     verbose =  cms.untracked.bool( False ),
     )
 
-
+process.load("RecoVertex.PrimaryVertexProducer.OfflinePrimaryVerticesDA_cfi")
 process.pat = cms.Sequence(
     process.allEventsFilter+
+    process.offlinePrimaryVerticesDA+
+    process.primaryVertexFilter+
+    process.vertexScrapingFilter +
     #process.makeSCs +
     process.PFTau*
     process.fjSequence*
