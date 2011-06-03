@@ -90,8 +90,10 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   
   float run_,event_,lumi_;
   float sumEt_;
-  float chIsoLeg1_,nhIsoLeg1_,phIsoLeg1_;
-  float chIsoPULeg1_,nhIsoPULeg1_,phIsoPULeg1_;
+  float chIsoLeg1v1_,nhIsoLeg1v1_,phIsoLeg1v1_;
+  float chIsoPULeg1v1_,nhIsoPULeg1v1_,phIsoPULeg1v1_;
+  float chIsoLeg1v2_,nhIsoLeg1v2_,phIsoLeg1v2_;
+  float chIsoPULeg1v2_,nhIsoPULeg1v2_,phIsoPULeg1v2_;
   float chIsoLeg2_,nhIsoLeg2_,phIsoLeg2_;
   float dxy1_,dxy2_;
   float dz1_,dz2_;
@@ -109,6 +111,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   int isTauLegMatched_;
   int isElecLegMatched_;
   int elecFlag_;
+  int hasKft_;
 
   // ele specific variables
   float nBrehm_;

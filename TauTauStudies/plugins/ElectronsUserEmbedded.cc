@@ -1,7 +1,4 @@
 #include "Bianchi/TauTauStudies/interface/ElectronsUserEmbedded.h"
-#include "DataFormats/RecoCandidate/interface/IsoDepositVetos.h"
-#include "DataFormats/RecoCandidate/interface/IsoDeposit.h"
-#include "DataFormats/PatCandidates/interface/Isolation.h"
 
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
 #include "MagneticField/Engine/interface/MagneticField.h"
@@ -123,44 +120,102 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     aElectron.addUserFloat("dxyWrtPV",dxyWrtPV);
     aElectron.addUserFloat("dzWrtPV",dzWrtPV);
 
-    reco::isodeposit::AbsVetos vetosCharged; 
-    reco::isodeposit::AbsVetos vetosNeutral;  
-    reco::isodeposit::AbsVetos vetosPhotons;
-    vetosCharged.push_back(new reco::isodeposit::ThresholdVeto(0.5));
-    vetosNeutral.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.08));
-    vetosNeutral.push_back(new reco::isodeposit::ThresholdVeto(1.0));
-    vetosPhotons.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.05));
-    vetosPhotons.push_back(new reco::isodeposit::ThresholdVeto(1.0));
+    // iso deposits
+    reco::isodeposit::AbsVetos vetos2010Charged;
+    reco::isodeposit::AbsVetos vetos2010Neutral;  
+    reco::isodeposit::AbsVetos vetos2010Photons;
+    reco::isodeposit::AbsVetos vetos2011Charged; 
+    reco::isodeposit::AbsVetos vetos2011Neutral;  
+    reco::isodeposit::AbsVetos vetos2011Photons;
 
-    float chIso03 = 
-      aElectron.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.3, vetosCharged).first;
-    float nhIso03 = 
-      aElectron.isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.3, vetosNeutral).first;
-    float phIso03 = 
-      aElectron.isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.3, vetosPhotons).first;
-    float chIso04 = 
-      aElectron.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4, vetosCharged).first;
-    float nhIso04 = 
-      aElectron.isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4, vetosNeutral).first;
-    float phIso04 = 
-      aElectron.isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4, vetosPhotons).first;
+    vetos2010Charged.push_back(new reco::isodeposit::ThresholdVeto(0.5));
+    vetos2010Neutral.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.08));
+    vetos2010Neutral.push_back(new reco::isodeposit::ThresholdVeto(1.0));
+    vetos2010Photons.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.05));
+    vetos2010Photons.push_back(new reco::isodeposit::ThresholdVeto(1.0));
+    
+    vetos2011Charged.push_back(new reco::isodeposit::ThresholdVeto(0.0));
+    vetos2011Neutral.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.01));
+    vetos2011Neutral.push_back(new reco::isodeposit::ThresholdVeto(0.5));
+    vetos2011Photons.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.01));
+    vetos2011Photons.push_back(new reco::isodeposit::ThresholdVeto(0.5));
+  
+  
+    float chIso03v1 = 
+      aElectron.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.3, vetos2010Charged).first;
+    float nhIso03v1 = 
+      aElectron.isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.3, vetos2010Neutral).first;
+    float phIso03v1 = 
+      aElectron.isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.3, vetos2010Photons).first;
+    float nhIsoPU03v1 = 
+      aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.3, vetos2010Neutral).first;
+    float phIsoPU03v1 = 
+      aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.3, vetos2010Photons).first;
+    
+    float chIso04v1 = 
+      aElectron.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4, vetos2010Charged).first;
+    float nhIso04v1 = 
+      aElectron.isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4, vetos2010Neutral).first;
+    float phIso04v1 = 
+      aElectron.isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4, vetos2010Photons).first;
+    float nhIsoPU04v1 = 
+      aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2010Neutral).first;
+    float phIsoPU04v1 = 
+      aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2010Photons).first;
 
-    aElectron.addUserFloat("PFRelIso04",(chIso04+nhIso04+phIso04)/aElectron.pt());
-    aElectron.addUserFloat("PFRelIso03",(chIso03+nhIso03+phIso03)/aElectron.pt());
+    float chIso03v2 = 
+      aElectron.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.3, vetos2011Charged).first;
+    float nhIso03v2 = 
+      aElectron.isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.3, vetos2011Neutral).first;
+    float phIso03v2 = 
+      aElectron.isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.3, vetos2011Photons).first;
+    float nhIsoPU03v2 = 
+      aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.3, vetos2011Neutral).first;
+    float phIsoPU03v2 = 
+      aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.3, vetos2011Photons).first;
+
+    float chIso04v2 = 
+      aElectron.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4, vetos2011Charged).first;
+    float nhIso04v2 = 
+      aElectron.isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4, vetos2011Neutral).first;
+    float phIso04v2 = 
+      aElectron.isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4, vetos2011Photons).first;
+    float nhIsoPU04v2 = 
+      aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2011Neutral).first;
+    float phIsoPU04v2 = 
+      aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2011Photons).first;
+
+
+    aElectron.addUserFloat("PFRelIso04v1",(chIso04v1+nhIso04v1+phIso04v1)/aElectron.pt());
+    aElectron.addUserFloat("PFRelIso03v1",(chIso03v1+nhIso03v1+phIso03v1)/aElectron.pt());
+    aElectron.addUserFloat("PFRelIsoDB04v1",(chIso04v1+std::max(nhIso04v1+phIso04v1-0.5*0.5*(nhIsoPU04v1+phIsoPU04v1),0.0))/aElectron.pt());
+    aElectron.addUserFloat("PFRelIsoDB03v1",(chIso03v1+std::max(nhIso03v1+phIso03v1-0.5*0.5*(nhIsoPU03v1+phIsoPU03v1),0.0))/aElectron.pt());
+
+    aElectron.addUserFloat("PFRelIso04v2",(chIso04v2+nhIso04v2+phIso04v2)/aElectron.pt());
+    aElectron.addUserFloat("PFRelIso03v2",(chIso03v2+nhIso03v2+phIso03v2)/aElectron.pt());
+    aElectron.addUserFloat("PFRelIsoDB04v2",(chIso04v2+std::max(nhIso04v2+phIso04v2-0.5*0.5*(nhIsoPU04v2+phIsoPU04v2),0.0))/aElectron.pt());
+    aElectron.addUserFloat("PFRelIsoDB03v2",(chIso03v2+std::max(nhIso03v2+phIso03v2-0.5*0.5*(nhIsoPU03v2+phIsoPU03v2),0.0))/aElectron.pt());
+
+    // cleaning
+    for(unsigned int i = 0; i <vetos2010Charged.size(); i++){
+      delete vetos2010Charged[i];
+    }
+    for(unsigned int i = 0; i <vetos2010Neutral.size(); i++){
+      delete vetos2010Neutral[i];
+      delete vetos2010Photons[i];
+    }
+    for(unsigned int i = 0; i <vetos2011Charged.size(); i++){
+      delete vetos2011Charged[i];
+    }
+    for(unsigned int i = 0; i <vetos2011Neutral.size(); i++){
+      delete vetos2011Neutral[i];
+      delete vetos2011Photons[i];
+    }
 
     aElectron.addUserFloat("isInRun",iEvent.run());
 
     electronsUserEmbeddedColl->push_back(aElectron);
     
-    // cleaning
-    for(unsigned int i = 0; i <vetosCharged.size(); i++){
-      delete vetosCharged[i];
-    }
-    for(unsigned int i = 0; i <vetosNeutral.size(); i++){
-      delete vetosNeutral[i];
-      delete vetosPhotons[i];
-    }
-
   }
 
 

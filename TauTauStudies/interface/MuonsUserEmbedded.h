@@ -10,6 +10,10 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 
+#include "DataFormats/RecoCandidate/interface/IsoDepositVetos.h"
+#include "DataFormats/RecoCandidate/interface/IsoDeposit.h"
+#include "DataFormats/PatCandidates/interface/Isolation.h"
+
 class MuonsUserEmbedded : public edm::EDProducer{
 
 
@@ -24,6 +28,14 @@ class MuonsUserEmbedded : public edm::EDProducer{
 
   edm::InputTag muonTag_;
   edm::InputTag vertexTag_;
+
+  reco::isodeposit::AbsVetos vetos2010Charged_;
+  reco::isodeposit::AbsVetos vetos2010Neutral_;  
+  reco::isodeposit::AbsVetos vetos2010Photons_;
+
+  reco::isodeposit::AbsVetos vetos2011Charged_; 
+  reco::isodeposit::AbsVetos vetos2011Neutral_;  
+  reco::isodeposit::AbsVetos vetos2011Photons_;
 
 };
 

@@ -11,6 +11,10 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/PatCandidates/interface/Electron.h"
 
+#include "DataFormats/RecoCandidate/interface/IsoDepositVetos.h"
+#include "DataFormats/RecoCandidate/interface/IsoDeposit.h"
+#include "DataFormats/PatCandidates/interface/Isolation.h"
+
 class ElectronsUserEmbedded : public edm::EDProducer{
 
 
@@ -27,7 +31,6 @@ class ElectronsUserEmbedded : public edm::EDProducer{
   edm::InputTag electronTag_;
   edm::InputTag vertexTag_;
   bool isMC_;
-
 
 };
 

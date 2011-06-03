@@ -118,12 +118,19 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("pZeta",&pZeta_,"pZeta/F");
   tree_->Branch("pZetaVis",&pZetaVis_,"pZetaVis/F");
 
-  tree_->Branch("chIsoLeg1",&chIsoLeg1_,"chIsoLeg1/F");
-  tree_->Branch("nhIsoLeg1",&nhIsoLeg1_,"nhIsoLeg1/F");
-  tree_->Branch("phIsoLeg1",&phIsoLeg1_,"phIsoLeg1/F");
-  tree_->Branch("chIsoPULeg1",&chIsoPULeg1_,"chIsoPULeg1/F");
-  tree_->Branch("nhIsoPULeg1",&nhIsoPULeg1_,"nhIsoPULeg1/F");
-  tree_->Branch("phIsoPULeg1",&phIsoPULeg1_,"phIsoPULeg1/F");
+  tree_->Branch("chIsoLeg1v1",&chIsoLeg1v1_,"chIsoLeg1v1/F");
+  tree_->Branch("nhIsoLeg1v1",&nhIsoLeg1v1_,"nhIsoLeg1v1/F");
+  tree_->Branch("phIsoLeg1v1",&phIsoLeg1v1_,"phIsoLeg1v1/F");
+  tree_->Branch("chIsoPULeg1v1",&chIsoPULeg1v1_,"chIsoPULeg1v1/F");
+  tree_->Branch("nhIsoPULeg1v1",&nhIsoPULeg1v1_,"nhIsoPULeg1v1/F");
+  tree_->Branch("phIsoPULeg1v1",&phIsoPULeg1v1_,"phIsoPULeg1v1/F");
+
+  tree_->Branch("chIsoLeg1v2",&chIsoLeg1v2_,"chIsoLeg1v2/F");
+  tree_->Branch("nhIsoLeg1v2",&nhIsoLeg1v2_,"nhIsoLeg1v2/F");
+  tree_->Branch("phIsoLeg1v2",&phIsoLeg1v2_,"phIsoLeg1v2/F");
+  tree_->Branch("chIsoPULeg1v2",&chIsoPULeg1v2_,"chIsoPULeg1v2/F");
+  tree_->Branch("nhIsoPULeg1v2",&nhIsoPULeg1v2_,"nhIsoPULeg1v2/F");
+  tree_->Branch("phIsoPULeg1v2",&phIsoPULeg1v2_,"phIsoPULeg1v2/F");
 
   tree_->Branch("chIsoLeg2",&chIsoLeg2_,"chIsoLeg2/F");
   tree_->Branch("nhIsoLeg2",&nhIsoLeg2_,"nhIsoLeg2/F");
@@ -146,6 +153,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   //tree_->Branch("isEleLikelihoodID",&isEleLikelihoodID_,"isEleLikelihoodID/I");
   //tree_->Branch("isEleCutBasedID",&isEleCutBasedID_,"isEleCutBasedID/I");
   tree_->Branch("elecFlag",&elecFlag_,"elecFlag/I");
+  tree_->Branch("hasKft",&hasKft_,"hasKft/I");
 
 
   tree_->Branch("run",&run_,"run/F");
@@ -325,8 +333,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
 	if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3 
 	    && (*electronsRel)[i].charge()*(*electrons)[j].charge()<0
-	    && ( ( (*electrons)[j].isEB() && (*electrons)[j].userFloat("PFRelIso04")<0.08) || ((*electrons)[j].isEE() && (*electrons)[j].userFloat("PFRelIso04")<0.04) ) 
-	    && (*electronsRel)[i].userFloat("PFRelIso04")<0.3 ){
+	    && ( ( (*electrons)[j].isEB() && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.08) || ((*electrons)[j].isEE() && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.04) ) 
+	    && (*electronsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
 	  //elecIndex = 0;
 	  elecFlag_ = 1;
 	  if(verbose_) cout<< "Two electrons failing diElec veto: flag= " << elecFlag_ << endl;
@@ -334,8 +342,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 	}
 	else if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3 
 		 && (*electronsRel)[i].charge()*(*electrons)[j].charge()>0
-		 && ( ((*electrons)[j].isEB() && (*electrons)[j].userFloat("PFRelIso04")<0.08) || ((*electrons)[j].isEE() && (*electrons)[j].userFloat("PFRelIso04")<0.04) ) 
-		 && (*electronsRel)[i].userFloat("PFRelIso04")<0.3 ){
+		 && ( ((*electrons)[j].isEB() && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.08) || ((*electrons)[j].isEE() && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.04) ) 
+		 && (*electronsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
 	  //elecIndex = 0;
 	  elecFlag_ = 2;
 	  if(verbose_) cout<< "Two electrons with SS: flag= " << elecFlag_ << endl;
@@ -398,8 +406,13 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     if(tau_i->tauID("decayModeFinding")<0.5) 
       continue;
     identifiedTaus.push_back(selectedDiTausFromElec[i]);
-    if(tau_i->tauID("byLooseIsolation")>0.5) 
-      looseIsoTaus.push_back(selectedDiTausFromElec[i]);
+    bool isIsolatedTau = false;
+    isIsolatedTau = ( (tau_i->isolationPFChargedHadrCandsPtSum() +
+		       std::max( (tau_i->isolationPFGammaCandsEtSum() -
+				  rhoFastJet_*TMath::Pi()*0.5*0.5), 0.0) )<2.); //new setting
+    if(isIsolatedTau) looseIsoTaus.push_back(selectedDiTausFromElec[i]);
+    //if(tau_i->tauID("byLooseIsolation")>0.5) 
+    //looseIsoTaus.push_back(selectedDiTausFromElec[i]);
     //else not_identifiedTaus.push_back(i);
   }
 
@@ -412,7 +425,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       const pat::Tau*  tau_i = dynamic_cast<const pat::Tau*>(  ((*diTaus)[ identifiedTaus[i] ].leg2()).get() );
       double sumIsoTau_i = 0.;
       sumIsoTau_i += tau_i->isolationPFChargedHadrCandsPtSum();
-      sumIsoTau_i += tau_i->isolationPFGammaCandsEtSum();
+      sumIsoTau_i += std::max( (tau_i->isolationPFGammaCandsEtSum() -
+				rhoFastJet_*TMath::Pi()*0.5*0.5), 0.0);
+      //sumIsoTau_i += tau_i->isolationPFGammaCandsEtSum();
       //sumIsoTau_i += tau_i->isolationPFNeutrHadrCandsEtSum();
       if(sumIsoTau_i<sumIsoTau){
 	index = identifiedTaus[i];
@@ -575,54 +590,94 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
 
   dxy1_ = vertexes->size()!=0 ? leg1->gsfTrack()->dxy( (*vertexes)[0].position() ) : -99;
-  dxy2_ = (vertexes->size()!=0 && 
-	   (leg2->leadPFChargedHadrCand()).isNonnull() 
-	   && (leg2->leadPFChargedHadrCand()->trackRef()).isNonnull() ) ? 
-    leg2->leadPFChargedHadrCand()->trackRef()->dxy( (*vertexes)[0].position() ) : -99;
   dz1_ = vertexes->size()!=0 ? leg1->gsfTrack()->dz( (*vertexes)[0].position() ) : -99;
-  dz2_ = (vertexes->size()!=0 && 
-	   (leg2->leadPFChargedHadrCand()).isNonnull() 
-	   && (leg2->leadPFChargedHadrCand()->trackRef()).isNonnull() ) ? 
-    leg2->leadPFChargedHadrCand()->trackRef()->dz( (*vertexes)[0].position() ) : -99;
-
-  isodeposit::AbsVetos vetosChargedLeg1; 
-  isodeposit::AbsVetos vetosNeutralLeg1; 
-  isodeposit::AbsVetos vetosPhotonLeg1;
+  dxy2_ = -99;
+  dz2_ = -99;
+  hasKft_ = 0;
+  if( vertexes->size()!=0 && (leg2->leadPFChargedHadrCand()).isNonnull() ){
+    if( (leg2->leadPFChargedHadrCand()->trackRef()).isNonnull() ){
+      dxy2_ = leg2->leadPFChargedHadrCand()->trackRef()->dxy( (*vertexes)[0].position() );
+      dz2_ = leg2->leadPFChargedHadrCand()->trackRef()->dz( (*vertexes)[0].position() );
+      hasKft_ = 1;
+    }
+    if( (leg2->leadPFChargedHadrCand()->gsfTrackRef()).isNonnull() ){
+      dxy2_ = leg2->leadPFChargedHadrCand()->gsfTrackRef()->dxy( (*vertexes)[0].position() );
+      dz2_ = leg2->leadPFChargedHadrCand()->gsfTrackRef()->dz( (*vertexes)[0].position() );
+    }
+  }
+  
+  // isoDeposit definition: 2010
+  isodeposit::AbsVetos vetos2010ChargedLeg1; 
+  isodeposit::AbsVetos vetos2010NeutralLeg1; 
+  isodeposit::AbsVetos vetos2010PhotonLeg1;
+  // isoDeposit definition: 2011
+  isodeposit::AbsVetos vetos2011ChargedLeg1; 
+  isodeposit::AbsVetos vetos2011NeutralLeg1; 
+  isodeposit::AbsVetos vetos2011PhotonLeg1;
  
-  vetosChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
-  vetosNeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
-  vetosNeutralLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
-  vetosPhotonLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.05));
-  vetosPhotonLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
+  vetos2010ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
+  vetos2010NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
+  vetos2010NeutralLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
+  vetos2010PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.05));
+  vetos2010PhotonLeg1.push_back( new isodeposit::ThresholdVeto(1.0));
+
+  vetos2011ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
+  vetos2011NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
+  vetos2011NeutralLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
+  vetos2011PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
+  vetos2011PhotonLeg1.push_back( new isodeposit::ThresholdVeto(0.5));
+
+  chIsoLeg1v1_   = 
+    leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
+  nhIsoLeg1v1_ = 
+    leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetos2010NeutralLeg1).first;
+  phIsoLeg1v1_ = 
+    leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2010PhotonLeg1).first;
+  chIsoPULeg1v1_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
+  nhIsoPULeg1v1_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010NeutralLeg1).first;
+  phIsoPULeg1v1_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010PhotonLeg1).first;
+
+  chIsoLeg1v2_   = 
+    leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
+  nhIsoLeg1v2_ = 
+    leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetos2011NeutralLeg1).first;
+  phIsoLeg1v2_ = 
+    leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2011PhotonLeg1).first;
+  chIsoPULeg1v2_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
+  nhIsoPULeg1v2_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011NeutralLeg1).first;
+  phIsoPULeg1v2_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011PhotonLeg1).first;
   
 
-  chIsoLeg1_ = 
-    leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetosChargedLeg1).first;
-  nhIsoLeg1_ = 
-    leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetosNeutralLeg1).first;
-  phIsoLeg1_ = 
-    leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetosPhotonLeg1).first;
-  chIsoPULeg1_ = 
-    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosChargedLeg1).first;
-  nhIsoPULeg1_ = 
-    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosNeutralLeg1).first;
-  phIsoPULeg1_ = 
-    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosPhotonLeg1).first;
-
-
-  chIsoLeg2_ = -99;
-  nhIsoLeg2_ = -99;
-  phIsoLeg2_ = -99;
-   
+  chIsoLeg2_ = leg2->isolationPFChargedHadrCandsPtSum();
+  nhIsoLeg2_ = 0.;
+  for(unsigned int i = 0; i < (leg2->isolationPFNeutrHadrCands()).size(); i++){
+    nhIsoLeg2_ += (leg2->isolationPFNeutrHadrCands()).at(i)->pt();
+  }
+  phIsoLeg2_ = leg2->isolationPFGammaCandsEtSum();
 
   // cleaning
-  for(unsigned int i = 0; i <vetosChargedLeg1.size(); i++){
-    delete vetosChargedLeg1[i];
+  for(unsigned int i = 0; i <vetos2010ChargedLeg1.size(); i++){
+    delete vetos2010ChargedLeg1[i];
   }
-  for(unsigned int i = 0; i <vetosNeutralLeg1.size(); i++){
-    delete vetosNeutralLeg1[i];
-    delete vetosPhotonLeg1[i];
+  for(unsigned int i = 0; i <vetos2010NeutralLeg1.size(); i++){
+    delete vetos2010NeutralLeg1[i];
+    delete vetos2010PhotonLeg1[i];
   }
+  for(unsigned int i = 0; i <vetos2011ChargedLeg1.size(); i++){
+    delete vetos2011ChargedLeg1[i];
+  }
+  for(unsigned int i = 0; i <vetos2011NeutralLeg1.size(); i++){
+    delete vetos2011NeutralLeg1[i];
+    delete vetos2011PhotonLeg1[i];
+  }
+  
+
   //
   nBrehm_= leg1->numberOfBrems();
   likelihood_ = leg1->electronID("electronIDLH");

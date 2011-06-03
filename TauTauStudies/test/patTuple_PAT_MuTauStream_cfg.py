@@ -1,14 +1,14 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 500
+process.MessageLogger.cerr.FwkReport.reportEvery = 2000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-#from Configuration.PyReleaseValidation.autoCond import autoCond
-#process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
+from Configuration.PyReleaseValidation.autoCond import autoCond
+process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
@@ -187,8 +187,8 @@ switchToPFTauHPS(process,
                  pfTauLabelNew = 'hpsPFTauProducer'
                  )
 
-getattr(process,"patTaus").embedIsolationTracks = cms.bool(False)
-getattr(process,"patTaus").embedSignalTracks = cms.bool(False)
+getattr(process,"patTaus").embedIsolationTracks = cms.bool(True)
+getattr(process,"patTaus").embedSignalTracks = cms.bool(True)
 getattr(process,"patTaus").embedGenMatch = cms.bool(True)
 getattr(process,"patTaus").embedLeadTrack = cms.bool(True)
 getattr(process,"patTaus").embedLeadPFCand = True
@@ -246,6 +246,8 @@ process.tauGenJetMatch.maxDPtRel = 999
 
 addPFMuonIsolation(process,process.patMuons)
 
+#process.pfPileUp.Vertices = "offlinePrimaryVerticesDA"
+
 addTriggerMatchingMuon(process,isMC=runOnMC)
 getattr(process,"patMuons").embedTrack = True
 
@@ -283,6 +285,8 @@ process.makeSCs = cms.Sequence(process.mergedSuperClusters*process.selectedSuper
     
 ########### PAT
 
+#process.patMuons.pvSrc = cms.InputTag("offlinePrimaryVerticesDA")
+#process.patElectrons.pvSrc = cms.InputTag("offlinePrimaryVerticesDA")
 
 process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
     "MuonsUserEmbedded",
@@ -292,7 +296,7 @@ process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
 
 process.atLeastOneMuTau = cms.EDProducer("CandViewShallowCloneCombiner",
                                          decay = cms.string("selectedPatMuonsTriggerMatch selectedPatTausTriggerMatch"),
-                                         cut = cms.string("sqrt((daughter(0).eta-daughter(1).eta)*(daughter(0).eta-daughter(1).eta)+  min( abs(daughter(0).phi-daughter(1).phi), 2*3.141 - abs(daughter(0).phi-daughter(1).phi)  ) *  min( abs(daughter(0).phi-daughter(1).phi), 2*3.141 - abs(daughter(0).phi-daughter(1).phi)  )  )>0.3"),
+                                         cut = cms.string("sqrt((daughter(0).eta-daughter(1).eta)*(daughter(0).eta-daughter(1).eta)+  min( abs(daughter(0).phi-daughter(1).phi), 2*3.141 - abs(daughter(0).phi-daughter(1).phi)  ) *  min( abs(daughter(0).phi-daughter(1).phi), 2*3.141 - abs(daughter(0).phi-daughter(1).phi)  )  )>0.5"),
                                          checkCharge = cms.bool(False)
                                          )
 
@@ -406,6 +410,12 @@ process.tauPtEtaIDAgMuAgElecCounter = cms.EDFilter(
     maxNumber = cms.uint32(999),
     )
 
+process.atLeastOneGoodVertexSequence = cms.Sequence(
+    process.primaryVertexFilter*process.vertexScrapingFilter
+    )
+process.PFTau.replace(process.offlinePrimaryVerticesDA,
+                      process.offlinePrimaryVerticesDA*process.atLeastOneGoodVertexSequence)
+
 process.alLeastOneMuTauSequence = cms.Sequence(
     process.atLeastOneMuTau*process.atLeastOneMuTauCounter*process.atLeastOneMuTauFilter
     )
@@ -426,7 +436,7 @@ process.load("Bianchi.Utilities.diTausReconstruction_cff")
 process.diTau = process.muTauPairs.clone()
 process.diTau.srcLeg1 = cms.InputTag("muPtEtaID")
 process.diTau.srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElec")
-process.diTau.srcMET  = cms.InputTag("patMETs"+postfix)
+process.diTau.srcMET  = cms.InputTag("patMETsPFlow")
 
 if not runOnMC:
     process.diTau.srcGenParticles = ""
@@ -434,8 +444,8 @@ if not runOnMC:
 process.selectedDiTau = cms.EDFilter(
     "MuTauPairSelector",
     src = cms.InputTag("diTau"),
-    #cut = cms.string("dR12>0.3 && charge==0 && mt1MET<40")
-    cut = cms.string("dR12>0.3")
+    #cut = cms.string("charge==0 && mt1MET<40")
+    cut = cms.string("dR12>0.5")
     )
 
 process.atLeast1selectedDiTau = cms.EDFilter(
@@ -492,19 +502,16 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     jets =  cms.InputTag("selectedPatJets"),
     triggerResults = cms.InputTag("patTriggerEvent"),
     isMC = cms.bool(runOnMC),
-    deltaRLegJet  = cms.untracked.double(0.3),
+    deltaRLegJet  = cms.untracked.double(0.5),
     minCorrPt = cms.untracked.double(15.),
     minJetID  = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
     applyTauSignalSel =  cms.bool( True ),
     verbose =  cms.untracked.bool( False ),
     )
 
-process.load("RecoVertex.PrimaryVertexProducer.OfflinePrimaryVerticesDA_cfi")
+
 process.pat = cms.Sequence(
     process.allEventsFilter+
-    process.offlinePrimaryVerticesDA+
-    process.primaryVertexFilter+
-    process.vertexScrapingFilter +
     #process.makeSCs +
     process.PFTau*
     process.fjSequence*
