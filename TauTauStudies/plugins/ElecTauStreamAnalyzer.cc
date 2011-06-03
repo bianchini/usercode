@@ -707,6 +707,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJets;
   std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJetsID;
   std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedGenJetsID;
+  std::map<double, std::pair<float,float> ,  ElecTauStreamAnalyzer::more> bTaggers;
+  
 
   for(unsigned int it = 0; it < jets->size() ; it++){
 
@@ -736,8 +738,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     if((*jets)[it].p4().Pt() < minCorrPt_) continue;
 
     //add b-tag info
-    jetsBtagHE_->push_back((*jets)[it].bDiscriminator("trackCountingHighEffBJetTags"));
-    jetsBtagHP_->push_back((*jets)[it].bDiscriminator("trackCountingHighPurBJetTags"));
+    bTaggers.insert( make_pair((*jets)[it].p4().Pt(), make_pair( (*jets)[it].bDiscriminator("trackCountingHighEffBJetTags"),(*jets)[it].bDiscriminator("trackCountingHighPurBJetTags")  ) ) );
+    //jetsBtagHE_->push_back((*jets)[it].bDiscriminator("trackCountingHighEffBJetTags"));
+    //jetsBtagHP_->push_back((*jets)[it].bDiscriminator("trackCountingHighPurBJetTags"));
                                 
     sortedJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4() ) );
     if(isMC_){
@@ -756,7 +759,10 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   for(CImap it = sortedGenJetsID.begin(); it != sortedGenJetsID.end() ; it++){
     genJetsIDP4_->push_back( it->second );
   }
-
+  for(std::map<double, std::pair<float,float> >::iterator it = bTaggers.begin(); it != bTaggers.end() ; it++){
+    jetsBtagHE_->push_back( (it->second).first  );
+    jetsBtagHP_->push_back( (it->second).second );
+  }
 
   tree_->Fill();
 
