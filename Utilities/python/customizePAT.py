@@ -452,7 +452,7 @@ def addTriggerMatchingMuon(process,isMC=False,postfix="",verbose=False):
         )
 
     if isMC:
-        muonMatch.matchedCuts  = cms.string('(path("HLT_Mu11_PFTau15_v*",0) || path("HLT_IsoMu9_PFTau15_v*",0)) && (filter("hltSingleMu11L3Filtered11") ) && type("TriggerMuon")')
+        muonMatch.matchedCuts  = cms.string('(path("HLT_Mu11_PFTau15_v*",0) || path("HLT_IsoMu9_PFTau15_v*",0)) && (filter("hltSingleMu11L3Filtered11") || filter("hltSingleMuIsoL3IsoFiltered9") ) && type("TriggerMuon")')
 
 
     setattr(process,"muonTriggerMatchHLTMuons"+postfix,muonMatch.clone()) 
@@ -547,7 +547,8 @@ def addTriggerMatchingTau(process,isMC=False,postfix="",XtriggerMu=False,verbose
         , src     = cms.InputTag( "selectedPatTaus"+postfix )
         , matched = cms.InputTag( "patTrigger" )
         #, matchedCuts    = cms.string('type("TriggerTau")')
-        , matchedCuts    = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*", 0) || path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*",0)) && (filter("hltOverlapFilterIsoEle15IsoPFTau15") || filter("hltOverlapFilterIsoEle15IsoPFTau20")) && type("TriggerTau")')
+        #, matchedCuts    = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*", 0) || path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*",0)) && (filter("hltOverlapFilterIsoEle15IsoPFTau15") || filter("hltOverlapFilterIsoEle15IsoPFTau20")) && type("TriggerTau")')
+        , matchedCuts    = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*", 0) || path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*",0))  && type("TriggerTau")')
         , maxDPtRel = cms.double( 999 )
         , maxDeltaR = cms.double( 0.3 )
         , resolveAmbiguities    = cms.bool( True )
@@ -556,10 +557,12 @@ def addTriggerMatchingTau(process,isMC=False,postfix="",XtriggerMu=False,verbose
 
 
     if XtriggerMu and (not isMC):
-        tauMatch.matchedCuts  = cms.string('(path("HLT_IsoMu12_LooseIsoPFTau10_v*",0) || path("HLT_Mu15_LooseIsoPFTau20_v*",0)) && (filter("hltOverlapFilterIsoMu12IsoPFTau10") || filter("hltOverlapFilterMu15IsoPFTau20") ) && type("TriggerTau")')
+        #tauMatch.matchedCuts  = cms.string('(path("HLT_IsoMu12_LooseIsoPFTau10_v*",0) || path("HLT_Mu15_LooseIsoPFTau20_v*",0)) && (filter("hltOverlapFilterIsoMu12IsoPFTau10") || filter("hltOverlapFilterMu15IsoPFTau20") ) && type("TriggerTau")')
+        tauMatch.matchedCuts  = cms.string('(path("HLT_IsoMu12_LooseIsoPFTau10_v*",0) || path("HLT_Mu15_LooseIsoPFTau20_v*",0)) && type("TriggerTau")')
 
     if XtriggerMu and isMC:
-        tauMatch.matchedCuts  = cms.string('path("HLT_Mu11_PFTau15_v*",0) && filter("hltOverlapFilterMu11PFTau15") && type("TriggerTau")')
+        #tauMatch.matchedCuts  = cms.string('path("HLT_Mu11_PFTau15_v*",0) && filter("hltOverlapFilterMu11PFTau15") && type("TriggerTau")')
+        tauMatch.matchedCuts  = cms.string('path("HLT_Mu11_PFTau15_v*",0) && type("TriggerTau")')
     if (not XtriggerMu) and isMC:
         tauMatch.matchedCuts    = cms.string('path("HLT_IsoEle12_PFTau15_v*",0) && type("TriggerTau")')
 
