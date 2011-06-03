@@ -296,7 +296,7 @@ process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
 
 process.atLeastOneMuTau = cms.EDProducer("CandViewShallowCloneCombiner",
                                          decay = cms.string("selectedPatMuonsTriggerMatch selectedPatTausTriggerMatch"),
-                                         cut = cms.string("sqrt((daughter(0).eta-daughter(1).eta)*(daughter(0).eta-daughter(1).eta)+  min( abs(daughter(0).phi-daughter(1).phi), 2*3.141 - abs(daughter(0).phi-daughter(1).phi)  ) *  min( abs(daughter(0).phi-daughter(1).phi), 2*3.141 - abs(daughter(0).phi-daughter(1).phi)  )  )>0.5"),
+                                         cut = cms.string("sqrt((daughter(0).eta-daughter(1).eta)*(daughter(0).eta-daughter(1).eta)+  min( abs(daughter(0).phi-daughter(1).phi), 2*3.1415926 - abs(daughter(0).phi-daughter(1).phi)  ) *  min( abs(daughter(0).phi-daughter(1).phi), 2*3.1415926 - abs(daughter(0).phi-daughter(1).phi)  )  )>0.5"),
                                          checkCharge = cms.bool(False)
                                          )
 
