@@ -21,7 +21,7 @@
 
 #include <vector>
 
-#define SAVE false
+#define SAVE true
 
 using namespace ROOT::Math;
 using namespace std;
@@ -56,7 +56,7 @@ void plotDEta(  FileList fileList_  , float Lumi_ = 30 ){
   leg->SetTextSize(0.04);
   leg->SetHeader("N^{jet}>1, p^{j1,j2}_{T}>30 GeV");
   
-  THStack* aStack = new THStack("aStack",Form("CMS Preliminary 2010   #sqrt{s}=7 TeV L=%.0f pb^{-1}",Lumi_));
+  THStack* aStack = new THStack("aStack",Form("CMS Preliminary    #sqrt{s}=7 TeV L=%.0f pb^{-1}",Lumi_));
   TH1F* hData = new TH1F();
   TH1F* hSiml = new TH1F();
 
@@ -82,14 +82,6 @@ void plotDEta(  FileList fileList_  , float Lumi_ = 30 ){
     if( ((fileList_[i].second).first).find("Wjets")!=string::npos ) {
       h1->SetFillColor(kGreen);
       leg->AddEntry(h1,"MadGraph W+jets","F");
-    }
-    if( ((fileList_[i].second).first).find("WW")!=string::npos ) {
-      h1->SetFillColor(42);
-      leg->AddEntry(h1,"PYTHIA WW","F");
-    }
-    if( ((fileList_[i].second).first).find("WZ")!=string::npos ) {
-      h1->SetFillColor(43);
-      leg->AddEntry(h1,"PYTHIA WZ","F");
     }
     if( ((fileList_[i].second).first).find("tW")!=string::npos ){
       h1->SetFillColor(kYellow);
@@ -203,7 +195,7 @@ void plotMass(FileList fileList,  float Lumi_ = 30 , float cutOff_ = 30){
   pad1->cd();
   pad1->SetLogy(1);
 
-  TLegend* leg = new TLegend(0.75,0.70,0.97,0.95,NULL,"brNDC");
+  TLegend* leg = new TLegend(0.75,0.70,0.95,0.95,NULL,"brNDC");
   leg->SetFillStyle(0);
   leg->SetBorderSize(0);
   leg->SetFillColor(10);
@@ -347,9 +339,9 @@ void plotJetMultiplicity(  FileList fileList_  , float Lumi_ = 30 , float cutOff
   leg->SetBorderSize(0);
   leg->SetFillColor(10);
   leg->SetTextSize(0.04);
-  leg->SetHeader( Form("E^{jet}_{T}>%.0f GeV/c",cutOff_) );
+  leg->SetHeader( Form("p^{jet}_{T}>%.0f GeV/c",cutOff_) );
   
-  THStack* aStack = new THStack("aStack",Form("CMS Preliminary 2010   #sqrt{s}=7 TeV L=%.0f pb^{-1}",Lumi_));
+  THStack* aStack = new THStack("aStack",Form("CMS Preliminary    #sqrt{s}=7 TeV L=%.0f pb^{-1}",Lumi_));
   TH1F* hData = new TH1F();
   TH1F* hSiml = new TH1F();
 
@@ -376,14 +368,6 @@ void plotJetMultiplicity(  FileList fileList_  , float Lumi_ = 30 , float cutOff
       h1->SetFillColor(kGreen);
       leg->AddEntry(h1,"MadGraph W+jets","F");
     }
-    if( ((fileList_[i].second).first).find("WW")!=string::npos ) {
-      h1->SetFillColor(42);
-      leg->AddEntry(h1,"PYTHIA WW","F");
-    }
-    if( ((fileList_[i].second).first).find("WZ")!=string::npos ) {
-      h1->SetFillColor(43);
-      leg->AddEntry(h1,"PYTHIA WZ","F");
-    }
     if( ((fileList_[i].second).first).find("tW")!=string::npos ){
       h1->SetFillColor(kYellow);
       leg->AddEntry(h1,"MadGraph single-t","F");
@@ -400,7 +384,7 @@ void plotJetMultiplicity(  FileList fileList_  , float Lumi_ = 30 , float cutOff
     }
 
     currentTree->Draw( Form("jetsIDP4@.size()>>%s",h1Name.c_str()), 
-		       Form("jetsIDP4@.size()<1 || (jetsIDP4@.size()>0 && jetsIDP4[jetsIDP4@.size()-1].Et()>%f)",cutOff_) );
+		       Form("jetsIDP4@.size()<1 || (jetsIDP4@.size()>0 && jetsIDP4[jetsIDP4@.size()-1].pt()>%f)",cutOff_) );
 
     if(((fileList_[i].second).first).find("data")!=string::npos){
       hData = h1;
@@ -441,7 +425,7 @@ void plotJetMultiplicity(  FileList fileList_  , float Lumi_ = 30 , float cutOff
   TH1F* hDataClone = (TH1F*)hData->Clone("hDataClone");
   hDataClone->Add(hSiml,-1);
   hRatio->Divide( hDataClone ,hSiml,1.0,1.0);
-  hRatio->SetAxisRange(-0.5,0.5,"Y");
+  hRatio->SetAxisRange(-1.5,1.5,"Y");
 
   hRatio->Draw();
   TF1* line = new TF1("line","0",hRatio->GetXaxis()->GetXmin(),hStack->GetXaxis()->GetXmax());
@@ -1817,28 +1801,23 @@ void mainPlot(){
   //plotMass(dummyFileList, 36., 30.);  
   
   
-  TFile* fData   = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_Mu-Run2010.root","READ");
-  TFile* fDYJets = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_DYJets-madgraph-50-PU.root","READ");
-  TFile* fTT     = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_TT-madgraph-PU.root","READ");
-  TFile* fWJets  = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_WJets-madgraph-PU.root","READ");
-  TFile* fWZ     = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_WZ-pythia-PU.root","READ");
-  TFile* fWW     = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_WW-pythia-PU.root","READ");
-  TFile* fT      = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_TToBLNu-tW-madhraph-PU.root","READ");
-  TFile* fQCD    = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/v2/treeZmumuPlusJets_QCD-pythia-PU.root","READ");
+  TFile* fData   = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/treeZmumuPlusJets_Mu-Run2010AB.root","READ");
+  TFile* fDYJets = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/treeZmumuPlusJets_DYJets-madgraph-50-PU-v2.root","READ");
+  TFile* fTT     = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/treeZmumuPlusJets_TT-madgraph-PU-v2.root","READ");
+  TFile* fWJets  = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/treeZmumuPlusJets_WJets-madgraph-PU-v2.root","READ");
+  TFile* fT      = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/treeZmumuPlusJets_TToBLNu-tW-madhraph-PU-v2.root","READ");
+  TFile* fQCD    = new TFile("/data_CMS/cms/lbianchini/ZmumuPlusJetsStudy/treeZmumuPlusJets_QCD-pythia-PU-v2.root","READ");
 
   FileList fileList;
   fileList.push_back( make_pair(fQCD,    make_pair("QCD",   349988.0 )  ));
   fileList.push_back( make_pair(fWJets,  make_pair("Wjets",  31314.0 )  ));
-  fileList.push_back( make_pair(fWZ,     make_pair("WZ",        10.4 )  ));
-  fileList.push_back( make_pair(fWW   ,  make_pair("WW"   ,      2.9 )  ));
   fileList.push_back( make_pair(fT,      make_pair("tW",        10.6 )  ));
   fileList.push_back( make_pair(fTT,     make_pair("ttbar",    157.5 )  ));
   fileList.push_back( make_pair(fDYJets, make_pair("Zjets",   3048.0 )  ));
   fileList.push_back( make_pair(fData,    make_pair("data",       -99 )  ));
 
-
-  plotJetMultiplicity( fileList, 36. , 30.);
   /*
+  plotJetMultiplicity( fileList, 36. , 30.);
   plotLeadingJetEt( fileList, 36. , 0.0, 2.4);
   plotLeadingJetEt( fileList, 36. , 2.4, 4.5);
   plotSubLeadingJetEt( fileList, 36. , 0.0, 2.4);
@@ -1857,7 +1836,7 @@ void mainPlot(){
   plotJetVeto(  fileList, 36. , 30., 1.5 ); 
   plotSubLeadMuonRelIso( fileList, 36.);
   */
-  //plotBenchMarkYield(fileList, 36.);
+  plotBenchMarkYield(fileList, 36.);
   
   
 }
