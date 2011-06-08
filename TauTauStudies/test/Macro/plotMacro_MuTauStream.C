@@ -30,7 +30,7 @@ using namespace std;
 typedef std::vector< pair<TFile*, pair<std::string,float> > > FileList;
 
 
-
+/*
 void plotInclusiveMass(  FileList fileList  , float Lumi_ = 30) {
 
   for(int i = 0; i<fileList.size(); i++){
@@ -207,6 +207,7 @@ void plotInclusiveMass(  FileList fileList  , float Lumi_ = 30) {
   if(SAVE) c1->SaveAs("Zmm_InclusiveMass.png");
 
 }
+*/
 
 
 void plotExclusiveMass(  FileList fileList , float Lumi_ = 30, 
@@ -411,7 +412,7 @@ void plotExclusiveMass(  FileList fileList , float Lumi_ = 30,
 
 }
 
-
+/*
 
 void plotCutFlow(  FileList fileList , float Lumi_ = 30, 
 		   float pt1_ = 20., float pt2_ = 15, float DEta_ = 1.0, float Mjj_ = 300. , float jetVeto_ = 15,
@@ -496,7 +497,7 @@ void plotCutFlow(  FileList fileList , float Lumi_ = 30,
       TH1F* tmph1 =  (TH1F*)currentFile->Get( (cutList[m].first).c_str() );
       if(tmph1!=0){
 	cutFlow.push_back( tmph1->GetBinContent(1) );
-	//cout << cutList[m].first << " ===> " << tmph1->GetBinContent(1) << endl;
+	//cout << tmph1->GetBinContent(1) << endl;
       }
     }
 
@@ -886,7 +887,7 @@ void plotCutFlowNotStaggered(  FileList fileList , float Lumi_ = 30,
 
 }
 
-
+*/
 
 ////////////////////////////////////////////////////
 
@@ -896,10 +897,10 @@ void mainPlot(){
   FileList dummyFileList;
   dummyFileList.clear();
   //plotInclusiveMass( dummyFileList, 500. );
-  //plotExclusiveMass( dummyFileList, 500., 32, 22, 4.0, 488, 15., 10); //WP1%
+  plotExclusiveMass( dummyFileList, 500., 32, 22, 4.0, 488, 15., 10); //WP1%
   //plotExclusiveMass( dummyFileList, 500., 26, 21, 2.9, 417, 15., 10); //WP3%
   //plotCutFlow( dummyFileList, 500., 32, 22, 4.0, 488, 15., 10);
-  plotCutFlowNotStaggered( dummyFileList, 500., 32, 22, 4.0, 488, 15., 10);
+  //plotCutFlowNotStaggered( dummyFileList, 500., 32, 22, 4.0, 488, 15., 10);
  
 
   return;
