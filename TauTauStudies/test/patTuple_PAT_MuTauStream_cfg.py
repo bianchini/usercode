@@ -68,7 +68,8 @@ process.source.fileNames = cms.untracked.vstring(
 #    )
 
 postfix           = "PFlow"
-runOnMC           = True
+runOnMC           = False
+#runOnMC           = True
 
 if runOnMC:
     #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
@@ -246,7 +247,6 @@ process.tauGenJetMatch.maxDPtRel = 999
 
 addPFMuonIsolation(process,process.patMuons)
 
-#process.pfPileUp.Vertices = "offlinePrimaryVerticesDA"
 
 addTriggerMatchingMuon(process,isMC=runOnMC)
 getattr(process,"patMuons").embedTrack = True
@@ -285,8 +285,6 @@ process.makeSCs = cms.Sequence(process.mergedSuperClusters*process.selectedSuper
     
 ########### PAT
 
-#process.patMuons.pvSrc = cms.InputTag("offlinePrimaryVerticesDA")
-#process.patElectrons.pvSrc = cms.InputTag("offlinePrimaryVerticesDA")
 
 process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
     "MuonsUserEmbedded",
@@ -410,12 +408,6 @@ process.tauPtEtaIDAgMuAgElecCounter = cms.EDFilter(
     maxNumber = cms.uint32(999),
     )
 
-process.atLeastOneGoodVertexSequence = cms.Sequence(
-    process.primaryVertexFilter*process.vertexScrapingFilter
-    )
-process.PFTau.replace(process.offlinePrimaryVerticesDA,
-                      process.offlinePrimaryVerticesDA*process.atLeastOneGoodVertexSequence)
-
 process.alLeastOneMuTauSequence = cms.Sequence(
     process.atLeastOneMuTau*process.atLeastOneMuTauCounter*process.atLeastOneMuTauFilter
     )
@@ -512,6 +504,9 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
 
 process.pat = cms.Sequence(
     process.allEventsFilter+
+    process.offlinePrimaryVerticesDA+
+    process.primaryVertexFilter+
+    process.vertexScrapingFilter+
     #process.makeSCs +
     process.PFTau*
     process.fjSequence*
