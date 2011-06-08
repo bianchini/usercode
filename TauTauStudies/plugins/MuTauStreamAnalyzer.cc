@@ -64,11 +64,16 @@ void MuTauStreamAnalyzer::beginJob(){
   jetsBtagHE_  = new std::vector< double >();
   jetsBtagHP_  = new std::vector< double >();
 
+  jetsChEfraction_  = new std::vector< float >();
+  jetsChNfraction_  = new std::vector< float >();
+  jetMoments_       = new std::vector< float >();
+
   tauXTriggers_= new std::vector< int >();
   triggerBits_ = new std::vector< int >();
 
   jetsP4_          = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   jetsIDP4_        = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  jetsIDL1OffsetP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genJetsIDP4_       = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
   diTauVisP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
@@ -89,10 +94,16 @@ void MuTauStreamAnalyzer::beginJob(){
 
   tree_->Branch("jetsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsP4_);
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
+  tree_->Branch("jetsIDL1OffsetP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDL1OffsetP4_);
   tree_->Branch("genJetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genJetsIDP4_);
   
   tree_->Branch("jetsBtagHE","std::vector<double>",&jetsBtagHE_);
   tree_->Branch("jetsBtagHP","std::vector<double>",&jetsBtagHP_);
+
+  tree_->Branch("jetMoments","std::vector<float> ",&jetMoments_);
+
+  tree_->Branch("jetsChEfraction","std::vector<float>",&jetsChEfraction_);
+  tree_->Branch("jetsChNfraction","std::vector<float>",&jetsChNfraction_);
 
   tree_->Branch("tauXTriggers","std::vector<int>",&tauXTriggers_);
   tree_->Branch("triggerBits","std::vector<int>",&triggerBits_);
@@ -167,8 +178,8 @@ MuTauStreamAnalyzer::~MuTauStreamAnalyzer(){
   delete jetsP4_; delete jetsIDP4_; delete METP4_; delete diTauVisP4_; delete diTauCAP4_; delete diTauICAP4_; 
   delete diTauSVfit1P4_; delete diTauSVfit2P4_; delete diTauSVfit3P4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_;
-  delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_; delete extraMuons_;
-  delete tRandom_ ; delete fpuweight_;
+  delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_; delete extraMuons_; delete jetsIDL1OffsetP4_;
+  delete tRandom_ ; delete fpuweight_; delete jetsChNfraction_; delete jetsChEfraction_;delete jetMoments_;
 }
 
 void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -177,6 +188,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
   jetsP4_->clear();
   jetsIDP4_->clear();
+  jetsIDL1OffsetP4_->clear();
   diTauVisP4_->clear();
   diTauCAP4_->clear();
   diTauICAP4_->clear();
@@ -185,6 +197,10 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   diTauSVfit3P4_->clear();
   diTauLegsP4_->clear();
   METP4_->clear();
+  jetsChNfraction_->clear();
+  jetsChEfraction_->clear();
+  jetMoments_->clear();
+  
 
   genJetsIDP4_->clear();
   genDiTauLegsP4_->clear();
@@ -216,6 +232,22 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     edm::LogError("DataNotAvailable")
       << "No PV label available \n";
   const reco::VertexCollection* vertexes = pvHandle.product();
+
+  std::vector<float> vtxZ;
+  for(unsigned int k = 0; k<vertexes->size(); k++){
+    vtxZ.push_back(((*vertexes)[k].position()).z());
+  }
+
+
+  if(verbose_){
+    cout << "List of vertexes " << endl;
+    for(unsigned int k = 0; k<vertexes->size(); k++){
+      cout << "Vtx[" << k << "] (x,y,z) = (" << ((*vertexes)[k].position()).x()
+	   << "," << ((*vertexes)[k].position()).y() << "," << ((*vertexes)[k].position()).z() << ")"
+	   << endl;
+    }
+  }
+
   numPV_ = vertexes->size();
 
   edm::Handle<pat::METCollection> metHandle;
@@ -696,9 +728,13 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   lumi_ = iEvent.luminosityBlock();
 
   std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedJets;
+  std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedJetsIDL1Offset;
   std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedJetsID;
   std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedGenJetsID;
   std::map<double, std::pair<float,float> ,  MuTauStreamAnalyzer::more> bTaggers;
+  std::map<double, std::pair<float,float> ,  MuTauStreamAnalyzer::more> jetPVassociation;
+  std::map<double, std::pair<float,float> ,  MuTauStreamAnalyzer::more> jetMoments;
+  
 
 
   for(unsigned int it = 0; it < jets->size() ; it++){
@@ -713,16 +749,27 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
     if(verbose_){
       pat::Jet* jet = const_cast<pat::Jet*>(&(*jets)[it]);
-      //for(unsigned int i = 0; i < (jet->availableJECLevels()).size() ; i++ ){
-      //std::cout << (jet->availableJECLevels())[i] << std::endl;
-      //}
-      std::cout << "Uncorrected " << jet->correctedJet("Uncorrected").pt() << std::endl;
-      std::cout << "L1FastJet "   << jet->correctedJet("L1FastJet").pt() << std::endl;
-      std::cout << "L2Relative "  << jet->correctedJet("L2Relative").pt() << std::endl; 
-      std::cout << "L3Absolute "  << jet->correctedJet("L3Absolute").pt() << std::endl; 
+      for(unsigned int i = 0; i < (jet->availableJECSets()).size() ; i++ ){
+	std::cout << (jet->availableJECSets())[i] << std::endl;
+      }
+      for(unsigned int i = 0; i < (jet->availableJECLevels()).size() ; i++ ){
+	std::cout << (jet->availableJECLevels())[i] << std::endl;
+      }
+      std::cout << "L1FastJet ========> " << std::endl;
+      std::cout << "Uncorrected " << jet->correctedJet("Uncorrected","none","patJetCorrFactors").pt() << std::endl;
+      std::cout << "L1FastJet "   << jet->correctedJet("L1FastJet","none",  "patJetCorrFactors").pt() << std::endl;
+      std::cout << "L2Relative "  << jet->correctedJet("L2Relative","none", "patJetCorrFactors").pt() << std::endl; 
+      std::cout << "L3Absolute "  << jet->correctedJet("L3Absolute","none", "patJetCorrFactors").pt() << std::endl; 
+      std::cout << "L1Offset ========> " << std::endl;
+      std::cout << "Uncorrected " << jet->jecFactor("Uncorrected","none","patJetCorrFactorsL1Offset")*jet->pt() << std::endl;
+      std::cout << "L1Offset"     << jet->jecFactor("L1Offset","none",   "patJetCorrFactorsL1Offset")*jet->pt() << std::endl;
+      std::cout << "L2Relative "  << jet->jecFactor("L2Relative","none", "patJetCorrFactorsL1Offset")*jet->pt() << std::endl;
+      std::cout << "L3Absolute"   << jet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*jet->pt() << std::endl;  
     }
 
-    if( jetID( &(*jets)[it] ) < minJetID_ )  continue;
+    std::map<string,float> aMap;
+
+    if( jetID( &(*jets)[it] , &((*vertexes)[0]), vtxZ, aMap ) < minJetID_ )  continue;
 
     sortedJets.insert( make_pair( (*jets)[it].correctedJet("Uncorrected").p4().Pt() ,(*jets)[it].correctedJet("Uncorrected").p4() ) );
 
@@ -730,10 +777,17 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
     //add b-tag info
     bTaggers.insert( make_pair((*jets)[it].p4().Pt(), make_pair( (*jets)[it].bDiscriminator("trackCountingHighEffBJetTags"),(*jets)[it].bDiscriminator("trackCountingHighPurBJetTags")  ) ) );
+    jetPVassociation.insert( make_pair( (*jets)[it].p4().Pt(), make_pair(aMap["chFracRawJetE"],aMap["chFracAllChargE"]) ) );
+    jetMoments.insert( make_pair( (*jets)[it].p4().Pt(), make_pair( (*jets)[it].etaetaMoment(),(*jets)[it].phiphiMoment()) ) );
+    
     //jetsBtagHE_->push_back((*jets)[it].bDiscriminator("trackCountingHighEffBJetTags"));
     //jetsBtagHP_->push_back((*jets)[it].bDiscriminator("trackCountingHighPurBJetTags"));
+
+    if(isMC_) sortedJetsIDL1Offset.insert( make_pair( (*jets)[it].jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*(*jets)[it].pt() , (*jets)[it].jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*(*jets)[it].p4()) );   
+    else sortedJetsIDL1Offset.insert( make_pair( (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].pt() , (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].p4()) ); 
                                 
     sortedJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4() ) );
+
     if(isMC_){
       if((*jets)[it].genJet() != 0) sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].genJet()->p4() ) );
       else sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Pt() , math::XYZTLorentzVectorD(0,0,0,0) ) );
@@ -747,6 +801,9 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   for(CImap it = sortedJetsID.begin(); it != sortedJetsID.end() ; it++){
     jetsIDP4_->push_back( it->second );
   }
+  for(CImap it = sortedJetsIDL1Offset.begin(); it != sortedJetsIDL1Offset.end() ; it++){
+    jetsIDL1OffsetP4_->push_back( it->second );
+  }
   for(CImap it = sortedGenJetsID.begin(); it != sortedGenJetsID.end() ; it++){
     genJetsIDP4_->push_back( it->second );
   }
@@ -754,13 +811,21 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     jetsBtagHE_->push_back( (it->second).first  );
     jetsBtagHP_->push_back( (it->second).second );
   }
+  for(std::map<double, std::pair<float,float> >::iterator it = jetPVassociation.begin(); it != jetPVassociation.end() ; it++){
+    jetsChEfraction_->push_back( (it->second).first  );
+    jetsChNfraction_->push_back( (it->second).second );
+  }
+  for(std::map<double, std::pair<float,float> >::iterator it = jetMoments.begin(); it != jetMoments.end() ; it++){
+    jetMoments_->push_back( (it->second).first  );
+    jetMoments_->push_back( (it->second).second );
+  }
 
   tree_->Fill();
 
 }
 
 
-unsigned int MuTauStreamAnalyzer::jetID( const pat::Jet* jet){
+unsigned int  MuTauStreamAnalyzer::jetID( const pat::Jet* jet, const reco::Vertex* vtx, std::vector<float> vtxZ, std::map<std::string,float>& map_){
 
   if( (jet->pt())<10 ) return 99; // always pass jet ID
 
@@ -778,6 +843,10 @@ unsigned int MuTauStreamAnalyzer::jetID( const pat::Jet* jet){
  
   float totalEnergyFromConst = 0;
 
+  float chEnFractionPV   = 0;
+  float chEnFractionChPV = 0;
+  float chFractionPV     = 0;
+
   for(unsigned i=0; i<pfCandPtrs.size(); ++i) {
     const reco::PFCandidate& cand = *(pfCandPtrs[i]);
 
@@ -788,6 +857,37 @@ unsigned int MuTauStreamAnalyzer::jetID( const pat::Jet* jet){
     case reco::PFCandidate::h: 
       nCharged++;
       energyCharged += cand.energy(); 
+
+      if((cand.trackRef()).isNonnull()){
+	bool isMatched = false;
+	for(reco::Vertex::trackRef_iterator it = vtx->tracks_begin() ; it!=vtx->tracks_end() && !isMatched; it++){
+	  if(  (*it).id() == (cand.trackRef()).id() && (*it).key() == (cand.trackRef()).key() ){
+	    isMatched = true;
+	    if(verbose_) cout << (*it).id() << ", " << (*it).key() << " is matched!" << endl;
+	    chEnFractionPV += cand.energy();
+	    chFractionPV+=1;
+	  }
+	}
+	if(!isMatched){
+	  float dist = vtxZ.size()>0 ? abs(vtxZ[0]-((cand.trackRef())->referencePoint()).z()) : 999.;
+	  float tmpDist = 999.;
+	  for(unsigned k = 1; k < vtxZ.size(); k++){
+	    if( abs(((cand.trackRef())->referencePoint()).z() - vtxZ[k] ) < tmpDist )
+	      tmpDist = abs(((cand.trackRef())->referencePoint()).z() - vtxZ[k] );
+	  }
+	  if(tmpDist>dist){
+	    isMatched = true;
+	    if(verbose_) cout << "Matched by closest vtx in z!!" << endl;
+	    chEnFractionPV += cand.energy();
+	    chFractionPV+=1;
+	  }
+	}
+	if(!isMatched && verbose_) {
+	  cout << "Ch with pt " << cand.pt() << " and eta " << cand.eta() << " is not matched to the PV !!!" << endl;
+	  cout << "z position of PV " << (vtx->position()).z() << ", z position of track " << ((cand.trackRef())->referencePoint()).z()  << ", x position of track " << ((cand.trackRef())->referencePoint()).x()   << ", y position of track " << ((cand.trackRef())->referencePoint()).y() << endl;
+	}
+      }
+
       break;
     case reco::PFCandidate::gamma:
       nPhotons++;
@@ -798,7 +898,28 @@ unsigned int MuTauStreamAnalyzer::jetID( const pat::Jet* jet){
       energyNeutral += cand.energy();
       break;
     case reco::PFCandidate::e: 
-      energyElectrons += cand.energy(); 
+      energyElectrons += cand.energy();
+
+      if((cand.gsfTrackRef()).isNonnull()){
+	bool isMatched = false;
+	float dist = vtxZ.size()>0 ? abs(vtxZ[0]-((cand.gsfTrackRef())->referencePoint()).z()) : 999.;
+	float tmpDist = 999.;
+	for(unsigned k = 1; k < vtxZ.size(); k++){
+	  if( abs(((cand.gsfTrackRef())->referencePoint()).z() - vtxZ[k] ) < tmpDist )
+	    tmpDist = abs(((cand.gsfTrackRef())->referencePoint()).z() - vtxZ[k] );
+	}
+	if(tmpDist>dist){
+	  isMatched = true;
+	  if(verbose_) cout << "Matched by closest vtx in z!!" << endl;
+	  chEnFractionPV += cand.energy();
+	  chFractionPV+=1;
+	}
+	if(!isMatched && verbose_) {
+	  cout << "Ele with pt " << cand.pt() << " and eta " << cand.eta() << " is not matched to the PV !!!" << endl;
+	  cout << "z position of PV " << (vtx->position()).z() << ", z position of gsfTrack " << ((cand.gsfTrackRef())->referencePoint()).z()  << ", x position of gsfTrack " << ((cand.gsfTrackRef())->referencePoint()).x()   << ", y position of gsfTrack " << ((cand.gsfTrackRef())->referencePoint()).y() << endl;
+	}
+      }
+      
       break;
     case reco::PFCandidate::h_HF: // fill neutral
       nNeutral++;
@@ -812,6 +933,18 @@ unsigned int MuTauStreamAnalyzer::jetID( const pat::Jet* jet){
       break;
     }
   }
+
+  chEnFractionChPV = chEnFractionPV;
+  if(energyCharged>0)
+    chEnFractionChPV /= energyCharged; 
+  chEnFractionPV /= jet->correctedJet("Uncorrected").p4().E();
+  chFractionPV   /= nCharged;
+
+  //if(chFractionPV==0) cout << energyCharged << endl;
+
+  map_["chMult"]          =  chFractionPV;
+  map_["chFracRawJetE"]   =  chEnFractionPV;
+  map_["chFracAllChargE"] =  chEnFractionChPV;
 
   bool loose=false;
   bool medium=false;

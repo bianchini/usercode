@@ -58,7 +58,8 @@ void TauFakeRateAnalyzer::beginJob(){
   tree_->Branch("leadPFCandEcalEnergy",&leadPFCandEcalEnergy_,"leadPFCandEcalEnergy/D");
   tree_->Branch("leadPFCandPt",&leadPFCandPt_,"leadPFCandPt/D");
   tree_->Branch("leadPFCandP",&leadPFCandP_,"leadPFCandP/D");
-  //tree_->Branch("hasGsf",&hasGsf_,"hasGsf/D");
+  tree_->Branch("hasGsf",&hasGsf_,"hasGsf/D");
+  tree_->Branch("hasKft",&hasKft_,"hasKft/D");
   tree_->Branch("matchedID",&matchedID_,"matchedID/D");
   //tree_->Branch("fbrem",&fbrem_,"fbrem/D");
   tree_->Branch("signalPFChargedHadrCands",&signalPFChargedHadrCands_,"signalPFChargedHadrCands/I");
@@ -121,6 +122,9 @@ void TauFakeRateAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   const reco::VertexCollection* vertexes = pvHandle.product();
   numPV_ = vertexes->size();
 
+  edm::Handle<reco::GenParticleCollection> genParticlesHandle;
+  const reco::GenParticleCollection* genParticles = 0;
+
   if(matchTo_.find("default")!=string::npos || matchTo_.find("tau")!=string::npos){
     edm::Handle<reco::GenJetCollection> tauGenJetsHandle;
     iEvent.getByLabel(edm::InputTag("genTauDecaysToHadrons"),tauGenJetsHandle);
@@ -133,26 +137,24 @@ void TauFakeRateAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     }
   } 
   else if( matchTo_.find("electron")!=string::npos ){
-    edm::Handle<reco::GenParticleCollection> genParticlesHandle;
     iEvent.getByLabel(edm::InputTag("genParticles"),genParticlesHandle);
     if( !genParticlesHandle.isValid() )  
       edm::LogError("DataNotAvailable")
 	<< "No genparticles label available \n";
-    const reco::GenParticleCollection* genParticles = genParticlesHandle.product();
+    genParticles = genParticlesHandle.product();
     for(unsigned int j = 0; j<genParticles->size() ; j++){
-      if( TMath::Abs((*genParticles)[j].pdgId())!=11 ) continue;
+      if( TMath::Abs((*genParticles)[j].pdgId())!=11  || (*genParticles)[j].pt()<10) continue;
       genMatchP4s.push_back( (*genParticles)[j].p4() );
     }
   }
   else if( matchTo_.find("muon")!=string::npos ){
-    edm::Handle<reco::GenParticleCollection> genParticlesHandle;
     iEvent.getByLabel(edm::InputTag("genParticles"),genParticlesHandle);
     if( !genParticlesHandle.isValid() )  
       edm::LogError("DataNotAvailable")
 	<< "No genparticles label available \n";
-    const reco::GenParticleCollection* genParticles = genParticlesHandle.product();
+    genParticles = genParticlesHandle.product();
     for(unsigned int j = 0; j<genParticles->size() ; j++){
-      if( TMath::Abs((*genParticles)[j].pdgId())!=13 ) continue;
+      if( TMath::Abs((*genParticles)[j].pdgId())!=13 || (*genParticles)[j].pt()<10) continue;
       genMatchP4s.push_back( (*genParticles)[j].p4() );
     }
   } 
@@ -162,7 +164,7 @@ void TauFakeRateAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   for(unsigned int i = 0; i< taus->size(); i++){
 
     if( ((*taus)[i].leadPFChargedHadrCand()).isNull() ){
-      //if( ((*taus)[i].leadPFChargedHadrCand()).isNull() )  cout << "Null ref to charged" << endl;
+      cout << "Null ref to charged" << endl;
       //if( (((*taus)[i].leadPFChargedHadrCand())->trackRef()).isNull() ) cout << "Null ref to track" << endl;
       continue;
     }
@@ -221,6 +223,18 @@ void TauFakeRateAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	if((*taus)[i].tauID("againstMuonLoose")>0.5)  tightestAntiMWP_++;
 	if((*taus)[i].tauID("againstMuonTight")>0.5)  tightestAntiMWP_++;
 	
+	if((*taus)[i].tauID("againstElectronMedium")>0.5){
+	  cout << "Electron passes anti-e medium !!!" << endl;
+	  cout << (*taus)[i].pt() << " --- eta " << (*taus)[i].eta() << " --- mva " <<
+	    (*taus)[i].electronPreIDOutput() << " --- lead pt " << ((*taus)[i].leadPFChargedHadrCand())->pt() << " --- lead cand " << ((*taus)[i].leadPFCand())->pt() << " --- lead charge " <<  ((*taus)[i].leadPFChargedHadrCand())->charge() << " --- lead cand charge " <<  ((*taus)[i].leadPFCand())->charge() <<  endl;
+	  for(unsigned int j = 0; j<genParticles->size() ; j++){
+	    if( TMath::Abs((*genParticles)[j].pdgId())==11 && ROOT::Math::VectorUtil::DeltaR( (*taus)[i].p4(),(*genParticles)[j].p4() )<0.15 ) cout << "Match with electron with charge " <<  (*genParticles)[j].charge() << endl;
+    }
+
+
+	}
+
+
 	leadPFChargedHadrMva_        =   (*taus)[i].electronPreIDOutput() ;	
 	leadPFChargedHadrHcalEnergy_ =  ((*taus)[i].leadPFChargedHadrCand())->hcalEnergy() ;
 	leadPFChargedHadrEcalEnergy_ =  ((*taus)[i].leadPFChargedHadrCand())->ecalEnergy() ;
@@ -240,8 +254,10 @@ void TauFakeRateAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	  leadPFCandPt_= -99;
 	  leadPFCandP_= -99;
 	}
-	//hasGsf_ = (((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()).isNonnull() ?
-	//  1 : 0;
+	hasGsf_ = (((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()).isNonnull() ?
+	  1. : 0.;
+	hasKft_ = (((*taus)[i].leadPFChargedHadrCand())->trackRef()).isNonnull() ?
+	  1. : 0.;
 	//fbrem_ = (((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()).isNonnull() ?
 	//  ( ((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()->p() - 
 	//    ((*taus)[i].leadPFChargedHadrCand())->gsfTrackRef()->outerP() ) :

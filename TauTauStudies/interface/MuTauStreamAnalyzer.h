@@ -10,6 +10,9 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
+//#include "DataFormats/Math/interface/Vector3D.h"
+//#include "DataFormats/Math/interface/Point3D.h"
+
 
 #include "DataFormats/RecoCandidate/interface/IsoDepositVetos.h"
 #include "DataFormats/RecoCandidate/interface/IsoDeposit.h"
@@ -25,6 +28,8 @@
 
 
 #include <string>
+#include <utility>
+#include <map>
 
 
 class MuTauStreamAnalyzer : public edm::EDAnalyzer{
@@ -40,7 +45,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   explicit MuTauStreamAnalyzer(const edm::ParameterSet&);
   ~MuTauStreamAnalyzer();
 
-  unsigned int jetID( const pat::Jet* jet);
+  unsigned int jetID( const pat::Jet* jet, const reco::Vertex* vtx, std::vector<float> vtxZ, std::map<std::string,float>& map_);
 
   void beginJob() ;
   void analyze(const edm::Event&  iEvent, const edm::EventSetup& iSetup);
@@ -65,11 +70,16 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
 
   std::vector< double >* jetsBtagHE_;
   std::vector< double >* jetsBtagHP_;
+  std::vector< float >* jetsChNfraction_;
+  std::vector< float >* jetsChEfraction_;
+  std::vector< float >* jetMoments_;
+
   std::vector< int >* tauXTriggers_;
   std::vector< int >* triggerBits_;
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDP4_;
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDL1OffsetP4_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* genJetsIDP4_; 
  
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauVisP4_; 
