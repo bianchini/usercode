@@ -30,17 +30,30 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 ) 
+void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLTData_ = 1, Int_t applyHLTMC_ = 1 , Float_t hMass_ = 115) 
 {
 
-  ofstream out("cutFlow_ElecTauStream_iter2.txt");
+  ofstream out(Form("cutFlow_ElecTauStream_iter2_%.0f.txt",hMass_));
   out.precision(4);
 
-  TCut hlt("HLTx==1");
+  TCut hltData("HLTx==1");
+  TCut hltMC("HLTx==1");
 
   TFile *fFullData                = new TFile("/data_CMS/cms/lbianchini//ElecTauStream2011_iter2/treeElecTauStream_Run2011-Elec.root","READ"); 
-  TFile *fFullSignalVBF           = new TFile("/data_CMS/cms/lbianchini//ElecTauStream2011_iter2/treeElecTauStream_VBFH115-powheg-PUS1.root","READ"); 
-  TFile *fFullSignalGGH           = new TFile("/data_CMS/cms/lbianchini//ElecTauStream2011_iter2/treeElecTauStream_GGFH115-powheg-PUS1.root","READ");  
+  TFile *fFullSignalVBF           = new TFile(Form("/data_CMS/cms/lbianchini//ElecTauStream2011_iter2/treeElecTauStream_VBFH%.0f-powheg-PUS1.root",hMass_),"READ"); 
+
+  float equivalentGGMass = 115;
+  float scaleGGH = 1.0;
+    if(hMass_ == 125){
+      equivalentGGMass = 120;
+      scaleGGH = 0.821;
+    }
+  if(hMass_ == 135){
+    equivalentGGMass = 130;
+    scaleGGH = 0.757;
+  }
+
+  TFile *fFullSignalGGH           = new TFile(Form("/data_CMS/cms/lbianchini//ElecTauStream2011_iter2/treeElecTauStream_GGFH%.0f-powheg-PUS1.root",equivalentGGMass),"READ");  
   TFile *fFullBackgroundDYTauTau  = new TFile("/data_CMS/cms/lbianchini//ElecTauStream2011_iter2/treeElecTauStream_DYJets-50-madgraph-PUS1.root","READ"); 
   TFile *fFullBackgroundDYEleEle  = new TFile("/data_CMS/cms/lbianchini//ElecTauStream2011_iter2/treeElecTauStream_DYJets-50-madgraph-PUS1.root","READ"); 
   TFile *fFullBackgroundWJets     = new TFile("/data_CMS/cms/lbianchini//ElecTauStream2011_iter2/treeElecTauStream_WJets-madgraph-PUS1.root","READ"); 
@@ -54,8 +67,8 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
 
   // OpenNTuples
   TString fDataName                = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011_iter2/Inclusive/nTupleRun2011-Elec_Open_ElecTauStream.root";
-  TString fSignalNameVBF           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011_iter2/Inclusive/nTupleVBFH115-powheg-PUS1_Open_ElecTauStream.root";
-  TString fSignalNameGGH           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011_iter2/Inclusive/nTupleGGFH115-powheg-PUS1_Open_ElecTauStream.root";
+  TString fSignalNameVBF           = Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011_iter2/Inclusive/nTupleVBFH%.0f-powheg-PUS1_Open_ElecTauStream.root",hMass_);
+  TString fSignalNameGGH           = Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011_iter2/Inclusive/nTupleGGFH%.0f-powheg-PUS1_Open_ElecTauStream.root",equivalentGGMass);
   TString fBackgroundNameDYTauTau  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011_iter2/Inclusive/nTupleDYJets-50-madgraph-PUS1_Open_ElecTauStream.root";
   TString fBackgroundNameDYEleEle  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011_iter2/Inclusive/nTupleDYJets-50-madgraph-PUS1_Open_ElecTauStream.root";
   TString fBackgroundNameWJets     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011_iter2/Inclusive/nTupleWJets-madgraph-PUS1_Open_ElecTauStream.root";
@@ -129,7 +142,6 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
 
   std::map<std::string,TTree*>::iterator jt;
 
-  
   // here I choose the order in the stack
   std::vector<string> samples;
   samples.push_back("ggH115");
@@ -144,8 +156,9 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
   samples.push_back("Ztautau");
   samples.push_back("Data");
 
+  float kFactorQCD=1.13;
   std::map<std::string,float> crossSec;
-  crossSec["ggH115"]=( 7.65e-02 * 18.13 );
+  crossSec["ggH115"]=( 7.65e-02 * 18.13 * scaleGGH);
   crossSec["qqH115"]=( 0.1012);
   crossSec["DiBoson"]=( -1  );
   crossSec["TTbar"]=( 157.5 );
@@ -178,10 +191,11 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
   filters.push_back("OS");
   filters.push_back("2-jets");
   filters.push_back("2-tag jets");
+  filters.push_back("Mass Window");
   filters.push_back("VBF cuts");
   filters.push_back("jet-veto");
   filters.push_back("anti-b tag");
-  filters.push_back("HLT-matching");
+  //filters.push_back("HLT-matching");
 
   // here I define the map between a sample name and its file ptr
   std::map<std::string,TFile*> fullMap;
@@ -256,6 +270,9 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
   std::map<std::string,float> cutMap_antiBtag;
   std::map<std::string,float> cutMap_antiBtagE;
 
+  std::map<std::string,float> cutMap_MassWindow;
+  std::map<std::string,float> cutMap_MassWindowE;
+
   std::map<std::string,float> cutMap_HLT;
   std::map<std::string,float> cutMap_HLTE;
 
@@ -314,9 +331,11 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0)";
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
-    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_) cut = "sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0)";
+    if((jt->first).find("Data")==string::npos && applyHLTMC_) cut = "sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0)";
+    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_);
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_TauIso[jt->first] = tot;
@@ -328,9 +347,12 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) )";
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
-    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_) cut =  "sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) )"; 
+    if((jt->first).find("Data")==string::npos && applyHLTMC_) cut =  "sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) )"; 
+    jt->second->Draw("etaL1>>h1",cut);
+
+    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_);
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_ElecIso[jt->first] = tot;
@@ -342,9 +364,12 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
-    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_)  cut =  "sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0)"; 
+    if((jt->first).find("Data")==string::npos && applyHLTMC_)  cut =  "sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0)"; 
+
+    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_);
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_DiElecVeto[jt->first] = tot;
@@ -356,9 +381,12 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
-    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_) cut =  "sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40)";  
+    if((jt->first).find("Data")==string::npos && applyHLTMC_) cut =  "sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40)";  
+    
+    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_);
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_Mt[jt->first] = tot;
@@ -370,9 +398,12 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
-    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_)  cut =  "sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0)"; 
+    if((jt->first).find("Data")==string::npos && applyHLTMC_)  cut =  "sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0)"; 
+    
+    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_);
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_OS[jt->first] = tot;
@@ -384,9 +415,12 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
-    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_)  cut =  "sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15)"; 
+    if((jt->first).find("Data")==string::npos && applyHLTMC_)  cut =  "sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15)"; 
+    
+    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_);
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_2jets[jt->first] = tot;
@@ -397,10 +431,13 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04))  && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15 && eta1*eta2<0)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
-    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    TCut cut =  Form("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04))  && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15 && eta1*eta2<0  && abs(diTauSVFitMass-%f)<999)",hMass_); 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_)  cut =  Form("sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04))  && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15 && eta1*eta2<0 && abs(diTauSVFitMass-%f)<999)", hMass_); 
+    if((jt->first).find("Data")==string::npos && applyHLTMC_)  cut =  Form("sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04))  && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15 && eta1*eta2<0 && abs(diTauSVFitMass-%f)<999)",hMass_); 
+    
+    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_);
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_VBFPre[jt->first] = tot;
@@ -411,10 +448,30 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
-    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    TCut cut =  Form("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15 && eta1*eta2<0 && abs(diTauSVFitMass-%f)<30 )", hMass_); 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_)  cut =  Form("sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && abs(diTauSVFitMass-%f)<30)", hMass_); 
+    if((jt->first).find("Data")==string::npos && applyHLTMC_)  cut =  Form("sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && abs(diTauSVFitMass-%f)<30)",hMass_); 
+    
+    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_);
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
+    float tot = h1->Integral();
+    float totalEquivalentEvents = h1->GetEffectiveEntries();
+    cutMap_MassWindow[jt->first] = tot;
+    cutMap_MassWindowE[jt->first] = totalEquivalentEvents>0 ? sqrt(totalEquivalentEvents)*(tot/totalEquivalentEvents) : 0;
+    delete h1;
+  }
+
+  for(jt = tMap.begin(); jt != tMap.end(); jt++){
+    cout<<jt->first<<endl;
+    TH1F* h1 = new TH1F("h1","",1,-10,10); 
+    TCut cut =  Form("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520  && abs(diTauSVFitMass-%f)<30)",hMass_); 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_) cut =  Form("sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && abs(diTauSVFitMass-%f)<30)", hMass_); 
+    if((jt->first).find("Data")==string::npos && applyHLTMC_) cut =  Form("sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && abs(diTauSVFitMass-%f)<30)",hMass_); 
+    
+    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_);
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_VBF[jt->first] = tot;
@@ -425,10 +482,13 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
-    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    TCut cut =  Form("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && abs(diTauSVFitMass-%f)<30)",hMass_); 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_) cut =  Form("sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20  && abs(diTauSVFitMass-%f)<30)",hMass_);  
+    if((jt->first).find("Data")==string::npos && applyHLTMC_) cut =  Form("sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && abs(diTauSVFitMass-%f)<30)",hMass_);  
+    
+    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_);
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_JetVeto[jt->first] = tot;
@@ -439,10 +499,13 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
-    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    TCut cut =  Form("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1  && abs(diTauSVFitMass-%f)<30)",hMass_); 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_)  cut =  Form("sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1 && abs(diTauSVFitMass-%f)<30)",hMass_); 
+    if((jt->first).find("Data")==string::npos && applyHLTMC_)  cut =  Form("sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1 && abs(diTauSVFitMass-%f)<30)",hMass_); 
+    
+    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_);
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_antiBtag[jt->first] = tot;
@@ -453,10 +516,17 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  (jt->first).find("Data")!=string::npos ? "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20  && jetsBtagHE1<2.1 && HLTmatch==1)" : "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04))  && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
-    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    TCut cut =  (jt->first).find("Data")!=string::npos ? "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20  && jetsBtagHE1<2.1 && diTauSVFitMass>85 && diTauSVFitMass<145 && HLTmatch==1)" : "sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1 && diTauSVFitMass>85 && diTauSVFitMass<145)"; 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_){
+      cut = "sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20  && jetsBtagHE1<2.1 && diTauSVFitMass>85 && diTauSVFitMass<145 && HLTmatch==1)";
+    }
+    if((jt->first).find("Data")==string::npos && applyHLTMC_){
+      cut = "sampleWeight*puWeight*(HLTx==1 && tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1 && diTauSVFitMass>85 && diTauSVFitMass<145 && HLTmatch==1)";
+    }
+
+    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_);
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_HLT[jt->first] = tot;
@@ -471,10 +541,12 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
   allFilters.push_back(cutMap_OS);
   allFilters.push_back(cutMap_2jets);
   allFilters.push_back(cutMap_VBFPre);
+  allFilters.push_back(cutMap_MassWindow);
   allFilters.push_back(cutMap_VBF);
   allFilters.push_back(cutMap_JetVeto);
   allFilters.push_back(cutMap_antiBtag);
-  allFilters.push_back(cutMap_HLT);
+  //allFilters.push_back(cutMap_MassWindow);
+  //allFilters.push_back(cutMap_HLT);
 
   allFiltersE.push_back(cutMap_TauIsoE);
   allFiltersE.push_back(cutMap_ElecIsoE);
@@ -483,10 +555,12 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
   allFiltersE.push_back(cutMap_OSE);
   allFiltersE.push_back(cutMap_2jetsE);
   allFiltersE.push_back(cutMap_VBFPreE);
+  allFiltersE.push_back(cutMap_MassWindowE);
   allFiltersE.push_back(cutMap_VBFE);
   allFiltersE.push_back(cutMap_JetVetoE);
   allFiltersE.push_back(cutMap_antiBtagE);
-  allFiltersE.push_back(cutMap_HLTE);
+  //allFiltersE.push_back(cutMap_MassWindowE);
+  //allFiltersE.push_back(cutMap_HLTE);
 
   std::vector<std::pair<float,float> > SMsums;
 
@@ -569,7 +643,7 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
       leg->AddEntry(h1,"t#bar{t}+jets","F");
     }
     if( (samples[k]).find("SingleTop")!=string::npos ) {
-      h1->SetFillColor(29);
+      h1->SetFillColor(kMagenta);
       leg->AddEntry(h1,"single-t","F");
     }
     if( (samples[k]).find("Wjets")!=string::npos ) {
@@ -645,17 +719,31 @@ void cutFlowStudyElec( Double_t hltEff_=0.8 , Int_t applyHLT_ = 1 )
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 ) 
+void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLTData_ = 1, Int_t applyHLTMC_ = 0 , Float_t hMass_ = 115) 
 {
   
-  ofstream out("cutFlow_MuTauStream_iter2.txt");
+  
+  ofstream out(Form("cutFlow_MuTauStream_iter2_%.0f.txt",hMass_)); 
   out.precision(4);
 
-  TCut hlt("((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261))");
+  TCut hltData("((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261))");
+  TCut hltMC("HLTx==1");
  
   TFile *fFullData                = new TFile("/data_CMS/cms/lbianchini//MuTauStream2011_iter2/treeMuTauStream_Run2011-Mu.root","READ"); 
-  TFile *fFullSignalVBF           = new TFile("/data_CMS/cms/lbianchini//MuTauStream2011_iter2/treeMuTauStream_VBFH115-Mu-powheg-PUS1.root","READ"); 
-  TFile *fFullSignalGGH           = new TFile("/data_CMS/cms/lbianchini//MuTauStream2011_iter2/treeMuTauStream_GGFH115-Mu-powheg-PUS1.root","READ");  
+  TFile *fFullSignalVBF           = new TFile(Form("/data_CMS/cms/lbianchini//MuTauStream2011_iter2/treeMuTauStream_VBFH%.0f-Mu-powheg-PUS1.root",hMass_),"READ"); 
+
+  float equivalentGGMass = 115;
+  float scaleGGH = 1.0;
+    if(hMass_ == 125){
+      equivalentGGMass = 120;
+      scaleGGH = 0.821;
+    }
+  if(hMass_ == 135){
+    equivalentGGMass = 130;
+    scaleGGH = 0.757;
+  }
+
+  TFile *fFullSignalGGH           = new TFile(Form("/data_CMS/cms/lbianchini//MuTauStream2011_iter2/treeMuTauStream_GGFH%.0f-Mu-powheg-PUS1.root",equivalentGGMass),"READ");  
   TFile *fFullBackgroundDYTauTau  = new TFile("/data_CMS/cms/lbianchini/MuTauStream2011_iter2/treeMuTauStream_DYJets-Mu-50-madgraph-PUS1.root","READ"); 
   TFile *fFullBackgroundDYMuMu    = new TFile("/data_CMS/cms/lbianchini/MuTauStream2011_iter2/treeMuTauStream_DYJets-Mu-50-madgraph-PUS1.root","READ"); 
   TFile *fFullBackgroundWJets     = new TFile("/data_CMS/cms/lbianchini//MuTauStream2011_iter2/treeMuTauStream_WJets-Mu-madgraph-PUS1.root","READ"); 
@@ -666,8 +754,8 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
 
   // OpenNTuples
   TString fDataName                = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011_iter2/Inclusive/nTupleRun2011-Mu_Open_MuTauStream.root";
-  TString fSignalNameVBF           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011_iter2/Inclusive/nTupleVBFH115-Mu-powheg-PUS1_Open_MuTauStream.root";
-  TString fSignalNameGGH           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011_iter2/Inclusive/nTupleGGFH115-Mu-powheg-PUS1_Open_MuTauStream.root";
+  TString fSignalNameVBF           = Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011_iter2/Inclusive/nTupleVBFH%.0f-Mu-powheg-PUS1_Open_MuTauStream.root",hMass_);
+  TString fSignalNameGGH           = Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011_iter2/Inclusive/nTupleGGFH%.0f-Mu-powheg-PUS1_Open_MuTauStream.root",equivalentGGMass);
   TString fBackgroundNameDYTauTau  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011_iter2/Inclusive/nTupleDYJets-Mu-50-madgraph-PUS1_Open_MuTauStream.root";
   TString fBackgroundNameDYMuMu    = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011_iter2/Inclusive/nTupleDYJets-Mu-50-madgraph-PUS1_Open_MuTauStream.root";
   TString fBackgroundNameWJets     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011_iter2/Inclusive/nTupleWJets-Mu-madgraph-PUS1_Open_MuTauStream.root";
@@ -750,8 +838,9 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
   samples.push_back("Ztautau");
   samples.push_back("Data");
 
+  float kFactorQCD=1.7;
   std::map<std::string,float> crossSec;
-  crossSec["ggH115"]=( 7.65e-02 * 18.13 );
+  crossSec["ggH115"]=( 7.65e-02 * 18.13 * scaleGGH);
   crossSec["qqH115"]=( 0.1012);
   crossSec["DiBoson"]=( -1  );
   crossSec["TTbar"]=( 157.5 );
@@ -759,11 +848,10 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
   crossSec["Wjets"]=( 31314.0);
   crossSec["ZfakeTau"]=( 3048  );
   crossSec["Ztautau"]=( 3048  );
-  crossSec["QCD"]=( 296600000*0.0002855 );
+  crossSec["QCD"]=( 296600000*0.0002855 * kFactorQCD); //K-factor from fit in signal region 1.7
   crossSec["Data"]=( 0 );
 
   float Lumi = 24.86+159.15;
-
 
   // here I choose the order in the stack
   std::vector<string> filters;
@@ -783,10 +871,12 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
   filters.push_back("OS");
   filters.push_back("2-jets");
   filters.push_back("2-tag jets");
+  filters.push_back("Mass Window");
   filters.push_back("VBF cuts");
   filters.push_back("jet-veto");
   filters.push_back("anti-b tag");
-  filters.push_back("HLT-matching");
+  //filters.push_back("Mass Window");
+  //filters.push_back("HLT-matching");
 
   // here I define the map between a sample name and its file ptr
   std::map<std::string,TFile*> fullMap;
@@ -860,6 +950,9 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
   std::map<std::string,float> cutMap_antiBtag;
   std::map<std::string,float> cutMap_antiBtagE;
 
+  std::map<std::string,float> cutMap_MassWindow;
+  std::map<std::string,float> cutMap_MassWindowE;
+
   std::map<std::string,float> cutMap_HLT;
   std::map<std::string,float> cutMap_HLTE;
 
@@ -918,9 +1011,12 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0)";
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
-    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_) cut = "sampleWeight*puWeight*(((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) && tightestHPSWP>0)";
+    if((jt->first).find("Data")==string::npos && applyHLTMC_) cut = "sampleWeight*puWeight*(HLTmu==1 && tightestHPSWP>0)";
+
+    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_);
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_TauIso[jt->first] = tot;
@@ -932,9 +1028,12 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLTData_) cut =  "sampleWeight*puWeight*(((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1)"; 
+    if((jt->first).find("Data")==string::npos && applyHLTMC_) cut =  "sampleWeight*puWeight*(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1)"; 
+    
+    jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_MuIso[jt->first] = tot;
@@ -946,9 +1045,12 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLTData_)  cut =  "sampleWeight*puWeight*(((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0)"; 
+    if((jt->first).find("Data")==string::npos && applyHLTMC_)  cut =  "sampleWeight*puWeight*(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0)"; 
+    
+    jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_DiMuVeto[jt->first] = tot;
@@ -960,9 +1062,12 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLTData_) cut =  "sampleWeight*puWeight*(((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40)"; 
+    if((jt->first).find("Data")==string::npos && applyHLTMC_) cut =  "sampleWeight*puWeight*(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40)"; 
+
+    jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_Mt[jt->first] = tot;
@@ -974,9 +1079,12 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLTData_) cut =  "sampleWeight*puWeight*(((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)";
+    if((jt->first).find("Data")==string::npos && applyHLTMC_) cut =  "sampleWeight*puWeight*(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)";
+
+    jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_OS[jt->first] = tot;
@@ -988,9 +1096,12 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLTData_)  cut =  "sampleWeight*puWeight*(((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15)"; 
+    if((jt->first).find("Data")==string::npos && applyHLTMC_)  cut =  "sampleWeight*puWeight*(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15)"; 
+    
+    jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_2jets[jt->first] = tot;
@@ -1002,9 +1113,12 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1  && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15 && eta1*eta2<0)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLTData_)  cut =  "sampleWeight*puWeight*(((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1  && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15 && eta1*eta2<0)";  
+    if((jt->first).find("Data")==string::npos && applyHLTMC_)   cut =  "sampleWeight*puWeight*(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1  && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>20 && pt2>15 && eta1*eta2<0)";
+    
+    jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_VBFPre[jt->first] = tot;
@@ -1012,13 +1126,35 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
     delete h1;
   }
 
+
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  Form("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 &&  abs(diTauSVFitMass-%f)<30 )",hMass_); 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_)  cut =  Form("sampleWeight*puWeight*(((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 &&  abs(diTauSVFitMass-%f)<30)",hMass_);  
+    if((jt->first).find("Data")==string::npos && applyHLTMC_)  cut =  Form("sampleWeight*puWeight*(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && abs(diTauSVFitMass-%f)<30)",hMass_);  
+    
+    jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
+    float tot = h1->Integral();
+    float totalEquivalentEvents = h1->GetEffectiveEntries();
+    cutMap_MassWindow[jt->first] = tot;
+    cutMap_MassWindowE[jt->first] = totalEquivalentEvents>0 ? sqrt(totalEquivalentEvents)*(tot/totalEquivalentEvents) : 0;
+    delete h1;
+  }
+
+
+
+  for(jt = tMap.begin(); jt != tMap.end(); jt++){
+    cout<<jt->first<<endl;
+    TH1F* h1 = new TH1F("h1","",1,-10,10); 
+    TCut cut =  Form("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && abs(diTauSVFitMass-%f)<30)",hMass_); 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_) cut =  Form("sampleWeight*puWeight*(((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && abs(diTauSVFitMass-%f)<30)",hMass_);  
+    if((jt->first).find("Data")==string::npos && applyHLTMC_) cut =  Form("sampleWeight*puWeight*(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && abs(diTauSVFitMass-%f)<30)",hMass_); 
+    jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_VBF[jt->first] = tot;
@@ -1029,10 +1165,13 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  Form("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && abs(diTauSVFitMass-%f)<30)",hMass_);
+    if((jt->first).find("Data")!=string::npos && applyHLTData_) cut =  Form("sampleWeight*puWeight*(((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && abs(diTauSVFitMass-%f)<30)",hMass_);
+    if((jt->first).find("Data")==string::npos && applyHLTMC_) cut =  Form("sampleWeight*puWeight*(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && abs(diTauSVFitMass-%f)<30)",hMass_);
+    
+    jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_JetVeto[jt->first] = tot;
@@ -1043,10 +1182,13 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
-    TCut cut =  "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1)"; 
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
+    TCut cut =  Form("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1 && abs(diTauSVFitMass-%f)<30)",hMass_); 
+    if((jt->first).find("Data")!=string::npos && applyHLTData_)  cut =  Form("sampleWeight*puWeight*(((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1 && abs(diTauSVFitMass-%f)<30)",hMass_);
+    if((jt->first).find("Data")==string::npos && applyHLTMC_)  cut =  Form("sampleWeight*puWeight*(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1 && abs(diTauSVFitMass-%f)<30)",hMass_);  
+    
+    jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_antiBtag[jt->first] = tot;
@@ -1054,13 +1196,21 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
     delete h1;
   }
 
+
   for(jt = tMap.begin(); jt != tMap.end(); jt++){
     cout<<jt->first<<endl;
     TH1F* h1 = new TH1F("h1","",1,-10,10); 
     TCut cut =  (jt->first).find("Data")!=string::npos ? "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20  && jetsBtagHE1<2.1 && HLTmatch==1)" : "sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1  && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1)";
-    if((jt->first).find("Data")!=string::npos && applyHLT_)  jt->second->Draw("etaL1>>h1",cut&&hlt);
-    else jt->second->Draw("etaL1>>h1",cut);
+    if((jt->first).find("Data")!=string::npos && applyHLTData_) {
+      cut = "sampleWeight*puWeight*( ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20  && jetsBtagHE1<2.1 && HLTmatch==1)";
+    }
+    if(((jt->first).find("Data")==string::npos && applyHLTMC_)){
+      cut = "sampleWeight*puWeight*(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1  && muFlag==0 && MtLeg1<40 && diTauCharge==0 && pt1>38 && pt2>25 && eta1*eta2<0 && Deta>2.7 && Mjj>520 && ptVeto<20 && jetsBtagHE1<2.1 &&  HLTmatch==1)";
+    }
+    
+    jt->second->Draw("etaL1>>h1",cut);
     if((jt->first).find("Data")==string::npos) h1->Scale(Lumi/1000*hltEff_); 
+    if((jt->first).find("QCD")!=string::npos) h1->Scale(kFactorQCD); 
     float tot = h1->Integral();
     float totalEquivalentEvents = h1->GetEffectiveEntries();
     cutMap_HLT[jt->first] = tot;
@@ -1075,10 +1225,12 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
   allFilters.push_back(cutMap_OS);
   allFilters.push_back(cutMap_2jets);
   allFilters.push_back(cutMap_VBFPre);
+  allFilters.push_back(cutMap_MassWindow);
   allFilters.push_back(cutMap_VBF);
   allFilters.push_back(cutMap_JetVeto);
   allFilters.push_back(cutMap_antiBtag);
-  allFilters.push_back(cutMap_HLT);
+  //allFilters.push_back(cutMap_MassWindow);
+  //allFilters.push_back(cutMap_HLT);
 
   allFiltersE.push_back(cutMap_TauIsoE);
   allFiltersE.push_back(cutMap_MuIsoE);
@@ -1087,10 +1239,12 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
   allFiltersE.push_back(cutMap_OSE);
   allFiltersE.push_back(cutMap_2jetsE);
   allFiltersE.push_back(cutMap_VBFPreE);
+  allFiltersE.push_back(cutMap_MassWindowE);
   allFiltersE.push_back(cutMap_VBFE);
   allFiltersE.push_back(cutMap_JetVetoE);
   allFiltersE.push_back(cutMap_antiBtagE);
-  allFiltersE.push_back(cutMap_HLTE);
+  //allFiltersE.push_back(cutMap_MassWindowE);
+  //allFiltersE.push_back(cutMap_HLTE);
 
   std::vector<std::pair<float,float> > SMsums;
 
@@ -1173,7 +1327,7 @@ void cutFlowStudyMu( Double_t hltEff_=0.9218*0.9, Int_t applyHLT_ = 1 )
       leg->AddEntry(h1,"t#bar{t}+jets","F");
     }
     if( (samples[k]).find("SingleTop")!=string::npos ) {
-      h1->SetFillColor(29);
+      h1->SetFillColor(kMagenta);
       leg->AddEntry(h1,"single-t","F");
     }
     if( (samples[k]).find("Wjets")!=string::npos ) {

@@ -35,8 +35,8 @@ void plot(bool sgn_ = true, bool doROC_ = false, int steps_ = 50){
   leg->SetFillColor(10);
   leg->SetTextSize(0.04);
 
-  TFile *fSgn = new TFile("nTupleDYJets-Mu-50-madgraph-PUS1_Open_MuTauStream.root","READ");
-  TFile *fBkg = new TFile("nTupleQCDmu_Open_MuTauStream.root","READ");
+  TFile *fSgn = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011_iter2/Inclusive/nTupleDYJets-Mu-50-madgraph-PUS1_Open_MuTauStream.root","READ");
+  TFile *fBkg = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011_iter2/Inclusive/nTupleQCDmu_Open_MuTauStream.root","READ");
 
   if((fSgn->IsZombie()) || (fBkg->IsZombie()) ){
     cout << "No file" << endl;
@@ -60,8 +60,11 @@ void plot(bool sgn_ = true, bool doROC_ = false, int steps_ = 50){
   TTree* treeBkg = (TTree*)fBkg->Get("outTreePtOrd");
 
   TFile* dummy = new TFile("dummy.root","RECREATE");
-  TTree* treeSgnCut = (TTree*)treeSgn->CopyTree("isTauLegMatched && tightestHPSWP>0");  
+  //TTree* treeSgnCut = (TTree*)treeSgn->CopyTree("isTauLegMatched && pt1>25 && pt2>20 && eta1*eta2<0");  
+  //TTree* treeBkgCut = (TTree*)treeBkg->CopyTree("tightestHPSWP>-1 && pt1>25 && pt2>20 && eta1*eta2<0");  
+  TTree* treeSgnCut = (TTree*)treeSgn->CopyTree("isTauLegMatched");  
   TTree* treeBkgCut = (TTree*)treeBkg->CopyTree("tightestHPSWP>0");  
+
 
   cout << treeSgnCut->GetEntries() << endl;
   cout << treeBkgCut->GetEntries() << endl;
@@ -178,7 +181,7 @@ void plot(bool sgn_ = true, bool doROC_ = false, int steps_ = 50){
 	aMapSgn[isoDep[k]]->SetMarkerColor(kBlack);
 	aMapSgn[isoDep[k]]->SetMarkerSize(1.4);
 	aMapSgn[isoDep[k]]->SetMarkerStyle(kFullCircle);
-	aMapSgn[isoDep[k]]->GetYaxis()->SetRangeUser(0.80,1.1);
+	aMapSgn[isoDep[k]]->GetYaxis()->SetRangeUser(0.50,1.1);
 	leg->AddEntry(aMapSgn[isoDep[k]],"pfNoPileUp","P");
 	aMapSgn[isoDep[k]]->Draw("P");
       }
@@ -221,7 +224,7 @@ void plot(bool sgn_ = true, bool doROC_ = false, int steps_ = 50){
 	aMapBkg[isoDep[k]]->SetMarkerColor(kBlack);
 	aMapSgn[isoDep[k]]->SetMarkerSize(1.4);
 	aMapBkg[isoDep[k]]->SetMarkerStyle(kFullCircle);
-	aMapSgn[isoDep[k]]->GetYaxis()->SetRangeUser(0.0,0.04);
+	aMapSgn[isoDep[k]]->GetYaxis()->SetRangeUser(0.0,0.10);
 	leg->AddEntry(aMapBkg[isoDep[k]],"pfNoPileUp","P");
 	aMapBkg[isoDep[k]]->Draw("P");
       }
@@ -279,7 +282,7 @@ void plot(bool sgn_ = true, bool doROC_ = false, int steps_ = 50){
 	roc[isoDep[k]]->SetMarkerColor(kBlack);
 	roc[isoDep[k]]->SetMarkerSize(1.4);
 	roc[isoDep[k]]->SetMarkerStyle(kFullCircle);
-	roc[isoDep[k]]->GetYaxis()->SetRangeUser(0.80,1.1);
+	roc[isoDep[k]]->GetYaxis()->SetRangeUser(0.50,1.1);
 	leg->AddEntry(roc[isoDep[k]],"pfNoPileUp","P");
 	roc[isoDep[k]]->Draw("P");
       }

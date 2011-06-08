@@ -84,8 +84,10 @@ void makeTrees_ElecTauStream(int index = 4){
   samples.push_back("G1Jet");                   crossSec.push_back( -1 );
   samples.push_back("VBFH115-powheg-PUS1");     crossSec.push_back( 0.1012);
   samples.push_back("GGFH115-powheg-PUS1");     crossSec.push_back( 7.65e-02 * 18.13 );
-  //samples.push_back("VBFH135-powheg-PUS1");     crossSec.push_back( 0.05049);
-  //samples.push_back("GGFH130-powheg-PUS1");     crossSec.push_back( 4.52e-02 * 13.8 );
+  samples.push_back("VBFH125-powheg-PUS1");     crossSec.push_back( 6.37e-02 *  1.332 );
+  samples.push_back("GGFH120-powheg-PUS1");     crossSec.push_back( 7.11e-02 * 16.63  );
+  samples.push_back("VBFH135-powheg-PUS1");     crossSec.push_back( 4.52e-02 *  1.100 );
+  samples.push_back("GGFH130-powheg-PUS1");     crossSec.push_back( 5.49e-02 * 14.12 );
 
 
   // normalization Lumi
@@ -422,8 +424,10 @@ void makeTrees_MuTauStream(int index = 4){
   //samples.push_back("DYToMuMu-20-PUS1");         crossSec.push_back( 1666  );
   //samples.push_back("DYToTauTau-Mu-20-PUS1");    crossSec.push_back( 1666  );
   //samples.push_back("Zjets-Mu-alpgen-PUS1");     crossSec.push_back( -1 );
-  samples.push_back("VBFH135-Mu-powheg-PUS1");     crossSec.push_back( 0.05049);
-  samples.push_back("GGFH130-Mu-powheg-PUS1");     crossSec.push_back( 0.624 );
+  samples.push_back("VBFH125-Mu-powheg-PUS1");     crossSec.push_back( 6.37e-02 *  1.332 );
+  samples.push_back("GGFH120-Mu-powheg-PUS1");     crossSec.push_back( 7.11e-02 * 16.63  );
+  samples.push_back("VBFH135-Mu-powheg-PUS1");     crossSec.push_back( 4.52e-02 *  1.100 );
+  samples.push_back("GGFH130-Mu-powheg-PUS1");     crossSec.push_back( 5.49e-02 * 14.12 );
 
   // normalization Lumi
   Float_t Lumi=1000;
@@ -748,7 +752,7 @@ void makeTrees_MuTauStream(int index = 4){
 
 void doAllSamplesElec(){
  
-  for( unsigned int k = 0; k < 10 ; k++)  makeTrees_ElecTauStream(k);
+  for( unsigned int k = 10; k < 14 ; k++)  makeTrees_ElecTauStream(k);
 
   return;
 
@@ -756,7 +760,7 @@ void doAllSamplesElec(){
 
 void doAllSamplesMu(){
  
-  for( unsigned int k = 0; k < 9 ; k++)  makeTrees_MuTauStream(k);
+  for( unsigned int k = 9; k < 13 ; k++)  makeTrees_MuTauStream(k);
 
   return;
 

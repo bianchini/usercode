@@ -8,18 +8,22 @@
 
   float Lumi = 185.37;
 
-  float hltCorr = 0.8;
+  float hltCorr = 1.0;
 
   TCut hlt("HLTx==1");
   
-  TCut signal_region_data("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 )");
+  TCut signal_region_MC("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && HLTx==1 )");
   TCut signal_region("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0)");
   TCut signal_SS_region("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge!=0)");
+  TCut signal_SS_region_MC("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge!=0 && HLTx==1)");
   TCut Wenrich_OS_region("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1>60 && diTauCharge==0)");
+  TCut Wenrich_OS_region_MC("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1>60 && diTauCharge==0 && HLTx==1)");
   TCut Wenrich_SS_region("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1>60 && diTauCharge!=0)");
+  TCut Wenrich_SS_region_MC("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1>60 && diTauCharge!=0 && HLTx==1)");
   TCut Wrelaxed_OS_region("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && diTauCharge==0)");
   TCut Wrelaxed_SS_region("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && diTauCharge!=0)");
   TCut QCDenrich_OS_region("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta>0.15 && elecFlag==0 && MtLeg1<40 && diTauCharge==0)");
+  TCut QCDenrich_OS_region_MC("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta>0.15 && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && HLTx==1)");
   TCut QCDenrich_SS_region("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta>0.15 && elecFlag==0 && MtLeg1<40 && diTauCharge!=0)");
   TCut ZEleEleFakeJet_OS_region("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==1 && MtLeg1<40 && diTauCharge==0)");
   TCut ZEleEleFakeJet_SS_region("sampleWeight*puWeight*(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==1 && MtLeg1<40 && diTauCharge!=0) ");
@@ -39,6 +43,9 @@
   TFile *fWJets = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011_iter2/Inclusive/nTupleWJets-madgraph-PUS1_Open_ElecTauStream.root","READ");
   TTree* treeWJets = (TTree*)fWJets->Get("outTreePtOrd");
 
+  TFile *fQCD = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011_iter2/Inclusive/nTupleQCD_Open_ElecTauStream.root","READ");
+  TTree* treeQCD = (TTree*)fQCD->Get("outTreePtOrd");
+
   TFile *fZTauTau = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream2011_iter2/Inclusive/nTupleDYJets-50-madgraph-PUS1_Open_ElecTauStream.root","READ");
   TTree* treeZTauTauAll = (TTree*)fZTauTau->Get("outTreePtOrd");
   TFile* dummy1 = new TFile("dummy1.root","RECREATE");
@@ -50,27 +57,27 @@
 
   //////////////// DiBoson + TTbar + SingleTop
  
-  treeDiBoson->Draw("etaL1>>h1",signal_region);
+  treeDiBoson->Draw("etaL1>>h1",signal_region_MC);
   float N_DiBoson_signal_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
-  treeDiBoson->Draw("etaL1>>h1",Wenrich_OS_region);
+  treeDiBoson->Draw("etaL1>>h1",Wenrich_OS_region_MC);
   float N_DiBoson_Wenrich_OS_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
-  treeTTbar->Draw("etaL1>>h1",signal_region);
+  treeTTbar->Draw("etaL1>>h1",signal_region_MC);
   float N_TTbar_signal_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
-  treeTTbar->Draw("etaL1>>h1",Wenrich_OS_region);
+  treeTTbar->Draw("etaL1>>h1",Wenrich_OS_region_MC);
   float N_TTbar_Wenrich_OS_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
-  treeSingleTop->Draw("etaL1>>h1",signal_region);
+  treeSingleTop->Draw("etaL1>>h1",signal_region_MC);
   float N_SingleTop_signal_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
-  treeSingleTop->Draw("etaL1>>h1",Wenrich_OS_region);
+  treeSingleTop->Draw("etaL1>>h1",Wenrich_OS_region_MC);
   float N_SingleTop_Wenrich_OS_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
@@ -95,7 +102,7 @@
   N_ZEleEleFakeJet_signal_SS_region *= (  (1-eA+eA*(1-eI))/(eA*eI) );
   float N_ZEleEleFakeJet_signal_region =  N_ZEleEleFakeJet_signal_SS_region;
 
-  treeZFakes->Draw("etaL1>>h1",signal_region);
+  treeZFakes->Draw("etaL1>>h1",signal_region_MC);
   float Exp_ZFake_signal_region = (float)h1->Integral();
   Exp_ZFake_signal_region *= (Lumi/1000.*hltCorr);
   h1->Reset();
@@ -174,9 +181,15 @@
   float SSOSratio = N_QCD_QCDenrich_OS_region/N_QCD_QCDenrich_SS_region;
   float N_QCD_signal_region = N_QCD_signal_SS_region * SSOSratio;
 
+  treeQCD->Draw("etaL1>>h1",signal_region_MC);
+  float Exp_QCD_signal_region = (float)h1->Integral();
+  Exp_QCD_signal_region *= (Lumi/1000.*hltCorr);
+  h1->Reset();
+
   cout << "SSOSratio = " << SSOSratio  << endl;
   cout << "N_QCD_signal_SS_region = " << N_QCD_signal_SS_region << endl;
   cout << "N_QCD_signal_region = " << N_QCD_signal_region << endl;
+  cout << "Exp_QCD_signal_region = " << Exp_QCD_signal_region << endl;
 
   cout << "//////////////////////////////////////" << endl;
  
@@ -195,7 +208,7 @@
   N_Z_signal_region -= N_WElecNu_signal_region;
   N_Z_signal_region -= N_WTauNu_signal_region;
 
-  treeZTauTau->Draw("etaL1>>h1",signal_region);
+  treeZTauTau->Draw("etaL1>>h1",signal_region_MC);
   float Exp_Z_signal_region = (float)h1->Integral();
   Exp_Z_signal_region *= (Lumi/1000.*hltCorr);
   h1->Reset();
@@ -207,14 +220,14 @@
 
   TFile* dummy1 = new TFile("dummy2.root","RECREATE");
   TTree *treeDataCut = (TTree*)treeData->CopyTree("(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && HLTx==1)");
-  TTree *treeQCDCut = (TTree*)treeData->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta>0.15 && elecFlag==0 && MtLeg1<40 && diTauCharge!=0)");
-  TTree *treeQCDIsoCut = (TTree*)treeData->CopyTree("(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge!=0)");
-  TTree *treeZTauTauCut = (TTree*)treeZTauTau->CopyTree("(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0)");
-  TTree *treeZFakesCut = (TTree*)treeZFakes->CopyTree("(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0)");
-  TTree *treeDiBosonCut = (TTree*)treeDiBoson->CopyTree("(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0)");
-  TTree *treeTTbarCut = (TTree*)treeTTbar->CopyTree("(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0)");
-  TTree *treeSingleTopCut = (TTree*)treeSingleTop->CopyTree("(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0)");
-  TTree *treeWJetsCut = (TTree*)treeWJets->CopyTree("(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0)");
+  TTree *treeQCDCut = (TTree*)treeData->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta>0.15 && elecFlag==0 && MtLeg1<40 && diTauCharge!=0 && HLTx==1)");
+  TTree *treeQCDIsoCut = (TTree*)treeData->CopyTree("(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge!=0 && HLTx==1)");
+  TTree *treeZTauTauCut = (TTree*)treeZTauTau->CopyTree("(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && HLTx==1)");
+  TTree *treeZFakesCut = (TTree*)treeZFakes->CopyTree("(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && HLTx==1)");
+  TTree *treeDiBosonCut = (TTree*)treeDiBoson->CopyTree("(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && HLTx==1)");
+  TTree *treeTTbarCut = (TTree*)treeTTbar->CopyTree("(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && HLTx==1)");
+  TTree *treeSingleTopCut = (TTree*)treeSingleTop->CopyTree("(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && HLTx==1)");
+  TTree *treeWJetsCut = (TTree*)treeWJets->CopyTree("(tightestHPSWP>0 && ((abs(etaL1)<1.5 && combRelIsoLeg1DBeta<0.08) || (abs(etaL1)>1.5 && combRelIsoLeg1DBeta<0.04)) && elecFlag==0 && MtLeg1<40 && diTauCharge==0 && HLTx==1)");
 
   RooRealVar Nqcd("Nqcd","",        100,0,10000);
   RooRealVar Nztt("Nztt","",        100,0,10000);
@@ -285,7 +298,7 @@
 
   RooAddPdf model("model","",RooArgList(zttPdf,qcdPdf,wenPdf,ttbPdf,zFakesPdf,dibPdf,stpPdf),RooArgList(Nztt,Nqcd,Nwen,Nttb,Nzfk,Ndib,Nstp));
 
-  RooFitResult* res = model.fitTo(dataDataHist , Extended(1), Minos(1), Save(1), NumCPU(4), ExternalConstraints( RooArgSet(McNqcdConstraint,McNzttConstraint,McNwenConstraint,McNttbConstraint,McNstpConstraint,McNdibConstraint,McNzfkConstraint) )  ,SumW2Error(1));
+  RooFitResult* res = model.fitTo(dataDataHist , Extended(1), Minos(1), Save(1), NumCPU(4), ExternalConstraints( RooArgSet(McNqcdConstraint,/*McNzttConstraint,*/McNwenConstraint,McNttbConstraint,McNstpConstraint,McNdibConstraint,McNzfkConstraint) )  ,SumW2Error(1));
 
   RooArgSet fitParam(res->floatParsFinal());
   RooRealVar* Fit_Z_signal_region = (RooRealVar*)(&fitParam["Nztt"]);

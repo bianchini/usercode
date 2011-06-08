@@ -19,7 +19,7 @@ tag70 = cms.EDFilter("PATElectronRefSelector",
 ######################################################################################
 probe = cms.EDFilter("PATTauRefSelector",
                      src = cms.InputTag("selectedPatTaus"),
-                     cut = cms.string('pt>15.0 && abs(eta)<2.5'),
+                     cut = cms.string('pt>20.0 && abs(eta)<2.3'),
                      filter = cms.bool(False)
                      )
 probeID = cms.EDFilter("PATTauRefSelector",
@@ -65,9 +65,9 @@ oneTp70IDLoose = cms.EDFilter("CandViewCountFilter",
                               minNumber = cms.uint32(1)
                               )
 oneTp70IDMedium = cms.EDFilter("CandViewCountFilter",
-                            src = cms.InputTag("tnp70IDMedium"),
-                            minNumber = cms.uint32(1)
-                            )
+                               src = cms.InputTag("tnp70IDMedium"),
+                               minNumber = cms.uint32(1)
+                               )
 oneTp70IDTight = cms.EDFilter("CandViewCountFilter",
                             src = cms.InputTag("tnp70IDTight"),
                             minNumber = cms.uint32(1)
@@ -129,7 +129,7 @@ etoTau70IDLoose = cms.EDAnalyzer("TagProbeFitTreeProducer",
     #nHitsLeadTrack = cms.string("leadPFChargedHadrCand.trackRef.numberOfValidHits"),
     tauVisMass = cms.string("mass"),
     ),
-                        flags = cms.PSet(
+                                 flags = cms.PSet(
     tauAntiELoose    =  cms.string('tauID("againstElectronLoose")>0.5'),
     tauAntiEMedium   =  cms.string('tauID("againstElectronMedium")>0.5'),
     tauAntiETight    =  cms.string('tauID("againstElectronTight")>0.5'),

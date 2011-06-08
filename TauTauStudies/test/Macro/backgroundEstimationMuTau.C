@@ -8,21 +8,28 @@
 
   float Lumi = 24.86+159.15;
 
-  float hltCorr = 0.92*0.9;
+  float hltCorr = 0.92;
 
   TCut hlt("( ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) )");
+  TCut hltMC("HLTmu==1");
   
-  TCut signal_region_data("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 )");
+  TCut signal_region_MC("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && HLTmu==1)");
   TCut signal_region("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
   TCut signal_SS_region("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge!=0)");
+  TCut signal_SS_region_MC("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge!=0 && HLTmu==1)");
   TCut Wenrich_OS_region("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1>60 && diTauCharge==0)");
+  TCut Wenrich_OS_region_MC("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1>60 && diTauCharge==0 && HLTmu==1)");
   TCut Wenrich_SS_region("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1>60 && diTauCharge!=0)");
+  TCut Wenrich_SS_region_MC("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1>60 && diTauCharge!=0 && HLTmu==1)");
   TCut Wrelaxed_OS_region("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && diTauCharge==0)");
   TCut Wrelaxed_SS_region("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && diTauCharge!=0)");
   TCut QCDenrich_OS_region("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta>0.15 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
+  TCut QCDenrich_OS_region_MC("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta>0.15 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && HLTmu==1)");
   TCut QCDenrich_SS_region("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta>0.15 && muFlag==0 && MtLeg1<40 && diTauCharge!=0)");
+  TCut QCDenrich_SS_region_MC("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta>0.15 && muFlag==0 && MtLeg1<40 && diTauCharge!=0 && HLTmu==1)");
   TCut ZMuMuFakeJet_OS_region("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==1 && MtLeg1<40 && diTauCharge==0)");
   TCut ZMuMuFakeJet_SS_region("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==1 && MtLeg1<40 && diTauCharge!=0) ");
+  TCut ZMuMuFakeJet_SS_region_MC("sampleWeight*puWeight*(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==1 && MtLeg1<40 && diTauCharge!=0 && HLTmu==1 ) ");
 
   TFile *fData = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011_iter2//Inclusive/nTupleRun2011-Mu_Open_MuTauStream.root","READ");
   TTree* treeData = (TTree*)fData->Get("outTreePtOrd");
@@ -39,6 +46,9 @@
   TFile *fWJets = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011_iter2/Inclusive/nTupleWJets-Mu-madgraph-PUS1_Open_MuTauStream.root","READ");
   TTree* treeWJets = (TTree*)fWJets->Get("outTreePtOrd");
 
+  TFile *fQCD = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011_iter2/Inclusive/nTupleQCDmu_Open_MuTauStream.root","READ");
+  TTree* treeQCD = (TTree*)fQCD->Get("outTreePtOrd");
+
   TFile *fZTauTau = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream2011_iter2/Inclusive/nTupleDYJets-Mu-50-madgraph-PUS1_Open_MuTauStream.root","READ");
   TTree* treeZTauTauAll = (TTree*)fZTauTau->Get("outTreePtOrd");
   TFile* dummy1 = new TFile("dummy1.root","RECREATE");
@@ -50,27 +60,27 @@
 
   //////////////// DiBoson + TTbar + SingleTop
  
-  treeDiBoson->Draw("etaL1>>h1",signal_region);
+  treeDiBoson->Draw("etaL1>>h1",signal_region_MC);
   float N_DiBoson_signal_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
-  treeDiBoson->Draw("etaL1>>h1",Wenrich_OS_region);
+  treeDiBoson->Draw("etaL1>>h1",Wenrich_OS_region_MC);
   float N_DiBoson_Wenrich_OS_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
-  treeTTbar->Draw("etaL1>>h1",signal_region);
+  treeTTbar->Draw("etaL1>>h1",signal_region_MC);
   float N_TTbar_signal_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
-  treeTTbar->Draw("etaL1>>h1",Wenrich_OS_region);
+  treeTTbar->Draw("etaL1>>h1",Wenrich_OS_region_MC);
   float N_TTbar_Wenrich_OS_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
-  treeSingleTop->Draw("etaL1>>h1",signal_region);
+  treeSingleTop->Draw("etaL1>>h1",signal_region_MC);
   float N_SingleTop_signal_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
-  treeSingleTop->Draw("etaL1>>h1",Wenrich_OS_region);
+  treeSingleTop->Draw("etaL1>>h1",Wenrich_OS_region_MC);
   float N_SingleTop_Wenrich_OS_region = (float)h1->Integral()*(Lumi/1000.*hltCorr);
   h1->Reset();
 
@@ -98,7 +108,7 @@
   // apply factor 2 ratio between Z->mumu, jet->tau and Z->mumu, mu->tau
   float N_ZMuMuFakeMu_signal_region = N_ZMuMuFakeJet_signal_region * 2;
 
-  treeZFakes->Draw("etaL1>>h1",signal_region);
+  treeZFakes->Draw("etaL1>>h1",signal_region&&hltMC);
   float Exp_ZFake_signal_region = (float)h1->Integral();
   Exp_ZFake_signal_region *= (Lumi/1000.*hltCorr);
   h1->Reset();
@@ -177,9 +187,15 @@
   float SSOSratio = N_QCD_QCDenrich_OS_region/N_QCD_QCDenrich_SS_region;
   float N_QCD_signal_region = N_QCD_signal_SS_region * SSOSratio;
 
+  treeQCD->Draw("etaL1>>h1",signal_region_MC);
+  float Exp_QCD_signal_region = (float)h1->Integral();
+  Exp_QCD_signal_region *= (Lumi/1000.*hltCorr);
+  h1->Reset();
+
   cout << "SSOSratio = " << SSOSratio  << endl;
   cout << "N_QCD_signal_SS_region = " << N_QCD_signal_SS_region << endl;
   cout << "N_QCD_signal_region = " << N_QCD_signal_region << endl;
+  cout << "Exp_QCD_signal_region = " << Exp_QCD_signal_region << endl;
 
   cout << "//////////////////////////////////////" << endl;
 
@@ -197,7 +213,7 @@
   N_Z_signal_region -= N_WMuNu_signal_region;
   N_Z_signal_region -= N_WTauNu_signal_region;
 
-  treeZTauTau->Draw("etaL1>>h1",signal_region);
+  treeZTauTau->Draw("etaL1>>h1",signal_region_MC);
   float Exp_Z_signal_region = (float)h1->Integral();
   Exp_Z_signal_region *= (Lumi/1000.*hltCorr);
   h1->Reset();
@@ -207,12 +223,12 @@
   TTree *treeDataCut = (TTree*)treeData->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0 && ( ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) ))");
   TTree *treeQCDCut = (TTree*)treeData->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta>0.15 && muFlag==0 && MtLeg1<40 && diTauCharge!=0)");
   TTree *treeQCDIsoCut = (TTree*)treeData->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && MtLeg1<40 && diTauCharge!=0)");
-  TTree *treeZTauTauCut = (TTree*)treeZTauTau->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
-  TTree *treeZFakesCut = (TTree*)treeZFakes->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
-  TTree *treeDiBosonCut = (TTree*)treeDiBoson->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
-  TTree *treeTTbarCut = (TTree*)treeTTbar->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
-  TTree *treeSingleTopCut = (TTree*)treeSingleTop->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
-  TTree *treeWJetsCut = (TTree*)treeWJets->CopyTree("(tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
+  TTree *treeZTauTauCut = (TTree*)treeZTauTau->CopyTree("(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
+  TTree *treeZFakesCut = (TTree*)treeZFakes->CopyTree("(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
+  TTree *treeDiBosonCut = (TTree*)treeDiBoson->CopyTree("(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
+  TTree *treeTTbarCut = (TTree*)treeTTbar->CopyTree("(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
+  TTree *treeSingleTopCut = (TTree*)treeSingleTop->CopyTree("(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
+  TTree *treeWJetsCut = (TTree*)treeWJets->CopyTree("(HLTmu==1 && tightestHPSWP>0 && combRelIsoLeg1DBeta<0.1 && muFlag==0 && MtLeg1<40 && diTauCharge==0)");
 
   RooRealVar Nqcd("Nqcd","",        100,0,10000);
   RooRealVar Nztt("Nztt","",        100,0,10000);
@@ -232,10 +248,11 @@
 
   RooRealVar mass("diTauVisMass","visible mass (GeV/c^{2})", 0 , 200);
   mass.setBins(40);
+  RooRealVar weight("puWeight","weight", 0 , 10);
 
   TH1F* data_SS = new TH1F("data_SS","",40,0,200);
-  treeQCDIsoCut->Draw("diTauVisMass>>data_SS");
   TH1F* W_SS = (TH1F*)data_SS->Clone("W_SS");
+  treeQCDIsoCut->Draw("diTauVisMass>>data_SS");
   treeWJets->Draw("diTauVisMass>>W_SS",signal_SS_region);
   W_SS->Scale((N_WMuNu_signal_SS_region+N_WTauNu_signal_SS_region)/W_SS->Integral());
   data_SS->Add(W_SS, -1 );
@@ -256,7 +273,10 @@
   RooHistPdf  qcdPdf("qcdPdf","",RooArgSet(mass),qcdDataHist);
 
   RooDataSet zttDataSet("zttDataSet","dataset for Ztautau", RooArgSet(mass), Import( *treeZTauTauCut ) );
-  RooDataHist zttDataHist("zttDataHist","",RooArgSet(mass),zttDataSet, 1.0);
+  TH1F* ztt = new TH1F("ztt","",40,0,200);
+  treeZTauTauCut->Draw("diTauVisMass>>ztt","puWeight");
+  //RooDataHist zttDataHist("zttDataHist","",RooArgSet(mass),zttDataSet, 1.0);
+  RooDataHist zttDataHist("zttDataHist","",RooArgSet(mass), Import(*ztt));
   RooHistPdf  zttPdf("zttPdf","",RooArgSet(mass),zttDataHist);
 
   RooDataSet zFakesDataSet("zFakesDataSet","dataset for Ztautau", RooArgSet(mass), Import( *treeZFakesCut ) );
@@ -276,7 +296,10 @@
   RooHistPdf  stpPdf("stpPdf","",RooArgSet(mass),stpDataHist);
 
   RooDataSet wenDataSet("wenDataSet","dataset for Ztautau", RooArgSet(mass), Import( *treeWJetsCut ) );
-  RooDataHist wenDataHist("wenDataHist","",RooArgSet(mass), wenDataSet, 1.0);
+  TH1F* wen = new TH1F("wen","",40,0,200);
+  treeWJetsCut->Draw("diTauVisMass>>wen","puWeight");
+  //RooDataHist wenDataHist("wenDataHist","",RooArgSet(mass), wenDataSet, 1.0);
+  RooDataHist wenDataHist("wenDataHist","",RooArgSet(mass), Import(*wen));
   RooHistPdf  wenPdf("wenPdf","",RooArgSet(mass),wenDataHist);
 
   RooDataSet dataDataSet("dataDataSet","dataset for qcd", RooArgSet(mass), Import( *treeDataCut ) );
@@ -284,13 +307,13 @@
 
   RooAddPdf model("model","",RooArgList(zttPdf,qcdPdf,wenPdf,ttbPdf,zFakesPdf,dibPdf,stpPdf),RooArgList(Nztt,Nqcd,Nwen,Nttb,Nzfk,Ndib,Nstp));
 
-  RooFitResult* res = model.fitTo(dataDataHist , Extended(1), Minos(1), Save(1), NumCPU(4), ExternalConstraints( RooArgSet(McNqcdConstraint,McNzttConstraint,McNwenConstraint,McNttbConstraint,McNstpConstraint,McNdibConstraint,McNzfkConstraint) )  ,SumW2Error(1));
+  RooFitResult* res = model.fitTo(dataDataHist , Extended(1), Minos(1), Save(1), NumCPU(4), ExternalConstraints( RooArgSet(McNqcdConstraint,/*McNzttConstraint,*/McNwenConstraint,McNttbConstraint,McNstpConstraint,McNdibConstraint,McNzfkConstraint) )  ,SumW2Error(1));
 
   RooArgSet fitParam(res->floatParsFinal());
   RooRealVar* Fit_Z_signal_region = (RooRealVar*)(&fitParam["Nztt"]);
 
 
-  RooPlot* frame = mass.frame(Bins(40),Title("Data: #mu+#tau"));
+  RooPlot* frame = mass.frame(Bins(40),Title(Form("CMS Preliminary 2011  #sqrt{s}=7 TeV   L=%.0f pb^{-1}",Lumi)));
 
   dataDataHist.plotOn(frame);
   model.plotOn(frame, LineColor(kBlue),  LineStyle(kSolid));
@@ -309,6 +332,10 @@
        << " --- Fit --- " <<  Fit_Z_signal_region->getVal() << " +/- " << Fit_Z_signal_region->getError()
        << endl;
 
+  TH1F* h_0 = new TH1F("h_0","",1,0,1);
+  h_0->SetLineColor(kBlue);
+  h_0->SetLineWidth(3);
+  h_0->SetLineStyle(kSolid);
   TH1F* h_1 = new TH1F("h_1","",1,0,1);
   h_1->SetLineColor(kRed);
   h_1->SetLineWidth(3);
@@ -344,10 +371,12 @@
   leg->SetFillColor(10);
   leg->SetTextSize(0.04);
 
-  leg->SetHeader(Form("Exp: %.0f - Est: %.0f - Fit:%.0f#pm%.0f",Exp_Z_signal_region,N_Z_signal_region,Fit_Z_signal_region->getVal(),Fit_Z_signal_region->getError()));
+  //leg->SetHeader(Form("Exp: %.0f - Est: %.0f - Fit:%.0f#pm%.0f",Exp_Z_signal_region,N_Z_signal_region,Fit_Z_signal_region->getVal(),Fit_Z_signal_region->getError()));
+  leg->SetHeader("#mu+#tau");
+  leg->AddEntry(h_0,"Fit to data","L");
   leg->AddEntry(h_1,"Z#tau#tau","L");
   leg->AddEntry(h_2,"Z+fakes","L");
-  leg->AddEntry(h_3,"QCD SS","L");
+  leg->AddEntry(h_3,"SS data \\ W","L");
   leg->AddEntry(h_4,"W+jets","L");
   leg->AddEntry(h_5,"t#bar{t}","L");
   leg->AddEntry(h_6,"Single-t","L");

@@ -53,8 +53,8 @@ process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets+process.kt
 process.source.fileNames = cms.untracked.vstring(
     #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_1.root',
     #'file:/data_CMS/cms/lbianchini/ZMuMu_RelVal386.root',
-    # 'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root',
-    # 'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/02700D19-A756-E011-B4D5-0030486792B6.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/02700D19-A756-E011-B4D5-0030486792B6.root'
     #'file:goodDataEvents_84_1_yHS.root'
     'file:/data_CMS/cms/akalinow/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/PU_S1_START311_V1G1-v1/AOD/8EC598C7-3453-E011-AC82-002481E14F8C.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall10/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/GEN-SIM-RECO/START38_V12-v1/0000/044E940A-55EC-DF11-89D6-0023AEFDEE60.root',
@@ -69,7 +69,6 @@ process.source.fileNames = cms.untracked.vstring(
 
 postfix           = "PFlow"
 runOnMC           = False
-#runOnMC           = True
 
 if runOnMC:
     #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
@@ -171,6 +170,20 @@ else:
 process.patJetCorrFactors.levels = JEClevels
 process.patJetCorrFactors.rho = cms.InputTag('kt6PFJets','rho')
 
+process.patJetCorrFactorsL1Offset = process.patJetCorrFactors.clone(
+    levels = cms.vstring('L1Offset',
+                         'L2Relative',
+                         'L3Absolute')
+    )
+if runOnMC:
+    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute']
+else:
+    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute','L2L3Residual']
+
+process.patJets.jetCorrFactorsSource = cms.VInputTag(cms.InputTag("patJetCorrFactors"),cms.InputTag("patJetCorrFactorsL1Offset"))
+process.patDefaultSequence.replace(process.patJetCorrFactors,
+                                   process.patJetCorrFactors+process.patJetCorrFactorsL1Offset)
+
 if runOnMC:
     process.load("RecoJets.Configuration.GenJetParticles_cff")
     process.load("RecoJets.Configuration.RecoGenJets_cff")
@@ -247,6 +260,7 @@ process.tauGenJetMatch.maxDPtRel = 999
 
 addPFMuonIsolation(process,process.patMuons)
 
+#process.pfPileUp.Vertices = "offlinePrimaryVerticesDA"
 
 addTriggerMatchingMuon(process,isMC=runOnMC)
 getattr(process,"patMuons").embedTrack = True
@@ -285,6 +299,8 @@ process.makeSCs = cms.Sequence(process.mergedSuperClusters*process.selectedSuper
     
 ########### PAT
 
+#process.patMuons.pvSrc = cms.InputTag("offlinePrimaryVerticesDA")
+#process.patElectrons.pvSrc = cms.InputTag("offlinePrimaryVerticesDA")
 
 process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
     "MuonsUserEmbedded",
@@ -408,6 +424,12 @@ process.tauPtEtaIDAgMuAgElecCounter = cms.EDFilter(
     maxNumber = cms.uint32(999),
     )
 
+process.atLeastOneGoodVertexSequence = cms.Sequence(
+    process.primaryVertexFilter*process.vertexScrapingFilter
+    )
+process.PFTau.replace(process.offlinePrimaryVerticesDA,
+                      process.offlinePrimaryVerticesDA*process.atLeastOneGoodVertexSequence)
+
 process.alLeastOneMuTauSequence = cms.Sequence(
     process.atLeastOneMuTau*process.atLeastOneMuTauCounter*process.atLeastOneMuTauFilter
     )
@@ -504,9 +526,6 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
 
 process.pat = cms.Sequence(
     process.allEventsFilter+
-    process.offlinePrimaryVerticesDA+
-    process.primaryVertexFilter+
-    process.vertexScrapingFilter+
     #process.makeSCs +
     process.PFTau*
     process.fjSequence*
