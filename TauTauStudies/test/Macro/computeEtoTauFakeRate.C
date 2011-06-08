@@ -4,9 +4,9 @@
   using namespace RooFit;
 
   const string tnp_      = "etoTau70IDLoose";
-  const string category_ = "tauAntiETight";
+  const string category_ = "tauAntiELoose";
   double cutValue_       = 0.5;
-  const string bin_      = "abseta>1.5";
+  const string bin_      = "abseta<1.5";
   const float binCenter_ = 0.75;
   const float binWidth_  = 0.75;
   const float xLow_      = 40;
@@ -214,7 +214,8 @@
   DataModelP_.plotOn(frame2, Components("bkgPdfP"), LineColor(kGreen), LineStyle(kSolid));
   frame2->Draw();
 
-  //return;
+  gPad->SaveAs("fitCanvas.png");
+  return;
 
 
 
@@ -270,6 +271,7 @@
   DataFrameF->Draw();
 
   c->Draw();
+  c->SaveAs("fitCanvas.png");
 
   ResDataCombinedFit->printArgs(std::cout);
   cout << endl;
