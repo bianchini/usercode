@@ -363,8 +363,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
 	if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3 
 	    && (*electronsRel)[i].charge()*(*electrons)[j].charge()<0
-	    && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.10 
-	    && (*electronsRel)[i].userFloat("PFRelIsoDB04v2")<0.30 ){
+	    && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.20 
+	    && (*electronsRel)[i].userFloat("PFRelIsoDB04v2")<0.20 ){
 	  //elecIndex = 0;
 	  elecFlag_ = 1;
 	  if(verbose_) cout<< "Two electrons failing diElec veto: flag= " << elecFlag_ << endl;
@@ -372,8 +372,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 	}
 	else if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3 
 		 && (*electronsRel)[i].charge()*(*electrons)[j].charge()>0
-		 && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.10
-		 && (*electronsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
+		 && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.20
+		 && (*electronsRel)[i].userFloat("PFRelIsoDB04v2")<0.20 ){
 	  //elecIndex = 0;
 	  elecFlag_ = 2;
 	  if(verbose_) cout<< "Two electrons with SS: flag= " << elecFlag_ << endl;
@@ -936,8 +936,8 @@ unsigned int  ElecTauStreamAnalyzer::jetID( const pat::Jet* jet, const reco::Ver
   }
 
   chEnFractionChPV = chEnFractionPV;
-  if(energyCharged>0)
-    chEnFractionChPV /= energyCharged; 
+  if(energyCharged>0 || energyElectrons>0)
+    chEnFractionChPV /= (energyCharged+energyElectrons); 
   chEnFractionPV /= jet->correctedJet("Uncorrected").p4().E();
   chFractionPV   /= nCharged;
 

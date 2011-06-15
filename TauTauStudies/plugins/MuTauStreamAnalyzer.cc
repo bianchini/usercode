@@ -355,7 +355,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
 	if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3 
 	    && (*muonsRel)[i].charge()*(*muons)[j].charge()<0
-	    && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.1 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
+	    && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.2 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.2 ){
 	  //muIndex = 0;
 	  muFlag_ = 1;
 	  if(verbose_) cout<< "Two muons failing diMu veto: flag= " << muFlag_ << endl;
@@ -363,7 +363,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	}
 	else if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3 
 		 && (*muonsRel)[i].charge()*(*muons)[j].charge()>0
-		 && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.1 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
+		 && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.2 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.2 ){
 	  //muIndex = 0;
 	  muFlag_ = 2;
 	  if(verbose_) cout<< "Two muons with SS: flag= " << muFlag_ << endl;
@@ -935,8 +935,8 @@ unsigned int  MuTauStreamAnalyzer::jetID( const pat::Jet* jet, const reco::Verte
   }
 
   chEnFractionChPV = chEnFractionPV;
-  if(energyCharged>0)
-    chEnFractionChPV /= energyCharged; 
+  if(energyCharged>0 || energyElectrons>0)
+    chEnFractionChPV /= (energyCharged+energyElectrons); 
   chEnFractionPV /= jet->correctedJet("Uncorrected").p4().E();
   chFractionPV   /= nCharged;
 
@@ -945,7 +945,7 @@ unsigned int  MuTauStreamAnalyzer::jetID( const pat::Jet* jet, const reco::Verte
   map_["chMult"]          =  chFractionPV;
   map_["chFracRawJetE"]   =  chEnFractionPV;
   map_["chFracAllChargE"] =  chEnFractionChPV;
-
+        
   bool loose=false;
   bool medium=false;
   bool tight=false;

@@ -37,7 +37,7 @@ class ZelelPlusJetsAnalyzer : public edm::EDAnalyzer{
   explicit ZelelPlusJetsAnalyzer(const edm::ParameterSet&);
   ~ZelelPlusJetsAnalyzer();
 
-  unsigned int jetID( const pat::Jet* jet);
+  unsigned int jetID( const pat::Jet* jet, const reco::Vertex* vtx, std::vector<float> vtxZ, std::map<std::string,float>& map_);
 
   void beginJob() ;
   void analyze(const edm::Event&  iEvent, const edm::EventSetup& iSetup);
@@ -60,10 +60,15 @@ class ZelelPlusJetsAnalyzer : public edm::EDAnalyzer{
 
   std::vector< double >* jetsBtagHE_;
   std::vector< double >* jetsBtagHP_;
+  std::vector< float >* jetsChNfraction_;
+  std::vector< float >* jetsChEfraction_;
+  std::vector< float >* jetMoments_;
   std::vector< int >* triggerBits_;
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsP4_; 
-  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDP4_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDP4_;
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDL1OffsetP4_;
+
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* genJetsIDP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diElectronLegsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* METP4_;
@@ -72,10 +77,17 @@ class ZelelPlusJetsAnalyzer : public edm::EDAnalyzer{
 
   float run_,event_,lumi_;
   float Zmass_,sumEt_;
-  float chIsoLeg1_,nhIsoLeg1_,phIsoLeg1_;
-  float chIsoPULeg1_,nhIsoPULeg1_,phIsoPULeg1_;
-  float chIsoLeg2_,nhIsoLeg2_,phIsoLeg2_;
-  float chIsoPULeg2_,nhIsoPULeg2_,phIsoPULeg2_;
+ 
+  float chIsoLeg1v1_,nhIsoLeg1v1_,phIsoLeg1v1_;
+  float chIsoPULeg1v1_,nhIsoPULeg1v1_,phIsoPULeg1v1_;
+  float chIsoLeg1v2_,nhIsoLeg1v2_,phIsoLeg1v2_;
+  float chIsoPULeg1v2_,nhIsoPULeg1v2_,phIsoPULeg1v2_;
+
+  float chIsoLeg2v1_,nhIsoLeg2v1_,phIsoLeg2v1_;
+  float chIsoPULeg2v1_,nhIsoPULeg2v1_,phIsoPULeg2v1_;
+  float chIsoLeg2v2_,nhIsoLeg2v2_,phIsoLeg2v2_;
+  float chIsoPULeg2v2_,nhIsoPULeg2v2_,phIsoPULeg2v2_;
+
   float dxy1_,dxy2_;
   float dz1_,dz2_;
   float MtLeg1_,MtLeg2_;

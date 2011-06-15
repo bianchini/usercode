@@ -26,6 +26,9 @@
 #include "DataFormats/JetReco/interface/GenJet.h"
 #include "DataFormats/JetReco/interface/GenJetCollection.h"
 
+#include "DataFormats/GsfTrackReco/interface/GsfTrack.h"
+#include "DataFormats/GsfTrackReco/interface/GsfTrackFwd.h"
+
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
@@ -58,12 +61,18 @@ void ZelelPlusJetsAnalyzer::beginJob(){
   jetsBtagHE_  = new std::vector< double >();
   jetsBtagHP_  = new std::vector< double >();
 
+  jetsChEfraction_  = new std::vector< float >();
+  jetsChNfraction_  = new std::vector< float >();
+  jetMoments_       = new std::vector< float >();
+
   triggerBits_ = new std::vector< int >();
 
   fpuweight_ = new PUWeight();
 
   jetsP4_          = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   jetsIDP4_        = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  jetsIDL1OffsetP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+
   genJetsIDP4_     = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   extraElectrons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
@@ -72,10 +81,18 @@ void ZelelPlusJetsAnalyzer::beginJob(){
   
   tree_->Branch("jetsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsP4_);
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
+  tree_->Branch("jetsIDL1OffsetP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDL1OffsetP4_);
   tree_->Branch("genJetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genJetsIDP4_);
+
   tree_->Branch("triggerBits","std::vector<int>",&triggerBits_); 
+
   tree_->Branch("jetsBtagHE","std::vector<double> ",&jetsBtagHE_);
   tree_->Branch("jetsBtagHP","std::vector<double> ",&jetsBtagHP_);
+  tree_->Branch("jetMoments","std::vector<float> ",&jetMoments_);
+
+  tree_->Branch("jetsChEfraction","std::vector<float>",&jetsChEfraction_);
+  tree_->Branch("jetsChNfraction","std::vector<float>",&jetsChNfraction_);
+
   tree_->Branch("diElectronLegsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diElectronLegsP4_);
   tree_->Branch("extraElectrons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&extraElectrons_);
   tree_->Branch("METP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&METP4_);
@@ -85,20 +102,34 @@ void ZelelPlusJetsAnalyzer::beginJob(){
   tree_->Branch("Zmass",&Zmass_,"Zmass/F");
   tree_->Branch("isLegFromTau",&isLegFromTau_,"isLegFromTau/I");
   
+  tree_->Branch("chIsoLeg1v1",&chIsoLeg1v1_,"chIsoLeg1v1/F");
+  tree_->Branch("nhIsoLeg1v1",&nhIsoLeg1v1_,"nhIsoLeg1v1/F");
+  tree_->Branch("phIsoLeg1v1",&phIsoLeg1v1_,"phIsoLeg1v1/F");
+  tree_->Branch("chIsoPULeg1v1",&chIsoPULeg1v1_,"chIsoPULeg1v1/F");
+  tree_->Branch("nhIsoPULeg1v1",&nhIsoPULeg1v1_,"nhIsoPULeg1v1/F");
+  tree_->Branch("phIsoPULeg1v1",&phIsoPULeg1v1_,"phIsoPULeg1v1/F");
 
-  tree_->Branch("chIsoLeg1",&chIsoLeg1_,"chIsoLeg1/F");
-  tree_->Branch("nhIsoLeg1",&nhIsoLeg1_,"nhIsoLeg1/F");
-  tree_->Branch("phIsoLeg1",&phIsoLeg1_,"phIsoLeg1/F");
-  tree_->Branch("chIsoPULeg1",&chIsoPULeg1_,"chIsoPULeg1/F");
-  tree_->Branch("nhIsoPULeg1",&nhIsoPULeg1_,"nhIsoPULeg1/F");
-  tree_->Branch("phIsoPULeg1",&phIsoPULeg1_,"phIsoPULeg1/F");
+  tree_->Branch("chIsoLeg1v2",&chIsoLeg1v2_,"chIsoLeg1v2/F");
+  tree_->Branch("nhIsoLeg1v2",&nhIsoLeg1v2_,"nhIsoLeg1v2/F");
+  tree_->Branch("phIsoLeg1v2",&phIsoLeg1v2_,"phIsoLeg1v2/F");
+  tree_->Branch("chIsoPULeg1v2",&chIsoPULeg1v2_,"chIsoPULeg1v2/F");
+  tree_->Branch("nhIsoPULeg1v2",&nhIsoPULeg1v2_,"nhIsoPULeg1v2/F");
+  tree_->Branch("phIsoPULeg1v2",&phIsoPULeg1v2_,"phIsoPULeg1v2/F");
 
-  tree_->Branch("chIsoLeg2",&chIsoLeg2_,"chIsoLeg2/F");
-  tree_->Branch("nhIsoLeg2",&nhIsoLeg2_,"nhIsoLeg2/F");
-  tree_->Branch("phIsoLeg2",&phIsoLeg2_,"phIsoLeg2/F");
-  tree_->Branch("chIsoPULeg2",&chIsoPULeg2_,"chIsoPULeg2/F");
-  tree_->Branch("nhIsoPULeg2",&nhIsoPULeg2_,"nhIsoPULeg2/F");
-  tree_->Branch("phIsoPULeg2",&phIsoPULeg2_,"phIsoPULeg2/F");
+  tree_->Branch("chIsoLeg2v1",&chIsoLeg2v1_,"chIsoLeg2v1/F");
+  tree_->Branch("nhIsoLeg2v1",&nhIsoLeg2v1_,"nhIsoLeg2v1/F");
+  tree_->Branch("phIsoLeg2v1",&phIsoLeg2v1_,"phIsoLeg2v1/F");
+  tree_->Branch("chIsoPULeg2v1",&chIsoPULeg2v1_,"chIsoPULeg2v1/F");
+  tree_->Branch("nhIsoPULeg2v1",&nhIsoPULeg2v1_,"nhIsoPULeg2v1/F");
+  tree_->Branch("phIsoPULeg2v1",&phIsoPULeg2v1_,"phIsoPULeg2v1/F");
+
+  tree_->Branch("chIsoLeg2v2",&chIsoLeg2v2_,"chIsoLeg2v2/F");
+  tree_->Branch("nhIsoLeg2v2",&nhIsoLeg2v2_,"nhIsoLeg2v2/F");
+  tree_->Branch("phIsoLeg2v2",&phIsoLeg2v2_,"phIsoLeg2v2/F");
+  tree_->Branch("chIsoPULeg2v2",&chIsoPULeg2v2_,"chIsoPULeg2v2/F");
+  tree_->Branch("nhIsoPULeg2v2",&nhIsoPULeg2v2_,"nhIsoPULeg2v2/F");
+  tree_->Branch("phIsoPULeg2v2",&phIsoPULeg2v2_,"phIsoPULeg2v2/F");
+
 
   tree_->Branch("dxy1",&dxy1_,"dxy1/F");
   tree_->Branch("dxy2",&dxy2_,"dxy2/F");
@@ -119,10 +150,10 @@ void ZelelPlusJetsAnalyzer::beginJob(){
 
 
 ZelelPlusJetsAnalyzer::~ZelelPlusJetsAnalyzer(){
-  delete jetsP4_; delete jetsIDP4_; delete jetsBtagHE_; delete jetsBtagHP_;
+  delete jetsP4_; delete jetsIDP4_; delete jetsIDL1OffsetP4_; delete jetsBtagHE_; delete jetsBtagHP_;
   delete diElectronLegsP4_ ; delete genJetsIDP4_;delete extraElectrons_;
   delete METP4_;  delete triggerBits_; 
-  delete fpuweight_;
+  delete fpuweight_;  delete jetsChNfraction_; delete jetsChEfraction_;delete jetMoments_;
 }
 
 void ZelelPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -130,6 +161,7 @@ void ZelelPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
   jetsP4_->clear();
   jetsIDP4_->clear();
+  jetsIDL1OffsetP4_->clear();
   jetsBtagHE_->clear();
   jetsBtagHP_->clear();
   diElectronLegsP4_->clear();
@@ -138,6 +170,9 @@ void ZelelPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   triggerBits_->clear();
   jetsBtagHE_->clear();
   jetsBtagHP_->clear();
+  jetsChNfraction_->clear();
+  jetsChEfraction_->clear();
+  jetMoments_->clear();
 
   
   edm::Handle<CompositeCandidateCollection> diElectronHandle;
@@ -155,12 +190,18 @@ void ZelelPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   const pat::JetCollection* jets = jetsHandle.product();
 
   edm::Handle<reco::VertexCollection> pvHandle;
-  edm::InputTag pvTag("offlinePrimaryVertices");
+  edm::InputTag pvTag("offlinePrimaryVerticesDA");
   iEvent.getByLabel(pvTag,pvHandle);
   if( !pvHandle.isValid() )  
     edm::LogError("DataNotAvailable")
       << "No PV label available \n";
   const reco::VertexCollection* vertexes = pvHandle.product();
+
+  std::vector<float> vtxZ;
+  for(unsigned int k = 0; k<vertexes->size(); k++){
+    vtxZ.push_back(((*vertexes)[k].position()).z());
+  }
+
   numPV_ = vertexes->size();
 
   edm::Handle<pat::METCollection> metHandle;
@@ -261,64 +302,136 @@ void ZelelPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   dz1_  = vertexes->size()!=0 ? leg1->gsfTrack()->dz( (*vertexes)[0].position() ) : -999;
   dz2_  = vertexes->size()!=0 ? leg2->gsfTrack()->dz( (*vertexes)[0].position() ) : -999;
 
+  // isoDeposit definition: 2010
+  isodeposit::AbsVetos vetos2010ChargedLeg1; 
+  isodeposit::AbsVetos vetos2010NeutralLeg1; 
+  isodeposit::AbsVetos vetos2010PhotonLeg1;
+  // isoDeposit definition: 2011
+  isodeposit::AbsVetos vetos2011ChargedLeg1; 
+  isodeposit::AbsVetos vetos2011NeutralLeg1; 
+  isodeposit::AbsVetos vetos2011PhotonLeg1;
+ 
+  vetos2010ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
+  vetos2010NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
+  vetos2010NeutralLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
+  vetos2010PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.05));
+  vetos2010PhotonLeg1.push_back( new isodeposit::ThresholdVeto(1.0));
 
-  isodeposit::AbsVetos vetosChargedLeg1; 
-  isodeposit::AbsVetos vetosNeutralLeg1; 
-  isodeposit::AbsVetos vetosPhotonLeg1;
-  isodeposit::AbsVetos vetosChargedLeg2; 
-  isodeposit::AbsVetos vetosNeutralLeg2;
-  isodeposit::AbsVetos vetosPhotonLeg2; 
-  vetosChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
-  vetosNeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
-  vetosNeutralLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
-  vetosPhotonLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.05));
-  vetosPhotonLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
+  vetos2011ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
+  vetos2011NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
+  vetos2011NeutralLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
+  vetos2011PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
+  vetos2011PhotonLeg1.push_back( new isodeposit::ThresholdVeto(0.5));
 
-  vetosChargedLeg2.push_back(new isodeposit::ThresholdVeto(0.5)); 
-  vetosNeutralLeg2.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg2->eta(),leg2->phi()),0.08));
-  vetosNeutralLeg2.push_back(new isodeposit::ThresholdVeto(1.0));
-  vetosPhotonLeg2.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg2->eta(),leg2->phi()),0.05));
-  vetosPhotonLeg2.push_back(new isodeposit::ThresholdVeto(1.0));
+  chIsoLeg1v1_   = 
+    leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
+  nhIsoLeg1v1_ = 
+    leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetos2010NeutralLeg1).first;
+  phIsoLeg1v1_ = 
+    leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2010PhotonLeg1).first;
+  chIsoPULeg1v1_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
+  nhIsoPULeg1v1_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010NeutralLeg1).first;
+  phIsoPULeg1v1_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010PhotonLeg1).first;
 
-  chIsoLeg1_ = 
-    leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetosChargedLeg1).first;
-  nhIsoLeg1_ = 
-    leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetosNeutralLeg1).first;
-  phIsoLeg1_ = 
-    leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetosPhotonLeg1).first;
-  chIsoPULeg1_ = 
-    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosChargedLeg1).first;
-  nhIsoPULeg1_ = 
-    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosNeutralLeg1).first;
-  phIsoPULeg1_ = 
-    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosPhotonLeg1).first;
-
-  chIsoLeg2_ = 
-    leg2->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetosChargedLeg2).first;
-  nhIsoLeg2_ = 
-    leg2->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetosNeutralLeg2).first;
-  phIsoLeg2_ = 
-    leg2->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetosPhotonLeg2 ).first;
-  chIsoPULeg2_ = 
-    leg2->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosChargedLeg2).first;
-  nhIsoPULeg2_ = 
-    leg2->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosNeutralLeg2).first;
-  phIsoPULeg2_ = 
-    leg2->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosPhotonLeg2).first;
-
+  chIsoLeg1v2_   = 
+    leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
+  nhIsoLeg1v2_ = 
+    leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetos2011NeutralLeg1).first;
+  phIsoLeg1v2_ = 
+    leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2011PhotonLeg1).first;
+  chIsoPULeg1v2_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
+  nhIsoPULeg1v2_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011NeutralLeg1).first;
+  phIsoPULeg1v2_ = 
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011PhotonLeg1).first;
 
   // cleaning
-  for(unsigned int i = 0; i <vetosChargedLeg1.size(); i++){
-    delete vetosChargedLeg1[i];
-    delete vetosChargedLeg2[i];
+  for(unsigned int i = 0; i <vetos2010ChargedLeg1.size(); i++){
+    delete vetos2010ChargedLeg1[i];
   }
-  for(unsigned int i = 0; i <vetosNeutralLeg1.size(); i++){
-    delete vetosNeutralLeg1[i];
-    delete vetosNeutralLeg2[i];
-    delete vetosPhotonLeg1[i];
-    delete vetosPhotonLeg2[i];
+  for(unsigned int i = 0; i <vetos2010NeutralLeg1.size(); i++){
+    delete vetos2010NeutralLeg1[i];
+    delete vetos2010PhotonLeg1[i];
+  }
+  for(unsigned int i = 0; i <vetos2011ChargedLeg1.size(); i++){
+    delete vetos2011ChargedLeg1[i];
+  }
+  for(unsigned int i = 0; i <vetos2011NeutralLeg1.size(); i++){
+    delete vetos2011NeutralLeg1[i];
+    delete vetos2011PhotonLeg1[i];
   }
   //
+ 
+
+  // isoDeposit definition: 2010
+  isodeposit::AbsVetos vetos2010ChargedLeg2; 
+  isodeposit::AbsVetos vetos2010NeutralLeg2; 
+  isodeposit::AbsVetos vetos2010PhotonLeg2;
+  // isoDeposit definition: 2011
+  isodeposit::AbsVetos vetos2011ChargedLeg2; 
+  isodeposit::AbsVetos vetos2011NeutralLeg2; 
+  isodeposit::AbsVetos vetos2011PhotonLeg2;
+ 
+  vetos2010ChargedLeg2.push_back(new isodeposit::ThresholdVeto(0.5));
+  vetos2010NeutralLeg2.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg2->eta(),leg2->phi()),0.08));
+  vetos2010NeutralLeg2.push_back(new isodeposit::ThresholdVeto(1.0));
+  vetos2010PhotonLeg2.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg2->eta(),leg2->phi()),0.05));
+  vetos2010PhotonLeg2.push_back( new isodeposit::ThresholdVeto(1.0));
+
+  vetos2011ChargedLeg2.push_back(new isodeposit::ThresholdVeto(0.0));
+  vetos2011NeutralLeg2.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg2->eta(),leg2->phi()),0.01));
+  vetos2011NeutralLeg2.push_back(new isodeposit::ThresholdVeto(0.5));
+  vetos2011PhotonLeg2.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg2->eta(),leg2->phi()),0.01));
+  vetos2011PhotonLeg2.push_back( new isodeposit::ThresholdVeto(0.5));
+
+  chIsoLeg2v1_   = 
+    leg2->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetos2010ChargedLeg2).first;
+  nhIsoLeg2v1_ = 
+    leg2->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetos2010NeutralLeg2).first;
+  phIsoLeg2v1_ = 
+    leg2->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2010PhotonLeg2).first;
+  chIsoPULeg2v1_ = 
+    leg2->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010ChargedLeg2).first;
+  nhIsoPULeg2v1_ = 
+    leg2->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010NeutralLeg2).first;
+  phIsoPULeg2v1_ = 
+    leg2->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010PhotonLeg2).first;
+
+  chIsoLeg2v2_   = 
+    leg2->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetos2011ChargedLeg2).first;
+  nhIsoLeg2v2_ = 
+    leg2->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetos2011NeutralLeg2).first;
+  phIsoLeg2v2_ = 
+    leg2->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2011PhotonLeg2).first;
+  chIsoPULeg2v2_ = 
+    leg2->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011ChargedLeg2).first;
+  nhIsoPULeg2v2_ = 
+    leg2->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011NeutralLeg2).first;
+  phIsoPULeg2v2_ = 
+    leg2->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011PhotonLeg2).first;
+
+  // cleaning
+  for(unsigned int i = 0; i <vetos2010ChargedLeg2.size(); i++){
+    delete vetos2010ChargedLeg2[i];
+  }
+  for(unsigned int i = 0; i <vetos2010NeutralLeg2.size(); i++){
+    delete vetos2010NeutralLeg2[i];
+    delete vetos2010PhotonLeg2[i];
+  }
+  for(unsigned int i = 0; i <vetos2011ChargedLeg2.size(); i++){
+    delete vetos2011ChargedLeg2[i];
+  }
+  for(unsigned int i = 0; i <vetos2011NeutralLeg2.size(); i++){
+    delete vetos2011NeutralLeg2[i];
+    delete vetos2011PhotonLeg2[i];
+  }
+  //
+ 
+
 
   vector<string> triggerPaths;
   if(isMC_){
@@ -370,18 +483,14 @@ void ZelelPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
   std::map<double, math::XYZTLorentzVectorD ,ZelelPlusJetsAnalyzer::more> sortedJets;
   std::map<double, math::XYZTLorentzVectorD ,ZelelPlusJetsAnalyzer::more> sortedJetsID;
+  std::map<double, math::XYZTLorentzVectorD ,ZelelPlusJetsAnalyzer::more> sortedJetsIDL1Offset;
+
   std::map<double, math::XYZTLorentzVectorD ,ZelelPlusJetsAnalyzer::more> sortedGenJetsID;
   std::map<double, std::pair<float,float> ,  ZelelPlusJetsAnalyzer::more> bTaggers;
+  std::map<double, std::pair<float,float> ,  ZelelPlusJetsAnalyzer::more> jetPVassociation;
+  std::map<double, std::pair<float,float> ,  ZelelPlusJetsAnalyzer::more> jetMoments;
 
   for(unsigned int it = 0; it < jets->size() ; it++){
-
-    if(verbose_){
-      pat::Jet* jet = const_cast<pat::Jet*>(&(*jets)[it]);
-      std::cout << "Jet pt "      << jet->et() << std::endl;
-      std::cout << "L1FastJet "   << jet->correctedJet("L1FastJet").et() << std::endl;
-      std::cout << "L2Relative "  << jet->correctedJet("L2Relative").et() << std::endl; 
-      std::cout << "L3Absolute "  << jet->correctedJet("L3Absolute").et() << std::endl; 
-    }
 
     if( Geom::deltaR((*jets)[it].p4(),leg1->p4())<deltaRLegJet_ || 
 	Geom::deltaR((*jets)[it].p4(),leg2->p4())<deltaRLegJet_ ){
@@ -390,19 +499,26 @@ void ZelelPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     }
 
 
-    if((*jets)[it].p4().Et() < minCorrPt_) continue;
+    if((*jets)[it].p4().Pt() < minCorrPt_) continue;
    
-    sortedJets.insert( make_pair( (*jets)[it].correctedJet("Uncorrected").p4().Et() ,(*jets)[it].correctedJet("Uncorrected").p4() ) );
+    sortedJets.insert( make_pair( (*jets)[it].correctedJet("Uncorrected").p4().Pt() ,(*jets)[it].correctedJet("Uncorrected").p4() ) );
                                         
-    if( jetID( &(*jets)[it] ) < minJetID_ )  continue;
+    std::map<string,float> aMap;
+    if( jetID( &(*jets)[it] , &((*vertexes)[0]), vtxZ, aMap ) < minJetID_ )  continue;
 
     //add b-tag info
-    bTaggers.insert( make_pair((*jets)[it].p4().Et(), make_pair( (*jets)[it].bDiscriminator("trackCountingHighEffBJetTags"),(*jets)[it].bDiscriminator("trackCountingHighPurBJetTags")  ) ) );
- 
-    sortedJetsID.insert( make_pair( (*jets)[it].p4().Et() ,(*jets)[it].p4() ) );
+    bTaggers.insert( make_pair((*jets)[it].p4().Pt(), make_pair( (*jets)[it].bDiscriminator("trackCountingHighEffBJetTags"),(*jets)[it].bDiscriminator("trackCountingHighPurBJetTags")  ) ) );
+    jetPVassociation.insert( make_pair( (*jets)[it].p4().Pt(), make_pair(aMap["chFracRawJetE"],aMap["chFracAllChargE"]) ) );
+    jetMoments.insert( make_pair( (*jets)[it].p4().Pt(), make_pair( (*jets)[it].etaetaMoment(),(*jets)[it].phiphiMoment()) ) );
+
+    if(isMC_) sortedJetsIDL1Offset.insert( make_pair( (*jets)[it].jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*(*jets)[it].pt() , (*jets)[it].jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*(*jets)[it].p4()) );   
+    else sortedJetsIDL1Offset.insert( make_pair( (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].pt() , (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].p4()) ); 
+  
+    sortedJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4() ) );
+  
     if(isMC_){
-      if((*jets)[it].genJet() != 0) sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Et() ,(*jets)[it].genJet()->p4() ) );
-      else sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Et() , math::XYZTLorentzVectorD(0,0,0,0) ) );
+      if((*jets)[it].genJet() != 0) sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].genJet()->p4() ) );
+      else sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Pt() , math::XYZTLorentzVectorD(0,0,0,0) ) );
     }
   }
   
@@ -412,6 +528,9 @@ void ZelelPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   for(CImap it = sortedJetsID.begin(); it != sortedJetsID.end() ; it++){
     jetsIDP4_->push_back( it->second );
   }
+  for(CImap it = sortedJetsIDL1Offset.begin(); it != sortedJetsIDL1Offset.end() ; it++){
+    jetsIDL1OffsetP4_->push_back( it->second );
+  }
   for(CImap it = sortedGenJetsID.begin(); it != sortedGenJetsID.end() ; it++){
     genJetsIDP4_->push_back( it->second );
   }
@@ -419,29 +538,41 @@ void ZelelPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     jetsBtagHE_->push_back( (it->second).first  );
     jetsBtagHP_->push_back( (it->second).second );
   }
+  for(std::map<double, std::pair<float,float> >::iterator it = jetPVassociation.begin(); it != jetPVassociation.end() ; it++){
+    jetsChEfraction_->push_back( (it->second).first  );
+    jetsChNfraction_->push_back( (it->second).second );
+  }
+  for(std::map<double, std::pair<float,float> >::iterator it = jetMoments.begin(); it != jetMoments.end() ; it++){
+    jetMoments_->push_back( (it->second).first  );
+    jetMoments_->push_back( (it->second).second );
+  }
 
   tree_->Fill();
 
 }
 
 
-unsigned int ZelelPlusJetsAnalyzer::jetID( const pat::Jet* jet){
-
-  if( (jet->et())<10 ) return 99; // always pass jet ID
-
+unsigned int ZelelPlusJetsAnalyzer::jetID( const pat::Jet* jet, const reco::Vertex* vtx, std::vector<float> vtxZ, std::map<std::string,float>& map_){
+  
+  if( (jet->pt())<10 ) return 99; // always pass jet ID
+  
   std::vector<reco::PFCandidatePtr> pfCandPtrs = jet->getPFConstituents();
-
+  
   int nCharged = 0;
   int nPhotons = 0;
   int nNeutral = 0;
   int nConst = 0;
-
+  
   float energyCharged = 0;
   float energyPhotons = 0;
   float energyNeutral = 0;
   float energyElectrons = 0;
  
   float totalEnergyFromConst = 0;
+  
+  float chEnFractionPV   = 0;
+  float chEnFractionChPV = 0;
+  float chFractionPV     = 0;
 
   for(unsigned i=0; i<pfCandPtrs.size(); ++i) {
     const reco::PFCandidate& cand = *(pfCandPtrs[i]);
@@ -453,6 +584,37 @@ unsigned int ZelelPlusJetsAnalyzer::jetID( const pat::Jet* jet){
     case reco::PFCandidate::h: 
       nCharged++;
       energyCharged += cand.energy(); 
+
+      if((cand.trackRef()).isNonnull()){
+	bool isMatched = false;
+	for(reco::Vertex::trackRef_iterator it = vtx->tracks_begin() ; it!=vtx->tracks_end() && !isMatched; it++){
+	  if(  (*it).id() == (cand.trackRef()).id() && (*it).key() == (cand.trackRef()).key() ){
+	    isMatched = true;
+	    if(verbose_) cout << (*it).id() << ", " << (*it).key() << " is matched!" << endl;
+	    chEnFractionPV += cand.energy();
+	    chFractionPV+=1;
+	  }
+	}
+	if(!isMatched){
+	  float dist = vtxZ.size()>0 ? abs(vtxZ[0]-((cand.trackRef())->referencePoint()).z()) : 999.;
+	  float tmpDist = 999.;
+	  for(unsigned k = 1; k < vtxZ.size(); k++){
+	    if( abs(((cand.trackRef())->referencePoint()).z() - vtxZ[k] ) < tmpDist )
+	      tmpDist = abs(((cand.trackRef())->referencePoint()).z() - vtxZ[k] );
+	  }
+	  if(tmpDist>dist){
+	    isMatched = true;
+	    if(verbose_) cout << "Matched by closest vtx in z!!" << endl;
+	    chEnFractionPV += cand.energy();
+	    chFractionPV+=1;
+	  }
+	}
+	if(!isMatched && verbose_) {
+	  cout << "Ch with pt " << cand.pt() << " and eta " << cand.eta() << " is not matched to the PV !!!" << endl;
+	  cout << "z position of PV " << (vtx->position()).z() << ", z position of track " << ((cand.trackRef())->referencePoint()).z()  << ", x position of track " << ((cand.trackRef())->referencePoint()).x()   << ", y position of track " << ((cand.trackRef())->referencePoint()).y() << endl;
+	}
+      }
+
       break;
     case reco::PFCandidate::gamma:
       nPhotons++;
@@ -463,7 +625,28 @@ unsigned int ZelelPlusJetsAnalyzer::jetID( const pat::Jet* jet){
       energyNeutral += cand.energy();
       break;
     case reco::PFCandidate::e: 
-      energyElectrons += cand.energy(); 
+      energyElectrons += cand.energy();
+
+      if((cand.gsfTrackRef()).isNonnull()){
+	bool isMatched = false;
+	float dist = vtxZ.size()>0 ? abs(vtxZ[0]-((cand.gsfTrackRef())->referencePoint()).z()) : 999.;
+	float tmpDist = 999.;
+	for(unsigned k = 1; k < vtxZ.size(); k++){
+	  if( abs(((cand.gsfTrackRef())->referencePoint()).z() - vtxZ[k] ) < tmpDist )
+	    tmpDist = abs(((cand.gsfTrackRef())->referencePoint()).z() - vtxZ[k] );
+	}
+	if(tmpDist>dist){
+	  isMatched = true;
+	  if(verbose_) cout << "Matched by closest vtx in z!!" << endl;
+	  chEnFractionPV += cand.energy();
+	  chFractionPV+=1;
+	}
+	if(!isMatched && verbose_) {
+	  cout << "Ele with pt " << cand.pt() << " and eta " << cand.eta() << " is not matched to the PV !!!" << endl;
+	  cout << "z position of PV " << (vtx->position()).z() << ", z position of gsfTrack " << ((cand.gsfTrackRef())->referencePoint()).z()  << ", x position of gsfTrack " << ((cand.gsfTrackRef())->referencePoint()).x()   << ", y position of gsfTrack " << ((cand.gsfTrackRef())->referencePoint()).y() << endl;
+	}
+      }
+      
       break;
     case reco::PFCandidate::h_HF: // fill neutral
       nNeutral++;
@@ -477,6 +660,18 @@ unsigned int ZelelPlusJetsAnalyzer::jetID( const pat::Jet* jet){
       break;
     }
   }
+
+  chEnFractionChPV = chEnFractionPV;
+  if(energyCharged>0 || energyElectrons>0)
+    chEnFractionChPV /= (energyCharged+energyElectrons); 
+  chEnFractionPV /= jet->correctedJet("Uncorrected").p4().E();
+  chFractionPV   /= nCharged;
+
+  //if(chFractionPV==0) cout << energyCharged << endl;
+
+  map_["chMult"]          =  chFractionPV;
+  map_["chFracRawJetE"]   =  chEnFractionPV;
+  map_["chFracAllChargE"] =  chEnFractionChPV;
 
   bool loose=false;
   bool medium=false;
@@ -532,7 +727,6 @@ unsigned int ZelelPlusJetsAnalyzer::jetID( const pat::Jet* jet){
   return 0;
 
 }
-
 
 
 void ZelelPlusJetsAnalyzer::endJob(){}

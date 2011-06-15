@@ -10,6 +10,11 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/Scalers/interface/DcsStatus.h"
 #include "RecoEgamma/EgammaTools/interface/ConversionFinder.h"
+#include "DataFormats/EgammaCandidates/interface/Conversion.h"
+
+#include "DataFormats/BeamSpot/interface/BeamSpot.h"
+
+#include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 
 using namespace edm;
 using namespace std;
@@ -38,6 +43,13 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
   edm::Handle<reco::VertexCollection> vertexHandle;
   iEvent.getByLabel(vertexTag_,vertexHandle);
   const reco::VertexCollection* vertexes = vertexHandle.product();
+
+  edm::Handle<reco::BeamSpot> bsHandle;
+  iEvent.getByLabel("offlineBeamSpot", bsHandle);
+  const reco::BeamSpot &thebs = *bsHandle.product();
+
+  edm::Handle<reco::ConversionCollection> hConversions;
+  iEvent.getByLabel("trackerOnlyConversions", hConversions);
 
   edm::Handle<DcsStatusCollection> dcsHandle;
   iEvent.getByLabel("scalersRawToDigi", dcsHandle);
@@ -85,11 +97,11 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     ConversionInfo convInfo  = convFinder.getConversionInfo(*aGsf, tracks_h, gsftracks_h, evt_bField);
     double els_conv_dist     = convInfo.dist();
     double els_conv_dcot     = convInfo.dcot();
-    double els_conv_radius   = convInfo.radiusOfConversion();
+    //double els_conv_radius   = convInfo.radiusOfConversion();
     math::XYZPoint els_conv_Point = convInfo.pointOfConversion(); 
     TrackRef els_conv_ctfRef = convInfo.conversionPartnerCtfTk(); 
     GsfTrackRef els_conv_gsfRef = convInfo.conversionPartnerGsfTk();
-    double els_conv_delMissHits =  convInfo.deltaMissingHits();
+    //double els_conv_delMissHits =  convInfo.deltaMissingHits();
 
     float dPhi  = aElectron.deltaPhiSuperClusterTrackAtVtx();
     float dEta  = aElectron.deltaEtaSuperClusterTrackAtVtx();
@@ -104,6 +116,11 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     aElectron.addUserFloat("dEta",abs(dEta));
     aElectron.addUserFloat("sihih",sihih);
     aElectron.addUserFloat("HoE",HoE);
+
+    int passconversionveto = 
+      int(!ConversionTools::hasMatchedConversion(*aGsf,hConversions,thebs.position(),true,2.0,1e-06,0));
+    aElectron.addUserInt("antiConv",passconversionveto);
+
 
     double dxyWrtPV =  -99.;
     double dzWrtPV =  -99.;
