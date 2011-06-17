@@ -110,10 +110,10 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     //cout << "dEta " << dEta << " dPhi " << dPhi << " -- dcot " << els_conv_dcot << " -- nHits " << nHits << endl;
 
     aElectron.addUserFloat("nHits",nHits);
-    aElectron.addUserFloat("dist",abs(els_conv_dist));
-    aElectron.addUserFloat("dcot",abs(els_conv_dcot));
-    aElectron.addUserFloat("dPhi",abs(dPhi));
-    aElectron.addUserFloat("dEta",abs(dEta));
+    aElectron.addUserFloat("dist",fabs(els_conv_dist));
+    aElectron.addUserFloat("dcot",fabs(els_conv_dcot));
+    aElectron.addUserFloat("dPhi",fabs(dPhi));
+    aElectron.addUserFloat("dEta",fabs(dEta));
     aElectron.addUserFloat("sihih",sihih);
     aElectron.addUserFloat("HoE",HoE);
 

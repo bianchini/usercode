@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 2000
+process.MessageLogger.cerr.FwkReport.reportEvery = 20
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -68,7 +68,7 @@ process.source.fileNames = cms.untracked.vstring(
 #    )
 
 postfix           = "PFlow"
-runOnMC           = False
+runOnMC           = True
 
 if runOnMC:
     #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
@@ -308,11 +308,18 @@ process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
     vertexTag = cms.InputTag("offlinePrimaryVertices")
     )
 
-process.atLeastOneMuTau = cms.EDProducer("CandViewShallowCloneCombiner",
-                                         decay = cms.string("selectedPatMuonsTriggerMatch selectedPatTausTriggerMatch"),
-                                         cut = cms.string("sqrt((daughter(0).eta-daughter(1).eta)*(daughter(0).eta-daughter(1).eta)+  min( abs(daughter(0).phi-daughter(1).phi), 2*3.1415926 - abs(daughter(0).phi-daughter(1).phi)  ) *  min( abs(daughter(0).phi-daughter(1).phi), 2*3.1415926 - abs(daughter(0).phi-daughter(1).phi)  )  )>0.5"),
-                                         checkCharge = cms.bool(False)
-                                         )
+process.selectedPatTausTriggerMatchUserEmbedded = cms.EDProducer(
+    "TausUserEmbedded",
+    tauTag = cms.InputTag("selectedPatTausTriggerMatch"),
+    vertexTag = cms.InputTag("offlinePrimaryVertices"),
+    )
+
+process.atLeastOneMuTau = cms.EDProducer(
+    "CandViewShallowCloneCombiner",
+    decay = cms.string("selectedPatMuonsTriggerMatchUserEmbedded selectedPatTausTriggerMatchUserEmbedded"),
+    cut = cms.string("sqrt((daughter(0).eta-daughter(1).eta)*(daughter(0).eta-daughter(1).eta)+  min( abs(daughter(0).phi-daughter(1).phi), 2*3.1415926 - abs(daughter(0).phi-daughter(1).phi)  ) *  min( abs(daughter(0).phi-daughter(1).phi), 2*3.1415926 - abs(daughter(0).phi-daughter(1).phi)  )  )>0.5"),
+    checkCharge = cms.bool(False)
+    )
 
 process.atLeastOneMuTauCounter = cms.EDFilter(
     "CandViewCountFilter",
@@ -328,7 +335,7 @@ process.muPtEta = cms.EDFilter(
     filter = cms.bool(False)
     )
 process.atLeastOneMuTaumuPtEta = process.atLeastOneMuTau.clone(
-    decay=cms.string("muPtEta selectedPatTausTriggerMatch")
+    decay=cms.string("muPtEta selectedPatTausTriggerMatchUserEmbedded")
     )
 process.muPtEtaCounter = cms.EDFilter(
     "CandViewCountFilter",
@@ -351,7 +358,7 @@ process.muPtEtaID = cms.EDFilter(
     filter = cms.bool(False)
     )
 process.atLeastOneMuTaumuPtEtaID = process.atLeastOneMuTau.clone(
-    decay=cms.string("muPtEtaID selectedPatTausTriggerMatch")
+    decay=cms.string("muPtEtaID selectedPatTausTriggerMatchUserEmbedded")
     )
 process.muPtEtaIDCounter = cms.EDFilter(
     "CandViewCountFilter",
@@ -362,7 +369,7 @@ process.muPtEtaIDCounter = cms.EDFilter(
 
 process.tauPtEta  = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("selectedPatTausTriggerMatch"),
+    src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
     cut = cms.string("pt>20 && abs(eta)<2.3"),
     filter = cms.bool(False)
     )
@@ -378,8 +385,8 @@ process.tauPtEtaCounter = cms.EDFilter(
 
 process.tauPtEtaID  = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("selectedPatTausTriggerMatch"),
-    cut = cms.string(process.tauPtEta.cut.value()+" && tauID('decayModeFinding')>0.5"),
+    src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
+    cut = cms.string(process.tauPtEta.cut.value()+" && tauID('decayModeFinding')>0.5 && userFloat('dzWrtPV')<0.2"),
     filter = cms.bool(False)
     )
 process.atLeastOneMuTautauPtEtaID = process.atLeastOneMuTau.clone(
@@ -394,7 +401,7 @@ process.tauPtEtaIDCounter = cms.EDFilter(
 
 process.tauPtEtaIDAgMu  = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("selectedPatTausTriggerMatch"),
+    src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
     cut = cms.string(process.tauPtEtaID.cut.value()+" && tauID('againstMuonTight')>0.5"),
     filter = cms.bool(False)
     )
@@ -410,7 +417,7 @@ process.tauPtEtaIDAgMuCounter = cms.EDFilter(
 
 process.tauPtEtaIDAgMuAgElec  = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("selectedPatTausTriggerMatch"),
+    src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
     cut = cms.string(process.tauPtEtaIDAgMu.cut.value()+" && tauID('againstElectronLoose')>0.5"),
     filter = cms.bool(False)
     )
@@ -447,10 +454,12 @@ process.tauLegSequence = cms.Sequence(
     )
 
 process.load("Bianchi.Utilities.diTausReconstruction_cff")
-process.diTau = process.muTauPairs.clone()
+process.diTau = process.allMuTauPairs.clone()
 process.diTau.srcLeg1 = cms.InputTag("muPtEtaID")
 process.diTau.srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElec")
 process.diTau.srcMET  = cms.InputTag("patMETsPFlow")
+process.diTau.dRmin12  = cms.double(0.5)
+process.diTau.doSVreco = cms.bool(True)
 
 if not runOnMC:
     process.diTau.srcGenParticles = ""
@@ -531,6 +540,7 @@ process.pat = cms.Sequence(
     process.fjSequence*
     process.patDefaultSequence*
     process.selectedPatMuonsTriggerMatchUserEmbedded*
+    process.selectedPatTausTriggerMatchUserEmbedded*
     process.alLeastOneMuTauSequence*
     process.muLegSequence*
     process.tauLegSequence*

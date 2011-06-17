@@ -81,9 +81,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   diTauVisP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   diTauCAP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   diTauICAP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  diTauSVfit1P4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  diTauSVfit2P4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  diTauSVfit3P4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  diTauSVfitP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
   diTauLegsP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genDiTauLegsP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
@@ -113,9 +111,11 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("diTauVisP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",  &diTauVisP4_);
   tree_->Branch("diTauCAP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",   &diTauCAP4_);
   tree_->Branch("diTauICAP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",   &diTauICAP4_);
-  tree_->Branch("diTauSVfit1P4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diTauSVfit1P4_);
-  tree_->Branch("diTauSVfit2P4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diTauSVfit2P4_);
-  tree_->Branch("diTauSVfit3P4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diTauSVfit3P4_);
+  tree_->Branch("diTauSVfitP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diTauSVfitP4_);
+
+  tree_->Branch("diTauNSVfitMass",       &diTauNSVfitMass_,"diTauNSVfitMass/F");
+  tree_->Branch("diTauNSVfitMassErrUp",  &diTauNSVfitMassErrUp_,"diTauNSVfitMassErrUp/F");
+  tree_->Branch("diTauNSVfitMassErrDown",&diTauNSVfitMassErrDown_,"diTauNSVfitMassErrDown/F");
 
   tree_->Branch("diTauLegsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diTauLegsP4_);
   tree_->Branch("genDiTauLegsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genDiTauLegsP4_);
@@ -192,7 +192,7 @@ void ElecTauStreamAnalyzer::beginJob(){
 
 ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
   delete jetsP4_; delete jetsIDP4_; delete jetsIDL1OffsetP4_, delete METP4_; delete diTauVisP4_; delete diTauCAP4_; delete diTauICAP4_; 
-  delete diTauSVfit1P4_; delete diTauSVfit2P4_; delete diTauSVfit3P4_;
+  delete diTauSVfitP4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_;
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;delete extraElectrons_;
   delete tRandom_ ; delete fpuweight_; delete jetsChNfraction_; delete jetsChEfraction_; delete jetMoments_;
@@ -206,9 +206,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   diTauVisP4_->clear();
   diTauCAP4_->clear();
   diTauICAP4_->clear();
-  diTauSVfit1P4_->clear();
-  diTauSVfit2P4_->clear();
-  diTauSVfit3P4_->clear();
+  diTauSVfitP4_->clear();
   diTauLegsP4_->clear();
   METP4_->clear();
   extraElectrons_->clear();
@@ -726,9 +724,15 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   diTauVisP4_->push_back( theDiTau->p4Vis() );
   diTauCAP4_->push_back( theDiTau->p4CollinearApprox() );
   diTauICAP4_->push_back( theDiTau->p4ImprovedCollinearApprox() );
-  diTauSVfit1P4_->push_back( theDiTau->svFitSolution("psKine","",0)->p4()  );
-  diTauSVfit2P4_->push_back( theDiTau->svFitSolution("psKine_MEt","",0)->p4()  );
-  diTauSVfit3P4_->push_back( theDiTau->svFitSolution("psKine_MEt_ptBalance","",0)->p4()  );
+
+  math::XYZTLorentzVectorD nSVfitFitP4(0,0,0,0);
+  if( theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)!=0 ) 
+    nSVfitFitP4 = ((NSVfitEventHypothesis*)theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0))->p4_fitted(); 
+  diTauSVfitP4_->push_back( nSVfitFitP4  );
+  
+  diTauNSVfitMass_        = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->numResonances()>0 ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->resonance(0)->mass()        : -99; 
+  diTauNSVfitMassErrUp_   = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->numResonances()>0 ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->resonance(0)->massErrUp()   : -99; 
+  diTauNSVfitMassErrDown_ = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->numResonances()>0 ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->resonance(0)->massErrDown() : -99; 
 
   run_   = iEvent.run();
   event_ = (iEvent.eventAuxiliary()).event();
@@ -871,11 +875,11 @@ unsigned int  ElecTauStreamAnalyzer::jetID( const pat::Jet* jet, const reco::Ver
 	  }
 	}
 	if(!isMatched){
-	  float dist = vtxZ.size()>0 ? abs(vtxZ[0]-((cand.trackRef())->referencePoint()).z()) : 999.;
+	  float dist = vtxZ.size()>0 ? fabs(vtxZ[0]-((cand.trackRef())->referencePoint()).z()) : 999.;
 	  float tmpDist = 999.;
 	  for(unsigned k = 1; k < vtxZ.size(); k++){
-	    if( abs(((cand.trackRef())->referencePoint()).z() - vtxZ[k] ) < tmpDist )
-	      tmpDist = abs(((cand.trackRef())->referencePoint()).z() - vtxZ[k] );
+	    if( fabs(((cand.trackRef())->referencePoint()).z() - vtxZ[k] ) < tmpDist )
+	      tmpDist = fabs(((cand.trackRef())->referencePoint()).z() - vtxZ[k] );
 	  }
 	  if(tmpDist>dist){
 	    isMatched = true;
@@ -903,11 +907,11 @@ unsigned int  ElecTauStreamAnalyzer::jetID( const pat::Jet* jet, const reco::Ver
 
       if((cand.gsfTrackRef()).isNonnull()){
 	bool isMatched = false;
-	float dist = vtxZ.size()>0 ? abs(vtxZ[0]-((cand.gsfTrackRef())->referencePoint()).z()) : 999.;
+	float dist = vtxZ.size()>0 ? fabs(vtxZ[0]-((cand.gsfTrackRef())->referencePoint()).z()) : 999.;
 	float tmpDist = 999.;
 	for(unsigned k = 1; k < vtxZ.size(); k++){
-	  if( abs(((cand.gsfTrackRef())->referencePoint()).z() - vtxZ[k] ) < tmpDist )
-	    tmpDist = abs(((cand.gsfTrackRef())->referencePoint()).z() - vtxZ[k] );
+	  if( fabs(((cand.gsfTrackRef())->referencePoint()).z() - vtxZ[k] ) < tmpDist )
+	    tmpDist = fabs(((cand.gsfTrackRef())->referencePoint()).z() - vtxZ[k] );
 	}
 	if(tmpDist>dist){
 	  isMatched = true;

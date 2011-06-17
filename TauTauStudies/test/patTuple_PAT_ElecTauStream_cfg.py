@@ -310,12 +310,12 @@ process.makeSCs = cms.Sequence(process.mergedSuperClusters*process.selectedSuper
 
 #simpleCutsWP95 = "(userFloat('nHits')<=1 && userFloat('dist')>-999 && userFloat('dcot')>-999 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.7 && userFloat('dEta')<0.01 && userFloat('HoE')<0.07) ))"
 #simpleCutsWP95 = "(userFloat('nHits')<=1 && userFloat('dist')>-999 && userFloat('dcot')>-999 &&  ( (pt>=20 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.7 && userFloat('dEta')<0.01 && userFloat('HoE')<0.15) )) || (pt<20 && (fbrem>0.15 || (abs(superClusterPosition.Eta)<1. && eSuperClusterOverP>0.95) ) && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.7 && userFloat('dEta')<0.01 && userFloat('HoE')<0.15) ) )  ) )"
-simpleCutsWP95 = "(userFloat('nHits')<=1 && userInt('antiConv')>0.5 &&  ( (pt>=20 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.7 && userFloat('dEta')<0.01 && userFloat('HoE')<0.15) )) || (pt<20 && (fbrem>0.15 || (abs(superClusterPosition.Eta)<1. && eSuperClusterOverP>0.95) ) && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.7 && userFloat('dEta')<0.01 && userFloat('HoE')<0.15) ) )  ) )"
+simpleCutsWP95 = "(userFloat('nHits')<=1  && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.7 && userFloat('dEta')<0.01 && userFloat('HoE')<0.07) ))"
 
 
 #simpleCutsWP80 = "(userFloat('nHits')==0 && userFloat('dist')>0.02 && userFloat('dcot')>0.02 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.06 && userFloat('dEta')<0.004 && userFloat('HoE')<0.04) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.03 && userFloat('dEta')<0.007 && userFloat('HoE')<0.025) ))"
 #simpleCutsWP80 = "(userFloat('nHits')==0 && userFloat('dist')>0.02 && userFloat('dcot')>0.02 &&  ( (pt>=20 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.06 && userFloat('dEta')<0.004 && userFloat('HoE')<0.04) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.03 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) )) || (pt<20 && (fbrem>0.15 || (abs(superClusterPosition.Eta)<1. && eSuperClusterOverP>0.95) ) && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.03 && userFloat('dEta')<0.004 && userFloat('HoE')<0.025) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.02 && userFloat('dEta')<0.005 && userFloat('HoE')<0.15) ) )  ) )"
-simpleCutsWP80 = "(userFloat('nHits')==0 && userInt('antiConv')>0.5 &&  ( (pt>=20 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.06 && userFloat('dEta')<0.004 && userFloat('HoE')<0.04) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.03 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) )) || (pt<20 && (fbrem>0.15 || (abs(superClusterPosition.Eta)<1. && eSuperClusterOverP>0.95) ) && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.03 && userFloat('dEta')<0.004 && userFloat('HoE')<0.025) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.02 && userFloat('dEta')<0.005 && userFloat('HoE')<0.15) ) )  ) )"
+simpleCutsWP80 = "(userFloat('nHits')==0 && userInt('antiConv')>0.5 &&  ( (pt>=20 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.06 && userFloat('dEta')<0.004 && userFloat('HoE')<0.04) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.03 && userFloat('dEta')<0.007 && userFloat('HoE')<0.025) )) || (pt<20 && (fbrem>0.15 || (abs(superClusterPosition.Eta)<1. && eSuperClusterOverP>0.95) ) && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.03 && userFloat('dEta')<0.004 && userFloat('HoE')<0.025) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.02 && userFloat('dEta')<0.005 && userFloat('HoE')<0.025) ) )  ) )"
 
 #likelihoodWP95 = "(userFloat('nHits')==0 && ( (isEB && ((numberOfBrems==0 && electronID('electronIDLH')>-4.274) || (numberOfBrems>0 && electronID('electronIDLH')>-3.773 ) )  )  || (isEE && ((numberOfBrems==0 && electronID('electronIDLH')>-5.092) || (numberOfBrems>0 && electronID('electronIDLH')>-2.796 ) )) ) )"
 #likelihoodWP80 = "(userFloat('nHits')==0 && userFloat('dist')>0.02 && userFloat('dcot')>0.02 && ( (isEB && ((numberOfBrems==0 && electronID('electronIDLH')>1.193) || (numberOfBrems>0 && electronID('electronIDLH')>1.345 ) ) )  || (isEE && ((numberOfBrems==0 && electronID('electronIDLH')>0.810) || (numberOfBrems>0 && electronID('electronIDLH')>3.021) )) ) )"
@@ -327,9 +327,15 @@ process.selectedPatElectronsTriggerMatchUserEmbedded = cms.EDProducer(
     isMC = cms.bool(runOnMC)
     )
 
+process.selectedPatTausTriggerMatchUserEmbedded = cms.EDProducer(
+    "TausUserEmbedded",
+    tauTag = cms.InputTag("selectedPatTausTriggerMatch"),
+    vertexTag = cms.InputTag("offlinePrimaryVertices"),
+    )
+
 process.atLeastOneElecTau = cms.EDProducer(
     "CandViewShallowCloneCombiner",
-    decay = cms.string("selectedPatElectronsTriggerMatch selectedPatTausTriggerMatch"),
+    decay = cms.string("selectedPatElectronsTriggerMatchUserEmbedded selectedPatTausTriggerMatchUserEmbedded"),
     cut = cms.string("sqrt((daughter(0).eta-daughter(1).eta)*(daughter(0).eta-daughter(1).eta)+  min( abs(daughter(0).phi-daughter(1).phi), 2*3.1415926 - abs(daughter(0).phi-daughter(1).phi)  ) *  min( abs(daughter(0).phi-daughter(1).phi), 2*3.1415926 - abs(daughter(0).phi-daughter(1).phi)  )  )>0.5"),
     checkCharge = cms.bool(False)
     )
@@ -348,7 +354,7 @@ process.elecPtEta = cms.EDFilter(
     filter = cms.bool(False)
     )
 process.atLeastOneElecTauelecPtEta = process.atLeastOneElecTau.clone(
-    decay=cms.string("elecPtEta selectedPatTausTriggerMatch")
+    decay=cms.string("elecPtEta selectedPatTausTriggerMatchUserEmbedded")
     )
 process.elecPtEtaCounter = cms.EDFilter(
     "CandViewCountFilter",
@@ -357,7 +363,6 @@ process.elecPtEtaCounter = cms.EDFilter(
     maxNumber = cms.uint32(999),
     )
 
-
 process.elecPtEtaID = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("selectedPatElectronsTriggerMatchUserEmbedded"),
@@ -365,7 +370,7 @@ process.elecPtEtaID = cms.EDFilter(
     filter = cms.bool(False)
     )
 process.atLeastOneElecTauelecPtEtaID = process.atLeastOneElecTau.clone(
-    decay=cms.string("elecPtEtaID selectedPatTausTriggerMatch")
+    decay=cms.string("elecPtEtaID selectedPatTausTriggerMatchUserEmbedded")
     )
 process.elecPtEtaIDCounter = cms.EDFilter(
     "CandViewCountFilter",
@@ -383,7 +388,7 @@ process.elecPtEtaRelID = cms.EDFilter(
 
 process.tauPtEta  = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("selectedPatTausTriggerMatch"),
+    src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
     cut = cms.string("pt>20 && (eta<2.3&&eta>-2.3)"),
     filter = cms.bool(False)
     )
@@ -397,10 +402,13 @@ process.tauPtEtaCounter = cms.EDFilter(
     maxNumber = cms.uint32(999),
     )
 
+
+
+
 process.tauPtEtaID  = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("selectedPatTausTriggerMatch"),
-    cut = cms.string(process.tauPtEta.cut.value()+" && tauID('decayModeFinding')>0.5"),
+    src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
+    cut = cms.string(process.tauPtEta.cut.value()+" && tauID('decayModeFinding')>0.5 && userFloat('dzWrtPV')<0.2"),
     filter = cms.bool(False)
     )
 process.atLeastOneElecTautauPtEtaID = process.atLeastOneElecTau.clone(
@@ -415,7 +423,7 @@ process.tauPtEtaIDCounter = cms.EDFilter(
 
 process.tauPtEtaIDAgMu  = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("selectedPatTausTriggerMatch"),
+    src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
     cut = cms.string(process.tauPtEtaID.cut.value()+" && tauID('againstMuonLoose')>0.5"),
     filter = cms.bool(False)
     )
@@ -431,7 +439,7 @@ process.tauPtEtaIDAgMuCounter = cms.EDFilter(
 
 process.tauPtEtaIDAgMuAgElec  = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("selectedPatTausTriggerMatch"),
+    src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
     cut = cms.string(process.tauPtEtaIDAgMu.cut.value()+" && tauID('againstElectronTight')>0.5"),
     filter = cms.bool(False)
     )
@@ -447,7 +455,7 @@ process.tauPtEtaIDAgMuAgElecCounter = cms.EDFilter(
 
 process.tauPtEtaIDAgMuAgElecCrackRem  = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("selectedPatTausTriggerMatch"),
+    src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
     cut = cms.string(process.tauPtEtaIDAgMuAgElec.cut.value()+" && tauID('againstElectronCrackRem')>0.5"),
     filter = cms.bool(False)
     )
@@ -485,13 +493,15 @@ process.tauLegSequence = cms.Sequence(
     )
 
 process.load("Bianchi.Utilities.diTausReconstruction_cff")
-process.diTau = process.elecTauPairs.clone()
+process.diTau = process.allElecTauPairs.clone()
 process.diTau.srcLeg1 = cms.InputTag("elecPtEtaID")
 process.diTau.srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecCrackRem")
 process.diTau.srcMET  = cms.InputTag("patMETsPFlow")
+process.diTau.dRmin12  = cms.double(0.5)
+process.diTau.doSVreco = cms.bool(True)
 
 if not runOnMC:
-        process.diTau.srcGenParticles = ""
+    process.diTau.srcGenParticles = ""
 
 
 process.selectedDiTau = cms.EDFilter(
@@ -568,6 +578,7 @@ process.pat = cms.Sequence(
     process.fjSequence*
     process.patDefaultSequence*
     process.selectedPatElectronsTriggerMatchUserEmbedded*
+    process.selectedPatTausTriggerMatchUserEmbedded*
     process.alLeastOneElecTauSequence*
     process.elecLegSequence*
     process.tauLegSequence*
