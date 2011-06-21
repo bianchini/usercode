@@ -557,6 +557,38 @@ process.jetCleaningSequence = cms.Sequence(
     process.deltaRJetElectrons*process.selectedPatJetsNoElectrons*process.deltaRJetTaus*process.selectedPatJetsNoElectronsNoTaus
     )
 
+process.offlinePrimaryVerticesDA = cms.EDProducer(
+    "PrimaryVertexProducer",
+    PVSelParameters = cms.PSet(
+    maxDistanceToBeam = cms.double(1.0)
+    ),
+    verbose = cms.untracked.bool(False),
+    algorithm = cms.string('AdaptiveVertexFitter'),
+    TkFilterParameters = cms.PSet(
+    maxNormalizedChi2 = cms.double(20.0),
+    minPt = cms.double(0.0),
+    algorithm = cms.string('filter'),
+    maxD0Significance = cms.double(5.0),
+    trackQuality = cms.string('any'),
+    minPixelLayersWithHits = cms.int32(2),
+    minSiliconLayersWithHits = cms.int32(5)
+    ),
+    beamSpotLabel = cms.InputTag("offlineBeamSpot"),
+    TrackLabel = cms.InputTag("generalTracks"),
+    useBeamConstraint = cms.bool(False),
+    minNdof = cms.double(0.0),
+    TkClusParameters = cms.PSet(
+    TkDAClusParameters = cms.PSet(
+    dzCutOff = cms.double(4.0),
+    d0CutOff = cms.double(3.0),
+    Tmin = cms.double(9.0),
+    coolingFactor = cms.double(0.8),
+    vertexSize = cms.double(0.05)
+    ),
+    algorithm = cms.string('DA')
+    )
+    )
+
 process.elecTauStreamAnalyzer = cms.EDAnalyzer(
     "ElecTauStreamAnalyzer",
     diTaus =  cms.InputTag("selectedDiTau"),
@@ -573,6 +605,7 @@ process.elecTauStreamAnalyzer = cms.EDAnalyzer(
 
 process.pat = cms.Sequence(
     process.allEventsFilter+
+    process.offlinePrimaryVerticesDA*
     #process.makeSCs +
     process.PFTau*
     process.fjSequence*
@@ -604,17 +637,32 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_TriggerResults_*_*',
     'keep *_hltTriggerSummaryAOD_*_*',
     'keep recoGenParticles_genParticles*_*_*',
+    'keep *_patTriggerEvent_*_*',
+    'keep *_patTrigger_*_*',
+    'keep *_selectedPatJets_*_*',
+    'keep *_ak5PFJets_*_*',
+    'keep *_particleFlow__*',
+    'keep *_offlinePrimaryVerticesDA_*_*',
+    'keep *_offlinePrimaryVerticesWithBS_*_*',
+    'keep *_offlineBeamSpot_*_*',
+    'keep *_patMETsPFlow_*_*',
+    'keep *_tauGenJetsSelectorAllHadrons_*_*',
+    'keep *_kt6PFJetsCentral_rho_*',
+    'keep *_elecPtEtaID_*_*',
+    'keep *_elecPtEtaRelID_*_*',
+    'keep *_addPileupInfo_*_*',
     'keep *_generalTracks_*_*',
     'keep *_electronGsfTracks_*_*',
     'keep recoTrackExtras_*_*_*',
     'keep recoGsfTrackExtras_*_*_*',
-    #'keep TrackingRecHitsOwned_*_*_*',
-    'keep *_selectedSuperClusters_*_*',
-    'keep *_offlineBeamSpot_*_*',
-    'keep *_offlinePrimaryVertices*_*_*',
-    'keep *_particleFlow_*_*',
-    'keep *_selectedPatJetsNoMuonsNoTaus_*_*',
-    'keep *_selectedDiTau_*_*',
+    'drop *_TriggerResults_*_HLT',
+    'drop *_TriggerResults_*_RECO',
+    'drop *_selectedPatElectrons_*_*',
+    'drop *_selectedPatMuons_*_*',
+    'drop *_selectedPatTaus_*_*',
+    'drop *_selectedPatElectronsTriggerMatch_*_*',
+    'drop *_selectedPatMuonsTriggerMatch_*_*',
+    'drop *_selectedPatTausTriggerMatch_*_*',
     )
                                    )
 
@@ -628,6 +676,6 @@ process.out.SelectEvents = cms.untracked.PSet(
 
 process.out.fileName = cms.untracked.string('patTuples_ElecTauStream.root')
 
-#process.outpath = cms.EndPath(process.out)
-process.outpath = cms.EndPath()
+process.outpath = cms.EndPath(process.out)
+#process.outpath = cms.EndPath()
 

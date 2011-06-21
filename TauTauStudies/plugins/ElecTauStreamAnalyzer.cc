@@ -90,7 +90,15 @@ void ElecTauStreamAnalyzer::beginJob(){
 
   extraElectrons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   
-  fpuweight_ = new PUWeight();
+  fpuweight_ = 0;// new PUWeight();
+
+  weights2011_[0] =  0.000623905;  weights2011_[1] =  0.00679293;  weights2011_[2] = 0.0327741;  weights2011_[3] =  0.108989;
+  weights2011_[4] =  0.271329;     weights2011_[5] =  0.541862;    weights2011_[6] =  0.900728;  weights2011_[7] =  1.29294;
+  weights2011_[8] =  1.61381;      weights2011_[9] =  1.79032;     weights2011_[10]=  1.79185;   weights2011_[11]=  1.80418;
+  weights2011_[12]=  1.79849;      weights2011_[13]=  1.80855;     weights2011_[14]=  1.78002;   weights2011_[15]=  1.79576;
+  weights2011_[16]=  1.77376;      weights2011_[17]=  1.76676;     weights2011_[18]=  1.77059;   weights2011_[19]=  1.83895;
+  weights2011_[20]=  1.74808;      weights2011_[21]= 1.9062;       weights2011_[22]=  1.82192;   weights2011_[23]=  1.68594;
+  weights2011_[24]=  1.54673;
 
   tree_->Branch("jetsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsP4_);
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
@@ -195,7 +203,7 @@ ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
   delete diTauSVfitP4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_;
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;delete extraElectrons_;
-  delete tRandom_ ; delete fpuweight_; delete jetsChNfraction_; delete jetsChEfraction_; delete jetMoments_;
+  delete tRandom_ ; /*delete fpuweight_;*/ delete jetsChNfraction_; delete jetsChEfraction_; delete jetMoments_;
 }
 
 void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -298,7 +306,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     }
   }
 
-  mcPUweight_ = fpuweight_->GetWeight(nPUVertices_);
+  if( fpuweight_ ) mcPUweight_ = fpuweight_->GetWeight(nPUVertices_);
+  else mcPUweight_ = nPUVertices_ < 25 ? weights2011_[nPUVertices_] : weights2011_[24];//
 
   edm::Handle<double> rhoFastJetHandle;
   iEvent.getByLabel(edm::InputTag("kt6PFJetsCentral","rho",""), rhoFastJetHandle);

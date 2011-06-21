@@ -136,6 +136,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   float rhoFastJet_;
   int nPUVertices_;
   int nOOTPUVertices_;
+  double weights2011_[25];
 
   PUWeight* fpuweight_;
   float mcPUweight_;
