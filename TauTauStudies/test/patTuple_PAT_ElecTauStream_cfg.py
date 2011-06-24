@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 2000
+process.MessageLogger.cerr.FwkReport.reportEvery = 20
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -11,28 +11,6 @@ from Configuration.PyReleaseValidation.autoCond import autoCond
 process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
-
-## temporary JEC
-#process.load("CondCore.DBCommon.CondDBCommon_cfi")
-#process.jec = cms.ESSource(
-#    "PoolDBESSource",
-#    DBParameters = cms.PSet(
-#    messageLevel = cms.untracked.int32(0)
-#    ),
-#    timetype = cms.string('runnumber'),
-#    toGet = cms.VPSet(
-#    cms.PSet(
-#    record = cms.string('JetCorrectionsRecord'),
-#    tag    = cms.string('JetCorrectorParametersCollection_Jec10V3_AK5PF'),
-#    label  = cms.untracked.string('AK5PF')
-#    )
-#    ),
-#    ## here you add as many jet types as you need (AK5Calo, AK5JPT, AK7PF, AK7Calo, KT4PF, KT4Calo, KT6PF, KT6Calo)
-#    connect = cms.string('sqlite_file:Jec10V3.db')
-#    )
-#process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
-
-
 
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 process.load('RecoJets.Configuration.RecoPFJets_cff')
@@ -53,18 +31,12 @@ process.kt6PFJetsCentral.Rho_EtaMax = cms.double(2.5)
 process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets+process.kt6PFJetsCentral)
 
 process.source.fileNames = cms.untracked.vstring(
-    #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_1.root',
-    #'file:/data_CMS/cms/lbianchini/ZMuMu_RelVal386.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root',
     'file:/data_CMS/cms/akalinow/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/PU_S1_START311_V1G1-v1/AOD/8EC598C7-3453-E011-AC82-002481E14F8C.root'
-    #'file:goodDataEvents_84_1_yHS.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/0053C2AC-423C-E011-976F-00215E21DB3A.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/00DCEC58-433B-E011-8FF8-E41F13181A70.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/02300FF5-423B-E011-B949-00215E2221E4.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/023A43AC-433B-E011-A582-00215E21DD26.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall10/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/GEN-SIM-RECO/START38_V12-v1/0000/044E940A-55EC-DF11-89D6-0023AEFDEE60.root',
-    #'file:/data_CMS/cms/lbianchini/F41A3437-7AED-DF11-A50D-002618943894.root',
-    #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_1.root',
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -308,13 +280,8 @@ process.makeSCs = cms.Sequence(process.mergedSuperClusters*process.selectedSuper
     
 ########### PAT
 
-#simpleCutsWP95 = "(userFloat('nHits')<=1 && userFloat('dist')>-999 && userFloat('dcot')>-999 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.7 && userFloat('dEta')<0.01 && userFloat('HoE')<0.07) ))"
-#simpleCutsWP95 = "(userFloat('nHits')<=1 && userFloat('dist')>-999 && userFloat('dcot')>-999 &&  ( (pt>=20 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.7 && userFloat('dEta')<0.01 && userFloat('HoE')<0.15) )) || (pt<20 && (fbrem>0.15 || (abs(superClusterPosition.Eta)<1. && eSuperClusterOverP>0.95) ) && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.7 && userFloat('dEta')<0.01 && userFloat('HoE')<0.15) ) )  ) )"
 simpleCutsWP95 = "(userFloat('nHits')<=1  && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.7 && userFloat('dEta')<0.01 && userFloat('HoE')<0.07) ))"
 
-
-#simpleCutsWP80 = "(userFloat('nHits')==0 && userFloat('dist')>0.02 && userFloat('dcot')>0.02 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.06 && userFloat('dEta')<0.004 && userFloat('HoE')<0.04) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.03 && userFloat('dEta')<0.007 && userFloat('HoE')<0.025) ))"
-#simpleCutsWP80 = "(userFloat('nHits')==0 && userFloat('dist')>0.02 && userFloat('dcot')>0.02 &&  ( (pt>=20 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.06 && userFloat('dEta')<0.004 && userFloat('HoE')<0.04) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.03 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) )) || (pt<20 && (fbrem>0.15 || (abs(superClusterPosition.Eta)<1. && eSuperClusterOverP>0.95) ) && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.03 && userFloat('dEta')<0.004 && userFloat('HoE')<0.025) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.02 && userFloat('dEta')<0.005 && userFloat('HoE')<0.15) ) )  ) )"
 simpleCutsWP80 = "(userFloat('nHits')==0 && userInt('antiConv')>0.5 &&  ( (pt>=20 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.06 && userFloat('dEta')<0.004 && userFloat('HoE')<0.04) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.03 && userFloat('dEta')<0.007 && userFloat('HoE')<0.025) )) || (pt<20 && (fbrem>0.15 || (abs(superClusterPosition.Eta)<1. && eSuperClusterOverP>0.95) ) && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.03 && userFloat('dEta')<0.004 && userFloat('HoE')<0.025) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.02 && userFloat('dEta')<0.005 && userFloat('HoE')<0.025) ) )  ) )"
 
 #likelihoodWP95 = "(userFloat('nHits')==0 && ( (isEB && ((numberOfBrems==0 && electronID('electronIDLH')>-4.274) || (numberOfBrems>0 && electronID('electronIDLH')>-3.773 ) )  )  || (isEE && ((numberOfBrems==0 && electronID('electronIDLH')>-5.092) || (numberOfBrems>0 && electronID('electronIDLH')>-2.796 ) )) ) )"
@@ -382,7 +349,7 @@ process.elecPtEtaIDCounter = cms.EDFilter(
 process.elecPtEtaRelID = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("selectedPatElectronsTriggerMatchUserEmbedded"),
-    cut = cms.string("pt>15 && abs(eta)<2.4 && !isEBEEGap && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2 &&"+simpleCutsWP95),
+    cut = cms.string("pt>15 && abs(eta)<2.4 && !isEBEEGap && "+simpleCutsWP95),
     filter = cms.bool(False)
     )
 
@@ -472,8 +439,8 @@ process.tauPtEtaIDAgMuAgElecCrackRemCounter = cms.EDFilter(
 process.atLeastOneGoodVertexSequence = cms.Sequence(
     process.primaryVertexFilter*process.vertexScrapingFilter
     )
-process.PFTau.replace(process.offlinePrimaryVerticesDA,
-                      process.offlinePrimaryVerticesDA*process.atLeastOneGoodVertexSequence)
+#process.PFTau.replace(process.offlinePrimaryVerticesDA,
+#                      process.offlinePrimaryVerticesDA*process.atLeastOneGoodVertexSequence)
 
 process.alLeastOneElecTauSequence = cms.Sequence(
     process.atLeastOneElecTau*process.atLeastOneElecTauCounter*process.atLeastOneElecTauFilter
@@ -498,7 +465,7 @@ process.diTau.srcLeg1 = cms.InputTag("elecPtEtaID")
 process.diTau.srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecCrackRem")
 process.diTau.srcMET  = cms.InputTag("patMETsPFlow")
 process.diTau.dRmin12  = cms.double(0.5)
-process.diTau.doSVreco = cms.bool(True)
+process.diTau.doSVreco = cms.bool(False)
 
 if not runOnMC:
     process.diTau.srcGenParticles = ""
@@ -557,7 +524,7 @@ process.jetCleaningSequence = cms.Sequence(
     process.deltaRJetElectrons*process.selectedPatJetsNoElectrons*process.deltaRJetTaus*process.selectedPatJetsNoElectronsNoTaus
     )
 
-process.offlinePrimaryVerticesDA = cms.EDProducer(
+process.offlinePrimaryVertices = cms.EDProducer(
     "PrimaryVertexProducer",
     PVSelParameters = cms.PSet(
     maxDistanceToBeam = cms.double(1.0)
@@ -597,7 +564,7 @@ process.elecTauStreamAnalyzer = cms.EDAnalyzer(
     triggerResults = cms.InputTag("patTriggerEvent"),
     isMC = cms.bool(runOnMC),
     deltaRLegJet  = cms.untracked.double(0.5),
-    minCorrPt = cms.untracked.double(15.), # is Et !!
+    minCorrPt = cms.untracked.double(15.),
     minJetID  = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
     applyTauSignalSel =  cms.bool( True ),
     verbose =  cms.untracked.bool( False ),
@@ -605,7 +572,8 @@ process.elecTauStreamAnalyzer = cms.EDAnalyzer(
 
 process.pat = cms.Sequence(
     process.allEventsFilter+
-    process.offlinePrimaryVerticesDA*
+    process.offlinePrimaryVertices*
+    process.atLeastOneGoodVertexSequence*
     #process.makeSCs +
     process.PFTau*
     process.fjSequence*
@@ -621,9 +589,9 @@ process.pat = cms.Sequence(
     process.printTree1
     )
 
-massSearchReplaceAnyInputTag(process.pat,
-                             "offlinePrimaryVertices",
-                             "offlinePrimaryVerticesDA",verbose=True)
+#massSearchReplaceAnyInputTag(process.pat,
+#                             "offlinePrimaryVertices",
+#                             "offlinePrimaryVerticesDA",verbose=True)
 
 if not runOnMC:
     process.pat.remove(process.printTree1)
@@ -643,6 +611,7 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_ak5PFJets_*_*',
     'keep *_particleFlow__*',
     'keep *_offlinePrimaryVerticesDA_*_*',
+    'keep *_offlinePrimaryVertices_*_*',
     'keep *_offlinePrimaryVerticesWithBS_*_*',
     'keep *_offlineBeamSpot_*_*',
     'keep *_patMETsPFlow_*_*',

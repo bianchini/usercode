@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 20
+process.MessageLogger.cerr.FwkReport.reportEvery = 2000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -11,7 +11,6 @@ from Configuration.PyReleaseValidation.autoCond import autoCond
 process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
-
 
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 process.load('RecoJets.Configuration.RecoPFJets_cff')
@@ -33,6 +32,7 @@ process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets+process.kt
 process.source.fileNames = cms.untracked.vstring(
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/02700D19-A756-E011-B4D5-0030486792B6.root'
+    #'file:goodDataEvents_84_1_yHS.root'
     'file:/data_CMS/cms/akalinow/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/PU_S1_START311_V1G1-v1/AOD/8EC598C7-3453-E011-AC82-002481E14F8C.root'
     )
 
@@ -328,7 +328,7 @@ process.muPtEtaRelID = cms.EDFilter(
 process.muPtEtaID = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
-    cut = cms.string(process.muPtEta.cut.value()+" &&  isTrackerMuon && isGlobalMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.hitPattern.numberOfValidTrackerHits>10 && globalTrack.normalizedChi2<10 && globalTrack.ptError/globalTrack.pt<0.1 && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"),
+    cut = cms.string(process.muPtEta.cut.value()+" &&  isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.hitPattern.numberOfValidTrackerHits>10 && globalTrack.normalizedChi2<10 && globalTrack.ptError/globalTrack.pt<0.1 && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"),
     filter = cms.bool(False)
     )
 process.atLeastOneMuTaumuPtEtaID = process.atLeastOneMuTau.clone(
@@ -427,39 +427,6 @@ process.tauLegSequence = cms.Sequence(
     (process.tauPtEtaIDAgMuAgElec*process.atLeastOneMuTautauPtEtaIDAgMuAgElec*process.tauPtEtaIDAgMuAgElecCounter*process.tauPtEtaIDAgMuAgElecFilter)
     )
 
-process.load("Bianchi.Utilities.diTausReconstruction_cff")
-process.diTau = process.allMuTauPairs.clone()
-process.diTau.srcLeg1 = cms.InputTag("muPtEtaID")
-process.diTau.srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElec")
-process.diTau.srcMET  = cms.InputTag("patMETsPFlow")
-process.diTau.dRmin12  = cms.double(0.5)
-process.diTau.doSVreco = cms.bool(False)
-
-if not runOnMC:
-    process.diTau.srcGenParticles = ""
-
-process.selectedDiTau = cms.EDFilter(
-    "MuTauPairSelector",
-    src = cms.InputTag("diTau"),
-    #cut = cms.string("charge==0 && mt1MET<40")
-    cut = cms.string("dR12>0.5")
-    )
-
-process.atLeast1selectedDiTau = cms.EDFilter(
-    "CandViewCountFilter",
-    src = cms.InputTag("selectedDiTau"),
-    minNumber = cms.uint32(1),
-    maxNumber = cms.uint32(999),
-    )
-
-process.diTauSequence = cms.Sequence(
-    process.diTau*
-    process.selectedDiTau*
-    process.atLeast1selectedDiTau*
-    process.atLeast1selectedDiTauFilter
-    )
-
-
 getattr(process,"selectedPatJets").cut = cms.string('pt>15 && abs(eta)<5.0')
 
 process.deltaRJetMuons = cms.EDProducer(
@@ -490,20 +457,6 @@ process.selectedPatJetsNoMuonsNoTaus = cms.EDProducer(
 
 process.jetCleaningSequence = cms.Sequence(
     process.deltaRJetMuons*process.selectedPatJetsNoMuons*process.deltaRJetTaus*process.selectedPatJetsNoMuonsNoTaus
-    )
-
-process.muTauStreamAnalyzer = cms.EDAnalyzer(
-    "MuTauStreamAnalyzer",
-    diTaus =  cms.InputTag("selectedDiTau"),
-    #jets =  cms.InputTag("selectedPatJetsNoMuons"),
-    jets =  cms.InputTag("selectedPatJets"),
-    triggerResults = cms.InputTag("patTriggerEvent"),
-    isMC = cms.bool(runOnMC),
-    deltaRLegJet  = cms.untracked.double(0.5),
-    minCorrPt = cms.untracked.double(15.),
-    minJetID  = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
-    applyTauSignalSel =  cms.bool( True ),
-    verbose =  cms.untracked.bool( True ),
     )
 
 process.offlinePrimaryVertices = cms.EDProducer(
@@ -538,6 +491,7 @@ process.offlinePrimaryVertices = cms.EDProducer(
     )
     )
 
+
 process.pat = cms.Sequence(
     process.allEventsFilter+
     process.offlinePrimaryVertices*
@@ -551,9 +505,7 @@ process.pat = cms.Sequence(
     process.alLeastOneMuTauSequence*
     process.muLegSequence*
     process.tauLegSequence*
-    process.diTauSequence*
     process.jetCleaningSequence*
-    process.muTauStreamAnalyzer+
     process.printTree1
     )
 
@@ -577,6 +529,7 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_patTrigger_*_*',
     'keep *_selectedPatJets_*_*',
     'keep *_ak5PFJets_*_*',
+    'keep *_genParticles_*_*',
     'keep *_particleFlow__*',
     'keep *_offlinePrimaryVerticesDA_*_*',
     'keep *_offlinePrimaryVertices_*_*',
@@ -597,6 +550,7 @@ process.out.outputCommands.extend( cms.vstring(
     'drop *_selectedPatElectrons_*_*',
     'drop *_selectedPatMuons_*_*',
     'drop *_selectedPatTaus_*_*',
+    'drop *_patMETs_*_*',
     'drop *_selectedPatMuonsTriggerMatch_*_*',
     'drop *_selectedPatElectronsTriggerMatch_*_*',
     'drop *_selectedPatTausTriggerMatch_*_*',
@@ -604,7 +558,7 @@ process.out.outputCommands.extend( cms.vstring(
                                    )
 
 process.TFileService = cms.Service("TFileService",
-                                   fileName = cms.string("treeMuTauStream.root")
+                                   fileName = cms.string("skimMuTauStream.root")
                                    )
 
 process.out.SelectEvents = cms.untracked.PSet(
@@ -613,6 +567,6 @@ process.out.SelectEvents = cms.untracked.PSet(
 
 process.out.fileName = cms.untracked.string('patTuples_MuTauStream.root')
 
-#process.outpath = cms.EndPath(process.out)
-process.outpath = cms.EndPath()
+process.outpath = cms.EndPath(process.out)
+#process.outpath = cms.EndPath()
 

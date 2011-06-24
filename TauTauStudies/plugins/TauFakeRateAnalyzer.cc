@@ -114,7 +114,7 @@ void TauFakeRateAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   mcPUweight_ = fpuweight_->GetWeight(nPUVertices);
 
   edm::Handle<reco::VertexCollection> pvHandle;
-  edm::InputTag pvTag("offlinePrimaryVerticesDA");
+  edm::InputTag pvTag("offlinePrimaryVertices");
   iEvent.getByLabel(pvTag,pvHandle);
   if( !pvHandle.isValid() )  
     edm::LogError("DataNotAvailable")

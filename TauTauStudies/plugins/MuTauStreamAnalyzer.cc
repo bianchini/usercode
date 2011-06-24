@@ -24,6 +24,7 @@
 
 #include "DataFormats/JetReco/interface/GenJet.h"
 #include "DataFormats/JetReco/interface/GenJetCollection.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
@@ -85,6 +86,7 @@ void MuTauStreamAnalyzer::beginJob(){
   genDiTauLegsP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   METP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genMETP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  genVP4_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
   extraMuons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
@@ -128,7 +130,11 @@ void MuTauStreamAnalyzer::beginJob(){
 
   tree_->Branch("METP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&METP4_);
   tree_->Branch("genMETP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genMETP4_);
+  tree_->Branch("genVP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genVP4_);
+  tree_->Branch("genDecay",&genDecay_,"genDecay/I");
+
   tree_->Branch("extraMuons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&extraMuons_);
+
 
   tree_->Branch("sumEt",&sumEt_,"sumEt/F");
   tree_->Branch("MtLeg1",&MtLeg1_,"MtLeg1/F");
@@ -184,7 +190,7 @@ void MuTauStreamAnalyzer::beginJob(){
 
 MuTauStreamAnalyzer::~MuTauStreamAnalyzer(){
   delete jetsP4_; delete jetsIDP4_; delete METP4_; delete diTauVisP4_; delete diTauCAP4_; delete diTauICAP4_; 
-  delete diTauSVfitP4_;
+  delete diTauSVfitP4_; delete genVP4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_;
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_; delete extraMuons_; delete jetsIDL1OffsetP4_;
   delete tRandom_ ; /*delete fpuweight_*/ delete jetsChNfraction_; delete jetsChEfraction_;delete jetMoments_;
@@ -203,6 +209,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   diTauSVfitP4_->clear();
   diTauLegsP4_->clear();
   METP4_->clear();
+  genVP4_->clear();
   jetsChNfraction_->clear();
   jetsChEfraction_->clear();
   jetMoments_->clear();
@@ -232,7 +239,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   const pat::JetCollection* jets = jetsHandle.product();
 
   edm::Handle<reco::VertexCollection> pvHandle;
-  edm::InputTag pvTag("offlinePrimaryVerticesDA");
+  edm::InputTag pvTag("offlinePrimaryVertices");
   iEvent.getByLabel(pvTag,pvHandle);
   if( !pvHandle.isValid() )  
     edm::LogError("DataNotAvailable")
@@ -270,6 +277,41 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       << "No Trigger label available \n";
   const pat::TriggerEvent* trigger = triggerHandle.product();
 
+  genDecay_ = -99;
+  edm::Handle<reco::GenParticleCollection> genHandle;
+  if(isMC_){
+    iEvent.getByLabel(edm::InputTag("genParticles"),genHandle);
+    if( !genHandle.isValid() )  
+      edm::LogError("DataNotAvailable")
+	<< "No gen particles label available \n";
+    const reco::GenParticleCollection* genParticles = genHandle.product();
+    for(unsigned int k = 0; k < genParticles->size(); k ++){
+      if( !( (*genParticles)[k].pdgId() == 23 || abs((*genParticles)[k].pdgId()) == 24 || (*genParticles)[k].pdgId() == 25) || (*genParticles)[k].status()!=3)
+	continue;
+      if(verbose_) cout << "Boson status, pt,phi " << (*genParticles)[k].status() << "," << (*genParticles)[k].pt() << "," << (*genParticles)[k].phi() << endl;
+
+      genVP4_->push_back( (*genParticles)[k].p4() );
+      genDecay_ = (*genParticles)[k].pdgId();
+
+      int breakLoop = 0;
+      for(unsigned j = 0; j< ((*genParticles)[k].daughterRefVector()).size() && breakLoop!=1; j++){
+	if( abs(((*genParticles)[k].daughterRef(j))->pdgId()) == 11 ){
+	  genDecay_ *= 11;
+	  breakLoop = 1;
+	}
+	if( abs(((*genParticles)[k].daughterRef(j))->pdgId()) == 13 ){
+	  genDecay_ *= 13;
+	  breakLoop = 1;
+	}
+	if( abs(((*genParticles)[k].daughterRef(j))->pdgId()) == 15 ){
+	  genDecay_ *= 15;
+	  breakLoop = 1;
+	}
+      }
+      if(verbose_) cout << "Decays to pdgId " << genDecay_/(*genParticles)[k].pdgId()  << endl;
+      break;
+    }
+  }
 
   edm::Handle<reco::GenJetCollection> tauGenJetsHandle;
   edm::Handle<std::vector<PileupSummaryInfo> > puInfoH;
@@ -362,7 +404,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
 	if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3 
 	    && (*muonsRel)[i].charge()*(*muons)[j].charge()<0
-	    && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.2 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.2 ){
+	    && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
 	  //muIndex = 0;
 	  muFlag_ = 1;
 	  if(verbose_) cout<< "Two muons failing diMu veto: flag= " << muFlag_ << endl;
@@ -370,7 +412,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	}
 	else if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3 
 		 && (*muonsRel)[i].charge()*(*muons)[j].charge()>0
-		 && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.2 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.2 ){
+		 && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
 	  //muIndex = 0;
 	  muFlag_ = 2;
 	  if(verbose_) cout<< "Two muons with SS: flag= " << muFlag_ << endl;
