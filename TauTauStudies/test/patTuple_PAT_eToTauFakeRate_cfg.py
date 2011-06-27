@@ -1,9 +1,9 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 50
+process.MessageLogger.cerr.FwkReport.reportEvery = 2000
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
@@ -15,20 +15,10 @@ process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 
 process.source.fileNames = cms.untracked.vstring(
-    #'file:/data_CMS/cms/lbianchini/ZeeRelVal413.root',
-    #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_1.root',
-    #'file:/data_CMS/cms/lbianchini/ZMuMu_RelVal386.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root',
-    #'file:goodDataEvents_84_1_yHS.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/VBF_ToHToZZTo4L_M-550_7TeV-powheg-pythia6/AODSIM/PU_S1_START311_V1G1-v1/0034/126992AB-6554-E011-BD51-003048D476B8.root'
     'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/0053C2AC-423C-E011-976F-00215E21DB3A.root',
     'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/00DCEC58-433B-E011-8FF8-E41F13181A70.root',
     'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/02300FF5-423B-E011-B949-00215E2221E4.root',
     'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/023A43AC-433B-E011-A582-00215E21DD26.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall10/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/GEN-SIM-RECO/START38_V12-v1/0000/044E940A-55EC-DF11-89D6-0023AEFDEE60.root',
-    #'file:/data_CMS/cms/lbianchini/F41A3437-7AED-DF11-A50D-002618943894.root',
-    #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_1.root',
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -37,7 +27,7 @@ process.source.fileNames = cms.untracked.vstring(
 
 postfix           = "PFlow"
 runOnMC           = True
-doEfficiency      = True
+doEfficiency      = False
 
 if not doEfficiency:
     FileName = "treeEtoTauTnP.root"
@@ -45,14 +35,15 @@ else:
     FileName = "treeEtoTauEff.root"
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
+    #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
+    process.GlobalTag.globaltag = cms.string('START41_V0::All')
 else:
     #process.GlobalTag.globaltag = cms.string(autoCond[ 'com10' ])
     process.GlobalTag.globaltag = cms.string('GR_R_41_V0::All')
 
 process.primaryVertexFilter = cms.EDFilter(
     "GoodVertexFilter",
-    vertexCollection = cms.InputTag('offlinePrimaryVerticesDA'),
+    vertexCollection = cms.InputTag('offlinePrimaryVertices'),
     minimumNDOF = cms.uint32(4) ,
     maxAbsZ = cms.double(24),
     maxd0 = cms.double(2)
@@ -144,7 +135,7 @@ process.tauGenJetMatch.maxDPtRel = 999
 
 addPFElectronIsolation(process,process.patElectrons)
 
-process.pfPileUp.Vertices = "offlinePrimaryVerticesDA"
+process.pfPileUp.Vertices = "offlinePrimaryVertices"
 
 getattr(process,"patElectrons").embedTrack = True
 getattr(process,"patElectrons").embedGsfTrack = True
@@ -159,7 +150,7 @@ if hasattr(process,"patTrigger"):
 process.selectedPatElectronsTriggerMatchUserEmbedded = cms.EDProducer(
     "ElectronsUserEmbedded",
     electronTag = cms.InputTag("selectedPatElectronsTriggerMatch"),
-    vertexTag = cms.InputTag("offlinePrimaryVerticesDA"),
+    vertexTag = cms.InputTag("offlinePrimaryVertices"),
     isMC = cms.bool(runOnMC)
     )
 
@@ -218,10 +209,44 @@ if (not doEfficiency) and (not runOnMC):
     process.etoTau70IDTight.makeMCUnbiasTree = cms.bool(False)
     process.addUserVariables.isMC = cms.bool(False)
 
+process.offlinePrimaryVertices = cms.EDProducer(
+    "PrimaryVertexProducer",
+    PVSelParameters = cms.PSet(
+    maxDistanceToBeam = cms.double(1.0)
+    ),
+    verbose = cms.untracked.bool(False),
+    algorithm = cms.string('AdaptiveVertexFitter'),
+    TkFilterParameters = cms.PSet(
+    maxNormalizedChi2 = cms.double(20.0),
+    minPt = cms.double(0.0),
+    algorithm = cms.string('filter'),
+    maxD0Significance = cms.double(5.0),
+    trackQuality = cms.string('any'),
+    minPixelLayersWithHits = cms.int32(2),
+    minSiliconLayersWithHits = cms.int32(5)
+    ),
+    beamSpotLabel = cms.InputTag("offlineBeamSpot"),
+    TrackLabel = cms.InputTag("generalTracks"),
+    useBeamConstraint = cms.bool(False),
+    minNdof = cms.double(0.0),
+    TkClusParameters = cms.PSet(
+    TkDAClusParameters = cms.PSet(
+    dzCutOff = cms.double(4.0),
+    d0CutOff = cms.double(3.0),
+    Tmin = cms.double(9.0),
+    coolingFactor = cms.double(0.8),
+    vertexSize = cms.double(0.05)
+    ),
+    algorithm = cms.string('DA')
+    )
+    )
+
+
 process.pat = cms.Sequence(
     process.allEventsFilter+
-    process.PFTau*
+    process.offlinePrimaryVertices*
     process.primaryVertexFilter*
+    process.PFTau*
     process.patDefaultSequence*
     process.selectedPatElectronsTriggerMatchUserEmbedded
     )
@@ -233,9 +258,9 @@ else:
     process.pat.replace(process.selectedPatElectronsTriggerMatchUserEmbedded,
                         process.selectedPatElectronsTriggerMatchUserEmbedded*process.makeEtoTauEff)
 
-massSearchReplaceAnyInputTag(process.pat,
-                             "offlinePrimaryVertices",
-                             "offlinePrimaryVerticesDA",verbose=True)
+#massSearchReplaceAnyInputTag(process.pat,
+#                             "offlinePrimaryVertices",
+#                             "offlinePrimaryVerticesDA",verbose=True)
 
 process.p = cms.Path(process.pat)
 

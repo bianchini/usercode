@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -39,7 +39,8 @@ runOnMC           = True
 FileName = "treeMutoTauTnP.root"
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
+    #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
+    process.GlobalTag.globaltag = cms.string('START41_V0::All')
 else:
     #process.GlobalTag.globaltag = cms.string(autoCond[ 'com10' ])
     #process.GlobalTag.globaltag = cms.string('GR_R_311_V4::All')
@@ -47,7 +48,7 @@ else:
 
 process.primaryVertexFilter = cms.EDFilter(
     "GoodVertexFilter",
-    vertexCollection = cms.InputTag('offlinePrimaryVerticesDA'),
+    vertexCollection = cms.InputTag('offlinePrimaryVertices'),
     minimumNDOF = cms.uint32(4) ,
     maxAbsZ = cms.double(24),
     maxd0 = cms.double(2)
@@ -142,7 +143,7 @@ addPFMuonIsolation(process,process.patMuons)
 addTriggerMatchingMuon(process,isMC=runOnMC)
 getattr(process,"patMuons").embedTrack = True
 
-process.pfPileUp.Vertices = "offlinePrimaryVerticesDA"
+process.pfPileUp.Vertices = "offlinePrimaryVertices"
 
 process.muonTriggerMatchHLTMuons.matchedCuts =  cms.string('(path("HLT_IsoMu17_v*") || path("HLT_IsoMu24_v*") ) && type("TriggerMuon")')
 
@@ -154,7 +155,7 @@ if hasattr(process,"patTrigger"):
 process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
     "MuonsUserEmbedded",
     muonTag = cms.InputTag("selectedPatMuonsTriggerMatch"),
-    vertexTag = cms.InputTag("offlinePrimaryVerticesDA")
+    vertexTag = cms.InputTag("offlinePrimaryVertices")
     )
 
 process.load("Bianchi.TauTauStudies.muToTauFakeRate_cff")
@@ -171,11 +172,44 @@ if not runOnMC:
     process.etoTauVBTFIDMedium.isMC = cms.bool(False)
     process.etoTauVBTFIDTight.isMC = cms.bool(False)
     process.addUserVariables.isMC = cms.bool(False)
- 
+
+process.offlinePrimaryVertices = cms.EDProducer(
+    "PrimaryVertexProducer",
+    PVSelParameters = cms.PSet(
+    maxDistanceToBeam = cms.double(1.0)
+    ),
+    verbose = cms.untracked.bool(False),
+    algorithm = cms.string('AdaptiveVertexFitter'),
+    TkFilterParameters = cms.PSet(
+    maxNormalizedChi2 = cms.double(20.0),
+    minPt = cms.double(0.0),
+    algorithm = cms.string('filter'),
+    maxD0Significance = cms.double(5.0),
+    trackQuality = cms.string('any'),
+    minPixelLayersWithHits = cms.int32(2),
+    minSiliconLayersWithHits = cms.int32(5)
+    ),
+    beamSpotLabel = cms.InputTag("offlineBeamSpot"),
+    TrackLabel = cms.InputTag("generalTracks"),
+    useBeamConstraint = cms.bool(False),
+    minNdof = cms.double(0.0),
+    TkClusParameters = cms.PSet(
+    TkDAClusParameters = cms.PSet(
+    dzCutOff = cms.double(4.0),
+    d0CutOff = cms.double(3.0),
+    Tmin = cms.double(9.0),
+    coolingFactor = cms.double(0.8),
+    vertexSize = cms.double(0.05)
+    ),
+    algorithm = cms.string('DA')
+    )
+    )
+
 process.pat = cms.Sequence(
     process.allEventsFilter+
-    process.PFTau*
+    process.offlinePrimaryVertices*
     process.primaryVertexFilter*
+    process.PFTau*
     process.patDefaultSequence*
     process.selectedPatMuonsTriggerMatchUserEmbedded
     )

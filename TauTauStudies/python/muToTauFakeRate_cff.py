@@ -71,11 +71,11 @@ oneTpVBTFIDTight = cms.EDFilter("CandViewCountFilter",
 ######################################################################################
 
 tagVBTFMcMatch = cms.EDProducer("MCTruthDeltaRMatcherNew",
-                              pdgId = cms.vint32(13,-13),
-                              src = cms.InputTag("tagVBTF"),
-                              distMin = cms.double(0.15),
-                              matched = cms.InputTag("genParticles")
-                              )
+                                pdgId = cms.vint32(13,-13),
+                                src = cms.InputTag("tagVBTF"),
+                                distMin = cms.double(0.15),
+                                matched = cms.InputTag("genParticles")
+                                )
 
 probeIDLooseMcMatch = cms.EDProducer("MCTruthDeltaRMatcherNew",
                                      pdgId = cms.vint32(13,-13),
@@ -120,6 +120,7 @@ etoTauVBTFIDLoose = cms.EDAnalyzer("TagProbeFitTreeProducer",
     #leadPFChargedHadrCandTrackP = cms.string("leadPFChargedHadrCand.trackRef.p"),
     #leadPFCandPt = cms.string("leadPFCand.pt"),
     #leadPFCandP = cms.string("leadPFCand.p"),
+    leadPFChargedHadrCandPt = cms.string("leadPFChargedHadrCand.pt"),
     signalPFChargedHadrCands = cms.string("signalPFChargedHadrCands.size"),
     signalPFGammaCands = cms.string("signalPFGammaCands.size"),
     #nHitsLeadTrack = cms.string("leadPFChargedHadrCand.trackRef.numberOfValidHits"),

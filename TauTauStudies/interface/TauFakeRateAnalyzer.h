@@ -58,6 +58,7 @@ class TauFakeRateAnalyzer : public edm::EDAnalyzer{
 
   double mcPUweight_;
   
+  double emFraction_;
   double visMass_;
   double fbrem_;
   double hasGsf_;
