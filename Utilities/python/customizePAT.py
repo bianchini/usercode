@@ -3,14 +3,14 @@ import FWCore.ParameterSet.Config as cms
 from PhysicsTools.PatAlgos.tools.jetTools import *
 from PhysicsTools.PatAlgos.tools.coreTools import *
 from PhysicsTools.PatAlgos.tools.pfTools import *
-from PhysicsTools.PFCandProducer.Isolation.tools_cfi import *
+from CommonTools.ParticleFlow.Isolation.tools_cfi import *
 
 ###################a#################################################
 def addSelectedPFlowParticle(process,verbose=False):
     if verbose:
         print "[Info] Adding pf-particles (for pf-isolation and pf-seed pat-leptons)"
-    process.load("PhysicsTools.PFCandProducer.ParticleSelectors.pfSortByType_cff")
-    process.load("PhysicsTools.PFCandProducer.pfNoPileUp_cff")
+    process.load("CommonTools.ParticleFlow.ParticleSelectors.pfSortByType_cff")
+    process.load("CommonTools.ParticleFlow.pfNoPileUp_cff")
 
     process.pfPU = cms.EDProducer(
         "TPPFCandidatesOnPFCandidates",
@@ -67,7 +67,7 @@ def addPFMuonIsolation(process,module,postfix="",verbose=False):
                               'pfAllPhotons'))
 
     #compute isolation values form deposits
-    process.load("PhysicsTools.PFCandProducer.Isolation.pfMuonIsolationFromDeposits_cff")
+    process.load("CommonTools.ParticleFlow.Isolation.pfMuonIsolationFromDeposits_cff")
     setattr(process,"isoValMuonWithChargedPU",
             process.isoValMuonWithCharged.clone())
     getattr(process,"isoValMuonWithChargedPU").deposits[0].src="isoDepMuonWithChargedPU"
@@ -261,13 +261,13 @@ def addPFElectronIsolation(process,module,postfix="",verbose=False):
                               'pfAllPhotons'))
 
     #compute isolation values form deposits
-    process.load("PhysicsTools.PFCandProducer.Isolation.pfElectronIsolationFromDeposits_cff")
+    process.load("CommonTools.ParticleFlow.Isolation.pfElectronIsolationFromDeposits_cff")
     setattr(process,"isoValElectronWithChargedPU",
             process.isoValElectronWithCharged.clone())
     getattr(process,"isoValElectronWithChargedPU").deposits[0].src="isoDepElectronWithChargedPU"
     
     #compute isolation values form deposits
-    process.load("PhysicsTools.PFCandProducer.Isolation.pfElectronIsolationFromDeposits_cff")
+    process.load("CommonTools.ParticleFlow.Isolation.pfElectronIsolationFromDeposits_cff")
     if postfix!="":
         setattr(process,"isoValElectronWithCharged"+postfix,
                 process.isoValElectronWithCharged.clone())
@@ -443,16 +443,15 @@ def addTriggerMatchingMuon(process,isMC=False,postfix="",verbose=False):
         "PATTriggerMatcherDRLessByR"
         , src     = cms.InputTag( "selectedPatMuons"+postfix )
         , matched = cms.InputTag( "patTrigger" )
-        , matchedCuts    = cms.string('(path("HLT_IsoMu12_LooseIsoPFTau10_v*",0) || path("HLT_Mu15_LooseIsoPFTau20_v*",0)) && (filter("hltSingleMuIsoL3IsoFiltered12") || filter("hltL3Muon15")) && type("TriggerMuon")')
-        #, matchedCuts    = cms.string('path("HLT_Mu11_PFTau15_v*",0) && filter("hltSingleMu11L3Filtered11") && type("TriggerMuon")')
+        , matchedCuts    = cms.string('(path("HLT_IsoMu15_LooseIsoPFTau15_v*",0) || path("HLT_IsoMu15_LooseIsoPFTau20_v*",0) ) && (filter("hltSingleMuIsoL3IsoFiltered15")) && type("TriggerMuon")')
+       #, matchedCuts    = cms.string('path("HLT_Mu11_PFTau15_v*",0) && filter("hltSingleMu11L3Filtered11") && type("TriggerMuon")')
         , maxDPtRel = cms.double( 999 )
         , maxDeltaR = cms.double( 0.3 )
         , resolveAmbiguities    = cms.bool( True )
         , resolveByMatchQuality = cms.bool( True )
         )
-
     if isMC:
-        muonMatch.matchedCuts  = cms.string('(path("HLT_Mu11_PFTau15_v*",0) || path("HLT_IsoMu9_PFTau15_v*",0)) && (filter("hltSingleMu11L3Filtered11") || filter("hltSingleMuIsoL3IsoFiltered9") ) && type("TriggerMuon")')
+        muonMatch.matchedCuts  = cms.string('(path("HLT_Mu15_LooseIsoPFTau20_v*",0) || path("HLT_IsoMu12_LooseIsoPFTau10_v*",0)) && (filter("hltSingleMu15L3Filtered15") || filter("hltSingleMuIsoL3IsoFiltered12") ) && type("TriggerMuon")')
 
 
     setattr(process,"muonTriggerMatchHLTMuons"+postfix,muonMatch.clone()) 
@@ -497,7 +496,7 @@ def addTriggerMatchingElectron(process,isMC=False,postfix="",verbose=False):
         #, matchedCuts = cms.string( 'path("HLT_IsoEle12_PFTau15_v3",0) && type("TriggerElectron")' )
         #, matchedCuts = cms.string( 'type("TriggerElectron")' )
         #, matchedCuts = cms.string( 'type("TriggerTau")' )
-        , matchedCuts = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*", 0) || path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*",0)) && filter("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter") && type("TriggerElectron")')
+        , matchedCuts = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*", 0) || path("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*",0)) && (filter("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter") || filter("hltEle18CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter")) && type("TriggerElectron")')
         , maxDPtRel = cms.double( 999 )
         , maxDeltaR = cms.double( 0.3)
         , resolveAmbiguities    = cms.bool( True )
@@ -505,7 +504,7 @@ def addTriggerMatchingElectron(process,isMC=False,postfix="",verbose=False):
         )
 
     if isMC:
-        eleMatch.matchedCuts = cms.string('(path("HLT_IsoEle12_PFTau15_v*",0)) && type("TriggerElectron")')
+        eleMatch.matchedCuts = cms.string('( (path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*",0)) || (path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*",0)) ) && filter("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter") && type("TriggerElectron")')
 
     setattr(process,"eleTriggerMatchHLTElectrons"+postfix,eleMatch.clone()) 
     if not hasattr(process,"patTriggerSequence"):
@@ -548,7 +547,7 @@ def addTriggerMatchingTau(process,isMC=False,postfix="",XtriggerMu=False,verbose
         , matched = cms.InputTag( "patTrigger" )
         #, matchedCuts    = cms.string('type("TriggerTau")')
         #, matchedCuts    = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*", 0) || path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*",0)) && (filter("hltOverlapFilterIsoEle15IsoPFTau15") || filter("hltOverlapFilterIsoEle15IsoPFTau20")) && type("TriggerTau")')
-        , matchedCuts    = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*", 0) || path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*",0))  && type("TriggerTau")')
+        , matchedCuts    = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*", 0) || path("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*",0))  && type("TriggerTau")')
         , maxDPtRel = cms.double( 999 )
         , maxDeltaR = cms.double( 0.3 )
         , resolveAmbiguities    = cms.bool( True )
@@ -557,15 +556,14 @@ def addTriggerMatchingTau(process,isMC=False,postfix="",XtriggerMu=False,verbose
 
 
     if XtriggerMu and (not isMC):
-        #tauMatch.matchedCuts  = cms.string('(path("HLT_IsoMu12_LooseIsoPFTau10_v*",0) || path("HLT_Mu15_LooseIsoPFTau20_v*",0)) && (filter("hltOverlapFilterIsoMu12IsoPFTau10") || filter("hltOverlapFilterMu15IsoPFTau20") ) && type("TriggerTau")')
-        tauMatch.matchedCuts  = cms.string('(path("HLT_IsoMu12_LooseIsoPFTau10_v*",0) || path("HLT_Mu15_LooseIsoPFTau20_v*",0)) && type("TriggerTau")')
+        tauMatch.matchedCuts  = cms.string('(path("HLT_IsoMu15_LooseIsoPFTau15_v*",0) || path("HLT_IsoMu15_LooseIsoPFTau20_v*",0)) && type("TriggerTau")')
 
     if XtriggerMu and isMC:
-        #tauMatch.matchedCuts  = cms.string('path("HLT_Mu11_PFTau15_v*",0) && filter("hltOverlapFilterMu11PFTau15") && type("TriggerTau")')
-        tauMatch.matchedCuts  = cms.string('path("HLT_Mu11_PFTau15_v*",0) && type("TriggerTau")')
-    if (not XtriggerMu) and isMC:
-        tauMatch.matchedCuts    = cms.string('path("HLT_IsoEle12_PFTau15_v*",0) && type("TriggerTau")')
+        tauMatch.matchedCuts  = cms.string('path("HLT_IsoMu12_LooseIsoPFTau10_v*",0) && type("TriggerTau")')
 
+    if (not XtriggerMu) and isMC:
+        tauMatch.matchedCuts  = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*", 0) || path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*",0))  && type("TriggerTau")')
+        
 
     setattr(process,"tauTriggerMatchHLTTaus"+postfix,tauMatch.clone()) 
     if not hasattr(process,"patTriggerSequence"):

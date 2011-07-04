@@ -542,21 +542,26 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   if(isMC_){
 
     // X-triggers
-    XtriggerPaths.push_back("HLT_IsoEle12_PFTau15_v*");
-
-    // Single Electron triggers + X-triggers
-    triggerPaths.push_back("HLT_IsoEle12_PFTau15_v3");
-  }
-  else{
-
-    // X-triggers
     XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*");
     XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
 
     // Single Electron triggers + X-triggers
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v1");
     triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v2");
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v4");
+    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v2");
+
+  }
+  else{
+    
+    // X-triggers
+    XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
+    XtriggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
+
+    // Single Electron triggers + X-triggers
+    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v6");
+    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v7");
+    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v8");
+    triggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v1");
+    triggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v2");
   }
 
   for(unsigned int i=0;i<triggerPaths.size();i++){
@@ -839,8 +844,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     jetPVassociation.insert( make_pair( (*jets)[it].p4().Pt(), make_pair(aMap["chFracRawJetE"],aMap["chFracAllChargE"]) ) );
     jetMoments.insert( make_pair( (*jets)[it].p4().Pt(), make_pair( (*jets)[it].etaetaMoment(),(*jets)[it].phiphiMoment()) ) );
 
-    if(isMC_) sortedJetsIDL1Offset.insert( make_pair( (*jets)[it].jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*(*jets)[it].pt() , (*jets)[it].jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*(*jets)[it].p4()) );   
-    else sortedJetsIDL1Offset.insert( make_pair( (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].pt() , (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].p4()) );   
+    if(isMC_ || true) sortedJetsIDL1Offset.insert( make_pair( (*jets)[it].jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*(*jets)[it].pt() , (*jets)[it].jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*(*jets)[it].p4()) );   
+    //else sortedJetsIDL1Offset.insert( make_pair( (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].pt() , (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].p4()) );   
                              
     sortedJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4() ) );
 

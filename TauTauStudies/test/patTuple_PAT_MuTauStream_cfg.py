@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 20
+process.MessageLogger.cerr.FwkReport.reportEvery = 2000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -33,7 +33,8 @@ process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets+process.kt
 process.source.fileNames = cms.untracked.vstring(
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/02700D19-A756-E011-B4D5-0030486792B6.root'
-    'file:/data_CMS/cms/akalinow/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/PU_S1_START311_V1G1-v1/AOD/8EC598C7-3453-E011-AC82-002481E14F8C.root'
+    #'file:/data_CMS/cms/akalinow/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/PU_S1_START311_V1G1-v1/AOD/8EC598C7-3453-E011-AC82-002481E14F8C.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/WH_ZH_TTH_HToWW_M-120_7TeV-pythia6//AODSIM/PU_S3_START42_V11-v1//0000/E430E306-347C-E011-A75A-00261834B5C6.root'
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -42,15 +43,13 @@ process.source.fileNames = cms.untracked.vstring(
 #    )
 
 postfix           = "PFlow"
-runOnMC           = True
+runOnMC           = False
 
 if runOnMC:
-    #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
-    process.GlobalTag.globaltag = cms.string('START41_V0::All')
+    process.GlobalTag.globaltag = cms.string('START42_V12::All')
+
 else:
-    #process.GlobalTag.globaltag = cms.string(autoCond[ 'com10' ])
-    #process.GlobalTag.globaltag = cms.string('GR_R_311_V4::All')
-    process.GlobalTag.globaltag = cms.string('GR_R_41_V0::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_42_V14::All')
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.printTree1 = cms.EDAnalyzer("ParticleListDrawer",
@@ -139,7 +138,7 @@ JEClevels = cms.vstring(['L2Relative', 'L3Absolute'])
 if runOnMC:
     JEClevels = ['L1FastJet', 'L2Relative', 'L3Absolute']
 else:
-    JEClevels = ['L1FastJet', 'L2Relative', 'L3Absolute','L2L3Residual']
+    JEClevels = ['L1FastJet', 'L2Relative', 'L3Absolute']
 
 process.patJetCorrFactors.levels = JEClevels
 process.patJetCorrFactors.rho = cms.InputTag('kt6PFJets','rho')
@@ -152,7 +151,7 @@ process.patJetCorrFactorsL1Offset = process.patJetCorrFactors.clone(
 if runOnMC:
     process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute']
 else:
-    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute','L2L3Residual']
+    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute']
 
 process.patJets.jetCorrFactorsSource = cms.VInputTag(cms.InputTag("patJetCorrFactors"),cms.InputTag("patJetCorrFactorsL1Offset"))
 process.patDefaultSequence.replace(process.patJetCorrFactors,
@@ -503,7 +502,7 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     minCorrPt = cms.untracked.double(15.),
     minJetID  = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
     applyTauSignalSel =  cms.bool( True ),
-    verbose =  cms.untracked.bool( True ),
+    verbose =  cms.untracked.bool( False ),
     )
 
 process.offlinePrimaryVertices = cms.EDProducer(
@@ -540,7 +539,7 @@ process.offlinePrimaryVertices = cms.EDProducer(
 
 process.pat = cms.Sequence(
     process.allEventsFilter+
-    process.offlinePrimaryVertices*
+    #process.offlinePrimaryVertices*
     process.atLeastOneGoodVertexSequence*
     #process.makeSCs +
     process.PFTau*

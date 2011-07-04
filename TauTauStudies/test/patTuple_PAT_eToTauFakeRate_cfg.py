@@ -14,11 +14,15 @@ process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 
+process.load('RecoJets.Configuration.RecoPFJets_cff')
+process.kt6PFJets.doRhoFastjet = True
+process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
+process.ak5PFJets.doAreaFastjet = True
+process.ak5PFJets.Rho_EtaMax = cms.double(4.4)
+process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets)
+
 process.source.fileNames = cms.untracked.vstring(
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/0053C2AC-423C-E011-976F-00215E21DB3A.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/00DCEC58-433B-E011-8FF8-E41F13181A70.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/02300FF5-423B-E011-B949-00215E2221E4.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/023A43AC-433B-E011-A582-00215E21DD26.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/WH_ZH_TTH_HToWW_M-120_7TeV-pythia6//AODSIM/PU_S3_START42_V11-v1//0000/E430E306-347C-E011-A75A-00261834B5C6.root'
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -36,10 +40,10 @@ else:
 
 if runOnMC:
     #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
-    process.GlobalTag.globaltag = cms.string('START41_V0::All')
+    process.GlobalTag.globaltag = cms.string('START42_V12::All')
 else:
-    #process.GlobalTag.globaltag = cms.string(autoCond[ 'com10' ])
-    process.GlobalTag.globaltag = cms.string('GR_R_41_V0::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_42_V14::All')
+
 
 process.primaryVertexFilter = cms.EDFilter(
     "GoodVertexFilter",
@@ -176,7 +180,7 @@ process.taus = cms.EDFilter("PATTauSelector",
                             filter = cms.bool(False)
                             )
 process.tauFakeRateAnalyzer = cms.EDAnalyzer("TauFakeRateAnalyzer",
-                                             matchTo = cms.string("electron"),
+                                             matchTo = cms.string("muon"),
                                              tauTag = cms.InputTag("taus"),
                                              electronsTag = cms.InputTag("selectedPatElectronsTriggerMatchUserEmbedded"),
                                              )
@@ -244,9 +248,10 @@ process.offlinePrimaryVertices = cms.EDProducer(
 
 process.pat = cms.Sequence(
     process.allEventsFilter+
-    process.offlinePrimaryVertices*
+    #process.offlinePrimaryVertices*
     process.primaryVertexFilter*
     process.PFTau*
+    process.fjSequence*
     process.patDefaultSequence*
     process.selectedPatElectronsTriggerMatchUserEmbedded
     )

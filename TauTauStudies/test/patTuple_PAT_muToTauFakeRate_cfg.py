@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 10
+process.MessageLogger.cerr.FwkReport.reportEvery = 2000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -14,19 +14,15 @@ process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 
+process.load('RecoJets.Configuration.RecoPFJets_cff')
+process.kt6PFJets.doRhoFastjet = True
+process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
+process.ak5PFJets.doAreaFastjet = True
+process.ak5PFJets.Rho_EtaMax = cms.double(4.4)
+process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets)
+
 process.source.fileNames = cms.untracked.vstring(
-    #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_1.root',
-    #'file:/data_CMS/cms/lbianchini/ZMuMu_RelVal386.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root',
-    #'file:goodDataEvents_84_1_yHS.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/0053C2AC-423C-E011-976F-00215E21DB3A.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/VBF_ToHToZZTo4L_M-550_7TeV-powheg-pythia6/AODSIM/PU_S1_START311_V1G1-v1/0034/126992AB-6554-E011-BD51-003048D476B8.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/00DCEC58-433B-E011-8FF8-E41F13181A70.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/02300FF5-423B-E011-B949-00215E2221E4.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/023A43AC-433B-E011-A582-00215E21DD26.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall10/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/GEN-SIM-RECO/START38_V12-v1/0000/044E940A-55EC-DF11-89D6-0023AEFDEE60.root',
-    #'file:/data_CMS/cms/lbianchini/F41A3437-7AED-DF11-A50D-002618943894.root',
-    #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_1.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/WH_ZH_TTH_HToWW_M-120_7TeV-pythia6//AODSIM/PU_S3_START42_V11-v1//0000/E430E306-347C-E011-A75A-00261834B5C6.root' 
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -34,17 +30,14 @@ process.source.fileNames = cms.untracked.vstring(
 #    )
 
 postfix           = "PFlow"
-runOnMC           = True
+runOnMC           = False
 
 FileName = "treeMutoTauTnP.root"
 
 if runOnMC:
-    #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
-    process.GlobalTag.globaltag = cms.string('START41_V0::All')
+    process.GlobalTag.globaltag = cms.string('START42_V12::All')
 else:
-    #process.GlobalTag.globaltag = cms.string(autoCond[ 'com10' ])
-    #process.GlobalTag.globaltag = cms.string('GR_R_311_V4::All')
-    process.GlobalTag.globaltag = cms.string('GR_R_41_V0::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_42_V14::All')
 
 process.primaryVertexFilter = cms.EDFilter(
     "GoodVertexFilter",
@@ -207,15 +200,16 @@ process.offlinePrimaryVertices = cms.EDProducer(
 
 process.pat = cms.Sequence(
     process.allEventsFilter+
-    process.offlinePrimaryVertices*
+    #process.offlinePrimaryVertices*
     process.primaryVertexFilter*
     process.PFTau*
+    process.fjSequence*
     process.patDefaultSequence*
     process.selectedPatMuonsTriggerMatchUserEmbedded
     )
 
 process.pat.replace(process.selectedPatMuonsTriggerMatchUserEmbedded,
-                        process.selectedPatMuonsTriggerMatchUserEmbedded*process.sequenceVBTF)
+                    process.selectedPatMuonsTriggerMatchUserEmbedded*process.sequenceVBTF)
 
 process.p = cms.Path(process.pat)
 

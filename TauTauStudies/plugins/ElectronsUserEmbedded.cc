@@ -49,7 +49,7 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
   const reco::BeamSpot &thebs = *bsHandle.product();
 
   edm::Handle<reco::ConversionCollection> hConversions;
-  iEvent.getByLabel("trackerOnlyConversions", hConversions);
+  iEvent.getByLabel("allConversions", hConversions);
 
   edm::Handle<DcsStatusCollection> dcsHandle;
   iEvent.getByLabel("scalersRawToDigi", dcsHandle);

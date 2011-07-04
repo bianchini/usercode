@@ -525,38 +525,32 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   if(isMC_){
 
     // X-triggers 
-    XtriggerPaths.push_back("HLT_Mu11_PFTau15_v*");
-    XtriggerPaths.push_back("HLT_IsoMu9_PFTau15_v*");
-    XtriggerPaths.push_back("HLT_Mu15_v*");
-    XtriggerPaths.push_back("HLT_IsoMu11_v*");
-
-    // Single Mu triggers
-    triggerPaths.push_back("HLT_Mu11_PFTau15_v2");
-    triggerPaths.push_back("HLT_IsoMu9_PFTau15_v2");
-    triggerPaths.push_back("HLT_Mu15_v1");
-    triggerPaths.push_back("HLT_IsoMu11_v4");
-  }
-  else{
-
-    // X-triggers
-    XtriggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v*");
     XtriggerPaths.push_back("HLT_Mu15_LooseIsoPFTau20_v*");
+    XtriggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v*");
     XtriggerPaths.push_back("HLT_Mu15_v*");
     XtriggerPaths.push_back("HLT_IsoMu12_v*");
 
-    //Single Mu triggers + X-triggers
-    triggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v1");
-    triggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v2");
-    //triggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v3");
-    triggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v4");
-    triggerPaths.push_back("HLT_Mu15_LooseIsoPFTau20_v1");
+    // Single Mu triggers
     triggerPaths.push_back("HLT_Mu15_LooseIsoPFTau20_v2");
-    //triggerPaths.push_back("HLT_Mu15_LooseIsoPFTau20_v3");
-    triggerPaths.push_back("HLT_Mu15_LooseIsoPFTau20_v4");
+    triggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v2");
     triggerPaths.push_back("HLT_Mu15_v2");
-    triggerPaths.push_back("HLT_Mu15_v3");
     triggerPaths.push_back("HLT_IsoMu12_v1");
-    triggerPaths.push_back("HLT_IsoMu12_v2");
+  }
+  else{
+
+    XtriggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v*");
+    XtriggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau20_v*");
+
+    //XtriggerPaths.push_back("HLT_IsoMu17_v*");
+    //XtriggerPaths.push_back("HLT_IsoMu24_v*");
+    //XtriggerPaths.push_back("HLT_IsoMu30_v*");
+
+    //Single Mu triggers + X-triggers
+    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v2");
+    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v3");
+    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v4");
+    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau20_v2");
+
   }
 
   for(unsigned int i=0;i<triggerPaths.size();i++){
@@ -851,8 +845,8 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     //jetsBtagHE_->push_back((*jets)[it].bDiscriminator("trackCountingHighEffBJetTags"));
     //jetsBtagHP_->push_back((*jets)[it].bDiscriminator("trackCountingHighPurBJetTags"));
 
-    if(isMC_) sortedJetsIDL1Offset.insert( make_pair( (*jets)[it].jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*(*jets)[it].pt() , (*jets)[it].jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*(*jets)[it].p4()) );   
-    else sortedJetsIDL1Offset.insert( make_pair( (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].pt() , (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].p4()) ); 
+    if(isMC_ || true) sortedJetsIDL1Offset.insert( make_pair( (*jets)[it].jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*(*jets)[it].pt() , (*jets)[it].jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*(*jets)[it].p4()) );   
+    //else sortedJetsIDL1Offset.insert( make_pair( (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].pt() , (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].p4()) ); 
                                 
     sortedJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4() ) );
 
