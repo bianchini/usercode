@@ -52,17 +52,17 @@ def addCutBasedID( process ):
     #ele ID + ISO + Conv Removal
     process.load("Bianchi.Utilities.simpleEleIdSequence_cff")
 
-    process.load("RecoEgamma.ElectronIdentification.likelihoodPdfsDB_cfi")
-    process.load("RecoEgamma.ElectronIdentification.likelihoodESetup_cfi")
+    #process.load("RecoEgamma.ElectronIdentification.likelihoodPdfsDB_cfi")
+    #process.load("RecoEgamma.ElectronIdentification.likelihoodESetup_cfi")
 
-    from RecoEgamma.ElectronIdentification.electronIdLikelihoodExt_cfi import eidLikelihoodExt
-    process.egammaIDLikelihood   = eidLikelihoodExt.clone()
-    process.electronIDLHSequence = cms.Sequence( process.egammaIDLikelihood )
+    #from RecoEgamma.ElectronIdentification.electronIdLikelihoodExt_cfi import eidLikelihoodExt
+    #process.egammaIDLikelihood   = eidLikelihoodExt.clone()
+    #process.electronIDLHSequence = cms.Sequence( process.egammaIDLikelihood )
 
 
     process.patElectronId = cms.Sequence(
-        process.simpleEleIdSequence +
-        process.electronIDLHSequence
+        process.simpleEleIdSequence #+
+        #process.electronIDLHSequence
         #process.eidClassBased95 +
         #process.eidClassBased90
         )
@@ -81,7 +81,7 @@ def addCutBasedID( process ):
         simpleEleId80cIso= cms.InputTag("simpleEleId80cIso"),
         simpleEleId70cIso= cms.InputTag("simpleEleId70cIso"),
         simpleEleId60cIso= cms.InputTag("simpleEleId60cIso"),
-        electronIDLH = cms.InputTag("egammaIDLikelihood"),
+        #electronIDLH = cms.InputTag("egammaIDLikelihood"),
         #eidLoose = cms.InputTag("eidClassBased95"),
         #eidTight = cms.InputTag("eidClassBased90")
         )

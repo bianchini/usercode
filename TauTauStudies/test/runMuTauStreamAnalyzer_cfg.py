@@ -14,14 +14,13 @@ process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 runOnMC = True
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START41_V0::All')
+    process.GlobalTag.globaltag = cms.string('START42_V12::All')
 else:
-    process.GlobalTag.globaltag = cms.string('GR_R_41_V0::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_42_V14::All')
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 2000
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
-
 
 process.source = cms.Source(
     "PoolSource",
@@ -32,13 +31,6 @@ process.source = cms.Source(
 
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool(True)
-    )
-
-process.tauPtEtaIDAgMuAgElec  = cms.EDFilter(
-    "PATTauSelector",
-    src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
-    cut = cms.string("pt>20 && abs(eta)<2.3  && tauID('decayModeFinding')>0.5 && userFloat('dzWrtPV')<0.2 && tauID('againstMuonTight')>0.5 && tauID('againstElectronLoose')>0.5"),
-    filter = cms.bool(False)
     )
 
 process.load("Bianchi.Utilities.diTausReconstruction_cff")
@@ -52,7 +44,6 @@ process.diTau.doSVreco = cms.bool(False)
 process.selectedDiTau = cms.EDFilter(
     "MuTauPairSelector",
     src = cms.InputTag("diTau"),
-    #cut = cms.string("charge==0 && mt1MET<40")
     cut = cms.string("dR12>0.5")
     )
 
@@ -66,20 +57,15 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     minCorrPt = cms.untracked.double(15.),
     minJetID  = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
     applyTauSignalSel =  cms.bool( True ),
-    verbose =  cms.untracked.bool( True ),
+    verbose =  cms.untracked.bool( False ),
     )
 
 process.analysis = cms.Sequence(
-    process.tauPtEtaIDAgMuAgElec*process.diTau*process.selectedDiTau* process.muTauStreamAnalyzer
+    process.diTau*process.selectedDiTau* process.muTauStreamAnalyzer
     )
 process.p = cms.Path(
     process.analysis
     )
-
-#from PhysicsTools.PatAlgos.tools.helpers import massSearchReplaceAnyInputTag
-#massSearchReplaceAnyInputTag(process.analysis,
-#                             "offlinePrimaryVertices",
-#                             "offlinePrimaryVerticesDA",verbose=True)
 
 process.out = cms.OutputModule(
     "PoolOutputModule",

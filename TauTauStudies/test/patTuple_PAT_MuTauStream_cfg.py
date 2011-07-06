@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 2000
+process.MessageLogger.cerr.FwkReport.reportEvery = 20
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -12,14 +12,35 @@ process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
+process.load("CondCore.DBCommon.CondDBCommon_cfi")
+process.jec = cms.ESSource("PoolDBESSource",
+      DBParameters = cms.PSet(
+        messageLevel = cms.untracked.int32(0)
+        ),
+      timetype = cms.string('runnumber'),
+      toGet = cms.VPSet(
+      cms.PSet(
+            record = cms.string('JetCorrectionsRecord'),
+            tag    = cms.string('JetCorrectorParametersCollection_Jec11V2_AK5PF'),
+            label  = cms.untracked.string('AK5PF')
+            )
+      ),
+      connect = cms.string('sqlite:Jec11V2.db')
+)
+process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
 
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
+
 process.load('RecoJets.Configuration.RecoPFJets_cff')
+#process.load('RecoJets.Configuration.RecoJets_cff')
+#process.load('RecoJets.JetProducers.ak5JetID_cfi')
+
+#process.ak5CaloJets.doAreaFastjet = True
 process.kt6PFJets.doRhoFastjet = True
-process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
+#process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
 #process.kt6PFJets.Ghost_EtaMax = cms.double(5.0)
 process.ak5PFJets.doAreaFastjet = True
-process.ak5PFJets.Rho_EtaMax = cms.double(4.4)
+#process.ak5PFJets.Rho_EtaMax = cms.double(4.4)
 #process.ak5PFJets.Ghost_EtaMax = cms.double(5.0)
 #process.ak5PFL1Fastjet.useCondDB = False
 
@@ -28,12 +49,10 @@ process.load('RecoJets.JetProducers.kt4PFJets_cfi')
 process.kt6PFJetsCentral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet = True )
 process.kt6PFJetsCentral.Rho_EtaMax = cms.double(2.5)
 
+#process.fjSequence = cms.Sequence(process.ak5CaloJets*process.ak5JetID+process.kt6PFJets+process.ak5PFJets+process.kt6PFJetsCentral)
 process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets+process.kt6PFJetsCentral)
 
 process.source.fileNames = cms.untracked.vstring(
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/02700D19-A756-E011-B4D5-0030486792B6.root'
-    #'file:/data_CMS/cms/akalinow/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/PU_S1_START311_V1G1-v1/AOD/8EC598C7-3453-E011-AC82-002481E14F8C.root'
     'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/WH_ZH_TTH_HToWW_M-120_7TeV-pythia6//AODSIM/PU_S3_START42_V11-v1//0000/E430E306-347C-E011-A75A-00261834B5C6.root'
     )
 
@@ -43,7 +62,7 @@ process.source.fileNames = cms.untracked.vstring(
 #    )
 
 postfix           = "PFlow"
-runOnMC           = False
+runOnMC           = True
 
 if runOnMC:
     process.GlobalTag.globaltag = cms.string('START42_V12::All')
@@ -124,6 +143,7 @@ from PhysicsTools.PatAlgos.tools.metTools import *
 addPfMET(process, postfix)
 
 from PhysicsTools.PatAlgos.tools.jetTools import *
+
 switchJetCollection(process,cms.InputTag('ak5PFJets'),
                     doJTA        = True,
                     doBTagging   = True,
@@ -138,10 +158,12 @@ JEClevels = cms.vstring(['L2Relative', 'L3Absolute'])
 if runOnMC:
     JEClevels = ['L1FastJet', 'L2Relative', 'L3Absolute']
 else:
-    JEClevels = ['L1FastJet', 'L2Relative', 'L3Absolute']
+    JEClevels = ['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']
 
 process.patJetCorrFactors.levels = JEClevels
 process.patJetCorrFactors.rho = cms.InputTag('kt6PFJets','rho')
+process.patJetCorrFactors.useRho = True
+
 
 process.patJetCorrFactorsL1Offset = process.patJetCorrFactors.clone(
     levels = cms.vstring('L1Offset',
@@ -151,7 +173,7 @@ process.patJetCorrFactorsL1Offset = process.patJetCorrFactors.clone(
 if runOnMC:
     process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute']
 else:
-    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute']
+    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute', 'L2L3Residual']
 
 process.patJets.jetCorrFactorsSource = cms.VInputTag(cms.InputTag("patJetCorrFactors"),cms.InputTag("patJetCorrFactorsL1Offset"))
 process.patDefaultSequence.replace(process.patJetCorrFactors,
@@ -211,16 +233,8 @@ process.patDefaultSequence.replace(process.patTaus,
 
 
 getattr(process,"patTaus").tauIDSources = cms.PSet(
-    decayModeFinding = cms.InputTag("hpsPFTauDiscriminationByDecayModeFinding"),
-    byLooseIsolation = cms.InputTag("hpsPFTauDiscriminationByLooseIsolation"),
-    byMediumIsolation = cms.InputTag("hpsPFTauDiscriminationByMediumIsolation"),
-    byTightIsolation = cms.InputTag("hpsPFTauDiscriminationByTightIsolation"),
-    againstElectronLoose = cms.InputTag("hpsPFTauDiscriminationByLooseElectronRejection"),
-    againstElectronMedium = cms.InputTag("hpsPFTauDiscriminationByMediumElectronRejection"),
-    againstElectronTight = cms.InputTag("hpsPFTauDiscriminationByTightElectronRejection"),
-    againstElectronCrackRem = cms.InputTag("hpsPFTauDiscriminationAgainstElectronCrackRem"),
-    againstMuonLoose = cms.InputTag("hpsPFTauDiscriminationByLooseMuonRejection"),
-    againstMuonTight = cms.InputTag("hpsPFTauDiscriminationByTightMuonRejection")
+    getattr(process,"patTaus").tauIDSources,
+    cms.PSet(againstElectronCrackRem = cms.InputTag("hpsPFTauDiscriminationAgainstElectronCrackRem"))
     )
 
 

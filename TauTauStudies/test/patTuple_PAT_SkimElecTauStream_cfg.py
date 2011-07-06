@@ -12,14 +12,31 @@ process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
+process.load("CondCore.DBCommon.CondDBCommon_cfi")
+process.jec = cms.ESSource("PoolDBESSource",
+      DBParameters = cms.PSet(
+        messageLevel = cms.untracked.int32(0)
+        ),
+      timetype = cms.string('runnumber'),
+      toGet = cms.VPSet(
+      cms.PSet(
+            record = cms.string('JetCorrectionsRecord'),
+            tag    = cms.string('JetCorrectorParametersCollection_Jec11V2_AK5PF'),
+            label  = cms.untracked.string('AK5PF')
+            )
+      ),
+      connect = cms.string('sqlite:Jec11V2.db')
+)
+process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
+
 
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 process.load('RecoJets.Configuration.RecoPFJets_cff')
 process.kt6PFJets.doRhoFastjet = True
-process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
+#process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
 #process.kt6PFJets.Ghost_EtaMax = cms.double(5.0)
 process.ak5PFJets.doAreaFastjet = True
-process.ak5PFJets.Rho_EtaMax = cms.double(4.4)
+#process.ak5PFJets.Rho_EtaMax = cms.double(4.4)
 #process.ak5PFJets.Ghost_EtaMax = cms.double(5.0)
 
 ## re-run kt4PFJets within lepton acceptance to compute rho
@@ -32,18 +49,7 @@ process.kt6PFJetsCentral.Rho_EtaMax = cms.double(2.5)
 process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets+process.kt6PFJetsCentral)
 
 process.source.fileNames = cms.untracked.vstring(
-    #'file:/data_CMS/cms/lbianchini/ZTT_RelVal386_1.root',
-    #'file:/data_CMS/cms/lbianchini/ZMuMu_RelVal386.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToTauTau_M-20_CT10_TuneZ2_7TeV-powheg-pythia-tauola/AODSIM/PU_S1_START311_V1G1-v2/0000/FA5943AB-A756-E011-A6C8-002618FDA208.root',
-    'file:/data_CMS/cms/akalinow/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/PU_S1_START311_V1G1-v1/AOD/8EC598C7-3453-E011-AC82-002481E14F8C.root'
-    #'file:goodDataEvents_84_1_yHS.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/0053C2AC-423C-E011-976F-00215E21DB3A.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/00DCEC58-433B-E011-8FF8-E41F13181A70.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/02300FF5-423B-E011-B949-00215E2221E4.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/DYToEE_M-20_TuneZ2_7TeV-pythia6/GEN-SIM-RECODEBUG/E7TeV_FlatDist10_2011EarlyData_50ns_START311_V1G1-v1/0000/023A43AC-433B-E011-A582-00215E21DD26.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall10/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/GEN-SIM-RECO/START38_V12-v1/0000/044E940A-55EC-DF11-89D6-0023AEFDEE60.root',
-    #'file:/data_CMS/cms/lbianchini/F41A3437-7AED-DF11-A50D-002618943894.root',
-    #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_1.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/WH_ZH_TTH_HToWW_M-120_7TeV-pythia6//AODSIM/PU_S3_START42_V11-v1//0000/E430E306-347C-E011-A75A-00261834B5C6.root'
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -54,12 +60,9 @@ postfix           = "PFlow"
 runOnMC           =  True
 
 if runOnMC:
-    #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
-    process.GlobalTag.globaltag = cms.string('START41_V0::All')
+    process.GlobalTag.globaltag = cms.string('START42_V12::All')
 else:
-    #process.GlobalTag.globaltag = cms.string(autoCond[ 'com10' ])
-    #process.GlobalTag.globaltag = cms.string('GR_R_311_V4::All')
-    process.GlobalTag.globaltag = cms.string('GR_R_41_V0::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_42_V14::All')
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.printTree1 = cms.EDAnalyzer("ParticleListDrawer",
@@ -139,7 +142,7 @@ from PhysicsTools.PatAlgos.tools.jetTools import *
 switchJetCollection(process,cms.InputTag('ak5PFJets'),
                     doJTA        = True,
                     doBTagging   = True,
-                    jetCorrLabel = ('AK5PF', ['L2Relative', 'L3Absolute',]),
+                    jetCorrLabel = ('AK5PF', ['L2Relative', 'L3Absolute']),
                     doType1MET   = False,
                     genJetCollection=cms.InputTag("ak5GenJets"),
                     doJetID      = True,
@@ -150,10 +153,11 @@ JEClevels = cms.vstring(['L2Relative', 'L3Absolute'])
 if runOnMC:
     JEClevels = ['L1FastJet', 'L2Relative', 'L3Absolute']
 else:
-    JEClevels = ['L1FastJet', 'L2Relative', 'L3Absolute','L2L3Residual']
+    JEClevels = ['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']
 
 process.patJetCorrFactors.levels = JEClevels
 process.patJetCorrFactors.rho = cms.InputTag('kt6PFJets','rho')
+process.patJetCorrFactors.useRho = True
 
 process.patJetCorrFactorsL1Offset = process.patJetCorrFactors.clone(
     levels = cms.vstring('L1Offset',
@@ -164,7 +168,7 @@ process.patJetCorrFactorsL1Offset = process.patJetCorrFactors.clone(
 if runOnMC:
     process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute']
 else:
-    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute','L2L3Residual']
+    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute', 'L2L3Residual']
     
 process.patJets.jetCorrFactorsSource = cms.VInputTag(cms.InputTag("patJetCorrFactors"),cms.InputTag("patJetCorrFactorsL1Offset"))
 process.patDefaultSequence.replace(process.patJetCorrFactors,
@@ -225,18 +229,9 @@ process.hpsPFTauDiscriminationAgainstElectronCrackRem = pfRecoTauDiscriminationA
 process.patDefaultSequence.replace(process.patTaus,
                                    process.hpsPFTauDiscriminationAgainstElectronCrackRem+process.patTaus)
 
-
 getattr(process,"patTaus").tauIDSources = cms.PSet(
-    decayModeFinding = cms.InputTag("hpsPFTauDiscriminationByDecayModeFinding"),
-    byLooseIsolation = cms.InputTag("hpsPFTauDiscriminationByLooseIsolation"),
-    byMediumIsolation = cms.InputTag("hpsPFTauDiscriminationByMediumIsolation"),
-    byTightIsolation = cms.InputTag("hpsPFTauDiscriminationByTightIsolation"),
-    againstElectronLoose = cms.InputTag("hpsPFTauDiscriminationByLooseElectronRejection"),
-    againstElectronMedium = cms.InputTag("hpsPFTauDiscriminationByMediumElectronRejection"),
-    againstElectronTight = cms.InputTag("hpsPFTauDiscriminationByTightElectronRejection"),
-    againstElectronCrackRem = cms.InputTag("hpsPFTauDiscriminationAgainstElectronCrackRem"),
-    againstMuonLoose = cms.InputTag("hpsPFTauDiscriminationByLooseMuonRejection"),
-    againstMuonTight = cms.InputTag("hpsPFTauDiscriminationByTightMuonRejection")
+    getattr(process,"patTaus").tauIDSources,
+    cms.PSet(againstElectronCrackRem = cms.InputTag("hpsPFTauDiscriminationAgainstElectronCrackRem"))
     )
 
 process.tauMatch.maxDeltaR = 0.15
@@ -377,8 +372,6 @@ process.tauPtEtaCounter = cms.EDFilter(
     )
 
 
-
-
 process.tauPtEtaID  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
@@ -446,8 +439,6 @@ process.tauPtEtaIDAgMuAgElecCrackRemCounter = cms.EDFilter(
 process.atLeastOneGoodVertexSequence = cms.Sequence(
     process.primaryVertexFilter*process.vertexScrapingFilter
     )
-#process.PFTau.replace(process.offlinePrimaryVerticesDA,
-#                      process.offlinePrimaryVerticesDA*process.atLeastOneGoodVertexSequence)
 
 process.alLeastOneElecTauSequence = cms.Sequence(
     process.atLeastOneElecTau*process.atLeastOneElecTauCounter*process.atLeastOneElecTauFilter
@@ -498,44 +489,9 @@ process.jetCleaningSequence = cms.Sequence(
     process.deltaRJetElectrons*process.selectedPatJetsNoElectrons*process.deltaRJetTaus*process.selectedPatJetsNoElectronsNoTaus
     )
 
-process.offlinePrimaryVertices = cms.EDProducer(
-    "PrimaryVertexProducer",
-    PVSelParameters = cms.PSet(
-    maxDistanceToBeam = cms.double(1.0)
-    ),
-    verbose = cms.untracked.bool(False),
-    algorithm = cms.string('AdaptiveVertexFitter'),
-    TkFilterParameters = cms.PSet(
-    maxNormalizedChi2 = cms.double(20.0),
-    minPt = cms.double(0.0),
-    algorithm = cms.string('filter'),
-    maxD0Significance = cms.double(5.0),
-    trackQuality = cms.string('any'),
-    minPixelLayersWithHits = cms.int32(2),
-    minSiliconLayersWithHits = cms.int32(5)
-    ),
-    beamSpotLabel = cms.InputTag("offlineBeamSpot"),
-    TrackLabel = cms.InputTag("generalTracks"),
-    useBeamConstraint = cms.bool(False),
-    minNdof = cms.double(0.0),
-    TkClusParameters = cms.PSet(
-    TkDAClusParameters = cms.PSet(
-    dzCutOff = cms.double(4.0),
-    d0CutOff = cms.double(3.0),
-    Tmin = cms.double(9.0),
-    coolingFactor = cms.double(0.8),
-    vertexSize = cms.double(0.05)
-    ),
-    algorithm = cms.string('DA')
-    )
-    )
-
-
 process.pat = cms.Sequence(
     process.allEventsFilter+
-    process.offlinePrimaryVertices*
     process.atLeastOneGoodVertexSequence*
-    #process.makeSCs +
     process.PFTau*
     process.fjSequence*
     process.patDefaultSequence*
@@ -548,9 +504,6 @@ process.pat = cms.Sequence(
     process.printTree1
     )
 
-#massSearchReplaceAnyInputTag(process.pat,
-#                             "offlinePrimaryVertices",
-#                             "offlinePrimaryVerticesDA",verbose=True)
 
 if not runOnMC:
     process.pat.remove(process.printTree1)
@@ -570,7 +523,6 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_ak5PFJets_*_*',
     'keep *_particleFlow__*',
     'keep *_genParticles_*_*',
-    'keep *_offlinePrimaryVerticesDA_*_*',
     'keep *_offlinePrimaryVertices_*_*',
     'keep *_offlinePrimaryVerticesWithBS_*_*',
     'keep *_offlineBeamSpot_*_*',
@@ -584,6 +536,7 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_electronGsfTracks_*_*',
     'keep recoTrackExtras_*_*_*',
     'keep recoGsfTrackExtras_*_*_*',
+    'keep *_tauPtEtaIDAgMuAgElec_*_*',
     'drop *_TriggerResults_*_HLT',
     'drop *_TriggerResults_*_RECO',
     'drop *_selectedPatElectrons_*_*',
@@ -593,6 +546,8 @@ process.out.outputCommands.extend( cms.vstring(
     'drop *_selectedPatElectronsTriggerMatch_*_*',
     'drop *_selectedPatMuonsTriggerMatch_*_*',
     'drop *_selectedPatTausTriggerMatch_*_*',
+    'drop *_selectedPatElectronsTriggerMatchUserEmbedded_*_*',
+    'drop *_selectedPatTausTriggerMatchUserEmbedded_*_*',
     )
                                    )
 
@@ -607,5 +562,4 @@ process.out.SelectEvents = cms.untracked.PSet(
 process.out.fileName = cms.untracked.string('patTuples_ElecTauStream.root')
 
 process.outpath = cms.EndPath(process.out)
-#process.outpath = cms.EndPath()
 

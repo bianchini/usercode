@@ -443,7 +443,7 @@ def addTriggerMatchingMuon(process,isMC=False,postfix="",verbose=False):
         "PATTriggerMatcherDRLessByR"
         , src     = cms.InputTag( "selectedPatMuons"+postfix )
         , matched = cms.InputTag( "patTrigger" )
-        , matchedCuts    = cms.string('(path("HLT_IsoMu15_LooseIsoPFTau15_v*",0) || path("HLT_IsoMu15_LooseIsoPFTau20_v*",0) ) && (filter("hltSingleMuIsoL3IsoFiltered15")) && type("TriggerMuon")')
+        , matchedCuts    = cms.string('(path("HLT_IsoMu12_LooseIsoPFTau10_v*",0,0) || path("HLT_IsoMu15_LooseIsoPFTau15_v*",0,0) || path("HLT_IsoMu15_LooseIsoPFTau20_v*",0,0) ) && (filter("hltSingleMuIsoL3IsoFiltered15") || filter("hltSingleMuIsoL3IsoFiltered12")) && type("TriggerMuon")')
        #, matchedCuts    = cms.string('path("HLT_Mu11_PFTau15_v*",0) && filter("hltSingleMu11L3Filtered11") && type("TriggerMuon")')
         , maxDPtRel = cms.double( 999 )
         , maxDeltaR = cms.double( 0.3 )
@@ -451,8 +451,8 @@ def addTriggerMatchingMuon(process,isMC=False,postfix="",verbose=False):
         , resolveByMatchQuality = cms.bool( True )
         )
     if isMC:
-        muonMatch.matchedCuts  = cms.string('(path("HLT_Mu15_LooseIsoPFTau20_v*",0) || path("HLT_IsoMu12_LooseIsoPFTau10_v*",0)) && (filter("hltSingleMu15L3Filtered15") || filter("hltSingleMuIsoL3IsoFiltered12") ) && type("TriggerMuon")')
-
+        muonMatch.matchedCuts  = cms.string('(path("HLT_Mu15_LooseIsoPFTau20_v*",0,0) || path("HLT_IsoMu12_LooseIsoPFTau10_v*",0,0) ) && (filter("hltL3Muon15") || filter("hltSingleMuIsoL3IsoFiltered12") ) && type("TriggerMuon")')
+        
 
     setattr(process,"muonTriggerMatchHLTMuons"+postfix,muonMatch.clone()) 
     if not hasattr(process,"patTriggerSequence"):
@@ -496,7 +496,7 @@ def addTriggerMatchingElectron(process,isMC=False,postfix="",verbose=False):
         #, matchedCuts = cms.string( 'path("HLT_IsoEle12_PFTau15_v3",0) && type("TriggerElectron")' )
         #, matchedCuts = cms.string( 'type("TriggerElectron")' )
         #, matchedCuts = cms.string( 'type("TriggerTau")' )
-        , matchedCuts = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*", 0) || path("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*",0)) && (filter("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter") || filter("hltEle18CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter")) && type("TriggerElectron")')
+        , matchedCuts = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*", 0,0) || path("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*",0,0)) && (filter("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter") || filter("hltEle18CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter")) && type("TriggerElectron")')
         , maxDPtRel = cms.double( 999 )
         , maxDeltaR = cms.double( 0.3)
         , resolveAmbiguities    = cms.bool( True )
@@ -504,7 +504,7 @@ def addTriggerMatchingElectron(process,isMC=False,postfix="",verbose=False):
         )
 
     if isMC:
-        eleMatch.matchedCuts = cms.string('( (path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*",0)) || (path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*",0)) ) && filter("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter") && type("TriggerElectron")')
+        eleMatch.matchedCuts = cms.string('( (path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*",0,0)) || (path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*",0,0)) ) && filter("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter") && filter("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter") && type("TriggerElectron")')
 
     setattr(process,"eleTriggerMatchHLTElectrons"+postfix,eleMatch.clone()) 
     if not hasattr(process,"patTriggerSequence"):
@@ -545,9 +545,7 @@ def addTriggerMatchingTau(process,isMC=False,postfix="",XtriggerMu=False,verbose
         "PATTriggerMatcherDRLessByR"
         , src     = cms.InputTag( "selectedPatTaus"+postfix )
         , matched = cms.InputTag( "patTrigger" )
-        #, matchedCuts    = cms.string('type("TriggerTau")')
-        #, matchedCuts    = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*", 0) || path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*",0)) && (filter("hltOverlapFilterIsoEle15IsoPFTau15") || filter("hltOverlapFilterIsoEle15IsoPFTau20")) && type("TriggerTau")')
-        , matchedCuts    = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*", 0) || path("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*",0))  && type("TriggerTau")')
+        , matchedCuts    = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*", 0,0) || path("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*",0,0)) && filter("hltPFTau20TrackLooseIso") && type("TriggerTau")')
         , maxDPtRel = cms.double( 999 )
         , maxDeltaR = cms.double( 0.3 )
         , resolveAmbiguities    = cms.bool( True )
@@ -556,13 +554,13 @@ def addTriggerMatchingTau(process,isMC=False,postfix="",XtriggerMu=False,verbose
 
 
     if XtriggerMu and (not isMC):
-        tauMatch.matchedCuts  = cms.string('(path("HLT_IsoMu15_LooseIsoPFTau15_v*",0) || path("HLT_IsoMu15_LooseIsoPFTau20_v*",0)) && type("TriggerTau")')
+        tauMatch.matchedCuts  = cms.string('( path("HLT_IsoMu12_LooseIsoPFTau10_v*",0,0) || path("HLT_IsoMu15_LooseIsoPFTau15_v*",0,0) || path("HLT_IsoMu15_LooseIsoPFTau20_v*",0,0) ) && ( filter("hltPFTau20TrackLooseIso") ||  filter("hltPFTau15TrackLooseIso") ) && type("TriggerTau")')
 
     if XtriggerMu and isMC:
-        tauMatch.matchedCuts  = cms.string('path("HLT_IsoMu12_LooseIsoPFTau10_v*",0) && type("TriggerTau")')
-
+         tauMatch.matchedCuts  = cms.string('(path("HLT_Mu15_LooseIsoPFTau20_v*",0,0) || path("HLT_IsoMu12_LooseIsoPFTau10_v*",0,0)) && (filter("hltPFTau20TrackLooseIso") ||  filter("hltPFTau10TrackLooseIso") ) && type("TriggerTau")')
+ 
     if (not XtriggerMu) and isMC:
-        tauMatch.matchedCuts  = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*", 0) || path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*",0))  && type("TriggerTau")')
+        tauMatch.matchedCuts  = cms.string('(path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*", 0,0) || path("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*",0,0))  && filter("hltPFTau20TrackLooseIso") && type("TriggerTau")')
         
 
     setattr(process,"tauTriggerMatchHLTTaus"+postfix,tauMatch.clone()) 

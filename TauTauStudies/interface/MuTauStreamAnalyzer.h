@@ -119,6 +119,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   float visibleTauMass_;
   float leadPFChargedHadrCandTrackPt_;
   int tightestHPSWP_;
+  int tightestHPSDBWP_;
   bool applyTauSignalSel_;
   int isTauLegMatched_;
   int isMuLegMatched_;
@@ -129,7 +130,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   float rhoFastJet_;
   int nPUVertices_;
   int nOOTPUVertices_;
-  double weights2011_[25];
+  std::vector<double> weights2011_;
 
   PUWeight* fpuweight_;
   float mcPUweight_;
