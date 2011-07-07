@@ -83,7 +83,7 @@ void makeTrees_ElecTauStream(int index = 4){
   // samples & x-sections
   samples.push_back("Run2011-Elec");                crossSec.push_back( 0  );
   samples.push_back("DYJets-50-madgraph-PUS4_run"); crossSec.push_back( 3048              * 0.0206749225649 );
-  samples.push_back("TT-madgraph-PUS3_run");        crossSec.push_back( 157.5             * 0.1171);
+  samples.push_back("TT-pythia-PUS3_run");          crossSec.push_back( 157.5             * 0.114806);
   samples.push_back("WJets-madgraph-PUS4_run");     crossSec.push_back( 31314.0           * 0.00813873);
   samples.push_back("VBFH125-powheg-PUS4_run");     crossSec.push_back( 6.37e-02 * 1.332  * 0.07722);
   samples.push_back("GGFH125-powheg-PUS4_run");     crossSec.push_back( 6.37e-02 * 16.49  * 0.0488);
@@ -146,8 +146,8 @@ void makeTrees_ElecTauStream(int index = 4){
   outTreePtOrd->Branch("diTauVisPt",  &diTauVisPt,"diTauVisPt/F");
   outTreePtOrd->Branch("diTauVisEta",   &diTauVisEta,"diTauVisEta/F");
   outTreePtOrd->Branch("diTauNSVfitMass", &diTauNSVfitMass_,"diTauNSVfitMass/F");
-  outTreePtOrd->Branch("diTauSVfitMass",  &diTauNSVfitMassErrUp_, "diTauNSVfitMassErrUp/F");
-  outTreePtOrd->Branch("diTauSVfitEta",   &diTauNSVfitMassErrDown_,"diTauNSVfitMassErrDown/F");
+  outTreePtOrd->Branch("diTauNSVfitMassErrUp",  &diTauNSVfitMassErrUp_, "diTauNSVfitMassErrUp/F");
+  outTreePtOrd->Branch("diTauNSVfitMassErrDown",   &diTauNSVfitMassErrDown_,"diTauNSVfitMassErrDown/F");
 
   outTreePtOrd->Branch("etaL1", &etaL1,"etaL1/F");
   outTreePtOrd->Branch("etaL2", &etaL2,"etaL2/F");
@@ -186,7 +186,7 @@ void makeTrees_ElecTauStream(int index = 4){
   outTreePtOrd->Branch("jetsBtagHE2",  &jetsBtagHE2,"jetsBtagHE2/F");
 
  
-  TString inName = "/data_CMS/cms/lbianchini/ElecTauSummer11_iter1//treeElecTauStream_"+sample+".root";
+  TString inName = "/data_CMS/cms/lbianchini/ElecTauStreamSummer11_iter1//treeElecTauStream_"+sample+".root";
   TFile* file   = new TFile(inName,"READ");
   if(file->IsZombie()){
     cout << "No such file!" << endl;
@@ -466,6 +466,7 @@ void makeTrees_ElecTauStream(int index = 4){
 
     isTauLegMatched_ = isTauLegMatched;
     elecFlag_ = elecFlag;
+    genDecay_ = genDecay ;
     event_=event;
     run_=run;
     lumi_=lumi;
@@ -502,10 +503,10 @@ void makeTrees_MuTauStream(int index = 4){
   // samples & x-sections
   samples.push_back("Run2011-Mu");                     crossSec.push_back( 0  );
   samples.push_back("DYJets-Mu-50-madgraph-PUS4_run"); crossSec.push_back( 3048              * 0.024618 );
-  samples.push_back("TT-Mu-madgraph-PUS3_run");        crossSec.push_back( 157.5             * 0.20004);
+  samples.push_back("TT-Mu-pythia-PUS3_run");          crossSec.push_back( 157.5             * 0.20004);
   samples.push_back("WJets-Mu-madgraph-PUS4_run");     crossSec.push_back( 31314.0           * 0.01242);
-  samples.push_back("VBFH125-powheg-PUS4_run");        crossSec.push_back( 6.37e-02 * 1.332  * 0.11342);
-  samples.push_back("GGFH125-powheg-PUS4_run");        crossSec.push_back( 6.37e-02 * 16.49  * 0.0753);
+  samples.push_back("VBFH125-Mu-powheg-PUS4_run");     crossSec.push_back( 6.37e-02 * 1.332  * 0.11342);
+  samples.push_back("GGFH125-Mu-powheg-PUS4_run");     crossSec.push_back( 6.37e-02 * 16.49  * 0.0753);
 
   //samples.push_back("DYToEE-20-PUS1");          crossSec.push_back( 1666  );
   //samples.push_back("DYToTauTau-20-PUS1");      crossSec.push_back( 1666  );
@@ -566,8 +567,8 @@ void makeTrees_MuTauStream(int index = 4){
   outTreePtOrd->Branch("diTauVisPt",  &diTauVisPt,"diTauVisPt/F");
   outTreePtOrd->Branch("diTauVisEta",   &diTauVisEta,"diTauVisEta/F");
   outTreePtOrd->Branch("diTauNSVfitMass", &diTauNSVfitMass_,"diTauNSVfitMass/F");
-  outTreePtOrd->Branch("diTauSVfitMass",  &diTauNSVfitMassErrUp_, "diTauNSVfitMassErrUp/F");
-  outTreePtOrd->Branch("diTauSVfitEta",   &diTauNSVfitMassErrDown_,"diTauNSVfitMassErrDown/F");
+  outTreePtOrd->Branch("diTauNSVfitMassErrUp",  &diTauNSVfitMassErrUp_, "diTauNSVfitMassErrUp/F");
+  outTreePtOrd->Branch("diTauNSVfitMassErrDown",   &diTauNSVfitMassErrDown_,"diTauNSVfitMassErrDown/F");
 
   outTreePtOrd->Branch("etaL1", &etaL1,"etaL1/F");
   outTreePtOrd->Branch("etaL2", &etaL2,"etaL2/F");
@@ -910,7 +911,7 @@ void makeTrees_MuTauStream(int index = 4){
 
 void doAllSamplesElec(){
  
-  for( unsigned int k = 0; k < 12 ; k++)  makeTrees_ElecTauStream(k);
+  for( unsigned int k = 0; k < 5 ; k++)  makeTrees_ElecTauStream(k);
 
   return;
 
@@ -918,7 +919,7 @@ void doAllSamplesElec(){
 
 void doAllSamplesMu(){
  
-  for( unsigned int k = 0; k < 11 ; k++)  makeTrees_MuTauStream(k);
+  for( unsigned int k = 0; k < 6 ; k++)  makeTrees_MuTauStream(k);
 
   return;
 
