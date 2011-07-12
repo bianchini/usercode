@@ -26,21 +26,21 @@
 
 ////////////////////////////////////////////////////////
 
-void plotElecTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20",
+void plotElecTau( TCut Cuts_ = "tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20",
 		  Bool_t doVBFPreRegion_ = false,
 		  TString variable_ = "diTauVisMass",
 		  TString XTitle_ = "mass",
 		  TString Unities_ = "GeV",
-		  Int_t nBins_ = 40, Float_t xMin_=0, Float_t xMax_=200,
-		  Float_t magnifySgn_ = 1,
-		  Float_t hltEff_ = 1.1,
+		  Int_t nBins_ = 40, Float_t xMin_=0, Float_t xMax_=400,
+		  Float_t magnifySgn_ = 20,
+		  Float_t hltEff_ = (0.906/0.825)*1.004*0.986*0.975,
 		  Int_t enableHLTmatching_ = 0,
 		  Int_t logy_ = 0 ) 
 {   
   
   
   
-  float Lumi = 123.;
+  float Lumi = (123.+887)*1.00;
   
   TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
   c1->SetGrid(0,0);
@@ -55,9 +55,9 @@ void plotElecTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diT
   leg->SetBorderSize(0);
   leg->SetFillColor(10);
   leg->SetTextSize(0.04);
-  leg->SetHeader("e+#tau_{had}");
+  leg->SetHeader("#tau_{e}#tau_{had}");
 
-  THStack* aStack = new THStack("aStack",Form("CMS Preliminary 2011    #sqrt{s}=7 TeV L=%.0f pb^{-1}", Lumi ));
+  THStack* aStack = new THStack("aStack",Form("CMS Preliminary 2011    #sqrt{s}=7 TeV L=%.2f fb^{-1}", Lumi/1000. ));
   TH1F* hSiml  = new TH1F();
   TH1F* hSgn   = new TH1F();
   TH1F* hSgn1  = new TH1F();
@@ -65,11 +65,11 @@ void plotElecTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diT
   TH1F* hData  = new TH1F();
 
   // OpenNTuples
-  TString fDataName                = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamSummer11_iter1//nTupleRun2011-Elec_Open_ElecTauStream.root";
+  TString fDataName                = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamSummer11_iter1//nTupleRun2011-Elec_All_Open_ElecTauStream.root";
   TString fSignalNameVBF           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamSummer11_iter1//nTupleVBFH125-powheg-PUS4_run_Open_ElecTauStream.root";
   TString fSignalNameGGH           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamSummer11_iter1//nTupleGGFH125-powheg-PUS4_run_Open_ElecTauStream.root";
   TString fBackgroundNameDYTauTau  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamSummer11_iter1//nTupleDYJets-50-madgraph-PUS4_run_Open_ElecTauStream.root";
-  TString fBackgroundNameDYElecElec    = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamSummer11_iter1//nTupleDYJets-50-madgraph-PUS4_run_Open_ElecTauStream.root";
+  TString fBackgroundNameDYElecElec= "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamSummer11_iter1//nTupleDYJets-50-madgraph-PUS4_run_Open_ElecTauStream.root";
   TString fBackgroundNameWJets     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamSummer11_iter1//nTupleWJets-madgraph-PUS4_run_Open_ElecTauStream.root";
   TString fBackgroundNameTTbar     = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamSummer11_iter1//nTupleTT-pythia-PUS3_run_Open_ElecTauStream.root";
 
@@ -93,14 +93,18 @@ void plotElecTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diT
   }
 
   TString tree = "outTreePtOrd";
-  TCut inclusiveRegionSS("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && HLTx==1)");
-  TCut vbfPreRegionSS("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1)");
-  TCut inclusiveRegionSSMtSide("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge!=0 && HLTx==1)");
-  TCut vbfPreRegionSSMtSide("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1)");
-  TCut inclusiveRegionSSmc("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && HLTx==1 )");
-  TCut vbfPreRegionSSmc("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1 )");
-  TCut inclusiveRegionSSMtmc("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && diTauCharge!=0 && HLTx==1 )");
-  TCut vbfPreRegionSSMtmc("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1 )");
+  TCut inclusiveRegionSS("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && HLTx==1)");
+  TCut vbfPreRegionSS("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1)");
+  TCut inclusiveRegionSSMtSide("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge!=0 && HLTx==1)");
+  TCut vbfPreRegionSSMtSide("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1)");
+   TCut inclusiveRegionOSMtSide("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge==0 && HLTx==1)");
+   TCut vbfPreRegionOSMtSide("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge==0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1)");
+  TCut inclusiveRegionSSmc("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && HLTx==1 )");
+  TCut vbfPreRegionSSmc("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1 )");
+  TCut inclusiveRegionSSMtmc("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && diTauCharge!=0 && HLTx==1 )");
+  TCut vbfPreRegionSSMtmc("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1 )");
+  TCut inclusiveRegionOSMtmc("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && diTauCharge==0 && HLTx==1 )");
+  TCut vbfPreRegionOSMtmc("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && diTauCharge==0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1 )");
 
   TTree *data                = (TTree*)fData->Get(tree);
   TTree *signalVBF           = (TTree*)fSignalVBF->Get(tree);
@@ -108,7 +112,7 @@ void plotElecTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diT
 
   TFile* dummy1 = new TFile("dummy1.root","RECREATE");
   TTree *backgroundDYTauTau  = ((TTree*)fBackgroundDYTauTau->Get(tree))->CopyTree("abs(genDecay)==(23*15)");
-  TTree *backgroundDYElecElec    = ((TTree*)fBackgroundDYElecElec->Get(tree))->CopyTree("abs(genDecay)==(23*11)");
+  TTree *backgroundDYElecElec    = ((TTree*)fBackgroundDYElecElec->Get(tree))->CopyTree("abs(genDecay)==(23*11) && diTauCharge==0");
   cout <<backgroundDYTauTau->GetEntries() << " -- " << backgroundDYElecElec->GetEntries() << endl;
 
   TTree* dataSS              = 0;
@@ -124,13 +128,24 @@ void plotElecTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diT
     ((TTree*)fBackgroundWJets->Get(tree))->CopyTree(vbfPreRegionSSMtmc) :
     ((TTree*)fBackgroundWJets->Get(tree))->CopyTree(inclusiveRegionSSMtmc);
   
-  TTree *backgroundWJets     = (TTree*)fBackgroundWJets->Get(tree);
   TTree *backgroundTTbar     = (TTree*)fBackgroundTTbar->Get(tree);
+  TTree *backgroundWJets     = (TTree*)fBackgroundWJets->Get(tree);
+
+  TH1F* hWMt = new TH1F("hWMt","",200,-200,200);
+  if(!doVBFPreRegion_) backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt",inclusiveRegionOSMtmc);
+  else backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt",vbfPreRegionOSMtmc);
+  float scaleFactor = (hWMt->Integral(0,80))/(hWMt->Integral(90,200));
+  cout << "Conv. factor for W ==> " << scaleFactor << endl;
+  float OSWinSignalRegion = doVBFPreRegion_ ?
+    data->GetEntries(vbfPreRegionOSMtSide) : 
+    data->GetEntries(inclusiveRegionOSMtSide);
+  OSWinSignalRegion *= (1./scaleFactor);
+  cout << "W+jets in signal region ==> " << OSWinSignalRegion << endl; 
 
   // here I choose the order in the stack
   std::vector<string> samples;
-  //samples.push_back("ggH115");
-  //samples.push_back("qqH115");
+  samples.push_back("ggH115");
+  samples.push_back("qqH115");
   samples.push_back("TTbar");
   samples.push_back("Wjets");
   samples.push_back("SS");
@@ -165,7 +180,7 @@ void plotElecTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diT
     std::map<std::string,TTree*>::iterator it = tMap.find(samples[iter]);
 
     TString h1Name = "h1_"+it->first;
-    TH1F* h1 = new TH1F( h1Name ,Form("CMS Preliminary 2011    #sqrt{s}=7 TeV L=%.0f pb^{-1}", Lumi) , nBins_ ,xMin_ , xMax_);
+    TH1F* h1 = new TH1F( h1Name ,Form("CMS Preliminary 2011    #sqrt{s}=7 TeV L=%.2f fb^{-1}", Lumi/1000) , nBins_ ,xMin_ , xMax_);
     
     TFile* dummy = new TFile("dummy.root","RECREATE");  
     TCut Cuts = Cuts_;
@@ -301,6 +316,15 @@ void plotElecTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diT
       }// end loop
     }
 
+    if((it->first).find("Wjets")!=string::npos){
+      float oldWNorm = h1->Integral();
+      h1->Scale(OSWinSignalRegion/h1->Integral());
+      cout << "Rescaling W+jets: from " << oldWNorm << " to " <<  h1->Integral() << endl;
+    }
+    
+
+    // Legend
+
     if( (it->first).find("Zelecelec")!=string::npos ) {
       h1->SetFillColor(7);
       leg->AddEntry(h1,"Z#rightarrowll","F");
@@ -349,7 +373,7 @@ void plotElecTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diT
       h1->SetFillColor(kBlack);
       h1->SetFillStyle(3004);
       h1->SetLineColor(kBlack);
-      leg->AddEntry(h1,Form("VBF H(115) X %.0f",magnifySgn_),"F");
+      //leg->AddEntry(h1,Form("VBF H(115) X %.0f",magnifySgn_),"F");
     }
     if((it->first).find("ggH115")!=string::npos){
       hSgn2 = (TH1F*)h1->Clone("hSgn2");
@@ -359,7 +383,7 @@ void plotElecTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diT
       h1->SetFillColor(kBlack);
       h1->SetFillStyle(3005);
       h1->SetLineColor(kBlack);
-      leg->AddEntry(h1,Form("GGF H(115) X %.0f",magnifySgn_),"F");
+      //leg->AddEntry(h1,Form("GGF H(115) X %.0f",magnifySgn_),"F");
     }
     if((it->first).find("Data")!=string::npos){
       hData = (TH1F*)h1->Clone("hData");
@@ -373,13 +397,15 @@ void plotElecTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diT
       hData->SetTitleSize(0.04,"X");
       hData->SetTitleSize(0.05,"Y");
       hData->SetTitleOffset(0.95,"Y");
-      leg->AddEntry(hData,"DATA","P");
+      leg->AddEntry(hData,"Observed","P");
     }
 
     if(iter==0) hSiml=(TH1F*)h1->Clone("hSiml");
     else if((it->first).find("Data")==string::npos) hSiml->Add(h1);
 
-    if((it->first).find("Data")==string::npos) aStack->Add(h1);
+    if(! ((it->first).find("Data")!=string::npos || 
+	  (it->first).find("ggH") !=string::npos ||
+	  (it->first).find("qqH") !=string::npos ) ) aStack->Add(h1);
 
     if(VERBOSE) cout<<(it->first) << " ==> " 
 		   << h1->Integral() << " +/- " 
@@ -390,6 +416,9 @@ void plotElecTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diT
   // all signal summed together:
   hSgn = (TH1F*)hSgn1->Clone("hSgn");
   hSgn->Add(hSgn1,hSgn2,1,1);
+  hSgn->SetFillColor(kRed);
+  aStack->Add(hSgn);
+  leg->AddEntry(hSgn,Form("SM H(125) X %.0f",magnifySgn_),"F");
 
   if(VERBOSE) cout<< "S/sqrt(B) ==> " 
 		  << hSgn->Integral()/ TMath::Sqrt(hSiml->Integral()) << " +/- " 
@@ -415,21 +444,22 @@ void plotElecTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diT
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-void plotMuTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20",
-		  Bool_t doVBFPreRegion_ = false,
-		  TString variable_ = "diTauVisMass",
-		  TString XTitle_ = "mass",
-		  TString Unities_ = "GeV",
-		  Int_t nBins_ = 40, Float_t xMin_=0, Float_t xMax_=200,
-		  Float_t magnifySgn_ = 1,
-		  Float_t hltEff_ = 1.1,
-		  Int_t enableHLTmatching_ = 0,
-		  Int_t logy_ = 0 ) 
+void plotMuTau( 
+	       TCut Cuts_ = "tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20",
+	       Bool_t doVBFPreRegion_ = false,
+	       TString variable_ = "diTauVisMass",
+	       TString XTitle_ = "mass",
+	       TString Unities_ = "GeV",
+	       Int_t nBins_ = 40, Float_t xMin_=0, Float_t xMax_=400,
+	       Float_t magnifySgn_ = 20,
+	       Float_t hltEff_ = (0.906/0.825)*0.9967*0.997*0.968,
+	       Int_t enableHLTmatching_ = 0,
+	       Int_t logy_ = 0 ) 
 {   
   
   
   
-  float Lumi = 145.;
+  float Lumi = (145.+30.9+887)*1.00;
   
   TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
   c1->SetGrid(0,0);
@@ -444,9 +474,9 @@ void plotMuTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diTau
   leg->SetBorderSize(0);
   leg->SetFillColor(10);
   leg->SetTextSize(0.04);
-  leg->SetHeader("#mu+#tau_{had}");
+  leg->SetHeader("#tau_{#mu}#tau_{had}");
 
-  THStack* aStack = new THStack("aStack",Form("CMS Preliminary 2011    #sqrt{s}=7 TeV L=%.0f pb^{-1}", Lumi ));
+  THStack* aStack = new THStack("aStack",Form("CMS Preliminary 2011    #sqrt{s}=7 TeV L=%.2f fb^{-1}", Lumi/1000. ));
   TH1F* hSiml  = new TH1F();
   TH1F* hSgn   = new TH1F();
   TH1F* hSgn1  = new TH1F();
@@ -454,7 +484,7 @@ void plotMuTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diTau
   TH1F* hData  = new TH1F();
 
   // OpenNTuples
-  TString fDataName                = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamSummer11_iter1//nTupleRun2011-Mu_Open_MuTauStream.root";
+  TString fDataName                = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamSummer11_iter1//nTupleRun2011-Mu_All_Open_MuTauStream.root";
   TString fSignalNameVBF           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamSummer11_iter1//nTupleVBFH125-Mu-powheg-PUS4_run_Open_MuTauStream.root";
   TString fSignalNameGGH           = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamSummer11_iter1//nTupleGGFH125-Mu-powheg-PUS4_run_Open_MuTauStream.root";
   TString fBackgroundNameDYTauTau  = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamSummer11_iter1//nTupleDYJets-Mu-50-madgraph-PUS4_run_Open_MuTauStream.root";
@@ -482,14 +512,18 @@ void plotMuTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diTau
   }
 
   TString tree = "outTreePtOrd";
-  TCut inclusiveRegionSS("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && ( ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) ))");
-  TCut vbfPreRegionSS("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && ( ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) ))");
-  TCut inclusiveRegionSSMtSide("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge!=0 && ( ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) ))");
-  TCut vbfPreRegionSSMtSide("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && ( ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) ))");
-  TCut inclusiveRegionSSmc("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && HLTx==1 )");
-  TCut vbfPreRegionSSmc("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1 )");
-  TCut inclusiveRegionSSMtmc("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && diTauCharge!=0 && HLTx==1 )");
-  TCut vbfPreRegionSSMtmc("(combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1 )");
+  TCut inclusiveRegionSS("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && ( ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) ))");
+  TCut vbfPreRegionSS("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && ( ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) ))");
+  TCut inclusiveRegionSSMtSide("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge!=0 && ( ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) ))");
+  TCut vbfPreRegionSSMtSide("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && ( ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) ))");
+  TCut inclusiveRegionOSMtSide("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge==0 && ( ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) ))");
+  TCut vbfPreRegionOSMtSide("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge==0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && ( ((HLTmu==1 && run<=163261) || (HLTx==1 && run>163261)) ))");
+  TCut inclusiveRegionSSmc("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && HLTx==1 )");
+  TCut vbfPreRegionSSmc("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1 )");
+  TCut inclusiveRegionSSMtmc("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && diTauCharge!=0 && HLTx==1 )");
+  TCut vbfPreRegionSSMtmc("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1 )");
+  TCut inclusiveRegionOSMtmc("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && diTauCharge==0 && HLTx==1 )");
+  TCut vbfPreRegionOSMtmc("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && muFlag==0 && diTauCharge==0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1 )");
 
   TTree *data                = (TTree*)fData->Get(tree);
   TTree *signalVBF           = (TTree*)fSignalVBF->Get(tree);
@@ -513,17 +547,28 @@ void plotMuTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diTau
     ((TTree*)fBackgroundWJets->Get(tree))->CopyTree(vbfPreRegionSSMtmc) :
     ((TTree*)fBackgroundWJets->Get(tree))->CopyTree(inclusiveRegionSSMtmc);
   
-  TTree *backgroundWJets     = (TTree*)fBackgroundWJets->Get(tree);
   TTree *backgroundTTbar     = (TTree*)fBackgroundTTbar->Get(tree);
+  TTree *backgroundWJets     = (TTree*)fBackgroundWJets->Get(tree);
+
+  TH1F* hWMt = new TH1F("hWMt","",200,-200,200);
+  if(!doVBFPreRegion_) backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt",inclusiveRegionOSMtmc);
+  else backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt",vbfPreRegionOSMtmc);
+  float scaleFactor = (hWMt->Integral(0,80))/(hWMt->Integral(90,200));
+  cout << "Conv. factor for W ==> " << scaleFactor << endl;
+  float OSWinSignalRegion = doVBFPreRegion_ ?
+    data->GetEntries(vbfPreRegionOSMtSide) : 
+    data->GetEntries(inclusiveRegionOSMtSide);
+  OSWinSignalRegion *= (1./scaleFactor);
+  cout << "W+jets in signal region ==> " << OSWinSignalRegion << endl; 
 
   // here I choose the order in the stack
   std::vector<string> samples;
-  //samples.push_back("ggH115");
-  //samples.push_back("qqH115");
+  samples.push_back("ggH115");
+  samples.push_back("qqH115");
   samples.push_back("TTbar");
-  samples.push_back("Wjets");
   samples.push_back("SS");
-  //samples.push_back("Zmumu");
+  samples.push_back("Wjets");
+  samples.push_back("Zmumu");
   samples.push_back("Ztautau");
   samples.push_back("Data");
   
@@ -554,7 +599,7 @@ void plotMuTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diTau
     std::map<std::string,TTree*>::iterator it = tMap.find(samples[iter]);
 
     TString h1Name = "h1_"+it->first;
-    TH1F* h1 = new TH1F( h1Name ,Form("CMS Preliminary 2011    #sqrt{s}=7 TeV L=%.0f pb^{-1}", Lumi) , nBins_ ,xMin_ , xMax_);
+    TH1F* h1 = new TH1F( h1Name ,Form("CMS Preliminary 2011    #sqrt{s}=7 TeV L=%.2f fb^{-1}", Lumi/1000.) , nBins_ ,xMin_ , xMax_);
     
     TFile* dummy = new TFile("dummy.root","RECREATE");  
     TCut Cuts = Cuts_;
@@ -586,14 +631,15 @@ void plotMuTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diTau
       TH1F* hW = (TH1F*)h1->Clone("hW");
       hW->Reset();
       float SSWinSignalRegion = doVBFPreRegion_ ?
-	data->GetEntries(inclusiveRegionSSMtSide) :  
-	data->GetEntries(vbfPreRegionSSMtSide);
+	data->GetEntries(inclusiveRegionSSMtSide):
+	data->GetEntries(vbfPreRegionSSMtSide) ;
       SSWinSignalRegion *= (1./scaleFactor);
       WJetsSS->Draw(variable+">>hW");
+      //cout << SSWinSignalRegion << endl;
       hW->Scale(SSWinSignalRegion/hW->Integral());
       h1->Add(hW, -1 );
       h1->Scale(1.06);
-      //cout << h1->Integral() << endl;
+      //h1->Draw();
     }
     else{
 
@@ -690,6 +736,15 @@ void plotMuTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diTau
       }// end loop
     }
 
+    if((it->first).find("Wjets")!=string::npos){
+      float oldWNorm = h1->Integral();
+      h1->Scale(OSWinSignalRegion/h1->Integral());
+      cout << "Rescaling W+jets: from " << oldWNorm << " to " <<  h1->Integral() << endl;
+    }
+
+
+    // Legend
+
     if( (it->first).find("Zmumu")!=string::npos ) {
       h1->SetFillColor(7);
       leg->AddEntry(h1,"Z#rightarrowll","F");
@@ -730,16 +785,6 @@ void plotMuTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diTau
       h1->SetFillColor(42);
       leg->AddEntry(h1,"SS \\ W","F");
     }
-    if((it->first).find("qqH115")!=string::npos){
-      hSgn1 = (TH1F*)h1->Clone("hSgn1");
-      hSgn1->Scale(magnifySgn_);
-      h1->Scale(magnifySgn_);
-      hSgn1->SetLineWidth(2);
-      h1->SetFillColor(kBlack);
-      h1->SetFillStyle(3004);
-      h1->SetLineColor(kBlack);
-      leg->AddEntry(h1,Form("VBF H(115) X %.0f",magnifySgn_),"F");
-    }
     if((it->first).find("ggH115")!=string::npos){
       hSgn2 = (TH1F*)h1->Clone("hSgn2");
       hSgn2->Scale(magnifySgn_);
@@ -748,7 +793,19 @@ void plotMuTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diTau
       h1->SetFillColor(kBlack);
       h1->SetFillStyle(3005);
       h1->SetLineColor(kBlack);
-      leg->AddEntry(h1,Form("GGF H(115) X %.0f",magnifySgn_),"F");
+      //continue;
+      //leg->AddEntry(h1,Form("GGF H(125) X %.0f",magnifySgn_),"F");
+    }
+    if((it->first).find("qqH115")!=string::npos){
+      hSgn1 = (TH1F*)h1->Clone("hSgn1");
+      hSgn1->Scale(magnifySgn_);
+      h1->Scale(magnifySgn_);
+      hSgn1->SetLineWidth(2);
+      h1->SetFillColor(kBlack);
+      h1->SetFillStyle(3004);
+      h1->SetLineColor(kBlack);
+      //continue;
+      //leg->AddEntry(h1,Form("VBF H(125) X %.0f",magnifySgn_),"F");
     }
     if((it->first).find("Data")!=string::npos){
       hData = (TH1F*)h1->Clone("hData");
@@ -762,13 +819,15 @@ void plotMuTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diTau
       hData->SetTitleSize(0.04,"X");
       hData->SetTitleSize(0.05,"Y");
       hData->SetTitleOffset(0.95,"Y");
-      leg->AddEntry(hData,"DATA","P");
+      leg->AddEntry(hData,"Observed","P");
     }
 
     if(iter==0) hSiml=(TH1F*)h1->Clone("hSiml");
     else if((it->first).find("Data")==string::npos) hSiml->Add(h1);
 
-    if((it->first).find("Data")==string::npos) aStack->Add(h1);
+    if(! ((it->first).find("Data")!=string::npos || 
+	  (it->first).find("ggH") !=string::npos ||
+	  (it->first).find("qqH") !=string::npos ) ) aStack->Add(h1);
 
     if(VERBOSE) cout<<(it->first) << " ==> " 
 		   << h1->Integral() << " +/- " 
@@ -779,6 +838,9 @@ void plotMuTau( TCut Cuts_ = "combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diTau
   // all signal summed together:
   hSgn = (TH1F*)hSgn1->Clone("hSgn");
   hSgn->Add(hSgn1,hSgn2,1,1);
+  hSgn->SetFillColor(kRed);
+  aStack->Add(hSgn);
+  leg->AddEntry(hSgn,Form("SM H(125) X %.0f",magnifySgn_),"F");
 
   if(VERBOSE) cout<< "S/sqrt(B) ==> " 
 		  << hSgn->Integral()/ TMath::Sqrt(hSiml->Integral()) << " +/- " 
