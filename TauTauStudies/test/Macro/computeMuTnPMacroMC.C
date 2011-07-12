@@ -47,8 +47,8 @@ using namespace RooFit;
 
 
 vector<float*> simFit(
-		      const string tnp_      = "elecTnP",
-		      const string category_ = "elecID",
+		      const string tnp_      = "muTnP",
+		      const string category_ = "muID",
 		      const string binLabel_ = "15to20",
 		      double cutValue_       = 0.5,
 		      const string bin_      = "abseta>1.5",
@@ -70,30 +70,30 @@ vector<float*> simFit(
 
   vector<float*> out;
 
-  TFile fSgn("../prod/ElecTnP/treeElecTnP_DYJets-50-madgraph-PUS4-TnP.root");
+  TFile fSgn("../prod/MuTnP/treeMuTnP_DYJets-Mu-50-madgraph-PUS4-TnP.root");
   TTree *fullTreeSgn  = (TTree*)fSgn.Get((tnp_+"/fitter_tree").c_str());
   fSgn.cd("allEventsFilter");
   TH1F* totalEventsSgn = (TH1F*)gDirectory->Get("totalEvents");
   float readEventsSgn = totalEventsSgn->GetBinContent(1);
 
   // data
-  TFile fdat("../prod/ElecTnP/treeElecTnP_Run2011-Elec-TnP.root");
+  TFile fdat("../prod/MuTnP/treeMuTnP_Run2011-Muon-TnP.root");
   TTree *fullTreeData = (TTree*)fdat.Get((tnp_+"/fitter_tree").c_str());
   
 
-  TFile fZtau("../prod/ElecTnP/treeElecTnP_DYJets-50-madgraph-PUS4-TnP.root");
+  TFile fZtau("../prod/MuTnP/treeMuTnP_DYJets-Mu-50-madgraph-PUS4-TnP.root");
   TTree *fullTreeZtt  = (TTree*)fZtau.Get((tnp_+"/fitter_tree").c_str());
   fZtau.cd("allEventsFilter");
   TH1F* totalEventsZtt = (TH1F*)gDirectory->Get("totalEvents");
   float readEventsZtt = totalEventsZtt->GetBinContent(1);
 
-  TFile fWen("../prod/ElecTnP/treeElecTnP_WJets-madgraph-PUS4-TnP.root");
+  TFile fWen("../prod/MuTnP/treeMuTnP_WJets-Mu-madgraph-PUS4-TnP.root");
   TTree *fullTreeWen = (TTree*)fWen.Get((tnp_+"/fitter_tree").c_str());
   fWen.cd("allEventsFilter");
   TH1F* totalEventsWen = (TH1F*)gDirectory->Get("totalEvents");
   float readEventsWen = totalEventsWen->GetBinContent(1);
 
-  TFile fTTb("../prod/ElecTnP/treeElecTnP_TT-pythia-PUS3-TnP.root");
+  TFile fTTb("../prod/MuTnP/treeMuTnP_TT-Mu-pythia-PUS3-TnP.root");
   TTree *fullTreeTTb  = (TTree*)fTTb.Get((tnp_+"/fitter_tree").c_str());
   fTTb.cd("allEventsFilter");
   TH1F* totalEventsTTb = (TH1F*)gDirectory->Get("totalEvents");
@@ -105,9 +105,9 @@ vector<float*> simFit(
   TH1F* hS           = new TH1F("hS","",1,0,150);
   TH1F* hSP          = new TH1F("hSP","",1,0,150);
   
-  fullTreeSgn->Draw("mass>>hS",Form("tag_puMCWeight*(%s && mass>%f && mass<%f && mcTrue && tag_genDecay==23*11 && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_hlt1)",bin_.c_str(),xLow_,xHigh_));
+  fullTreeSgn->Draw("mass>>hS",Form("tag_puMCWeight*(%s && mass>%f && mass<%f && mcTrue && tag_genDecay==23*13 && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_hlt)",bin_.c_str(),xLow_,xHigh_));
   float SGNtrue = hS->Integral();
-  fullTreeSgn->Draw("mass>>hSP",Form("tag_puMCWeight*(%s && %s>=%f && mass>%f && mass<%f && mcTrue && tag_genDecay==23*11 && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_hlt1)",bin_.c_str(),category_.c_str(),cutValue_,xLow_,xHigh_));
+  fullTreeSgn->Draw("mass>>hSP",Form("tag_puMCWeight*(%s && %s>=%f && mass>%f && mass<%f && mcTrue && tag_genDecay==23*13 && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_hlt)",bin_.c_str(),category_.c_str(),cutValue_,xLow_,xHigh_));
   float SGNtruePass = hSP->Integral();
 
   float McTruthEff    = SGNtruePass/SGNtrue;
@@ -119,10 +119,10 @@ vector<float*> simFit(
 
   float reductionFactor = 0.3;
   // file to copy the trees
-  TFile *templFile = new TFile(Form("dummyElecTempl_%s_bin%.2f.root",binLabel_.c_str(),binCenter_),"RECREATE");
+  TFile *templFile = new TFile(Form("dummyMuTempl_%s_bin%.2f.root",binLabel_.c_str(),binCenter_),"RECREATE");
   
-  TTree* fullTreeSgnCutP = fullTreeSgn->CopyTree( Form("(%s>=%f && %s && pair_tnpCharge==0 && event_met_pfmet<25 && mcTrue && tag_genDecay==23*11 && tag_pfRelIso<0.1 && tag_pt>25 && tag_hlt1 && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(),xLow_,xHigh_) ,"",int(fullTreeSgn->GetEntries()*reductionFactor));
-  TTree* fullTreeSgnCutF = fullTreeSgn->CopyTree( Form("(%s< %f && %s && pair_tnpCharge==0 && event_met_pfmet<25 && mcTrue && tag_genDecay==23*11 && tag_pfRelIso<0.1 && tag_pt>25 && tag_hlt1 && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(),xLow_,xHigh_) ,"",int(fullTreeSgn->GetEntries()*reductionFactor));
+  TTree* fullTreeSgnCutP = fullTreeSgn->CopyTree( Form("(%s>=%f && %s && pair_tnpCharge==0 && event_met_pfmet<25 && mcTrue && tag_genDecay==23*13 && tag_pfRelIso<0.1 && tag_pt>25 && tag_hlt && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(),xLow_,xHigh_) ,"",int(fullTreeSgn->GetEntries()*reductionFactor));
+  TTree* fullTreeSgnCutF = fullTreeSgn->CopyTree( Form("(%s< %f && %s && pair_tnpCharge==0 && event_met_pfmet<25 && mcTrue && tag_genDecay==23*13 && tag_pfRelIso<0.1 && tag_pt>25 && tag_hlt && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(),xLow_,xHigh_) ,"",int(fullTreeSgn->GetEntries()*reductionFactor));
   
   float unWeightedMCEff = float(fullTreeSgnCutP->GetEntries())/(fullTreeSgnCutF->GetEntries()+fullTreeSgnCutP->GetEntries());
   int sgnPToAppend =  unWeightedMCEff<McTruthEff ? int(fullTreeSgnCutP->GetEntries()) : int(McTruthEff/(1-McTruthEff)*fullTreeSgnCutF->GetEntries()) ;
@@ -306,9 +306,9 @@ vector<float*> simFit(
   RooAddPdf DataModelP("DataModelP","",RooArgList(sgnPdfP/*sgnTemplatePdfP*/,bkgPdfP),RooArgList(DataNumSgnP,DataNumBkgP));
   RooAddPdf DataModelF("DataModelF","",RooArgList(sgnPdfF/*sgnTemplatePdfF*/,bkgPdfF),RooArgList(DataNumSgnF,DataNumBkgF));
   
-  TFile* dummyData = new TFile(("dummyElecData_"+binLabel_+".root").c_str(),"RECREATE");
-  TTree* fullTreeDataCutP = fullTreeData->CopyTree( Form("(%s>=%f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_hlt1 && tag_pt>25)",category_.c_str(),cutValue_,bin_.c_str()) ); 
-  TTree* fullTreeDataCutF = fullTreeData->CopyTree( Form("(%s <%f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_hlt1 && tag_pt>25)",category_.c_str(),cutValue_,bin_.c_str()) );
+  TFile* dummyData = new TFile(("dummyMuData_"+binLabel_+".root").c_str(),"RECREATE");
+  TTree* fullTreeDataCutP = fullTreeData->CopyTree( Form("(%s>=%f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_hlt && tag_pt>25)",category_.c_str(),cutValue_,bin_.c_str()) ); 
+  TTree* fullTreeDataCutF = fullTreeData->CopyTree( Form("(%s <%f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_hlt && tag_pt>25)",category_.c_str(),cutValue_,bin_.c_str()) );
 
   mass.setBins(nBins_);
   RooDataSet DataDataSetP("DataDataSetP","dataset for Data pass", RooArgSet(mass), Import( *fullTreeDataCutP ) );
@@ -320,14 +320,14 @@ vector<float*> simFit(
   RooDataHist DataDataHistF("DataDataHistF","",RooArgSet(mass),DataDataSetF, 1.0);
 
 
-  TFile* dummyBkg = new TFile(Form("dummyElecBkg%s_%.2f.root",binLabel_.c_str(),binCenter_),"RECREATE");
-  TTree* fullTreeZttCutP = fullTreeZtt->CopyTree( Form("(%s>=%f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_genDecay==23*15  && tag_hlt1 && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(),xLow_,xHigh_) ); 
-  TTree* fullTreeWenCutP = fullTreeWen->CopyTree( Form("(%s>=%f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_hlt1 && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(), xLow_, xHigh_) ); 
-  TTree* fullTreeTTbCutP = fullTreeTTb->CopyTree( Form("(%s>=%f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_hlt1 && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(), xLow_, xHigh_) ); 
+  TFile* dummyBkg = new TFile(Form("dummyBkgMu%s_%.2f.root",binLabel_.c_str(),binCenter_),"RECREATE");
+  TTree* fullTreeZttCutP = fullTreeZtt->CopyTree( Form("(%s>=%f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_genDecay==23*15  && tag_hlt && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(),xLow_,xHigh_) ); 
+  TTree* fullTreeWenCutP = fullTreeWen->CopyTree( Form("(%s>=%f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_hlt && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(), xLow_, xHigh_) ); 
+  TTree* fullTreeTTbCutP = fullTreeTTb->CopyTree( Form("(%s>=%f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_hlt && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(), xLow_, xHigh_) ); 
   //
-  TTree* fullTreeZttCutF = fullTreeZtt->CopyTree( Form("(%s< %f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_genDecay==23*15  && tag_hlt1 && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(),xLow_,xHigh_) ); 
-  TTree* fullTreeWenCutF = fullTreeWen->CopyTree( Form("(%s< %f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_hlt1 && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(),xLow_,xHigh_) ); 
-  TTree* fullTreeTTbCutF = fullTreeTTb->CopyTree( Form("(%s< %f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_hlt1 && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(),xLow_,xHigh_) ); 
+  TTree* fullTreeZttCutF = fullTreeZtt->CopyTree( Form("(%s< %f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_genDecay==23*15  && tag_hlt && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(),xLow_,xHigh_) ); 
+  TTree* fullTreeWenCutF = fullTreeWen->CopyTree( Form("(%s< %f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_hlt && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(),xLow_,xHigh_) ); 
+  TTree* fullTreeTTbCutF = fullTreeTTb->CopyTree( Form("(%s< %f && %s  && tag_pfRelIso<0.1 && pair_tnpCharge==0 && event_met_pfmet<25 && tag_pt>25 && tag_hlt && mass>%f && mass<%f)",category_.c_str(),cutValue_,bin_.c_str(),xLow_,xHigh_) ); 
 
   TH1F* hEta = new TH1F("hEta","",1,-10,10); 
 
@@ -447,7 +447,7 @@ vector<float*> simFit(
   RooRealVar* DataNumSigFit   = (RooRealVar*)(&DataFitParam["DataNumSgn"]);
 
   string theSample = doMC_ ? "Simulation" : "Data" ;
-  float theLumi = doMC_ ? mcLumi_ : 181.;
+  float theLumi = doMC_ ? mcLumi_ : 195.;
 
   RooPlot* DataFrameP = mass.frame(Bins(40),Title(Form("CMS Preliminary 2011  #sqrt{s}=7 TeV %s  L=%.0f pb^{-1}:  passing probe",theSample.c_str(),theLumi)));
   DataCombData.plotOn(DataFrameP,Cut("category==category::pass"));
@@ -472,10 +472,10 @@ vector<float*> simFit(
 
   cPass->cd();
   DataFrameP->Draw();
-  string fileNameP = "fitCanvasPassElecTnP_"+tnp_+"_"+category_;
+  string fileNameP = "fitCanvasPassMuTnP_"+tnp_+"_"+category_;
   if(doMC_) fileNameP = fileNameP+"MC";
   else fileNameP = fileNameP+"DATA";
-  cPass->SaveAs(Form("./ElecTnP/%s_%s.png",fileNameP.c_str(), binLabel_.c_str()));
+  cPass->SaveAs(Form("./MuTnP/%s_%s.png",fileNameP.c_str(), binLabel_.c_str()));
 
   TCanvas *cFail = new TCanvas("fitCanvasF","canvas",10,30,650,600);
   cFail->SetGrid(0,0);
@@ -486,10 +486,10 @@ vector<float*> simFit(
 
   cFail->cd();
   DataFrameF->Draw();
-  string fileNameF = "fitCanvasFailElecTnP_"+tnp_+"_"+category_;
+  string fileNameF = "fitCanvasFailMuTnP_"+tnp_+"_"+category_;
   if(doMC_) fileNameF = fileNameF+"MC";
   else fileNameF = fileNameF+"DATA";
-  cFail->SaveAs(Form("./ElecTnP/%s_%s.png",fileNameF.c_str(), binLabel_.c_str()));
+  cFail->SaveAs(Form("./MuTnP/%s_%s.png",fileNameF.c_str(), binLabel_.c_str()));
 
   ResDataCombinedFit->printArgs(std::cout);
   cout << endl;
@@ -529,8 +529,8 @@ vector<float*> simFit(
 }
 
 void plot(
-	  const string tnp_      = "elecTnP",
-	  const string category_ = "elecID80",
+	  const string tnp_      = "muTnP",
+	  const string category_ = "muID",
 	  const string ptRange_  = "pt>15 && pt<20",
 	  const string binLabel_ = "15to20",
 	  float ymax             = 1.0,
@@ -543,11 +543,11 @@ void plot(
 	  float deltaN_          = 0.0,
 	  float scale_           = 0.0,
 	  float mcLumi_          = 250,
-	  bool doMC_             = false
+	  bool doMC_             = true
 	  )
 {
  
-  string outName = "./ElecTnP/elecTnP_"+category_+"_"+binLabel_;
+  string outName = "./MuTnP/muTnP_"+category_+"_"+binLabel_;
   if(doMC_) outName = outName+"MC";
   else  outName = outName+"DATA";
   outName = outName+".txt";
@@ -632,7 +632,7 @@ void plot(
 
   leg->Draw();
 
-  string effPlotName = "./ElecTnP/efficiencyElecTnP"+category_+"_"+binLabel_;
+  string effPlotName = "./MuTnP/efficiencyMuTnP"+category_+"_"+binLabel_;
   if(doMC_) effPlotName = effPlotName+"MC";
   else  effPlotName = effPlotName+"DATA";
   effPlotName= effPlotName+".png";
@@ -643,10 +643,10 @@ void plot(
 
 
 void plotVsPt(
-	      const string tnp_      = "elecTnP",
-	      const string category_ = "elecIso",
-	      const string ptRange_  = "abseta<2.3 && elecID80",
-	      const string binLabel_  = "ID80",
+	      const string tnp_      = "muTnP",
+	      const string category_ = "muHLT15",
+	      const string ptRange_  = "abseta<2.1 && muID && muIso",
+	      const string binLabel_  = "HLT15",
 	      float ymax             = 1.05,
 	      float ymin             = 0.5,
 	      double cutValue_       = 0.5,
@@ -657,15 +657,16 @@ void plotVsPt(
 	      float deltaAlpha_      = 0.0,
 	      float deltaN_          = 0.0,
 	      float scale_           = 0.0,
-	      float mcLumi_          = 181,
-	      bool doMC_             = true
+	      float mcLumi_          = 195,
+	      bool doMC_             = false
 	      )
 {
+ 
 
-  TFile *f = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamSummer11_iter1/nTupleDYJets-50-madgraph-PUS4_run_Open_ElecTauStream.root","READ");
+  TFile *f = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamSummer11_iter1/nTupleDYJets-Mu-50-madgraph-PUS4_run_Open_MuTauStream.root","READ");
   TTree* tree = (TTree*)f->Get("outTreePtOrd");
   TH1F* h1 = new TH1F("h1","; p_{T}",100,15,115);
-  tree->Draw("ptL1>>h1","puWeight*(genDecay==23*15 && HLTx && combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20)");
+  tree->Draw("ptL1>>h1","puWeight*(genDecay==23*15 && HLTmu && combIsoLeg2<2 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20)");
   vector<float> binFracs; 
   binFracs.push_back(h1->Integral(1,5)/h1->Integral()  );
   binFracs.push_back(h1->Integral(6,10)/h1->Integral() );
@@ -677,7 +678,7 @@ void plotVsPt(
   cout << "[25,35]" << h1->Integral(10,20)/h1->Integral() << endl;
   cout << "[35,50]" << h1->Integral(20,35)/h1->Integral() << endl;
 
-  string outName = "./ElecTnP/elecTnP_"+category_+"_"+binLabel_;
+  string outName = "./MuTnP/muTnP_"+category_+"_"+binLabel_;
   if(doMC_) outName = outName+"MC";
   else  outName = outName+"DATA";
   outName = outName+".txt";
@@ -747,7 +748,7 @@ void plotVsPt(
   leg->SetFillColor(0);
 
   string theSample = doMC_ ? "Simulation" : "Data" ;
-  float theLumi = doMC_ ? mcLumi_ : 181.;
+  float theLumi = doMC_ ? mcLumi_ : 195.;
 
   TH1F* hMaster = new TH1F("hMaster",Form("CMS Preliminary 2011  #sqrt{s}=7 TeV %s  L=%.0f pb^{-1}; p_{T}^{probe} (GeV); efficiency",theSample.c_str(),theLumi),1,15,50);
 
@@ -768,8 +769,7 @@ void plotVsPt(
   graph_tnpData->SetMarkerSize(1.5);
 
   string header = "";
-  if(category_.find("ID80")!=string::npos)  header = "Eff. of WP80 Id for "+ptRange_ ;
-  if(category_.find("ID95")!=string::npos)  header = "Eff. of WP95 Id for "+ptRange_ ;
+  if(category_.find("ID")!=string::npos)  header = "Eff. of Id for "+ptRange_ ;
   if(category_.find("Iso")!=string::npos) header = "Eff. of Iso(#Delta#beta) for "+ptRange_ ;
   if(category_.find("HLT")!=string::npos) header = "Eff. of HLT for "+ptRange_ ;
   leg->SetHeader(header.c_str());
@@ -783,7 +783,7 @@ void plotVsPt(
 
   leg->Draw();
 
-  string effPlotName = "./ElecTnP/efficiencyElecTnP"+category_+"_"+binLabel_;
+  string effPlotName = "./MuTnP/efficiencyMuTnP"+category_+"_"+binLabel_;
   if(doMC_) effPlotName = effPlotName+"MC";
   else  effPlotName = effPlotName+"DATA";
   effPlotName= effPlotName+".png";
