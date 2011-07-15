@@ -97,8 +97,8 @@ void plotElecTau( TCut Cuts_ = "tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 &&
   TCut vbfPreRegionSS("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1)");
   TCut inclusiveRegionSSMtSide("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge!=0 && HLTx==1)");
   TCut vbfPreRegionSSMtSide("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1)");
-   TCut inclusiveRegionOSMtSide("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge==0 && HLTx==1)");
-   TCut vbfPreRegionOSMtSide("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge==0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1)");
+  TCut inclusiveRegionOSMtSide("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge==0 && HLTx==1)");
+  TCut vbfPreRegionOSMtSide("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && diTauCharge==0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1)");
   TCut inclusiveRegionSSmc("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && HLTx==1 )");
   TCut vbfPreRegionSSmc("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && diTauCharge!=0 && pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && HLTx==1 )");
   TCut inclusiveRegionSSMtmc("(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && elecFlag==0 && diTauCharge!=0 && HLTx==1 )");
@@ -212,8 +212,8 @@ void plotElecTau( TCut Cuts_ = "tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 &&
       TH1F* hW = (TH1F*)h1->Clone("hW");
       hW->Reset();
       float SSWinSignalRegion = doVBFPreRegion_ ?
-	data->GetEntries(inclusiveRegionSSMtSide) :  
-	data->GetEntries(vbfPreRegionSSMtSide);
+	data->GetEntries(vbfPreRegionSSMtSide) :
+	data->GetEntries(inclusiveRegionSSMtSide) ;
       SSWinSignalRegion *= (1./scaleFactor);
       WJetsSS->Draw(variable+">>hW");
       hW->Scale(SSWinSignalRegion/hW->Integral());
@@ -253,6 +253,7 @@ void plotElecTau( TCut Cuts_ = "tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 &&
       currentTree->SetBranchAddress( "numPV",&numPV);
       currentTree->SetBranchAddress( "sampleWeight",&sampleWeight);
       currentTree->SetBranchAddress( "puWeight",&puWeight);
+      currentTree->SetBranchAddress( "HLTweight",&HLTweight);
       currentTree->SetBranchAddress( "ptVeto",&ptVeto);
       currentTree->SetBranchAddress( "MEt",&MEt);
       currentTree->SetBranchAddress( "MEtCorr",&MEtCorr);
@@ -308,7 +309,7 @@ void plotElecTau( TCut Cuts_ = "tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 &&
 	vMap["Mjj"]= Mjj;
 	vMap["ptVeto"]= ptVeto;
 	
-	if((it->first).find("Data")==string::npos) sampleWeight*=(Lumi/1000*hltEff_*puWeight);
+	if((it->first).find("Data")==string::npos) sampleWeight*=(Lumi/1000*hltEff_*puWeight*HLTweight);
 	
 	counter++;
 	h1->Fill( vMap[variable_], sampleWeight);
@@ -437,7 +438,7 @@ void plotElecTau( TCut Cuts_ = "tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 &&
   hStack->SetTitleOffset(0.95,"Y");
   leg->Draw();
 
-  //c1->SaveAs("tmp.png");
+  c1->SaveAs("tmp.png");
 
 }
 
@@ -450,7 +451,7 @@ void plotMuTau(
 	       TString variable_ = "diTauVisMass",
 	       TString XTitle_ = "mass",
 	       TString Unities_ = "GeV",
-	       Int_t nBins_ = 40, Float_t xMin_=0, Float_t xMax_=400,
+	       Int_t nBins_ = 60, Float_t xMin_=0, Float_t xMax_=120,
 	       Float_t magnifySgn_ = 20,
 	       Float_t hltEff_ = (0.906/0.825)*0.9967*0.997*0.968,
 	       Int_t enableHLTmatching_ = 0,
@@ -620,6 +621,9 @@ void plotMuTau(
       TH1F* hHelp = (TH1F*)h1->Clone("hHelp");
       hHelp->Reset();
       TString variable = ( (std::string(variable_.Data())).find("pZeta")!=string::npos ) ? "pZetaCorr-1.5*pZetaVisCorr" : variable_;
+      if((std::string(variable_.Data())).find("ptL2optL1")!=string::npos) variable = "ptL2/ptL1";
+      if((std::string(variable_.Data())).find("ptL1optL2")!=string::npos) variable = "ptL1/ptL2";
+
       currentTree->Draw(variable+">>hHelp");
       //cout << hHelp->GetEntries() << endl;
       h1->Add(hHelp,1);
@@ -631,8 +635,8 @@ void plotMuTau(
       TH1F* hW = (TH1F*)h1->Clone("hW");
       hW->Reset();
       float SSWinSignalRegion = doVBFPreRegion_ ?
-	data->GetEntries(inclusiveRegionSSMtSide):
-	data->GetEntries(vbfPreRegionSSMtSide) ;
+	data->GetEntries(vbfPreRegionSSMtSide) :
+	data->GetEntries(inclusiveRegionSSMtSide);
       SSWinSignalRegion *= (1./scaleFactor);
       WJetsSS->Draw(variable+">>hW");
       //cout << SSWinSignalRegion << endl;
@@ -722,6 +726,9 @@ void plotMuTau(
 	vMap["jetsBtagHE2"]= jetsBtagHE2;
 	vMap["leadTrackPt"]= leadTrackPt;
 	
+	vMap["ptL2optL1"]= ptL2/ptL1;
+	vMap["ptL1optL2"]= ptL1/ptL2;
+
 	vMap["pt1"]= pt1;
 	vMap["pt2"]= pt2;
 	vMap["Deta"]= Deta;
