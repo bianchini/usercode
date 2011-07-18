@@ -6,7 +6,7 @@
   using namespace std;
   using namespace RooFit;
 
-  string numPV = "numPV<99";
+  string numPV = "numPV>7";
 
   TFile* fData     = new TFile("nTupleRun2011-Mu_All_Open_MuTauStream.root","READ");
   TFile* fDYTauTau = new TFile("nTupleDYJets-Mu-50-madgraph-PUS4_run_Open_MuTauStream.root");
@@ -65,8 +65,28 @@
   // SS for QCD
   TH1F* hSS1prong0pi0Pdf = new TH1F("hSS1prong0pi0Pdf","",40,20,120);
   data->Draw("diTauVisMass>>hSS1prong0pi0Pdf",Form("tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge!=0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>40 && diTauVisMass<80 && decayMode!=-99 && %s",numPV.c_str()));
+  //hSS1prong0pi0Pdf->DrawNormalized("HIST");
+  TH1F* hWMt2_ = new TH1F("hWMt2_","",200,-200,200);
+  hWMt2_->Reset();
+  backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt2_",Form("puWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge!=0 && muFlag==0 && HLTx && diTauVisMass>40 && diTauVisMass<80 && decayMode!=-99 && %s)",numPV.c_str()));
+  float scaleFactor1SS_ = (hWMt2_->Integral(0,80))/(hWMt2_->Integral(90,200));
+  float SSWinSignalRegion1_ = data->GetEntries(Form("tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge!=0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && HLTx && diTauVisMass>40 && diTauVisMass<80 && decayMode!=-99 && %s",numPV.c_str()));
+  SSWinSignalRegion1_ *= (1./scaleFactor1SS_);
+  TH1F* hW1_ = (TH1F*)hSS1prong0pi0Pdf->Clone("hW1_");
+  hW1_->Reset();
+  backgroundWJets->Draw("diTauVisMass>>hW1_",Form("puWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge!=0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>40 && diTauVisMass<80 && decayMode!=-99 && %s)",numPV.c_str()));
+
+  cout << hSS1prong0pi0Pdf->Integral() << endl;
+  hW1_->Scale(SSWinSignalRegion1_/hW1_->Integral());
+  cout << hW1_->Integral() << endl;
+  //hSS1prong0pi0Pdf->Add(hW1_, -1 );
+
+  //hSS1prong0pi0Pdf->DrawNormalized("HIST");
+  //return;
+
   TH1F* hSS1prong0pi0 = new TH1F("hSS1prong0pi0","",40,20,120);
   data->Draw("diTauVisMass>>hSS1prong0pi0",Form("tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge!=0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>40 && diTauVisMass<80 && decayMode==0 && %s",numPV.c_str()));
+
   TH1F* hWMt2 = new TH1F("hWMt2","",200,-200,200);
   hWMt2->Reset();
   backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt2",Form("puWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge!=0 && muFlag==0 && HLTx && diTauVisMass>40 && diTauVisMass<80 && decayMode==0 && %s)",numPV.c_str()));
@@ -89,8 +109,8 @@
   RooRealVar NWJets1prong0pi0("NWJets1prong0pi0","",0,10000);
   RooRealVar NSS1prong0pi0("NSS1prong0pi0","",0,10000);
 
-  RooLognormal NWJets1prong0pi0_C("NWJets1prong0pi0_C","",NWJets1prong0pi0,RooConst(OSWinSignalRegion1),RooConst(1.1));
-  RooLognormal NSS1prong0pi0_C("NSS1prong0pi0_C","",NSS1prong0pi0,RooConst(hSS1prong0pi0->Integral()),RooConst(1.1));
+  RooLognormal NWJets1prong0pi0_C("NWJets1prong0pi0_C","",NWJets1prong0pi0,RooConst(OSWinSignalRegion1),RooConst(1.5));
+  RooLognormal NSS1prong0pi0_C("NSS1prong0pi0_C","",NSS1prong0pi0,RooConst(hSS1prong0pi0->Integral()),RooConst(1.5));
 
   RooAddPdf model1prong0pi0("model1prong0pi0","",RooArgList(DYTauTau1prong0pi0Pdf,WJets1prong0pi0Pdf,SS1prong0pi0Pdf),RooArgList(NDYTauTau1prong0pi0,NWJets1prong0pi0,NSS1prong0pi0));
 
@@ -155,6 +175,24 @@
   // SS for QCD
   TH1F* hSS1prong1pi0Pdf = new TH1F("hSS1prong1pi0Pdf","",40,20,120);
   data->Draw("diTauVisMass>>hSS1prong1pi0Pdf",Form("tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge!=0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>40 && diTauVisMass<80 && decayMode!=-99 && %s",numPV.c_str()));
+  TH1F* hWMt4_ = new TH1F("hWMt4_","",200,-200,200);
+  hWMt4_->Reset();
+  backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt4_",Form("puWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge!=0 && muFlag==0 && HLTx && diTauVisMass>40 && diTauVisMass<80 && decayMode!=-99 && %s)",numPV.c_str()));
+  float scaleFactor1SS_ = (hWMt4_->Integral(0,80))/(hWMt4_->Integral(90,200));
+  float SSWinSignalRegion1_ = data->GetEntries(Form("tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge!=0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && HLTx && diTauVisMass>40 && diTauVisMass<80 && decayMode!=-99 && %s",numPV.c_str()));
+  SSWinSignalRegion1_ *= (1./scaleFactor1SS_);
+  TH1F* hW2_ = (TH1F*)hSS1prong1pi0Pdf->Clone("hW2_");
+  hW2_->Reset();
+  backgroundWJets->Draw("diTauVisMass>>hW2_",Form("puWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge!=0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>40 && diTauVisMass<80 && decayMode!=-99 && %s)",numPV.c_str()));
+
+  cout << hSS1prong1pi0Pdf->Integral() << endl;
+  hW2_->Scale(SSWinSignalRegion1_/hW1_->Integral());
+  cout << hW2_->Integral() << endl;
+  //hSS1prong1pi0Pdf->Add(hW2_, -1 );
+
+  hSS1prong1pi0Pdf->DrawNormalized("HIST");
+  //return;
+
   TH1F* hSS1prong1pi0 = new TH1F("hSS1prong1pi0","",40,20,120);
   data->Draw("diTauVisMass>>hSS1prong1pi0",Form("tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge!=0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>40 && diTauVisMass<80 && decayMode==1 && %s",numPV.c_str()));
   TH1F* hWMt4 = new TH1F("hWMt4","",200,-200,200);
@@ -178,8 +216,8 @@
   RooRealVar NWJets1prong1pi0("NWJets1prong1pi0","",0,10000);
   RooRealVar NSS1prong1pi0("NSS1prong1pi0","",0,10000);
 
-  RooLognormal NWJets1prong1pi0_C("NWJets1prong1pi0_C","",NWJets1prong1pi0,RooConst(OSWinSignalRegion1),RooConst(1.1));
-  RooLognormal NSS1prong1pi0_C("NSS1prong1pi0_C","",NSS1prong1pi0,RooConst(hSS1prong1pi0->Integral()),RooConst(1.1));
+  RooLognormal NWJets1prong1pi0_C("NWJets1prong1pi0_C","",NWJets1prong1pi0,RooConst(OSWinSignalRegion1),RooConst(1.5));
+  RooLognormal NSS1prong1pi0_C("NSS1prong1pi0_C","",NSS1prong1pi0,RooConst(hSS1prong1pi0->Integral()),RooConst(1.5));
 
   RooAddPdf model1prong1pi0("model1prong1pi0","",RooArgList(DYTauTau1prong1pi0Pdf,WJets1prong1pi0Pdf,SS1prong1pi0Pdf),RooArgList(NDYTauTau1prong1pi0,NWJets1prong1pi0,NSS1prong1pi0));
 
@@ -261,8 +299,8 @@
   RooRealVar NWJets3prong("NWJets3prong","",0,10000);
   RooRealVar NSS3prong("NSS3prong","",0,10000);
 
-  RooLognormal NWJets3prong_C("NWJets3prong_C","",NWJets3prong,RooConst(OSWinSignalRegion1),RooConst(1.1));
-  RooLognormal NSS3prong_C("NSS3prong_C","",NSS3prong,RooConst(hSS3prong->Integral()),RooConst(1.1));
+  RooLognormal NWJets3prong_C("NWJets3prong_C","",NWJets3prong,RooConst(OSWinSignalRegion1),RooConst(1.5));
+  RooLognormal NSS3prong_C("NSS3prong_C","",NSS3prong,RooConst(hSS3prong->Integral()),RooConst(1.5));
 
   RooAddPdf model3prong("model3prong","",RooArgList(DYTauTau3prongPdf,WJets3prongPdf,SS3prongPdf),RooArgList(NDYTauTau3prong,NWJets3prong,NSS3prong));
 
@@ -380,18 +418,37 @@
   backgroundTTbar->Draw("etaL1>>hEta",Form("puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>40 && diTauVisMass<80 && decayMode==2 && %s)",numPV.c_str() ) ) ;
   histoTTbar->SetBinContent(3, hEta->Integral()*scaleFactor  );
 
+  TH1F* histoAll = (TH1F*)histoDYTauTau->Clone("histoAll");
+  histoAll->Reset();
+  histoAll->Add(histoDYTauTau,1);
+  histoAll->Add(histoWJets,1);
+  histoAll->Add(histoTTbar,1);
+  histoAll->Add(histoSS,1);
+  histoAll->SetBinError(1,sqrt(histoDYTauTau->GetBinContent(1)*(0.06)*histoDYTauTau->GetBinContent(1)*(0.06) + NfitWJets1prong0pi0->getError()*NfitWJets1prong0pi0->getError() + NfitSS1prong0pi0->getError()*NfitSS1prong0pi0->getError()));
+  histoAll->SetBinError(2,sqrt(histoDYTauTau->GetBinContent(2)*(0.06)*histoDYTauTau->GetBinContent(2)*(0.06) +NfitWJets1prong1pi0->getError()*NfitWJets1prong1pi0->getError() + NfitSS1prong1pi0->getError()*NfitSS1prong1pi0->getError()));
+  histoAll->SetBinError(3,sqrt(histoDYTauTau->GetBinContent(3)*(0.06)*histoDYTauTau->GetBinContent(3)*(0.06) +NfitWJets3prong->getError()*NfitWJets3prong->getError() + NfitSS3prong->getError()*NfitSS3prong->getError()));
+  histoAll->Sumw2();
+
   //noralize
   float mcIntegral = histoDYTauTau->Integral() + histoWJets->Integral() + histoSS->Integral()+histoTTbar->Integral();
+
   histoDYTauTau->Scale(1./mcIntegral);
   histoWJets->Scale(1./mcIntegral);
   histoSS->Scale(1./mcIntegral);
   histoTTbar->Scale(1./mcIntegral);
 
+  histoWJets->Add(histoTTbar,1);
+
+  histoAll->Scale(1./mcIntegral);
+
   aStack->Add(histoWJets);
-  aStack->Add(histoTTbar);
+  //aStack->Add(histoTTbar);
   aStack->Add(histoSS);
   aStack->Add(histoDYTauTau);
 
+  histoData->GetXaxis()->SetBinLabel(1,"#pi");
+  histoData->GetXaxis()->SetBinLabel(2,"#pi#pi^{0}");
+  histoData->GetXaxis()->SetBinLabel(3,"#pi#pi#pi");
   histoData->Sumw2();
   histoData->DrawNormalized("P");
   //histoData->Draw("P");
@@ -399,4 +456,25 @@
   histoData->DrawNormalized("PSAME");
   //histoData->Draw("PSAME");
 
+  histoAll->SetMarkerColor(kRed);
+  histoAll->SetMarkerStyle(1);
+  histoAll->SetFillColor(kRed);
+  histoAll->SetFillStyle(3004);
+  histoAll->Draw("E2SAME");
+  histoData->DrawNormalized("PSAME");
+
+  TLegend* leg = new TLegend(0.61,0.64,0.81,0.90,NULL,"brNDC");
+  leg->SetFillStyle(0);
+  leg->SetBorderSize(0);
+  leg->SetFillColor(10);
+  leg->SetTextSize(0.04);
+  leg->SetHeader("");
+
+  leg->AddEntry(histoData,"Observed","P");
+  leg->AddEntry(histoDYTauTau,"Z#rightarrow#tau#tau","F");
+  leg->AddEntry(histoSS,"QCD","F");
+  leg->AddEntry(histoWJets,"ElectroWeak","F");
+
+  leg->Draw();
+  
 }

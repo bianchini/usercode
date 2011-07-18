@@ -33,7 +33,7 @@ void plotElecTau( TCut Cuts_ = "tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 &&
 		  TString Unities_ = "GeV",
 		  Int_t nBins_ = 40, Float_t xMin_=0, Float_t xMax_=400,
 		  Float_t magnifySgn_ = 20,
-		  Float_t hltEff_ = (0.906/0.825)*1.004*0.986*0.975,
+		  Float_t hltEff_ = (0.906/0.825)*1.004*0.986/**0.975*/,
 		  Int_t enableHLTmatching_ = 0,
 		  Int_t logy_ = 0 ) 
 {   
@@ -866,7 +866,7 @@ void plotMuTau(
   hStack->SetTitleOffset(0.95,"Y");
   leg->Draw();
 
-  //c1->SaveAs("tmp.png");
+  c1->SaveAs("tmp.png");
 
 }
 

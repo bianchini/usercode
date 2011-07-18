@@ -23,7 +23,6 @@
 
   bool normalize = true;
 
-
   TFile* fData     = new TFile("nTupleRun2011-Mu_All_Open_MuTauStream.root","READ");
   TFile* fDYTauTau = new TFile("nTupleDYJets-Mu-50-madgraph-PUS4_run_Open_MuTauStream.root");
   TFile* fWJets    = new TFile("nTupleWJets-Mu-madgraph-PUS4_run_Open_MuTauStream.root");
@@ -50,7 +49,7 @@
   
   TH1F* hMass = new TH1F("hMass","CMS Preliminary 2011 #sqrt{s}=7 TeV L = 1.06 fb^{-1}; tau visible mass (GeV); a.u.",17,0.2,1.5);
   TH1F* h1prong0Pi0 = new TH1F("h1prong0Pi0","CMS Preliminary 2011 #sqrt{s}=7 TeV L = 1.06 fb^{-1}; tau visible mass  (GeV); a.u.",3,0.,0.3);
-  TH1F* h1prong1Pi0 = new TH1F("h1prong1Pi0","CMS Preliminary 2011 #sqrt{s}=7 TeV L = 1.06 fb^{-1}; tau visible mass  (GeV); a.u.",8,0.1,1.5);
+  TH1F* h1prong1Pi0 = new TH1F("h1prong1Pi0","CMS Preliminary 2011 #sqrt{s}=7 TeV L = 1.06 fb^{-1}; tau visible mass  (GeV); a.u.",8,0.2,1.4);
   TH1F* h3prong     = new TH1F("h3prong",    "CMS Preliminary 2011 #sqrt{s}=7 TeV L = 1.06 fb^{-1}; tau visible mass  (GeV); a.u.",9,0.7,1.6);;
 
   TH1F* h1prong0Pi0Data = (TH1F*)h1prong0Pi0->Clone("h1prong0Pi0Data");
@@ -144,17 +143,23 @@
   data->Draw("visibleTauMass>>h1prong1Pi0Data",signalOS && c1prong1Pi0);
   backgroundDYTauTau->Draw("visibleTauMass>>h1prong1Pi0DYTauTau","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && abs(genDecay)==(23*15) && decayMode==1 && numPV>5)");
   h1prong1Pi0DYTauTau->Scale(Lumi/1000.*(0.906/0.825)*0.9967*0.997*0.968);
-  backgroundDYTauTau->Draw("(1.03*visibleTauMass)>>h1prong1Pi0DYTauTauUp","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && abs(genDecay)==(23*15) && decayMode==1 && numPV>5)");
+  backgroundDYTauTau->Draw("(1.02*visibleTauMass)>>h1prong1Pi0DYTauTauUp","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && abs(genDecay)==(23*15) && decayMode==1 && numPV>5)");
   h1prong1Pi0DYTauTauUp->Scale(Lumi/1000.*(0.906/0.825)*0.9967*0.997*0.968);
-  backgroundDYTauTau->Draw("(0.97*visibleTauMass)>>h1prong1Pi0DYTauTauDown","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && abs(genDecay)==(23*15) && decayMode==1 && numPV>5)");
+  backgroundDYTauTau->Draw("(0.98*visibleTauMass)>>h1prong1Pi0DYTauTauDown","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && abs(genDecay)==(23*15) && decayMode==1 && numPV>5)");
   h1prong1Pi0DYTauTauDown->Scale(Lumi/1000.*(0.906/0.825)*0.9967*0.997*0.968);
+
+  //h1prong1Pi0DYTauTau->Draw("HIST");
+  //h1prong1Pi0DYTauTauUp->Draw("SAMEHIST");
+  //h1prong1Pi0DYTauTauDown->Draw("SAMEHIST");
+  //return;
+
 
   data->Draw("visibleTauMass>>h1prong1Pi0SS",signalSS && c1prong1Pi0);
   h1prong1Pi0SS->Scale(1.06);
 
   backgroundWJets->Draw("visibleTauMass>>h1prong1Pi0EWK","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && decayMode==1 && numPV>5)");
-  backgroundWJets->Draw("(1.03*visibleTauMass)>>h1prong1Pi0EWKUp","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && decayMode==1 && numPV>5)");
-  backgroundWJets->Draw("(0.97*visibleTauMass)>>h1prong1Pi0EWKDown","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && decayMode==1 && numPV>5)");
+  backgroundWJets->Draw("(1.02*visibleTauMass)>>h1prong1Pi0EWKUp","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && decayMode==1 && numPV>5)");
+  backgroundWJets->Draw("(0.98*visibleTauMass)>>h1prong1Pi0EWKDown","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && decayMode==1 && numPV>5)");
   hWMt->Reset();
   backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","puWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && HLTx && diTauVisMass>50 && diTauVisMass<70 && decayMode==1 && numPV>5)");
   float scaleFactor1 = (hWMt->Integral(0,80))/(hWMt->Integral(90,200));
@@ -162,10 +167,14 @@
   float OSWinSignalRegion1 = data->GetEntries("tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && HLTx && diTauVisMass>50 && diTauVisMass<70 && decayMode==1 && numPV>5");
   OSWinSignalRegion1 *= (1./scaleFactor1);
   h1prong1Pi0EWK->Scale(OSWinSignalRegion1/h1prong1Pi0EWK->Integral());
-  h1prong1Pi0EWKUp->Scale(OSWinSignalRegion1/h1prong1Pi0EWK->Integral());
-  h1prong1Pi0EWKDown->Scale(OSWinSignalRegion1/h1prong1Pi0EWK->Integral());
+  h1prong1Pi0EWKUp->Scale(OSWinSignalRegion1/h1prong1Pi0EWKUp->Integral());
+  h1prong1Pi0EWKDown->Scale(OSWinSignalRegion1/h1prong1Pi0EWKDown->Integral());
   //h1prong1Pi0EWK->Scale(Lumi/1000.);
 
+  //h1prong1Pi0EWK->Draw("HIST");
+  //h1prong1Pi0EWKUp->Draw("SAMEHIST");
+  //h1prong1Pi0EWKDown->Draw("SAMEHIST");
+  //return;
  
   //////////////////////////////////////////////////////////////////////////////////
 
@@ -173,16 +182,16 @@
   data->Draw("visibleTauMass>>h3prongData",signalOS && c3prong);
   backgroundDYTauTau->Draw("visibleTauMass>>h3prongDYTauTau","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && abs(genDecay)==(23*15) && decayMode==2 && numPV>5)");
   h3prongDYTauTau->Scale(Lumi/1000.*(0.906/0.825)*0.9967*0.997*0.968);
-  backgroundDYTauTau->Draw("(1.03*visibleTauMass)>>h3prongDYTauTauUp","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && abs(genDecay)==(23*15) && decayMode==2 && numPV>5)");
+  backgroundDYTauTau->Draw("(1.02*visibleTauMass)>>h3prongDYTauTauUp","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && abs(genDecay)==(23*15) && decayMode==2 && numPV>5)");
   h3prongDYTauTauUp->Scale(Lumi/1000.*(0.906/0.825)*0.9967*0.997*0.968);
-  backgroundDYTauTau->Draw("(0.97*visibleTauMass)>>h3prongDYTauTauDown","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && abs(genDecay)==(23*15) && decayMode==2 && numPV>5)");
+  backgroundDYTauTau->Draw("(0.98*visibleTauMass)>>h3prongDYTauTauDown","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && abs(genDecay)==(23*15) && decayMode==2 && numPV>5)");
   h3prongDYTauTauDown->Scale(Lumi/1000.*(0.906/0.825)*0.9967*0.997*0.968);
   data->Draw("visibleTauMass>>h3prongSS",signalSS && c3prong);
   h3prongSS->Scale(1.06);
 
   backgroundWJets->Draw("visibleTauMass>>h3prongEWK","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && decayMode==2 && numPV>5)");
-  backgroundWJets->Draw("(1.03*visibleTauMass)>>h3prongEWKUp","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && decayMode==2 && numPV>5)");
-  backgroundWJets->Draw("(0.97*visibleTauMass)>>h3prongEWKDown","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && decayMode==2 && numPV>5)");
+  backgroundWJets->Draw("(1.02*visibleTauMass)>>h3prongEWKUp","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && decayMode==2 && numPV>5)");
+  backgroundWJets->Draw("(0.98*visibleTauMass)>>h3prongEWKDown","puWeight*sampleWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)>-20 && HLTx && diTauVisMass>50 && diTauVisMass<70 && decayMode==2 && numPV>5)");
   hWMt->Reset();
   backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","puWeight*(tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && HLTx && diTauVisMass>50 && diTauVisMass<70 && decayMode==2 && numPV>5)");
   float scaleFactor1 = (hWMt->Integral(0,80))/(hWMt->Integral(90,200));
@@ -190,8 +199,8 @@
   float OSWinSignalRegion1 = data->GetEntries("tightestHPSDBWP>0 && combRelIsoLeg1DBeta<0.10 && diTauCharge==0 && muFlag==0 && (pZetaCorr-1.5*pZetaVisCorr)<-40 && HLTx && diTauVisMass>50 && diTauVisMass<70 && decayMode==2 && numPV>5");
   OSWinSignalRegion1 *= (1./scaleFactor1);
   h3prongEWK->Scale(OSWinSignalRegion1/h3prongEWK->Integral());
-  h3prongEWKUp->Scale(OSWinSignalRegion1/h3prongEWK->Integral());
-  h3prongEWKDown->Scale(OSWinSignalRegion1/h3prongEWK->Integral());
+  h3prongEWKUp->Scale(OSWinSignalRegion1/h3prongEWKUp->Integral());
+  h3prongEWKDown->Scale(OSWinSignalRegion1/h3prongEWKDown->Integral());
   //h3prongEWK->Scale(Lumi/1000.);
 
   float n1prong0Pi0Norm = h1prong0Pi0SS->Integral()+h1prong0Pi0EWK->Integral()+h1prong0Pi0DYTauTau->Integral();
@@ -206,12 +215,29 @@
     h1prong0Pi0SS->Scale(1. / (n1prong0Pi0Norm) );
     h1prong0Pi0EWK->Scale(1./ (n1prong0Pi0Norm));
     h1prong0Pi0DYTauTau->Scale(1./ (n1prong0Pi0Norm));
+
+    //
+ 
     h1prong1Pi0SS->Scale(1./ (n1prong1Pi0Norm));
     h1prong1Pi0EWK->Scale(1./ (n1prong1Pi0Norm));
     h1prong1Pi0DYTauTau->Scale(1./ (n1prong1Pi0Norm));
+    
+    h1prong1Pi0EWKUp->Scale(1./ (n1prong1Pi0Norm));
+    h1prong1Pi0DYTauTauUp->Scale(1./ (n1prong1Pi0Norm));
+    h1prong1Pi0EWKDown->Scale(1./ (n1prong1Pi0Norm));
+    h1prong1Pi0DYTauTauDown->Scale(1./ (n1prong1Pi0Norm));
+
+    //
+
     h3prongSS->Scale(1./ (n3prongNorm));
     h3prongEWK->Scale(1./ (n3prongNorm));
     h3prongDYTauTau->Scale(1./ (n3prongNorm));
+
+    h3prongEWKUp->Scale(1./ (n3prongNorm));
+    h3prongDYTauTauUp->Scale(1./ (n3prongNorm));
+    h3prongEWKDown->Scale(1./ (n3prongNorm));
+    h3prongDYTauTauDown->Scale(1./ (n3prongNorm));
+
   }
 
   aStack1->Add(h1prong0Pi0SS);
@@ -266,8 +292,8 @@
     leg->AddEntry(h1prong1Pi0DYTauTau,"Z#rightarrow#tau#tau","F");
     leg->AddEntry(h1prong1Pi0SS,"QCD","F");
     leg->AddEntry(h1prong1Pi0EWK,"ElectroWeak","F");
-    leg->AddEntry(h1prong1Pi0DYTauTauUp,"TauES+3%","L");
-    leg->AddEntry(h1prong1Pi0DYTauTauDown,"TauES-3%","L");
+    leg->AddEntry(h1prong1Pi0DYTauTauUp,"TauES+2%","L");
+    leg->AddEntry(h1prong1Pi0DYTauTauDown,"TauES-2%","L");
     leg->Draw();
   }
   if(do3prong){
@@ -298,8 +324,8 @@
     leg->AddEntry(h3prongDYTauTau,"Z#rightarrow#tau#tau","F");
     leg->AddEntry(h3prongSS,"QCD","F");
     leg->AddEntry(h3prongEWK,"ElectroWeak","F");
-    leg->AddEntry(h3prongDYTauTauUp,"TauES+3%","L");
-    leg->AddEntry(h3prongDYTauTauDown,"TauES-3%","L");
+    leg->AddEntry(h3prongDYTauTauUp,"TauES+2%","L");
+    leg->AddEntry(h3prongDYTauTauDown,"TauES-2%","L");
     leg->Draw();
   }
 
