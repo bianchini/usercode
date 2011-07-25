@@ -978,7 +978,7 @@ void makeTrees_MuTauStream(int index = 4){
  outFile->Close();
 
  delete jets; delete jets_v2; delete diTauLegsP4; delete diTauVisP4; delete tauXTriggers; delete triggerBits;
- delete METP4; delete jetsBtagHE; delete jetsChNfraction; delete genVP4;delete recoilCorr;
+ delete METP4; delete jetsBtagHE; delete jetsChNfraction; delete genVP4;delete recoilCorr; delete ratioEffTau;
 
 }
 
