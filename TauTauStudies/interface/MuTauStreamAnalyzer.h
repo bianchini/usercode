@@ -97,7 +97,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* extraMuons_; 
   
-  float run_,event_,lumi_;
+  unsigned long run_,event_,lumi_;
   float sumEt_;
   float chIsoLeg1v1_,nhIsoLeg1v1_,phIsoLeg1v1_;
   float chIsoPULeg1v1_,nhIsoPULeg1v1_,phIsoPULeg1v1_;

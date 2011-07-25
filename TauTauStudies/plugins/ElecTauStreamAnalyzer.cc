@@ -94,31 +94,33 @@ void ElecTauStreamAnalyzer::beginJob(){
   
   fpuweight_ = 0;// new PUWeight();
 
-  weights2011_.push_back( 0.109024 );
-  weights2011_.push_back( 0.407075 );
-  weights2011_.push_back( 0.987766 );
-  weights2011_.push_back( 1.63438 );
-  weights2011_.push_back( 2.05669 );
-  weights2011_.push_back( 2.199 );
-  weights2011_.push_back( 2.11165 );
-  weights2011_.push_back( 1.64845 );
-  weights2011_.push_back( 1.22609 );
-  weights2011_.push_back( 0.858752 );
-  weights2011_.push_back( 0.588653 );
-  weights2011_.push_back( 0.390765 );
-  weights2011_.push_back( 0.260896 );
-  weights2011_.push_back( 0.172374 );
-  weights2011_.push_back( 0.114789 );
-  weights2011_.push_back( 0.0763381 );
-  weights2011_.push_back( 0.0516093 );
-  weights2011_.push_back( 0.0346901 );
-  weights2011_.push_back( 0.0236226 );
-  weights2011_.push_back( 0.0164639 );
-  weights2011_.push_back( 0.0112493 );
-  weights2011_.push_back( 0.00779505 );
-  weights2011_.push_back( 0.00534702 );
-  weights2011_.push_back( 0.00378638 );
-  weights2011_.push_back( 0.00390528 );
+  weights2011_.push_back(0.0809561); 
+  weights2011_.push_back(0.483674); 
+  weights2011_.push_back(1.04601); 
+  weights2011_.push_back(1.6949); 
+  weights2011_.push_back(2.1009); 
+  weights2011_.push_back(2.24013); 
+  weights2011_.push_back(2.15938); 
+  weights2011_.push_back(1.73219); 
+  weights2011_.push_back(1.32508); 
+  weights2011_.push_back(0.950115);
+  weights2011_.push_back(0.6599); 
+  weights2011_.push_back(0.438093); 
+  weights2011_.push_back(0.284885); 
+  weights2011_.push_back(0.180615); 
+  weights2011_.push_back(0.112314); 
+  weights2011_.push_back(0.0687845);
+  weights2011_.push_back(0.0415087); 
+  weights2011_.push_back(0.0247498); 
+  weights2011_.push_back(0.0147688); 
+  weights2011_.push_back(0.00865185); 
+  weights2011_.push_back(0.00512891); 
+  weights2011_.push_back(0.00291561); 
+  weights2011_.push_back(0.00169447); 
+  weights2011_.push_back(0.000998808);
+  weights2011_.push_back(0.00087273); 
+  weights2011_.push_back(0); 
+  weights2011_.push_back(0); 
 
   tree_->Branch("jetsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsP4_);
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
@@ -197,9 +199,9 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("hasKft",&hasKft_,"hasKft/I");
 
 
-  tree_->Branch("run",&run_,"run/F");
-  tree_->Branch("event",&event_,"event/F");
-  tree_->Branch("lumi",&lumi_,"lumi/F");
+  tree_->Branch("run",&run_,"run/l");
+  tree_->Branch("event",&event_,"event/l");
+  tree_->Branch("lumi",&lumi_,"lumi/l");
   tree_->Branch("numPV",&numPV_,"numPV/F");
   tree_->Branch("numOfDiTaus",&numOfDiTaus_,"numOfDiTaus/I");
   tree_->Branch("numOfLooseIsoDiTaus",&numOfLooseIsoDiTaus_,"numOfLooseIsoDiTaus/I");
@@ -373,7 +375,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     cout << "Num of OOT PU = " << nOOTPUVertices_ << endl;
   }
   if( fpuweight_ ) mcPUweight_ = fpuweight_->GetWeight(nPUVertices_);
-  else mcPUweight_ =  int(sum_nvtx/3.+0.5) < int(weights2011_.size()) ? weights2011_[int(sum_nvtx/3.+0.5)] : weights2011_[(unsigned int)(weights2011_.size()-1)];
+  //else mcPUweight_ =  int(sum_nvtx/3.+0.5) < int(weights2011_.size()) ? weights2011_[int(sum_nvtx/3.+0.5)] : weights2011_[(unsigned int)(weights2011_.size()-1)];
+  else mcPUweight_ =  int(nPUVertices_+0.5) < int(weights2011_.size()) ? weights2011_[int(nPUVertices_+0.5)] : weights2011_[(unsigned int)(weights2011_.size()-1)];
 
   edm::Handle<double> rhoFastJetHandle;
   iEvent.getByLabel(edm::InputTag("kt6PFJetsCentral","rho",""), rhoFastJetHandle);
@@ -510,13 +513,11 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       continue;
     identifiedTaus.push_back(selectedDiTausFromElec[i]);
     bool isIsolatedTau = false;
-    isIsolatedTau = ( (tau_i->isolationPFChargedHadrCandsPtSum() +
-		       std::max( (tau_i->isolationPFGammaCandsEtSum() -
-				  rhoFastJet_*TMath::Pi()*0.5*0.5), 0.0) )<2.); //new setting
+    //isIsolatedTau = ( (tau_i->isolationPFChargedHadrCandsPtSum() +
+    //	       std::max( (tau_i->isolationPFGammaCandsEtSum() -
+    //			  rhoFastJet_*TMath::Pi()*0.5*0.5), 0.0) )<2.); //new setting
+    isIsolatedTau = tau_i->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5;
     if(isIsolatedTau) looseIsoTaus.push_back(selectedDiTausFromElec[i]);
-    //if(tau_i->tauID("byLooseIsolation")>0.5) 
-    //looseIsoTaus.push_back(selectedDiTausFromElec[i]);
-    //else not_identifiedTaus.push_back(i);
   }
 
   numOfLooseIsoDiTaus_ = looseIsoTaus.size(); 
@@ -580,15 +581,17 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     // X-triggers
     XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*");
     XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
+    XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TightIsoPFTau20_v*");
     XtriggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
 
     // Single Electron triggers + X-triggers
     triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v1");
     triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v2");
     triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v4");
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v6");
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v7");
+    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v6");
     triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v8");
+    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v9");
+    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TightIsoPFTau20_v2");
     triggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v1");
     triggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v2");
   }
