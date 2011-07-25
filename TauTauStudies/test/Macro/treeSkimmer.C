@@ -16,7 +16,8 @@
 #include "TMultiGraph.h"
 #include "TBranch.h"
 #include "TSystem.h"
-#include "ratioEfficiency.C"
+#include "ratioEfficiencyElec.C"
+#include "ratioEfficiencyTau.C"
 #include "RecoilCorrector.C"
 #include "TLorentzVector.h"
 #include "TRandom3.h"
@@ -70,8 +71,11 @@ float* computeZeta(LV leg1, LV leg2, LV MEt){
 
 void makeTrees_ElecTauStream(int index = 4){
 
-  gSystem->Load("ratioEfficiency_C.so");
-  ratioEfficiency* ratioEff = new ratioEfficiency();
+  gSystem->Load("ratioEfficiencyElec_C.so");
+  ratioEfficiencyElec* ratioEffElec = new ratioEfficiencyElec();
+
+  gSystem->Load("ratioEfficiencyTau_C.so");
+  ratioEfficiencyTau* ratioEffTau = new ratioEfficiencyTau();
 
   gSystem->Load("RecoilCorrector_C.so");
   RecoilCorrector* recoilCorr = new RecoilCorrector();
@@ -132,7 +136,7 @@ void makeTrees_ElecTauStream(int index = 4){
   int tightestHPSWP_,tightestHPSDBWP_;
   float jetsBtagHE1,jetsBtagHE2;
   float ptVeto, chFracPV1, chFracPV2;
-  float HLTx,HLTmatch,HLTweight;
+  float HLTx,HLTmatch,HLTweightElec,HLTweightTau;
   int isTauLegMatched_,elecFlag_,genDecay_;
   unsigned long event_,run_,lumi_;
 
@@ -182,7 +186,8 @@ void makeTrees_ElecTauStream(int index = 4){
   outTreePtOrd->Branch("tightestHPSWP",  &tightestHPSWP_,"tightestHPSWP/I");
   outTreePtOrd->Branch("tightestHPSDBWP",  &tightestHPSDBWP_,"tightestHPSDBWP/I");
   outTreePtOrd->Branch("HLTx", &HLTx,"HLTx/F");
-  outTreePtOrd->Branch("HLTweight", &HLTweight,"HLTweight/F");
+  outTreePtOrd->Branch("HLTweightElec", &HLTweightElec,"HLTweightElec/F");
+  outTreePtOrd->Branch("HLTweightTau", &HLTweightTau,"HLTweightTau/F");
   outTreePtOrd->Branch("HLTmatch", &HLTmatch,"HLTmatch/F");
   outTreePtOrd->Branch("isTauLegMatched", &isTauLegMatched_,"isTauLegMatched/I");
   outTreePtOrd->Branch("genDecay", &genDecay_,"genDecay/I");
@@ -489,8 +494,10 @@ void makeTrees_ElecTauStream(int index = 4){
       }
     }
     
-    HLTweight = (std::string(sample.Data())).find("Run2011")==string::npos ? 
-      ratioEff->ratio((*diTauLegsP4)[0].Pt(), bool(fabs((*diTauLegsP4)[0].Eta())<1.5) ) : 1;
+    HLTweightElec = (std::string(sample.Data())).find("Run2011")==string::npos ? 
+      ratioEffElec->ratio((*diTauLegsP4)[0].Pt(), bool(fabs((*diTauLegsP4)[0].Eta())<1.5) ) : 1;
+    HLTweightTau = (std::string(sample.Data())).find("Run2011")==string::npos ? 
+      ratioEffTau->ratio( (*diTauLegsP4)[0].Pt() ) : 1.0;
 
     isTauLegMatched_ = isTauLegMatched;
     elecFlag_ = elecFlag;
@@ -510,7 +517,7 @@ void makeTrees_ElecTauStream(int index = 4){
 
  delete jets; delete jets_v2; delete diTauLegsP4; delete diTauVisP4; delete tauXTriggers; delete triggerBits;
  delete METP4; delete jetsBtagHE; delete jetsChNfraction; delete genVP4;
- delete ratioEff; delete recoilCorr; delete hPU; delete tRandom;
+ delete ratioEffElec; delete ratioEffTau;  delete recoilCorr; delete hPU; delete tRandom;
 }
 
 
@@ -522,6 +529,9 @@ void makeTrees_MuTauStream(int index = 4){
   
   gSystem->Load("RecoilCorrector_C.so");
   RecoilCorrector* recoilCorr = new RecoilCorrector();
+
+  gSystem->Load("ratioEfficiencyTau_C.so");
+  ratioEfficiencyTau* ratioEffTau = new ratioEfficiencyTau();
 
   typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LV;
 
@@ -580,7 +590,7 @@ void makeTrees_MuTauStream(int index = 4){
   int genDecay_; int decayMode_; float visibleTauMass_;
   float jetsBtagHE1,jetsBtagHE2;
   float ptVeto, chFracPV1, chFracPV2;
-  float HLTmu,HLTx,HLTmatch;
+  float HLTmu,HLTx,HLTmatch,HLTweightTau;
   int isTauLegMatched_,muFlag_;
   unsigned long event_,run_,lumi_;
 
@@ -631,6 +641,7 @@ void makeTrees_MuTauStream(int index = 4){
   outTreePtOrd->Branch("tightestHPSDBWP",  &tightestHPSDBWP_,"tightestHPSDBWP/I");
   outTreePtOrd->Branch("HLTmu", &HLTmu,"HLTmu/F");
   outTreePtOrd->Branch("HLTx", &HLTx,"HLTx/F");
+  outTreePtOrd->Branch("HLTweightTau", &HLTweightTau,"HLTweightTau/F");
   outTreePtOrd->Branch("HLTmatch", &HLTmatch,"HLTmatch/F");
   outTreePtOrd->Branch("isTauLegMatched", &isTauLegMatched_,"isTauLegMatched/I");
   outTreePtOrd->Branch("genDecay", &genDecay_,"genDecay/I");
@@ -942,11 +953,14 @@ void makeTrees_MuTauStream(int index = 4){
       else if(run>=165088)
 	HLTmatch = float((*tauXTriggers)[1]);
     } else{
-      HLTmu = float((*triggerBits)[3]); //HLT_IsoMu12
+      HLTmu = float((*triggerBits)[3]);   //HLT_IsoMu12
       HLTx = 	float((*triggerBits)[1]); //HLT_IsoMu12_LooseIsoPFTau10_v2
       HLTmatch = float((*tauXTriggers)[1]);
     }
     
+    HLTweightTau = (std::string(sample.Data())).find("Run2011")==string::npos ? 
+      ratioEffTau->ratio( (*diTauLegsP4)[0].Pt() ) : 1.0;
+
     isTauLegMatched_ = isTauLegMatched;
     genDecay_ = genDecay ;
     muFlag_ = muFlag;
