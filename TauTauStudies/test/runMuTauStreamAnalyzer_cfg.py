@@ -11,7 +11,7 @@ process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
-runOnMC = True
+runOnMC = False
 
 if runOnMC:
     process.GlobalTag.globaltag = cms.string('START42_V12::All')
@@ -125,11 +125,11 @@ process.diJetCounter = cms.EDFilter(
     )
 process.twoJetSequence = cms.Sequence(
     process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter*
-    process.muPtEtaIDIso*process.muPtEtaIDIsoCounter*
-    process.selectedPatJets25*process.deltaRJetMuons*process.selectedPatJetsNoMuons*
-    process.deltaRJetTaus*process.selectedPatJetsNoMuonsNoTaus*
-    process.selectedPatJetsNoMuonsNoTausCounter*
-    process.diJet*process.diJetCounter
+    process.muPtEtaIDIso*process.muPtEtaIDIsoCounter#*
+    #process.selectedPatJets25*process.deltaRJetMuons*process.selectedPatJetsNoMuons*
+    #process.deltaRJetTaus*process.selectedPatJetsNoMuonsNoTaus*
+    #process.selectedPatJetsNoMuonsNoTausCounter*
+    #process.diJet*process.diJetCounter
     )
 
 #######################################################################
@@ -158,9 +158,9 @@ process.analysis2 = cms.Sequence(
     process.diTau2*process.selectedDiTau2*process.muTauStreamAnalyzer2
     )
 
-process.p = cms.Path(
-    process.analysis
-    )
+#process.p = cms.Path(
+#    process.analysis
+#    )
 process.p2 = cms.Path(
     process.analysis2
     )

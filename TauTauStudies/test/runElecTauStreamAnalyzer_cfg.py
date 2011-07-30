@@ -11,7 +11,7 @@ process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
-runOnMC = True
+runOnMC = False
 
 if runOnMC:
     process.GlobalTag.globaltag = cms.string('START42_V12::All')
@@ -20,7 +20,6 @@ else:
 
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 2000
-
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 
@@ -127,12 +126,12 @@ process.diJetCounter = cms.EDFilter(
     )
 process.twoJetSequence = cms.Sequence(
     process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter*
-    process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter*
-    process.selectedPatJets25*
-    process.deltaRJetElectrons*process.selectedPatJetsNoElectrons*
-    process.deltaRJetTaus*process.selectedPatJetsNoElectronsNoTaus*
-    process.selectedPatJetsNoElectronsNoTausCounter*
-    process.diJet*process.diJetCounter
+    process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter#*
+    #process.selectedPatJets25*
+    #process.deltaRJetElectrons*process.selectedPatJetsNoElectrons*
+    #process.deltaRJetTaus*process.selectedPatJetsNoElectronsNoTaus*
+    #process.selectedPatJetsNoElectronsNoTausCounter*
+    #process.diJet*process.diJetCounter
     )
 
 #######################################################################3
@@ -160,9 +159,9 @@ process.analysis2 = cms.Sequence(
     process.diTau2*process.selectedDiTau2*process.elecTauStreamAnalyzer2
     )
 
-process.p = cms.Path(
-    process.analysis
-    )
+#process.p = cms.Path(
+#    process.analysis
+#    )
 process.p2 = cms.Path(
     process.analysis2
     )

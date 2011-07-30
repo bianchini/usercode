@@ -69,7 +69,7 @@ float* computeZeta(LV leg1, LV leg2, LV MEt){
 }
 
 
-void makeTrees_ElecTauStream(int index = 4){
+void makeTrees_ElecTauStream(int index = 4, bool doExlusive = false){
 
   gSystem->Load("ratioEfficiencyElec_C.so");
   ratioEfficiencyElec* ratioEffElec = new ratioEfficiencyElec();
@@ -89,30 +89,31 @@ void makeTrees_ElecTauStream(int index = 4){
 
   std::vector<std::string> samples;
   std::vector<float> crossSec;
+  std::vector<int> readEvents;
 
   // samples & x-sections
-  samples.push_back("Run2011-Elec_All");            crossSec.push_back( 0  );
-  samples.push_back("DYJets-50-madgraph-PUS4_run"); crossSec.push_back( 3048              * 0.0206749225649 );
-  samples.push_back("TTJets-madgraph-PUS4_run");    crossSec.push_back( 157.5             * 0.121349924468);
+  samples.push_back("Run2011-Elec_All");            crossSec.push_back( 0  );                              readEvents.push_back( 0  );
+  samples.push_back("DYJets-50-madgraph-PUS4_run"); crossSec.push_back( 3048           * 0.0206749225649 );readEvents.push_back(550447);
+  samples.push_back("TTJets-madgraph-PUS4_run");    crossSec.push_back( 157.5          * 0.121349924468);  readEvents.push_back(219845);
   
-  samples.push_back("WJets-madgraph-PUS4_run");     crossSec.push_back( 31314.0           * 0.00813873);
+  samples.push_back("WJets-madgraph-PUS4_run");     crossSec.push_back( 31314.0        * 0.00813873);      readEvents.push_back(329597);
 
-  samples.push_back("T-t-PUS1_run");                crossSec.push_back( 42.6  *  0.03529121);
-  samples.push_back("Tbar-t-PUS1_run");             crossSec.push_back( 22.0  *  0.0371653);
-  samples.push_back("WZIncl-pythia-PUS4_run");      crossSec.push_back( 18.2  *  0.02982);
-  samples.push_back("ZZ-pythia-PUS4_run");          crossSec.push_back( 0.238 *  0.03224);
-  samples.push_back("WW-pythia-PUS4_run");          crossSec.push_back( 4.51  *  0.05138);
+  samples.push_back("T-t-PUS4_run");                crossSec.push_back( 42.6  *  0.03529121);              readEvents.push_back(14726);
+  samples.push_back("Tbar-t-PUS4_run");             crossSec.push_back( 22.0  *  0.0371653);               readEvents.push_back(69307);
+  samples.push_back("WZIncl-pythia-PUS4_run");      crossSec.push_back( 18.2  *  0.02982);                 readEvents.push_back(1491);
+  samples.push_back("ZZ-pythia-PUS4_run");          crossSec.push_back( 0.238 *  0.03224);                 readEvents.push_back(1612);
+  samples.push_back("WW-pythia-PUS4_run");          crossSec.push_back( 4.51  *  0.05138);                 readEvents.push_back(2569);
  
-  samples.push_back("VBFH120-powheg-PUS4_run");     crossSec.push_back( 7.10e-02 * 1.269  * 0.0763019);  
+  samples.push_back("VBFH120-powheg-PUS4_run");     crossSec.push_back( 7.10e-02 * 1.269  * 0.0763019);    readEvents.push_back(15156);
 
-  samples.push_back("VBFH125-powheg-PUS4_run");     crossSec.push_back( 6.37e-02 * 1.211  * 0.07841419);
-  samples.push_back("GGFH125-powheg-PUS4_run");     crossSec.push_back( 6.37e-02 * 15.31  * 0.04875379);
-  samples.push_back("VBFH130-powheg-PUS4_run");     crossSec.push_back( 5.48e-02 * 1.154  * 0.081445 );
-  samples.push_back("GGFH130-powheg-PUS4_run");     crossSec.push_back( 5.48e-02 * 14.12  * 0.0514438 );
-  samples.push_back("VBFH135-powheg-PUS4_run");     crossSec.push_back( 4.52e-02 * 1.100  * 0.0844918 );
-  samples.push_back("GGFH135-powheg-PUS4_run");     crossSec.push_back( 4.52e-02 * 13.08  * 0.0552598);
-  samples.push_back("VBFH140-powheg-PUS4_run");     crossSec.push_back( 3.54e-02 * 1.052  * 0.0851500);
-  samples.push_back("GGFH140-powheg-PUS4_run");     crossSec.push_back( 3.54e-02 * 12.13  * 0.05694626);
+  samples.push_back("VBFH125-powheg-PUS4_run");     crossSec.push_back( 6.37e-02 * 1.211  * 0.07841419);   readEvents.push_back(15574);
+  samples.push_back("GGFH125-powheg-PUS4_run");     crossSec.push_back( 6.37e-02 * 15.31  * 0.04875379);   readEvents.push_back(8775);
+  samples.push_back("VBFH130-powheg-PUS4_run");     crossSec.push_back( 5.48e-02 * 1.154  * 0.081445 );    readEvents.push_back(16064);
+  samples.push_back("GGFH130-powheg-PUS4_run");     crossSec.push_back( 5.48e-02 * 14.12  * 0.0514438 );   readEvents.push_back(10288);
+  samples.push_back("VBFH135-powheg-PUS4_run");     crossSec.push_back( 4.52e-02 * 1.100  * 0.0844918 );   readEvents.push_back(16787);
+  samples.push_back("GGFH135-powheg-PUS4_run");     crossSec.push_back( 4.52e-02 * 13.08  * 0.0552598);    readEvents.push_back(10973);
+  samples.push_back("VBFH140-powheg-PUS4_run");     crossSec.push_back( 3.54e-02 * 1.052  * 0.0851500);    readEvents.push_back(16506);
+  samples.push_back("GGFH140-powheg-PUS4_run");     crossSec.push_back( 3.54e-02 * 12.13  * 0.05694626);   readEvents.push_back(10908);
 
   // normalization Lumi
   Float_t Lumi=1000;
@@ -138,7 +139,7 @@ void makeTrees_ElecTauStream(int index = 4){
   float ptVeto, chFracPV1, chFracPV2;
   float HLTx,HLTmatch,HLTweightElec,HLTweightTau;
   int isTauLegMatched_,elecFlag_,genDecay_;
-  unsigned long event_,run_,lumi_;
+  ULong64_t event_,run_,lumi_;
 
   outTreePtOrd->Branch("pt1",  &pt1,"pt1/F");
   outTreePtOrd->Branch("pt2",  &pt2,"pt2/F");
@@ -200,16 +201,18 @@ void makeTrees_ElecTauStream(int index = 4){
   outTreePtOrd->Branch("jetsBtagHE2",  &jetsBtagHE2,"jetsBtagHE2/F");
 
  
-  TString inName = "/data_CMS/cms/lbianchini/ElecTauStreamSummer11_iter1//treeElecTauStream_"+sample+".root";
+  TString inName = "/data_CMS/cms/lbianchini/ElecTauStreamSummer11_iter3//treeElecTauStream_"+sample+".root";
   TFile* file   = new TFile(inName,"READ");
   if(file->IsZombie()){
     cout << "No such file!" << endl;
     return;
   }
-  TTree* currentTree = (TTree*)file->Get("elecTauStreamAnalyzer/tree");
+  TString treeName = doExlusive ? "elecTauStreamAnalyzer2/tree" : "elecTauStreamAnalyzer/tree";
+  TTree* currentTree = (TTree*)file->Get(treeName);
   int nEntries = currentTree->GetEntries() ;
+  int nEventsRead = readEvents[index];//((TTree*)file->Get("elecTauStreamAnalyzer/tree"))->GetEntries() ;
 
-  float scaleFactor = (crossSec[index] != 0) ? ((crossSec[index])*Lumi) / nEntries : 1;
+  float scaleFactor = (crossSec[index] != 0) ? ((crossSec[index])*Lumi*(float(nEntries)/float(nEventsRead))) / nEntries : 1;
 
   
   currentTree->SetBranchStatus("diTauVisP4",1);
@@ -291,7 +294,7 @@ void makeTrees_ElecTauStream(int index = 4){
   int isTauLegMatched;
   int genDecay;
   int nPUVertices;
-  unsigned long event,run,lumi;
+  ULong64_t event,run,lumi;
 
   std::vector< LV >* jets        = new std::vector< LV >();
   currentTree->SetBranchAddress("jetsIDP4",   &jets);
@@ -497,7 +500,7 @@ void makeTrees_ElecTauStream(int index = 4){
     HLTweightElec = (std::string(sample.Data())).find("Run2011")==string::npos ? 
       ratioEffElec->ratio((*diTauLegsP4)[0].Pt(), bool(fabs((*diTauLegsP4)[0].Eta())<1.5) ) : 1;
     HLTweightTau = (std::string(sample.Data())).find("Run2011")==string::npos ? 
-      ratioEffTau->ratio( (*diTauLegsP4)[0].Pt() ) : 1.0;
+      ratioEffTau->ratio( (*diTauLegsP4)[1].Pt() ) : 1.0;
 
     isTauLegMatched_ = isTauLegMatched;
     elecFlag_ = elecFlag;
@@ -525,7 +528,7 @@ void makeTrees_ElecTauStream(int index = 4){
 /////////////////////////////////////////////////////////////////////////////////////
 
 
-void makeTrees_MuTauStream(int index = 4){
+void makeTrees_MuTauStream(int index = 4, bool doExlusive = false){
   
   gSystem->Load("RecoilCorrector_C.so");
   RecoilCorrector* recoilCorr = new RecoilCorrector();
@@ -540,31 +543,32 @@ void makeTrees_MuTauStream(int index = 4){
 
   std::vector<std::string> samples;
   std::vector<float> crossSec;
+  std::vector<int> readEvents;
 
   // samples & x-sections
-  samples.push_back("Run2011-Mu_All");                 crossSec.push_back( 0  );
-  samples.push_back("DYJets-Mu-50-madgraph-PUS4_run"); crossSec.push_back( 3048              * 0.02461861 );
-  samples.push_back("TTJets-Mu-madgraph-PUS4_run");    crossSec.push_back( 157.5             * 0.20574389);
+  samples.push_back("Run2011-Mu_All");                 crossSec.push_back( 0  );                          readEvents.push_back( 0  );
+  samples.push_back("DYJets-Mu-50-madgraph-PUS4_run"); crossSec.push_back( 3048           * 0.02461861 ); readEvents.push_back(800630);
+  samples.push_back("TTJets-Mu-madgraph-PUS4_run");    crossSec.push_back( 157.5          * 0.20574389);  readEvents.push_back(761653);
   
-  samples.push_back("WJets-Mu-madgraph-PUS4_run");     crossSec.push_back( 31314.0           * 0.0124213);
+  samples.push_back("WJets-Mu-madgraph-PUS4_run");     crossSec.push_back( 31314.0        * 0.0124213);    readEvents.push_back(429416);
 
-  samples.push_back("T-Mu-t-PUS1_run");                crossSec.push_back( 42.6  *  0.06856682);
-  samples.push_back("Tbar-Mu-t-PUS1_run");             crossSec.push_back( 22.0  *  0.071513338468);
-  samples.push_back("WZIncl-Mu-pythia-PUS4_run");      crossSec.push_back( 18.2  *  0.0453);
-  samples.push_back("ZZ-Mu-pythia-PUS4_run");          crossSec.push_back( 0.238 *  0.04114);
-  samples.push_back("WW-Mu-pythia-PUS4_run");          crossSec.push_back( 4.51  *  0.09366);
+  samples.push_back("T-Mu-t-PUS4_run");                crossSec.push_back( 42.6  *  0.06856682);           readEvents.push_back(200028);
+  samples.push_back("Tbar-Mu-t-PUS4_run");             crossSec.push_back( 22.0  *  0.071513338468);       readEvents.push_back(139081);
+  samples.push_back("WZIncl-Mu-pythia-PUS4_run");      crossSec.push_back( 18.2  *  0.0453);               readEvents.push_back(2265);
+  samples.push_back("ZZ-Mu-pythia-PUS4_run");          crossSec.push_back( 0.238 *  0.04114);              readEvents.push_back(2057);
+  samples.push_back("WW-Mu-pythia-PUS4_run");          crossSec.push_back( 4.51  *  0.09366);              readEvents.push_back(4683);
  
-  samples.push_back("VBFH115-Mu-powheg-PUS4_run");     crossSec.push_back( 7.65e-02 * 1.332  * 0.10683611);  
-  samples.push_back("VBFH120-Mu-powheg-PUS4_run");     crossSec.push_back( 7.10e-02 * 1.269  * 0.1107091);  
+  samples.push_back("VBFH115-Mu-powheg-PUS4_run");     crossSec.push_back( 7.65e-02 * 1.332  * 0.10683611);readEvents.push_back(21159);  
+  samples.push_back("VBFH120-Mu-powheg-PUS4_run");     crossSec.push_back( 7.10e-02 * 1.269  * 0.1107091); readEvents.push_back(11599);
 
-  samples.push_back("VBFH125-Mu-powheg-PUS4_run");     crossSec.push_back( 6.37e-02 * 1.211  * 0.11374);
-  samples.push_back("GGFH125-Mu-powheg-PUS4_run");     crossSec.push_back( 6.37e-02 * 15.31  * 0.07533527);
-  samples.push_back("VBFH130-Mu-powheg-PUS4_run");     crossSec.push_back( 5.48e-02 * 1.154  * 0.115987953);
-  samples.push_back("GGFH130-Mu-powheg-PUS4_run");     crossSec.push_back( 5.48e-02 * 14.12  * 0.079845988 );
-  samples.push_back("VBFH135-Mu-powheg-PUS4_run");     crossSec.push_back( 4.52e-02 * 1.100  * 0.119965573);
-  samples.push_back("GGFH135-Mu-powheg-PUS4_run");     crossSec.push_back( 4.52e-02 * 13.08  * 0.083426);
-  samples.push_back("VBFH140-Mu-powheg-PUS4_run");     crossSec.push_back( 3.54e-02 * 1.052  * 0.12298938);
-  samples.push_back("GGFH140-Mu-powheg-PUS4_run");     crossSec.push_back( 3.54e-02 * 12.13  * 0.08600932);
+  samples.push_back("VBFH125-Mu-powheg-PUS4_run");     crossSec.push_back( 6.37e-02 * 1.211  * 0.11374);     readEvents.push_back(14574);
+  samples.push_back("GGFH125-Mu-powheg-PUS4_run");     crossSec.push_back( 6.37e-02 * 15.31  * 0.07533527);  readEvents.push_back(15066);
+  samples.push_back("VBFH130-Mu-powheg-PUS4_run");     crossSec.push_back( 5.48e-02 * 1.154  * 0.115987953); readEvents.push_back(22877);
+  samples.push_back("GGFH130-Mu-powheg-PUS4_run");     crossSec.push_back( 5.48e-02 * 14.12  * 0.079845988 );readEvents.push_back(15968);
+  samples.push_back("VBFH135-Mu-powheg-PUS4_run");     crossSec.push_back( 4.52e-02 * 1.100  * 0.119965573); readEvents.push_back(23835);
+  samples.push_back("GGFH135-Mu-powheg-PUS4_run");     crossSec.push_back( 4.52e-02 * 13.08  * 0.083426);    readEvents.push_back(16566);
+  samples.push_back("VBFH140-Mu-powheg-PUS4_run");     crossSec.push_back( 3.54e-02 * 1.052  * 0.12298938);  readEvents.push_back(23841);
+  samples.push_back("GGFH140-Mu-powheg-PUS4_run");     crossSec.push_back( 3.54e-02 * 12.13  * 0.08600932);  readEvents.push_back(16475);
   
   // normalization Lumi
   Float_t Lumi=1000;
@@ -592,7 +596,7 @@ void makeTrees_MuTauStream(int index = 4){
   float ptVeto, chFracPV1, chFracPV2;
   float HLTmu,HLTx,HLTmatch,HLTweightTau;
   int isTauLegMatched_,muFlag_;
-  unsigned long event_,run_,lumi_;
+  ULong64_t event_,run_,lumi_;
 
   outTreePtOrd->Branch("pt1",  &pt1,"pt1/F");
   outTreePtOrd->Branch("pt2",  &pt2,"pt2/F");
@@ -658,16 +662,18 @@ void makeTrees_MuTauStream(int index = 4){
   outTreePtOrd->Branch("jetsBtagHE2",  &jetsBtagHE2,"jetsBtagHE2/F");
 
  
-  TString inName = "/data_CMS/cms/lbianchini/MuTauStreamSummer11_iter1//treeMuTauStream_"+sample+".root";
+  TString inName = "/data_CMS/cms/lbianchini/MuTauStreamSummer11_iter3//treeMuTauStream_"+sample+".root";
   TFile* file   = new TFile(inName,"READ");
   if(file->IsZombie()){
     cout << "No such file!" << endl;
     return;
   }
-  TTree* currentTree = (TTree*)file->Get("muTauStreamAnalyzer/tree");
+  TString treeName = doExlusive ? "muTauStreamAnalyzer2/tree" : "muTauStreamAnalyzer/tree";
+  TTree* currentTree = (TTree*)file->Get(treeName);
   int nEntries = currentTree->GetEntries() ;
+  int nEventsRead = readEvents[index];//((TTree*)file->Get("muTauStreamAnalyzer/tree"))->GetEntries() ;
 
-  float scaleFactor = (crossSec[index] != 0) ? ((crossSec[index])*Lumi) / nEntries : 1;
+  float scaleFactor = (crossSec[index] != 0) ? ((crossSec[index])*Lumi*(float(nEntries)/float(nEventsRead))) / nEntries : 1;
 
   currentTree->SetBranchStatus("diTauVisP4",1);
   currentTree->SetBranchStatus("diTauCAP4",0);
@@ -749,7 +755,7 @@ void makeTrees_MuTauStream(int index = 4){
   float visibleTauMass;
   int genDecay;
   int nPUVertices;
-  unsigned long event,run,lumi;
+  ULong64_t event,run,lumi;
 
   std::vector< LV >* jets        = new std::vector< LV >();
   currentTree->SetBranchAddress("jetsIDP4",   &jets);
@@ -959,7 +965,7 @@ void makeTrees_MuTauStream(int index = 4){
     }
     
     HLTweightTau = (std::string(sample.Data())).find("Run2011")==string::npos ? 
-      ratioEffTau->ratio( (*diTauLegsP4)[0].Pt() ) : 1.0;
+      ratioEffTau->ratio( (*diTauLegsP4)[1].Pt() ) : 1.0;
 
     isTauLegMatched_ = isTauLegMatched;
     genDecay_ = genDecay ;
@@ -984,17 +990,17 @@ void makeTrees_MuTauStream(int index = 4){
 
 
 
-void doAllSamplesElec(){
+void doAllSamplesElec(bool doExlusive = false){
  
-  for( unsigned int k = 0; k < 6 ; k++)  makeTrees_ElecTauStream(k);
+  for( unsigned int k = 0; k < 18 ; k++)  makeTrees_ElecTauStream(k, doExlusive);
 
   return;
 
 }
 
-void doAllSamplesMu(){
+void doAllSamplesMu(bool doExlusive = false){
  
-  for( unsigned int k = 1; k < 6 ; k++)  makeTrees_MuTauStream(k);
+  for( unsigned int k = 0; k < 19 ; k++)  makeTrees_MuTauStream(k, doExlusive);
 
   return;
 
