@@ -33,8 +33,8 @@ process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 process.load('RecoJets.Configuration.RecoPFJets_cff')
 process.kt6PFJets.doRhoFastjet = True
-#process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
-#process.kt6PFJets.Ghost_EtaMax = cms.double(5.0)
+process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
+process.kt6PFJets.Ghost_EtaMax = cms.double(5.0)
 process.ak5PFJets.doAreaFastjet = True
 #process.ak5PFJets.Rho_EtaMax = cms.double(4.4)
 #process.ak5PFJets.Ghost_EtaMax = cms.double(5.0)
@@ -43,6 +43,7 @@ process.ak5PFJets.doAreaFastjet = True
 process.load('RecoJets.JetProducers.kt4PFJets_cfi')
 process.kt6PFJetsCentral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet = True )
 process.kt6PFJetsCentral.Rho_EtaMax = cms.double(2.5)
+process.kt6PFJetsNeutral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet = True, src="pfAllNeutral" )
 
 #process.ak5PFL1Fastjet.useCondDB = False
 
@@ -57,7 +58,7 @@ process.source.fileNames = cms.untracked.vstring(
 #    )
 
 postfix           = "PFlow"
-runOnMC           =  False
+runOnMC           =  True
 
 if runOnMC:
     #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
@@ -581,6 +582,7 @@ process.pat = cms.Sequence(
     process.PFTau*
     process.fjSequence*
     process.patDefaultSequence*
+    process.kt6PFJetsNeutral*
     process.selectedPatElectronsTriggerMatchUserEmbedded*
     process.selectedPatTausTriggerMatchUserEmbedded*
     process.alLeastOneElecTauSequence*
@@ -620,6 +622,7 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_patMETsPFlow_*_*',
     'keep *_tauGenJetsSelectorAllHadrons_*_*',
     'keep *_kt6PFJetsCentral_rho_*',
+    'keep *_kt6PFJetsNeutral_rho_*',
     'keep *_elecPtEtaID_*_*',
     'keep *_elecPtEtaRelID_*_*',
     'keep *_addPileupInfo_*_*',

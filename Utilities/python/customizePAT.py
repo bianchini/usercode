@@ -22,6 +22,19 @@ def addSelectedPFlowParticle(process,verbose=False):
         )
     process.pfAllChargedHadronsPU = process.pfAllChargedHadrons.clone(src='pfPU')
 
+    #####
+    process.pfNoCharged = process.pfPU.clone(
+        name = cms.untracked.string("noChargedPFCandidates"),
+        topCollection = cms.InputTag("pfAllChargedHadrons"),
+        bottomCollection = cms.InputTag("particleFlow"),
+        )
+    process.pfAllNeutral = cms.EDFilter(
+        "PdgIdPFCandidateSelector",
+        pdgId = cms.vint32(111, 130, 310, 2112, 22),
+        src = cms.InputTag("pfNoCharged")
+        )
+    #####
+
     process.pfCandidateSelectionByType = cms.Sequence(
         process.pfNoPileUpSequence *
         ( process.pfAllNeutralHadrons +
@@ -30,7 +43,8 @@ def addSelectedPFlowParticle(process,verbose=False):
           (process.pfPU * process.pfAllChargedHadronsPU )
           )  +
         process.pfAllMuons +
-        process.pfAllElectrons
+        process.pfAllElectrons +
+        ( process.pfNoCharged+process.pfAllNeutral)
         )
     process.pfPileUp.Enable = True # enable pile-up filtering
     process.pfPileUp.Vertices = "offlinePrimaryVertices" # use vertices w/o BS

@@ -6,12 +6,29 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load("Configuration.StandardSequences.Geometry_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
+
 from Configuration.PyReleaseValidation.autoCond import autoCond
 process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
+process.load("CondCore.DBCommon.CondDBCommon_cfi")
+process.jec = cms.ESSource("PoolDBESSource",
+      DBParameters = cms.PSet(
+        messageLevel = cms.untracked.int32(0)
+        ),
+      timetype = cms.string('runnumber'),
+      toGet = cms.VPSet(
+      cms.PSet(
+            record = cms.string('JetCorrectionsRecord'),
+            tag    = cms.string('JetCorrectorParametersCollection_Jec11V2_AK5PF'),
+            label  = cms.untracked.string('AK5PF')
+            )
+      ),
+      connect = cms.string('sqlite:Jec11V2.db')
+)
+process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
 
-runOnMC = False
+runOnMC = True
 
 if runOnMC:
     process.GlobalTag.globaltag = cms.string('START42_V12::All')
@@ -19,7 +36,7 @@ else:
     process.GlobalTag.globaltag = cms.string('GR_R_42_V14::All')
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 2000
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source(
@@ -31,6 +48,26 @@ process.source = cms.Source(
 
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool(True)
+    )
+
+process.allEventsFilter = cms.EDFilter(
+    "AllEventsFilter"
+    )
+
+
+process.rescaledMET = cms.EDProducer(
+    "MEtRescalerProducer",
+    metTag = cms.InputTag("patMETsPFlow"),
+    jetTag = cms.InputTag("selectedPatJets"),
+    electronTag = cms.InputTag(""),
+    muonTag = cms.InputTag("muPtEtaIDIso"),
+    tauTag = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
+    unClusterShift = cms.double(0.10),
+    tauShift = cms.double(0.03),
+    muonShift = cms.double(0.01),
+    electronShift = cms.double(0.02),
+    jetThreshold  = cms.double(10),
+    verbose = cms.bool(False)
     )
 
 process.load("Bianchi.Utilities.diTausReconstruction_cff")
@@ -52,8 +89,11 @@ process.selectedDiTau = cms.EDFilter(
 
 #######################################################################3
 
-process.diTau2 = process.diTau.clone(doSVreco = cms.bool(True))
+process.diTau2 = process.diTau.clone(doSVreco = cms.bool(False),
+                                     srcMET  = cms.InputTag("rescaledMET","UUUUU")
+                                     )
 process.selectedDiTau2 = process.selectedDiTau.clone(src = cms.InputTag("diTau2") )
+
 process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
@@ -69,7 +109,7 @@ process.tauPtEtaIDAgMuAgElecIsoCounter = cms.EDFilter(
 process.muPtEtaIDIso  = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("muPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04v2')<0.2"),
+    cut = cms.string("userFloat('PFRelIsoDB04v2')<0.1"),
     filter = cms.bool(False)
     )
 process.muPtEtaIDIsoCounter = cms.EDFilter(
@@ -123,10 +163,10 @@ process.diJetCounter = cms.EDFilter(
     src = cms.InputTag("diJet"),
     minNumber = cms.uint32(1)
     )
-process.twoJetSequence = cms.Sequence(
+process.filterSequence = cms.Sequence(
     process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter*
-    process.muPtEtaIDIso*process.muPtEtaIDIsoCounter#*
-    #process.selectedPatJets25*process.deltaRJetMuons*process.selectedPatJetsNoMuons*
+    process.muPtEtaIDIso*process.muPtEtaIDIsoCounter
+    #*process.selectedPatJets25*process.deltaRJetMuons*process.selectedPatJetsNoMuons*
     #process.deltaRJetTaus*process.selectedPatJetsNoMuonsNoTaus*
     #process.selectedPatJetsNoMuonsNoTausCounter*
     #process.diJet*process.diJetCounter
@@ -154,7 +194,9 @@ process.analysis  = cms.Sequence(
     process.diTau*process.selectedDiTau* process.muTauStreamAnalyzer
     )
 process.analysis2 = cms.Sequence(
-    process.twoJetSequence*
+    process.allEventsFilter*
+    process.filterSequence*
+    process.rescaledMET*
     process.diTau2*process.selectedDiTau2*process.muTauStreamAnalyzer2
     )
 
@@ -167,7 +209,9 @@ process.p2 = cms.Path(
 
 process.out = cms.OutputModule(
     "PoolOutputModule",
-    outputCommands = cms.untracked.vstring( 'keep *'),
+    outputCommands = cms.untracked.vstring( 'drop *',
+                                            'keep *_patMETsPFlow_*_*',
+                                            'keep *_rescaledMET_*_*'),
     fileName = cms.untracked.string('patTuplesSkimmed_MuTauStream.root'),
     )
 
@@ -175,4 +219,4 @@ process.TFileService = cms.Service("TFileService",
                                    fileName = cms.string("treeMuTauStream.root")
                                    )
 
-process.outpath = cms.EndPath()
+process.outpath = cms.EndPath(process.out)

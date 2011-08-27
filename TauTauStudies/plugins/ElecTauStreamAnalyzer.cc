@@ -33,6 +33,10 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
+#include "JetMETCorrections/Objects/interface/JetCorrectionsRecord.h"
+#include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
+#include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
+
 #include "DataFormats/HLTReco/interface/TriggerTypeDefs.h"
 
 #include <vector>
@@ -76,6 +80,8 @@ void ElecTauStreamAnalyzer::beginJob(){
 
   jetsP4_          = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   jetsIDP4_        = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  jetsIDUpP4_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  jetsIDDownP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   jetsIDL1OffsetP4_= new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genJetsIDP4_     = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
@@ -124,6 +130,8 @@ void ElecTauStreamAnalyzer::beginJob(){
 
   tree_->Branch("jetsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsP4_);
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
+  tree_->Branch("jetsIDUpP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDUpP4_);
+  tree_->Branch("jetsIDDownP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDDownP4_);
   tree_->Branch("jetsIDL1OffsetP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDL1OffsetP4_);
   tree_->Branch("genJetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genJetsIDP4_);
   
@@ -216,6 +224,7 @@ void ElecTauStreamAnalyzer::beginJob(){
 
   tree_->Branch("diTauCharge",&diTauCharge_,"diTauCharge/F");
   tree_->Branch("rhoFastJet",&rhoFastJet_,"rhoFastJet/F");
+  tree_->Branch("rhoNeutralFastJet",&rhoNeutralFastJet_,"rhoNeutralFastJet/F");
   tree_->Branch("mcPUweight",&mcPUweight_,"mcPUweight/F");
   tree_->Branch("nPUVertices",&nPUVertices_,"nPUVertices/I");
 
@@ -224,7 +233,8 @@ void ElecTauStreamAnalyzer::beginJob(){
 
 
 ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
-  delete jetsP4_; delete jetsIDP4_; delete jetsIDL1OffsetP4_, delete METP4_; delete diTauVisP4_; delete diTauCAP4_; delete diTauICAP4_; 
+  delete jetsP4_; delete jetsIDP4_; delete jetsIDL1OffsetP4_; delete jetsIDUpP4_; delete jetsIDDownP4_; 
+  delete METP4_; delete diTauVisP4_; delete diTauCAP4_; delete diTauICAP4_; 
   delete diTauSVfitP4_; delete genVP4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_;
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;delete extraElectrons_;
@@ -235,6 +245,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
   jetsP4_->clear();
   jetsIDP4_->clear();
+  jetsIDUpP4_->clear();
+  jetsIDDownP4_->clear();
   jetsIDL1OffsetP4_->clear();
   diTauVisP4_->clear();
   diTauCAP4_->clear();
@@ -384,6 +396,13 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     edm::LogError("DataNotAvailable")
       << "No rho label available \n";
   rhoFastJet_ = (*rhoFastJetHandle);
+
+  edm::Handle<double> rhoNeutralFastJetHandle;
+  iEvent.getByLabel(edm::InputTag("kt6PFJetsNeutral","rho", ""), rhoNeutralFastJetHandle);
+  if( !rhoNeutralFastJetHandle.isValid() )  
+    edm::LogError("DataNotAvailable")
+      << "No rho neutral label available \n";
+  rhoNeutralFastJet_ = (*rhoNeutralFastJetHandle);
 
   edm::Handle<pat::ElectronCollection> electronsHandle;
   iEvent.getByLabel("elecPtEtaID",electronsHandle);
@@ -838,6 +857,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJets;
   std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJetsIDL1Offset;
   std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJetsID;
+  std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJetsIDUp;
+  std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJetsIDDown;
   std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedGenJetsID;
   std::map<double, std::pair<float,float> ,  ElecTauStreamAnalyzer::more> bTaggers;
   std::map<double, std::pair<float,float> ,  ElecTauStreamAnalyzer::more> jetPVassociation;
@@ -853,6 +874,19 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       if(verbose_) cout << "The jet at (" <<(*jets)[it].pt()<<","<<(*jets)[it].eta()<<") is closer than "<<deltaRLegJet_ << " from one of the legs" << endl;  
       continue;
     }
+
+    /////////////////////////////////////////////////////////////////////////
+    //// try to use JES uncertainties
+    edm::ESHandle<JetCorrectorParametersCollection> jetCorrParameters;
+    // get the jet corrector parameters collection from the global tag
+    iSetup.get<JetCorrectionsRecord>().get("AK5PF", jetCorrParameters);
+    // get the uncertainty parameters from the collection
+    JetCorrectorParameters const & param = (*jetCorrParameters)["Uncertainty"];
+    // instantiate the jec uncertainty object
+    JetCorrectionUncertainty* deltaJEC = new JetCorrectionUncertainty(param);
+    deltaJEC->setJetEta((*jets)[it].eta()); deltaJEC->setJetPt((*jets)[it].pt());
+    float shift  = deltaJEC->getUncertainty( true );
+    /////////////////////////////////////////////////////////////////////////
 
     if(verbose_){
       pat::Jet* jet = const_cast<pat::Jet*>(&(*jets)[it]);
@@ -890,6 +924,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     else sortedJetsIDL1Offset.insert( make_pair( (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].pt() , (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].p4()) );   
                              
     sortedJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4() ) );
+    sortedJetsIDUp.insert( make_pair( (*jets)[it].p4().Pt() ,  (*jets)[it].p4()*(1+shift) ) );
+    sortedJetsIDDown.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4()*(1-shift) ) );
+
 
     if(isMC_){
       if((*jets)[it].genJet() != 0) sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].genJet()->p4() ) );
@@ -903,6 +940,12 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   }
   for(CImap it = sortedJetsID.begin(); it != sortedJetsID.end() ; it++){
     jetsIDP4_->push_back( it->second );
+  }
+  for(CImap it = sortedJetsIDUp.begin(); it != sortedJetsIDUp.end() ; it++){
+    jetsIDUpP4_->push_back( it->second );
+  }
+  for(CImap it = sortedJetsIDDown.begin(); it != sortedJetsIDDown.end() ; it++){
+    jetsIDDownP4_->push_back( it->second );
   }
   for(CImap it = sortedJetsIDL1Offset.begin(); it != sortedJetsIDL1Offset.end() ; it++){
     jetsIDL1OffsetP4_->push_back( it->second );

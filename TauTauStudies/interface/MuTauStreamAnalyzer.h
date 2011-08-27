@@ -79,6 +79,8 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDP4_;
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDUpP4_;
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDDownP4_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDL1OffsetP4_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* genJetsIDP4_; 
  
@@ -128,6 +130,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
 
   float diTauCharge_;
   float rhoFastJet_;
+  float rhoNeutralFastJet_;
   int nPUVertices_;
   int nOOTPUVertices_;
   std::vector<double> weights2011_;

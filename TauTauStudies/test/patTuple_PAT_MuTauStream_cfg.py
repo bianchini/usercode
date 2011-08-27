@@ -30,15 +30,11 @@ process.jec = cms.ESSource("PoolDBESSource",
 process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
 
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
-
 process.load('RecoJets.Configuration.RecoPFJets_cff')
-#process.load('RecoJets.Configuration.RecoJets_cff')
-#process.load('RecoJets.JetProducers.ak5JetID_cfi')
 
-#process.ak5CaloJets.doAreaFastjet = True
 process.kt6PFJets.doRhoFastjet = True
-#process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
-#process.kt6PFJets.Ghost_EtaMax = cms.double(5.0)
+process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
+process.kt6PFJets.Ghost_EtaMax = cms.double(5.0)
 process.ak5PFJets.doAreaFastjet = True
 #process.ak5PFJets.Rho_EtaMax = cms.double(4.4)
 #process.ak5PFJets.Ghost_EtaMax = cms.double(5.0)
@@ -48,21 +44,24 @@ process.ak5PFJets.doAreaFastjet = True
 process.load('RecoJets.JetProducers.kt4PFJets_cfi')
 process.kt6PFJetsCentral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet = True )
 process.kt6PFJetsCentral.Rho_EtaMax = cms.double(2.5)
+process.kt6PFJetsNeutral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet = True, src="pfAllNeutral" )
 
-#process.fjSequence = cms.Sequence(process.ak5CaloJets*process.ak5JetID+process.kt6PFJets+process.ak5PFJets+process.kt6PFJetsCentral)
 process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets+process.kt6PFJetsCentral)
 
 process.source.fileNames = cms.untracked.vstring(
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/WH_ZH_TTH_HToWW_M-120_7TeV-pythia6//AODSIM/PU_S3_START42_V11-v1//0000/E430E306-347C-E011-A75A-00261834B5C6.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/WH_ZH_TTH_HToWW_M-120_7TeV-pythia6//AODSIM/PU_S3_START42_V11-v1//0000/E430E306-347C-E011-A75A-00261834B5C6.root'
+    'file:./root/pickevents_1.root',
+    'file:./root/pickevents_2.root',
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
-#    '1:751063','1:751088','1:751100','1:751117','1:751141','1:751237','1:751325','1:751392','1:751466','1:977809','1:977870','1:977898',
-#    '1:977915','1:978085','1:978214','1:811102','1:811190'
+    #'165364:1072416723'
+    #'1:751063','1:751088','1:751100','1:751117','1:751141','1:751237','1:751325','1:751392','1:751466','1:977809','1:977870','1:977898',
+    #'1:977915','1:978085','1:978214','1:811102','1:811190'
 #    )
 
 postfix           = "PFlow"
-runOnMC           = True
+runOnMC           = False
 
 if runOnMC:
     process.GlobalTag.globaltag = cms.string('START42_V12::All')
@@ -559,6 +558,7 @@ process.pat = cms.Sequence(
     process.PFTau*
     process.fjSequence*
     process.patDefaultSequence*
+    process.kt6PFJetsNeutral*
     process.selectedPatMuonsTriggerMatchUserEmbedded*
     process.selectedPatTausTriggerMatchUserEmbedded*
     process.alLeastOneMuTauSequence*
@@ -598,6 +598,7 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_patMETsPFlow_*_*',
     'keep *_tauGenJetsSelectorAllHadrons_*_*',
     'keep *_kt6PFJetsCentral_rho_*',
+    'keep *_kt6PFJetsNeutral_rho_*',
     'keep *_muPtEtaID_*_*',
     'keep *_muPtEtaRelID_*_*',
     'keep *_addPileupInfo_*_*',
@@ -613,6 +614,8 @@ process.out.outputCommands.extend( cms.vstring(
     'drop *_selectedPatMuonsTriggerMatch_*_*',
     'drop *_selectedPatElectronsTriggerMatch_*_*',
     'drop *_selectedPatTausTriggerMatch_*_*',
+    'drop *_selectedPatMuonsTriggerMatchUserEmbedded_*_*',
+    'drop *_selectedPatTausTriggerMatchUserEmbedded_*_*',
     )
                                    )
 
