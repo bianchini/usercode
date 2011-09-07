@@ -111,6 +111,8 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   float MtLeg1_;
   float pZeta_;
   float pZetaVis_;
+  float pZetaSig_;
+  float mTauTauMin_;
   float numPV_;
   int numOfDiTaus_;
   int numOfLooseIsoDiTaus_;
@@ -122,7 +124,6 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   float leadPFChargedHadrCandTrackPt_;
   int tightestHPSWP_;
   int tightestHPSDBWP_;
-  bool applyTauSignalSel_;
   int isTauLegMatched_;
   int isMuLegMatched_;
   int muFlag_;

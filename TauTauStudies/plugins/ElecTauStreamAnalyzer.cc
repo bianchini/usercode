@@ -29,6 +29,7 @@
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
 #include "DataFormats/PatCandidates/interface/TriggerEvent.h"
+#include <DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h>
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
@@ -57,7 +58,6 @@ ElecTauStreamAnalyzer::ElecTauStreamAnalyzer(const edm::ParameterSet & iConfig){
   deltaRLegJet_  =  iConfig.getUntrackedParameter<double>("deltaRLegJet",0.3);
   minCorrPt_  =  iConfig.getUntrackedParameter<double>("minCorrPt",10.);
   minJetID_   =  iConfig.getUntrackedParameter<double>("minJetID",0.5);
-  applyTauSignalSel_ = iConfig.getParameter<bool>("applyTauSignalSel");
   verbose_ =  iConfig.getUntrackedParameter<bool>("verbose",false);
 }
 
@@ -165,9 +165,11 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("extraElectrons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&extraElectrons_);
 
   tree_->Branch("sumEt",&sumEt_,"sumEt/F");
+  tree_->Branch("mTauTauMin",&mTauTauMin_,"mTauTauMin/F");
   tree_->Branch("MtLeg1",&MtLeg1_,"MtLeg1/F");
   tree_->Branch("pZeta",&pZeta_,"pZeta/F");
   tree_->Branch("pZetaVis",&pZetaVis_,"pZetaVis/F");
+  tree_->Branch("pZetaSig",&pZetaSig_,"pZetaSig/F");
 
   tree_->Branch("chIsoLeg1v1",&chIsoLeg1v1_,"chIsoLeg1v1/F");
   tree_->Branch("nhIsoLeg1v1",&nhIsoLeg1v1_,"nhIsoLeg1v1/F");
@@ -321,6 +323,13 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       << "No Trigger label available \n";
   const pat::TriggerEvent* trigger = triggerHandle.product();
 
+  edm::Handle<pat::TriggerObjectStandAloneCollection > triggerObjsHandle;
+  iEvent.getByLabel(edm::InputTag("patTrigger"),triggerObjsHandle);
+  if( !triggerObjsHandle.isValid() )  
+    edm::LogError("DataNotAvailable")
+      << "No Trigger Objects label available \n";
+  const pat::TriggerObjectStandAloneCollection* triggerObjs = triggerObjsHandle.product();
+    
   genDecay_ = -99;
   edm::Handle<reco::GenParticleCollection> genHandle;
   if(isMC_){
@@ -540,7 +549,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   }
 
   numOfLooseIsoDiTaus_ = looseIsoTaus.size(); 
-  if(looseIsoTaus.size()>0 /*&& applyTauSignalSel_*/ ){
+  if(looseIsoTaus.size()>0 ){
     identifiedTaus.swap(looseIsoTaus);
     if(verbose_) cout << identifiedTaus.size() << "  isolated taus found..." << endl;
     for(unsigned int i=0; i<identifiedTaus.size(); i++){
@@ -558,7 +567,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       } 
     }
   } 
-  else if(identifiedTaus.size()>0 /*&& !applyTauSignalSel_*/ ) {
+  else if(identifiedTaus.size()>0  ) {
     index = identifiedTaus[tRandom_->Integer( identifiedTaus.size() )];
     if(verbose_) cout << "Random selection has chosen index " << index << endl;   
   }
@@ -576,6 +585,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   MtLeg1_ =  theDiTau->mt1MET();
   pZeta_     =  theDiTau->pZeta();
   pZetaVis_  =  theDiTau->pZetaVis();
+  pZetaSig_  =  theDiTau->pZetaSig();
+  mTauTauMin_=  theDiTau->mTauTauMin();
+
   isElecLegMatched_  = 0;
   isTauLegMatched_ = 0;
 
@@ -584,6 +596,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
   vector<string> triggerPaths;
   vector<string> XtriggerPaths;
+  vector<string> HLTfiltersElec;
+  vector<string> HLTfiltersTau;
+
   if(isMC_){
 
     // X-triggers
@@ -593,6 +608,13 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     // Single Electron triggers + X-triggers
     triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v2");
     triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v2");
+
+    HLTfiltersElec.push_back("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter");
+    HLTfiltersElec.push_back("hltEle20CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter");
+
+    //HLTfiltersTau.push_back("hltPFTau15TrackLooseIso");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoEle15IsoPFTau15");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoEle15IsoPFTau20");
 
   }
   else{
@@ -611,8 +633,22 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v8");
     triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v9");
     triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TightIsoPFTau20_v2");
-    triggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v1");
-    triggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v2");
+    triggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1");
+                              
+    // watch out! name convention changed with time
+    HLTfiltersElec.push_back("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter");
+    HLTfiltersElec.push_back("hltEle15CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter");
+    // watch out! name convention changed with time
+    HLTfiltersElec.push_back("hltEle18CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter");
+    HLTfiltersElec.push_back("hltEle18CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter");
+   
+    //HLTfiltersTau.push_back("hltPFTau15TrackLooseIso");
+    //HLTfiltersTau.push_back("hltPFTau20TrackLooseIso");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoEle15IsoPFTau15");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoEle15IsoPFTau20");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoEle15TightIsoPFTau20");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoEle18MediumIsoPFTau20");
+
   }
 
   for(unsigned int i=0;i<triggerPaths.size();i++){
@@ -621,6 +657,14 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       cout << "Invalid triggerEvent !" << endl;
     }
     const pat::TriggerPath *triggerPath =  trigger->path(triggerPaths[i]);
+
+    if(verbose_){
+      cout<<  "Testing " << triggerPaths[i] << endl;
+      if(triggerPath) cout << "Is there..." << endl;
+      if(triggerPath && triggerPath->wasRun()) cout << "Was run..." << endl;
+      if(triggerPath && triggerPath->wasRun() && triggerPath->wasAccept()) cout << "Was accepted..." << endl;
+    }
+    
     if(triggerPath && triggerPath->wasRun() && 
        triggerPath->wasAccept() && 
        triggerPath->prescale()==1) triggerBits_->push_back(1);
@@ -630,6 +674,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     else triggerBits_->push_back(0);
   }
 
+  /*
   for(unsigned int m = 0; m<XtriggerPaths.size(); m++){
     if((leg1->triggerObjectMatchesByPath(XtriggerPaths[m],false,false)).size()!=0 && 
        (leg2->triggerObjectMatchesByPath(XtriggerPaths[m],false,false)).size()!=0) tauXTriggers_->push_back(1);
@@ -639,6 +684,58 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 	    (leg2->triggerObjectMatchesByPath(XtriggerPaths[m],false,false)).size()!=0)  tauXTriggers_->push_back(3);
     else tauXTriggers_->push_back(0);
   }
+  */
+
+  for(unsigned int i=0 ; i< HLTfiltersElec.size() ; i++){
+    bool matched = false;
+    for(pat::TriggerObjectStandAloneCollection::const_iterator it = triggerObjs->begin() ; it !=triggerObjs->end() ; it++){
+      pat::TriggerObjectStandAlone *aObj = const_cast<pat::TriggerObjectStandAlone*>(&(*it));
+      if(verbose_) {
+	if( Geom::deltaR( aObj->triggerObject().p4(), leg1->p4() )<0.3 ){
+	  for(unsigned int k =0; k < (aObj->filterLabels()).size() ; k++){
+	    cout << "Object passing " << (aObj->filterLabels())[k] << " within 0.3 of electron" << endl;
+	  }
+	}
+      }
+      if( Geom::deltaR( aObj->triggerObject().p4(), leg1->p4() )<0.3  && aObj->hasFilterLabel(HLTfiltersElec[i]) ){
+	matched = true;
+      }
+    }
+    if(matched) 
+      tauXTriggers_->push_back(1);
+    else 
+      tauXTriggers_->push_back(0);
+    if(verbose_){
+      if(matched) cout << "Electron matched within dR=0.3 with trigger object passing filter " << HLTfiltersElec[i] << endl;
+      else cout << "!!! Electron is not trigger matched within dR=0.3 !!!" << endl;
+    }
+  }
+  for(unsigned int i=0 ; i< HLTfiltersTau.size() ; i++){
+    bool matched = false;
+    for(pat::TriggerObjectStandAloneCollection::const_iterator it = triggerObjs->begin() ; it !=triggerObjs->end() ; it++){
+      pat::TriggerObjectStandAlone *aObj = const_cast<pat::TriggerObjectStandAlone*>(&(*it));
+      if(verbose_) {
+        if( Geom::deltaR( aObj->triggerObject().p4(), leg2->p4() )<0.3 ){
+          for(unsigned int k =0; k < (aObj->filterLabels()).size() ; k++){
+            cout << "Object passing " << (aObj->filterLabels())[k] << " within 0.3 of tau" << endl;
+          }
+        }
+      }
+      if( Geom::deltaR( aObj->triggerObject().p4(), leg2->p4() )<0.3  && aObj->hasFilterLabel(HLTfiltersTau[i]) ){
+	matched = true;
+      }
+    }
+    if(matched) 
+      tauXTriggers_->push_back(1);
+    else 
+      tauXTriggers_->push_back(0);
+    if(verbose_){
+      if(matched) cout << "Tau matched within dR=0.3 with trigger object passing filter " << HLTfiltersTau[i] << endl;
+      else cout << "!!! Tau is not trigger matched within dR=0.3 !!!" << endl;
+    }
+  }
+
+
 
   // triggers Elec
   if(verbose_){
@@ -841,18 +938,22 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   diTauCAP4_->push_back( theDiTau->p4CollinearApprox() );
   diTauICAP4_->push_back( theDiTau->p4ImprovedCollinearApprox() );
 
-  math::XYZTLorentzVectorD nSVfitFitP4(0,0,0,0);
-  if( theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)!=0 ) 
-    nSVfitFitP4 = ((NSVfitEventHypothesis*)theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0))->p4_fitted(); 
+  math::XYZTLorentzVectorD nSVfitFitP4(0,0,0,(theDiTau->p4Vis()).M() );
+  if( theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)!=0 /* &&theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)->isValidSolution()*/ ){
+    if(verbose_) cout << "Visible mass ==> " << nSVfitFitP4.E() << endl;
+    nSVfitFitP4.SetPxPyPzE( 0,0,0, theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)->mass() ) ;
+    if(verbose_) cout << "SVFit fit solution ==> " << nSVfitFitP4.E() << endl;
+  }
   diTauSVfitP4_->push_back( nSVfitFitP4  );
+
   
-  diTauNSVfitMass_        = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->numResonances()>0 ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->resonance(0)->mass()        : -99; 
-  diTauNSVfitMassErrUp_   = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->numResonances()>0 ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->resonance(0)->massErrUp()   : -99; 
-  diTauNSVfitMassErrDown_ = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->numResonances()>0 ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->resonance(0)->massErrDown() : -99; 
+  diTauNSVfitMass_        = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->mass()        : -99; 
+  diTauNSVfitMassErrUp_   = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrUp()   : -99; 
+  diTauNSVfitMassErrDown_ = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrDown() : -99; 
 
   run_   = iEvent.run();
   event_ = (iEvent.eventAuxiliary()).event();
-  lumi_ = iEvent.luminosityBlock();
+  lumi_  = iEvent.luminosityBlock();
   
   std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJets;
   std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJetsIDL1Offset;

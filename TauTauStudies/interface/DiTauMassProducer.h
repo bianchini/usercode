@@ -45,8 +45,8 @@ public:
 	theDiTau = collectionHandle->ptrAt(i);
 
       double diTauNSVfitMass = (theDiTau->hasNSVFitSolutions() && 
-				theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->numResonances()>0 ) ? 
-	theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->resonance(0)->mass() : -99; 
+				theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? 
+	theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->mass() : -99; 
 
       diTauMass->push_back( diTauNSVfitMass );
 
