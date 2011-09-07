@@ -91,8 +91,8 @@ void plotElecTau( Int_t mH_ = 120,
   // split the DY->ll into l=e/mu and l=tau (MC level)
   TFile* dummy1 = new TFile("dummy1.root","RECREATE");
   TTree *backgroundDYTauTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)==(23*15)");                             // g/Z -> tau+ tau-
-  TTree *backgroundDYEtoTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) && genDiTauLegsP4[1].E()>0");  // g/Z -> e+e- e->tau
-  TTree *backgroundDYJtoTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) && genDiTauLegsP4[1].E()<=0"); // g/Z -> e+e- jet->tau
+  TTree *backgroundDYEtoTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) && isFakeTau<0.5");  // g/Z -> e+e- e->tau
+  TTree *backgroundDYJtoTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) && isFakeTau>0.5"); // g/Z -> e+e- jet->tau
 
   cout << backgroundDYTauTau->GetEntries() << " come from DY->tautau"      << endl;
   cout << backgroundDYEtoTau->GetEntries() << " come from DY->ee, e->tau"  << endl;
@@ -455,16 +455,16 @@ void plotMuTau( Int_t mH_ = 120,
   leg->SetHeader(Form("#splitline{CMS Preliminary}{#splitline{%.1f fb^{-1} #sqrt{s}=7 TeV}{#tau_{#mu}#tau_{had}}}", Lumi/1000. ));
 
   THStack* aStack = new THStack("aStack","");
-  TH1F* hSiml  = new TH1F();
-  TH1F* hSgn   = new TH1F();
-  TH1F* hSgn1  = new TH1F();
-  TH1F* hSgn2  = new TH1F();
-  TH1F* hData  = new TH1F();
-  TH1F* hEWK   = new TH1F();
+  TH1F* hSiml  = new TH1F( "hSiml" ,"" , nBins_ ,xMin_ , xMax_);
+  TH1F* hSgn   = new TH1F( "hSgn " ,"" , nBins_ ,xMin_ , xMax_);
+  TH1F* hSgn1  = new TH1F( "hSgn1" ,"" , nBins_ ,xMin_ , xMax_);
+  TH1F* hSgn2  = new TH1F( "hSgn2" ,"" , nBins_ ,xMin_ , xMax_);
+  TH1F* hData  = new TH1F( "hData" ,"" , nBins_ ,xMin_ , xMax_);
+  TH1F* hEWK   = new TH1F( "hEWK"  ,"" , nBins_ ,xMin_ , xMax_);
 
   // Open the files
   TFile *fData              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamSummer11_fAna//nTupleRun2011-Mu_All_Open_MuTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamSummer11_fAna//nTupleRun2011-Mu-All_run_Open_MuTauStream.root", "READ");  
   TFile *fSignalVBF         
     = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamSummer11_fAna//nTupleVBFH%d-Mu-powheg-PUS4_run_Open_MuTauStream.root",mH_) ,"READ");  
   TFile *fSignalGGH         
@@ -490,9 +490,9 @@ void plotMuTau( Int_t mH_ = 120,
   cout << "Now copying g/Z -> tau+ tau- " << endl;
   TTree *backgroundDYTauTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)==(23*15)");                             // g/Z -> tau+ tau-
   cout << "Now copying g/Z -> mu+mu- mu->tau" << endl;
-  TTree *backgroundDYMutoTau = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) && genDiTauLegsP4[1].E()>0");  // g/Z -> mu+mu- mu->tau
+  TTree *backgroundDYMutoTau = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) && isFakeTau<0.5");  // g/Z -> mu+mu- mu->tau
   cout << "Now copying g/Z -> mu+mu- jet->tau" << endl;
-  TTree *backgroundDYJtoTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) && genDiTauLegsP4[1].E()<=0"); // g/Z -> mu+mu- jet->tau
+  TTree *backgroundDYJtoTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) && isFakeTau>0.5"); // g/Z -> mu+mu- jet->tau
 
   cout << backgroundDYTauTau->GetEntries()  << " come from DY->tautau"      << endl;
   cout << backgroundDYMutoTau->GetEntries() << " come from DY->mumu, mu->tau"  << endl;
@@ -503,10 +503,10 @@ void plotMuTau( Int_t mH_ = 120,
   TTree *backgroundOthers    = (TTree*)fBackgroundOthers->Get(tree);
  
 
-  TCut lpt("ptL1>18");
+  TCut lpt("ptL1>15");
   TCut tpt("ptL2>20");
   TCut tiso("tightestHPSDBWP>0");
-  TCut liso("combReliso && lvetoLeg1DBeta<0.10");
+  TCut liso("combRelIsoLeg1DBeta<0.10");
   TCut lveto("muFlag==0");
   TCut SS("diTauCharge!=0");
   TCut OS("diTauCharge==0");
@@ -569,7 +569,7 @@ void plotMuTau( Int_t mH_ = 120,
 
   ///////////////////////////////////////// Doing OS first...
   hWMt->Reset();
-  backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightMu*HLTweightTau)"*sbinPZetaRel);
+  backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightTau)"*sbinPZetaRel);
   cout << "Using  " << hWMt->Integral() << " entries from the W+jets OS sample" << endl;
   float OSWinSignalRegionMC = hWMt->Integral(90,200)*Lumi*hltEff_/1000.;
   float scaleFactorOS = (hWMt->Integral(0,80))/(hWMt->Integral(90,200));
@@ -577,12 +577,12 @@ void plotMuTau( Int_t mH_ = 120,
 
   hWMt->Reset();
   cout << "Estimating cobtribution from ttbar and others in OS low pZeta tail..." << endl;
-  backgroundTTbar->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightMu*HLTweightTau)"*sbinPZetaRel);
+  backgroundTTbar->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightTau)"*sbinPZetaRel);
   hWMt->Scale(Lumi*hltEff_/1000.);
   float ttbarExtrOS = hWMt->Integral(0,80);
   cout << "Contribution from ttbar in OS is " << ttbarExtrOS << endl;
   hWMt->Reset();
-  backgroundOthers->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightMu*HLTweightTau)"*sbinPZetaRel);
+  backgroundOthers->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightTau)"*sbinPZetaRel);
   hWMt->Scale(Lumi*hltEff_/1000.);
   float othersExtrOS = hWMt->Integral(0,80);
   cout << "Contribution from single-t and di-boson in OS is " << othersExtrOS << endl;
@@ -590,15 +590,15 @@ void plotMuTau( Int_t mH_ = 120,
   cout << "Selected events in data in low pZeta tail " << OSWinSignalRegionDATA << endl;
   OSWinSignalRegionDATA -= ttbarExtrOS;
   OSWinSignalRegionDATA -= othersExtrOS;
-  OSWinSignalRegionDATA *= scaleFactorOS;
+  OSWinSignalRegionDATA /= scaleFactorOS;
   cout << "W+jets in signal region is estimated to be "  
-       << OSWinSignalRegionDATA/scaleFactorOS << "*" << scaleFactorOS << " = " 
-       << OSWinSignalRegionDATA <<  " +/- " << sqrt(OSWinSignalRegionDATA*scaleFactorOS) << endl;
+       << OSWinSignalRegionDATA*scaleFactorOS << "/" << scaleFactorOS << " = " 
+       << OSWinSignalRegionDATA <<  " +/- " << sqrt(OSWinSignalRegionDATA/scaleFactorOS)/scaleFactorOS << endl;
   cout << "  ===> the MC prediction was " << OSWinSignalRegionMC << endl;
 
   ///////////////////////////////////////// Doing SS last...
   hWMt->Reset();
-  backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightMu*HLTweightTau)"*sbinPZetaRelSS);
+  backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightTau)"*sbinPZetaRelSS);
   cout << "Using  " << hWMt->Integral() << " entries from the SS W+jets sample" << endl;
   float SSWinSignalRegionMC = hWMt->Integral(90,200)*Lumi*hltEff_/1000.;
   float scaleFactorSS = (hWMt->Integral(0,80))/(hWMt->Integral(90,200));
@@ -606,12 +606,12 @@ void plotMuTau( Int_t mH_ = 120,
 
   hWMt->Reset();
   cout << "Estimating cobtribution from ttbar and others in SS low pZeta tail..." << endl;
-  backgroundTTbar->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightMu*HLTweightTau)"*sbinPZetaRelSS);
+  backgroundTTbar->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightTau)"*sbinPZetaRelSS);
   hWMt->Scale(Lumi*hltEff_/1000.);
   float ttbarExtrSS = hWMt->Integral(0,80);
   cout << "Contribution from ttbar in SS is " << ttbarExtrSS << endl;
   hWMt->Reset();
-  backgroundOthers->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightMu*HLTweightTau)"*sbinPZetaRelSS);
+  backgroundOthers->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightTau)"*sbinPZetaRelSS);
   hWMt->Scale(Lumi*hltEff_/1000.);
   float othersExtrSS = hWMt->Integral(0,80);
   cout << "Contribution from single-t and di-boson in SS is " << othersExtrSS << endl;
@@ -619,12 +619,11 @@ void plotMuTau( Int_t mH_ = 120,
   cout << "Selected events in data in low pZeta tail " << SSWinSignalRegionDATA << endl;
   SSWinSignalRegionDATA -= ttbarExtrSS;
   SSWinSignalRegionDATA -= othersExtrSS;
-  SSWinSignalRegionDATA *= scaleFactorSS;
+  SSWinSignalRegionDATA /= scaleFactorSS;
   cout << "W+jets in SS signal region is estimated to be "  
-       << SSWinSignalRegionDATA/scaleFactorSS << "*" << scaleFactorSS << " = " 
-       << SSWinSignalRegionDATA <<  " +/- " << sqrt(SSWinSignalRegionDATA*scaleFactorSS) << endl;
+       << SSWinSignalRegionDATA*scaleFactorSS << "/" << scaleFactorSS << " = " 
+       << SSWinSignalRegionDATA <<  " +/- " << sqrt(SSWinSignalRegionDATA/scaleFactorSS)/scaleFactorSS << endl;
   cout << "  ===> the MC prediction was " << SSWinSignalRegionMC << endl;
-
 
   // here I choose the order in the stack
   std::vector<string> samples;
@@ -699,22 +698,22 @@ void plotMuTau( Int_t mH_ = 120,
     else{
 
       currentTree = (it->second);
-      currentTree->Draw(variable_+">>h1", "(sampleWeight*puWeight*HLTweightMu*HLTweightTau)"*sbin);
-    
+      currentTree->Draw(variable_+">>"+h1Name, "(sampleWeight*puWeight*HLTweightTau)"*sbin);
+
       // scale by correction factors
       if((it->first).find("Data")==string::npos)
 	h1->Scale(Lumi/1000*hltEff_);
 
       // if W+jets, scale by extrapolation
-      if((it->first).find("WJets")==string::npos)
-	h1->Scale(SSWinSignalRegionDATA/SSWinSignalRegionMC);
+      if((it->first).find("WJets")!=string::npos)
+	h1->Scale(OSWinSignalRegionDATA/OSWinSignalRegionMC);
 
       // if DY->ee, e->tau, scale by fake-rate
-      if((it->first).find("DYMutoTau")==string::npos)
+      if((it->first).find("DYMutoTau")!=string::npos)
 	h1->Scale(1.0);
 
       // if DY->ee, jet->tau, scale by fake-rate
-      if((it->first).find("DYJtoTau")==string::npos)
+      if((it->first).find("DYJtoTau")!=string::npos)
 	h1->Scale(1.0);
 
     }
@@ -724,8 +723,7 @@ void plotMuTau( Int_t mH_ = 120,
 	(it->first).find("DYJtoTau")!=string::npos || 
 	(it->first).find("WJets")!=string::npos || 
 	(it->first).find("Others")!=string::npos ) {
-      if(!hEWK) hEWK=(TH1F*)h1->Clone("hEWK");
-      else hEWK->Add(h1,1.0);
+      hEWK->Add(h1,1.0);
     }
 
     if( (it->first).find("DYToTauTau")!=string::npos ) {
@@ -741,7 +739,7 @@ void plotMuTau( Int_t mH_ = 120,
       leg->AddEntry(h1,"QCD","F");
     }
     if((it->first).find("qqH115")!=string::npos){
-      hSgn1 = (TH1F*)h1->Clone("hSgn1");
+      hSgn1->Add(h1,1.0);
       hSgn1->Scale(magnifySgn_);
       h1->Scale(magnifySgn_);
       hSgn1->SetLineWidth(2);
@@ -751,7 +749,7 @@ void plotMuTau( Int_t mH_ = 120,
       //leg->AddEntry(h1,Form("VBF H(115) X %.0f",magnifySgn_),"F");
     }
     if((it->first).find("ggH115")!=string::npos){
-      hSgn2 = (TH1F*)h1->Clone("hSgn2");
+      hSgn2->Add(h1,1.0);
       hSgn2->Scale(magnifySgn_);
       h1->Scale(magnifySgn_);
       hSgn2->SetLineWidth(2);
@@ -761,7 +759,7 @@ void plotMuTau( Int_t mH_ = 120,
       //leg->AddEntry(h1,Form("GGF H(115) X %.0f",magnifySgn_),"F");
     }
     if((it->first).find("Data")!=string::npos){
-      hData = (TH1F*)h1->Clone("hData");
+      hData->Add(h1,1.0);
       hData->Sumw2();
       hData->SetMarkerStyle(20);
       hData->SetMarkerSize(1.2);
@@ -775,8 +773,7 @@ void plotMuTau( Int_t mH_ = 120,
       leg->AddEntry(hData,"Observed","P");
     }
 
-    if(!hSiml) hSiml=(TH1F*)h1->Clone("hSiml");
-    else if((it->first).find("Data")==string::npos) hSiml->Add(h1);
+    hSiml->Add(h1,1.0);
 
     if(! ((it->first).find("Data")!=string::npos || 
 	  (it->first).find("ggH") !=string::npos ||
@@ -793,7 +790,6 @@ void plotMuTau( Int_t mH_ = 120,
   leg->AddEntry(hEWK,"ElectroWeak","F");
 
   // all signal summed together:
-  hSgn = (TH1F*)hSgn1->Clone("hSgn");
   hSgn->Add(hSgn1,hSgn2,1,1);
   hSgn->SetFillColor(kRed);
   aStack->Add(hSgn);
@@ -812,7 +808,7 @@ void plotMuTau( Int_t mH_ = 120,
 
   leg->Draw();
 
-  //c1->SaveAs("tmpMuTau.png");
+  c1->SaveAs("tmpMuTau.png");
 
 }
 

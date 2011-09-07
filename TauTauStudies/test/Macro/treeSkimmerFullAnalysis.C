@@ -328,7 +328,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
 
   // taus
   currentTree->SetBranchStatus("diTauLegsP4"           ,1);
-  currentTree->SetBranchStatus("genDiTauLegsP4"        ,0);
+  currentTree->SetBranchStatus("genDiTauLegsP4"        ,1);
   currentTree->SetBranchStatus("chIsoLeg1v1"           ,0);
   currentTree->SetBranchStatus("nhIsoLeg1v1"           ,0);
   currentTree->SetBranchStatus("phIsoLeg1v1"           ,0);
@@ -763,7 +763,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   std::vector<int> readEvents;
 
   // samples & x-sections
-  samples.push_back("Run2011-Mu_All");                 crossSec.push_back( 0  );                          
+  samples.push_back("Run2011-Mu-All_run");             crossSec.push_back( 0  );                          
   samples.push_back("DYJets-Mu-50-madgraph-PUS4_run"); crossSec.push_back( 3048           * 0.02461861 ); 
   samples.push_back("TTJets-Mu-madgraph-PUS4_run");    crossSec.push_back( 157.5          * 0.20574389);  
   
@@ -832,7 +832,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
  
   // object-related weights and triggers
   float HLTx,HLTmatch,HLTweightTau;
-  int isTauLegMatched_,muFlag_,genDecay_;
+  int isTauLegMatched_,muFlag_,genDecay_,isFakeTau;
 
   // event id
   ULong64_t event_,run_,lumi_;
@@ -931,6 +931,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   outTreePtOrd->Branch("isTauLegMatched", &isTauLegMatched_,"isTauLegMatched/I");
   outTreePtOrd->Branch("muFlag",          &muFlag_,"muFlag/I"); 
   outTreePtOrd->Branch("genDecay",        &genDecay_,"genDecay/I");
+  outTreePtOrd->Branch("isFakeTau",       &isFakeTau,"isFakeTau/I");
 
   outTreePtOrd->Branch("event",&event_,"event/l");
   outTreePtOrd->Branch("run",  &run_,  "run/l");
@@ -984,7 +985,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 
   // taus
   currentTree->SetBranchStatus("diTauLegsP4"           ,1);
-  currentTree->SetBranchStatus("genDiTauLegsP4"        ,0);
+  currentTree->SetBranchStatus("genDiTauLegsP4"        ,1);
   currentTree->SetBranchStatus("chIsoLeg1v1"           ,0);
   currentTree->SetBranchStatus("nhIsoLeg1v1"           ,0);
   currentTree->SetBranchStatus("phIsoLeg1v1"           ,0);
@@ -1073,6 +1074,9 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 
   std::vector< LV >* diTauCAP4    = new std::vector< LV >();
   currentTree->SetBranchAddress("diTauICAP4",    &diTauCAP4);
+
+  std::vector< LV >* genDiTauLegsP4 = new std::vector< LV >();
+  currentTree->SetBranchAddress("genDiTauLegsP4",    &genDiTauLegsP4);
 
   std::vector< LV >* genVP4         = new std::vector< LV >();
   currentTree->SetBranchAddress("genVP4",          &genVP4);
@@ -1326,11 +1330,16 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
       HLTx =  float((*triggerBits)[1]); //HLT_IsoMu12_LooseIsoPFTau10_v2
       bool isTriggMatched = (*tauXTriggers)[0] && (*tauXTriggers)[2] ; //hltSingleMuIsoL3IsoFiltered12 && hltOverlapFilterIsoMu12IsoPFTau10
       HLTmatch = isTriggMatched ? 1.0 : 0.0;
-      HLTweightTau = (std::string(sample.Data())).find("Run2011")==string::npos ? 
-	ratioEffTau10->ratio( (*diTauLegsP4)[1].Pt() ) : 1.0;
     }
+
+    HLTweightTau = (std::string(sample.Data())).find("Run2011")==string::npos ? 
+      ratioEffTau10->ratio( (*diTauLegsP4)[1].Pt() ) : 1.0;
     
     isTauLegMatched_ = isTauLegMatched;
+    if((std::string(sample.Data())).find("Run2011")==string::npos)
+      isFakeTau        = (*genDiTauLegsP4)[1].E()<=0 ? 1 : 0;
+    else 
+      isFakeTau = 0;
     muFlag_          = muFlag;
     genDecay_        = genDecay ;
     event_           = event;
@@ -1350,7 +1359,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   delete tauXTriggers; delete triggerBits;
   delete METP4; delete jetsBtagHE; delete jetsBtagHP; delete jetsChNfraction; delete genVP4;
   delete ratioEffTau; delete ratioEffTau10; delete ratioEffTau15; delete recoilCorr; 
-  delete hPU; delete tRandom;
+  delete hPU; delete tRandom; delete genDiTauLegsP4;
   
   return;
 
@@ -1377,6 +1386,7 @@ void doAllSamplesMu(){
  
   for( unsigned int k = 0; k < 25 ; k++) {
     makeTrees_MuTauStream("",        k);
+    if( k==0 ) continue;
     makeTrees_MuTauStream("JetUp",   k);
     makeTrees_MuTauStream("JetDown", k);
     makeTrees_MuTauStream("TauUp",   k);
