@@ -36,7 +36,7 @@ else:
     process.GlobalTag.globaltag = cms.string('GR_R_42_V14::All')
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 10
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source(
@@ -180,7 +180,7 @@ process.computeRhoNeutral = cms.Sequence(
     )
 ####################################################################################
 
-doSVFitReco = False
+doSVFitReco = True
 
 process.load("Bianchi.Utilities.diTausReconstruction_cff")
 process.diTau = process.allElecTauPairs.clone()

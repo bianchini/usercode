@@ -28,7 +28,7 @@ process.jec = cms.ESSource("PoolDBESSource",
 )
 process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
 
-runOnMC = True
+runOnMC = False
 
 if runOnMC:
     process.GlobalTag.globaltag = cms.string('START42_V12::All')
@@ -36,13 +36,14 @@ else:
     process.GlobalTag.globaltag = cms.string('GR_R_42_V14::All')
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 10
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream/9d70b246dfc2095f4b7f776df63d9adc/patTuples_MuTauStream_9_1_u2S.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream/9d70b246dfc2095f4b7f776df63d9adc/patTuples_MuTauStream_9_1_u2S.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream/9d70b246dfc2095f4b7f776df63d9adc//patTuples_MuTauStream_653_1_J0x.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/MuTauStream-v6/19b210cddfa58b4f9a99f3faa9d787aa/patTuples_MuTauStream_91_1_VIQ.root'
     )
     )
@@ -174,13 +175,20 @@ process.kt6PFJetsCentral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet =
 process.kt6PFJetsCentral.Rho_EtaMax = cms.double(2.5)
 process.kt6PFJetsNeutral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet = True, src="pfAllNeutral" )
 
+process.pfAllNeutral = cms.EDFilter(
+    "PdgIdPFCandidateSelector",
+    src = cms.InputTag("particleFlow"),
+    pdgId = cms.vint32(111, 130, 310, 2112, 22)
+    )
+
 process.computeRhoNeutral = cms.Sequence(
-    process.pfCandidateSelectionByType*
+    #process.pfCandidateSelectionByType*
+    process.pfAllNeutral*
     process.kt6PFJetsNeutral
     )
 ####################################################################################
 
-doSVFitReco = False
+doSVFitReco = True
 
 process.load("Bianchi.Utilities.diTausReconstruction_cff")
 process.diTau = process.allMuTauPairs.clone()
@@ -188,7 +196,7 @@ process.diTau.srcLeg1 = cms.InputTag("muPtEtaIDIso")
 process.diTau.srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso")
 process.diTau.srcMET  = cms.InputTag("patMETsPFlow")
 process.diTau.dRmin12  = cms.double(0.5)
-process.diTau.doSVreco = cms.bool(True)
+process.diTau.doSVreco = cms.bool(doSVFitReco)
 
 if not runOnMC:
     process.diTau.srcGenParticles = ""
