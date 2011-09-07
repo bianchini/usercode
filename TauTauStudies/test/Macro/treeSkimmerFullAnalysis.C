@@ -296,8 +296,11 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
   TTree* currentTree = (TTree*)file->Get(treeName);
   int nEntries    = currentTree->GetEntries() ;
   int nEventsRead = ((TH1F*)file->Get("allEventsFilter/totalEvents"))->GetBinContent(1) ;
+  cout<< "nEventsRead " << nEventsRead << endl;
   float crossSection = index >= 0 ? crossSec[index] : float(nEventsRead)/Lumi ; 
+  cout<< "crossSection " << crossSection << endl;
   float scaleFactor = (crossSection != 0) ? Lumi / (  float(nEventsRead)/crossSection )  : 1.0;
+  cout<< "scaleFactor " << scaleFactor << endl;
 
   // jets
   currentTree->SetBranchStatus("jetsP4"                ,0);
@@ -424,7 +427,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
   currentTree->SetBranchAddress("diTauSVfitP4",    &diTauSVfitP4);
 
   std::vector< LV >* diTauCAP4    = new std::vector< LV >();
-  currentTree->SetBranchAddress("diTauCAP4",    &diTauCAP4);
+  currentTree->SetBranchAddress("diTauICAP4",    &diTauCAP4);
 
   std::vector< LV >* genVP4         = new std::vector< LV >();
   currentTree->SetBranchAddress("genVP4",          &genVP4);
@@ -731,7 +734,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
 
 void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   
-  cout << "Now skimming analysys " << analysis << endl;
+  cout << "Now skimming analysis " << analysis << endl;
   
   // scale factors for PFTau20
   gSystem->Load("ratioEfficiencyTau_C.so");
@@ -933,7 +936,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   outTreePtOrd->Branch("run",  &run_,  "run/l");
   outTreePtOrd->Branch("lumi", &lumi_, "lumi/l");
  
-  string currentInName = index >= 0 ?  "/data_CMS/cms/lbianchini/MuTauStreamSummer11_iter4//treeMuTauStream_"+samples[index]+".root" : "../treeMuTauStream.root";
+  string currentInName = index >= 0 ?  "/data_CMS/cms/lbianchini/MuTauStreamSummer11_fAna//treeMuTauStream_"+samples[index]+".root" : "../treeMuTauStream.root";
 
   TString inName(currentInName.c_str());
   TFile* file   = new TFile(inName,"READ");
@@ -949,6 +952,11 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   int nEventsRead = ((TH1F*)file->Get("allEventsFilter/totalEvents"))->GetBinContent(1) ;
   float crossSection = index >= 0 ? crossSec[index] : float(nEventsRead)/Lumi ; 
   float scaleFactor = (crossSection != 0) ? Lumi / (  float(nEventsRead)/crossSection )  : 1.0;
+
+  cout << "Processing sample " << sample.Data() << endl;
+  cout<< "nEventsRead = " << nEventsRead << endl;
+  cout<< "nEntries    = " << nEntries << endl;
+  cout<< "crossSection " << crossSection << " pb ==> scaleFactor " << scaleFactor << endl;
 
   // jets
   currentTree->SetBranchStatus("jetsP4"                ,0);
@@ -1064,7 +1072,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   currentTree->SetBranchAddress("diTauSVfitP4",    &diTauSVfitP4);
 
   std::vector< LV >* diTauCAP4    = new std::vector< LV >();
-  currentTree->SetBranchAddress("diTauCAP4",    &diTauCAP4);
+  currentTree->SetBranchAddress("diTauICAP4",    &diTauCAP4);
 
   std::vector< LV >* genVP4         = new std::vector< LV >();
   currentTree->SetBranchAddress("genVP4",          &genVP4);
@@ -1137,7 +1145,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   for (int n = 0; n < nEntries ; n++) {
     
     currentTree->GetEntry(n);
-    if(n%1000==0) cout << n << endl;
+    if(n%2000==0) cout << n << endl;
     
     // initialize variables filled only in the two jet case
     pt1=-99;pt2=-99;eta1=-99,eta2=-99;Deta=-99;Dphi=-99;Mjj=-99;phi1=-99;phi2=-99;
@@ -1315,7 +1323,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
      
     } else{
 
-      HLTx =  float((*triggerBits)[1]);
+      HLTx =  float((*triggerBits)[1]); //HLT_IsoMu12_LooseIsoPFTau10_v2
       bool isTriggMatched = (*tauXTriggers)[0] && (*tauXTriggers)[2] ; //hltSingleMuIsoL3IsoFiltered12 && hltOverlapFilterIsoMu12IsoPFTau10
       HLTmatch = isTriggMatched ? 1.0 : 0.0;
       HLTweightTau = (std::string(sample.Data())).find("Run2011")==string::npos ? 
@@ -1367,13 +1375,15 @@ void doAllSamplesElec(){
 
 void doAllSamplesMu(){
  
-  //for( unsigned int k = 0; k < 18 ; k++)  makeTrees_ElecTauStream(k, doExlusive);
-
-  makeTrees_MuTauStream("",-1);
-  makeTrees_MuTauStream("JetUp",  -1);
-  makeTrees_MuTauStream("JetDown",-1);
-  makeTrees_MuTauStream("TauUp",  -1);
-  makeTrees_MuTauStream("TauDown",-1);
+  for( unsigned int k = 0; k < 25 ; k++) {
+    makeTrees_MuTauStream("",        k);
+    makeTrees_MuTauStream("JetUp",   k);
+    makeTrees_MuTauStream("JetDown", k);
+    makeTrees_MuTauStream("TauUp",   k);
+    makeTrees_MuTauStream("TauDown", k);
+    makeTrees_MuTauStream("MuUp",   k);
+    makeTrees_MuTauStream("MuDown", k);
+  }
 
   return;
 
