@@ -426,7 +426,7 @@ void plotElecTau( Int_t mH_ = 120,
 void plotMuTau( Int_t mH_ = 120,
 		string selection_ = "inclusive",
 		string analysis_  = "",		  
-		TString variable_ = "diTauNSVfitMass",
+		TString variable_ = "diTauVisMass",
 		TString XTitle_ = "full mass",
 		TString Unities_ = "GeV",
 		Int_t nBins_ = 100, Float_t xMin_=0, Float_t xMax_=400,
@@ -447,11 +447,11 @@ void plotMuTau( Int_t mH_ = 120,
   c1->SetObjectStat(0);
   c1->SetLogy(logy_);
 
-  TLegend* leg = new TLegend(0.55,0.47,0.85,0.85,NULL,"brNDC");
+  TLegend* leg = new TLegend(0.55,0.42,0.85,0.85,NULL,"brNDC");
   leg->SetFillStyle(0);
   leg->SetBorderSize(0);
   leg->SetFillColor(10);
-  leg->SetTextSize(0.04);
+  leg->SetTextSize(0.03);
   leg->SetHeader(Form("#splitline{CMS Preliminary}{#splitline{%.1f fb^{-1} #sqrt{s}=7 TeV}{#tau_{#mu}#tau_{had}}}", Lumi/1000. ));
 
   THStack* aStack = new THStack("aStack","");
@@ -461,6 +461,9 @@ void plotMuTau( Int_t mH_ = 120,
   TH1F* hSgn2  = new TH1F( "hSgn2" ,"" , nBins_ ,xMin_ , xMax_);
   TH1F* hData  = new TH1F( "hData" ,"" , nBins_ ,xMin_ , xMax_);
   TH1F* hEWK   = new TH1F( "hEWK"  ,"" , nBins_ ,xMin_ , xMax_);
+  TH1F* hZtt   = new TH1F( "hZtt"  ,"" , nBins_ ,xMin_ , xMax_);
+  TH1F* hTTb   = new TH1F( "hTTb"  ,"" , nBins_ ,xMin_ , xMax_);
+  TH1F* hQCD   = new TH1F( "hQCD"  ,"" , nBins_ ,xMin_ , xMax_);
 
   // Open the files
   TFile *fData              
@@ -481,16 +484,16 @@ void plotMuTau( Int_t mH_ = 120,
   // choose the analysis: Nominal "", jet up/Down "JetUp/Down" , elec up/down "MuUp/Down" , tau up/down "TauUp/Down"
   TString tree = "outTreePtOrd"+analysis_;
 
-  TTree *data                = (TTree*)fData->Get(tree);
+  TTree *data                = (TTree*)fData->Get("outTreePtOrd");
   TTree *signalVBF           = (TTree*)fSignalVBF->Get(tree);
   TTree *signalGGH           = (TTree*)fSignalGGH->Get(tree);
 
   // split the DY->ll into l=e/mu and l=tau (MC level)
   TFile* dummy1 = new TFile("dummy1.root","RECREATE");
   cout << "Now copying g/Z -> tau+ tau- " << endl;
-  TTree *backgroundDYTauTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)==(23*15)");                             // g/Z -> tau+ tau-
+  TTree *backgroundDYTauTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)==(23*15)");                  // g/Z -> tau+ tau-
   cout << "Now copying g/Z -> mu+mu- mu->tau" << endl;
-  TTree *backgroundDYMutoTau = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) && isFakeTau<0.5");  // g/Z -> mu+mu- mu->tau
+  TTree *backgroundDYMutoTau = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) && isFakeTau<0.5"); // g/Z -> mu+mu- mu->tau
   cout << "Now copying g/Z -> mu+mu- jet->tau" << endl;
   TTree *backgroundDYJtoTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) && isFakeTau>0.5"); // g/Z -> mu+mu- jet->tau
 
@@ -506,7 +509,7 @@ void plotMuTau( Int_t mH_ = 120,
   TCut lpt("ptL1>15");
   TCut tpt("ptL2>20");
   TCut tiso("tightestHPSDBWP>0");
-  TCut liso("combRelIsoLeg1DBeta<0.10");
+  TCut liso("combRelIsoLeg1DBeta<0.1");
   TCut lveto("muFlag==0");
   TCut SS("diTauCharge!=0");
   TCut OS("diTauCharge==0");
@@ -529,7 +532,7 @@ void plotMuTau( Int_t mH_ = 120,
     sbinSS         =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch;
     sbinPZetaRelSS =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch;
   }
-  else if(selection_.find("vbf")!=string::npos){
+  else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
     sbin           =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && vbf;
     sbinPZetaRel   =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && vbf;
     sbinPZetaRev   =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && vbf;
@@ -545,7 +548,7 @@ void plotMuTau( Int_t mH_ = 120,
     sbinSS         =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && novbf;
     sbinPZetaRelSS =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && novbf;
   }
-  else if(selection_.find("bTag")!=string::npos){
+  else if(selection_.find("bTag")!=string::npos && selection_.find("nobTag")==string::npos){
     sbin           =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && bTag;
     sbinPZetaRel   =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && bTag;
     sbinPZetaRev   =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && bTag;
@@ -571,10 +574,10 @@ void plotMuTau( Int_t mH_ = 120,
   hWMt->Reset();
   backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightTau)"*sbinPZetaRel);
   cout << "Using  " << hWMt->Integral() << " entries from the W+jets OS sample" << endl;
-  float OSWinSignalRegionMC = hWMt->Integral(90,200)*Lumi*hltEff_/1000.;
-  float scaleFactorOS = (hWMt->Integral(0,80))/(hWMt->Integral(90,200));
+  float OSWinSignalRegionMC = hWMt->Integral(91,200)*Lumi*hltEff_/1000.;
+  float scaleFactorOS = (hWMt->Integral(0,80))/(hWMt->Integral(91,200));
   cout << "Extrapolation factor for W OS : P(pZetaCorr<-40)/P(pZetaCorr>-20) ==> " << scaleFactorOS << endl;
-
+ 
   hWMt->Reset();
   cout << "Estimating cobtribution from ttbar and others in OS low pZeta tail..." << endl;
   backgroundTTbar->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightTau)"*sbinPZetaRel);
@@ -600,8 +603,8 @@ void plotMuTau( Int_t mH_ = 120,
   hWMt->Reset();
   backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightTau)"*sbinPZetaRelSS);
   cout << "Using  " << hWMt->Integral() << " entries from the SS W+jets sample" << endl;
-  float SSWinSignalRegionMC = hWMt->Integral(90,200)*Lumi*hltEff_/1000.;
-  float scaleFactorSS = (hWMt->Integral(0,80))/(hWMt->Integral(90,200));
+  float SSWinSignalRegionMC = hWMt->Integral(91,200)*Lumi*hltEff_/1000.;
+  float scaleFactorSS = (hWMt->Integral(0,80))/(hWMt->Integral(91,200));
   cout << "Extrapolation factor for W SS : P(pZetaCorr<-40)/P(pZetaCorr>-20) ==> " << scaleFactorSS << endl;
 
   hWMt->Reset();
@@ -682,15 +685,40 @@ void plotMuTau( Int_t mH_ = 120,
       currentTree->Draw(variable_+">>hHelp", sbinSS);
       cout << "Selected SS events in data " << hHelp->GetEntries() << endl;
       h1->Add(hHelp,1);
+
       hHelp->Reset();
-      backgroundWJets->Draw(variable_+">>hHelp", "(sampleWeight*puWeight)"*sbinSS);
-      cout << "We expect " << hHelp->Integral() << " events from W+jets" << endl;
-      hHelp->Scale(SSWinSignalRegionDATA/SSWinSignalRegionMC);
-      cout << "We estimate " << hHelp->Integral() << " events from W+jets by extrapolating" << endl;
-      if( !(selection_.find("vbf")!=string::npos || selection_.find("bTag")!=string::npos)){
-	cout << "The selection has large pZeta tail, so we can extrapolate..." << endl;
+      backgroundWJets->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTweightTau)"*sbinSS);
+      cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from W+jets" << endl;
+      hHelp->Scale(SSWinSignalRegionDATA/SSWinSignalRegionMC*Lumi/1000*hltEff_);
+      cout << "We estimate " << hHelp->Integral() << " SS events from W+jets by extrapolating" << endl;
+
+      if( !(selection_.find("novbf")!=string::npos || selection_.find("nobTag")!=string::npos) ){
+	cout << " ==> removing W+jets from SS...." << endl;
 	h1->Add(hHelp, -1 );
       }
+
+      hHelp->Reset();
+      backgroundDYMutoTau->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTweightTau)"*sbinSS);
+      cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from DY->mumu, mu->jet" << endl;
+      hHelp->Scale(1.0*Lumi/1000*hltEff_);
+      cout << "We estimate " << hHelp->Integral() << " SS events from DY->mumu, mu->tau" << endl;
+
+      if( !(selection_.find("novbf")!=string::npos || selection_.find("nobTag")!=string::npos) ){
+	cout << " ==> removing DY->mumu, mu->tau from SS...." << endl;
+	h1->Add(hHelp, -1 );
+      }
+
+      hHelp->Reset();
+      backgroundDYJtoTau->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTweightTau)"*sbinSS);
+      cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from DY->mumu, jet->tau" << endl;
+      hHelp->Scale(1.0*Lumi/1000*hltEff_);
+      cout << "We estimate " << hHelp->Integral() << " SS events from DY->mumu, jet->tau" << endl;
+
+      if( !(selection_.find("novbf")!=string::npos || selection_.find("nobTag")!=string::npos) ){
+	cout << " ==> removing DY->mumu, mu->jet from SS...." << endl;
+	h1->Add(hHelp, -1 );
+      }
+      
       h1->Scale(1.06);
       cout << "After removing the expected contribution from W+jets and rescaling by 1.06 we expect " 
 	   << h1->Integral() << " events from QCD processes" << endl;
@@ -718,25 +746,27 @@ void plotMuTau( Int_t mH_ = 120,
 
     }
   
+    /////////////////////////////////////////////////////////////////////////////////////
+
     // Legend
     if( (it->first).find("DYMutoTau")!=string::npos ||  
 	(it->first).find("DYJtoTau")!=string::npos || 
 	(it->first).find("WJets")!=string::npos || 
 	(it->first).find("Others")!=string::npos ) {
+      hEWK->SetFillColor(kBlue);
       hEWK->Add(h1,1.0);
     }
-
     if( (it->first).find("DYToTauTau")!=string::npos ) {
-      h1->SetFillColor(kWhite);
-      leg->AddEntry(h1,"Z#rightarrow#tau#tau","F");
+      hZtt->Add(h1,1.0);
+      hZtt->SetFillColor(kWhite);
     }
     if( (it->first).find("TTbar")!=string::npos ) {
-      h1->SetFillColor(kBlue);
-      leg->AddEntry(h1,"t#bar{t}+jets","F");
+      hTTb->Add(h1,1.0);
+      hTTb->SetFillColor(kMagenta);     
     }
     if( (it->first).find("SS")!=string::npos ) {
-      h1->SetFillColor(42);
-      leg->AddEntry(h1,"QCD","F");
+      hQCD->Add(h1,1.0);
+      hQCD->SetFillColor(42);
     }
     if((it->first).find("qqH115")!=string::npos){
       hSgn1->Add(h1,1.0);
@@ -746,7 +776,6 @@ void plotMuTau( Int_t mH_ = 120,
       h1->SetFillColor(kBlack);
       h1->SetFillStyle(3004);
       h1->SetLineColor(kBlack);
-      //leg->AddEntry(h1,Form("VBF H(115) X %.0f",magnifySgn_),"F");
     }
     if((it->first).find("ggH115")!=string::npos){
       hSgn2->Add(h1,1.0);
@@ -756,7 +785,6 @@ void plotMuTau( Int_t mH_ = 120,
       h1->SetFillColor(kBlack);
       h1->SetFillStyle(3005);
       h1->SetLineColor(kBlack);
-      //leg->AddEntry(h1,Form("GGF H(115) X %.0f",magnifySgn_),"F");
     }
     if((it->first).find("Data")!=string::npos){
       hData->Add(h1,1.0);
@@ -770,31 +798,37 @@ void plotMuTau( Int_t mH_ = 120,
       hData->SetTitleSize(0.04,"X");
       hData->SetTitleSize(0.05,"Y");
       hData->SetTitleOffset(0.95,"Y");
-      leg->AddEntry(hData,"Observed","P");
     }
 
+    // adding alltogether
     hSiml->Add(h1,1.0);
 
-    if(! ((it->first).find("Data")!=string::npos || 
-	  (it->first).find("ggH") !=string::npos ||
-	  (it->first).find("qqH") !=string::npos ) ) aStack->Add(h1);
-
     if(VERBOSE) cout<<(it->first) << " ==> " 
-		   << h1->Integral() << " +/- " 
-		   << TMath::Sqrt(h1->GetEntries())*(h1->Integral()/h1->GetEntries())
-		   << endl;
+		    << h1->Integral() << " +/- " 
+		    << TMath::Sqrt(h1->GetEntries())*(h1->Integral()/h1->GetEntries())
+		    << endl;
   }
-
-  // ewk
-  hEWK->SetFillColor(kBlue);
-  leg->AddEntry(hEWK,"ElectroWeak","F");
 
   // all signal summed together:
   hSgn->Add(hSgn1,hSgn2,1,1);
   hSgn->SetFillColor(kRed);
-  aStack->Add(hSgn);
-  leg->AddEntry(hSgn,Form("SM H(%d) X %.0f",mH_,magnifySgn_),"F");
+  hSgn->SetLineWidth(2);
 
+  //Adding to the stack
+  aStack->Add(hQCD);
+  aStack->Add(hEWK);
+  aStack->Add(hTTb);
+  aStack->Add(hZtt);
+  aStack->Add(hSgn);
+
+  // legend
+  leg->AddEntry(hData,"Observed","P");
+  leg->AddEntry(hSgn,Form("(%.0fx) H#rightarrow#tau#tau m_{H}=%d",magnifySgn_,mH_),"F");
+  leg->AddEntry(hZtt,"Z#rightarrow#tau#tau","F");
+  leg->AddEntry(hTTb,"t#bar{t}","F");
+  leg->AddEntry(hEWK,"Electroweak","F");
+  leg->AddEntry(hQCD,"QCD","F");
+  
   hData->Draw("P");
   aStack->Draw("HISTSAME");
   hData->Draw("PSAME");

@@ -1328,16 +1328,29 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     } else{
 
       HLTx =  float((*triggerBits)[1]); //HLT_IsoMu12_LooseIsoPFTau10_v2
+      HLTx =  float((*triggerBits)[3]); //HLT_IsoMu12_v1
       bool isTriggMatched = (*tauXTriggers)[0] && (*tauXTriggers)[2] ; //hltSingleMuIsoL3IsoFiltered12 && hltOverlapFilterIsoMu12IsoPFTau10
+      isTriggMatched = (*tauXTriggers)[0]; //hltSingleMuIsoL3IsoFiltered12
       HLTmatch = isTriggMatched ? 1.0 : 0.0;
     }
 
+    // ratioEffTau15 does not reach plateau...force same plateau of IsoPFTau20
+    if((*diTauLegsP4)[1].Pt() < 30){
+      HLTweightTau = (std::string(sample.Data())).find("Run2011")==string::npos ? 
+	ratioEffTau15->dataEfficiency( (*diTauLegsP4)[1].Pt() )/ratioEffTau10->mcEfficiency( (*diTauLegsP4)[1].Pt() ) : 1.0;
+    }
+    else{
+      HLTweightTau = (std::string(sample.Data())).find("Run2011")==string::npos ? 
+	ratioEffTau->dataEfficiency( (*diTauLegsP4)[1].Pt() )/ratioEffTau10->mcEfficiency( (*diTauLegsP4)[1].Pt() ) : 1.0;
+    }
+    // apply data-measured efficiency
     HLTweightTau = (std::string(sample.Data())).find("Run2011")==string::npos ? 
-      ratioEffTau10->ratio( (*diTauLegsP4)[1].Pt() ) : 1.0;
-    
+      ratioEffTau15->dataEfficiency( (*diTauLegsP4)[1].Pt() ) : 1.0;
+
+
     isTauLegMatched_ = isTauLegMatched;
     if((std::string(sample.Data())).find("Run2011")==string::npos)
-      isFakeTau        = (*genDiTauLegsP4)[1].E()<=0 ? 1 : 0;
+      isFakeTau      = (*genDiTauLegsP4)[1].E()<=0 ? 1 : 0;
     else 
       isFakeTau = 0;
     muFlag_          = muFlag;
