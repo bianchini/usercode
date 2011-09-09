@@ -56,8 +56,8 @@ double ratioEfficiencyElec::efficiency(double m, double m0, double sigma, double
 
 double ratioEfficiencyElec::ratio(double pt, bool EB) const
 {
-  double ratio = 0 ;
-  if (pt<15) return ratio ;
+  double ratio_ = 0 ;
+  if (pt<15) return ratio_ ;
 
   double meandata,sigmadata,alphadata,ndata,normdata ;
   double meanMC,sigmaMC,alphaMC,nMC,normMC ;
@@ -73,14 +73,14 @@ double ratioEfficiencyElec::ratio(double pt, bool EB) const
   double effdata = efficiency(pt,meandata,sigmadata,alphadata,ndata,normdata) ;
   double effMC = efficiency(pt,meanMC,sigmaMC,alphaMC,nMC,normMC) ;
 
-  if (effMC>0) ratio = effdata/effMC ;
-  return ratio ;
+  if (effMC>0) ratio_ = effdata/effMC ;
+  return ratio_ ;
 }
 
 double ratioEfficiencyElec::dataEfficiency(double pt, bool EB) const
 {
-  double ratio = 0 ;
-  if (pt<15) return ratio ;
+  double ratio_ = 0 ;
+  if (pt<15) return ratio_ ;
 
   double meandata,sigmadata,alphadata,ndata,normdata ;
 
@@ -91,8 +91,8 @@ double ratioEfficiencyElec::dataEfficiency(double pt, bool EB) const
   }
 
   double effdata = efficiency(pt,meandata,sigmadata,alphadata,ndata,normdata) ;
-  ratio = effdata ;
-  return ratio ;
+  ratio_ = effdata ;
+  return ratio_ ;
 }
 
 

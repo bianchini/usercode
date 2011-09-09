@@ -3,15 +3,23 @@
 #include <limits>
 
 
-class ratioEfficiencyTau {
+ /***************************************************************************** 
+  *                                                                           * 
+  *****************************************************************************/ 
+#include <math.h> 
+#include "TMath.h" 
+#include <limits>
+
+
+class ratioEfficiencyTau15 {
 public:
-  ratioEfficiencyTau(){} ;
+  ratioEfficiencyTau15(){} ;
   double efficiency(double m, double m0, double sigma, double alpha, double n, double norm) const ;
   double ratio(double pt) const ;
-  double dataEfficiency(double pt) const;
+  double dataEfficiency(double pt) const ;
 } ;
 
-double ratioEfficiencyTau::efficiency(double m, double m0, double sigma, double alpha, double n, double norm) const 
+double ratioEfficiencyTau15::efficiency(double m, double m0, double sigma, double alpha, double n, double norm) const 
  { 
    const double sqrtPiOver2 = 1.2533141373;
    const double sqrt2 = 1.4142135624;
@@ -54,7 +62,7 @@ double ratioEfficiencyTau::efficiency(double m, double m0, double sigma, double 
  } 
 
 
-double ratioEfficiencyTau::ratio(double pt) const
+double ratioEfficiencyTau15::ratio(double pt) const
 {
   double r = 0 ;
   if (pt<15) return r ;
@@ -62,8 +70,8 @@ double ratioEfficiencyTau::ratio(double pt) const
   double meandata,sigmadata,alphadata,ndata,normdata ;
   double meanMC,sigmaMC,alphaMC,nMC,normMC ;
 
-    meandata=19.1016 ; sigmadata=2.54719 ; alphadata=6.45551 ; ndata=34.9826 ; normdata=0.933025 ; //2011 data 0.832 fb-1
-    meanMC=18.3632 ; sigmaMC=1.05792  ; alphaMC=0.409811 ; nMC=4.28198 ; normMC=0.841393 ; //PU reweighting, Summer11_S4
+    meandata=14.3758 ; sigmadata=0.980896 ; alphadata=1.48308  ; ndata= 1.42603 ; normdata=1 ; //2011 data 0.832 fb-1
+    meanMC=15.5267 ; sigmaMC=1.49683  ; alphaMC=6.4306 ; nMC=30.9974 ; normMC=0.804055 ; //PU reweighting, Summer11_S4
 
 
   double effdata = efficiency(pt,meandata,sigmadata,alphadata,ndata,normdata) ;
@@ -73,24 +81,17 @@ double ratioEfficiencyTau::ratio(double pt) const
   return r ;
 }
 
-double ratioEfficiencyTau::dataEfficiency(double pt) const
+double ratioEfficiencyTau15::dataEfficiency(double pt) const
 {
 
   double meandata,sigmadata,alphadata,ndata,normdata ;
   double meanMC,sigmaMC,alphaMC,nMC,normMC ;
 
-    meandata=19.1016 ; sigmadata=2.54719 ; alphadata=6.45551 ; ndata=34.9826 ; normdata=0.933025 ; //2011 data 0.832 fb-1
-    meanMC=18.3632 ; sigmaMC=1.05792  ; alphaMC=0.409811 ; nMC=4.28198 ; normMC=0.841393 ; //PU reweighting, Summer11_S4
-
+  meandata=14.3758 ; sigmadata=0.980896 ; alphadata=1.48308  ; ndata= 1.42603 ; normdata=1 ; //2011 data 0.832 fb-1
+  meanMC=15.5267 ; sigmaMC=1.49683  ; alphaMC=0.208853  ; nMC=30.9974 ; normMC=0.804055 ; //PU reweighting, Summer11_S4
 
   double effdata = efficiency(pt,meandata,sigmadata,alphadata,ndata,normdata) ;
   double effMC = efficiency(pt,meanMC,sigmaMC,alphaMC,nMC,normMC) ;
 
- 
   return effdata ;
 }
-
-
-
-
-
