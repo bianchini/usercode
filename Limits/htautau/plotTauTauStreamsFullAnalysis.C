@@ -440,7 +440,11 @@ void plotMuTau( Int_t mH_ = 120,
   ifstream is;
 
   char* c = new char[10];
-  is.open(Form("bins_muTau_mH%d_%s_%s.txt",mH_,selection_.c_str(),variable_.Data())); 
+  is.open(Form("bins/bins_muTau_mH%d_%s_%s.txt",mH_,selection_.c_str(),variable_.Data())); 
+  if(nBins_<0 &&  !is.good()){
+    cout << "Bins file not found" << endl;
+    return;
+  }
 
   int nBinsFromFile = 0;
   while (is.good())     
@@ -458,7 +462,7 @@ void plotMuTau( Int_t mH_ = 120,
   cout << "Making histograms with " << nBins << " bins:" << endl;
 
   is.close();
-  is.open(Form("bins_muTau_mH%d_%s_%s.txt",mH_,selection_.c_str(),variable_.Data())); 
+  is.open(Form("bins/bins_muTau_mH%d_%s_%s.txt",mH_,selection_.c_str(),variable_.Data())); 
   
   nBinsFromFile = 0;
 
@@ -500,18 +504,22 @@ void plotMuTau( Int_t mH_ = 120,
 
   THStack* aStack = new THStack("aStack","");
 
-  TH1F* hSiml  = new TH1F( "hSiml" ,"" , nBins , bins);
-  TH1F* hSgn   = new TH1F( "hSgn " ,"" , nBins , bins);
-  TH1F* hSgn1  = new TH1F( "hSgn1" ,"" , nBins , bins);
-  TH1F* hSgn2  = new TH1F( "hSgn2" ,"" , nBins , bins);
-  TH1F* hData  = new TH1F( "hData" ,"" , nBins , bins);
-  TH1F* hEWK   = new TH1F( "hEWK"  ,"" , nBins , bins);
-  TH1F* hZtt   = new TH1F( "hZtt"  ,"" , nBins , bins);
-  TH1F* hZmm   = new TH1F( "hZmm"  ,"" , nBins , bins);
-  TH1F* hZmj   = new TH1F( "hZmj"  ,"" , nBins , bins);
-  TH1F* hTTb   = new TH1F( "hTTb"  ,"" , nBins , bins);
-  TH1F* hQCD   = new TH1F( "hQCD"  ,"" , nBins , bins);
-  TH1F* hVV    = new TH1F( "hVV"   ,"" , nBins , bins);
+  TH1F* hSiml  = new TH1F( "hSiml" ,"all"               , nBins , bins);
+  TH1F* hSgn   = new TH1F( "hSgn " ,"vbf+ggf"           , nBins , bins);
+  TH1F* hSgn1  = new TH1F( "hSgn1" ,"vbf"               , nBins , bins);
+  TH1F* hSgn2  = new TH1F( "hSgn2" ,"ggf"               , nBins , bins);
+  TH1F* hData  = new TH1F( "hData" ,"Observed"          , nBins , bins);
+  TH1F* hW     = new TH1F( "hW"    ,"W+jets"            , nBins , bins);
+  TH1F* hEWK   = new TH1F( "hEWK"  ,"EWK"               , nBins , bins);
+  TH1F* hZtt   = new TH1F( "hZtt"  ,"Ztautau"           , nBins , bins);
+  TH1F* hZmm   = new TH1F( "hZmm"  ,"Z+jets, mu to tau" , nBins , bins);
+  TH1F* hZmj   = new TH1F( "hZmj"  ,"Z+jets, jet to tau", nBins , bins);
+  TH1F* hTTb   = new TH1F( "hTTb"  ,"ttbar"             , nBins , bins);
+  TH1F* hQCD   = new TH1F( "hQCD"  ,"QCD"               , nBins , bins);
+  TH1F* hVV    = new TH1F( "hVV"   ,"Diboson"           , nBins , bins);
+
+  // pZeta OS, N pZ sideband OS, pZeta SS, N sideband SS, N QCD SS, OS/SS
+  TH1F* hParameters   = new TH1F( "hParameters", "" , 6, 0,6);
 
   // Open the files
   TFile *fData              
@@ -647,6 +655,9 @@ void plotMuTau( Int_t mH_ = 120,
        << OSWinSignalRegionDATA <<  " +/- " << sqrt(OSWinSignalRegionDATA/scaleFactorOS)/scaleFactorOS << endl;
   cout << "  ===> the MC prediction was " << OSWinSignalRegionMC << endl;
 
+  hParameters->SetBinContent(1, 1./scaleFactorOS );
+  hParameters->SetBinContent(2, OSWinSignalRegionDATA*scaleFactorOS );
+
   ///////////////////////////////////////// Doing SS last...
   hWMt->Reset();
   backgroundWJets->Draw("(pZetaCorr-1.5*pZetaVisCorr)>>hWMt","(sampleWeight*puWeight*HLTweightTau)"*sbinPZetaRelSS);
@@ -675,6 +686,10 @@ void plotMuTau( Int_t mH_ = 120,
        << SSWinSignalRegionDATA*scaleFactorSS << "/" << scaleFactorSS << " = " 
        << SSWinSignalRegionDATA <<  " +/- " << sqrt(SSWinSignalRegionDATA/scaleFactorSS)/scaleFactorSS << endl;
   cout << "  ===> the MC prediction was " << SSWinSignalRegionMC << endl;
+
+  hParameters->SetBinContent(3, 1./scaleFactorSS );
+  hParameters->SetBinContent(4, SSWinSignalRegionDATA*scaleFactorSS );
+
 
   // here I choose the order in the stack
   std::vector<string> samples;
@@ -764,9 +779,14 @@ void plotMuTau( Int_t mH_ = 120,
 	h1->Add(hHelp, -1 );
       }
       
+      hParameters->SetBinContent(5, h1->Integral());
+      hParameters->SetBinContent(6, 1.06);
+
+      //  OS/SS ratio
       h1->Scale(1.06);
       cout << "After removing the expected contribution from W+jets and rescaling by 1.06 we expect " 
 	   << h1->Integral() << " events from QCD processes" << endl;
+
     }
     else{
 
@@ -781,8 +801,10 @@ void plotMuTau( Int_t mH_ = 120,
 	h1->Scale(Lumi/1000*hltEff_);
 
       // if W+jets, scale by extrapolation
-      if((it->first).find("WJets")!=string::npos)
+      if((it->first).find("WJets")!=string::npos){
 	h1->Scale(OSWinSignalRegionDATA/OSWinSignalRegionMC);
+	hW->Add(h1,1.0);
+      }
 
       // if DY->ee, e->tau, scale by fake-rate
       if((it->first).find("DYMutoTau")!=string::npos){
@@ -900,6 +922,7 @@ void plotMuTau( Int_t mH_ = 120,
 
   c1->SaveAs("tmpMuTau.png");
 
+  // templates for fitting
   TFile* fout = new TFile(Form("muTau_mH%d_%s_%s_%s.root",mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()),"RECREATE");
   fout->cd();
   hQCD->Write();
@@ -907,11 +930,12 @@ void plotMuTau( Int_t mH_ = 120,
   hZmj->Write();
   hTTb->Write();
   hZtt->Write();
-  hEWK->Write();
+  hW->Write();
   hVV->Write();
   hSgn1->Write();
   hSgn2->Write();
   hData->Write();
+  hParameters->Write();
   fout->Write();
   fout->Close();
 
@@ -920,3 +944,33 @@ void plotMuTau( Int_t mH_ = 120,
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+void plotMuTauAll(){
+
+  plotMuTau(120,"vbf",""         ,"diTauVisMass","mass","GeV",-1);
+  plotMuTau(120,"vbf","TauUp"    ,"diTauVisMass","mass","GeV",-1);
+  plotMuTau(120,"vbf","TauDown"  ,"diTauVisMass","mass","GeV",-1);
+  //plotMuTau(120,"vbf","JetUp"    ,"diTauVisMass","mass","GeV",-1);
+  //plotMuTau(120,"vbf","JetDown"  ,"diTauVisMass","mass","GeV",-1);
+
+  plotMuTau(120,"novbf",""       ,"diTauVisMass","mass","GeV",-1);
+  plotMuTau(120,"novbf","TauUp"  ,"diTauVisMass","mass","GeV",-1);
+  plotMuTau(120,"novbf","TauDown","diTauVisMass","mass","GeV",-1);
+  //plotMuTau(120,"novbf","JetUp"  ,"diTauVisMass","mass","GeV",-1);
+  //plotMuTau(120,"novbf","JetDown","diTauVisMass","mass","GeV",-1);
+
+  plotMuTau(130,"vbf",""         ,"diTauVisMass","mass","GeV",-1);
+  plotMuTau(130,"vbf","TauUp"    ,"diTauVisMass","mass","GeV",-1);
+  plotMuTau(130,"vbf","TauDown"  ,"diTauVisMass","mass","GeV",-1);
+  //plotMuTau(120,"vbf","JetUp"    ,"diTauVisMass","mass","GeV",-1);
+  //plotMuTau(120,"vbf","JetDown"  ,"diTauVisMass","mass","GeV",-1);
+
+  plotMuTau(130,"novbf",""       ,"diTauVisMass","mass","GeV",-1);
+  plotMuTau(130,"novbf","TauUp"  ,"diTauVisMass","mass","GeV",-1);
+  plotMuTau(130,"novbf","TauDown","diTauVisMass","mass","GeV",-1);
+  //plotMuTau(120,"novbf","JetUp"  ,"diTauVisMass","mass","GeV",-1);
+  //plotMuTau(120,"novbf","JetDown","diTauVisMass","mass","GeV",-1);
+
+
+}
