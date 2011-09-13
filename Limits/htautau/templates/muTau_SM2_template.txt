@@ -1,0 +1,37 @@
+imax 1
+jmax *
+kmax *
+shapes *  *    muTauSM.root  $CHANNEL/$PROCESS $CHANNEL/$PROCESS_$SYSTEMATIC 
+
+
+observation XXX
+
+
+bin            muTau_SM2            muTau_SM2            muTau_SM2            muTau_SM2            muTau_SM2            muTau_SM2            muTau_SM2            muTau_SM2            muTau_SM2
+process        SMXXX        VBFYYY        ZTT           QCD           W             ZJ            ZL            TT            VV
+process        -1            0             1             2             3             4             5             6             7
+rate          
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+
+lumi     lnN   1.045          1.045          -             -             -             -             -             -             -          luminosity
+CMS_scale_t    shape    1.00     1.00       1.00         -           1.00          1.00         1.00       1.00         1.00      shape(Ignore small ones that cause instabilities)
+CMS_eff_m     lnN   1.020          1.020          1.020          -             -             1.020          1.020          1.020          1.020       muon ID /HLT
+CMS_eff_t     lnN   1.060          1.060          1.060          -             -             -             -             1.060          1.060        Tau IDf
+CMS_htt_zttNorm lnN   -             -             1.033          -             -             1.033          1.033          -              -         ZTT Scale  
+CMS_htt_ztt_extrap_vbf lnN   -             -             1.301          -             -            -              -          -              -         ZTT Extrapolation  
+CMS_htt_ttbarNorm          lnN      -             -             -             -             -             -             -              1.236           -      TTbar background  
+CMS_htt_DiBosonNorm        lnN      -             -             -             -             -             -             -              -              2.000   DiBoson background 
+CMS_htt_muTau_SM2_QCDNorm             gmN XXX      -             -             -             YYY          -             -             -              -              -      QCD Background
+CMS_htt_muTau_QCDSyst             lnN        -             -             -             1.019          -             -             -              -              -      QCD Background
+CMS_htt_muTau_SM2_W               lnN      -             -             -             -             1.308          -             -              -              -      W Backghround 
+CMS_htt_muTau_SM2_ZJetFakeTau     lnN      -             -             -             -             -             1.323          -              -              -      Z(jet->tau) background
+CMS_htt_muTau_SM2_ZLeptonFakeTau  lnN      -             -             -             -             -             -             1.396           -              -      Z(l->tau)   background
+CMS_scale_j          lnN      1.04       1.04          1.04            -              -        1.04         1.04          1.04        1.04   PDF VBF
+pdf_qqbar            lnN      -          1.03          -            -              -        -         -          -            -    PDF VBF
+pdf_gg               lnN      1.03       -             -            -              -        -         -          -            -    PDF GGH
+QCDscale_ggH2in      lnN      1.12       -         -            -              -        -         -          -            -    QCD scale 
+QCDscale_qqH         lnN      -          1.04         -            -              -        -         -          -            -    QCD scale VBF
+UEPS                 lnN      1.04       1.04          -            -              -        -         -          -            -    UEPS VBF
