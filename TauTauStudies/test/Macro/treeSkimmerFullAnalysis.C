@@ -96,8 +96,33 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
 
   typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LV;
 
-  TFile *fPU = new TFile("pileUp_EPS2011.root","READ");
-  TH1F* hPU  = (TH1F*)fPU->Get("hWOneBX");
+  // pu weights
+  TFile fgen("pileUp_EPS2011.root");
+  TFile fdat("/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions11/7TeV/PileUp/Pileup_2011_to_173692_LPLumiScale_68mb.root");
+  
+  TH1F *hgen = (TH1F*)fgen.Get("hMCOneBX");
+  TH1F *hdat = (TH1F*)fdat.Get("pileup");
+
+  TH1F *hgen2 = (TH1F*)hdat->Clone("hgen2");
+  for(int k=1; k <= hgen2->GetNbinsX(); k++){
+    if(k==hgen2->GetNbinsX()){
+      hgen2->SetBinContent(k, 0);
+      continue;
+    }
+    hgen2->SetBinContent(k, hgen->GetBinContent(k));
+  }
+  
+  TH1F *hRatio = (TH1F*)hdat->Clone("hRatio");
+  hRatio->Reset();
+
+  hdat->Scale(1./hdat->Integral());
+  hgen2->Scale(1./hgen2->Integral());
+
+  hRatio->Divide(hdat,hgen2,1,1) ;
+
+  // rho weights
+  TFile frho("vertexMultiplicityVsRhoPFNeutralReweight.root");
+  TH2F* hRho = (TH2F*)frho.Get("histoReweight_fitted");
 
   TRandom3* tRandom = new TRandom3();
 
@@ -641,8 +666,8 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
     numPV_              = numPV;
     sampleWeight        = scaleFactor; 
     puWeight            = (std::string(sample.Data())).find("Run2011")!=string::npos ? 
-      1.0 : hPU->GetBinContent(nPUVertices+1) ;
-    rhoNeutralWeight    = 1.0; // to be implemented;
+      1.0 : hRatio->GetBinContent( hRatio->FindBin(nPUVertices) ) ;
+    rhoNeutralWeight    =  hRho->GetBinContent( hRho->FindBin(numPV,rhoNeutralFastJet) ); // to be implemented;
     numOfLooseIsoDiTaus = numOfLooseIsoDiTaus_;
 
     if((std::string(sample.Data())).find("Run2011")!=string::npos){
@@ -723,7 +748,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
  delete tauXTriggers; delete triggerBits;
  delete METP4; delete jetsBtagHE; delete jetsBtagHP; delete jetsChNfraction; delete genVP4;
  delete ratioEffElec; delete ratioEffTau; delete ratioEffTau10; delete ratioEffTau15; delete recoilCorr; 
- delete hPU; delete tRandom;
+ delete tRandom;
 
  return;
 }
@@ -753,8 +778,31 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 
   typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LV;
 
-  TFile *fPU = new TFile("pileUp_EPS2011.root","READ");
-  TH1F* hPU  = (TH1F*)fPU->Get("hWOneBX");
+  // pu weights
+  TFile fgen("pileUp_EPS2011.root");
+  TFile fdat("/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions11/7TeV/PileUp/Pileup_2011_to_173692_LPLumiScale_68mb.root");
+
+  TH1F *hgen = (TH1F*)fgen.Get("hMCOneBX");
+  TH1F *hdat = (TH1F*)fdat.Get("pileup");
+
+  TH1F *hgen2 = (TH1F*)hdat->Clone("hgen2");
+  for(int k=1; k <= hgen2->GetNbinsX(); k++){
+    if(k==hgen2->GetNbinsX()){
+      hgen2->SetBinContent(k, 0);
+      continue;
+    }
+    hgen2->SetBinContent(k, hgen->GetBinContent(k));
+  }
+
+  TH1F *hRatio = (TH1F*)hdat->Clone("hRatio");
+  hRatio->Reset();
+
+  hdat->Scale(1./hdat->Integral());
+  hgen2->Scale(1./hgen2->Integral());
+  hRatio->Divide(hdat,hgen2,1,1) ;
+
+  TFile frho("vertexMultiplicityVsRhoPFNeutralReweight.root");
+  TH2F* hRho = (TH2F*)frho.Get("histoReweight_fitted");
 
   TRandom3* tRandom = new TRandom3();
 
@@ -1291,8 +1339,8 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     numPV_              = numPV;
     sampleWeight        = scaleFactor; 
     puWeight            = (std::string(sample.Data())).find("Run2011")!=string::npos ? 
-      1.0 : hPU->GetBinContent(nPUVertices+1) ;
-    rhoNeutralWeight    = 1.0; // to be implemented;
+      1.0 : hRatio->GetBinContent( hRatio->FindBin(nPUVertices) ) ;
+    rhoNeutralWeight    = hRho->GetBinContent( hRho->FindBin(numPV,rhoNeutralFastJet) ); // to be implemented;
     numOfLooseIsoDiTaus = numOfLooseIsoDiTaus_;
 
     if((std::string(sample.Data())).find("Run2011")!=string::npos){
@@ -1327,7 +1375,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
      
     } else{
 
-      HLTx =  float((*triggerBits)[1]); //HLT_IsoMu12_LooseIsoPFTau10_v2
+      //HLTx =  float((*triggerBits)[1]); //HLT_IsoMu12_LooseIsoPFTau10_v2
       HLTx =  float((*triggerBits)[3]); //HLT_IsoMu12_v1
       bool isTriggMatched = (*tauXTriggers)[0] && (*tauXTriggers)[2] ; //hltSingleMuIsoL3IsoFiltered12 && hltOverlapFilterIsoMu12IsoPFTau10
       isTriggMatched = (*tauXTriggers)[0]; //hltSingleMuIsoL3IsoFiltered12
@@ -1372,7 +1420,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   delete tauXTriggers; delete triggerBits;
   delete METP4; delete jetsBtagHE; delete jetsBtagHP; delete jetsChNfraction; delete genVP4;
   delete ratioEffTau; delete ratioEffTau10; delete ratioEffTau15; delete recoilCorr; 
-  delete hPU; delete tRandom; delete genDiTauLegsP4;
+  delete tRandom; delete genDiTauLegsP4;
   
   return;
 
