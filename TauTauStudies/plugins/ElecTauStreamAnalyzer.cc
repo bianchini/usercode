@@ -75,6 +75,9 @@ void ElecTauStreamAnalyzer::beginJob(){
   jetsChNfraction_  = new std::vector< float >();
   jetMoments_       = new std::vector< float >();
 
+  gammadR_       = new std::vector< float >();
+  gammaPt_       = new std::vector< float >();
+
   tauXTriggers_= new std::vector< int >();
   triggerBits_ = new std::vector< int >();
 
@@ -139,6 +142,9 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("jetsBtagHP","std::vector<double> ",&jetsBtagHP_);
 
   tree_->Branch("jetMoments","std::vector<float> ",&jetMoments_);
+
+  tree_->Branch("gammadR","std::vector<float> ",&gammadR_);
+  tree_->Branch("gammaPt","std::vector<float> ",&gammaPt_);
 
   tree_->Branch("jetsChEfraction","std::vector<float>",&jetsChEfraction_);
   tree_->Branch("jetsChNfraction","std::vector<float>",&jetsChNfraction_);
@@ -241,6 +247,7 @@ ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_;
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;delete extraElectrons_;
   delete tRandom_ ; /*delete fpuweight_;*/ delete jetsChNfraction_; delete jetsChEfraction_; delete jetMoments_;
+  delete gammadR_ ; delete gammaPt_;
 }
 
 void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -261,6 +268,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   jetsChNfraction_->clear();
   jetsChEfraction_->clear();
   jetMoments_->clear();
+
+  gammadR_->clear();
+  gammaPt_->clear();
 
   genJetsIDP4_->clear();
   genDiTauLegsP4_->clear();
@@ -332,12 +342,13 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     
   genDecay_ = -99;
   edm::Handle<reco::GenParticleCollection> genHandle;
+  const reco::GenParticleCollection* genParticles = 0;
   if(isMC_){
     iEvent.getByLabel(edm::InputTag("genParticles"),genHandle);
     if( !genHandle.isValid() )  
       edm::LogError("DataNotAvailable")
 	<< "No gen particles label available \n";
-    const reco::GenParticleCollection* genParticles = genHandle.product();
+    genParticles = genHandle.product();
     for(unsigned int k = 0; k < genParticles->size(); k ++){
       if( !( (*genParticles)[k].pdgId() == 23 || abs((*genParticles)[k].pdgId()) == 24 || (*genParticles)[k].pdgId() == 25) || (*genParticles)[k].status()!=3)
 	continue;
@@ -784,7 +795,21 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       }
     }
 
-    if( leg2->genJet() !=0 ) genDiTauLegsP4_->push_back(leg2->genJet()->p4());
+    bool leg2IsFromElec = false;
+    math::XYZTLorentzVectorD genElecP4(0,0,0,0);
+    for(unsigned int k = 0; k < genParticles->size(); k ++){
+      if( abs((*genParticles)[k].pdgId()) != 11  || (*genParticles)[k].status()!=3 )
+        continue;
+      if(Geom::deltaR( (*genParticles)[k].p4(),leg2->p4())<0.15){
+	leg2IsFromElec = true;
+	genElecP4 = (*genParticles)[k].p4();
+      }
+    }
+
+    if( leg2->genJet() !=0 ) 
+      genDiTauLegsP4_->push_back(leg2->genJet()->p4());
+    else if(leg2IsFromElec)
+      genDiTauLegsP4_->push_back( genElecP4 );      
     else{
       genDiTauLegsP4_->push_back( math::XYZTLorentzVectorD(0,0,0,0) );
       if(verbose_) cout << "WARNING: no genJet matched to the leg2 with eta,phi " << leg2->eta() << ", " << leg2->phi() << endl;
@@ -811,6 +836,15 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   else if((leg2->signalPFChargedHadrCands()).size()==3) decayMode_ = 2; 
   else  decayMode_ = -99;
 
+  for(unsigned int k = 0 ; k < (leg2->signalPFGammaCands()).size() ; k++){
+    reco::PFCandidateRef gamma = (leg2->signalPFGammaCands()).at(k);
+    if( (leg2->leadPFChargedHadrCand()).isNonnull() )
+      gammadR_->push_back( Geom::deltaR( gamma->p4(), leg2->leadPFChargedHadrCand()->p4() ) );
+    else
+      gammadR_->push_back( Geom::deltaR( gamma->p4(), leg2->p4() ) );
+    gammaPt_->push_back(  gamma->pt() );
+  }
+  
   visibleTauMass_ = leg2->mass();
   if((leg2->leadPFChargedHadrCand()->trackRef()).isNonnull()){
     leadPFChargedHadrCandTrackPt_ = leg2->leadPFChargedHadrCand()->trackRef()->pt();

@@ -72,6 +72,9 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< int >* tauXTriggers_;
   std::vector< int >* triggerBits_;
 
+  std::vector< float >* gammadR_;
+  std::vector< float >* gammaPt_;
+
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDP4_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDUpP4_;

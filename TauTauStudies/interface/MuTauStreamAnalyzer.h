@@ -74,6 +74,9 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< float >* jetsChEfraction_;
   std::vector< float >* jetMoments_;
 
+  std::vector< float >* gammadR_;
+  std::vector< float >* gammaPt_;
+
   std::vector< int >* tauXTriggers_;
   std::vector< int >* triggerBits_;
 
