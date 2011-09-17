@@ -131,7 +131,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
   std::vector<int> readEvents;
 
   // samples & x-sections
-  samples.push_back("Run2011-Elec_All");            crossSec.push_back( 0 );                            
+  samples.push_back("Run2011-Elec-All_run");            crossSec.push_back( 0 );                            
 
   samples.push_back("DYJets-50-madgraph-PUS4_run"); crossSec.push_back( 3048  * 0.0206749225649 );
   samples.push_back("TTJets-madgraph-PUS4_run");    crossSec.push_back( 157.5 * 0.121349924468);  
@@ -202,7 +202,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
  
   // object-related weights and triggers
   float HLTx,HLTmatch,HLTweightElec,HLTweightTau;
-  int isTauLegMatched_,elecFlag_,genDecay_;
+  int isTauLegMatched_,elecFlag_,genDecay_, leptFakeTau;
 
   // event id
   ULong64_t event_,run_,lumi_;
@@ -302,12 +302,13 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
   outTreePtOrd->Branch("isTauLegMatched", &isTauLegMatched_,"isTauLegMatched/I");
   outTreePtOrd->Branch("elecFlag",        &elecFlag_,"elecFlag/I"); 
   outTreePtOrd->Branch("genDecay",        &genDecay_,"genDecay/I");
+  outTreePtOrd->Branch("leptFakeTau",       &leptFakeTau,"leptFakeTau/I");
 
   outTreePtOrd->Branch("event",&event_,"event/l");
   outTreePtOrd->Branch("run",  &run_,  "run/l");
   outTreePtOrd->Branch("lumi", &lumi_, "lumi/l");
  
-  string currentInName = index >= 0 ?  "/data_CMS/cms/lbianchini/ElecTauStreamSummer11_iter4//treeElecTauStream_"+samples[index]+".root" : "../treeElecTauStream.root";
+  string currentInName = index >= 0 ?  "/data_CMS/cms/lbianchini/ElecTauStreamSummer11_fAna//treeElecTauStream_"+samples[index]+".root" : "../treeElecTauStream.root";
 
   TString inName(currentInName.c_str());
   TFile* file   = new TFile(inName,"READ");
@@ -454,6 +455,9 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
   std::vector< LV >* diTauCAP4    = new std::vector< LV >();
   currentTree->SetBranchAddress("diTauICAP4",    &diTauCAP4);
 
+  std::vector< LV >* genDiTauLegsP4 = new std::vector< LV >();
+  currentTree->SetBranchAddress("genDiTauLegsP4",    &genDiTauLegsP4);
+
   std::vector< LV >* genVP4         = new std::vector< LV >();
   currentTree->SetBranchAddress("genVP4",          &genVP4);
 
@@ -525,7 +529,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
   for (int n = 0; n < nEntries ; n++) {
 
     currentTree->GetEntry(n);
-    if(n%1000==0) cout << n << endl;
+    if(n%2000==0) cout << n << endl;
 
     // initialize variables filled only in the two jet case
     pt1=-99;pt2=-99;eta1=-99,eta2=-99;Deta=-99;Dphi=-99;Mjj=-99;phi1=-99;phi2=-99;
@@ -599,7 +603,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
     diTauVisMass  = (*diTauVisP4)[0].M();
     diTauVisPt    = (*diTauVisP4)[0].Pt();
     diTauVisEta   = (*diTauVisP4)[0].Eta();
-    diTauVisPhi   = (*diTauVisP4)[0].Eta();
+    diTauVisPhi   = (*diTauVisP4)[0].Phi();
 
     diTauMinMass  = mTauTauMin;
   
@@ -668,7 +672,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
     puWeight            = (std::string(sample.Data())).find("Run2011")!=string::npos ? 
       1.0 : hRatio->GetBinContent( hRatio->FindBin(nPUVertices) ) ;
     rhoNeutralWeight    =  hRho->GetBinContent( hRho->FindBin(numPV,rhoNeutralFastJet) ); // to be implemented;
-    numOfLooseIsoDiTaus = numOfLooseIsoDiTaus_;
+    numOfLooseIsoDiTaus_= numOfLooseIsoDiTaus;
 
     if((std::string(sample.Data())).find("Run2011")!=string::npos){
       
@@ -679,7 +683,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
       else if(run>=163269 && run<=163869)
 	HLTx = 	float((*triggerBits)[2]); //HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v4
       else if(run>=165088 && run<=165633)
-	HLTx = 	float((*triggerBits)[3]); //HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v6
+	HLTx = 	1.0 ; //float((*triggerBits)[3]); //HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v6 <------ check!!!!
       else if(run>=165970 && run<=166967)
 	HLTx = 	float((*triggerBits)[4]); //HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v8
       else if(run>=167039 && run<=167913)
@@ -689,11 +693,11 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
       else if(run>=173243)
 	HLTx = 	float((*triggerBits)[7]); //HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1
 
-      if(run>=160404 && run<=165633){
-	bool isTriggMatched = ((*tauXTriggers)[0] || (*tauXTriggers)[1]) && (*tauXTriggers)[4] ; //hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle15IsoPFTau15
+      if(run>=160404 && run<=163869){
+	bool isTriggMatched = ((*tauXTriggers)[0] || (*tauXTriggers)[1])  && (*tauXTriggers)[4] ; //hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle15IsoPFTau15
 	HLTmatch = isTriggMatched ? 1.0 : 0.0 ;
       }
-      else if(run>=165970 && run<=167913){
+      else if(run>=165088 && run<=167913){
 	bool isTriggMatched = ((*tauXTriggers)[0] || (*tauXTriggers)[1]) && (*tauXTriggers)[5] ; //hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle15IsoPFTau20
 	HLTmatch = isTriggMatched ? 1.0 : 0.0;
       }
@@ -706,29 +710,33 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
 	HLTmatch = isTriggMatched ? 1.0 : 0.0;
       }
 
+      HLTweightTau = 1.0;
+
     } else{
       // MC: 10% => rough estimate of how long IsoEle15PFTau15 was run
       if(tRandom->Uniform(0,1)<0.1){ 
-	HLTx =  float((*triggerBits)[0]);
-	bool isTriggMatched = (*tauXTriggers)[0] && (*tauXTriggers)[2] ; //hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle15IsoPFTau15
+	HLTx =  1.0 ; //float((*triggerBits)[0]);
+	bool isTriggMatched = (*tauXTriggers)[0] /*&& (*tauXTriggers)[2]*/ ; //hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle15IsoPFTau15
 	HLTmatch = isTriggMatched ? 1.0 : 0.0;
-	HLTweightTau = (std::string(sample.Data())).find("Run2011")==string::npos ? 
-	  ratioEffTau15->ratio( (*diTauLegsP4)[1].Pt() ) : 1.0;
+	HLTweightTau = ratioEffTau15->dataEfficiency( (*diTauLegsP4)[1].Pt() ) ;
       }
       else{
-	HLTx =  float((*triggerBits)[1]);
-	bool isTriggMatched = (*tauXTriggers)[0] && (*tauXTriggers)[3] ; //hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle15IsoPFTau20
+	HLTx = 1.0 ; //float((*triggerBits)[1]);
+	bool isTriggMatched = (*tauXTriggers)[0] /*&& (*tauXTriggers)[3]*/ ; //hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle15IsoPFTau20
 	HLTmatch = isTriggMatched ? 1.0 : 0.0;
-	HLTweightTau = (std::string(sample.Data())).find("Run2011")==string::npos ? 
-	  ratioEffTau->ratio( (*diTauLegsP4)[1].Pt() ) : 1.0;
+	HLTweightTau =  ratioEffTau->dataEfficiency( (*diTauLegsP4)[1].Pt() ) ;
       }
     }
     
     // attention to runs triggered by IsoEle18 !!!
     HLTweightElec = (std::string(sample.Data())).find("Run2011")==string::npos ? 
-      ratioEffElec->ratio((*diTauLegsP4)[0].Pt(), bool(fabs((*diTauLegsP4)[0].Eta())<1.5) ) : 1;
+      ratioEffElec->ratio((*diTauLegsP4)[0].Pt(), bool(fabs((*diTauLegsP4)[0].Eta())<1.5) ) : 1.0;
 
     isTauLegMatched_ = isTauLegMatched;
+    if((std::string(sample.Data())).find("Run2011")==string::npos)
+      leptFakeTau      = (isTauLegMatched==0 && (*genDiTauLegsP4)[1].E()>0) ? 1 : 0;
+    else 
+      leptFakeTau = -99;
     elecFlag_        = elecFlag;
     genDecay_        = genDecay ;
     event_           = event;
@@ -744,7 +752,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
  if(SAVE) outFile->Write();
  outFile->Close();
 
- delete jets; delete jets_v2; delete diTauLegsP4; delete diTauVisP4; delete diTauSVfitP4; delete diTauCAP4;
+ delete jets; delete jets_v2; delete diTauLegsP4; delete diTauVisP4; delete diTauSVfitP4; delete diTauCAP4; delete genDiTauLegsP4;
  delete tauXTriggers; delete triggerBits;
  delete METP4; delete jetsBtagHE; delete jetsBtagHP; delete jetsChNfraction; delete genVP4;
  delete ratioEffElec; delete ratioEffTau; delete ratioEffTau10; delete ratioEffTau15; delete recoilCorr; 
@@ -880,7 +888,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
  
   // object-related weights and triggers
   float HLTx,HLTmatch,HLTweightTau;
-  int isTauLegMatched_,muFlag_,genDecay_,isFakeTau;
+  int isTauLegMatched_,muFlag_,genDecay_,leptFakeTau;
 
   // event id
   ULong64_t event_,run_,lumi_;
@@ -979,7 +987,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   outTreePtOrd->Branch("isTauLegMatched", &isTauLegMatched_,"isTauLegMatched/I");
   outTreePtOrd->Branch("muFlag",          &muFlag_,"muFlag/I"); 
   outTreePtOrd->Branch("genDecay",        &genDecay_,"genDecay/I");
-  outTreePtOrd->Branch("isFakeTau",       &isFakeTau,"isFakeTau/I");
+  outTreePtOrd->Branch("leptFakeTau",       &leptFakeTau,"leptFakeTau/I");
 
   outTreePtOrd->Branch("event",&event_,"event/l");
   outTreePtOrd->Branch("run",  &run_,  "run/l");
@@ -1272,7 +1280,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     diTauVisMass  = (*diTauVisP4)[0].M();
     diTauVisPt    = (*diTauVisP4)[0].Pt();
     diTauVisEta   = (*diTauVisP4)[0].Eta();
-    diTauVisPhi   = (*diTauVisP4)[0].Eta();
+    diTauVisPhi   = (*diTauVisP4)[0].Phi();
 
     diTauMinMass  = mTauTauMin;
     
@@ -1341,7 +1349,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     puWeight            = (std::string(sample.Data())).find("Run2011")!=string::npos ? 
       1.0 : hRatio->GetBinContent( hRatio->FindBin(nPUVertices) ) ;
     rhoNeutralWeight    = hRho->GetBinContent( hRho->FindBin(numPV,rhoNeutralFastJet) ); // to be implemented;
-    numOfLooseIsoDiTaus = numOfLooseIsoDiTaus_;
+    numOfLooseIsoDiTaus_= numOfLooseIsoDiTaus;
 
     if((std::string(sample.Data())).find("Run2011")!=string::npos){
       
@@ -1398,9 +1406,9 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 
     isTauLegMatched_ = isTauLegMatched;
     if((std::string(sample.Data())).find("Run2011")==string::npos)
-      isFakeTau      = (*genDiTauLegsP4)[1].E()<=0 ? 1 : 0;
+      leptFakeTau      = (isTauLegMatched==0 && (*genDiTauLegsP4)[1].E()>0) ? 1 : 0;
     else 
-      isFakeTau = 0;
+      leptFakeTau = -99;
     muFlag_          = muFlag;
     genDecay_        = genDecay ;
     event_           = event;
@@ -1416,11 +1424,11 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   if(SAVE) outFile->Write();
   outFile->Close();
 
-  delete jets; delete jets_v2; delete diTauLegsP4; delete diTauVisP4; delete diTauSVfitP4; delete diTauCAP4;
+  delete jets; delete jets_v2; delete diTauLegsP4; delete diTauVisP4; delete diTauSVfitP4; delete diTauCAP4; delete genDiTauLegsP4;
   delete tauXTriggers; delete triggerBits;
   delete METP4; delete jetsBtagHE; delete jetsBtagHP; delete jetsChNfraction; delete genVP4;
   delete ratioEffTau; delete ratioEffTau10; delete ratioEffTau15; delete recoilCorr; 
-  delete tRandom; delete genDiTauLegsP4;
+  delete tRandom; 
   
   return;
 
@@ -1430,16 +1438,19 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 
 void doAllSamplesElec(){
  
-  //for( unsigned int k = 0; k < 18 ; k++)  makeTrees_ElecTauStream(k, doExlusive);
-
-  makeTrees_ElecTauStream("",-1);
-  makeTrees_ElecTauStream("JetUp",  -1);
-  makeTrees_ElecTauStream("JetDown",-1);
-  makeTrees_ElecTauStream("TauUp",  -1);
-  makeTrees_ElecTauStream("TauDown",-1);
+ for( unsigned int k = 0; k < 25 ; k++) {
+    makeTrees_ElecTauStream("",        k);
+    if( k==0 ) continue;
+    makeTrees_ElecTauStream("JetUp",   k);
+    makeTrees_ElecTauStream("JetDown", k);
+    makeTrees_ElecTauStream("TauUp",   k);
+    makeTrees_ElecTauStream("TauDown", k);
+    makeTrees_ElecTauStream("ElecUp",   k);
+    makeTrees_ElecTauStream("ElecDown", k);
+  }
 
   return;
-
+  
 }
 
 
