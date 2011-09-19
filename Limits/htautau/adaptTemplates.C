@@ -4,19 +4,23 @@
 
 {
 
+  TString channel = "mu";
   TString variable = "diTauVisMass";
+
   std::vector<TString> analysis;
   analysis.push_back(TString(""));
   analysis.push_back(TString("_CMS_scale_tUp"));
   analysis.push_back(TString("_CMS_scale_tDown"));
   analysis.push_back(TString("_CMS_scale_jUp"));
   analysis.push_back(TString("_CMS_scale_jDown"));
+  //analysis.push_back(TString("_CMS_scale_eUp"));
+  //analysis.push_back(TString("_CMS_scale_eDown"));
 
-  TFile fin("datacards/muTauSM_"+variable+".root","UPDATE");
+  TFile fin("datacards/"+channel+"TauSM_"+variable+".root","UPDATE");
 
   for(int k = 0 ; k < analysis.size() ; k++){
 
-    fin.cd("muTau_SM0");
+    fin.cd(channel+"Tau_SM0");
     TH1F* hQCD_new = (TH1F*)gDirectory->Get("QCD"+analysis[k]);
     TH1F* hW_new   = (TH1F*)gDirectory->Get("W"+analysis[k]);
     TH1F* hVV_new  = (TH1F*)gDirectory->Get("VV"+analysis[k]);
@@ -24,7 +28,7 @@
     TH1F* hZJ_new  = (TH1F*)gDirectory->Get("ZJ"+analysis[k]);
     
     
-    fin.cd("muTau_SM2");
+    fin.cd(channel+"Tau_SM2");
     TH1F* hQCD_old = (TH1F*)gDirectory->Get("QCD"+analysis[k]);
     TH1F* hW_old   = (TH1F*)gDirectory->Get("W"+analysis[k]);
     TH1F* hVV_old  = (TH1F*)gDirectory->Get("VV"+analysis[k]);

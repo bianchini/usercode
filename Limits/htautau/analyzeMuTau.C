@@ -411,15 +411,25 @@ void plotMuTau( Int_t mH_ = 120,
 	hW->Add(h1,1.0);
       }
 
-      // if DY->ee, e->tau, scale by fake-rate
+      // if DY->tautau, and vbf scale by ratio data/MC
+      if((it->first).find("DYToTauTau")!=string::npos && selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
+	cout << "DY->tautau will be rescaled by 1.03 according to the Z->mumu+vbf/Z->mumu ratio" << endl;
+	h1->Scale(1.03);
+      }
+
+      // if DY->mumu, mu->tau, scale by fake-rate
       if((it->first).find("DYMutoTau")!=string::npos){
-	h1->Scale(1.0);
+	float sF = 1.0;
+	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) sF *= 1.03;
+	h1->Scale(sF);
 	hZmm->Add(h1,1.0);
       }
 
-      // if DY->ee, jet->tau, scale by fake-rate
+      // if DY->mumu, jet->tau, scale by fake-rate
       if((it->first).find("DYJtoTau")!=string::npos){
-	h1->Scale(1.0);
+	float sF = 0.80;
+	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) sF *= 1.03;
+	h1->Scale(sF);
 	hZmj->Add(h1,2.0); // x2
       }
 
