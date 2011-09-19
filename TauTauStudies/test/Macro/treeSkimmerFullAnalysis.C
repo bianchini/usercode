@@ -21,6 +21,7 @@
 #include "ratioEfficiencyTau.C"
 #include "ratioEfficiencyTau10.C"
 #include "ratioEfficiencyTau15.C"
+#include "recoilCorrectionAlgorithm.C"
 #include "RecoilCorrector.C"
 #include "TLorentzVector.h"
 #include "TRandom3.h"
@@ -36,6 +37,7 @@
 #define SAVE   true
 #define MINPt1 20.0 //20
 #define MINPt2 20.0 //15
+#define USERECOILALGO true
 
 using namespace ROOT::Math;
 using namespace std;
@@ -93,6 +95,9 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
 
   gSystem->Load("RecoilCorrector_C.so");
   RecoilCorrector* recoilCorr = new RecoilCorrector();
+
+  gSystem->Load("recoilCorrectionAlgorithm_C.so");
+  recoilCorrectionAlgorithm* recoilCorr2 = new recoilCorrectionAlgorithm();
 
   typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LV;
 
@@ -207,6 +212,9 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
   // event id
   ULong64_t event_,run_,lumi_;
 
+  // random number
+  float ran;
+
   outTreePtOrd->Branch("pt1",  &pt1,"pt1/F");
   outTreePtOrd->Branch("pt2",  &pt2,"pt2/F");
   outTreePtOrd->Branch("eta1", &eta1,"eta1/F");
@@ -307,6 +315,8 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
   outTreePtOrd->Branch("event",&event_,"event/l");
   outTreePtOrd->Branch("run",  &run_,  "run/l");
   outTreePtOrd->Branch("lumi", &lumi_, "lumi/l");
+
+  outTreePtOrd->Branch("ran", &ran, "ran/F");
  
   string currentInName = index >= 0 ?  "/data_CMS/cms/lbianchini/ElecTauStreamSummer11_fAna//treeElecTauStream_"+samples[index]+".root" : "../treeElecTauStream.root";
 
@@ -396,7 +406,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
 
   // MET
   currentTree->SetBranchStatus("METP4"                 ,1);
-  currentTree->SetBranchStatus("genMETP4"              ,0);
+  currentTree->SetBranchStatus("genMETP4"              ,1);
   currentTree->SetBranchStatus("sumEt"                 ,0);
   currentTree->SetBranchStatus("mTauTauMin"            ,1);
   currentTree->SetBranchStatus("MtLeg1"                ,0);
@@ -463,6 +473,9 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
 
   std::vector< LV >* METP4          = new std::vector< LV >();
   currentTree->SetBranchAddress("METP4",           &METP4);
+
+  std::vector< LV >* genMETP4       = new std::vector< LV >();
+  currentTree->SetBranchAddress("genMETP4",        &genMETP4);
 
   std::vector< int >* tauXTriggers  = new std::vector< int >();
   currentTree->SetBranchAddress("tauXTriggers",    &tauXTriggers);
@@ -623,8 +636,8 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
     TLorentzVector corrMET_tmp;
     LV corrMET(1,0,0,1);
     double corrPt = (*METP4)[0].Et(); double corrPhi = (*METP4)[0].Phi();
+    unsigned int indexHelp = index >=0 ? index : 0;
     if(genVP4->size()){
-      unsigned int indexHelp = index >=0 ? index : 0;
       if(samples[indexHelp].find("WJets")  !=string::npos)      
 	recoilCorr->Correct(corrPt,corrPhi,(*genVP4)[0].Pt() ,(*genVP4)[0].Phi() , ((*diTauLegsP4)[0]).Pt(),((*diTauLegsP4)[0]).Phi()  );
       else if(samples[indexHelp].find("DYJets")!=string::npos)  
@@ -635,6 +648,8 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
     corrMET.SetPy(corrMET_tmp.Py());
     corrMET.SetPz(corrMET_tmp.Pz());
     corrMET.SetE(corrMET_tmp.E());
+
+    if(USERECOILALGO) corrMET = recoilCorr2->buildZllCorrectedMEt( (*METP4)[0] , (*genMETP4)[0] , (*genVP4)[0]);
 
     float scalarSumPt = (*diTauLegsP4)[0].Pt() + (*METP4)[0].Pt();
     float vectorSumPt = ((*diTauLegsP4)[0] + (*METP4)[0]).Pt() ;
@@ -675,6 +690,8 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
     numOfLooseIsoDiTaus_= numOfLooseIsoDiTaus;
 
     if((std::string(sample.Data())).find("Run2011")!=string::npos){
+
+      ran=1.0;
       
       if(run>=160404 && run<=161176)
 	HLTx = 	float((*triggerBits)[0]); //HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v1
@@ -713,19 +730,40 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
       HLTweightTau = 1.0;
 
     } else{
-      // MC: 10% => rough estimate of how long IsoEle15PFTau15 was run
-      if(tRandom->Uniform(0,1)<0.1){ 
+
+      float LumiData = 1940.;
+      ran = (float)tRandom->Uniform(0,1) ;
+      // LoosePFTau15
+      if( ran<= 167.8/LumiData ){ 
 	HLTx =  1.0 ; //float((*triggerBits)[0]);
 	bool isTriggMatched = (*tauXTriggers)[0] /*&& (*tauXTriggers)[2]*/ ; //hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle15IsoPFTau15
 	HLTmatch = isTriggMatched ? 1.0 : 0.0;
 	HLTweightTau = ratioEffTau15->dataEfficiency( (*diTauLegsP4)[1].Pt() ) ;
       }
-      else{
+      // LoosePFTau20
+      else if( ran>167.8/LumiData && ran<=(167.8+1098.3)/LumiData ){
 	HLTx = 1.0 ; //float((*triggerBits)[1]);
 	bool isTriggMatched = (*tauXTriggers)[0] /*&& (*tauXTriggers)[3]*/ ; //hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle15IsoPFTau20
 	HLTmatch = isTriggMatched ? 1.0 : 0.0;
 	HLTweightTau =  ratioEffTau->dataEfficiency( (*diTauLegsP4)[1].Pt() ) ;
       }
+      // TightPFTau20
+      else if( ran>(167.8+1098.3)/LumiData && ran<=(167.8+1098.3+486.1)/LumiData ){
+	HLTx = 1.0 ; //float((*triggerBits)[1]);
+	bool isTriggMatched = (*tauXTriggers)[0] /*&& (*tauXTriggers)[3]*/ ; //hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle15IsoPFTau20
+	HLTmatch = isTriggMatched ? 1.0 : 0.0;
+	HLTweightTau =  ratioEffTau->dataEfficiency( (*diTauLegsP4)[1].Pt() ) * 0.87;
+      }
+      // MediumPFTau20
+      else{
+	HLTx = 1.0 ; //float((*triggerBits)[1]);
+	bool isTriggMatched = (*tauXTriggers)[0] /*&& (*tauXTriggers)[3]*/ ; //hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle15IsoPFTau20
+	HLTmatch = isTriggMatched ? 1.0 : 0.0;
+	HLTweightTau =  ratioEffTau->dataEfficiency( (*diTauLegsP4)[1].Pt() ) * 0.986;
+      }
+
+
+
     }
     
     // attention to runs triggered by IsoEle18 !!!
@@ -754,7 +792,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
 
  delete jets; delete jets_v2; delete diTauLegsP4; delete diTauVisP4; delete diTauSVfitP4; delete diTauCAP4; delete genDiTauLegsP4;
  delete tauXTriggers; delete triggerBits;
- delete METP4; delete jetsBtagHE; delete jetsBtagHP; delete jetsChNfraction; delete genVP4;
+ delete METP4; delete jetsBtagHE; delete jetsBtagHP; delete jetsChNfraction; delete genVP4; delete genMETP4;
  delete ratioEffElec; delete ratioEffTau; delete ratioEffTau10; delete ratioEffTau15; delete recoilCorr; 
  delete tRandom;
 
@@ -783,6 +821,9 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 
   gSystem->Load("RecoilCorrector_C.so");
   RecoilCorrector* recoilCorr = new RecoilCorrector();
+
+  gSystem->Load("recoilCorrectionAlgorithm_C.so");
+  recoilCorrectionAlgorithm* recoilCorr2 = new recoilCorrectionAlgorithm();
 
   typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LV;
 
@@ -1072,7 +1113,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 
   // MET
   currentTree->SetBranchStatus("METP4"                 ,1);
-  currentTree->SetBranchStatus("genMETP4"              ,0);
+  currentTree->SetBranchStatus("genMETP4"              ,1);
   currentTree->SetBranchStatus("sumEt"                 ,0);
   currentTree->SetBranchStatus("MtLeg1"                ,0);
   currentTree->SetBranchStatus("pZeta"                 ,0);
@@ -1139,6 +1180,9 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 
   std::vector< LV >* METP4          = new std::vector< LV >();
   currentTree->SetBranchAddress("METP4",           &METP4);
+
+  std::vector< LV >* genMETP4          = new std::vector< LV >();
+  currentTree->SetBranchAddress("genMETP4",        &genMETP4);
 
   std::vector< int >* tauXTriggers  = new std::vector< int >();
   currentTree->SetBranchAddress("tauXTriggers",    &tauXTriggers);
@@ -1312,6 +1356,8 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     corrMET.SetPy(corrMET_tmp.Py());
     corrMET.SetPz(corrMET_tmp.Pz());
     corrMET.SetE(corrMET_tmp.E());
+
+    if(USERECOILALGO) corrMET = recoilCorr2->buildZllCorrectedMEt( (*METP4)[0] , (*genMETP4)[0] , (*genVP4)[0]);
     
     float scalarSumPt = (*diTauLegsP4)[0].Pt() + (*METP4)[0].Pt();
     float vectorSumPt = ((*diTauLegsP4)[0] + (*METP4)[0]).Pt() ;
@@ -1426,7 +1472,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 
   delete jets; delete jets_v2; delete diTauLegsP4; delete diTauVisP4; delete diTauSVfitP4; delete diTauCAP4; delete genDiTauLegsP4;
   delete tauXTriggers; delete triggerBits;
-  delete METP4; delete jetsBtagHE; delete jetsBtagHP; delete jetsChNfraction; delete genVP4;
+  delete METP4; delete jetsBtagHE; delete jetsBtagHP; delete jetsChNfraction; delete genVP4; delete genMETP4;
   delete ratioEffTau; delete ratioEffTau10; delete ratioEffTau15; delete recoilCorr; 
   delete tRandom; 
   
