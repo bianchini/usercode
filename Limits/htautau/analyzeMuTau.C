@@ -124,7 +124,7 @@ void plotMuTau( Int_t mH_ = 120,
   TH1F* hVV    = new TH1F( "hVV"   ,"Diboson"           , nBins , bins);
 
   // pZeta OS, N pZ sideband OS, pZeta SS, N sideband SS, N QCD SS, OS/SS
-  TH1F* hParameters   = new TH1F( "hParameters", "" , 6, 0,6);
+  TH1F* hParameters   = new TH1F( "hParameters", "" , 7, 0,7);
 
   // Open the files
   TFile *fData              
@@ -174,6 +174,7 @@ void plotMuTau( Int_t mH_ = 120,
   TCut lveto("muFlag==0");
   TCut SS("diTauCharge!=0");
   TCut OS("diTauCharge==0");
+  TCut twoJets("pt1>30 && pt2>30");
   TCut vbf("pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && ptVeto<30");
   TCut novbf("pt2<30 || (pt1>30 && pt2>30 && ptVeto<30 && !(eta1*eta2<0 && Mjj>350 && Deta>3.5))");
   TCut hltevent("HLTx==1");
@@ -192,6 +193,14 @@ void plotMuTau( Int_t mH_ = 120,
     sbinPZetaRevSS =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch;
     sbinSS         =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch;
     sbinPZetaRelSS =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch;
+  }
+  else if(selection_.find("twoJets")!=string::npos){
+    sbin           =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && twoJets;
+    sbinPZetaRel   =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && twoJets;
+    sbinPZetaRev   =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && twoJets;
+    sbinPZetaRevSS =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && twoJets;
+    sbinSS         =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && twoJets;
+    sbinPZetaRelSS =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && twoJets;
   }
   else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
     sbin           =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && vbf;
@@ -344,53 +353,69 @@ void plotMuTau( Int_t mH_ = 120,
       
       cout << "Remove W contamination from SS data sample ... " << endl;
       currentTree = (it->second);
+
+      float error2OnQCD = 0.0;
       
       TH1F* hHelp = (TH1F*)h1->Clone("hHelp");
       hHelp->Reset();
       currentTree->Draw(variable_+">>hHelp", sbinSS);
+      int SSevents = hHelp->GetEntries();
       cout << "Selected SS events in data " << hHelp->GetEntries() << endl;
       h1->Add(hHelp,1);
 
       hHelp->Reset();
       backgroundWJets->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTweightTau)"*sbinSS);
-      cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from W+jets" << endl;
-      hHelp->Scale(SSWinSignalRegionDATA/SSWinSignalRegionMC*Lumi/1000*hltEff_);
+      cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from W+jets (from " << hHelp->GetEntries() << " entries)" << endl;
+      float sFWSS = ( selection_.find("novbf")!=string::npos || selection_.find("nobTag")!=string::npos || selection_.find("twoJets")!=string::npos) ? SSWinSignalRegionDATA/SSWinSignalRegionMC : 1.19; // from the extrapolation factor DATA/MC
+      hHelp->Scale(sFWSS*Lumi/1000*hltEff_);
       cout << "We estimate " << hHelp->Integral() << " SS events from W+jets by extrapolating" << endl;
+      cout << " ==> removing W+jets from SS...." << endl;
+      h1->Add(hHelp, -1 );
+      if(hHelp->GetEntries()>0) error2OnQCD +=  pow( hHelp->Integral()/hHelp->GetEntries(), 2)*hHelp->GetEntries(); // error on MC W+jets SS events
+      error2OnQCD +=  pow(1.19*0.06,2)*pow(hHelp->GetEntries(),2);        // error on W+jets extrapolation factor ==> 6% according to Artur
+      cout << sqrt(error2OnQCD) << " <==  W" << endl;      
 
-      if( !( (selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || selection_.find("nobTag")!=string::npos) ){
-	cout << " ==> removing W+jets from SS...." << endl;
-	h1->Add(hHelp, -1 );
-      }
+      hHelp->Reset();
+      backgroundTTbar->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTweightTau)"*sbinSS);
+      cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from TTbar (from " << hHelp->GetEntries() << " entries)" << endl;
+      hHelp->Scale(1.0*Lumi/1000*hltEff_);
+      cout << "We estimate " << hHelp->Integral() << " SS events from TTbar" << endl;
+      cout << " ==> removing TTbar from SS...." << endl;
+      h1->Add(hHelp, -1 );
+      if(hHelp->GetEntries()>0) error2OnQCD +=  pow(hHelp->Integral()/hHelp->GetEntries(),2)*hHelp->GetEntries();   // error on MC TTbar SS events
+      cout << sqrt(error2OnQCD) << " <== W + TTb" << endl;      
 
       hHelp->Reset();
       backgroundDYMutoTau->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTweightTau)"*sbinSS);
       cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from DY->mumu, mu->jet" << endl;
       hHelp->Scale(1.0*Lumi/1000*hltEff_);
       cout << "We estimate " << hHelp->Integral() << " SS events from DY->mumu, mu->tau" << endl;
-
-      if( !( (selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || selection_.find("nobTag")!=string::npos) ){
-	cout << " ==> removing DY->mumu, mu->tau from SS...." << endl;
-	h1->Add(hHelp, -1 );
-      }
+      cout << " ==> removing DY->mumu, mu->tau from SS...." << endl;
+      h1->Add(hHelp, -1 );
+      if(hHelp->GetEntries()>0) error2OnQCD +=  pow(hHelp->Integral()/hHelp->GetEntries(),2)*hHelp->GetEntries();   // error on MC DY->mumu, mu->tau events
+      cout << sqrt(error2OnQCD) << " <== W + TTb + DY(1)" << endl;      
 
       hHelp->Reset();
       backgroundDYJtoTau->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTweightTau)"*sbinSS);
       cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from DY->mumu, jet->tau" << endl;
       hHelp->Scale(1.0*Lumi/1000*hltEff_);
       cout << "We estimate " << hHelp->Integral() << " SS events from DY->mumu, jet->tau" << endl;
-
-      if( !( (selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || selection_.find("nobTag")!=string::npos) ){
-	cout << " ==> removing DY->mumu, mu->jet from SS...." << endl;
-	h1->Add(hHelp, -1 );
-      }
-      
-      hParameters->SetBinContent(5, h1->Integral());
-      hParameters->SetBinContent(6, 1.06);
+      cout << " ==> removing DY->mumu, mu->jet from SS...." << endl;
+      h1->Add(hHelp, -1 );
+      if(hHelp->GetEntries()>0) error2OnQCD +=  pow(hHelp->Integral()/hHelp->GetEntries(),2)*hHelp->GetEntries();   // error on MC DY->mumu, jet->tau events
+      cout << sqrt(error2OnQCD) << " <== W + TTb + DY(1,2)" << endl;      
 
       //  OS/SS ratio
       h1->Scale(1.06);
       cout << "After removing the expected contribution from W+jets and rescaling by 1.06 we expect " 
 	   << h1->Integral() << " events from QCD processes" << endl;
+
+      hParameters->SetBinContent(5, SSevents);
+      hParameters->SetBinContent(6, h1->Integral()/SSevents);
+
+      cout << "Total unceratinty from bkg subtraction in SS region is " << sqrt(error2OnQCD) << endl;
+      float totalRelErrorOnQCD = 0.02 + sqrt(error2OnQCD)/h1->Integral(); //0.02 ==> uncertainty on OS/SS ratio
+      hParameters->SetBinContent(7,totalRelErrorOnQCD);
 
     }
     else{
@@ -574,6 +599,12 @@ void plotMuTauAll(){
   plotMuTau(120,"novbf","TauDown","diTauVisMass","mass","GeV",-1);
   plotMuTau(120,"novbf","JetUp"  ,"diTauVisMass","mass","GeV",-1);
   plotMuTau(120,"novbf","JetDown","diTauVisMass","mass","GeV",-1);
+
+  plotMuTau(120,"twoJets",""       ,"diTauVisMass","mass","GeV",-1);
+  plotMuTau(120,"twoJets","TauUp"  ,"diTauVisMass","mass","GeV",-1);
+  plotMuTau(120,"twoJets","TauDown","diTauVisMass","mass","GeV",-1);
+  plotMuTau(120,"twoJets","JetUp"  ,"diTauVisMass","mass","GeV",-1);
+  plotMuTau(120,"twoJets","JetDown","diTauVisMass","mass","GeV",-1);
 
 
 }
