@@ -89,9 +89,15 @@ void plotMuTau( Int_t mH_ = 120,
     cout << endl;
   }
 
-  // Luminosity analyzed  
-  float Lumi = (159.+887.+361.7+531.5)*1.00;
-  
+  // Luminosity analyzed & parameters
+  float Lumi                     = (159.+887.+361.7+531.5)*1.00;
+  float WcorrectionFactorOS      = 0.97;  
+  float WcorrectionFactorSS      = 1.19;  
+  float MutoTauCorrectionFactor  = 1.00;
+  float JtoTauCorrectionFactor   = 0.80;
+  float VbfExtrapolationFactor   = 1.03;
+
+
   TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
   c1->SetGrid(0,0);
   c1->SetFillStyle(4000);
@@ -168,12 +174,13 @@ void plotMuTau( Int_t mH_ = 120,
  
 
   TCut lpt("ptL1>15");
-  TCut tpt("ptL2>22");
+  TCut tpt("ptL2>21");
   TCut tiso("tightestHPSDBWP>0");
   TCut liso("combRelIsoLeg1DBeta<0.1");
   TCut lveto("muFlag==0");
   TCut SS("diTauCharge!=0");
   TCut OS("diTauCharge==0");
+  TCut oneJet("pt1>30");
   TCut twoJets("pt1>30 && pt2>30");
   TCut vbf("pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && ptVeto<30");
   TCut novbf("pt2<30 || (pt1>30 && pt2>30 && ptVeto<30 && !(eta1*eta2<0 && Mjj>350 && Deta>3.5))");
@@ -193,6 +200,14 @@ void plotMuTau( Int_t mH_ = 120,
     sbinPZetaRevSS =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch;
     sbinSS         =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch;
     sbinPZetaRelSS =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch;
+  }
+  else if(selection_.find("oneJet")!=string::npos){
+    sbin           =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && oneJet;
+    sbinPZetaRel   =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && oneJet;
+    sbinPZetaRev   =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && oneJet;
+    sbinPZetaRevSS =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && oneJet;
+    sbinSS         =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && oneJet;
+    sbinPZetaRelSS =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && oneJet;
   }
   else if(selection_.find("twoJets")!=string::npos){
     sbin           =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && twoJets;
@@ -366,13 +381,13 @@ void plotMuTau( Int_t mH_ = 120,
       hHelp->Reset();
       backgroundWJets->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTweightTau)"*sbinSS);
       cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from W+jets (from " << hHelp->GetEntries() << " entries)" << endl;
-      float sFWSS = ( selection_.find("novbf")!=string::npos || selection_.find("nobTag")!=string::npos || selection_.find("twoJets")!=string::npos) ? SSWinSignalRegionDATA/SSWinSignalRegionMC : 1.19; // from the extrapolation factor DATA/MC
+      float sFWSS = ( selection_.find("novbf")!=string::npos || selection_.find("nobTag")!=string::npos ) ? SSWinSignalRegionDATA/SSWinSignalRegionMC : WcorrectionFactorSS; // from the extrapolation factor DATA/MC
       hHelp->Scale(sFWSS*Lumi/1000*hltEff_);
       cout << "We estimate " << hHelp->Integral() << " SS events from W+jets by extrapolating" << endl;
       cout << " ==> removing W+jets from SS...." << endl;
       h1->Add(hHelp, -1 );
       if(hHelp->GetEntries()>0) error2OnQCD +=  pow( hHelp->Integral()/hHelp->GetEntries(), 2)*hHelp->GetEntries(); // error on MC W+jets SS events
-      error2OnQCD +=  pow(1.19*0.06,2)*pow(hHelp->GetEntries(),2);        // error on W+jets extrapolation factor ==> 6% according to Artur
+      error2OnQCD +=  pow(WcorrectionFactorSS*0.06,2)*pow(hHelp->GetEntries(),2);        // error on W+jets extrapolation factor ==> 6% according to Artur
       cout << sqrt(error2OnQCD) << " <==  W" << endl;      
 
       hHelp->Reset();
@@ -388,7 +403,7 @@ void plotMuTau( Int_t mH_ = 120,
       hHelp->Reset();
       backgroundDYMutoTau->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTweightTau)"*sbinSS);
       cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from DY->mumu, mu->jet" << endl;
-      hHelp->Scale(1.0*Lumi/1000*hltEff_);
+      hHelp->Scale(MutoTauCorrectionFactor*Lumi/1000*hltEff_);
       cout << "We estimate " << hHelp->Integral() << " SS events from DY->mumu, mu->tau" << endl;
       cout << " ==> removing DY->mumu, mu->tau from SS...." << endl;
       h1->Add(hHelp, -1 );
@@ -398,7 +413,7 @@ void plotMuTau( Int_t mH_ = 120,
       hHelp->Reset();
       backgroundDYJtoTau->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTweightTau)"*sbinSS);
       cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from DY->mumu, jet->tau" << endl;
-      hHelp->Scale(1.0*Lumi/1000*hltEff_);
+      hHelp->Scale(JtoTauCorrectionFactor*Lumi/1000*hltEff_);
       cout << "We estimate " << hHelp->Integral() << " SS events from DY->mumu, jet->tau" << endl;
       cout << " ==> removing DY->mumu, mu->jet from SS...." << endl;
       h1->Add(hHelp, -1 );
@@ -431,29 +446,31 @@ void plotMuTau( Int_t mH_ = 120,
 	h1->Scale(Lumi/1000*hltEff_);
 
       // if W+jets, scale by extrapolation
+      float sFWOS = 
+	( selection_.find("novbf")!=string::npos || selection_.find("nobTag")!=string::npos ) ? OSWinSignalRegionDATA/OSWinSignalRegionMC : WcorrectionFactorOS;
       if((it->first).find("WJets")!=string::npos){
-	h1->Scale(OSWinSignalRegionDATA/OSWinSignalRegionMC);
+	h1->Scale( sFWOS );
 	hW->Add(h1,1.0);
       }
 
       // if DY->tautau, and vbf scale by ratio data/MC
       if((it->first).find("DYToTauTau")!=string::npos && selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
 	cout << "DY->tautau will be rescaled by 1.03 according to the Z->mumu+vbf/Z->mumu ratio" << endl;
-	h1->Scale(1.03);
+	h1->Scale( VbfExtrapolationFactor );
       }
 
       // if DY->mumu, mu->tau, scale by fake-rate
       if((it->first).find("DYMutoTau")!=string::npos){
-	float sF = 1.0;
-	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) sF *= 1.03;
+	float sF = MutoTauCorrectionFactor;
+	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) sF *= VbfExtrapolationFactor;
 	h1->Scale(sF);
 	hZmm->Add(h1,1.0);
       }
 
       // if DY->mumu, jet->tau, scale by fake-rate
       if((it->first).find("DYJtoTau")!=string::npos){
-	float sF = 0.80;
-	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) sF *= 1.03;
+	float sF = JtoTauCorrectionFactor;
+	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) sF *= VbfExtrapolationFactor;
 	h1->Scale(sF);
 	hZmj->Add(h1,2.0); // x2
       }
@@ -605,6 +622,12 @@ void plotMuTauAll(){
   plotMuTau(120,"twoJets","TauDown","diTauVisMass","mass","GeV",-1);
   plotMuTau(120,"twoJets","JetUp"  ,"diTauVisMass","mass","GeV",-1);
   plotMuTau(120,"twoJets","JetDown","diTauVisMass","mass","GeV",-1);
+
+  plotMuTau(120,"oneJet",""       ,"diTauVisMass","mass","GeV",-1);
+  plotMuTau(120,"oneJet","TauUp"  ,"diTauVisMass","mass","GeV",-1);
+  plotMuTau(120,"oneJet","TauDown","diTauVisMass","mass","GeV",-1);
+  plotMuTau(120,"oneJet","JetUp"  ,"diTauVisMass","mass","GeV",-1);
+  plotMuTau(120,"oneJet","JetDown","diTauVisMass","mass","GeV",-1);
 
 
 }

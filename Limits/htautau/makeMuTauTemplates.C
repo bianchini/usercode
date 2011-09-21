@@ -30,6 +30,8 @@ void produce(
     binNameSpace =  "SM2";
   else if(bin_.find("twoJets")!=string::npos) 
     binNameSpace =  "SMpre2";
+  else if(bin_.find("oneJet")!=string::npos) 
+    binNameSpace =  "SMpre2a";
 
   TFile* fTemplOut = new TFile(Form("datacards/muTauSM_%s.root",variable_.c_str()),"UPDATE");
   
@@ -232,4 +234,9 @@ void produceAll(){
   produce(120,"diTauVisMass", "JetUp"   , "twoJets");
   produce(120,"diTauVisMass", "JetDown" , "twoJets");
 
+  produce(120,"diTauVisMass", ""        , "oneJet");
+  produce(120,"diTauVisMass", "TauUp"   , "oneJet");
+  produce(120,"diTauVisMass", "TauDown" , "oneJet");
+  produce(120,"diTauVisMass", "JetUp"   , "oneJet");
+  produce(120,"diTauVisMass", "JetDown" , "oneJet");
 }

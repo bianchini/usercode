@@ -27,6 +27,10 @@ void produce(
     binNameSpace =  "SM0";
   else if(bin_.find("vbf")!=string::npos && bin_.find("novbf")==string::npos) 
     binNameSpace =  "SM2";
+  else if(bin_.find("twoJets")!=string::npos) 
+    binNameSpace =  "SMpre2";
+  else if(bin_.find("oneJet")!=string::npos) 
+    binNameSpace =  "SMpre2a";
 
   TFile* fTemplOut = new TFile(Form("datacards/eleTauSM_%s.root",variable_.c_str()),"UPDATE");
   
@@ -139,14 +143,59 @@ void produce(
 	      << space << ((TH1F*)fin->Get("hVV"))->Integral()
 	      << endl;
 	}
-	else if(line.find(Form("CMS_htt_eleTau_%s_QCDNorm", binNameSpace.c_str()))!=string::npos){
-	  line.replace( line.find("XXX") , 3 , string(Form("%.0f",((TH1F*)fin->Get("hParameters"))->GetBinContent(5)))  );
-	  line.replace( line.find("YYY") , 3 , string(Form("%.2f",((TH1F*)fin->Get("hParameters"))->GetBinContent(6)))  );
+	else if(line.find( "CMS_htt_eleTau_SM2_ttbarNorm" )!=string::npos){
+	  line.replace( line.find("XXX") , 3 , string(Form("%.0f",((TH1F*)fin->Get("hTTb"))->GetEntries()))  );
+	  line.replace( line.find("YYY") , 3 , string(Form("%.5f",((TH1F*)fin->Get("hTTb"))->Integral()/((TH1F*)fin->Get("hTTb"))->GetEntries() ))  );
 	  out << line << endl;
 	}
-	else if(line.find(Form("CMS_htt_eleTau_%s_WNorm",binNameSpace.c_str()))!=string::npos && binNameSpace!="SM2"){
+	else if(line.find( "CMS_htt_eleTau_SM2_DiBosonNorm" )!=string::npos){
+	  line.replace( line.find("XXX") , 3 , string(Form("%.0f",((TH1F*)fin->Get("hVV"))->GetEntries()))  );
+	  line.replace( line.find("YYY") , 3 , string(Form("%.5f",((TH1F*)fin->Get("hVV"))->Integral()/((TH1F*)fin->Get("hVV"))->GetEntries() ))  );
+	  out << line << endl;
+	}
+	else if(line.find( Form("CMS_htt_eleTau_%s_QCDNorm",binNameSpace.c_str()) )!=string::npos){
+	  line.replace( line.find("XXX") , 3 , string(Form("%.0f",((TH1F*)fin->Get("hParameters"))->GetBinContent(5)))  );
+	  line.replace( line.find("YYY") , 3 , string(Form("%.4f",((TH1F*)fin->Get("hParameters"))->GetBinContent(6)))  );
+	  out << line << endl;
+	}
+	else if(line.find( "CMS_htt_eleTau_SM2_QCDSyst")!=string::npos){
+	  line.replace( line.find("XXX") , 3 , string(Form("%.2f",1.0+((TH1F*)fin->Get("hParameters"))->GetBinContent(7)))  );
+	  out << line << endl;
+	}
+	else if(line.find( "CMS_htt_eleTau_SM2_WNorm")!=string::npos){
+          line.replace( line.find("XXX") , 3 , string(Form("%.0f",((TH1F*)fin->Get("hW"))->GetEntries()))  );
+          line.replace( line.find("YYY") , 3 , string(Form("%.3f",((TH1F*)fin->Get("hW"))->Integral()/((TH1F*)fin->Get("hW"))->GetEntries() ))  );
+          out << line << endl;
+        }
+	else if(line.find( "CMS_htt_eleTau_SM0_WNorm")!=string::npos){
           line.replace( line.find("XXX") , 3 , string(Form("%.0f",((TH1F*)fin->Get("hParameters"))->GetBinContent(2)))  );
-          line.replace( line.find("YYY") , 3 , string(Form("%.2f",((TH1F*)fin->Get("hParameters"))->GetBinContent(1)))  );
+          line.replace( line.find("YYY") , 3 , string(Form("%.3f",((TH1F*)fin->Get("hParameters"))->GetBinContent(1)))  );
+          out << line << endl;
+        }
+	else if(line.find( "CMS_htt_eleTau_SM2_ZJetFakeTauNorm" )!=string::npos){
+	  if(((TH1F*)fin->Get("hZmj"))->GetEntries()>0){
+	    line.replace( line.find("KKK") , 3 , "gmN"  );
+	    line.replace( line.find("XXX") , 3 , string(Form("%.0f",((TH1F*)fin->Get("hZmj"))->GetEntries()))  );
+	    line.replace( line.find("YYY") , 3 , string(Form("%.4f",((TH1F*)fin->Get("hZmj"))->Integral()/((TH1F*)fin->Get("hZmj"))->GetEntries() ))  );
+	  }
+	  else{
+	    line.replace( line.find("KKK") , 3 , "   "  );
+	    line.replace( line.find("XXX") , 3 , "lnN"  );
+	    line.replace( line.find("YYY") , 3 , string(Form("%.2f", 2.00 ))  );
+	  }
+          out << line << endl;
+        }
+	else if(line.find( "CMS_htt_eleTau_SM2_ZLeptonFakeTauNorm" )!=string::npos){
+	  if(((TH1F*)fin->Get("hZmm"))->GetEntries()>0){
+	    line.replace( line.find("KKK") , 3 , "gmN"  );
+	    line.replace( line.find("XXX") , 3 , string(Form("%.0f",((TH1F*)fin->Get("hZmm"))->GetEntries()))  );
+	    line.replace( line.find("YYY") , 3 , string(Form("%.4f",((TH1F*)fin->Get("hZmm"))->Integral()/((TH1F*)fin->Get("hZmm"))->GetEntries() ))  );
+	  }
+	  else{
+	    line.replace( line.find("KKK") , 3 , "   "  );
+	    line.replace( line.find("XXX") , 3 , "lnN"  );
+	    line.replace( line.find("YYY") , 3 , string(Form("%.2f", 2.00 ))  );
+	  }
           out << line << endl;
         }
 	else{
@@ -181,5 +230,21 @@ void produceAll(){
   produce(120,"diTauVisMass", "JetDown" , "novbf");
   produce(120,"diTauVisMass", "ElecUp"  , "novbf");
   produce(120,"diTauVisMass", "ElecDown", "novbf");
+  
+  produce(120,"diTauVisMass", ""        , "twoJets");
+  produce(120,"diTauVisMass", "TauUp"   , "twoJets");
+  produce(120,"diTauVisMass", "TauDown" , "twoJets");
+  produce(120,"diTauVisMass", "JetUp"   , "twoJets");
+  produce(120,"diTauVisMass", "JetDown" , "twoJets");
+  produce(120,"diTauVisMass", "ElecUp"  , "twoJets");
+  produce(120,"diTauVisMass", "ElecDown", "twoJets");
+
+  produce(120,"diTauVisMass", ""        , "oneJet");
+  produce(120,"diTauVisMass", "TauUp"   , "oneJet");
+  produce(120,"diTauVisMass", "TauDown" , "oneJet");
+  produce(120,"diTauVisMass", "JetUp"   , "oneJet");
+  produce(120,"diTauVisMass", "JetDown" , "oneJet");
+  produce(120,"diTauVisMass", "ElecUp"  , "oneJet");
+  produce(120,"diTauVisMass", "ElecDown", "oneJet");
 
 }
