@@ -33,25 +33,23 @@ process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 
 process.load('RecoJets.Configuration.RecoPFJets_cff')
 
-#process.ak5CaloJets.doAreaFastjet = True
 process.kt6PFJets.doRhoFastjet = True
-#process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
-#process.kt6PFJets.Ghost_EtaMax = cms.double(5.0)
+process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
+process.kt6PFJets.Ghost_EtaMax = cms.double(5.0)
 process.ak5PFJets.doAreaFastjet = True
-#process.ak5PFJets.Rho_EtaMax = cms.double(4.4)
-#process.ak5PFJets.Ghost_EtaMax = cms.double(5.0)
-#process.ak5PFL1Fastjet.useCondDB = False
 
 ## re-run kt4PFJets within lepton acceptance to compute rho
 process.load('RecoJets.JetProducers.kt4PFJets_cfi')
 process.kt6PFJetsCentral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet = True )
 process.kt6PFJetsCentral.Rho_EtaMax = cms.double(2.5)
+process.kt6PFJetsNeutral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet = True, src="pfAllNeutral" )
 
-#process.fjSequence = cms.Sequence(process.ak5CaloJets*process.ak5JetID+process.kt6PFJets+process.ak5PFJets+process.kt6PFJetsCentral)
 process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets+process.kt6PFJetsCentral)
 
 process.source.fileNames = cms.untracked.vstring(
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/WH_ZH_TTH_HToWW_M-120_7TeV-pythia6//AODSIM/PU_S3_START42_V11-v1//0000/E430E306-347C-E011-A75A-00261834B5C6.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/AODSIM/PU_S4_START42_V11-v1/0000/0E47FBF8-0295-E011-818F-0030487E3026.root'
+    #'file:./root/pickevents_1.root',
+    #'file:./root/pickevents_2.root',
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -241,6 +239,7 @@ process.tauMatch.resolveAmbiguities = cms.bool(False)
 process.tauGenJetMatch.resolveAmbiguities = cms.bool(False)
 process.tauGenJetMatch.maxDeltaR = 0.15
 process.tauGenJetMatch.maxDPtRel = 999
+
 ## <\tau part>
 
 addPFMuonIsolation(process,process.patMuons)
@@ -437,7 +436,7 @@ process.tauLegSequence = cms.Sequence(
     )
 
 
-getattr(process,"selectedPatJets").cut = cms.string('pt>15 && abs(eta)<5.0')
+getattr(process,"selectedPatJets").cut = cms.string('pt>10 && abs(eta)<5.0')
 
 process.deltaRJetMuons = cms.EDProducer(
     "DeltaRNearestMuonComputer",
@@ -476,6 +475,7 @@ process.pat = cms.Sequence(
     process.PFTau*
     process.fjSequence*
     process.patDefaultSequence*
+    process.kt6PFJetsNeutral*
     process.selectedPatMuonsTriggerMatchUserEmbedded*
     process.selectedPatTausTriggerMatchUserEmbedded*
     process.alLeastOneMuTauSequence*
@@ -511,6 +511,7 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_patMETsPFlow_*_*',
     'keep *_tauGenJetsSelectorAllHadrons_*_*',
     'keep *_kt6PFJetsCentral_rho_*',
+    'keep *_kt6PFJetsNeutral_rho_*',
     'keep *_muPtEtaID_*_*',
     'keep *_muPtEtaRelID_*_*',
     'keep *_addPileupInfo_*_*',
