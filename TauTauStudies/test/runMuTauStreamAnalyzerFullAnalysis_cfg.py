@@ -11,39 +11,41 @@ from Configuration.PyReleaseValidation.autoCond import autoCond
 process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
-process.load("CondCore.DBCommon.CondDBCommon_cfi")
-process.jec = cms.ESSource("PoolDBESSource",
-      DBParameters = cms.PSet(
-        messageLevel = cms.untracked.int32(0)
-        ),
-      timetype = cms.string('runnumber'),
-      toGet = cms.VPSet(
-      cms.PSet(
-            record = cms.string('JetCorrectionsRecord'),
-            tag    = cms.string('JetCorrectorParametersCollection_Jec11V2_AK5PF'),
-            label  = cms.untracked.string('AK5PF')
-            )
-      ),
-      connect = cms.string('sqlite:Jec11V2.db')
-)
-process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
 
-runOnMC = False
+#process.load("CondCore.DBCommon.CondDBCommon_cfi")
+#process.jec = cms.ESSource("PoolDBESSource",
+#      DBParameters = cms.PSet(
+#        messageLevel = cms.untracked.int32(0)
+#        ),
+#      timetype = cms.string('runnumber'),
+#      toGet = cms.VPSet(
+#      cms.PSet(
+#            record = cms.string('JetCorrectionsRecord'),
+#            tag    = cms.string('JetCorrectorParametersCollection_Jec11V2_AK5PF'),
+#            label  = cms.untracked.string('AK5PF')
+#            )
+#      ),
+#      connect = cms.string('sqlite:Jec11V2.db')
+#)
+#process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
+
+
+runOnMC = True
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START42_V12::All')
+    process.GlobalTag.globaltag = cms.string('START42_V13::All')
 else:
-    process.GlobalTag.globaltag = cms.string('GR_R_42_V14::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream/9d70b246dfc2095f4b7f776df63d9adc/patTuples_MuTauStream_9_1_u2S.root'
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream/9d70b246dfc2095f4b7f776df63d9adc//patTuples_MuTauStream_653_1_J0x.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream/9d70b246dfc2095f4b7f776df63d9adc/patTuples_MuTauStream_9_1_u2S.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream/9d70b246dfc2095f4b7f776df63d9adc//patTuples_MuTauStream_653_1_J0x.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/MuTauStream-v6/19b210cddfa58b4f9a99f3faa9d787aa/patTuples_MuTauStream_91_1_VIQ.root'
     )
     )
@@ -60,7 +62,6 @@ process.allEventsFilter = cms.EDFilter(
 process.rescaledMET = cms.EDProducer(
     "MEtRescalerProducer",
     metTag = cms.InputTag("patMETsPFlow"),
-    #jetTag = cms.InputTag("selectedPatJets"),
     jetTag = cms.InputTag("selectedPatJetsRemake"),
     electronTag = cms.InputTag(""),
     muonTag = cms.InputTag("muPtEtaIDIso"),
@@ -136,6 +137,18 @@ process.patJetCorrFactors.levels = JEClevels
 process.patJetCorrFactors.rho = cms.InputTag('kt6PFJets','rho')
 process.patJetCorrFactors.useRho = True
 
+process.patJetCorrFactorsL1Offset = process.patJetCorrFactors.clone(
+    levels = cms.vstring('L1Offset',
+                         'L2Relative',
+                         'L3Absolute')
+    )
+if runOnMC:
+    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute']
+else:
+    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute', 'L2L3Residual']
+process.patJets.jetCorrFactorsSource = cms.VInputTag(cms.InputTag("patJetCorrFactors"),cms.InputTag("patJetCorrFactorsL1Offset"))
+
+
 process.patJets.addBTagInfo = False
 process.patJets.embedCaloTowers = False
 process.patJets.getJetMCFlavour = False
@@ -149,6 +162,8 @@ process.patJets.addGenPartonMatch = False
 process.patJets.addGenJetMatch = False
 process.patJets.addJetCharge = False
 
+process.makePatJets.replace(process.patJetCorrFactors,
+                            process.patJetCorrFactors+process.patJetCorrFactorsL1Offset)
 process.makePatJets.remove(process.patJetCharge)
 process.makePatJets.remove(process.patJetPartonMatch)
 process.makePatJets.remove(process.patJetGenJetMatch)
@@ -157,7 +172,7 @@ process.makePatJets.remove(process.patJetPartonAssociation)
 process.makePatJets.remove(process.patJetFlavourAssociation)
 
 process.selectedPatJetsRemake = process.selectedPatJets.clone()
-getattr(process,"selectedPatJetsRemake").cut = cms.string('correctedJet("Uncorrected","none","patJetCorrFactors").pt>10 && abs(eta)<4.5')
+getattr(process,"selectedPatJetsRemake").cut = cms.string('correctedJet("Uncorrected","none","patJetCorrFactors").pt>10 && abs(eta)<5.0')
 
 process.remakePatJets = cms.Sequence(
     process.kt6PFJets*
@@ -182,13 +197,12 @@ process.pfAllNeutral = cms.EDFilter(
     )
 
 process.computeRhoNeutral = cms.Sequence(
-    #process.pfCandidateSelectionByType*
     process.pfAllNeutral*
     process.kt6PFJetsNeutral
     )
 ####################################################################################
 
-doSVFitReco = True
+doSVFitReco = False
 
 process.load("Bianchi.Utilities.diTausReconstruction_cff")
 process.diTau = process.allMuTauPairs.clone()
@@ -304,21 +318,45 @@ process.filterSequence = cms.Sequence(
 
 process.muTauStreamAnalyzer = cms.EDAnalyzer(
     "MuTauStreamAnalyzer",
-    diTaus =  cms.InputTag("selectedDiTau"),
-    jets =  cms.InputTag("selectedPatJets"),
+    diTaus         = cms.InputTag("selectedDiTau"),
+    jets           = cms.InputTag("selectedPatJets"),
+    newJets        = cms.InputTag("patJets"),
+    met            = cms.InputTag("patMETsPFlow"),
+    rawMet         = cms.InputTag("patMETsPFlow"),
+    muons          = cms.InputTag("muPtEtaID"),
+    muonsRel       = cms.InputTag("muPtEtaRelID"),
+    vertices       = cms.InputTag("offlinePrimaryVertices"),
     triggerResults = cms.InputTag("patTriggerEvent"),
-    isMC = cms.bool(runOnMC),
-    deltaRLegJet  = cms.untracked.double(0.5),
-    minCorrPt = cms.untracked.double(15.),
-    minJetID  = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
-    verbose =  cms.untracked.bool( False ),
+    isMC           = cms.bool(runOnMC),
+    deltaRLegJet   = cms.untracked.double(0.5),
+    minCorrPt      = cms.untracked.double(15.),
+    minJetID       = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
+    verbose        = cms.untracked.bool( False ),
     )
-process.muTauStreamAnalyzerJetUp   = process.muTauStreamAnalyzer.clone(diTaus =  cms.InputTag("selectedDiTauJetUp"))
-process.muTauStreamAnalyzerJetDown = process.muTauStreamAnalyzer.clone(diTaus =  cms.InputTag("selectedDiTauJetDown"))
-process.muTauStreamAnalyzerMuUp    = process.muTauStreamAnalyzer.clone(diTaus =  cms.InputTag("selectedDiTauMuUp"))
-process.muTauStreamAnalyzerMuDown  = process.muTauStreamAnalyzer.clone(diTaus =  cms.InputTag("selectedDiTauMuDown"))
-process.muTauStreamAnalyzerTauUp   = process.muTauStreamAnalyzer.clone(diTaus =  cms.InputTag("selectedDiTauTauUp"))
-process.muTauStreamAnalyzerTauDown = process.muTauStreamAnalyzer.clone(diTaus =  cms.InputTag("selectedDiTauTauDown"))
+process.muTauStreamAnalyzerJetUp   = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauJetUp"),
+    met    =  cms.InputTag("rescaledMETjet",  "UNNNU"),
+    )
+process.muTauStreamAnalyzerJetDown = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauJetDown"),
+    met    =  cms.InputTag("rescaledMETjet",  "DNNND"),
+    )
+process.muTauStreamAnalyzerMuUp    = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauMuUp"),
+    met    =  cms.InputTag("rescaledMETmuon","NNUNN")
+    )
+process.muTauStreamAnalyzerMuDown  = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauMuDown"),
+    met    =  cms.InputTag("rescaledMETmuon","NNDNN")
+    )
+process.muTauStreamAnalyzerTauUp   = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauTauUp"),
+    met    =  cms.InputTag("rescaledMETtau","NNNUN")
+    )
+process.muTauStreamAnalyzerTauDown = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauTauDown"),
+    met    =  cms.InputTag("rescaledMETtau","NNNDN")
+    )
 
 process.allAnalyzers = cms.Sequence(
     process.muTauStreamAnalyzer+

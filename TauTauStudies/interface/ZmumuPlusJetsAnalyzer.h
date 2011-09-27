@@ -67,15 +67,19 @@ class ZmumuPlusJetsAnalyzer : public edm::EDAnalyzer{
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDP4_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDUpP4_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDDownP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDL1OffsetP4_;
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* genJetsIDP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diMuonLegsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* METP4_;
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* genVP4_;
+  int genDecay_;
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* extraMuons_; 
 
-  float run_,event_,lumi_;
+  unsigned long run_,event_,lumi_;
   float Zmass_,sumEt_;
 
   float chIsoLeg1v1_,nhIsoLeg1v1_,phIsoLeg1v1_;
@@ -95,8 +99,11 @@ class ZmumuPlusJetsAnalyzer : public edm::EDAnalyzer{
   int isLegFromTau_;
   float numPV_;
   float rhoFastJet_;
+  float rhoNeutralFastJet_;
   int nPUVertices_;
   int nOOTPUVertices_;
+  std::vector<double> weights2011_;
+
   PUWeight* fpuweight_;
   float mcPUweight_;
 

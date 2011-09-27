@@ -10,14 +10,6 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
-//#include "DataFormats/Math/interface/Vector3D.h"
-//#include "DataFormats/Math/interface/Point3D.h"
-
-
-#include "DataFormats/RecoCandidate/interface/IsoDepositVetos.h"
-#include "DataFormats/RecoCandidate/interface/IsoDeposit.h"
-#include "DataFormats/PatCandidates/interface/Isolation.h"
-
 
 #include "TFile.h"
 #include "TTree.h"
@@ -46,6 +38,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   ~MuTauStreamAnalyzer();
 
   unsigned int jetID( const pat::Jet* jet, const reco::Vertex* vtx, std::vector<float> vtxZ, std::map<std::string,float>& map_);
+  pat::Jet* newJetMatched( const pat::Jet* oldJet , const pat::JetCollection* newJets);
 
   void beginJob() ;
   void analyze(const edm::Event&  iEvent, const edm::EventSetup& iSetup);
@@ -60,6 +53,12 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
  
   edm::InputTag diTauTag_;
   edm::InputTag jetsTag_;
+  edm::InputTag newJetsTag_;
+  edm::InputTag metTag_;
+  edm::InputTag rawMetTag_;
+  edm::InputTag muonsTag_;
+  edm::InputTag muonsRelTag_;
+  edm::InputTag verticesTag_;
   edm::InputTag triggerResultsTag_;
 
   bool isMC_;

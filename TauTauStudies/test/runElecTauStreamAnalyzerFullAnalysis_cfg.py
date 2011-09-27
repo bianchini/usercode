@@ -11,32 +11,33 @@ from Configuration.PyReleaseValidation.autoCond import autoCond
 process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
-process.load("CondCore.DBCommon.CondDBCommon_cfi")
-process.jec = cms.ESSource("PoolDBESSource",
-      DBParameters = cms.PSet(
-        messageLevel = cms.untracked.int32(0)
-        ),
-      timetype = cms.string('runnumber'),
-      toGet = cms.VPSet(
-      cms.PSet(
-            record = cms.string('JetCorrectionsRecord'),
-            tag    = cms.string('JetCorrectorParametersCollection_Jec11V2_AK5PF'),
-            label  = cms.untracked.string('AK5PF')
-            )
-      ),
-      connect = cms.string('sqlite:Jec11V2.db')
-)
-process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
+
+#process.load("CondCore.DBCommon.CondDBCommon_cfi")
+#process.jec = cms.ESSource("PoolDBESSource",
+#      DBParameters = cms.PSet(
+#        messageLevel = cms.untracked.int32(0)
+#        ),
+#      timetype = cms.string('runnumber'),
+#      toGet = cms.VPSet(
+#      cms.PSet(
+#            record = cms.string('JetCorrectionsRecord'),
+#            tag    = cms.string('JetCorrectorParametersCollection_Jec11V2_AK5PF'),
+#            label  = cms.untracked.string('AK5PF')
+#            )
+#      ),
+#      connect = cms.string('sqlite:Jec11V2.db')
+#)
+#process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
 
 runOnMC = True
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START42_V12::All')
+    process.GlobalTag.globaltag = cms.string('START42_V13::All')
 else:
-    process.GlobalTag.globaltag = cms.string('GR_R_42_V14::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source(
@@ -59,7 +60,6 @@ process.allEventsFilter = cms.EDFilter(
 process.rescaledMET = cms.EDProducer(
     "MEtRescalerProducer",
     metTag = cms.InputTag("patMETsPFlow"),
-    #jetTag = cms.InputTag("selectedPatJets"),
     jetTag = cms.InputTag("selectedPatJetsRemake"),
     electronTag = cms.InputTag("elecPtEtaIDIso"),
     muonTag = cms.InputTag(""),
@@ -135,6 +135,18 @@ process.patJetCorrFactors.levels = JEClevels
 process.patJetCorrFactors.rho = cms.InputTag('kt6PFJets','rho')
 process.patJetCorrFactors.useRho = True
 
+process.patJetCorrFactorsL1Offset = process.patJetCorrFactors.clone(
+    levels = cms.vstring('L1Offset',
+                         'L2Relative',
+                         'L3Absolute')
+    )
+if runOnMC:
+    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute']
+else:
+    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute', 'L2L3Residual']
+process.patJets.jetCorrFactorsSource = cms.VInputTag(cms.InputTag("patJetCorrFactors"),cms.InputTag("patJetCorrFactorsL1Offset"))
+
+
 process.patJets.addBTagInfo = False
 process.patJets.embedCaloTowers = False
 process.patJets.getJetMCFlavour = False
@@ -148,6 +160,8 @@ process.patJets.addGenPartonMatch = False
 process.patJets.addGenJetMatch = False
 process.patJets.addJetCharge = False
 
+process.makePatJets.replace(process.patJetCorrFactors,
+                            process.patJetCorrFactors+process.patJetCorrFactorsL1Offset)
 process.makePatJets.remove(process.patJetCharge)
 process.makePatJets.remove(process.patJetPartonMatch)
 process.makePatJets.remove(process.patJetGenJetMatch)
@@ -174,13 +188,19 @@ process.kt6PFJetsCentral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet =
 process.kt6PFJetsCentral.Rho_EtaMax = cms.double(2.5)
 process.kt6PFJetsNeutral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet = True, src="pfAllNeutral" )
 
+process.pfAllNeutral = cms.EDFilter(
+    "PdgIdPFCandidateSelector",
+    src = cms.InputTag("particleFlow"),
+    pdgId = cms.vint32(111, 130, 310, 2112, 22)
+    )
+
 process.computeRhoNeutral = cms.Sequence(
-    process.pfCandidateSelectionByType*
+    process.pfAllNeutral*
     process.kt6PFJetsNeutral
     )
 ####################################################################################
 
-doSVFitReco = True
+doSVFitReco = False
 
 process.load("Bianchi.Utilities.diTausReconstruction_cff")
 process.diTau = process.allElecTauPairs.clone()
@@ -188,7 +208,7 @@ process.diTau.srcLeg1 = cms.InputTag("elecPtEtaIDIso")
 process.diTau.srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso")
 process.diTau.srcMET  = cms.InputTag("patMETsPFlow")
 process.diTau.dRmin12  = cms.double(0.5)
-process.diTau.doSVreco = cms.bool(True)
+process.diTau.doSVreco = cms.bool(doSVFitReco)
 
 if not runOnMC:
     process.diTau.srcGenParticles = ""
@@ -296,21 +316,45 @@ process.filterSequence = cms.Sequence(
 
 process.elecTauStreamAnalyzer = cms.EDAnalyzer(
     "ElecTauStreamAnalyzer",
-    diTaus =  cms.InputTag("selectedDiTau"),
-    jets =  cms.InputTag("selectedPatJets"),
+    diTaus         = cms.InputTag("selectedDiTau"),
+    jets           = cms.InputTag("selectedPatJets"),
+    newJets        = cms.InputTag("patJets"),
+    met            = cms.InputTag("patMETsPFlow"),
+    rawMet         = cms.InputTag("patMETsPFlow"),
+    electrons      = cms.InputTag("elecPtEtaID"),
+    electronsRel   = cms.InputTag("elecPtEtaRelID"),
+    vertices       = cms.InputTag("offlinePrimaryVertices"),
     triggerResults = cms.InputTag("patTriggerEvent"),
-    isMC = cms.bool(runOnMC),
-    deltaRLegJet  = cms.untracked.double(0.5),
-    minCorrPt = cms.untracked.double(15.),
-    minJetID  = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
-    verbose =  cms.untracked.bool( False ),
+    isMC           = cms.bool(runOnMC),
+    deltaRLegJet   = cms.untracked.double(0.5),
+    minCorrPt      = cms.untracked.double(15.),
+    minJetID       = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
+    verbose        = cms.untracked.bool( False ),
     )
-process.elecTauStreamAnalyzerJetUp     = process.elecTauStreamAnalyzer.clone(diTaus =  cms.InputTag("selectedDiTauJetUp"))
-process.elecTauStreamAnalyzerJetDown   = process.elecTauStreamAnalyzer.clone(diTaus =  cms.InputTag("selectedDiTauJetDown"))
-process.elecTauStreamAnalyzerElecUp    = process.elecTauStreamAnalyzer.clone(diTaus =  cms.InputTag("selectedDiTauElecUp"))
-process.elecTauStreamAnalyzerElecDown  = process.elecTauStreamAnalyzer.clone(diTaus =  cms.InputTag("selectedDiTauElecDown"))
-process.elecTauStreamAnalyzerTauUp     = process.elecTauStreamAnalyzer.clone(diTaus =  cms.InputTag("selectedDiTauTauUp"))
-process.elecTauStreamAnalyzerTauDown   = process.elecTauStreamAnalyzer.clone(diTaus =  cms.InputTag("selectedDiTauTauDown"))
+process.elecTauStreamAnalyzerJetUp     = process.elecTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauJetUp"),
+    met    =  cms.InputTag("rescaledMETjet",  "UNNNU"),
+    )
+process.elecTauStreamAnalyzerJetDown   = process.elecTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauJetDown"),
+    met    =  cms.InputTag("rescaledMETjet",  "DNNND"),
+    )
+process.elecTauStreamAnalyzerElecUp    = process.elecTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauElecUp"),
+    met    =  cms.InputTag("rescaledMETelectron","NUNNN")
+    )
+process.elecTauStreamAnalyzerElecDown  = process.elecTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauElecDown"),
+    met    =  cms.InputTag("rescaledMETelectron","NDNNN")
+    )
+process.elecTauStreamAnalyzerTauUp     = process.elecTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauTauUp"),
+    met    =  cms.InputTag("rescaledMETtau","NNNUN")
+    )
+process.elecTauStreamAnalyzerTauDown   = process.elecTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauTauDown"),
+    met    =  cms.InputTag("rescaledMETtau","NNNDN")
+    )
 
 process.allAnalyzers = cms.Sequence(
     process.elecTauStreamAnalyzer+

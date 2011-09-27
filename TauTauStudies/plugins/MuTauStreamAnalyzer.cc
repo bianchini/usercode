@@ -49,14 +49,20 @@ typedef std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more>::i
 
 MuTauStreamAnalyzer::MuTauStreamAnalyzer(const edm::ParameterSet & iConfig){
 
-  diTauTag_ = iConfig.getParameter<edm::InputTag>("diTaus");
-  jetsTag_ = iConfig.getParameter<edm::InputTag>("jets");
+  diTauTag_          = iConfig.getParameter<edm::InputTag>("diTaus");
+  jetsTag_           = iConfig.getParameter<edm::InputTag>("jets");
+  newJetsTag_        = iConfig.getParameter<edm::InputTag>("newJets");
+  metTag_            = iConfig.getParameter<edm::InputTag>("met");
+  rawMetTag_         = iConfig.getParameter<edm::InputTag>("rawMet");
+  muonsTag_          = iConfig.getParameter<edm::InputTag>("muons");
+  muonsRelTag_       = iConfig.getParameter<edm::InputTag>("muonsRel");
+  verticesTag_       = iConfig.getParameter<edm::InputTag>("vertices");
   triggerResultsTag_ = iConfig.getParameter<edm::InputTag>("triggerResults"); 
-  isMC_ =  iConfig.getParameter<bool>("isMC");
-  deltaRLegJet_  =  iConfig.getUntrackedParameter<double>("deltaRLegJet",0.3);
-  minCorrPt_  =  iConfig.getUntrackedParameter<double>("minCorrPt",10.);
-  minJetID_   =  iConfig.getUntrackedParameter<double>("minJetID",0.5);
-  verbose_ =  iConfig.getUntrackedParameter<bool>("verbose",false);
+  isMC_              = iConfig.getParameter<bool>("isMC");
+  deltaRLegJet_      = iConfig.getUntrackedParameter<double>("deltaRLegJet",0.3);
+  minCorrPt_         = iConfig.getUntrackedParameter<double>("minCorrPt",10.);
+  minJetID_          = iConfig.getUntrackedParameter<double>("minJetID",0.5);
+  verbose_           = iConfig.getUntrackedParameter<bool>("verbose",false);
 }
 
 void MuTauStreamAnalyzer::beginJob(){
@@ -282,9 +288,15 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       << "No jets label available \n";
   const pat::JetCollection* jets = jetsHandle.product();
 
+  edm::Handle<pat::JetCollection> newJetsHandle;
+  iEvent.getByLabel(newJetsTag_,newJetsHandle);
+  if( !newJetsHandle.isValid() )  
+    edm::LogError("DataNotAvailable")
+      << "No newJets label available \n";
+  const pat::JetCollection* newJets = newJetsHandle.product();
+
   edm::Handle<reco::VertexCollection> pvHandle;
-  edm::InputTag pvTag("offlinePrimaryVertices");
-  iEvent.getByLabel(pvTag,pvHandle);
+  iEvent.getByLabel( verticesTag_ ,pvHandle);
   if( !pvHandle.isValid() )  
     edm::LogError("DataNotAvailable")
       << "No PV label available \n";
@@ -310,11 +322,18 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   numPV_ = vertexes->size();
 
   edm::Handle<pat::METCollection> metHandle;
-  iEvent.getByLabel(edm::InputTag("patMETsPFlow"),metHandle);
+  iEvent.getByLabel( metTag_, metHandle);
   if( !metHandle.isValid() )  
     edm::LogError("DataNotAvailable")
       << "No MET label available \n";
   const pat::METCollection* met = metHandle.product();
+
+  edm::Handle<pat::METCollection> rawMetHandle;
+  iEvent.getByLabel( rawMetTag_, rawMetHandle);
+  if( !rawMetHandle.isValid() )  
+    edm::LogError("DataNotAvailable")
+      << "No raw MET label available \n";
+  const pat::METCollection* rawMet = rawMetHandle.product();
 
   edm::Handle<pat::TriggerEvent> triggerHandle;
   iEvent.getByLabel(triggerResultsTag_, triggerHandle);
@@ -419,7 +438,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   rhoNeutralFastJet_ = (*rhoNeutralFastJetHandle);
   
   edm::Handle<pat::MuonCollection> muonsHandle;
-  iEvent.getByLabel("muPtEtaID",muonsHandle);
+  iEvent.getByLabel( muonsTag_ ,muonsHandle);
   if( !muonsHandle.isValid() )  
     edm::LogError("DataNotAvailable")
       << "No muons label available \n";
@@ -431,7 +450,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     cout << "WARNING: "<< muons->size() << "  muons found in the event !!! We will select only one" << endl;
   }
   edm::Handle<pat::MuonCollection> muonsRelHandle;
-  iEvent.getByLabel("muPtEtaRelID",muonsRelHandle);
+  iEvent.getByLabel(muonsRelTag_, muonsRelHandle);
   if( !muonsRelHandle.isValid() )  
     edm::LogError("DataNotAvailable")
       << "No muonsRel label available \n";
@@ -456,12 +475,10 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   muFlag_=-99;
 
   if(  muons->size()==1 &&  muonsRel->size()==1 ){
-    //muIndex = 0;
     muFlag_ = 0;
     if(verbose_) cout<< "Just one selected muon: flag= " << muFlag_ << endl;
   }
   else if(  muonsRel->size()>1 ){
-    //muIndex = 0;
     muFlag_ = 3;
   
     bool found = false;
@@ -473,7 +490,6 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3 
 	    && (*muonsRel)[i].charge()*(*muons)[j].charge()<0
 	    && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
-	  //muIndex = 0;
 	  muFlag_ = 1;
 	  if(verbose_) cout<< "Two muons failing diMu veto: flag= " << muFlag_ << endl;
 	  found=true; 
@@ -481,7 +497,6 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	else if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3 
 		 && (*muonsRel)[i].charge()*(*muons)[j].charge()>0
 		 && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
-	  //muIndex = 0;
 	  muFlag_ = 2;
 	  if(verbose_) cout<< "Two muons with SS: flag= " << muFlag_ << endl;
 	  found=true;  
@@ -490,11 +505,12 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     }
   } 
   else{
-    //muIndex = 0;
     muFlag_ = -1;
   }
 
-  // select highest-pt electron that forms at least one di-tau 
+  // select highest-pt muon that forms at least one di-tau
+  // no ambiguity if "muons" are isolated ==> if extra
+  // isolated muon exists the event is vetoed
   bool found2 = false;
   for(unsigned int j=0; j<muons->size(); j++){
     for(unsigned int i=0; i< diTaus->size(); i++){
@@ -524,21 +540,16 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   
   // choose the diTau with most isolated tau leg
   double sumIsoTau = 999.;
-  //double highestPt = 0.;
   unsigned int index = 0;
 
   std::vector<unsigned int> identifiedTaus;
   std::vector<unsigned int> looseIsoTaus;
-  //std::vector<unsigned int> not_identifiedTaus;
 
   for(unsigned int i=0; i<selectedDiTausFromMu.size(); i++){
     const pat::Tau*  tau_i = dynamic_cast<const pat::Tau*>(  ((*diTaus)[selectedDiTausFromMu[i]].leg2()).get() );
     if(tau_i->tauID("decayModeFinding")<0.5) continue;
     identifiedTaus.push_back(selectedDiTausFromMu[i]);
     bool isIsolatedTau = false;
-    //isIsolatedTau = ( (tau_i->isolationPFChargedHadrCandsPtSum() +
-    //	       std::max( (tau_i->isolationPFGammaCandsEtSum() -
-    //			  rhoFastJet_*TMath::Pi()*0.5*0.5), 0.0) )<2.); //new setting
     isIsolatedTau = tau_i->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5;
     if(isIsolatedTau) looseIsoTaus.push_back(selectedDiTausFromMu[i]);
   }
@@ -569,14 +580,15 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
    
   if(verbose_) cout << "Chosen index " << index << endl;
-  identifiedTaus.clear(); /*not_identifiedTaus.clear(); */ looseIsoTaus.clear();
+  identifiedTaus.clear(); looseIsoTaus.clear();
 
   theDiTau = &(*diTaus)[index];
 
   
   diTauCharge_ = theDiTau->charge();
-  METP4_->push_back((*met)[0].p4());
-  if(isMC_) genMETP4_->push_back( (*met)[0].genMET()->p4() );
+  METP4_->push_back((*rawMet)[0].p4()); // raw met
+  METP4_->push_back((*met)[0].p4());    // possibly rescaled met
+  if(isMC_) genMETP4_->push_back( (*rawMet)[0].genMET()->p4() );
   sumEt_  = (*met)[0].sumEt();
   MtLeg1_ =  theDiTau->mt1MET();
   pZeta_     =  theDiTau->pZeta();
@@ -667,18 +679,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     else triggerBits_->push_back(0);
   }
 
-  /*
-  for(unsigned int m = 0; m<XtriggerPaths.size(); m++){
-    if((leg1->triggerObjectMatchesByPath(XtriggerPaths[m],false,false)).size()!=0 && 
-       (leg2->triggerObjectMatchesByPath(XtriggerPaths[m],false,false)).size()!=0) tauXTriggers_->push_back(1);
-    else if((leg1->triggerObjectMatchesByPath(XtriggerPaths[m],false,false)).size()!=0 && 
-	    (leg2->triggerObjectMatchesByPath(XtriggerPaths[m],false,false)).size()==0)  tauXTriggers_->push_back(2);
-    else if((leg1->triggerObjectMatchesByPath(XtriggerPaths[m],false,false)).size()==0 && 
-	    (leg2->triggerObjectMatchesByPath(XtriggerPaths[m],false,false)).size()!=0)  tauXTriggers_->push_back(3);
-    else tauXTriggers_->push_back(0);
-  }
-  */
-
+ 
   for(unsigned int i=0 ; i< HLTfiltersMu.size() ; i++){
     bool matched = false;
     for(pat::TriggerObjectStandAloneCollection::const_iterator it = triggerObjs->begin() ; it !=triggerObjs->end() ; it++){
@@ -760,7 +761,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   diTauLegsP4_->push_back(leg2->p4());
   
   if(isMC_){
-    if( (leg1->genParticleById(13,0,true)).isNonnull() ||  (leg1->genParticleById(-13,0,true)).isNonnull() ){
+    if( (leg1->genParticleById(13,0,true)).isNonnull() ){
       genDiTauLegsP4_->push_back( leg1->genParticleById(13,0,true)->p4() );
       isMuLegMatched_ = 1;
     }
@@ -779,7 +780,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     bool leg2IsFromMu = false;
     math::XYZTLorentzVectorD genMuP4(0,0,0,0);
     for(unsigned int k = 0; k < genParticles->size(); k ++){
-      if( abs((*genParticles)[k].pdgId()) != 11  || (*genParticles)[k].status()!=3 )
+      if( abs((*genParticles)[k].pdgId()) != 13  || (*genParticles)[k].status()!=3 )
         continue;
       if(Geom::deltaR( (*genParticles)[k].p4(),leg2->p4())<0.15){
         leg2IsFromMu = true;
@@ -991,16 +992,26 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
   for(unsigned int it = 0; it < jets->size() ; it++){
 
+    pat::Jet* jet = const_cast<pat::Jet*>(&(*jets)[it]);
+
+    // newJet redone using possibly different JEC ==> it may not contain infos on bTag
+    // so I use it together with jet
+    pat::Jet* newJet = newJetMatched( jet , newJets );
+    if(!newJet){
+      cout << "No jet from the new collection can be matched ==> using old one..." << endl;
+      newJet = jet;
+    }
+
     math::XYZTLorentzVectorD leg2p4 = ( (leg2->pfJetRef()).isNonnull() ) ? leg2->pfJetRef()->p4() : leg2->p4();
 
-    if( Geom::deltaR((*jets)[it].p4(),leg1->p4())<deltaRLegJet_ || 
-	Geom::deltaR((*jets)[it].p4(), leg2p4 )<deltaRLegJet_ ){
-      if(verbose_) cout << "The jet at (" <<(*jets)[it].pt()<<","<<(*jets)[it].eta()<<") is closer than "<<deltaRLegJet_ << " from one of the legs" << endl;  
+    if( Geom::deltaR(jet->p4(), leg1->p4())<deltaRLegJet_ || 
+	Geom::deltaR(jet->p4(), leg2p4 )<deltaRLegJet_ ){
+      if(verbose_) cout << "The jet at (" <<jet->pt()<<","<<jet->eta()<<") is closer than "<<deltaRLegJet_ << " from one of the legs" << endl;  
       continue;
     }
 
     /////////////////////////////////////////////////////////////////////////
-    //// try to use JES uncertainties
+    //// use JES uncertainties
     edm::ESHandle<JetCorrectorParametersCollection> jetCorrParameters;
     // get the jet corrector parameters collection from the global tag
     iSetup.get<JetCorrectionsRecord>().get("AK5PF", jetCorrParameters);
@@ -1008,65 +1019,71 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     JetCorrectorParameters const & param = (*jetCorrParameters)["Uncertainty"];
     // instantiate the jec uncertainty object
     JetCorrectionUncertainty* deltaJEC = new JetCorrectionUncertainty(param);
-    deltaJEC->setJetEta((*jets)[it].eta()); deltaJEC->setJetPt((*jets)[it].pt());
+    deltaJEC->setJetEta(newJet->eta()); deltaJEC->setJetPt(newJet->pt());
     float shift  = deltaJEC->getUncertainty( true );
     /////////////////////////////////////////////////////////////////////////
 
     if(verbose_){
-      cout << "Analyzing jet with pt " << ((*jets)[it].p4()).Pt() 
-	   << "and eta " << ((*jets)[it].p4()).Eta() << endl;
+      cout << "Analyzing jet with pt " << (newJet->p4()).Pt() 
+	   << "and eta " << (newJet->p4()).Eta() << endl;
       cout << " ==> JEC uncertainty is " << shift*100 << " %" << endl;
-      pat::Jet* jet = const_cast<pat::Jet*>(&(*jets)[it]);
-      for(unsigned int i = 0; i < (jet->availableJECSets()).size() ; i++ ){
-	std::cout << (jet->availableJECSets())[i] << std::endl;
+      for(unsigned int i = 0; i < (newJet->availableJECSets()).size() ; i++ ){
+	std::cout << (newJet->availableJECSets())[i] << std::endl;
       }
-      for(unsigned int i = 0; i < (jet->availableJECLevels()).size() ; i++ ){
-	std::cout << (jet->availableJECLevels())[i] << std::endl;
+      for(unsigned int i = 0; i < (newJet->availableJECLevels()).size() ; i++ ){
+	std::cout << (newJet->availableJECLevels())[i] << std::endl;
       }
       std::cout << "L1FastJet ========> " << std::endl;
-      std::cout << "Uncorrected " << jet->correctedJet("Uncorrected","none","patJetCorrFactors").pt() << std::endl;
-      std::cout << "L1FastJet "   << jet->correctedJet("L1FastJet","none",  "patJetCorrFactors").pt() << std::endl;
-      std::cout << "L2Relative "  << jet->correctedJet("L2Relative","none", "patJetCorrFactors").pt() << std::endl; 
-      std::cout << "L3Absolute "  << jet->correctedJet("L3Absolute","none", "patJetCorrFactors").pt() << std::endl; 
+      std::cout << "Uncorrected " << newJet->correctedJet("Uncorrected","none","patJetCorrFactors").pt() << std::endl;
+      std::cout << "L1FastJet "   << newJet->correctedJet("L1FastJet","none",  "patJetCorrFactors").pt() << std::endl;
+      std::cout << "L2Relative "  << newJet->correctedJet("L2Relative","none", "patJetCorrFactors").pt() << std::endl; 
+      std::cout << "L3Absolute "  << newJet->correctedJet("L3Absolute","none", "patJetCorrFactors").pt() << std::endl; 
       std::cout << "L1Offset ========> " << std::endl;
-      std::cout << "Uncorrected " << jet->jecFactor("Uncorrected","none","patJetCorrFactorsL1Offset")*jet->pt() << std::endl;
-      std::cout << "L1Offset"     << jet->jecFactor("L1Offset","none",   "patJetCorrFactorsL1Offset")*jet->pt() << std::endl;
-      std::cout << "L2Relative "  << jet->jecFactor("L2Relative","none", "patJetCorrFactorsL1Offset")*jet->pt() << std::endl;
-      std::cout << "L3Absolute"   << jet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*jet->pt() << std::endl;  
+      std::cout << "Uncorrected " << newJet->jecFactor("Uncorrected","none","patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;
+      std::cout << "L1Offset"     << newJet->jecFactor("L1Offset","none",   "patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;
+      std::cout << "L2Relative "  << newJet->jecFactor("L2Relative","none", "patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;
+      std::cout << "L3Absolute"   << newJet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;  
     }
 
     std::map<string,float> aMap;
 
-    if( jetID( &(*jets)[it] , &((*vertexes)[0]), vtxZ, aMap ) < minJetID_ )  continue;
+    if( jetID( jet , &((*vertexes)[0]), vtxZ, aMap ) < minJetID_ )  continue;
 
-    sortedJets.insert( make_pair( (*jets)[it].correctedJet("Uncorrected").p4().Pt() ,(*jets)[it].correctedJet("Uncorrected").p4() ) );
+    sortedJets.insert( make_pair( newJet->correctedJet("Uncorrected").p4().Pt() ,newJet->correctedJet("Uncorrected").p4() ) );
 
-    if((*jets)[it].p4().Pt() < minCorrPt_) continue;
+    if(newJet->p4().Pt() < minCorrPt_) continue;
 
-    //add b-tag info
-    bTaggers.insert( make_pair((*jets)[it].p4().Pt(), make_pair( (*jets)[it].bDiscriminator("trackCountingHighEffBJetTags"),(*jets)[it].bDiscriminator("trackCountingHighPurBJetTags")  ) ) );
-    jetPVassociation.insert( make_pair( (*jets)[it].p4().Pt(), make_pair(aMap["chFracRawJetE"],aMap["chFracAllChargE"]) ) );
-    jetMoments.insert( make_pair( (*jets)[it].p4().Pt(), make_pair( (*jets)[it].etaetaMoment(),(*jets)[it].phiphiMoment()) ) );
-    
-    //jetsBtagHE_->push_back((*jets)[it].bDiscriminator("trackCountingHighEffBJetTags"));
-    //jetsBtagHP_->push_back((*jets)[it].bDiscriminator("trackCountingHighPurBJetTags"));
-
-    if(isMC_) sortedJetsIDL1Offset.insert( make_pair( (*jets)[it].jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*(*jets)[it].pt() , (*jets)[it].jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*(*jets)[it].p4()) );   
-    else sortedJetsIDL1Offset.insert( make_pair( (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].pt() , (*jets)[it].jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*(*jets)[it].p4()) ); 
+    // add b-tag info
+    bTaggers.insert(         make_pair( newJet->p4().Pt(), make_pair( jet->bDiscriminator("trackCountingHighEffBJetTags"),
+								      jet->bDiscriminator("trackCountingHighPurBJetTags")  ) ) );
+    // add pu information
+    jetPVassociation.insert( make_pair( newJet->p4().Pt(), make_pair(aMap["chFracRawJetE"],
+								  aMap["chFracAllChargE"]) ) );
+    // add jet moments
+    jetMoments.insert(       make_pair( newJet->p4().Pt(), make_pair( jet->etaetaMoment(),
+								   jet->phiphiMoment()) ) );
+   
+    if(isMC_) 
+      sortedJetsIDL1Offset.insert( make_pair( newJet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*newJet->pt() , 
+					      newJet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*newJet->p4()) );   
+    else 
+      sortedJetsIDL1Offset.insert( make_pair( newJet->jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*newJet->pt() , 
+					      newJet->jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*newJet->p4()) ); 
 
     if(verbose_) cout << "Components: "
-		      << "px=" << ((*jets)[it].p4()).Px() << " (" << (*jets)[it].px() << "), "
-		      << "py=" << ((*jets)[it].p4()).Py() << " (" << (*jets)[it].py() << "), "
-		      << "pz=" << ((*jets)[it].p4()).Pz() << " (" << (*jets)[it].pz() << "), "
-		      << "E="  << ((*jets)[it].p4()).E()  << " (" << (*jets)[it].energy()  << ")"
+		      << "px=" << (newJet->p4()).Px() << " (" << newJet->px() << "), "
+		      << "py=" << (newJet->p4()).Py() << " (" << newJet->py() << "), "
+		      << "pz=" << (newJet->p4()).Pz() << " (" << newJet->pz() << "), "
+		      << "E="  << (newJet->p4()).E()  << " (" << newJet->energy()  << ")"
 		      << endl;
-    sortedJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4() ) );
-    sortedJetsIDUp.insert( make_pair( (*jets)[it].p4().Pt() ,  (*jets)[it].p4()*(1+shift) ) );
-    sortedJetsIDDown.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4()*(1-shift) ) );
+
+    sortedJetsID.insert(     make_pair( newJet->p4().Pt() ,  newJet->p4() ) );
+    sortedJetsIDUp.insert(   make_pair( newJet->p4().Pt() ,  newJet->p4()*(1+shift) ) );
+    sortedJetsIDDown.insert( make_pair( newJet->p4().Pt() ,  newJet->p4()*(1-shift) ) );
 
     if(isMC_){
-      if((*jets)[it].genJet() != 0) sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].genJet()->p4() ) );
-      else sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Pt() , math::XYZTLorentzVectorD(0,0,0,0) ) );
+      if(jet->genJet() != 0) sortedGenJetsID.insert( make_pair( newJet->p4().Pt() ,jet->genJet()->p4() ) );
+      else sortedGenJetsID.insert( make_pair( newJet->p4().Pt() , math::XYZTLorentzVectorD(0,0,0,0) ) );
     }
      
   }
@@ -1280,6 +1297,21 @@ unsigned int  MuTauStreamAnalyzer::jetID( const pat::Jet* jet, const reco::Verte
   if(loose && medium && tight)   return 3; 
   
   return 0;
+
+}
+
+pat::Jet* MuTauStreamAnalyzer::newJetMatched( const pat::Jet* oldJet , const pat::JetCollection* newJets ){
+
+  pat::Jet* matchedJet = 0;
+
+  for(unsigned int it = 0; it < newJets->size() ; it++){
+    if( Geom::deltaR( (*newJets)[it].p4() , oldJet->p4() )<0.01 ){
+      matchedJet = const_cast<pat::Jet*>(&((*newJets)[it]));
+      break;
+    }
+  }
+
+  return matchedJet;
 
 }
 

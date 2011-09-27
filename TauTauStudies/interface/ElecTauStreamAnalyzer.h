@@ -11,10 +11,6 @@
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
 
-#include "DataFormats/RecoCandidate/interface/IsoDepositVetos.h"
-#include "DataFormats/RecoCandidate/interface/IsoDeposit.h"
-#include "DataFormats/PatCandidates/interface/Isolation.h"
-
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1F.h"
@@ -40,6 +36,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   ~ElecTauStreamAnalyzer();
 
   unsigned int jetID( const pat::Jet* jet, const reco::Vertex* vtx, std::vector<float> vtxZ, std::map<std::string,float>& map_);
+  pat::Jet* newJetMatched( const pat::Jet* oldJet , const pat::JetCollection* newJets);
 
   void beginJob() ;
   void analyze(const edm::Event&  iEvent, const edm::EventSetup& iSetup);
@@ -54,8 +51,13 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
  
   edm::InputTag diTauTag_;
   edm::InputTag jetsTag_;
+  edm::InputTag newJetsTag_;
+  edm::InputTag metTag_;
+  edm::InputTag rawMetTag_;
+  edm::InputTag electronsTag_;
+  edm::InputTag electronsRelTag_;
+  edm::InputTag verticesTag_;
   edm::InputTag triggerResultsTag_;
-
 
   bool isMC_;
   bool verbose_;

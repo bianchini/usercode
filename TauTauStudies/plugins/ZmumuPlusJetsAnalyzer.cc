@@ -26,12 +26,17 @@
 #include "DataFormats/JetReco/interface/GenJet.h"
 #include "DataFormats/JetReco/interface/GenJetCollection.h"
 
-//#include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
 #include "DataFormats/GsfTrackReco/interface/GsfTrack.h"
 #include "DataFormats/GsfTrackReco/interface/GsfTrackFwd.h"
 
+#include "FWCore/Framework/interface/ESHandle.h"
+#include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
+
+#include "JetMETCorrections/Objects/interface/JetCorrectionsRecord.h"
+#include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
+#include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
 
 #include <vector>
 #include <utility>
@@ -68,26 +73,55 @@ void ZmumuPlusJetsAnalyzer::beginJob(){
 
   triggerBits_ = new std::vector< int >();
 
-  fpuweight_ = new PUWeight();
+  fpuweight_ = 0;// new PUWeight();
+
+  weights2011_.push_back(0.0809561); 
+  weights2011_.push_back(0.483674); 
+  weights2011_.push_back(1.04601); 
+  weights2011_.push_back(1.6949); 
+  weights2011_.push_back(2.1009); 
+  weights2011_.push_back(2.24013); 
+  weights2011_.push_back(2.15938); 
+  weights2011_.push_back(1.73219); 
+  weights2011_.push_back(1.32508); 
+  weights2011_.push_back(0.950115);
+  weights2011_.push_back(0.6599); 
+  weights2011_.push_back(0.438093); 
+  weights2011_.push_back(0.284885); 
+  weights2011_.push_back(0.180615); 
+  weights2011_.push_back(0.112314); 
+  weights2011_.push_back(0.0687845);
+  weights2011_.push_back(0.0415087); 
+  weights2011_.push_back(0.0247498); 
+  weights2011_.push_back(0.0147688); 
+  weights2011_.push_back(0.00865185); 
+  weights2011_.push_back(0.00512891); 
+  weights2011_.push_back(0.00291561); 
+  weights2011_.push_back(0.00169447); 
+  weights2011_.push_back(0.000998808);
+  weights2011_.push_back(0.00087273); 
+  weights2011_.push_back(0); 
+  weights2011_.push_back(0); 
 
   jetsP4_          = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   jetsIDP4_        = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  jetsIDL1OffsetP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-
-  genJetsIDP4_     = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  jetsIDL1OffsetP4_= new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  jetsIDUpP4_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  jetsIDDownP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+ 
+  genJetsIDP4_  = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   extraMuons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
-  
-  //jetsIDbyMjjP4_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  //jetsIDbyDEtaP4_  = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-    
-  //muonsP4_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   diMuonLegsP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   METP4_        = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  
+  genVP4_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
+  tree_->Branch("genDecay",&genDecay_,"genDecay/I");
+  
   tree_->Branch("jetsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsP4_);
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
+  tree_->Branch("jetsIDUpP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDUpP4_);
+  tree_->Branch("jetsIDDownP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDDownP4_);
   tree_->Branch("jetsIDL1OffsetP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDL1OffsetP4_);
    
   tree_->Branch("genJetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genJetsIDP4_);
@@ -96,7 +130,6 @@ void ZmumuPlusJetsAnalyzer::beginJob(){
   tree_->Branch("jetsBtagHP","std::vector<double> ",&jetsBtagHP_);
  
   tree_->Branch("jetMoments","std::vector<float> ",&jetMoments_);
-
   tree_->Branch("jetsChEfraction","std::vector<float>",&jetsChEfraction_);
   tree_->Branch("jetsChNfraction","std::vector<float>",&jetsChNfraction_);
 
@@ -144,22 +177,24 @@ void ZmumuPlusJetsAnalyzer::beginJob(){
   tree_->Branch("dz1",&dz1_,"dz1/F");
   tree_->Branch("dz2",&dz2_,"dz2/F");
 
-  tree_->Branch("run",&run_,"run/F");
-  tree_->Branch("event",&event_,"event/F");
-  tree_->Branch("lumi",&lumi_,"lumi/F");
+  tree_->Branch("run",&run_,"run/l");
+  tree_->Branch("event",&event_,"event/l");
+  tree_->Branch("lumi",&lumi_,"lumi/l");
 
   tree_->Branch("numPV",&numPV_,"numPV/F");
   tree_->Branch("rhoFastJet",&rhoFastJet_,"rhoFastJet/F");
+  tree_->Branch("rhoNeutralFastJet",&rhoNeutralFastJet_,"rhoNeutralFastJet/F");
   tree_->Branch("mcPUweight",&mcPUweight_,"mcPUweight/F");
   tree_->Branch("nPUVertices",&nPUVertices_,"nPUVertices/I");
 }
 
 
 ZmumuPlusJetsAnalyzer::~ZmumuPlusJetsAnalyzer(){
-  delete jetsP4_; delete jetsIDP4_; delete jetsIDL1OffsetP4_; delete jetsBtagHE_; delete jetsBtagHP_;
+  delete jetsP4_; delete jetsIDP4_; delete jetsIDUpP4_ ; delete jetsIDDownP4_ ; delete jetsIDL1OffsetP4_; delete jetsBtagHE_; delete jetsBtagHP_;
   delete diMuonLegsP4_ ; delete genJetsIDP4_;delete extraMuons_;
   delete METP4_;  delete triggerBits_; 
-  delete fpuweight_;  delete jetsChNfraction_; delete jetsChEfraction_;delete jetMoments_;
+  /*delete fpuweight_;*/  
+  delete jetsChNfraction_; delete jetsChEfraction_;delete jetMoments_;
 }
 
 void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -167,6 +202,8 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
   jetsP4_->clear();
   jetsIDP4_->clear();
+  jetsIDUpP4_->clear();
+  jetsIDDownP4_->clear();
   jetsIDL1OffsetP4_->clear();
   jetsBtagHE_->clear();
   jetsBtagHP_->clear();
@@ -224,20 +261,65 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       << "No Trigger label available \n";
   const pat::TriggerEvent* trigger = triggerHandle.product();
 
+  genDecay_ = -99;
+  edm::Handle<reco::GenParticleCollection> genHandle;
+  if(isMC_){
+    iEvent.getByLabel(edm::InputTag("genParticles"),genHandle);
+    if( !genHandle.isValid() )  
+      edm::LogError("DataNotAvailable")
+	<< "No gen particles label available \n";
+    const reco::GenParticleCollection* genParticles = genHandle.product();
+    for(unsigned int k = 0; k < genParticles->size(); k ++){
+      if( !( (*genParticles)[k].pdgId() == 23 || abs((*genParticles)[k].pdgId()) == 24 || (*genParticles)[k].pdgId() == 25) || (*genParticles)[k].status()!=3)
+	continue;
+      if(verbose_) cout << "Boson status, pt,phi " << (*genParticles)[k].status() << "," << (*genParticles)[k].pt() << "," << (*genParticles)[k].phi() << endl;
+      
+      genVP4_->push_back( (*genParticles)[k].p4() );
+      genDecay_ = (*genParticles)[k].pdgId();
+      
+      int breakLoop = 0;
+      for(unsigned j = 0; j< ((*genParticles)[k].daughterRefVector()).size() && breakLoop!=1; j++){
+	if( abs(((*genParticles)[k].daughterRef(j))->pdgId()) == 11 ){
+	  genDecay_ *= 11;
+	  breakLoop = 1;
+	}
+	if( abs(((*genParticles)[k].daughterRef(j))->pdgId()) == 13 ){
+	  genDecay_ *= 13;
+	  breakLoop = 1;
+	}
+	if( abs(((*genParticles)[k].daughterRef(j))->pdgId()) == 15 ){
+	  genDecay_ *= 15;
+	  breakLoop = 1;
+	}
+      }
+      if(verbose_) cout << "Decays to pdgId " << genDecay_/(*genParticles)[k].pdgId()  << endl;
+      break;
+    }
+  }
+
   edm::Handle<std::vector<PileupSummaryInfo> > puInfoH;
   nPUVertices_= -99;
   nOOTPUVertices_=-99;
-
+  float sum_nvtx = 0;
   if(isMC_){
+    // PU infos
     iEvent.getByType(puInfoH);
     if(puInfoH.isValid()){
       for(std::vector<PileupSummaryInfo>::const_iterator it = puInfoH->begin(); it != puInfoH->end(); it++){
+	//cout << "Bunc crossing " << it->getBunchCrossing() << endl;
 	if(it->getBunchCrossing() ==0) nPUVertices_ = it->getPU_NumInteractions();
 	else  nOOTPUVertices_ = it->getPU_NumInteractions();
+	sum_nvtx += float(it->getPU_NumInteractions());
       }
     }
   }
-  mcPUweight_ = fpuweight_->GetWeight(nPUVertices_);
+  if(verbose_){
+    cout << "Average num of int = " << sum_nvtx/3. << endl;
+    cout << "Num of PU = " << nPUVertices_ << endl;
+    cout << "Num of OOT PU = " << nOOTPUVertices_ << endl;
+  }
+  if( fpuweight_ ) mcPUweight_ = fpuweight_->GetWeight(nPUVertices_);
+  else mcPUweight_ =  int(nPUVertices_+0.5) < int(weights2011_.size()) ? weights2011_[int(nPUVertices_+0.5)] : weights2011_[(unsigned int)(weights2011_.size()-1)];
 
   edm::Handle<double> rhoFastJetHandle;
   iEvent.getByLabel(edm::InputTag("kt6PFJetsCentral","rho", ""), rhoFastJetHandle);
@@ -245,6 +327,13 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     edm::LogError("DataNotAvailable")
       << "No rho label available \n";
   rhoFastJet_ = (*rhoFastJetHandle);
+
+  edm::Handle<double> rhoNeutralFastJetHandle;
+  iEvent.getByLabel(edm::InputTag("kt6PFJetsNeutral","rho", ""), rhoNeutralFastJetHandle);
+  if( !rhoNeutralFastJetHandle.isValid() )  
+    edm::LogError("DataNotAvailable")
+      << "No rho neutral label available \n";
+  rhoNeutralFastJet_ = (*rhoNeutralFastJetHandle);
 
   std::map< double, const CompositeCandidate*, less<double> > visMassMap;
   const CompositeCandidate *theDiMuon = 0;
@@ -279,7 +368,7 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     cout << " No valid diMuon !!! " << endl;
     return;
   }
-
+  
   Zmass_ = theDiMuon->mass();
   METP4_->push_back((*met)[0].p4());
   sumEt_  = (*met)[0].sumEt();
@@ -294,14 +383,14 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
   const pat::Muon* leg1 = dynamic_cast<const pat::Muon*>( (theDiMuon->daughter(0)->masterClone()).get() );
   const pat::Muon* leg2 = dynamic_cast<const pat::Muon*>( (theDiMuon->daughter(1)->masterClone()).get() );
-
-
+  
+  
   isLegFromTau_ = ( (leg1->genParticleById(15,0,true)).isNonnull() ||
 		    (leg1->genParticleById(-15,0,true)).isNonnull() ||
 		    (leg2->genParticleById(15,0,true)).isNonnull() ||
 		    (leg2->genParticleById(-15,0,true)).isNonnull()
 		    ) ? 1 : 0;
-
+  
   dxy1_ = vertexes->size()!=0 ? leg1->globalTrack()->dxy( (*vertexes)[0].position() ) : -999;
   dxy2_ = vertexes->size()!=0 ? leg2->globalTrack()->dxy( (*vertexes)[0].position() ) : -999;
   dz1_  = vertexes->size()!=0 ? leg1->globalTrack()->dz( (*vertexes)[0].position() ) : -999;
@@ -440,18 +529,27 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
   vector<string> triggerPaths;
   if(isMC_){
-    triggerPaths.push_back("HLT_Mu11");
-    triggerPaths.push_back("HLT_Mu15_v1");
-    triggerPaths.push_back("HLT_Mu17_v1");
-    triggerPaths.push_back("HLT_IsoMu11_v4");
-    triggerPaths.push_back("HLT_IsoMu15_v4");
-    triggerPaths.push_back("HLT_IsoMu17_v4");
-  }
-  else{
-    triggerPaths.push_back("HLT_IsoMu15_v5");
-    triggerPaths.push_back("HLT_IsoMu15_v5");
     triggerPaths.push_back("HLT_IsoMu17_v5");
     triggerPaths.push_back("HLT_IsoMu17_v6");
+    triggerPaths.push_back("HLT_IsoMu24_v1");
+  }
+  else{
+    triggerPaths.push_back("HLT_IsoMu24_v1");
+    triggerPaths.push_back("HLT_IsoMu24_v2");
+    triggerPaths.push_back("HLT_IsoMu24_v3");
+    triggerPaths.push_back("HLT_IsoMu24_v4");
+    triggerPaths.push_back("HLT_IsoMu24_v5");
+    triggerPaths.push_back("HLT_IsoMu24_v6");
+    triggerPaths.push_back("HLT_IsoMu24_v7");
+    triggerPaths.push_back("HLT_IsoMu24_v8");
+    triggerPaths.push_back("HLT_Mu17_Mu8_v1");
+    triggerPaths.push_back("HLT_Mu17_Mu8_v2");
+    triggerPaths.push_back("HLT_Mu17_Mu8_v3");
+    triggerPaths.push_back("HLT_Mu17_Mu8_v4");
+    triggerPaths.push_back("HLT_Mu17_Mu8_v5");
+    triggerPaths.push_back("HLT_Mu17_Mu8_v6");
+    triggerPaths.push_back("HLT_Mu17_Mu8_v7");
+    triggerPaths.push_back("HLT_Mu17_Mu8_v8");
   }
 
   for(unsigned int i=0;i<triggerPaths.size();i++){
@@ -488,6 +586,8 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   std::map<double, math::XYZTLorentzVectorD ,ZmumuPlusJetsAnalyzer::more> sortedJets;
   std::map<double, math::XYZTLorentzVectorD ,ZmumuPlusJetsAnalyzer::more> sortedJetsID;
   std::map<double, math::XYZTLorentzVectorD ,ZmumuPlusJetsAnalyzer::more> sortedJetsIDL1Offset;
+  std::map<double, math::XYZTLorentzVectorD ,ZmumuPlusJetsAnalyzer::more> sortedJetsIDUp;
+  std::map<double, math::XYZTLorentzVectorD ,ZmumuPlusJetsAnalyzer::more> sortedJetsIDDown;
   std::map<double, math::XYZTLorentzVectorD ,ZmumuPlusJetsAnalyzer::more> sortedGenJetsID;
   std::map<double, std::pair<float,float> ,  ZmumuPlusJetsAnalyzer::more> bTaggers;
   std::map<double, std::pair<float,float> ,  ZmumuPlusJetsAnalyzer::more> jetPVassociation;
@@ -501,10 +601,21 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       continue;
     }
 
-
     if((*jets)[it].p4().Pt() < minCorrPt_) continue;
-   
     sortedJets.insert( make_pair( (*jets)[it].correctedJet("Uncorrected").p4().Pt() ,(*jets)[it].correctedJet("Uncorrected").p4() ) );
+
+    /////////////////////////////////////////////////////////////////////////
+    //// try to use JES uncertainties
+    edm::ESHandle<JetCorrectorParametersCollection> jetCorrParameters;
+    // get the jet corrector parameters collection from the global tag
+    iSetup.get<JetCorrectionsRecord>().get("AK5PF", jetCorrParameters);
+    // get the uncertainty parameters from the collection
+    JetCorrectorParameters const & param = (*jetCorrParameters)["Uncertainty"];
+    // instantiate the jec uncertainty object
+    JetCorrectionUncertainty* deltaJEC = new JetCorrectionUncertainty(param);
+    deltaJEC->setJetEta((*jets)[it].eta()); deltaJEC->setJetPt((*jets)[it].pt());
+    float shift  = deltaJEC->getUncertainty( true );
+    /////////////////////////////////////////////////////////////////////////
                                         
     std::map<string,float> aMap;
     if( jetID( &(*jets)[it] , &((*vertexes)[0]), vtxZ, aMap ) < minJetID_ )  continue;
@@ -519,7 +630,9 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   
 
     sortedJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4() ) );
- 
+    sortedJetsIDUp.insert( make_pair( (*jets)[it].p4().Pt() ,  (*jets)[it].p4()*(1+shift) ) );
+    sortedJetsIDDown.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].p4()*(1-shift) ) );
+
     if(isMC_){
       if((*jets)[it].genJet() != 0) sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Pt() ,(*jets)[it].genJet()->p4() ) );
       else sortedGenJetsID.insert( make_pair( (*jets)[it].p4().Pt() , math::XYZTLorentzVectorD(0,0,0,0) ) );
@@ -531,6 +644,12 @@ void ZmumuPlusJetsAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   }
   for(CImap it = sortedJetsID.begin(); it != sortedJetsID.end() ; it++){
     jetsIDP4_->push_back( it->second );
+  }
+  for(CImap it = sortedJetsIDUp.begin(); it != sortedJetsIDUp.end() ; it++){
+    jetsIDUpP4_->push_back( it->second );
+  }
+  for(CImap it = sortedJetsIDDown.begin(); it != sortedJetsIDDown.end() ; it++){
+    jetsIDDownP4_->push_back( it->second );
   }
   for(CImap it = sortedJetsIDL1Offset.begin(); it != sortedJetsIDL1Offset.end() ; it++){
     jetsIDL1OffsetP4_->push_back( it->second );

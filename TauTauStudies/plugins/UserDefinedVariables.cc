@@ -10,6 +10,7 @@
 #include "DataFormats/PatCandidates/interface/MET.h"
 
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 #include "DataFormats/Candidate/interface/CandidateFwd.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
@@ -40,6 +41,7 @@ UserDefinedVariables::UserDefinedVariables(const edm::ParameterSet & iConfig) :
   fpuweight_ = new PUWeight();
   produces<edm::ValueMap<float> >("Mt");
   produces<edm::ValueMap<float> >("puMCWeight");
+  produces<edm::ValueMap<float> >("genDecay");
 }
 
 
@@ -57,6 +59,37 @@ void UserDefinedVariables::produce(edm::Event & iEvent, const edm::EventSetup & 
     edm::Handle<pat::METCollection> metHandle;
     iEvent.getByLabel(met_,metHandle);
     const pat::METCollection* met = metHandle.product();
+
+    int genDecay = -99;
+
+    edm::Handle<reco::GenParticleCollection> genHandle;
+    if(isMC_){
+      iEvent.getByLabel(edm::InputTag("genParticles"),genHandle);
+      const reco::GenParticleCollection* genParticles = genHandle.product();
+      for(unsigned int k = 0; k < genParticles->size(); k ++){
+      if( !( (*genParticles)[k].pdgId() == 23 || abs((*genParticles)[k].pdgId()) == 24 ) || (*genParticles)[k].status()!=3)
+	continue;
+
+      genDecay = (*genParticles)[k].pdgId();
+
+      int breakLoop = 0;
+      for(unsigned j = 0; j< ((*genParticles)[k].daughterRefVector()).size() && breakLoop!=1; j++){
+	if( abs(((*genParticles)[k].daughterRef(j))->pdgId()) == 11 ){
+	  genDecay *= 11;
+	  breakLoop = 1;
+	}
+	if( abs(((*genParticles)[k].daughterRef(j))->pdgId()) == 13 ){
+	  genDecay *= 13;
+	  breakLoop = 1;
+	}
+	if( abs(((*genParticles)[k].daughterRef(j))->pdgId()) == 15 ){
+	  genDecay *= 15;
+	  breakLoop = 1;
+	}
+      }
+      break;
+      }
+    }
 
     int nPUVertices = -99;
     int nOOTPUVertices = -99;
@@ -82,6 +115,7 @@ void UserDefinedVariables::produce(edm::Event & iEvent, const edm::EventSetup & 
     // prepare vector for output   
     std::vector<float> values;
     std::vector<float> values2;
+    std::vector<float> values3;
 
     View<reco::Candidate>::const_iterator object; 
     for (object = objects->begin(); object != objects->end(); ++object) {
@@ -92,6 +126,7 @@ void UserDefinedVariables::produce(edm::Event & iEvent, const edm::EventSetup & 
 
       values.push_back(Mt);
       values2.push_back(mcPUweight);
+      values3.push_back(fabs(genDecay));
 
     }
 
@@ -107,6 +142,12 @@ void UserDefinedVariables::produce(edm::Event & iEvent, const edm::EventSetup & 
     filler2.insert(objects, values2.begin(), values2.end());
     filler2.fill();
     iEvent.put(valMap2, "puMCWeight");
+
+    std::auto_ptr<ValueMap<float> > valMap3(new ValueMap<float>());
+    ValueMap<float>::Filler filler3(*valMap3);
+    filler3.insert(objects, values3.begin(), values3.end());
+    filler3.fill();
+    iEvent.put(valMap3, "genDecay");
 
 }
 

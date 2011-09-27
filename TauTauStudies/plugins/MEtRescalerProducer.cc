@@ -30,13 +30,18 @@ MEtRescalerProducer::MEtRescalerProducer(const edm::ParameterSet & iConfig){
   
  
   // convention: jet - elec - mu - tau - uncluster
-  char shift[] = {'U','D'};
+  char shift[] = {'U','N','D'};
 
-  for(int i = 0; i < 2 ; i++){
-    for(int j = 0; j < 2 ; j++){
-      for(int k = 0; k < 2 ; k++){
-	for(int l = 0; l < 2 ; l++){
-	  for(int m = 0; m < 2 ; m++){
+  for(int i = 0; i < 3 ; i++){
+    if(unClusterShift_<1e-06 && i!=1) continue;
+    for(int j = 0; j < 3 ; j++){
+      if(electronShift_<1e-06 && j!=1) continue;
+      for(int k = 0; k < 3 ; k++){
+	if(muonShift_<1e-06 && k!=1) continue;
+	for(int l = 0; l < 3 ; l++){
+	  if(tauShift_<1e-06 && l!=1) continue;
+	  for(int m = 0; m < 3 ; m++){
+	    if(unClusterShift_<1e-06 && m!=1) continue;
 	    char buffer[5];
 	    sprintf (buffer, "%c%c%c%c%c", 
 		     shift[i],shift[j],shift[k],shift[l],shift[m]);
@@ -81,13 +86,18 @@ void MEtRescalerProducer::produce(edm::Event & iEvent, const edm::EventSetup & i
   const pat::TauCollection* taus = tauHandle.product();
 
   // convention: jet - elec - mu - tau - uncluster
-  char shift[] = {'U','D'};
+  char shift[] = {'U','N','D'};
 
-  for(int i = 0; i < 2 ; i++){
-    for(int j = 0; j < 2 ; j++){
-      for(int k = 0; k < 2 ; k++){
-	for(int l = 0; l < 2 ; l++){
-	  for(int m = 0; m < 2 ; m++){
+  for(int i = 0; i < 3 ; i++){
+    if(unClusterShift_<1e-06 && i!=1) continue;
+    for(int j = 0; j < 3 ; j++){
+      if(electronShift_<1e-06 && j!=1) continue;
+      for(int k = 0; k < 3 ; k++){
+	if(muonShift_<1e-06 && k!=1) continue;
+	for(int l = 0; l < 3 ; l++){
+	  if(tauShift_<1e-06 && l!=1) continue;
+	  for(int m = 0; m < 3 ; m++){
+	    if(unClusterShift_<1e-06 && m!=1) continue;
 	    char buffer[5];
 	    sprintf (buffer, "%c%c%c%c%c", 
 		     shift[i],shift[j],shift[k],shift[l],shift[m]);
@@ -183,14 +193,14 @@ void MEtRescalerProducer::produce(edm::Event & iEvent, const edm::EventSetup & i
 		JetCorrectionUncertainty* deltaJEC = new JetCorrectionUncertainty(param);
 		deltaJEC->setJetEta((*jets)[it].eta()); deltaJEC->setJetPt((*jets)[it].pt());
 		float jetShift  = deltaJEC->getUncertainty( true );
-		if(i==0) dPx += (*jets)[it].px() * jetShift;
-		else     dPx -= (*jets)[it].px() * jetShift;
-		if(i==0) dPy += (*jets)[it].py() * jetShift;
-		else     dPy -= (*jets)[it].py() * jetShift;
-		if(i==0) dSumEt += (*jets)[it].pt() * jetShift;
-		else     dSumEt -= (*jets)[it].pt() * jetShift;
+		if(i==0) dPx += (*jets)[it].correctedJet("Uncorrected","none","patJetCorrFactors").px() * jetShift;
+		else     dPx -= (*jets)[it].correctedJet("Uncorrected","none","patJetCorrFactors").px() * jetShift;
+		if(i==0) dPy += (*jets)[it].correctedJet("Uncorrected","none","patJetCorrFactors").py() * jetShift;
+		else     dPy -= (*jets)[it].correctedJet("Uncorrected","none","patJetCorrFactors").py() * jetShift;
+		if(i==0) dSumEt += (*jets)[it].correctedJet("Uncorrected","none","patJetCorrFactors").pt() * jetShift;
+		else     dSumEt -= (*jets)[it].correctedJet("Uncorrected","none","patJetCorrFactors").pt() * jetShift;
 
-		unClusterEnergy -= (*jets)[it].p4();
+		unClusterEnergy -= (*jets)[it].correctedJet("Uncorrected","none","patJetCorrFactors").p4();
 		if(verbose_){
 		  cout << "Shifting jet #" << it << " => dPx= " << dPx
 		       << " , dPy= " << dPy
@@ -208,6 +218,13 @@ void MEtRescalerProducer::produce(edm::Event & iEvent, const edm::EventSetup & i
 	    else     dPy -= unClusterEnergy.Py() * unClusterShift_;
 	    if(m==0) dSumEt += (-1)*unClusterEnergy.Pt() * unClusterShift_;
 	    else     dSumEt -=  (-1)*unClusterEnergy.Pt() * unClusterShift_;
+
+	    if(verbose_ && i==0 && j==0 && k==0 && l==0 && m==0){
+	      cout << "Uncluster energy (pT,phi)= " << unClusterEnergy.Pt() << "," << unClusterEnergy.Phi() << ")"
+		   << " -- MET (pT,phi)= " << (*mets)[0].pt() << "," << (*mets)[0].phi() << ")" << endl;
+	      cout << "Correlation ==> " << abs(unClusterEnergy.Px()*(*mets)[0].px()+unClusterEnergy.Py()*(*mets)[0].py())/(unClusterEnergy.Px()*(*mets)[0].px()+unClusterEnergy.Py()*(*mets)[0].py()) << endl;
+	    }
+	    
 	    if(verbose_){
 	      cout << "Shifting uncluster energy " << " => dPx= " << dPx
 		   << " , dPy= " << dPy
