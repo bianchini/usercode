@@ -82,8 +82,11 @@ void MEtRescalerProducer::produce(edm::Event & iEvent, const edm::EventSetup & i
   }
 
   edm::Handle<pat::TauCollection> tauHandle;
-  iEvent.getByLabel(tauTag_,tauHandle);
-  const pat::TauCollection* taus = tauHandle.product();
+  const pat::TauCollection* taus = 0;
+  if(tauTag_.label()!=""){
+    iEvent.getByLabel(tauTag_,tauHandle);
+    taus = tauHandle.product();
+  }
 
   // convention: jet - elec - mu - tau - uncluster
   char shift[] = {'U','N','D'};
