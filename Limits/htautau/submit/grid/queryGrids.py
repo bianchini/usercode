@@ -11,6 +11,8 @@ import sys
 
 def publishSkim( stream , variable ):
 
+    print stream, " with " , variable
+    
     f = open('results_'+stream+'_SM_'+variable+'.txt', 'w')
     nameInDatacard = ""
     if re.search("eleTau", stream )!=None:
@@ -20,6 +22,8 @@ def publishSkim( stream , variable ):
     
     for mass in [105, 110, 115, 120, 125, 130, 135, 140]:
 
+        print mass
+        
         medianExpected     = 0
         OneSUpExpected     = 0
         TwoSUpExpected     = 0
@@ -36,7 +40,7 @@ def publishSkim( stream , variable ):
         for line in linesMedianExp:
             if  re.search("@ 95% CL", line )!=None:
                 words = re.split(r'\s', line)
-                print words
+                print "Median => ", words
                 medianExpected = float(words[3])
         f.write(str(medianExpected)+" ")
 
@@ -47,7 +51,7 @@ def publishSkim( stream , variable ):
         for line in linesOneSUpExpected:
             if  re.search("@ 95% CL", line )!=None:
                 words = re.split(r'\s', line)
-                print words
+                print "1s Up => " , words
                 OneSUpExpected = float(words[3])
         f.write(str(OneSUpExpected)+" ")
         
@@ -58,7 +62,7 @@ def publishSkim( stream , variable ):
         for line in linesTwoSUpExpected:
             if  re.search("@ 95% CL", line )!=None:
                 words = re.split(r'\s', line)
-                print words
+                print "2s Up => " , words
                 TwoSUpExpected = float(words[3])
         f.write(str(TwoSUpExpected)+" ")
   
@@ -69,7 +73,7 @@ def publishSkim( stream , variable ):
         for line in linesOneSDownExpected:
             if  re.search("@ 95% CL", line )!=None:
                 words = re.split(r'\s', line)
-                print words
+                print "1s Down => " , words
                 OneSDownExpected = float(words[3])
         f.write(str(OneSDownExpected)+" ")
   
@@ -80,7 +84,7 @@ def publishSkim( stream , variable ):
         for line in linesTwoSDownExpected:
             if  re.search("@ 95% CL", line )!=None:
                 words = re.split(r'\s', line)
-                print words
+                print "2s Down => " ,words
                 TwoSDownExpected = float(words[3])
         f.write(str(TwoSDownExpected)+" ")
 
@@ -91,7 +95,7 @@ def publishSkim( stream , variable ):
         for line in linesObserved:
             if  re.search("@ 95% CL", line )!=None:
                 words = re.split(r'\s', line)
-                print words
+                print "Observed => ", words
                 observed = float(words[3])
         f.write(str(observed))
         
@@ -103,7 +107,7 @@ def publishSkim( stream , variable ):
 ###########################################
 ###########################################
 
-#publishSkim("eleTau", "diTauVisMass")
-#publishSkim("eleTau", "diTauNSVfitMass")
+publishSkim("eleTau", "diTauVisMass")
+publishSkim("eleTau", "diTauNSVfitMass")
 publishSkim("muTau", "diTauVisMass")
 publishSkim("muTau", "diTauNSVfitMass")
