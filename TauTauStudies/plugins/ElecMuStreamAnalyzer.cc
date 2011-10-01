@@ -224,7 +224,6 @@ void ElecMuStreamAnalyzer::beginJob(){
 
   tree_->Branch("numPV",&numPV_,"numPV/F");
   tree_->Branch("numOfDiTaus",&numOfDiTaus_,"numOfDiTaus/I");
-  tree_->Branch("numOfLooseIsoDiTaus",&numOfLooseIsoDiTaus_,"numOfLooseIsoDiTaus/I");
 
   tree_->Branch("isElecLegMatched",&isElecLegMatched_,"isTauLegMatched/I");
   tree_->Branch("isMuLegMatched",&isMuLegMatched_,"isMuLegMatched/I");
@@ -457,7 +456,7 @@ void ElecMuStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSe
     cout << " No electronsRel !!! " << endl;
     return;
   } else if(electronsRel->size()>1 && verbose_){
-    cout << "WARNING: "<< electronsRel->size() << "  electronsRel found in the event !!! We will select only one" << endl;
+    cout << "WARNING: "<< electronsRel->size() << "  electronsRel found in the event !!!" << endl;
   }
 
   edm::Handle<pat::MuonCollection> muonsHandle;
@@ -482,7 +481,7 @@ void ElecMuStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSe
     cout << " No muonsRel !!! " << endl;
     return;
   } else if(muonsRel->size()>1 && verbose_){
-    cout << "WARNING: "<< muonsRel->size() << "  muonsRel found in the event !!! We will select only one" << endl;
+    cout << "WARNING: "<< muonsRel->size() << "  muonsRel found in the event !!!" << endl;
   }
 
   const PATElecMuPair *theDiTau = 0;
@@ -538,7 +537,7 @@ void ElecMuStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSe
 
       if(found2) continue;
 
-      if( Geom::deltaR(((*diTaus)[i].leg1())->p4(),((*muons)[j]).p4())<0.01 ){
+      if( Geom::deltaR(((*diTaus)[i].leg2())->p4(),((*muons)[j]).p4())<0.01 ){
 	muIndex=j;
 	found2 = true;
       }
@@ -553,7 +552,7 @@ void ElecMuStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSe
 
   std::vector<unsigned int> selectedDiTausFromMu;
   for(unsigned int i=0; i< diTaus->size(); i++){
-    if( Geom::deltaR(((*diTaus)[i].leg1())->p4(),((*muons)[muIndex]).p4())<0.01 ) 
+    if( Geom::deltaR(((*diTaus)[i].leg2())->p4(),((*muons)[muIndex]).p4())<0.01 ) 
       selectedDiTausFromMu.push_back(i);
   }
   if(verbose_) cout<< "Selection on Muons has selected " << selectedDiTausFromMu.size() << " diTaus...check tau leg now..." << endl;
@@ -628,7 +627,7 @@ void ElecMuStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSe
     for(unsigned int j = 0; j < selectedDiTausFromElec.size() ; j++){
       if(selectedDiTausFromMu[i]==selectedDiTausFromElec[j]){
 	index = selectedDiTausFromMu[i];
-	if(verbose_) cout << "DiTau with index " << index << " is contained in both selected leptons" << endl;
+	if(verbose_) cout << "DiTau with index " << index << " contains both selected leptons" << endl;
 	break;
       }
     }
@@ -773,7 +772,7 @@ void ElecMuStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSe
   }
 
 
-  // triggers Mu
+  // triggers Elec
   if(verbose_){
     const pat::TriggerObjectStandAloneCollection trColl = leg1->triggerObjectMatchesByType(trigger::TriggerElectron);
     cout << "Mu triggers" << endl;
@@ -786,7 +785,7 @@ void ElecMuStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSe
       }
     }
   }
-  // triggers Elec
+  // triggers Mu
   if(verbose_){
     const pat::TriggerObjectStandAloneCollection trColl = leg2->triggerObjectMatchesByType(trigger::TriggerMuon);
     cout << "Electron triggers" << endl;
@@ -808,34 +807,50 @@ void ElecMuStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSe
       genDiTauLegsP4_->push_back( leg1->genParticleById(11,0,true)->p4() );
       isElecLegMatched_ = 1;
     }
+    else if( (leg1->genParticleById(-11,0,true)).isNonnull()  ){
+      genDiTauLegsP4_->push_back( leg1->genParticleById(-11,0,true)->p4() );
+      isElecLegMatched_ = 2;
+    }
     else{
       genDiTauLegsP4_->push_back( math::XYZTLorentzVectorD(0,0,0,0) );
-      if(verbose_){
-	for(unsigned int l = 0; l < leg1->genParticlesSize() ; l++){
-	  if((leg1->genParticleRefs())[l]->pt() < 0.5 ) continue;
-	  cout << "Elec leg matchged to particle " << (leg1->genParticleRefs())[l]->pdgId() 
-	       << " with pt " << (leg1->genParticleRefs())[l]->pt()
+      for(unsigned int k = 0; k < genParticles->size(); k ++){
+	if( (*genParticles)[k].status()==3 && abs((*genParticles)[k].pdgId())==15 )
+	  isElecLegMatched_ = 3;
+	if(  verbose_ && (*genParticles)[k].status()==1 && Geom::deltaR((*genParticles)[k].p4() ,leg1->p4())<0.15 )
+	  cout << "Elec leg matchged to particle " << (*genParticles)[k].pdgId() 
+	       << " with pt " << (*genParticles)[k].pt()
 	       << endl;
-	}
       }
     }
-
+    
     if( (leg2->genParticleById(13,0,true)).isNonnull()  ){
       genDiTauLegsP4_->push_back( leg2->genParticleById(13,0,true)->p4() );
       isMuLegMatched_ = 1;
     }
+    else if( (leg2->genParticleById(-13,0,true)).isNonnull()  ){
+      genDiTauLegsP4_->push_back( leg2->genParticleById(-13,0,true)->p4() );
+      isMuLegMatched_ = 2;
+    }
     else{
       genDiTauLegsP4_->push_back( math::XYZTLorentzVectorD(0,0,0,0) );
-      if(verbose_){
-	for(unsigned int l = 0; l < leg2->genParticlesSize() ; l++){
-	  if((leg2->genParticleRefs())[l]->pt() < 0.5 ) continue;
-	  cout << "Mu leg matchged to particle " << (leg2->genParticleRefs())[l]->pdgId() 
-	       << " with pt " << (leg2->genParticleRefs())[l]->pt()
+      for(unsigned int k = 0; k < genParticles->size(); k ++){
+	if( (*genParticles)[k].status()==3 && abs((*genParticles)[k].pdgId())==15 )
+	  isMuLegMatched_ = 3;
+	if( verbose_ && (*genParticles)[k].status()==1 && Geom::deltaR((*genParticles)[k].p4() ,leg2->p4())<0.15 )
+	  cout << "Mu leg matchged to particle " << (*genParticles)[k].pdgId() 
+	       << " with pt " << (*genParticles)[k].pt()
 	       << endl;
-	}
       }
     }
+
   }
+  else{
+    genDiTauLegsP4_->push_back( math::XYZTLorentzVectorD(0,0,0,0) );
+    genDiTauLegsP4_->push_back( math::XYZTLorentzVectorD(0,0,0,0) );
+  }
+
+
+
   
   dxy1_ = vertexes->size()!=0 ? leg1->gsfTrack()->dxy( (*vertexes)[0].position() ) : -99;
   dz1_  = vertexes->size()!=0 ? leg1->gsfTrack()->dz( (*vertexes)[0].position() ) : -99;

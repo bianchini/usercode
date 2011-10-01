@@ -37,7 +37,7 @@
 #define SAVE   true
 #define MINPt1 20.0 //20
 #define MINPt2 20.0 //15
-#define USERECOILALGO true
+#define USERECOILALGO false
 
 using namespace ROOT::Math;
 using namespace std;
@@ -97,7 +97,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
   RecoilCorrector* recoilCorr = new RecoilCorrector();
 
   gSystem->Load("recoilCorrectionAlgorithm_C.so");
-  recoilCorrectionAlgorithm* recoilCorr2 = new recoilCorrectionAlgorithm();
+  recoilCorrectionAlgorithm* recoilCorr2 = new recoilCorrectionAlgorithm(1);
 
   typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LV;
 
@@ -640,7 +640,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
     if(genVP4->size()){
       if(samples[indexHelp].find("WJets")  !=string::npos)      
 	recoilCorr->Correct(corrPt,corrPhi,(*genVP4)[0].Pt() ,(*genVP4)[0].Phi() , ((*diTauLegsP4)[0]).Pt(),((*diTauLegsP4)[0]).Phi()  );
-      else if(samples[indexHelp].find("DYJets")!=string::npos)  
+      else if(samples[indexHelp].find("DYJets")!=string::npos || samples[indexHelp].find("VBF")  !=string::npos || samples[indexHelp].find("GGF")  !=string::npos)  
 	recoilCorr->Correct(corrPt,corrPhi,(*genVP4)[0].Pt() ,(*genVP4)[0].Phi() , ((*diTauLegsP4)[0]+(*diTauLegsP4)[1]).Pt(),((*diTauLegsP4)[0]+(*diTauLegsP4)[1]).Phi()  );
     }
     corrMET_tmp.SetPtEtaPhiM(corrPt,0,corrPhi,0);
@@ -649,8 +649,12 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
     corrMET.SetPz(corrMET_tmp.Pz());
     corrMET.SetE(corrMET_tmp.E());
 
-    if(USERECOILALGO) corrMET = recoilCorr2->buildZllCorrectedMEt( (*METP4)[0] , (*genMETP4)[0] , (*genVP4)[0]);
-
+    if(USERECOILALGO && genVP4->size() && genMETP4->size() && (samples[indexHelp].find("WJets")  !=string::npos 
+							       || samples[indexHelp].find("DYJets")  !=string::npos
+							       || samples[indexHelp].find("VBF")  !=string::npos
+							       || samples[indexHelp].find("GGF")  !=string::npos) )
+      corrMET = recoilCorr2->buildZllCorrectedMEt( (*METP4)[0] , (*genMETP4)[0] , (*genVP4)[0]);
+    
     float scalarSumPt = (*diTauLegsP4)[0].Pt() + (*METP4)[0].Pt();
     float vectorSumPt = ((*diTauLegsP4)[0] + (*METP4)[0]).Pt() ;
     float scalarSumPtCorr = (*diTauLegsP4)[0].Pt() + corrMET.Pt();
@@ -673,7 +677,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
     float PUtoPVratio = (chIsoLeg1+chIsoPULeg1)>0 ? chIsoPULeg1/(chIsoLeg1+chIsoPULeg1) : 0.0;
     float scaled_nhIsoLeg1 = std::max( nhIsoLeg1*(1-PUtoPVratio), float(0.0));
     float scaled_phIsoLeg1 = std::max( phIsoLeg1*(1-PUtoPVratio), float(0.0));
-    combRelIsoLeg1Beta = (chIsoLeg1+scaled_nhIsoLeg1+scaled_phIsoLeg1)/(*diTauLegsP4)[0].Pt();
+    combRelIsoLeg1Beta  = (chIsoLeg1+scaled_nhIsoLeg1+scaled_phIsoLeg1)/(*diTauLegsP4)[0].Pt();
     combRelIsoLeg1DBeta = (chIsoLeg1+ std::max( nhIsoLeg1+phIsoLeg1-0.5*0.5*(nhIsoPULeg1+phIsoPULeg1),double(0.0)))/(*diTauLegsP4)[0].Pt();
     float EffArea = TMath::Pi()*0.4*0.4;
     combRelIsoLeg1Rho = std::max(((chIsoLeg1+nhIsoLeg1+phIsoLeg1) - rhoNeutralFastJet*EffArea),float(0.0))/(*diTauLegsP4)[0].Pt();
@@ -686,7 +690,8 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
     sampleWeight        = scaleFactor; 
     puWeight            = (std::string(sample.Data())).find("Run2011")!=string::npos ? 
       1.0 : hRatio->GetBinContent( hRatio->FindBin(nPUVertices) ) ;
-    rhoNeutralWeight    =  hRho->GetBinContent( hRho->FindBin(numPV,rhoNeutralFastJet) ); // to be implemented;
+    rhoNeutralWeight    =  (std::string(sample.Data())).find("Run2011")!=string::npos ? 
+      1.0 : hRho->GetBinContent( hRho->FindBin(numPV,rhoNeutralFastJet) ); // to be implemented;
     numOfLooseIsoDiTaus_= numOfLooseIsoDiTaus;
 
     if((std::string(sample.Data())).find("Run2011")!=string::npos){
@@ -823,7 +828,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   RecoilCorrector* recoilCorr = new RecoilCorrector();
 
   gSystem->Load("recoilCorrectionAlgorithm_C.so");
-  recoilCorrectionAlgorithm* recoilCorr2 = new recoilCorrectionAlgorithm();
+  recoilCorrectionAlgorithm* recoilCorr2 = new recoilCorrectionAlgorithm(1);
 
   typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LV;
 
@@ -1344,11 +1349,11 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     TLorentzVector corrMET_tmp;
     LV corrMET(1,0,0,1);
     double corrPt = (*METP4)[0].Et(); double corrPhi = (*METP4)[0].Phi();
+    unsigned int indexHelp = index >=0 ? index : 0;
     if(genVP4->size()){
-      unsigned int indexHelp = index >=0 ? index : 0;
       if(samples[indexHelp].find("WJets")  !=string::npos)      
 	recoilCorr->Correct(corrPt,corrPhi,(*genVP4)[0].Pt() ,(*genVP4)[0].Phi() , ((*diTauLegsP4)[0]).Pt(),((*diTauLegsP4)[0]).Phi()  );
-      else if(samples[indexHelp].find("DYJets")!=string::npos)  
+      else if(samples[indexHelp].find("DYJets")!=string::npos || samples[indexHelp].find("VBF")  !=string::npos || samples[indexHelp].find("GGF")  !=string::npos)  
 	recoilCorr->Correct(corrPt,corrPhi,(*genVP4)[0].Pt() ,(*genVP4)[0].Phi() , ((*diTauLegsP4)[0]+(*diTauLegsP4)[1]).Pt(),((*diTauLegsP4)[0]+(*diTauLegsP4)[1]).Phi()  );
     }
     corrMET_tmp.SetPtEtaPhiM(corrPt,0,corrPhi,0);
@@ -1357,7 +1362,12 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     corrMET.SetPz(corrMET_tmp.Pz());
     corrMET.SetE(corrMET_tmp.E());
 
-    if(USERECOILALGO) corrMET = recoilCorr2->buildZllCorrectedMEt( (*METP4)[0] , (*genMETP4)[0] , (*genVP4)[0]);
+    if(USERECOILALGO && genVP4->size() && genMETP4->size() && (samples[indexHelp].find("WJets")  !=string::npos 
+							       || samples[indexHelp].find("DYJets")  !=string::npos
+							       || samples[indexHelp].find("VBF")  !=string::npos
+							       || samples[indexHelp].find("GGF")  !=string::npos) ) 
+      corrMET = recoilCorr2->buildZllCorrectedMEt( (*METP4)[0] , (*genMETP4)[0] , (*genVP4)[0]);
+    
     
     float scalarSumPt = (*diTauLegsP4)[0].Pt() + (*METP4)[0].Pt();
     float vectorSumPt = ((*diTauLegsP4)[0] + (*METP4)[0]).Pt() ;
@@ -1394,7 +1404,8 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     sampleWeight        = scaleFactor; 
     puWeight            = (std::string(sample.Data())).find("Run2011")!=string::npos ? 
       1.0 : hRatio->GetBinContent( hRatio->FindBin(nPUVertices) ) ;
-    rhoNeutralWeight    = hRho->GetBinContent( hRho->FindBin(numPV,rhoNeutralFastJet) ); // to be implemented;
+    rhoNeutralWeight    = (std::string(sample.Data())).find("Run2011")!=string::npos ? 
+      1.0 : hRho->GetBinContent( hRho->FindBin(numPV,rhoNeutralFastJet) ); // to be implemented;
     numOfLooseIsoDiTaus_= numOfLooseIsoDiTaus;
 
     if((std::string(sample.Data())).find("Run2011")!=string::npos){

@@ -69,7 +69,8 @@ elecTnP = cms.EDAnalyzer("TagProbeFitTreeProducer",
     phi = cms.string("phi"),
     pfRelIso =  cms.string("userFloat('PFRelIsoDB04v2')"),
     puMCWeight =  cms.InputTag("addUserVariables","puMCWeight"),
-    Mt =  cms.InputTag("addUserVariables","Mt")
+    Mt =  cms.InputTag("addUserVariables","Mt"),
+    genDecay   =  cms.InputTag("addUserVariables","genDecay"),
     ),
                          tagFlags = cms.PSet(),
                          pairVariables = cms.PSet(

@@ -12,24 +12,7 @@ process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
-#process.load("CondCore.DBCommon.CondDBCommon_cfi")
-#process.jec = cms.ESSource("PoolDBESSource",
-#      DBParameters = cms.PSet(
-#        messageLevel = cms.untracked.int32(0)
-#        ),
-#      timetype = cms.string('runnumber'),
-#      toGet = cms.VPSet(
-#      cms.PSet(
-#            record = cms.string('JetCorrectionsRecord'),
-#            tag    = cms.string('JetCorrectorParametersCollection_Jec11V2_AK5PF'),
-#            label  = cms.untracked.string('AK5PF')
-#            )
-#      ),
-#      connect = cms.string('sqlite:Jec11V2.db')
-#)
-#process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
-
-runOnMC = True
+runOnMC = False
 
 if runOnMC:
     process.GlobalTag.globaltag = cms.string('START42_V13::All')
@@ -329,7 +312,7 @@ process.elecMuStreamAnalyzer = cms.EDAnalyzer(
     deltaRLegJet   = cms.untracked.double(0.5),
     minCorrPt      = cms.untracked.double(15.),
     minJetID       = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
-    verbose        = cms.untracked.bool( True ),
+    verbose        = cms.untracked.bool( False ),
     )
 process.elecMuStreamAnalyzerJetUp     = process.elecMuStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauJetUp"),

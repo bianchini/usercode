@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 20
+process.MessageLogger.cerr.FwkReport.reportEvery = 2000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -45,15 +45,10 @@ process.kt6PFJetsNeutral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet =
 process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets+process.kt6PFJetsCentral)
 
 process.source.fileNames = cms.untracked.vstring(
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/AODSIM/PU_S4_START42_V11-v1/0000/0E47FBF8-0295-E011-818F-0030487E3026.root'
-    #'file:./root/pickevents_1.root',
-    #'file:./root/pickevents_2.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/AODSIM/PU_S4_START42_V11-v1/0000/0E47FBF8-0295-E011-818F-0030487E3026.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/data/Run2011A/MuEG/AOD/05Aug2011-v1/0000/EA148FB5-ABBF-E011-8C96-E0CB4E19F9A4.root'
     )
 
-#process.source.eventsToProcess = cms.untracked.VEventRange(
-#    '1:751063','1:751088','1:751100','1:751117','1:751141','1:751237','1:751325','1:751392','1:751466','1:977809','1:977870','1:977898',
-#    '1:977915','1:978085','1:978214','1:811102','1:811190'
-#    )
 
 postfix           = "PFlow"
 runOnMC           = True
@@ -234,7 +229,7 @@ process.atLeastOneElecMuCounter = cms.EDFilter(
 process.muPtEta = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
-    cut = cms.string("pt>15 && abs(eta)<2.1"),
+    cut = cms.string("pt>9 && abs(eta)<2.1"),
     filter = cms.bool(False)
     )
 process.atLeastOneElecMumuPtEta = process.atLeastOneElecMu.clone(
@@ -250,7 +245,7 @@ process.muPtEtaCounter = cms.EDFilter(
 process.muPtEtaRelID = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
-    cut = cms.string("pt>15 && abs(eta)<2.4 && isGlobalMuon"),
+    cut = cms.string("pt>9 && abs(eta)<2.4 && isGlobalMuon"),
     filter = cms.bool(False)
     )
 
@@ -273,7 +268,7 @@ process.muPtEtaIDCounter = cms.EDFilter(
 process.elecPtEta = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("selectedPatElectronsTriggerMatchUserEmbedded"),
-    cut = cms.string("pt>15 && abs(eta)<2.1 && !isEBEEGap"),
+    cut = cms.string("pt>9 && abs(eta)<2.5 && !isEBEEGap"),
     filter = cms.bool(False)
     )
 process.atLeastOneElecMuelecPtEta = process.atLeastOneElecMu.clone(
@@ -305,7 +300,7 @@ process.elecPtEtaIDCounter = cms.EDFilter(
 process.elecPtEtaRelID = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("selectedPatElectronsTriggerMatchUserEmbedded"),
-    cut = cms.string("pt>15 && abs(eta)<2.4 && !isEBEEGap && "+simpleCutsWP95),
+    cut = cms.string("pt>9 && abs(eta)<2.5 && !isEBEEGap && "+simpleCutsWP95),
     filter = cms.bool(False)
     )
 

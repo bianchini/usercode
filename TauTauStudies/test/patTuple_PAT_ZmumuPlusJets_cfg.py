@@ -1,7 +1,7 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 2000
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -11,52 +11,40 @@ from Configuration.PyReleaseValidation.autoCond import autoCond
 process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
+process.load("CondCore.DBCommon.CondDBCommon_cfi")
+process.jec = cms.ESSource("PoolDBESSource",
+      DBParameters = cms.PSet(
+        messageLevel = cms.untracked.int32(0)
+        ),
+      timetype = cms.string('runnumber'),
+      toGet = cms.VPSet(
+      cms.PSet(
+            record = cms.string('JetCorrectionsRecord'),
+            tag    = cms.string('JetCorrectorParametersCollection_Jec11V2_AK5PF'),
+            label  = cms.untracked.string('AK5PF')
+            )
+      ),
+      connect = cms.string('sqlite:Jec11V2.db')
+)
+process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
 
-## temporary JEC
-#process.load("CondCore.DBCommon.CondDBCommon_cfi")
-#process.jec = cms.ESSource(
-#    "PoolDBESSource",
-#    DBParameters = cms.PSet(
-#    messageLevel = cms.untracked.int32(0)
-#    ),
-#    timetype = cms.string('runnumber'),
-#    toGet = cms.VPSet(
-#    cms.PSet(
-#    record = cms.string('JetCorrectionsRecord'),
-#    tag    = cms.string('JetCorrectorParametersCollection_Jec10V3_AK5PF'),
-#    label  = cms.untracked.string('AK5PF')
-#    )
-#    ),
-    ## here you add as many jet types as you need (AK5Calo, AK5JPT, AK7PF, AK7Calo, KT4PF, KT4Calo, KT6PF, KT6Calo)#
-#    connect = cms.string('sqlite_file:Jec10V3.db')
-#    )
-#
-#process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
-
-
-process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 process.load('RecoJets.Configuration.RecoPFJets_cff')
 process.kt6PFJets.doRhoFastjet = True
 process.kt6PFJets.Rho_EtaMax = cms.double(4.4)
-#process.kt6PFJets.Ghost_EtaMax = cms.double(5.0)
+process.kt6PFJets.Ghost_EtaMax = cms.double(5.0)
 process.ak5PFJets.doAreaFastjet = True
-process.ak5PFJets.Rho_EtaMax = cms.double(4.4)
-#process.ak5PFJets.Ghost_EtaMax = cms.double(5.0)
-
-#process.ak5PFL1Fastjet.useCondDB = False
 
 ## re-run kt4PFJets within lepton acceptance to compute rho
 process.load('RecoJets.JetProducers.kt4PFJets_cfi')
 process.kt6PFJetsCentral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet = True )
 process.kt6PFJetsCentral.Rho_EtaMax = cms.double(2.5)
+process.kt6PFJetsNeutral = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet = True, src="pfAllNeutral" )
 
 process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets+process.kt6PFJetsCentral)
 
 process.source.fileNames = cms.untracked.vstring(
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall10/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/GEN-SIM-RECO/START38_V12-v1/0000/044E940A-55EC-DF11-89D6-0023AEFDEE60.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Spring11/VBF_ToHToZZTo4L_M-500_7TeV-powheg-pythia6/AODSIM/PU_S1_START311_V1G1-v1/0030/3A38172E-9553-E011-BC76-00E0817918C5.root'
-    #'file:/data_CMS/cms/lbianchini/F41A3437-7AED-DF11-A50D-002618943894.root',
-    #'file:/data_CMS/cms/lbianchini/ZElEl_RelVal386_1.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/DYToMuMu_M-120_TuneZ2_7TeV-pythia6-tauola/AODSIM/PU_S3_START42_V11-v2/0000/2EE73A4A-8288-E011-9561-1CC1DE1CEFC8.root'
+    'file:pickevents_1.root'
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -65,56 +53,20 @@ process.source.fileNames = cms.untracked.vstring(
 #    )
 
 postfix           = "PFlow"
-sample            = ""
 runOnMC           = False
 
 if runOnMC:
-    #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
-    process.GlobalTag.globaltag = cms.string('START41_V0::All')
-    
+    process.GlobalTag.globaltag = cms.string('START42_V12::All')
 else:
-    #process.GlobalTag.globaltag = cms.string(autoCond[ 'com10' ])
-    #process.GlobalTag.globaltag = cms.string('GR_R_311_V4::All')
-     process.GlobalTag.globaltag = cms.string('GR_R_41_V0::All')
-
-
+    process.GlobalTag.globaltag = cms.string('GR_R_42_V14::All')
+    
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.printTree1 = cms.EDAnalyzer("ParticleListDrawer",
                                     src = cms.InputTag("genParticles"),
                                     maxEventsToPrint  = cms.untracked.int32(1)
                                     )
 
-process.offlinePrimaryVerticesDA = cms.EDProducer(
-    "PrimaryVertexProducer",
-    PVSelParameters = cms.PSet(
-    maxDistanceToBeam = cms.double(1.0)
-    ),
-    verbose = cms.untracked.bool(False),
-    algorithm = cms.string('AdaptiveVertexFitter'),
-    TkFilterParameters = cms.PSet(
-    maxNormalizedChi2 = cms.double(20.0),
-    minPt = cms.double(0.0),
-    algorithm = cms.string('filter'),
-    maxD0Significance = cms.double(5.0),
-    trackQuality = cms.string('any'),
-    minPixelLayersWithHits = cms.int32(2),
-    minSiliconLayersWithHits = cms.int32(5)
-    ),
-    beamSpotLabel = cms.InputTag("offlineBeamSpot"),
-    TrackLabel = cms.InputTag("generalTracks"),
-    useBeamConstraint = cms.bool(False),
-    minNdof = cms.double(0.0),
-    TkClusParameters = cms.PSet(
-    TkDAClusParameters = cms.PSet(
-    dzCutOff = cms.double(4.0),
-    d0CutOff = cms.double(3.0),
-    Tmin = cms.double(9.0),
-    coolingFactor = cms.double(0.8),
-    vertexSize = cms.double(0.05)
-    ),
-    algorithm = cms.string('DA')
-    )
-    )
+
 
 process.primaryVertexFilter = cms.EDFilter(
     "GoodVertexFilter",
@@ -137,7 +89,6 @@ process.allEventsFilter = cms.EDFilter(
     )
 
 from PhysicsTools.PatAlgos.tools.coreTools import *
-
 if not runOnMC:
     removeMCMatching(process,["All"])
     
@@ -173,6 +124,7 @@ else:
 
 process.patJetCorrFactors.levels = JEClevels
 process.patJetCorrFactors.rho = cms.InputTag('kt6PFJets','rho')
+process.patJetCorrFactors.useRho = True
 
 process.patJetCorrFactorsL1Offset = process.patJetCorrFactors.clone(
     levels = cms.vstring('L1Offset',
@@ -192,18 +144,8 @@ process.patDefaultSequence.replace(process.patJetCorrFactors,
 
 addPFMuonIsolation(process,process.patMuons)
 addTriggerMatchingMuon(process,isMC=runOnMC)
-
-process.muonTriggerMatchHLTMuons.matchedCuts =  cms.string('(path("HLT_Mu11_v*") || path("HLT_Mu15_v*") || path("HLT_Mu17_v*") || path("HLT_isoMu11_v*") || path("HLT_isoMu15_v*") || path("HLT_isoMu17_v*")) && type("TriggerMuon")')
+process.muonTriggerMatchHLTMuons.matchedCuts =  cms.string('(path("HLT_Mu11_v*") || path("HLT_Mu15_v*") || path("HLT_Mu17_v*") || path("HLT_IsoMu11_v*") || path("HLT_IsoMu15_v*") || path("HLT_IsoMu17_v*")) && type("TriggerMuon")')
 getattr(process,"patMuons").embedTrack = True
-
-from Bianchi.Utilities.electrons import *
-addCutBasedID(process)
-addPFElectronIsolation(process,process.patElectrons)
-getattr(process,"patElectrons").embedTrack = True
-getattr(process,"patElectrons").embedGsfTrack = True
-
-addTriggerMatchingElectron(process,isMC=runOnMC)
-process.eleTriggerMatchHLTElectrons.matchedCuts =  cms.string('type("TriggerElectron")')
 
 from PhysicsTools.PatAlgos.tools.trigTools import *
 switchOnTrigger( process )
@@ -211,24 +153,6 @@ process.patTriggerEvent.processName = '*'
 
 if hasattr(process,"patTrigger"):
     process.patTrigger.processName = '*'
-
-# SC sequence
-process.mergedSuperClusters = cms.EDProducer(
-    "SuperClusterMerger",
-    src = cms.VInputTag(cms.InputTag("correctedHybridSuperClusters"),
-                        cms.InputTag("correctedMulti5x5SuperClustersWithPreshower"))
-    )
-process.selectedSuperClusters = cms.EDFilter(
-    "SuperClusterSelector",
-    src = cms.InputTag("mergedSuperClusters"),
-    cut = cms.string("energy()*sin(position().theta()) > 4"),
-    filter = cms.bool(False)
-    )
-process.makeSCs = cms.Sequence(process.mergedSuperClusters*process.selectedSuperClusters)
-
-    
-#########
-## PAT
 
 process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
     "MuonsUserEmbedded",
@@ -239,15 +163,14 @@ process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
 process.tightMuons = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
-    cut = cms.string("pt>15 && abs(eta)<2.1 && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.hitPattern.numberOfValidTrackerHits>10 && globalTrack.normalizedChi2<10 && globalTrack.ptError/globalTrack.pt<0.1 && abs(userFloat('dxyWrtPV'))<0.02 && abs(userFloat('dzWrtPV'))<0.2"),
+    cut = cms.string("pt>15 && abs(eta)<2.1 && isTrackerMuon && isGlobalMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.hitPattern.numberOfValidTrackerHits>10 && globalTrack.normalizedChi2<10 && globalTrack.ptError/globalTrack.pt<0.1 && abs(userFloat('dxyWrtPV'))<0.02 && abs(userFloat('dzWrtPV'))<0.2"),
     filter = cms.bool(False)
     )
 
 process.looseMuons = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
-    #cut = cms.string("pt>10 && (eta<2.4&&eta>-2.4) && isGlobalMuon && globalTrack.isNonnull"),
-    cut = cms.string("pt>15 && abs(eta)<2.4 && isTrackerMuon && numberOfMatches>=2 && globalTrack.isNonnull && globalTrack.hitPattern.numberOfValidMuonHits>=1 && globalTrack.hitPattern.numberOfValidPixelHits>=1 && globalTrack.hitPattern.numberOfValidTrackerHits>10 && globalTrack.normalizedChi2<10 && globalTrack.ptError/globalTrack.pt<0.1 && abs(userFloat('dxyWrtPV'))<0.02 && abs(userFloat('dzWrtPV'))<0.2"),
+    cut = cms.string("pt>10 && abs(eta)<2.4 && isGlobalMuon"),
     filter = cms.bool(False)
     )
 
@@ -264,23 +187,7 @@ process.atLeast1diMuon = cms.EDFilter(
     maxNumber = cms.uint32(999),
     )
 
-simpleCutsWP95 = "(userFloat('nHits')<=1 && userFloat('dist')>-999 && userFloat('dcot')>-999 && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.7 && userFloat('dEta')<0.01 && userFloat('HoE')<0.15) ))"
-getattr(process,"selectedPatElectronsTriggerMatch").cut = cms.string('(eta<2.4&&eta>-2.4 && !isEBEEGap) && et>10 && '+simpleCutsWP95)
-
-getattr(process,"selectedPatJets").cut = cms.string('pt>15 && abs(eta)<5.0')
-
-process.deltaRJetMuons = cms.EDProducer(
-    "DeltaRNearestMuonComputer",
-    probes = cms.InputTag("selectedPatJets"),
-    objects = cms.InputTag("looseMuons"),
-    )
-
-process.selectedPatJetsNoMuons = cms.EDProducer(
-    "JetsCleaner",
-    jets =  cms.InputTag("selectedPatJets"),
-    valueMap = cms.InputTag("deltaRJetMuons"),
-    minDeltaR = cms.double(0.3)
-    )
+getattr(process,"selectedPatJets").cut = cms.string('correctedJet("Uncorrected","none","patJetCorrFactors").pt>10 && abs(eta)<4.5')
 
 process.zPlusJetsAnalyzer = cms.EDAnalyzer(
     "ZmumuPlusJetsAnalyzer",
@@ -296,18 +203,14 @@ process.zPlusJetsAnalyzer = cms.EDAnalyzer(
 
 process.pat = cms.Sequence(
     process.allEventsFilter+
-    process.offlinePrimaryVerticesDA*
     process.primaryVertexFilter+
-    #process.scrapping +
-    #process.makeSCs +
     process.fjSequence*
     process.patDefaultSequence*
+    process.kt6PFJetsNeutral*
     process.selectedPatMuonsTriggerMatchUserEmbedded*
     (process.looseMuons+process.tightMuons)*
     process.diMuons*
     process.atLeast1diMuon*
-    process.deltaRJetMuons*
-    process.selectedPatJetsNoMuons*
     process.zPlusJetsAnalyzer+
     process.printTree1
     )
@@ -317,9 +220,6 @@ if not runOnMC:
 
 process.p = cms.Path(process.pat)
 
-massSearchReplaceAnyInputTag(process.pat,
-                             "offlinePrimaryVertices",
-                             "offlinePrimaryVerticesDA",verbose=True)
 
 from PhysicsTools.PatAlgos.patEventContent_cff import patEventContentNoCleaning
 process.out.outputCommands = cms.untracked.vstring('drop *',
@@ -332,7 +232,6 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_electronGsfTracks_*_*',
     'keep recoTrackExtras_*_*_*',
     'keep recoGsfTrackExtras_*_*_*',
-    #'keep TrackingRecHitsOwned_*_*_*',
     'keep *_selectedSuperClusters_*_*',
     'keep *_offlineBeamSpot_*_*',
     'keep *_offlinePrimaryVertices*_*_*',
@@ -350,8 +249,7 @@ process.out.SelectEvents = cms.untracked.PSet(
     SelectEvents = cms.vstring('p')
     )
 
-process.out.fileName = cms.untracked.string('patTuples_'+sample+'.root')
+process.out.fileName = cms.untracked.string('patTuples_ZmumuPlusJets.root')
 
-#process.outpath = cms.EndPath(process.out)
 process.outpath = cms.EndPath()
 

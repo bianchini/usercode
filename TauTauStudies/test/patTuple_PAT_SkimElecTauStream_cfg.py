@@ -56,7 +56,7 @@ process.source.fileNames = cms.untracked.vstring(
 #    )
 
 postfix           = "PFlow"
-runOnMC           =  True
+runOnMC           =  False
 
 if runOnMC:
     process.GlobalTag.globaltag = cms.string('START42_V12::All')

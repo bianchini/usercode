@@ -15,6 +15,7 @@
 #include "TVectorT.h"
 #include "TMultiGraph.h"
 #include "TBranch.h"
+#include "TChain.h"
 
 #include "Math/Vector3D.h"
 #include "Math/Vector4D.h"
@@ -146,7 +147,7 @@ void makePlot(TH1F* hMult=0,
   cout << "Now doing " << analysis << endl;
   for(unsigned int n = 0 ; n<nEntries ; n++){
 
-    if(n%10000==0) cout << "Processing event " << n << " ..." << endl;
+    if(n%100000==0) cout << "Processing event " << n << " ..." << endl;
 
     brjets->GetEntry(n);
     brjetsUp->GetEntry(n);
@@ -230,9 +231,54 @@ void makePlot(TH1F* hMult=0,
       Mjj  = ((*jets)[0]+(*jets)[1]).M();
     }
 
-    total++;
-    if( pt1>30 && pt2>30 && Deta>3.5 && Mjj>350 && pt3<30 && abs(eta1)<4.5 && abs(eta2)<4.5)
-      vbf++;
+
+    for(int v = 0 ; v < muons->size() ; v++){
+
+      LV MEt =  (*MET)[0]+(*muons)[v];
+      
+      for( int k = 0 ; k < jets->size() ; k++){
+	int index0 = -99;
+	int index1 = -99;
+	int index2 = -99;
+	int index3 = -99;
+	if( (*jets)[k].Pt()>20 && fabs((*jets)[k].Eta())<2.4 ){
+	  index0 = k;
+	  for( int m = 0 ;  m < jets->size() ; m++){
+	    if(m!= k && index1>=0 && index2>=0 && index3<0)  index3 = m;
+	    if(m!= k && index1>=0 && index2<0  && index3<0)  index2 = m;
+	    if(m!= k && index1<0  && index2<0  && index3<0)  index1 = m;
+	  }
+	  //cout << index0 << " - " << index1 << " - " << index2 << " - " << index3 << endl;
+	}
+
+	if(index0>0){
+	  float cos1 = (*muons)[1-v].Px()/(*muons)[1-v].Pt();
+	  float cos2 = (*jets)[index0].Px()/(*jets)[index0].Pt();
+	  float sen1 = (*muons)[1-v].Py()/(*muons)[1-v].Pt();
+	  float sen2 = (*jets)[index0].Py()/(*jets)[index0].Pt();
+	  float bisecX = cos1 + cos2;
+	  float bisecY = sen1 + sen2;
+	  float norm = TMath::Sqrt(bisecX*bisecX + bisecY*bisecY);
+	  if(norm>0.){
+	    bisecX /= norm;
+	    bisecY /= norm;
+	  }
+	  float pZetaVis = ((*muons)[1-v]+(*jets)[index0]).Px()*bisecX + ((*muons)[1-v]+(*jets)[index0]).Py()*bisecY;
+	  float pZeta    = ((*muons)[1-v]+(*jets)[index0]+MEt).Px()*bisecX + ((*muons)[1-v]+(*jets)[index0]+MEt).Py()*bisecY; 
+
+	  if((pZeta-1.5*pZetaVis) < -20) index0 = -99;
+	}
+
+	if(index0>=0) total+=puWeight;
+	if(index0>=0 && index1>=0 && index2>=0 && (index3<0 || (*jets)[index3].Pt()<30)
+	   && (*jets)[index1].Pt()>30 && (*jets)[index2].Pt()>30 && TMath::Abs((*jets)[index1].Eta()-(*jets)[index2].Eta())>3.5 &&
+	   ((*jets)[index1]+(*jets)[index2]).M()>350 )
+	  vbf+=puWeight;
+      }
+    }
+
+    //total+=puWeight;
+    //if(pt1>30 && pt2>30 && Deta>3.5 && Mjj>350 && pt3<30) vbf+=puWeight;
 
 
     if(hPt1)   hPt1->Fill(pt1,puWeight);
@@ -249,6 +295,9 @@ void makePlot(TH1F* hMult=0,
    delete jets;
    delete muons ;
    delete MET ;
+   delete jetsBtagHE;
+   delete jetsBtagHP;
+   delete jetsChNfraction;
 
    cout << "Efficiency for vbf cut " << vbf << "/" << total << " = " << float(vbf)/float(total) << endl;
 
@@ -273,7 +322,7 @@ void plot(){
   c0->SetTicky();
   c0->SetObjectStat(0);
   c0->SetLogy(1);
-  c0->Divide(2,3);
+  c0->Divide(3,3);
 
   TLegend* leg = new TLegend(0.55,0.68,0.85,0.88,NULL,"brNDC");
   leg->SetFillStyle(0);
@@ -281,11 +330,17 @@ void plot(){
   leg->SetFillColor(10);
   leg->SetTextSize(0.04);
 
-  TFile fdata("/data_CMS/cms/lbianchini/VbfJetsStudy/Background//treeZmumuPlusJets_Run2011-Mu-Zjets.root");
-  TFile fmc("/data_CMS/cms/lbianchini/VbfJetsStudy/Background/treeZmumuPlusJets_DYJets-50-madgraph-PUS4-Zjets.root");
+  TFile fdata("/data_CMS/cms/lbianchini/VbfJetsStudy/Background/MuTauStreamSummer11_fAna/treeZmumuPlusJets_Run2011-Mu-Zjets.root");
+  TChain mc("zPlusJetsAnalyzer/tree");
+
+  //mc.Add("/data_CMS/cms/lbianchini/VbfJetsStudy/Background/MuTauStreamSummer11_fAna/treeZmumuPlusJets_DYJets-50-madgraph-PUS4-Zjets.root");
+  //mc.Add("/data_CMS/cms/lbianchini/VbfJetsStudy/Background/MuTauStreamSummer11_fAna/treeZmumuPlusJets_DYJets-50-madgraph-PUS4-Zjets_1.root");
+  mc.Add("/data_CMS/cms/lbianchini/VbfJetsStudy/Background/MuTauStreamSummer11_fAna/treeZmumuPlusJets_DYJets-50-madgraph-PUS4-Zjets_2.root");
+  //mc.Add("/data_CMS/cms/lbianchini/VbfJetsStudy/Background/MuTauStreamSummer11_fAna/treeZmumuPlusJets_DYJets-50-madgraph-PUS4-Zjets_3.root");
 
   TTree* treeData = (TTree*)(fdata.Get("zPlusJetsAnalyzer/tree"));
-  TTree* treeMc   = (TTree*)(fmc.Get("zPlusJetsAnalyzer/tree"));
+  mc.LoadTree(1);
+  TTree* treeMc   = (TTree*)mc.GetTree();
 
   TH1F* hMultData = new TH1F("hMultData"," ; multiplicity of jets p_{T}>30 GeV ; units",10,0,10);
   TH1F* hMultMc   = new TH1F("hMultMc","",10,0,10);
@@ -323,11 +378,29 @@ void plot(){
   TH1F* hMjjMcDown = new TH1F("hMjjMcDown","",50,0,1000);
   setUp(hMjjData,hMjjMc,hMjjMcUp,hMjjMcDown);
 
+  TH1F* hDphiData = new TH1F("hDphiData"," ; #Delta#phi leading-trailing jet pair; units",40,0,3.2);
+  TH1F* hDphiMc   = new TH1F("hDphiMc","",40,0,3.2);
+  TH1F* hDphiMcUp = new TH1F("hDphiMcUp","",40,0,3.2);
+  TH1F* hDphiMcDown = new TH1F("hDphiMcDown","",40,0,3.2);
+  setUp(hDphiData,hDphiMc,hDphiMcUp,hDphiMcDown);
+
+  TH1F* hFrac1Data = new TH1F("hFrac1Data"," ; Fraction of charged energy from PV of leading jet; units",50,0,1);
+  TH1F* hFrac1Mc   = new TH1F("hFrac1Mc","",50,0,1);
+  TH1F* hFrac1McUp = new TH1F("hFrac1McUp","",50,0,1);
+  TH1F* hFrac1McDown = new TH1F("hFrac1McDown","",50,0,1);
+  setUp(hFrac1Data,hFrac1Mc,hFrac1McUp,hFrac1McDown);
+
+  TH1F* hFrac2Data = new TH1F("hFrac2Data"," ; Fraction of charged energy from PV of trailing jet; units",50,0,1);
+  TH1F* hFrac2Mc   = new TH1F("hFrac2Mc","",50,0,1);
+  TH1F* hFrac2McUp = new TH1F("hFrac2McUp","",50,0,1);
+  TH1F* hFrac2McDown = new TH1F("hFrac2McDown","",50,0,1);
+  setUp(hFrac2Data,hFrac2Mc,hFrac2McUp,hFrac2McDown);
+
   ///////////////////////////////////////////////////////////////////
-  makePlot( hMultData,   hPt1Data,  hPt2Data,  hPt3Data,  hDetaData,   hMjjData  ,0,0,0,  treeData, false,   "");
-  makePlot( hMultMc,     hPt1Mc,    hPt2Mc,    hPt3Mc,    hDetaMc,     hMjjMc    ,0,0,0,  treeMc,   true ,   "");
-  makePlot( hMultMcUp,   hPt1McUp,  hPt2McUp,  hPt3McUp,  hDetaMcUp,   hMjjMcUp  ,0,0,0,  treeMc,   true ,   "JetUp");
-  makePlot( hMultMcDown, hPt1McDown,hPt2McDown,hPt3McDown,hDetaMcDown, hMjjMcDown,0,0,0,  treeMc,   true ,   "JetDown");
+  makePlot( hMultData,   hPt1Data,  hPt2Data,  hPt3Data,  hDetaData,   hMjjData  , hDphiData   ,hFrac1Data,   hFrac2Data   ,  treeData, false,   "");
+  makePlot( hMultMc,     hPt1Mc,    hPt2Mc,    hPt3Mc,    hDetaMc,     hMjjMc    , hDphiMc     ,hFrac1Mc,     hFrac2Mc     ,  treeMc,   true ,   "");
+  makePlot( hMultMcUp,   hPt1McUp,  hPt2McUp,  hPt3McUp,  hDetaMcUp,   hMjjMcUp  , hDphiMcUp   ,hFrac1McUp,   hFrac2McUp   ,  treeMc,   true ,   "JetUp");
+  makePlot( hMultMcDown, hPt1McDown,hPt2McDown,hPt3McDown,hDetaMcDown, hMjjMcDown, hDphiMcDown ,hFrac1McDown, hFrac2McDown ,  treeMc,   true ,   "JetDown");
   ///////////////////////////////////////////////////////////////////
 
   leg->AddEntry(hMultData,  "Observed","P");
@@ -388,6 +461,33 @@ void plot(){
   hMjjMc->DrawNormalized("HISTSAME");
   hMjjMcUp->DrawNormalized("HISTSAME");
   hMjjMcDown->DrawNormalized("HISTSAME");
+  leg->Draw();
+
+  c0->cd(7);
+  //gPad->SetLogy();
+  hDphiData->Sumw2();
+  hDphiData->DrawNormalized("P");
+  hDphiMc->DrawNormalized("HISTSAME");
+  hDphiMcUp->DrawNormalized("HISTSAME");
+  hDphiMcDown->DrawNormalized("HISTSAME");
+  leg->Draw();
+
+  c0->cd(8);
+  //gPad->SetLogy();
+  hFrac1Data->Sumw2();
+  hFrac1Data->DrawNormalized("P");
+  hFrac1Mc->DrawNormalized("HISTSAME");
+  hFrac1McUp->DrawNormalized("HISTSAME");
+  hFrac1McDown->DrawNormalized("HISTSAME");
+  leg->Draw();
+
+  c0->cd(9);
+  //gPad->SetLogy();
+  hFrac2Data->Sumw2();
+  hFrac2Data->DrawNormalized("P");
+  hFrac2Mc->DrawNormalized("HISTSAME");
+  hFrac2McUp->DrawNormalized("HISTSAME");
+  hFrac2McDown->DrawNormalized("HISTSAME");
   leg->Draw();
 
   c0->Draw();

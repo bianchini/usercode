@@ -30,7 +30,7 @@ process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 #process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
 
 
-runOnMC = True
+runOnMC = False
 
 if runOnMC:
     process.GlobalTag.globaltag = cms.string('START42_V13::All')
@@ -38,7 +38,7 @@ else:
     process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 10
+process.MessageLogger.cerr.FwkReport.reportEvery = 2000
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source(
@@ -202,7 +202,7 @@ process.computeRhoNeutral = cms.Sequence(
     )
 ####################################################################################
 
-doSVFitReco = False
+doSVFitReco = True
 
 process.load("Bianchi.Utilities.diTausReconstruction_cff")
 process.diTau = process.allMuTauPairs.clone()

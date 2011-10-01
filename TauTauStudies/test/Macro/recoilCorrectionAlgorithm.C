@@ -15,9 +15,10 @@ using namespace std;
 
 class recoilCorrectionAlgorithm {
 public:
-  recoilCorrectionAlgorithm():
+  recoilCorrectionAlgorithm(int verbose=0):
+    verbose_(verbose),
     DATAd_(0.0) ,DATAk_(-0.874173)  ,DATAsigma1_(9.1567)  ,DATAb1_(0.00780813)  ,DATAc1_(2.34183E-05)  ,DATAsigma2_(9.18864)  ,DATAb2_(0.00594046)  ,DATAc2_(-3.73481E-06),
-    MCd_(0.0),MCk_(-0.91035),MCsigma1_(8.90269),MCb1_(0.00430534),MCc1_(2.07653e-05),MCsigma2_(8.95895),MCb2_(0.00179307),MCc2_(-4.80025e-06),
+    MCd_  (0.0),MCk_   (-0.91035),MCsigma1_     (8.90269),MCb1_   (0.00430534),MCc1_    (2.07653e-05),MCsigma2_    (8.95895),MCb2_    (0.00179307),MCc2_    (-4.80025e-06),
 
     DATAdUnc_  (0.0)  ,DATAkUnc_  (0.00075441)   ,DATAsigma1Unc_  (0.0186172)   ,DATAb1Unc_  (0.000187149)  ,DATAc1Unc_  (2.21508e-06)  ,DATAsigma2Unc_  (0.01791930)  ,DATAb2Unc_  (0.000165015)  ,DATAc2Unc_  (1.82988e-06),
     MCdUnc_(0.0)  ,MCkUnc_(0.000177905)  ,MCsigma1Unc_(0.00487887)  ,MCb1Unc_(4.66588e-05)  ,MCc1Unc_(5.55936e-07)  ,MCsigma2Unc_(0.00460745)  ,MCb2Unc_(3.87975e-05)  ,MCc2Unc_(4.23705e-07)
@@ -29,6 +30,7 @@ public:
   
 private:
 
+  int verbose_;
 
   double DATAd_;
   double DATAk_;
@@ -153,6 +155,17 @@ LV recoilCorrectionAlgorithm::buildZllCorrectedMEt(LV uncorrectedMEt, LV genMEt,
     correctedMEt.SetPy( correctedMETpy );
     correctedMEt.SetPz( 0.0 );
     correctedMEt.SetE( correctedMETpt );
+
+    if( verbose_ && (correctedMEt.Pt()-uncorrectedMEt.Pt())/uncorrectedMEt.Pt() > 3.0 ){
+      cout << "Corr met is " << correctedMEt.Pt() << "/" << uncorrectedMEt.Pt()  << " >+300% larger than raw met ==>" << endl;
+      cout << " Boson pT " << qT 
+	   << " -- Gen MET " << genMEt.Pt() << endl;
+      cout << "u1gen=" << u1gen << ", u2gen=" << u2gen << endl;
+      cout << "u1rec=" << u1rec << ", u2rec=" << u2rec << endl;
+      cout << "u1sigmaCorr=" << u1sigmaCorr << ", u2sigmaCorr=" << u2sigmaCorr << endl;
+      cout << endl;
+    }
+    
  }
 
   return correctedMEt;
