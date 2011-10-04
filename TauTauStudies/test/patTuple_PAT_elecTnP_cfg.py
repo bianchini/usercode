@@ -23,13 +23,13 @@ process.source.fileNames = cms.untracked.vstring(
     )
 
 postfix           = "PFlow"
-runOnMC           = True
+runOnMC           =  True
 FileName          = "treeElecTnP.root"
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START42_V12::All')
+    process.GlobalTag.globaltag = cms.string('START42_V13::All')
 else:
-    process.GlobalTag.globaltag = cms.string('GR_R_42_V14::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
 
 
 process.primaryVertexFilter = cms.EDFilter(
@@ -67,8 +67,7 @@ addPFElectronIsolation(process,process.patElectrons)
 getattr(process,"patElectrons").embedTrack = True
 getattr(process,"patElectrons").embedGsfTrack = True
 addTriggerMatchingElectron(process,isMC=runOnMC)
-process.eleTriggerMatchHLTElectrons.matchedCuts =  cms.string('( (path("HLT_Ele27_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_v*",0,0) || path("HLT_Ele32_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_v*",0,0) ) || filter("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter"))  && type("TriggerElectron")')
-
+process.eleTriggerMatchHLTElectrons.matchedCuts = cms.string('( (path("HLT_Ele27_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_v*",0,0) || path("HLT_Ele32_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_v*",0,0) ) || filter("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter") || filter("hltEle15CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter"))  && type("TriggerElectron")')
 
 if hasattr(process,"patTrigger"):
     process.patTrigger.processName = '*'

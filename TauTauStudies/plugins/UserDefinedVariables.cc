@@ -41,6 +41,7 @@ UserDefinedVariables::UserDefinedVariables(const edm::ParameterSet & iConfig) :
   fpuweight_ = new PUWeight();
   produces<edm::ValueMap<float> >("Mt");
   produces<edm::ValueMap<float> >("puMCWeight");
+  produces<edm::ValueMap<float> >("numGenPU");
   produces<edm::ValueMap<float> >("genDecay");
 }
 
@@ -95,27 +96,24 @@ void UserDefinedVariables::produce(edm::Event & iEvent, const edm::EventSetup & 
     int nOOTPUVertices = -99;
     edm::Handle<std::vector<PileupSummaryInfo> > puInfoH;
     if(isMC_){
-      // PU infos
-      //iEvent.getByType(puInfoH);
       iEvent.getByLabel(edm::InputTag("addPileupInfo"), puInfoH);
 
       if(puInfoH.isValid()){
 	for(std::vector<PileupSummaryInfo>::const_iterator it = puInfoH->begin(); it != puInfoH->end(); it++){
-	  //cout << nPUVertices << endl;
 	  if(it->getBunchCrossing() ==0) nPUVertices = it->getPU_NumInteractions();
 	  else  nOOTPUVertices = it->getPU_NumInteractions();
 	}
-      }//else{
-      //	cout << "Not valid!!!" << endl;
-      //}
+      }
     }
     float mcPUweight = fpuweight_->GetWeight(nPUVertices);
-    //cout << mcPUweight << " -- " << nPUVertices << endl;
+    float numGenPU   = nPUVertices;
+
 
     // prepare vector for output   
     std::vector<float> values;
     std::vector<float> values2;
     std::vector<float> values3;
+    std::vector<float> values4;
 
     View<reco::Candidate>::const_iterator object; 
     for (object = objects->begin(); object != objects->end(); ++object) {
@@ -127,6 +125,7 @@ void UserDefinedVariables::produce(edm::Event & iEvent, const edm::EventSetup & 
       values.push_back(Mt);
       values2.push_back(mcPUweight);
       values3.push_back(fabs(genDecay));
+      values4.push_back(numGenPU);
 
     }
 
@@ -148,6 +147,12 @@ void UserDefinedVariables::produce(edm::Event & iEvent, const edm::EventSetup & 
     filler3.insert(objects, values3.begin(), values3.end());
     filler3.fill();
     iEvent.put(valMap3, "genDecay");
+
+    std::auto_ptr<ValueMap<float> > valMap4(new ValueMap<float>());
+    ValueMap<float>::Filler filler4(*valMap4);
+    filler4.insert(objects, values4.begin(), values4.end());
+    filler4.fill();
+    iEvent.put(valMap4, "numGenPU");
 
 }
 

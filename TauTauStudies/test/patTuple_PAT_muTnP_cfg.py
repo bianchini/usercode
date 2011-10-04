@@ -26,9 +26,9 @@ runOnMC           = True
 FileName          = "treeMuTnP.root"
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START42_V12::All')
+    process.GlobalTag.globaltag = cms.string('START42_V13::All')
 else:
-    process.GlobalTag.globaltag = cms.string('GR_R_42_V14::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
 
 
 process.primaryVertexFilter = cms.EDFilter(
@@ -64,8 +64,7 @@ addPfMET(process, postfix)
 addPFMuonIsolation(process,process.patMuons)
 
 addTriggerMatchingMuon(process,isMC=runOnMC)
-process.muonTriggerMatchHLTMuons.matchedCuts =  cms.string('(path("HLT_IsoMu17_v*",0,0) || filter("hltSingleMuIsoL3IsoFiltered12") || filter("hltSingleMuIsoL3IsoFiltered15")) && type("TriggerMuon")')
-
+process.muonTriggerMatchHLTMuons.matchedCuts = cms.string('(path("HLT_IsoMu17_v*",0,0) || path("HLT_IsoMu24_v*",0,0) || filter("hltSingleMuIsoL3IsoFiltered12") || filter("hltSingleMuIsoL3IsoFiltered15")) && type("TriggerMuon")')
 
 if hasattr(process,"patTrigger"):
     process.patTrigger.processName = '*'
