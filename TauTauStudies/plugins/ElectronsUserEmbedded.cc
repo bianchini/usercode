@@ -127,11 +127,11 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
 
     if(vertexes->size()!=0 && (aElectron.gsfTrack()).isNonnull() ){
       dxyWrtPV = (aElectron.gsfTrack())->dxy( (*vertexes)[0].position() ) ;
-      dzWrtPV  = (aElectron.gsfTrack())->dz( (*vertexes)[0].position() ) ;
+      dzWrtPV  = (aElectron.gsfTrack())->dz(  (*vertexes)[0].position() ) ;
     }
     else if (vertexes->size()!=0 && (aElectron.track()).isNonnull() ){
       dxyWrtPV = (aElectron.track())->dxy( (*vertexes)[0].position() ) ;
-      dzWrtPV  = (aElectron.track())->dz( (*vertexes)[0].position() ) ;
+      dzWrtPV  = (aElectron.track())->dz(  (*vertexes)[0].position() ) ;
     }
 
     aElectron.addUserFloat("dxyWrtPV",dxyWrtPV);
@@ -145,12 +145,14 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     reco::isodeposit::AbsVetos vetos2011Neutral;  
     reco::isodeposit::AbsVetos vetos2011Photons;
 
+    vetos2010Charged.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.01));
     vetos2010Charged.push_back(new reco::isodeposit::ThresholdVeto(0.5));
     vetos2010Neutral.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.08));
     vetos2010Neutral.push_back(new reco::isodeposit::ThresholdVeto(1.0));
     vetos2010Photons.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.05));
     vetos2010Photons.push_back(new reco::isodeposit::ThresholdVeto(1.0));
-    
+
+    vetos2011Charged.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.01));
     vetos2011Charged.push_back(new reco::isodeposit::ThresholdVeto(0.0));
     vetos2011Neutral.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.01));
     vetos2011Neutral.push_back(new reco::isodeposit::ThresholdVeto(0.5));

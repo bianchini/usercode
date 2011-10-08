@@ -100,6 +100,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   int genDecay_;
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* extraMuons_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* pfMuons_; 
   
   unsigned long run_,event_,lumi_;
   float sumEt_;
@@ -135,7 +136,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   float rhoFastJet_;
   float rhoNeutralFastJet_;
   int nPUVertices_;
-  int nOOTPUVertices_;
+  float nPUaverage_;
   std::vector<double> weights2011_;
 
   PUWeight* fpuweight_;

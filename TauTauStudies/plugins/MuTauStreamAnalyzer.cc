@@ -26,6 +26,9 @@
 #include "DataFormats/JetReco/interface/GenJetCollection.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
+
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
 #include "DataFormats/PatCandidates/interface/TriggerEvent.h"
@@ -104,6 +107,7 @@ void MuTauStreamAnalyzer::beginJob(){
   genVP4_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
   extraMuons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  pfMuons_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
   fpuweight_ = 0;//new PUWeight();
 
@@ -175,6 +179,7 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("genDecay",&genDecay_,"genDecay/I");
 
   tree_->Branch("extraMuons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&extraMuons_);
+  tree_->Branch("pfMuons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&pfMuons_);
 
   tree_->Branch("sumEt",&sumEt_,"sumEt/F");
   tree_->Branch("mTauTauMin",&mTauTauMin_,"mTauTauMin/F");
@@ -227,6 +232,7 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("rhoNeutralFastJet",&rhoNeutralFastJet_,"rhoNeutralFastJet/F");
   tree_->Branch("mcPUweight",&mcPUweight_,"mcPUweight/F");
   tree_->Branch("nPUVertices",&nPUVertices_,"nPUVertices/I");
+  tree_->Branch("nPUaverage",&nPUaverage_,"nPUaverage/F");
 
 
 }
@@ -237,7 +243,7 @@ MuTauStreamAnalyzer::~MuTauStreamAnalyzer(){
   delete METP4_; delete diTauVisP4_; delete diTauCAP4_; delete diTauICAP4_; 
   delete diTauSVfitP4_; delete genVP4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_;
-  delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_; delete extraMuons_; delete jetsIDL1OffsetP4_;
+  delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_; delete extraMuons_; delete pfMuons_; delete jetsIDL1OffsetP4_;
   delete tRandom_ ; /*delete fpuweight_*/ delete jetsChNfraction_; delete jetsChEfraction_;delete jetMoments_;
   delete gammadR_ ; delete gammaPt_;
 }
@@ -269,6 +275,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   genDiTauLegsP4_->clear();
   genMETP4_->clear();
   extraMuons_->clear();
+  pfMuons_->clear();
   jetsBtagHE_->clear();
   jetsBtagHP_->clear();
   tauXTriggers_->clear();
@@ -294,6 +301,13 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     edm::LogError("DataNotAvailable")
       << "No newJets label available \n";
   const pat::JetCollection* newJets = newJetsHandle.product();
+
+  edm::Handle<reco::PFCandidateCollection> pfHandle;
+  iEvent.getByLabel("particleFlow",pfHandle);
+  if( !pfHandle.isValid() )  
+    edm::LogError("DataNotAvailable")
+      << "No pf particles label available \n";
+  const reco::PFCandidateCollection* pfCandidates = pfHandle.product();
 
   edm::Handle<reco::VertexCollection> pvHandle;
   iEvent.getByLabel( verticesTag_ ,pvHandle);
@@ -389,8 +403,9 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
   edm::Handle<reco::GenJetCollection> tauGenJetsHandle;
   edm::Handle<std::vector<PileupSummaryInfo> > puInfoH;
-  nPUVertices_= -99;
-  nOOTPUVertices_=-99;
+  nPUVertices_       = -99;
+  nPUaverage_        = -99;
+  int nOOTPUVertices_= -99;
   float sum_nvtx = 0;
 
   const reco::GenJetCollection* tauGenJets = 0;
@@ -413,6 +428,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       }
     }
   }
+  nPUaverage_ = sum_nvtx/3.;
   if(verbose_){
     cout << "Average num of int = " << sum_nvtx/3. << endl;
     cout << "Num of PU = " << nPUVertices_ << endl;
@@ -874,12 +890,14 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   isodeposit::AbsVetos vetos2011NeutralLeg1; 
   isodeposit::AbsVetos vetos2011PhotonLeg1;
  
+  vetos2010ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
   vetos2010ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
   vetos2010NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
   vetos2010NeutralLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
   vetos2010PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.05));
   vetos2010PhotonLeg1.push_back( new isodeposit::ThresholdVeto(1.0));
 
+  vetos2011ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
   vetos2011ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
   vetos2011NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
   vetos2011NeutralLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
@@ -912,6 +930,14 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   phIsoPULeg1v2_ = 
     leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011PhotonLeg1).first;
 
+  // loop over pfMuon to make sure we don't have low-mass DY events
+  for(unsigned int i = 0 ; i < pfCandidates->size() ; i++){
+    const reco::PFCandidate cand = (*pfCandidates)[i];
+    if(! (cand.particleId()== PFCandidate::mu && cand.pt()>0.5) ) continue;
+    float dz = (cand.trackRef())->dz( leg1->vertex() );
+    if(dz>0.2) continue;
+    pfMuons_->push_back(cand.p4());
+  }
 
   chIsoLeg2_ = leg2->isolationPFChargedHadrCandsPtSum();
   //

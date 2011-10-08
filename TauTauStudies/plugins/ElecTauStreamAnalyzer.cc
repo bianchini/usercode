@@ -107,6 +107,8 @@ void ElecTauStreamAnalyzer::beginJob(){
   genVP4_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   
   extraElectrons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  pfElectrons_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+
   
   fpuweight_ = 0;// new PUWeight();
 
@@ -176,6 +178,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("genVP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genVP4_);
   tree_->Branch("genDecay",&genDecay_,"genDecay/I");
   tree_->Branch("extraElectrons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&extraElectrons_);
+  tree_->Branch("pfElectrons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&pfElectrons_);
 
   tree_->Branch("sumEt",&sumEt_,"sumEt/F");
   tree_->Branch("mTauTauMin",&mTauTauMin_,"mTauTauMin/F");
@@ -252,7 +255,7 @@ ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
   delete METP4_; delete diTauVisP4_; delete diTauCAP4_; delete diTauICAP4_; 
   delete diTauSVfitP4_; delete genVP4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_;
-  delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;delete extraElectrons_;
+  delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;delete extraElectrons_; delete pfElectrons_;
   delete tRandom_ ; /*delete fpuweight_;*/ delete jetsChNfraction_; delete jetsChEfraction_; delete jetMoments_;
   delete gammadR_ ; delete gammaPt_;
 }
@@ -272,6 +275,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   METP4_->clear();
   genVP4_->clear();
   extraElectrons_->clear();
+  pfElectrons_->clear();
   jetsChNfraction_->clear();
   jetsChEfraction_->clear();
   jetMoments_->clear();
@@ -308,6 +312,13 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     edm::LogError("DataNotAvailable")
       << "No newJets label available \n";
   const pat::JetCollection* newJets = newJetsHandle.product();
+
+  edm::Handle<reco::PFCandidateCollection> pfHandle;
+  iEvent.getByLabel("particleFlow",pfHandle);
+  if( !pfHandle.isValid() )  
+    edm::LogError("DataNotAvailable")
+      << "No pf particles label available \n";
+  const reco::PFCandidateCollection* pfCandidates = pfHandle.product();
 
   edm::Handle<reco::VertexCollection> pvHandle;
   iEvent.getByLabel(  verticesTag_ ,pvHandle);
@@ -897,12 +908,14 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   isodeposit::AbsVetos vetos2011NeutralLeg1; 
   isodeposit::AbsVetos vetos2011PhotonLeg1;
  
+  vetos2010ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
   vetos2010ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
   vetos2010NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
   vetos2010NeutralLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
   vetos2010PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.05));
   vetos2010PhotonLeg1.push_back( new isodeposit::ThresholdVeto(1.0));
 
+  vetos2011ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
   vetos2011ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
   vetos2011NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
   vetos2011NeutralLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
@@ -935,6 +948,18 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   phIsoPULeg1v2_ = 
     leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011PhotonLeg1).first;
   
+  // loop over pfElectrons to make sure we don't have low-mass DY events
+  for(unsigned int i = 0 ; i < pfCandidates->size() ; i++){
+    const reco::PFCandidate cand = (*pfCandidates)[i];
+    if(! (cand.particleId()== PFCandidate::e && cand.pt()>0.5) ) continue;
+    float dz = 999;
+    if(cand.trackRef().isNonnull()) 
+      dz = (cand.trackRef())->dz(    leg1->vertex() );
+    if(cand.gsfTrackRef().isNonnull())
+      dz = (cand.gsfTrackRef())->dz( leg1->vertex() );
+    if(dz>0.2) continue;
+    pfElectrons_->push_back(cand.p4());
+  }
 
   chIsoLeg2_ = leg2->isolationPFChargedHadrCandsPtSum();
   nhIsoLeg2_ = 0.;
@@ -980,7 +1005,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   diTauICAP4_->push_back( theDiTau->p4ImprovedCollinearApprox() );
 
   math::XYZTLorentzVectorD nSVfitFitP4(0,0,0,(theDiTau->p4Vis()).M() );
-  if( theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)!=0 /* &&theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)->isValidSolution()*/ ){
+  if( theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)->isValidSolution() ){
     if(verbose_) cout << "Visible mass ==> " << nSVfitFitP4.E() << endl;
     nSVfitFitP4.SetPxPyPzE( 0,0,0, theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)->mass() ) ;
     if(verbose_) cout << "SVFit fit solution ==> " << nSVfitFitP4.E() << endl;
@@ -988,9 +1013,12 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   diTauSVfitP4_->push_back( nSVfitFitP4  );
 
   
-  diTauNSVfitMass_        = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->mass()        : -99; 
-  diTauNSVfitMassErrUp_   = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrUp()   : -99; 
-  diTauNSVfitMassErrDown_ = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrDown() : -99; 
+  diTauNSVfitMass_        = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
+    ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->mass()        : -99; 
+  diTauNSVfitMassErrUp_   = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
+    ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrUp()   : -99; 
+  diTauNSVfitMassErrDown_ = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
+    ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrDown() : -99; 
 
   run_   = iEvent.run();
   event_ = (iEvent.eventAuxiliary()).event();

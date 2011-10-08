@@ -98,6 +98,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   int genDecay_;
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* extraElectrons_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* pfElectrons_; 
 
   
   unsigned long run_,event_,lumi_;

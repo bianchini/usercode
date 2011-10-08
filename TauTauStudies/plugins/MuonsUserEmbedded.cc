@@ -52,12 +52,14 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
     reco::isodeposit::AbsVetos vetos2011Neutral;  
     reco::isodeposit::AbsVetos vetos2011Photons;
 
+    vetos2010Charged.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aMuon.eta(),aMuon.phi()),0.01));
     vetos2010Charged.push_back(new reco::isodeposit::ThresholdVeto(0.5));
     vetos2010Neutral.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aMuon.eta(),aMuon.phi()),0.08));
     vetos2010Neutral.push_back(new reco::isodeposit::ThresholdVeto(1.0));
     vetos2010Photons.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aMuon.eta(),aMuon.phi()),0.05));
     vetos2010Photons.push_back(new reco::isodeposit::ThresholdVeto(1.0));
     
+    vetos2011Charged.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aMuon.eta(),aMuon.phi()),0.01));
     vetos2011Charged.push_back(new reco::isodeposit::ThresholdVeto(0.0));
     vetos2011Neutral.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aMuon.eta(),aMuon.phi()),0.01));
     vetos2011Neutral.push_back(new reco::isodeposit::ThresholdVeto(0.5));

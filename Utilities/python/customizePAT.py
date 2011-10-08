@@ -12,6 +12,10 @@ def addSelectedPFlowParticle(process,verbose=False):
     process.load("CommonTools.ParticleFlow.ParticleSelectors.pfSortByType_cff")
     process.load("CommonTools.ParticleFlow.pfNoPileUp_cff")
 
+    process.pfAllChargedCandidates = process.pfAllChargedHadrons.clone()
+    process.pfAllChargedCandidates.pdgId.extend(process.pfAllMuons.pdgId.value())
+    process.pfAllChargedCandidates.pdgId.extend(process.pfAllElectrons.pdgId.value())
+    
     process.pfPU = cms.EDProducer(
         "TPPFCandidatesOnPFCandidates",
         enable =  cms.bool( True ),
@@ -22,7 +26,7 @@ def addSelectedPFlowParticle(process,verbose=False):
         )
     process.pfAllChargedHadronsPU = process.pfAllChargedHadrons.clone(src='pfPU')
 
-    #####
+    #################################################################
     process.pfNoCharged = process.pfPU.clone(
         name = cms.untracked.string("noChargedPFCandidates"),
         topCollection = cms.InputTag("pfAllChargedHadrons"),
@@ -33,12 +37,13 @@ def addSelectedPFlowParticle(process,verbose=False):
         pdgId = cms.vint32(111, 130, 310, 2112, 22),
         src = cms.InputTag("pfNoCharged")
         )
-    #####
+    #################################################################
 
     process.pfCandidateSelectionByType = cms.Sequence(
         process.pfNoPileUpSequence *
         ( process.pfAllNeutralHadrons +
           process.pfAllChargedHadrons +
+          process.pfAllChargedCandidates +
           process.pfAllPhotons +
           (process.pfPU * process.pfAllChargedHadronsPU )
           )  +
@@ -46,17 +51,12 @@ def addSelectedPFlowParticle(process,verbose=False):
         process.pfAllElectrons +
         ( process.pfNoCharged+process.pfAllNeutral)
         )
-    process.pfPileUp.Enable = True # enable pile-up filtering
-    process.pfPileUp.Vertices = "offlinePrimaryVertices" # use vertices w/o BS
-    process.pfAllMuons.src = "particleFlow"
-    process.pfAllElectrons.src = "particleFlow"
+    process.pfPileUp.Enable              = True
+    process.pfPileUp.checkClosestZVertex = False
+    process.pfPileUp.Vertices            = "offlinePrimaryVertices"
+    process.pfAllMuons.src               = "particleFlow"
+    process.pfAllElectrons.src           = "particleFlow"
     
-    #process.patDefaultSequence.replace(process.patCandidates,
-    #                                   process.pfCandidateSelectionByType+
-    #                                   process.patCandidates)
-    #process.patDefaultSequence.replace(process.electronMatch,
-    #                                   process.pfCandidateSelectionByType+
-    #                                   process.electronMatch)
     
 ###################a#################################################
 def addPFMuonIsolation(process,module,postfix="",verbose=False):
@@ -69,7 +69,7 @@ def addPFMuonIsolation(process,module,postfix="",verbose=False):
     #setup correct src of isolated object
     setattr(process,"isoDepMuonWithCharged"+postfix,
             isoDepositReplace(module.muonSource,
-                              'pfAllChargedHadrons'))
+                              'pfAllChargedCandidates'))
     setattr(process,"isoDepMuonWithChargedPU"+postfix,
             isoDepositReplace(module.muonSource,
                               'pfAllChargedHadronsPU'))
@@ -126,7 +126,7 @@ def addPFMuonIsolation(process,module,postfix="",verbose=False):
         ComponentName = cms.string('CandViewExtractor'),
         DR_Max = cms.double(1.0),
         Diff_r = cms.double(99999.99),
-        inputCandView = cms.InputTag("pfAllChargedHadrons"),
+        inputCandView = cms.InputTag("pfAllChargedCandidates"),
         DR_Veto = cms.double(1e-05),
         DepositLabel = cms.untracked.string('')
         )
@@ -263,7 +263,7 @@ def addPFElectronIsolation(process,module,postfix="",verbose=False):
     #setup correct src of isolated object
     setattr(process,"isoDepElectronWithCharged"+postfix,
             isoDepositReplace(module.electronSource,
-                              'pfAllChargedHadrons'))
+                              'pfAllChargedCandidates'))
     setattr(process,"isoDepElectronWithChargedPU"+postfix,
             isoDepositReplace(module.electronSource,
                               'pfAllChargedHadronsPU'))
@@ -323,7 +323,7 @@ def addPFElectronIsolation(process,module,postfix="",verbose=False):
         ComponentName = cms.string('CandViewExtractor'),
         DR_Max = cms.double(1.0),
         Diff_r = cms.double(99999.99),
-        inputCandView = cms.InputTag("pfAllChargedHadrons"),
+        inputCandView = cms.InputTag("pfAllChargedCandidates"),
         DR_Veto = cms.double(1e-05),
         DepositLabel = cms.untracked.string('')
         )
