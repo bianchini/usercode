@@ -5,6 +5,7 @@
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/ESHandle.h"
+#include "FWCore/ParameterSet/interface/FileInPath.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
@@ -14,6 +15,9 @@
 #include "DataFormats/RecoCandidate/interface/IsoDepositVetos.h"
 #include "DataFormats/RecoCandidate/interface/IsoDeposit.h"
 #include "DataFormats/PatCandidates/interface/Isolation.h"
+
+#include "HiggsAnalysis/HiggsToWW2Leptons/interface/ElectronIDMVA.h"
+
 
 class ElectronsUserEmbedded : public edm::EDProducer{
 
@@ -31,6 +35,7 @@ class ElectronsUserEmbedded : public edm::EDProducer{
   edm::InputTag electronTag_;
   edm::InputTag vertexTag_;
   bool isMC_;
+  ElectronIDMVA* fMVA_;
 
 };
 

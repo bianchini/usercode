@@ -15,6 +15,8 @@
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
+#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 
 using namespace edm;
 using namespace std;
@@ -26,12 +28,41 @@ ElectronsUserEmbedded::ElectronsUserEmbedded(const edm::ParameterSet & iConfig){
   electronTag_ = iConfig.getParameter<edm::InputTag>("electronTag");
   vertexTag_   = iConfig.getParameter<edm::InputTag>("vertexTag");
   isMC_        = iConfig.getParameter<bool>("isMC");
+
+  edm::FileInPath inputFileName0 = iConfig.getParameter<edm::FileInPath>("inputFileName0");
+  edm::FileInPath inputFileName1 = iConfig.getParameter<edm::FileInPath>("inputFileName1");
+  edm::FileInPath inputFileName2 = iConfig.getParameter<edm::FileInPath>("inputFileName2");
+  edm::FileInPath inputFileName3 = iConfig.getParameter<edm::FileInPath>("inputFileName3");
+  edm::FileInPath inputFileName4 = iConfig.getParameter<edm::FileInPath>("inputFileName4");
+  edm::FileInPath inputFileName5 = iConfig.getParameter<edm::FileInPath>("inputFileName5");
+
+  /*
+    "UserCode/MitPhysics/data/ElectronMVAWeights/Subdet0LowPt_NoIPInfo_BDTG.weights.xml",
+    "UserCode/MitPhysics/data/ElectronMVAWeights/Subdet1LowPt_NoIPInfo_BDTG.weights.xml",
+    "UserCode/MitPhysics/data/ElectronMVAWeights/Subdet2LowPt_NoIPInfo_BDTG.weights.xml",
+    "UserCode/MitPhysics/data/ElectronMVAWeights/Subdet0HighPt_NoIPInfo_BDTG.weights.xml",
+    "UserCode/MitPhysics/data/ElectronMVAWeights/Subdet1HighPt_NoIPInfo_BDTG.weights.xml",
+    "UserCode/MitPhysics/data/ElectronMVAWeights/Subdet2HighPt_NoIPInfo_BDTG.weights.xml" ,
+  */
+
+  fMVA_ = new ElectronIDMVA();
+  fMVA_->Initialize("BDTG method",
+		    inputFileName0.fullPath().data(),
+		    inputFileName1.fullPath().data(),
+		    inputFileName2.fullPath().data(),
+		    inputFileName3.fullPath().data(),
+		    inputFileName4.fullPath().data(),
+		    inputFileName5.fullPath().data(),                
+		    ElectronIDMVA::kNoIPInfo);
+
+
  
   produces<pat::ElectronCollection>("");
 
 }
 
 ElectronsUserEmbedded::~ElectronsUserEmbedded(){
+  delete fMVA_;
 }
 
 void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -121,7 +152,16 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
       int(!ConversionTools::hasMatchedConversion(*aGsf,hConversions,thebs.position(),true,2.0,1e-06,0));
     aElectron.addUserInt("antiConv",passconversionveto);
 
-
+    //edm::Handle< EcalRecHitCollection > reducedEBRecHits;
+    //edm::Handle< EcalRecHitCollection > reducedEERecHits;
+    //iEvent.getByLabel( edm::InputTag("reducedEcalRecHitsEB"), reducedEBRecHits );
+    //iEvent.getByLabel( edm::InputTag("reducedEcalRecHitsEE"), reducedEERecHits ) ;
+    //const EcalRecHitCollection * reducedRecHits = 0 ;
+    //if (aElectron.isEB())  
+    //  reducedRecHits = reducedEBRecHits.product() ; 
+    //else 
+    //  reducedRecHits = reducedEERecHits.product() ;
+  
     double dxyWrtPV =  -99.;
     double dzWrtPV =  -99.;
 
@@ -137,6 +177,32 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     aElectron.addUserFloat("dxyWrtPV",dxyWrtPV);
     aElectron.addUserFloat("dzWrtPV",dzWrtPV);
 
+    EcalClusterLazyTools lazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::InputTag("reducedEcalRecHitsEE"));
+    float mva = -99;    
+    int mvaPreselection = passconversionveto && nHits<=0 && dxyWrtPV<0.045 && dzWrtPV<0.2 &&
+      ((aElectron.isEB() && sihih < 0.01 
+	&& fabs(dEta) < 0.007
+	&& fabs(dPhi) < 0.15
+	&& HoE < 0.12
+	&& aElectron.dr03TkSumPt()/aElectron.pt() < 0.20
+	&& (TMath::Max(aElectron.dr03EcalRecHitSumEt() - 1.0, 0.0))/aElectron.pt() < 0.20
+	&& aElectron.dr03HcalTowerSumEt()/aElectron.pt() < 0.20
+
+	) ||
+       (aElectron.isEE() && sihih < 0.03 
+	&& fabs(dEta) < 0.009
+	&& fabs(dPhi) < 0.10
+	&& HoE < 0.10
+	&& aElectron.dr03TkSumPt()/aElectron.pt() < 0.20
+	&& (TMath::Max(aElectron.dr03EcalRecHitSumEt() - 1.0, 0.0))/aElectron.pt() < 0.20
+	&& aElectron.dr03HcalTowerSumEt()/aElectron.pt() < 0.20
+	));
+    if(mvaPreselection)
+      mva = fMVA_->MVAValue(aGsf, lazyTools);
+    aElectron.addUserFloat("mva",mva);
+    aElectron.addUserInt("mvaPreselection",mvaPreselection);
+
+
     // iso deposits
     reco::isodeposit::AbsVetos vetos2010Charged;
     reco::isodeposit::AbsVetos vetos2010Neutral;  
@@ -144,6 +210,9 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     reco::isodeposit::AbsVetos vetos2011Charged; 
     reco::isodeposit::AbsVetos vetos2011Neutral;  
     reco::isodeposit::AbsVetos vetos2011Photons;
+    reco::isodeposit::AbsVetos vetos2011EECharged; 
+    reco::isodeposit::AbsVetos vetos2011EENeutral;  
+    reco::isodeposit::AbsVetos vetos2011EEPhotons;
 
     vetos2010Charged.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.01));
     vetos2010Charged.push_back(new reco::isodeposit::ThresholdVeto(0.5));
@@ -158,6 +227,13 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     vetos2011Neutral.push_back(new reco::isodeposit::ThresholdVeto(0.5));
     vetos2011Photons.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.01));
     vetos2011Photons.push_back(new reco::isodeposit::ThresholdVeto(0.5));
+
+    vetos2011EECharged.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.015));
+    vetos2011EECharged.push_back(new reco::isodeposit::ThresholdVeto(0.0));
+    vetos2011EENeutral.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.01));
+    vetos2011EENeutral.push_back(new reco::isodeposit::ThresholdVeto(0.5));
+    vetos2011EEPhotons.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aElectron.eta(),aElectron.phi()),0.08));
+    vetos2011EEPhotons.push_back(new reco::isodeposit::ThresholdVeto(0.5));
   
   
     float chIso03v1 = 
@@ -204,6 +280,28 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     float phIsoPU04v2 = 
       aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2011Photons).first;
 
+    float chIso03EEv2 = 
+      aElectron.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.3, vetos2011EECharged).first;
+    float nhIso03EEv2 = 
+      aElectron.isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.3, vetos2011EENeutral).first;
+    float phIso03EEv2 = 
+      aElectron.isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.3, vetos2011EEPhotons).first;
+    float nhIsoPU03EEv2 = 
+      aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.3, vetos2011EENeutral).first;
+    float phIsoPU03EEv2 = 
+      aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.3, vetos2011EEPhotons).first;
+
+    float chIso04EEv2 = 
+      aElectron.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4, vetos2011EECharged).first;
+    float nhIso04EEv2 = 
+      aElectron.isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4, vetos2011EENeutral).first;
+    float phIso04EEv2 = 
+      aElectron.isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4, vetos2011EEPhotons).first;
+    float nhIsoPU04EEv2 = 
+      aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2011EENeutral).first;
+    float phIsoPU04EEv2 = 
+      aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2011EEPhotons).first;
+
 
     aElectron.addUserFloat("PFRelIso04v1",(chIso04v1+nhIso04v1+phIso04v1)/aElectron.pt());
     aElectron.addUserFloat("PFRelIso03v1",(chIso03v1+nhIso03v1+phIso03v1)/aElectron.pt());
@@ -214,6 +312,14 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     aElectron.addUserFloat("PFRelIso03v2",(chIso03v2+nhIso03v2+phIso03v2)/aElectron.pt());
     aElectron.addUserFloat("PFRelIsoDB04v2",(chIso04v2+std::max(nhIso04v2+phIso04v2-0.5*0.5*(nhIsoPU04v2+phIsoPU04v2),0.0))/aElectron.pt());
     aElectron.addUserFloat("PFRelIsoDB03v2",(chIso03v2+std::max(nhIso03v2+phIso03v2-0.5*0.5*(nhIsoPU03v2+phIsoPU03v2),0.0))/aElectron.pt());
+    aElectron.addUserFloat("PFRelIsoDB04v3",
+			   (aElectron.isEB())*(chIso04v2+std::max(nhIso04v2+phIso04v2-0.5*0.5*(nhIsoPU04v2+phIsoPU04v2),0.0))/aElectron.pt()+
+			   (aElectron.isEE())*(chIso04EEv2+std::max(nhIso04EEv2+phIso04EEv2-0.5*0.5*(nhIsoPU04EEv2+phIsoPU04EEv2),0.0))/aElectron.pt()
+			   );
+    aElectron.addUserFloat("PFRelIsoDB03v3",
+			   (int(aElectron.isEB()))*(chIso03v2+std::max(nhIso03v2+phIso03v2-0.5*0.5*(nhIsoPU03v2+phIsoPU03v2),0.0))/aElectron.pt()+
+			   (int(aElectron.isEE()))*(chIso03EEv2+std::max(nhIso03EEv2+phIso03EEv2-0.5*0.5*(nhIsoPU03EEv2+phIsoPU03EEv2),0.0))/aElectron.pt()
+			   );
 
     // cleaning
     for(unsigned int i = 0; i <vetos2010Charged.size(); i++){
@@ -229,6 +335,13 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     for(unsigned int i = 0; i <vetos2011Neutral.size(); i++){
       delete vetos2011Neutral[i];
       delete vetos2011Photons[i];
+    }
+    for(unsigned int i = 0; i <vetos2011EECharged.size(); i++){
+      delete vetos2011EECharged[i];
+    }
+    for(unsigned int i = 0; i <vetos2011EENeutral.size(); i++){
+      delete vetos2011EENeutral[i];
+      delete vetos2011EEPhotons[i];
     }
 
     aElectron.addUserFloat("isInRun",iEvent.run());

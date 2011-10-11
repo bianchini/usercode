@@ -170,7 +170,9 @@ void MEtRescalerProducer::produce(edm::Event & iEvent, const edm::EventSetup & i
 	    // jet
 	    for(unsigned int it = 0; it<jets->size(); it++){
 
-	      bool overlaps = (*jets)[it].correctedJet("Uncorrected","none","patJetCorrFactors").pt() < jetThreshold_ ;
+	      bool overlaps = 
+		((*jets)[it].correctedJet("Uncorrected","none","patJetCorrFactors").pt() < jetThreshold_) ||
+		(TMath::Abs((*jets)[it].eta()) > 4.5);
 	      for(unsigned int jt = 0; electrons!=0 && jt<electrons->size(); jt++){
 		if(Geom::deltaR((*jets)[it].p4(),(*electrons)[jt].p4())<0.5)
 		  overlaps = true;
