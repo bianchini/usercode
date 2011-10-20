@@ -230,6 +230,46 @@ getattr(process,"patElectrons").embedTrack = True
 getattr(process,"patElectrons").embedGsfTrack = True
 addTriggerMatchingElectron(process,isMC=runOnMC)
 
+import RecoEgamma.ElectronIdentification.cutsInCategoriesElectronIdentificationV06_DataTuning_cfi as cic
+process.eidCiCVeryLoose = cic.eidVeryLoose.clone()
+process.eidCiCLoose     = cic.eidLoose.clone()
+process.eidCiCMedium    = cic.eidMedium.clone()
+process.eidCiCTight     = cic.eidTight.clone() 
+
+import RecoEgamma.ElectronIdentification.cutsInCategoriesHZZElectronIdentificationV06_cfi as cicHZZ
+process.eidCiCHZZVeryLoose   = cicHZZ.eidHZZVeryLoose.clone()
+process.eidCiCHZZLoose       = cicHZZ.eidHZZLoose.clone()
+process.eidCiCHZZMedium      = cicHZZ.eidHZZMedium.clone()
+process.eidCiCHZZTight       = cicHZZ.eidHZZTight.clone()
+process.eidCiCHZZSuperTight  = cicHZZ.eidHZZSuperTight.clone()
+process.eidCiCHZZHyperTight1 = cicHZZ.eidHZZHyperTight1.clone()
+
+process.patElectrons.addElectronID = True
+process.patElectrons.electronIDSources.eidCiCVeryLoose      = cms.InputTag("eidCiCVeryLoose")
+process.patElectrons.electronIDSources.eidCiCLoose          = cms.InputTag("eidCiCLoose")
+process.patElectrons.electronIDSources.eidCiCMedium         = cms.InputTag("eidCiCMedium")
+process.patElectrons.electronIDSources.eidCiCTight          = cms.InputTag("eidCiCTight")
+process.patElectrons.electronIDSources.eidCiCHZZVeryLoose   = cms.InputTag("eidCiCHZZVeryLoose")
+process.patElectrons.electronIDSources.eidCiCHZZLoose       = cms.InputTag("eidCiCHZZLoose")
+process.patElectrons.electronIDSources.eidCiCHZZMedium      = cms.InputTag("eidCiCHZZMedium")
+process.patElectrons.electronIDSources.eidCiCHZZTight       = cms.InputTag("eidCiCHZZTight")
+process.patElectrons.electronIDSources.eidCiCHZZSuperTight  = cms.InputTag("eidCiCHZZSuperTight")
+process.patElectrons.electronIDSources.eidCiCHZZHyperTight1 = cms.InputTag("eidCiCHZZHyperTight1")
+
+process.cicIDSequence = cms.Sequence(
+    process.eidCiCVeryLoose +
+    process.eidCiCLoose +
+    process.eidCiCMedium +
+    process.eidCiCTight + 
+    process.eidCiCHZZVeryLoose +
+    process.eidCiCHZZLoose +
+    process.eidCiCHZZMedium +
+    process.eidCiCHZZTight +
+    process.eidCiCHZZSuperTight +
+    process.eidCiCHZZHyperTight1
+)
+process.patDefaultSequence.replace(process.patElectrons,
+                                   process.cicIDSequence+process.patElectrons)
 
 ######################## pat::tau ################################
 
@@ -280,7 +320,31 @@ simpleCutsWP80 = "(userFloat('nHits')==0 && userInt('antiConv')>0.5 "+ \
                  "    )"   + \
                  ")"
 
+CiCTight = "((electronID('eidCiCTight')==1  ||" + \
+           "  electronID('eidCiCTight')==3  ||" + \
+           "  electronID('eidCiCTight')==5  ||" + \
+           "  electronID('eidCiCTight')==7  ||" + \
+           "  electronID('eidCiCTight')==9  ||" + \
+           "  electronID('eidCiCTight')==11 ||" + \
+           "  electronID('eidCiCTight')==13 ||" + \
+           "  electronID('eidCiCTight')==15)" + \
+           " || " + \
+           " (electronID('eidCiCHZZTight')==1  ||" + \
+           "  electronID('eidCiCHZZTight')==3  ||" + \
+           "  electronID('eidCiCHZZTight')==5  ||" + \
+           "  electronID('eidCiCHZZTight')==7  ||" + \
+           "  electronID('eidCiCHZZTight')==9  ||" + \
+           "  electronID('eidCiCHZZTight')==11 ||" + \
+           "  electronID('eidCiCHZZTight')==13 ||" + \
+           "  electronID('eidCiCHZZTight')==15)"+ \
+           ")"
 
+MVA = "(pt<=20 && abs(superClusterPosition.Eta)>=0.0 && abs(superClusterPosition.Eta)<1.0 && userFloat('mva')>0.133) ||" + \
+      "(pt<=20 && abs(superClusterPosition.Eta)>=1.0 && abs(superClusterPosition.Eta)<1.5 && userFloat('mva')>0.465) ||" + \
+      "(pt<=20 && abs(superClusterPosition.Eta)>=1.5 && abs(superClusterPosition.Eta)<2.5 && userFloat('mva')>0.518) ||" + \
+      "(pt>20  && abs(superClusterPosition.Eta)>=0.0 && abs(superClusterPosition.Eta)<1.0 && userFloat('mva')>0.942) ||" + \
+      "(pt>20  && abs(superClusterPosition.Eta)>=1.0 && abs(superClusterPosition.Eta)<1.5 && userFloat('mva')>0.947) ||" + \
+      "(pt>20  && abs(superClusterPosition.Eta)>=1.5 && abs(superClusterPosition.Eta)<2.5 && userFloat('mva')>0.878)"
 
 process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
     "MuonsUserEmbedded",
@@ -291,8 +355,9 @@ process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
 process.selectedPatElectronsTriggerMatchUserEmbedded = cms.EDProducer(
     "ElectronsUserEmbedded",
     electronTag = cms.InputTag("selectedPatElectronsTriggerMatch"),
-    vertexTag = cms.InputTag("offlinePrimaryVertices"),
-    isMC = cms.bool(runOnMC),
+    vertexTag   = cms.InputTag("offlinePrimaryVertices"),
+    isMC        = cms.bool(runOnMC),
+    doMVA       = cms.bool(True),
     inputFileName0 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet0LowPt_NoIPInfo_BDTG.weights.xml'),
     inputFileName1 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet1LowPt_NoIPInfo_BDTG.weights.xml'),
     inputFileName2 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet2LowPt_NoIPInfo_BDTG.weights.xml'),
@@ -345,7 +410,7 @@ process.elecPtEtaID = cms.EDFilter(
     src = cms.InputTag("selectedPatElectronsTriggerMatchUserEmbedded"),
     cut = cms.string(process.elecPtEta.cut.value()+
                      " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2 &&"
-                     +simpleCutsWP80),
+                     +"("+simpleCutsWP80+" || "+CiCTight+" || "+MVA+")"),
     filter = cms.bool(False)
     )
 process.atLeastOneElecTauelecPtEtaID = process.atLeastOneElecTau.clone(

@@ -28,6 +28,7 @@ ElectronsUserEmbedded::ElectronsUserEmbedded(const edm::ParameterSet & iConfig){
   electronTag_ = iConfig.getParameter<edm::InputTag>("electronTag");
   vertexTag_   = iConfig.getParameter<edm::InputTag>("vertexTag");
   isMC_        = iConfig.getParameter<bool>("isMC");
+  doMVA_       = iConfig.getParameter<bool>("doMVA");
 
   edm::FileInPath inputFileName0 = iConfig.getParameter<edm::FileInPath>("inputFileName0");
   edm::FileInPath inputFileName1 = iConfig.getParameter<edm::FileInPath>("inputFileName1");
@@ -36,24 +37,17 @@ ElectronsUserEmbedded::ElectronsUserEmbedded(const edm::ParameterSet & iConfig){
   edm::FileInPath inputFileName4 = iConfig.getParameter<edm::FileInPath>("inputFileName4");
   edm::FileInPath inputFileName5 = iConfig.getParameter<edm::FileInPath>("inputFileName5");
 
-  /*
-    "UserCode/MitPhysics/data/ElectronMVAWeights/Subdet0LowPt_NoIPInfo_BDTG.weights.xml",
-    "UserCode/MitPhysics/data/ElectronMVAWeights/Subdet1LowPt_NoIPInfo_BDTG.weights.xml",
-    "UserCode/MitPhysics/data/ElectronMVAWeights/Subdet2LowPt_NoIPInfo_BDTG.weights.xml",
-    "UserCode/MitPhysics/data/ElectronMVAWeights/Subdet0HighPt_NoIPInfo_BDTG.weights.xml",
-    "UserCode/MitPhysics/data/ElectronMVAWeights/Subdet1HighPt_NoIPInfo_BDTG.weights.xml",
-    "UserCode/MitPhysics/data/ElectronMVAWeights/Subdet2HighPt_NoIPInfo_BDTG.weights.xml" ,
-  */
-
-  fMVA_ = new ElectronIDMVA();
-  fMVA_->Initialize("BDTG method",
-		    inputFileName0.fullPath().data(),
-		    inputFileName1.fullPath().data(),
-		    inputFileName2.fullPath().data(),
-		    inputFileName3.fullPath().data(),
-		    inputFileName4.fullPath().data(),
-		    inputFileName5.fullPath().data(),                
-		    ElectronIDMVA::kNoIPInfo);
+  if(doMVA_){
+    fMVA_ = new ElectronIDMVA();
+    fMVA_->Initialize("BDTG method",
+		      inputFileName0.fullPath().data(),
+		      inputFileName1.fullPath().data(),
+		      inputFileName2.fullPath().data(),
+		      inputFileName3.fullPath().data(),
+		      inputFileName4.fullPath().data(),
+		      inputFileName5.fullPath().data(),                
+		      ElectronIDMVA::kNoIPInfo);
+  }
 
 
  
@@ -62,7 +56,7 @@ ElectronsUserEmbedded::ElectronsUserEmbedded(const edm::ParameterSet & iConfig){
 }
 
 ElectronsUserEmbedded::~ElectronsUserEmbedded(){
-  delete fMVA_;
+  if(doMVA_) delete fMVA_;
 }
 
 void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -177,7 +171,9 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     aElectron.addUserFloat("dxyWrtPV",dxyWrtPV);
     aElectron.addUserFloat("dzWrtPV",dzWrtPV);
 
-    EcalClusterLazyTools lazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::InputTag("reducedEcalRecHitsEE"));
+    EcalClusterLazyTools lazyTools(iEvent,iSetup,
+				   edm::InputTag("reducedEcalRecHitsEB"),
+				   edm::InputTag("reducedEcalRecHitsEE"));
     float mva = -99;    
     int mvaPreselection = passconversionveto && nHits<=0 && dxyWrtPV<0.045 && dzWrtPV<0.2 &&
       ((aElectron.isEB() && sihih < 0.01 
@@ -197,7 +193,7 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
 	&& (TMath::Max(aElectron.dr03EcalRecHitSumEt() - 1.0, 0.0))/aElectron.pt() < 0.20
 	&& aElectron.dr03HcalTowerSumEt()/aElectron.pt() < 0.20
 	));
-    if(mvaPreselection)
+    if(doMVA_ /*&& mvaPreselection*/)
       mva = fMVA_->MVAValue(aGsf, lazyTools);
     aElectron.addUserFloat("mva",mva);
     aElectron.addUserInt("mvaPreselection",mvaPreselection);

@@ -126,6 +126,8 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   float diTauNSVfitMassErrDown_;
   float visibleTauMass_;
   float leadPFChargedHadrCandTrackPt_;
+  int tightestCutBasedWP_;
+  int tightestCiCWP_;
   int tightestHPSWP_;
   int tightestHPSDBWP_;
   int isTauLegMatched_;

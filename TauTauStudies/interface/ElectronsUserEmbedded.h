@@ -35,6 +35,7 @@ class ElectronsUserEmbedded : public edm::EDProducer{
   edm::InputTag electronTag_;
   edm::InputTag vertexTag_;
   bool isMC_;
+  bool doMVA_;
   ElectronIDMVA* fMVA_;
 
 };

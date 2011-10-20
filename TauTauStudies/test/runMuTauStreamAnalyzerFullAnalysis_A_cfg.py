@@ -16,6 +16,12 @@ runOnMC     = True
 doSVFitReco = True
 
 if runOnMC:
+    print "Running on MC"
+else:
+    print "Running on Data"
+        
+
+if runOnMC:
     process.GlobalTag.globaltag = cms.string('START42_V13::All')
 else:
     process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
@@ -29,8 +35,8 @@ process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-A/eb0fd1029d421bd6defe934bc4cc3c1f/patTuples_MuTauStream_1_1_WTL.root'   
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-A/fa903dab72ded7ad712369203e92cf01/patTuples_MuTauStream_1_1_ID4.root'
-    #'file:patTuples_MuTauStream.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-A/fa903dab72ded7ad712369203e92cf01/patTuples_MuTauStream_1_1_ID4.root'
+    'file:./root/patTuples_MuTauStream_sync.root'
     )
     )
 
@@ -85,7 +91,7 @@ process.rescaledMuons = cms.EDProducer(
     )
 process.rescaledMuonsRel = cms.EDProducer(
     "MuonRescalerProducer",
-    inputCollection = cms.InputTag("muPtEtaIDRel"),
+    inputCollection = cms.InputTag("muPtEtaRelID"),
     shift = cms.double(0.01)
     )
 
@@ -236,14 +242,14 @@ process.muPtEtaIDIsoMuDown = process.muPtEtaIDIso.clone(
 process.muPtEtaIDIsoMuDownCounter = process.muPtEtaIDIsoCounter.clone(
     src = cms.InputTag("muPtEtaIDIsoMuDown"),
     )
-process.muPtEtaIDRel = process.muPtEtaIDIso.clone(
+process.muPtEtaRelID = process.muPtEtaIDIso.clone(
     src = cms.InputTag("muPtEtaRelID"),
     cut = cms.string("pt>15")
     )
-process.muPtEtaIDRelMuUp   = process.muPtEtaIDRel.clone(
+process.muPtEtaRelIDMuUp   = process.muPtEtaRelID.clone(
     src = cms.InputTag("rescaledMuonsRel","U")
     )
-process.muPtEtaIDRelMuDown = process.muPtEtaIDRel.clone(
+process.muPtEtaRelIDMuDown = process.muPtEtaRelID.clone(
     src = cms.InputTag("rescaledMuonsRel","D")
     )
 
@@ -254,7 +260,7 @@ process.filterSequence = cms.Sequence(
     (process.muPtEtaIDIso      * process.muPtEtaIDIsoCounter) +
     (process.muPtEtaIDIsoMuUp  * process.muPtEtaIDIsoMuUpCounter) +
     (process.muPtEtaIDIsoMuDown* process.muPtEtaIDIsoMuDownCounter) +
-    (process.muPtEtaIDRel+process.muPtEtaIDRelMuUp+process.muPtEtaIDRelMuDown)
+    (process.muPtEtaRelID+process.muPtEtaRelIDMuUp+process.muPtEtaRelIDMuDown)
     )
 
 #######################################################################
@@ -289,13 +295,13 @@ process.muTauStreamAnalyzerMuUp    = process.muTauStreamAnalyzer.clone(
     diTaus   =  cms.InputTag("selectedDiTauMuUp"),
     met      =  cms.InputTag("rescaledMETmuon","NNUNN"),
     muons    =  cms.InputTag("muPtEtaIDIsoMuUp"),
-    muonsRel =  cms.InputTag("muPtEtaIDRelMuUp"),
+    muonsRel =  cms.InputTag("muPtEtaRelIDMuUp"),
     )
 process.muTauStreamAnalyzerMuDown  = process.muTauStreamAnalyzer.clone(
     diTaus   =  cms.InputTag("selectedDiTauMuDown"),
     met      =  cms.InputTag("rescaledMETmuon","NNDNN"),
     muons    =  cms.InputTag("muPtEtaIDIsoMuDown"),
-    muonsRel =  cms.InputTag("muPtEtaIDRelMuDown"),
+    muonsRel =  cms.InputTag("muPtEtaRelIDMuDown"),
     )
 process.muTauStreamAnalyzerTauUp   = process.muTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauTauUp"),
@@ -329,17 +335,17 @@ process.pNominal = cms.Path(
     process.allEventsFilter*
     (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
     (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
-    process.muPtEtaIDRel *
+    process.muPtEtaRelID *
     process.rescaledObjects*
     process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
     process.muTauStreamAnalyzer
     )
-'''
+
 process.pJetUp = cms.Path(
     process.allEventsFilter*
     (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
     (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
-    process.muPtEtaIDRel *
+    process.muPtEtaRelID *
     process.rescaledObjects*
     process.diTauJetUp*process.selectedDiTauJetUp*process.selectedDiTauJetUpCounter*
     process.muTauStreamAnalyzerJetUp
@@ -348,7 +354,7 @@ process.pJetDown = cms.Path(
     process.allEventsFilter*
     (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
     (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
-    process.muPtEtaIDRel *
+    process.muPtEtaRelID *
     process.rescaledObjects*
     process.diTauJetDown*process.selectedDiTauJetDown*process.selectedDiTauJetDownCounter*
     process.muTauStreamAnalyzerJetDown
@@ -356,22 +362,22 @@ process.pJetDown = cms.Path(
 process.pMuUp = cms.Path(
     process.allEventsFilter*
     process.muPtEtaIDIso *
-    process.muPtEtaIDRel *
+    process.muPtEtaRelID *
     (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
     process.rescaledObjects*
     (process.muPtEtaIDIsoMuUp*process.muPtEtaIDIsoMuUpCounter) *
-    process.muPtEtaIDRelMuUp *
+    process.muPtEtaRelIDMuUp *
     process.diTauMuUp*process.selectedDiTauMuUp*process.selectedDiTauMuUpCounter*
     process.muTauStreamAnalyzerMuUp
     )
 process.pMuDown = cms.Path(
     process.allEventsFilter*
     process.muPtEtaIDIso *
-    process.muPtEtaIDRel *
+    process.muPtEtaRelID *
     (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
     process.rescaledObjects*
     (process.muPtEtaIDIsoMuDown*process.muPtEtaIDIsoMuDownCounter) *
-    process.muPtEtaIDRelMuDown *
+    process.muPtEtaRelIDMuDown *
     process.diTauMuDown*process.selectedDiTauMuDown*process.selectedDiTauMuDownCounter*
     process.muTauStreamAnalyzerMuDown
     )
@@ -379,7 +385,7 @@ process.pTauUp = cms.Path(
     process.allEventsFilter*
     (process.muPtEtaIDIso*process.muPtEtaIDIsoCounter) *
     process.tauPtEtaIDAgMuAgElecIso*
-    process.muPtEtaIDRel *
+    process.muPtEtaRelID *
     process.rescaledObjects*
     (process.tauPtEtaIDAgMuAgElecIsoTauUp*process.tauPtEtaIDAgMuAgElecIsoTauUpCounter)*
     process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter*
@@ -389,13 +395,13 @@ process.pTauDown = cms.Path(
     process.allEventsFilter*
     (process.muPtEtaIDIso*process.muPtEtaIDIsoCounter) *
     process.tauPtEtaIDAgMuAgElecIso*
-    process.muPtEtaIDRel *
+    process.muPtEtaRelID *
     process.rescaledObjects*
     (process.tauPtEtaIDAgMuAgElecIsoTauDown*process.tauPtEtaIDAgMuAgElecIsoTauDownCounter)*
     process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
     process.muTauStreamAnalyzerTauDown
     )
-'''
+
 
 process.out = cms.OutputModule(
     "PoolOutputModule",

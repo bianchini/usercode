@@ -245,6 +245,8 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("numOfLooseIsoDiTaus",&numOfLooseIsoDiTaus_,"numOfLooseIsoDiTaus/I");
   tree_->Branch("decayMode",&decayMode_,"decayMode/I");
   tree_->Branch("tightestHPSWP",&tightestHPSWP_,"tightestHPSWP/I");
+  tree_->Branch("tightestCiCWP",&tightestCiCWP_,"tightestCiCWP/I");
+  tree_->Branch("tightestCutBasedWP",&tightestCutBasedWP_,"tightestCutBasedWP/I");
   tree_->Branch("tightestHPSDBWP",&tightestHPSDBWP_,"tightestHPSDBWP/I");
   tree_->Branch("visibleTauMass",&visibleTauMass_,"visibleTauMass/F");
   tree_->Branch("leadPFChargedHadrCandTrackPt",&leadPFChargedHadrCandTrackPt_,"leadPFChargedHadrCandTrackPt/F");
@@ -490,7 +492,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   const pat::ElectronCollection* electronsRel = electronsRelHandle.product();
   if(electronsRel->size()<1){
     cout << " No electronsRel !!! " << endl;
-    return;
+    //return;
   } else if(electronsRel->size()>1 && verbose_){
     cout << "WARNING: "<< electronsRel->size() << "  electronsRel found in the event !!! We will select only one" << endl;
   }
@@ -507,7 +509,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   unsigned int elecIndex = 0;
   elecFlag_=-99;
 
-  if(  electrons->size()==1 &&  electronsRel->size()==1 ){
+  if(  electrons->size()==1 &&  (electronsRel->size()==1 || electronsRel->size()==0)){
     //elecIndex = 0;
     elecFlag_ = 0;
     if(verbose_) cout<< "Just one selected electron: flag= " << elecFlag_ << endl;
@@ -1056,9 +1058,43 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   EoP_   = leg1->eSuperClusterOverP();
   fbrem_ = leg1->fbrem();
 
-  //if(verbose_) cout << "Anti-conv parameters: " << leg1->userFloat("dist") << " --- " << leg1->userFloat("dcot") << endl;
-  //isEleLikelihoodID_ = leg1->userFloat("nHits")==0 && leg1->userFloat("dist")>0.02 && leg1->userFloat("dcot")>0.02 && ( (leg1->isEB() && ((leg1->numberOfBrems()==0 && leg1->electronID("electronIDLH")>1.193) || (leg1->numberOfBrems()>0 && leg1->electronID("electronIDLH")>1.345 ) ) )  || (leg1->isEE() && ((leg1->numberOfBrems()==0 && leg1->electronID("electronIDLH")>0.810) || (leg1->numberOfBrems()>0 && leg1->electronID("electronIDLH")>3.021) )) ) ? 1 : 0 ;
-  //isEleCutBasedID_ = (leg1->userFloat("nHits")==0 && leg1->userFloat("dist")>0.02 && leg1->userFloat("dcot")>0.02 &&  ( (leg1->isEB() && leg1->userFloat("sihih")<0.01 && leg1->userFloat("dPhi")<0.027 && leg1->userFloat("dEta")<0.005) || (leg1->isEE() && leg1->userFloat("sihih")<0.031 && leg1->userFloat("dPhi")<0.021  && leg1->userFloat("dEta")<0.006)  )) ? 1 : 0 ; 
+
+  tightestCutBasedWP_ = -1;
+  if((leg1->userFloat("nHits")<=1
+      && (  
+	  (leg1->isEB() && leg1->userFloat("sihih")<0.010 && leg1->userFloat("dPhi")<0.80 &&  
+	   leg1->userFloat("dEta") <0.007 && leg1->userFloat("HoE") <0.15)    
+	  ||    
+	  (leg1->isEE() && leg1->userFloat("sihih")<0.030 && leg1->userFloat("dPhi")<0.70 &&  
+	   leg1->userFloat("dEta") <0.010 && leg1->userFloat("HoE") <0.07)    
+	  )
+      )
+     ) tightestCutBasedWP_ ++;
+  if((leg1->userFloat("nHits")==0 && leg1->userInt("antiConv")>0.5 	
+      && (							
+	  (leg1->pt()>=20 && (    						
+			      (leg1->isEB() && leg1->userFloat("sihih")<0.010 && leg1->userFloat("dPhi")<0.06 &&    
+			       leg1->userFloat("dEta")< 0.004 && leg1->userFloat("HoE") <0.04)      
+			      ||						
+			      (leg1->isEE() && leg1->userFloat("sihih")<0.030 && leg1->userFloat("dPhi")<0.030 &&   
+			       leg1->userFloat("dEta") <0.007 && leg1->userFloat("HoE") <0.025) ))  
+          || 							
+	  (leg1->pt()<20 && (leg1->fbrem()>0.15 || (fabs(leg1->superClusterPosition().Eta())<1. && leg1->eSuperClusterOverP()>0.95) ) && (  
+																	  (leg1->isEB() && leg1->userFloat("sihih")<0.010 && leg1->userFloat("dPhi")<0.030 &&   
+																	   leg1->userFloat("dEta") <0.004 && leg1->userFloat("HoE") <0.025)     
+																	  ||						
+																	  (leg1->isEE() && leg1->userFloat("sihih")<0.030 && leg1->userFloat("dPhi")<0.020 &&   
+																	   leg1->userFloat("dEta") <0.005 && leg1->userFloat("HoE") <0.025) ))  
+	  )  						
+      )     
+     ) tightestCutBasedWP_ ++;
+  
+    
+    
+  tightestCiCWP_ = -1;
+  if( (int(leg1->electronID("eidCiCHZZTight"))&1)==1     )    tightestCiCWP_++;
+  if( (int(leg1->electronID("eidCiCHZZSuperTight"))&1)==1)    tightestCiCWP_++;
+  if( (int(leg1->electronID("eidCiCHZZHyperTight1"))&1)==1  ) tightestCiCWP_++;
 
   diTauVisP4_->push_back( theDiTau->p4Vis() );
   diTauCAP4_->push_back( theDiTau->p4CollinearApprox() );

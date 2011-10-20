@@ -22,12 +22,9 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source.fileNames = cms.untracked.vstring(
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/AODSIM/PU_S4_START42_V11-v1/0000/0E47FBF8-0295-E011-818F-0030487E3026.root'
-    'file:./root/pickevents_1.root',
-    'file:./root/pickevents_2.root',
-    'file:./root/pickevents_3.root',
-    'file:./root/pickevents_4.root',
-    'file:./root/pickevents_5.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/AODSIM/PU_S4_START42_V11-v1/0000/0E47FBF8-0295-E011-818F-0030487E3026.root'
+    #'file:./root/syncSkim_1_1_kvl.root',
+    #'file:./root/syncSkim_5_1_vnT.root',
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -272,7 +269,14 @@ process.selectedPatElectronsTriggerMatchUserEmbedded = cms.EDProducer(
     "ElectronsUserEmbedded",
     electronTag = cms.InputTag("selectedPatElectronsTriggerMatch"),
     vertexTag   = cms.InputTag("offlinePrimaryVertices"),
-    isMC        = cms.bool(runOnMC)
+    isMC        = cms.bool(runOnMC),
+    doMVA       = cms.bool(False),
+    inputFileName0 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet0LowPt_NoIPInfo_BDTG.weights.xml'),
+    inputFileName1 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet1LowPt_NoIPInfo_BDTG.weights.xml'),
+    inputFileName2 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet2LowPt_NoIPInfo_BDTG.weights.xml'),
+    inputFileName3 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet0HighPt_NoIPInfo_BDTG.weights.xml'),
+    inputFileName4 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet1HighPt_NoIPInfo_BDTG.weights.xml'),
+    inputFileName5 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet2HighPt_NoIPInfo_BDTG.weights.xml')  
     )
 
 process.selectedPatTausTriggerMatchUserEmbedded = cms.EDProducer(
@@ -329,10 +333,11 @@ process.muPtEtaID = cms.EDFilter(
                      " && globalTrack.isNonnull "+
                      " && globalTrack.hitPattern.numberOfValidMuonHits>=1"+
                      " && globalTrack.hitPattern.numberOfValidPixelHits>=1"+
-                     " && globalTrack.hitPattern.numberOfValidTrackerHits>10"+
+                     " && globalTrack.hitPattern.numberOfValidTrackerHits>=10"+
                      " && globalTrack.normalizedChi2<10"+
                      " && globalTrack.ptError/globalTrack.pt<0.1"+
-                     " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"),
+                     " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"
+                     ),
     filter = cms.bool(False)
     )
 process.atLeastOneMuTaumuPtEtaID = process.atLeastOneMuTau.clone(

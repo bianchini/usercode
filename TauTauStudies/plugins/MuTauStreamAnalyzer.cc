@@ -950,7 +950,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   for(unsigned int i = 0 ; i < pfCandidates->size() ; i++){
     const reco::PFCandidate cand = (*pfCandidates)[i];
     if(! (cand.particleId()== PFCandidate::mu && cand.pt()>0.5) ) continue;
-    float dz = (cand.trackRef())->dz( leg1->vertex() );
+    float dz = (cand.trackRef()).isNonnull() ? (cand.trackRef())->dz( leg1->vertex() ) : 999.;
     if(dz>0.2) continue;
     pfMuons_->push_back(cand.p4());
   }
