@@ -38,7 +38,8 @@
 
 #define SAVE   true
 #define MINPt1 20.0 
-#define MINPt2 20.0 
+#define MINPt2 20.0
+#define PtVETO 30.0
 #define MAXEta  4.5 
 #define USERECOILALGO true
 
@@ -168,7 +169,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
   samples.push_back("GGFH125-ElecTau-powheg-PUS4_run");     crossSec.push_back( 6.37e-02*15.31 * 0.0527237   * 0.6582891); 
   samples.push_back("VBFH130-ElecTau-powheg-PUS4_run");     crossSec.push_back( 5.48e-02*1.154 * 1.0         * 0.1210558); 
   samples.push_back("GGFH130-ElecTau-powheg-PUS4_run");     crossSec.push_back( 5.48e-02*14.12 * 0.055105    * 0.6489805);
-//samples.push_back("VBFH135-ElecTau-powheg-PUS4_run");     crossSec.push_back( 4.52e-02*1.100 * 0.0716975   * 0.6897157); 
+  samples.push_back("VBFH135-ElecTau-powheg-PUS4_run");     crossSec.push_back( 4.52e-02*1.100 * 0.0716975   * 0.6897157); 
   samples.push_back("GGFH135-ElecTau-powheg-PUS4_run");     crossSec.push_back( 4.52e-02*13.08 * 1.0         * 0.0831602);    
   samples.push_back("VBFH140-ElecTau-powheg-PUS4_run");     crossSec.push_back( 3.54e-02*1.052 * 0.0730735   * 0.6933992);  
   samples.push_back("GGFH140-ElecTau-powheg-PUS4_run");     crossSec.push_back( 3.54e-02*12.13 * 0.0608360   * 0.6521164);  
@@ -201,9 +202,11 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
   // kinematical variables of first 2 jets  
   float pt1,pt2,eta1,eta2,Deta,Mjj,Dphi,phi1,phi2;
   float pt1_v2,pt2_v2,eta1_v2,eta2_v2,Deta_v2,Mjj_v2,Dphi_v2,phi1_v2,phi2_v2;
+  int nJets30, nJets20;
 
   // quality cuts of the first 2 jets
   float jetsBtagHE1,jetsBtagHE2,jetsBtagHP1,jetsBtagHP2;
+  int nJets20BTagged;
   float chFracPV1, chFracPV2;
 
   // kinematical variables of the veto jet
@@ -266,6 +269,10 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
   outTreePtOrd->Branch("chFracPV1",    &chFracPV1,  "chFracPV1/F");
   outTreePtOrd->Branch("chFracPV2",    &chFracPV2,  "chFracPV2/F");  
  
+  outTreePtOrd->Branch("nJets30",       &nJets30,  "nJets30/I");  
+  outTreePtOrd->Branch("nJets20",       &nJets20,  "nJets20/I");  
+  outTreePtOrd->Branch("nJets20BTagged",&nJets20BTagged,  "nJets20BTagged/I");  
+
   outTreePtOrd->Branch("ptVeto",  &ptVeto, "ptVeto/F");
   outTreePtOrd->Branch("phiVeto", &phiVeto,"phiVeto/F");
   outTreePtOrd->Branch("etaVeto", &etaVeto,"etaVeto/F");
@@ -586,18 +593,27 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
     ptVeto = -99; phiVeto= -99; etaVeto= -99;isVetoInJets=-99;
     chFracPV1=-99;chFracPV2=-99;chFracPVVeto=-99; jetsBtagHE1 = -99;jetsBtagHE2 = -99;jetsBtagHP1 = -99;jetsBtagHP2 = -99;
 
-    // define the relevant jet collection 
+    // define the relevant jet collection
+    nJets20BTagged = 0;
+    nJets30        = 0;
     int lead  = -99;
     int trail = -99;
     int veto  = -99;
     vector<int> indexes;
     for(int l = 0 ; l < jets->size() ; l++){
-      if((*jets)[l].Pt()>MINPt1 && TMath::Abs((*jets)[l].Eta())<MAXEta)
+      if((*jets)[l].Pt()>MINPt1 && TMath::Abs((*jets)[l].Eta())<MAXEta){
 	indexes.push_back(l);
+	if((*jetsBtagHE)[l] > 3.3) nJets20BTagged++;
+      }
     }
+    nJets20 = indexes.size();
     if(indexes.size()>0) lead  = indexes[0];  
     if(indexes.size()>1) trail = indexes[1];  
     if(indexes.size()>2) veto  = indexes[2];
+
+    for(int v = 0 ; v < indexes.size() ; v++){
+      if( (*jets)[indexes[v]].Pt() > 30 ) nJets30++;
+    }
 
     //1 or 2 jet preselection
     if(lead>=0){
@@ -644,11 +660,17 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 ){
 
     }
 
-    ptVeto       = (jets->size()>2) ? (*jets)[veto].Pt() : -99;
-    etaVeto      = (jets->size()>2) ? (*jets)[veto].Eta(): -99;
-    phiVeto      = (jets->size()>2) ? (*jets)[veto].Phi(): -99;
-    isVetoInJets = (veto>=0) ? ((*jets)[veto].Eta() - (*jets)[lead].Eta())*((*jets)[veto].Eta() - (*jets)[trail].Eta()) <= 0 : -99;
-    chFracPVVeto = (jets->size()>2) ? (*jetsChNfraction)[veto] : -99; 
+    ptVeto       = (veto>=0) ? (*jets)[veto].Pt() : -99;
+    etaVeto      = (veto>=0) ? (*jets)[veto].Eta(): -99;
+    phiVeto      = (veto>=0) ? (*jets)[veto].Phi(): -99;
+    chFracPVVeto = (veto>=0) ? (*jetsChNfraction)[veto] : -99;
+
+    isVetoInJets = 0;
+    for(int l = 0 ; l < indexes.size() ; l++){
+      if(lead>=0 && trail>=0 && (l!= lead && l!= trail) &&
+	 (*jets)[indexes[l]].Pt()>PtVETO && ((*jets)[indexes[l]].Eta() - eta1)*((*jets)[indexes[l]].Eta() - eta2)<=0 )
+	isVetoInJets = 1;
+    }
 
     diTauNSVfitMass_        = diTauNSVfitMass;
     diTauNSVfitMassErrUp_   = diTauNSVfitMassErrUp;
@@ -976,14 +998,17 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   // kinematical variables of first 2 jets  
   float pt1,pt2,eta1,eta2,Deta,Mjj,Dphi,phi1,phi2;
   float pt1_v2,pt2_v2,eta1_v2,eta2_v2,Deta_v2,Mjj_v2,Dphi_v2,phi1_v2,phi2_v2;
+  int nJets30, nJets20;
 
   // quality cuts of the first 2 jets
   float jetsBtagHE1,jetsBtagHE2,jetsBtagHP1,jetsBtagHP2;
+  int nJets20BTagged;
   float chFracPV1, chFracPV2;
 
   // kinematical variables of the veto jet
   float ptVeto, etaVeto, phiVeto; 
   int isVetoInJets; float chFracPVVeto;
+
 
 
   // diTau related variables
@@ -1036,6 +1061,10 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   outTreePtOrd->Branch("jetsBtagHP2",  &jetsBtagHP2,"jetsBtagHP2/F");
   outTreePtOrd->Branch("chFracPV1",    &chFracPV1,  "chFracPV1/F");
   outTreePtOrd->Branch("chFracPV2",    &chFracPV2,  "chFracPV2/F"); 
+
+  outTreePtOrd->Branch("nJets30",       &nJets30,  "nJets30/I");  
+  outTreePtOrd->Branch("nJets20",       &nJets20,  "nJets20/I");  
+  outTreePtOrd->Branch("nJets20BTagged",&nJets20BTagged,  "nJets20BTagged/I");  
  
   outTreePtOrd->Branch("ptVeto",  &ptVeto, "ptVeto/F");
   outTreePtOrd->Branch("phiVeto", &phiVeto,"phiVeto/F");
@@ -1338,6 +1367,8 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     chFracPV1=-99;chFracPV2=-99;chFracPVVeto=-99;jetsBtagHE1 = -99;jetsBtagHE2 = -99;jetsBtagHP1 = -99;jetsBtagHP2 = -99;
 
     // define the relevant jet collection 
+    nJets20BTagged = 0;
+    nJets30        = 0;
     int lead  = -99;
     int trail = -99;
     int veto  = -99;
@@ -1345,10 +1376,16 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     for(int l = 0 ; l < jets->size() ; l++){
       if((*jets)[l].Pt()>MINPt1 && TMath::Abs((*jets)[l].Eta())<MAXEta)
 	indexes.push_back(l);
+      if((*jetsBtagHE)[l] > 3.3) nJets20BTagged++;
     }
+    nJets20 = indexes.size();
     if(indexes.size()>0) lead  = indexes[0];  
     if(indexes.size()>1) trail = indexes[1];  
     if(indexes.size()>2) veto  = indexes[2];  
+
+    for(int v = 0 ; v < indexes.size() ; v++){
+      if( (*jets)[indexes[v]].Pt() > 30 ) nJets30++;
+    }
 
     // first jet
     if(lead>=0){
@@ -1400,9 +1437,15 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     ptVeto  = (veto>=0) ? (*jets)[veto].Pt() : -99;
     etaVeto = (veto>=0) ? (*jets)[veto].Eta(): -99;
     phiVeto = (veto>=0) ? (*jets)[veto].Phi(): -99;
-    isVetoInJets = (veto>=0) ? ((*jets)[veto].Eta() - (*jets)[lead].Eta())*((*jets)[veto].Eta() - (*jets)[trail].Eta()) <= 0 : -99;
     chFracPVVeto = (veto>=0) ? (*jetsChNfraction)[veto] : -99; 
  
+    isVetoInJets = 0;
+    for(int l = 0 ; l < indexes.size() ; l++){
+      if(lead>=0 && trail>=0 && (l!= lead && l!= trail) &&
+	 (*jets)[indexes[l]].Pt()>PtVETO && ((*jets)[indexes[l]].Eta() - eta1)*((*jets)[indexes[l]].Eta() - eta2)<=0 )
+	isVetoInJets = 1;
+    }
+
     diTauNSVfitMass_        = diTauNSVfitMass;
     diTauNSVfitMassErrUp_   = diTauNSVfitMassErrUp;
     diTauNSVfitMassErrDown_ = diTauNSVfitMassErrDown;
@@ -1532,10 +1575,10 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
      
     } else{
 
-      HLTx =  float((*triggerBits)[1]); //HLT_IsoMu12_LooseIsoPFTau10_v2
-      //HLTx =  float((*triggerBits)[3]); //HLT_IsoMu12_v1
+      //HLTx =  float((*triggerBits)[1]); //HLT_IsoMu12_LooseIsoPFTau10_v2
+      HLTx =  float((*triggerBits)[3]); //HLT_IsoMu12_v1
       bool isTriggMatched = (*tauXTriggers)[0] && (*tauXTriggers)[2] ; //hltSingleMuIsoL3IsoFiltered12 && hltOverlapFilterIsoMu12IsoPFTau10
-      //isTriggMatched = (*tauXTriggers)[0]; //hltSingleMuIsoL3IsoFiltered12
+      isTriggMatched = (*tauXTriggers)[0]; //hltSingleMuIsoL3IsoFiltered12
       HLTmatch = isTriggMatched ? 1.0 : 0.0;
     }
 
@@ -1550,8 +1593,8 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     }
  
     // apply data-measured efficiency
-    //HLTweightTau = (std::string(sample.Data())).find("Run2011")==string::npos ? 
-    // ratioEffTau15->dataEfficiency( (*diTauLegsP4)[1].Pt() ) : 1.0;
+    HLTweightTau = (std::string(sample.Data())).find("Run2011")==string::npos ? 
+      ratioEffTau15->dataEfficiency( (*diTauLegsP4)[1].Pt() ) : 1.0;
 
 
     isTauLegMatched_ = isTauLegMatched;
@@ -1588,7 +1631,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 
 void doAllSamplesElec(){
  
- for( unsigned int k = 0; k < 35 ; k++) {
+ for( unsigned int k = 0; k < 36 ; k++) {
    makeTrees_ElecTauStream("",        k);
    if( k==0 ) continue;
    makeTrees_ElecTauStream("JetUp",   k);
