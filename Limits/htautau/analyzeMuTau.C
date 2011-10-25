@@ -22,7 +22,9 @@
 #include "TCut.h"
 
 #define VERBOSE true
-#define SAVE true
+#define SAVE    true
+#define addVH   false
+
 
 
 
@@ -35,10 +37,12 @@ void plotMuTau( Int_t mH_ = 120,
 		TString variable_ = "diTauVisMass",
 		TString XTitle_ = "full mass",
 		TString Unities_ = "GeV",
+		TString outputDir = "Oct2011/",
 		Int_t nBins_ = 40, Float_t xMin_=0, Float_t xMax_=200,
 		Float_t magnifySgn_ = 1.0,
 		Float_t hltEff_ = 0.9967*0.997*0.968, // muID*muIso*muHLT
-		Int_t logy_ = 0 ) 
+		Int_t logy_ = 0
+		) 
 {   
 
   // input txt file with bins
@@ -95,12 +99,15 @@ void plotMuTau( Int_t mH_ = 120,
   //float Lumi                      = (159.+887.+361.7+531.5)*1.00;
   float Lumi = (-47.4 + 215.3 + 930.7 + 410.6 + (450.6+212.7) )*1.00;
 
-  float WcorrectionFactorOS       = 0.97;  
-  float WcorrectionFactorSS       = 1.19;  
+  float WcorrectionFactorOS       = 0.96;  
+  float WcorrectionFactorSS       = 1.17;  
   float MutoTauCorrectionFactor   = 1.00;
-  float JtoTauCorrectionFactor    = 0.80;
-  float VbfExtrapolationFactorZ   = 1.05;
-  float VbfExtrapolationFactorW   = 1.26;
+  float JtoTauCorrectionFactor    = 1.00;
+  float VbfExtrapolationFactorZ   = 1.15;
+  float BoostExtrapolationFactorZ = 0.94;
+  float VbfExtrapolationFactorW   = 1.15;
+  float BoostExtrapolationFactorW = 0.94;
+
 
   bool useMt      = true;
   string antiWcut = useMt ? "MtLeg1" : "-(pZeta-1.5*pZetaVis)" ;
@@ -166,7 +173,7 @@ void plotMuTau( Int_t mH_ = 120,
   TTree *data                = (TTree*)fData->Get("outTreePtOrd");
   TTree *signalVBF           = (TTree*)fSignalVBF->Get(tree);
   TTree *signalGGH           = (TTree*)fSignalGGH->Get(tree);
-  TTree *signalVH            = (TTree*)fSignalVH->Get(tree);
+  TTree *signalVH            = addVH ? (TTree*)fSignalVH->Get(tree) : 0;
 
   // split the DY->ll into l=e/mu and l=tau (MC level) ===> temporary, need fix !!!
   TFile* dummy1 = new TFile("dummy1.root","RECREATE");
@@ -193,15 +200,15 @@ void plotMuTau( Int_t mH_ = 120,
   TCut lveto("(muFlag==0 || muFlag==3)");
   TCut SS("diTauCharge!=0");
   TCut OS("diTauCharge==0");
-  TCut oneJet("pt1>30");
-  TCut twoJets("pt1>30 && pt2>30");
-  TCut vbf("pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && (ptVeto<30 || isVetoInJets!=0)");
+  TCut oneJet("nJets30>=1");
+  TCut twoJets("nJets30>=2");
+  TCut vbf("pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && isVetoInJets!=1");
   TCut novbf("pt1<30");
   TCut boost("pt1>150 && pt2<30");
   TCut hltevent("HLTx==1 && (run>=163269 || run==1)");
   TCut hltmatch("HLTmatch==1");
-  TCut bTag("(pt2<30 && ((pt1>20 && jetsBtagHE1>3.3) || (pt2>20 && jetsBtagHE2>3.3)))");
-  TCut nobTag("pt2<30 && jetsBtagHE1<3.3 && jetsBtagHE2<3.3");
+  TCut bTag("nJets30<=1 && nJets20BTagged>=1");
+  TCut nobTag("nJets30<=1 && nJets20BTagged==0");
   TCut pZ( Form("((%s)<%f)",antiWcut.c_str(),antiWsgn));
   TCut apZ(Form("((%s)>%f)",antiWcut.c_str(),antiWsdb));
 
@@ -358,7 +365,8 @@ void plotMuTau( Int_t mH_ = 120,
   samples.push_back("Data");
   samples.push_back("ggH115");
   samples.push_back("qqH115");
-  samples.push_back("VH115");
+  if(signalVH)
+    samples.push_back("VH115");
   samples.push_back("Others");
   samples.push_back("TTbar");
   samples.push_back("SS");
@@ -418,6 +426,7 @@ void plotMuTau( Int_t mH_ = 120,
       cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from W+jets (from " << hHelp->GetEntries() << " entries)" << endl;
       float sFWSS = ( selection_.find("novbf")!=string::npos || selection_.find("nobTag")!=string::npos ) ? SSWinSignalRegionDATA/SSWinSignalRegionMC : WcorrectionFactorSS; // from the extrapolation factor DATA/MC
       if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) sFWSS *= VbfExtrapolationFactorW;
+      else if(selection_.find("boost")!=string::npos)  sFWSS *= BoostExtrapolationFactorW;
       hHelp->Scale(sFWSS*Lumi/1000*hltEff_);
       cout << "We estimate " << hHelp->Integral() << " SS events from W+jets by extrapolating" << endl;
       cout << " ==> removing W+jets from SS...." << endl;
@@ -489,14 +498,24 @@ void plotMuTau( Int_t mH_ = 120,
 	  sFWOS *= VbfExtrapolationFactorW;
 	  cout << "Wjets will be rescaled by " << VbfExtrapolationFactorW << " according to the Z->mumu+j+vbf/Z->mumu+j ratio" << endl;
 	}
+	else if(selection_.find("boost")!=string::npos){
+	  sFWOS *= BoostExtrapolationFactorW;
+	  cout << "Wjets will be rescaled by " << BoostExtrapolationFactorW << " according to the Z->mumu+j+vbf/Z->mumu+j ratio" << endl;
+	}
 	h1->Scale( sFWOS );
 	hW->Add(h1,1.0);
       }
 
       // if DY->tautau, and vbf scale by ratio data/MC
-      if((it->first).find("DYToTauTau")!=string::npos && selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
+      if((it->first).find("DYToTauTau")!=string::npos){
+	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
 	cout << "DY->tautau will be rescaled by " << VbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
 	h1->Scale( VbfExtrapolationFactorZ );
+	}
+	else if(selection_.find("boost")!=string::npos){
+	  cout << "DY->tautau will be rescaled by " << BoostExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
+	  h1->Scale( BoostExtrapolationFactorZ );
+	}
       }
 
       // if DY->mumu, mu->tau, scale by fake-rate
@@ -505,6 +524,10 @@ void plotMuTau( Int_t mH_ = 120,
 	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
 	  sF *= VbfExtrapolationFactorZ;
 	  cout << "DY->tautau, mu->tau will be rescaled by " << VbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
+	}
+	else if(selection_.find("boost")!=string::npos){
+	  cout << "DY->tautau, mu->tau will be rescaled by " << BoostExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
+	  h1->Scale( BoostExtrapolationFactorZ );
 	}
 	h1->Scale(sF);
 	hZmm->Add(h1,1.0);
@@ -516,6 +539,10 @@ void plotMuTau( Int_t mH_ = 120,
 	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
 	  sF *= VbfExtrapolationFactorZ;
 	  cout << "DY->tautau, jet->tau will be rescaled by " << VbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
+	}
+	else if(selection_.find("boost")!=string::npos){
+	  cout << "DY->tautau, jet->tau will be rescaled by " << BoostExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
+	  h1->Scale( BoostExtrapolationFactorZ );
 	}
 	h1->Scale(sF);
 	hZmj->Add(h1,1.0);
@@ -567,7 +594,7 @@ void plotMuTau( Int_t mH_ = 120,
       h1->SetFillStyle(3005);
       h1->SetLineColor(kBlack);
     }
-    if((it->first).find("vH115")!=string::npos){
+    if((it->first).find("VH115")!=string::npos){
       hSgn3->Add(h1,1.0);
       hSgn3->Scale(magnifySgn_);
       h1->Scale(magnifySgn_);
@@ -633,10 +660,10 @@ void plotMuTau( Int_t mH_ = 120,
 
   leg->Draw();
 
-  c1->SaveAs(Form("plots/plot_muTau_mH%d_%s_%s_%s.png",mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
+  c1->SaveAs(Form("plots/%s/plot_muTau_mH%d_%s_%s_%s.png",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
 
   // templates for fitting
-  TFile* fout = new TFile(Form("histograms/muTau_mH%d_%s_%s_%s.root",mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()),"RECREATE");
+  TFile* fout = new TFile(Form("histograms/%s/muTau_mH%d_%s_%s_%s.root",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()),"RECREATE");
   fout->cd();
   hQCD->Write();
   hZmm->Write();
@@ -652,6 +679,8 @@ void plotMuTau( Int_t mH_ = 120,
   hParameters->Write();
   fout->Write();
   fout->Close();
+
+  //return;
 
   delete hQCD; delete hZmm; delete hZmj; delete hTTb; delete hZtt; delete hW;
   delete hVV; delete hSgn1; delete hSgn2; delete hSgn3; delete hData; delete hParameters;
@@ -672,49 +701,55 @@ void plotMuTau( Int_t mH_ = 120,
 
 
 
-void plotMuTauAll(){
+void plotMuTauAll(TString outputDir = "Oct2011"){
 
   vector<string> variables;
   vector<int> mH;
 
-  variables.push_back("diTauVisMass");
+  //variables.push_back("diTauVisMass");
   variables.push_back("diTauNSVfitMass");
 
-  mH.push_back(105);
-  mH.push_back(110);
-  mH.push_back(115);
+  //mH.push_back(105);
+  //mH.push_back(110);
+  //mH.push_back(115);
   mH.push_back(120);
-  mH.push_back(125);
-  mH.push_back(130);
-  mH.push_back(135);
-  mH.push_back(140);
+  //mH.push_back(125);
+  //mH.push_back(130);
+  //mH.push_back(135);
+  //mH.push_back(140);
 
   for(unsigned int i = 0 ; i < variables.size(); i++){
     for(unsigned j = 0; j < mH.size(); j++){
 
-      plotMuTau(mH[j],"vbf",""         ,variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"vbf","TauUp"    ,variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"vbf","TauDown"  ,variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"vbf","JetUp"    ,variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"vbf","JetDown"  ,variables[i],"mass","GeV",-1);
+      plotMuTau(mH[j],"vbf",""         ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"vbf","TauUp"    ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"vbf","TauDown"  ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"vbf","JetUp"    ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"vbf","JetDown"  ,variables[i],"mass","GeV",outputDir,-1);
 
-      plotMuTau(mH[j],"novbf",""       ,variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"novbf","TauUp"  ,variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"novbf","TauDown",variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"novbf","JetUp"  ,variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"novbf","JetDown",variables[i],"mass","GeV",-1);
+      plotMuTau(mH[j],"novbf",""       ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"novbf","TauUp"  ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"novbf","TauDown",variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"novbf","JetUp"  ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"novbf","JetDown",variables[i],"mass","GeV",outputDir,-1);
 
-      plotMuTau(mH[j],"twoJets",""       ,variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"twoJets","TauUp"  ,variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"twoJets","TauDown",variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"twoJets","JetUp"  ,variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"twoJets","JetDown",variables[i],"mass","GeV",-1);
+      plotMuTau(mH[j],"boost",""       ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"boost","TauUp"  ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"boost","TauDown",variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"boost","JetUp"  ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"boost","JetDown",variables[i],"mass","GeV",outputDir,-1);
+
+      plotMuTau(mH[j],"twoJets",""       ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"twoJets","TauUp"  ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"twoJets","TauDown",variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"twoJets","JetUp"  ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"twoJets","JetDown",variables[i],"mass","GeV",outputDir,-1);
       
-      plotMuTau(mH[j],"oneJet",""       ,variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"oneJet","TauUp"  ,variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"oneJet","TauDown",variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"oneJet","JetUp"  ,variables[i],"mass","GeV",-1);
-      plotMuTau(mH[j],"oneJet","JetDown",variables[i],"mass","GeV",-1);
+      plotMuTau(mH[j],"oneJet",""       ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"oneJet","TauUp"  ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"oneJet","TauDown",variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"oneJet","JetUp"  ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],"oneJet","JetDown",variables[i],"mass","GeV",outputDir,-1);
 
     }
   }

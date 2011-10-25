@@ -22,8 +22,8 @@
 #include "TCut.h"
 
 #define VERBOSE true
-#define SAVE true
-
+#define SAVE    true
+#define addVH   false
 
 
 
@@ -95,10 +95,10 @@ void plotElecTau( Int_t mH_ = 120,
   //float Lumi                      = (159.+887.+361.7+531.5)*1.00;
   float Lumi = (-47.4 + 215.3 + 930.7 + 410.6 + (450.6+212.7) )* 1.00 ;
 
-  float WcorrectionFactorOS      = 1.04;  
-  float WcorrectionFactorSS      = 0.88;  
+  float WcorrectionFactorOS      = 0.94;  
+  float WcorrectionFactorSS      = 1.13;  
   float EtoTauCorrectionFactor   = 1.00;
-  float JtoTauCorrectionFactor   = 0.80;
+  float JtoTauCorrectionFactor   = 1.00;
   float VbfExtrapolationFactorZ  = 1.05;
   float VbfExtrapolationFactorW  = 1.26;
   
@@ -128,6 +128,7 @@ void plotElecTau( Int_t mH_ = 120,
   TH1F* hSgn   = new TH1F( "hSgn " ,"vbf+ggf"           , nBins , bins);
   TH1F* hSgn1  = new TH1F( "hSgn1" ,"vbf"               , nBins , bins);
   TH1F* hSgn2  = new TH1F( "hSgn2" ,"ggf"               , nBins , bins);
+  TH1F* hSgn3  = new TH1F( "hSgn3" ,"vh"                , nBins , bins);
   TH1F* hData  = new TH1F( "hData" ,"Observed"          , nBins , bins);
   TH1F* hW     = new TH1F( "hW"    ,"W+jets"            , nBins , bins);
   TH1F* hEWK   = new TH1F( "hEWK"  ,"EWK"               , nBins , bins);
@@ -147,7 +148,9 @@ void plotElecTau( Int_t mH_ = 120,
   TFile *fSignalVBF         
     = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream_13Oct2011//nTupleVBFH%d-ElecTau-powheg-PUS4_run_Open_ElecTauStream.root",mH_) ,"READ");  
   TFile *fSignalGGH         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream_13Oct2011//nTupleGGFH%d-ElecTau-powheg-PUS4_run_Open_ElecTauStream.root",mH_),"READ");  
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream_13Oct2011//nTupleGGFH%d-ElecTau-powheg-PUS4_run_Open_ElecTauStream.root",mH_),"READ");
+  TFile *fSignalVH         
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream_13Oct2011//nTupleVH%d-MuTau-pythia-PUS4_run_Open_MuTauStream.root",mH_),"READ");  
   TFile *fBackgroundDY
     = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStream_13Oct2011//nTupleDYJets-ElecTau-50-madgraph-PUS4_run_Open_ElecTauStream.root","READ"); 
   TFile *fBackgroundWJets   
@@ -163,6 +166,7 @@ void plotElecTau( Int_t mH_ = 120,
   TTree *data                = (TTree*)fData->Get("outTreePtOrd");
   TTree *signalVBF           = (TTree*)fSignalVBF->Get(tree);
   TTree *signalGGH           = (TTree*)fSignalGGH->Get(tree);
+  TTree *signalVH            = addVH ? (TTree*)fSignalVH->Get(tree) : 0;
 
   // split the DY->ll into l=e/mu and l=tau (MC level)
   TFile* dummy1 = new TFile("dummy1.root","RECREATE");
@@ -188,15 +192,15 @@ void plotElecTau( Int_t mH_ = 120,
   TCut lveto("(elecFlag!=1 && elecFlag!=2)");
   TCut SS("diTauCharge!=0");
   TCut OS("diTauCharge==0");
-  TCut oneJet("pt1>30");
-  TCut twoJets("pt1>30 && pt2>30");
-  TCut vbf("pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>350 && Deta>3.5 && ptVeto<30");
+  TCut oneJet("nJets30>=1");
+  TCut twoJets("nJets30>=2");
+  TCut vbf("pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && isVetoInJets!=1");
   TCut novbf("pt1<30");
   TCut boost("pt1>150 && pt2<30");
+  TCut bTag("nJets30<=1 && nJets20BTagged>=1");
+  TCut nobTag("nJets30<=1 && nJets20BTagged==0");
   TCut hltevent("HLTx==1 && (run>=163269 || run==1)");
   TCut hltmatch("HLTmatch==1");
-  TCut bTag("(pt2<30 && ((pt1>20 && jetsBtagHE1>3.3) || (pt2>20 && jetsBtagHE2>3.3)))");
-  TCut nobTag("pt2<30 && jetsBtagHE1<3.3 && jetsBtagHE2<3.3");
   TCut pZ( Form("((%s)<%f)",antiWcut.c_str(),antiWsgn));
   TCut apZ(Form("((%s)>%f)",antiWcut.c_str(),antiWsdb));
 
@@ -353,6 +357,8 @@ void plotElecTau( Int_t mH_ = 120,
   samples.push_back("Data");
   samples.push_back("ggH115");
   samples.push_back("qqH115");
+  if(signalVH)
+    samples.push_back("VH115");
   samples.push_back("Others");
   samples.push_back("TTbar");
   samples.push_back("SS");
@@ -368,6 +374,7 @@ void plotElecTau( Int_t mH_ = 120,
   tMap["Data"]      = data;
   tMap["ggH115"]    = signalGGH;
   tMap["qqH115"]    = signalVBF;
+  tMap["VH115"]     = signalVH;
   tMap["DYToTauTau"]= backgroundDYTauTau;
   tMap["DYEtoTau"]  = backgroundDYEtoTau;
   tMap["DYJtoTau"]  = backgroundDYJtoTau;
@@ -552,6 +559,15 @@ void plotElecTau( Int_t mH_ = 120,
       h1->SetFillStyle(3005);
       h1->SetLineColor(kBlack);
     }
+    if((it->first).find("VH115")!=string::npos){
+      hSgn3->Add(h1,1.0);
+      hSgn3->Scale(magnifySgn_);
+      h1->Scale(magnifySgn_);
+      hSgn3->SetLineWidth(2);
+      h1->SetFillColor(kBlack);
+      h1->SetFillStyle(3005);
+      h1->SetLineColor(kBlack);
+    }
     if((it->first).find("Data")!=string::npos){
       hData->Add(h1,1.0);
       hData->Sumw2();
@@ -652,7 +668,7 @@ void plotElecTauAll(){
   vector<string> variables;
   vector<int> mH;
   
-  variables.push_back("diTauVisMass");
+  //variables.push_back("diTauVisMass");
   variables.push_back("diTauNSVfitMass");
   
   mH.push_back(105);
@@ -682,6 +698,14 @@ void plotElecTauAll(){
       plotElecTau(mH[j],"novbf","JetDown" ,variables[i],"mass","GeV",-1);
       plotElecTau(mH[j],"novbf","ElecUp"  ,variables[i],"mass","GeV",-1);
       plotElecTau(mH[j],"novbf","ElecDown",variables[i],"mass","GeV",-1);
+
+      plotElecTau(mH[j],"boost",""        ,variables[i],"mass","GeV",-1);
+      plotElecTau(mH[j],"boost","TauUp"   ,variables[i],"mass","GeV",-1);
+      plotElecTau(mH[j],"boost","TauDown" ,variables[i],"mass","GeV",-1);
+      plotElecTau(mH[j],"boost","JetUp"   ,variables[i],"mass","GeV",-1);
+      plotElecTau(mH[j],"boost","JetDown" ,variables[i],"mass","GeV",-1);
+      plotElecTau(mH[j],"boost","ElecUp"  ,variables[i],"mass","GeV",-1);
+      plotElecTau(mH[j],"boost","ElecDown",variables[i],"mass","GeV",-1);
 
       plotElecTau(mH[j],"twoJets",""        ,variables[i],"mass","GeV",-1);
       plotElecTau(mH[j],"twoJets","TauUp"   ,variables[i],"mass","GeV",-1);
