@@ -8,8 +8,7 @@
   /////////////////////////// ADAPT THE TEMPLATES FOR MU+TAU  /////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////
 
-  //TString inputDir = "datacards";
-  TString inputDir = ".";
+  TString inputDir = "datacards/Oct2011";
 
   TString channel = "mu";
   //TString variable = "diTauVisMass";
@@ -74,6 +73,8 @@
     TH1F* hW_help2   = (TH1F*)gDirectory->Get("W"+analysis[k]);
     TH1F* hVV_help2  = (TH1F*)gDirectory->Get("VV"+analysis[k]);
     TH1F* hTT_help2  = (TH1F*)gDirectory->Get("TT"+analysis[k]);
+    TH1F* hZL_help2  = (TH1F*)gDirectory->Get("ZL"+analysis[k]);
+    TH1F* hZJ_help2  = (TH1F*)gDirectory->Get("ZJ"+analysis[k]);
 
     // directory to overwrite:
     fin.cd(channel+"Tau_SM2");
@@ -82,6 +83,11 @@
     float QCD_old = hQCD_old->Integral();
     hQCD_old->Reset();
     hQCD_old->Add(hQCD_help2, QCD_old/hQCD_help2->Integral());
+    for(int bin=1 ; bin<=hQCD_old->GetNbinsX(); bin++){
+      if(hQCD_old->GetBinContent(bin)<0)
+	hQCD_old->SetBinContent(bin,0.0);
+    }
+    hQCD_old->Scale(QCD_old/hQCD_old->Integral());
     hQCD_old->Write("QCD"+analysis[k] , TObject::kOverwrite);
     cout << "QCD template taken from "+channel+"Tau_SMpre2a" << endl; 
     
@@ -393,14 +399,14 @@
 
   // fix the SM templates
   vector<int> hMass;
-  hMass.push_back(105);
-  hMass.push_back(110);
-  hMass.push_back(115);
+  //hMass.push_back(105);
+  //hMass.push_back(110);
+  //hMass.push_back(115);
   hMass.push_back(120);
-  hMass.push_back(125);
-  hMass.push_back(130);
-  hMass.push_back(135);
-  hMass.push_back(140);
+  //hMass.push_back(125);
+  //hMass.push_back(130);
+  //hMass.push_back(135);
+  //hMass.push_back(140);
 
   for(int k=0; k<hMass.size(); k++ ){
 
