@@ -7,7 +7,7 @@ shapes *  *    XXX.root  $CHANNEL/$PROCESS $CHANNEL/$PROCESS_$SYSTEMATIC
 observation XXX
 
 
-bin                                             muTau_SM2            muTau_SM2            muTau_SM2            muTau_SM2            muTau_SM2            muTau_SM2            muTau_SM2            muTau_SM2            muTau_SM2
+bin                                             muTau_SM1            muTau_SM1            muTau_SM1            muTau_SM1            muTau_SM1            muTau_SM1            muTau_SM1            muTau_SM1            muTau_SM1
 process                                          SMXXX                 VBFYYY                ZTT                  QCD                   W                   ZJ                   ZL                    TT                  VV
 process                                            -1                     0                   1                    2                    3                    4                    5                     6                   7
 rate          
@@ -23,9 +23,7 @@ CMS_scale_t                              shape    1.00                   1.00   
 CMS_htt_zttNorm                            lnN       -                     -                  1.033                  -                    -                  1.033                 1.033                   -                  -          ZTT Scale  
 CMS_htt_ztt_extrap_vbf                     lnN       -                     -                  1.080                  -                    -                  1.080                 1.080                   -                  -          ZTT Extrapolation  
 CMS_htt_ttbarNorm                          lnN       -                     -                     -                   -                    -                    -                    -                    1.12                 -          TTbar Background X-section uncertainty  
-CMS_htt_muTau_SM1_ttbarNorm           gmN  XXX       -                     -                     -                   -                    -                    -                    -                     YYY                 -          TTbar background Normal. from sideband 
 CMS_htt_DiBosonNorm                        lnN       -                     -                     -                   -                    -                    -                    -                      -                 1.30        DiBoson background
-CMS_htt_muTau_SM1_DiBosonNorm         gmN  XXX       -                     -                     -                   -                    -                    -                    -                      -                 YYY         DiBoson background 
 CMS_htt_muTau_SM1_QCDNorm             gmN  XXX       -                     -                     -                  YYY                   -                    -                    -                      -                  -          QCD Background Normal. from sideband
 CMS_htt_muTau_SM1_QCDSyst                  lnN       -                     -                     -                  XXX                   -                    -                    -                      -                  -          QCD Background Systematics
 CMS_htt_muTau_SM1_WNorm               gmN  XXX       -                     -                     -                   -                   YYY                   -                    -                      -                  -          W Backghround Normalization: limited MC statistics
