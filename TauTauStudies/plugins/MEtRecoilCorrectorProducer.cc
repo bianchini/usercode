@@ -17,6 +17,7 @@ MEtRecoilCorrectorProducer::MEtRecoilCorrectorProducer(const edm::ParameterSet &
   tauTag_          = iConfig.getParameter<edm::InputTag>("tauTag");
   jetTag_          = iConfig.getParameter<edm::InputTag>("jetTag");
   minJetPt_        = iConfig.getParameter<double>("minJetPt");
+  numOfSigmas_     = iConfig.getParameter<double>("numOfSigmas");
 
   verbose_  = iConfig.getParameter<bool>("verbose");
   isMC_     = iConfig.getParameter<bool>("isMC");
@@ -30,9 +31,11 @@ MEtRecoilCorrectorProducer::MEtRecoilCorrectorProducer(const edm::ParameterSet &
   eventCounter_ = -1;
   recoilCorr_   =  0;
 
-  produces<pat::METCollection>("U");     
   produces<pat::METCollection>("N");     
-  produces<pat::METCollection>("D");  
+  produces<pat::METCollection>("ResponseU");     
+  produces<pat::METCollection>("ResponseD");  
+  produces<pat::METCollection>("ResolutionU");     
+  produces<pat::METCollection>("ResolutionD");     
 
 }
 
@@ -48,24 +51,37 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
   iEvent.getByLabel(metTag_,metHandle);
   const pat::METCollection* mets = metHandle.product();
 
-  double scaledMETPxN  = (*mets)[0].px();
-  double scaledMETPyN  = (*mets)[0].py();
-  double scaledMETPtN  = (*mets)[0].pt();
-  double scaledMETPhiN = (*mets)[0].phi();
+  double scaledMETPxN   = (*mets)[0].px();
+  double scaledMETPyN   = (*mets)[0].py();
+  double scaledMETPtN   = (*mets)[0].pt();
+  double scaledMETPhiN  = (*mets)[0].phi();
 
-  double scaledMETPxU  = (*mets)[0].px();
-  double scaledMETPyU  = (*mets)[0].py();
-  double scaledMETPtU  = (*mets)[0].pt();
-  double scaledMETPhiU = (*mets)[0].phi();
+  double scaledMETPxUm  = (*mets)[0].px();
+  double scaledMETPyUm  = (*mets)[0].py();
+  double scaledMETPtUm  = (*mets)[0].pt();
+  double scaledMETPhiUm = (*mets)[0].phi();
 
-  double scaledMETPxD  = (*mets)[0].px();
-  double scaledMETPyD  = (*mets)[0].py();
-  double scaledMETPtD  = (*mets)[0].pt();
-  double scaledMETPhiD = (*mets)[0].phi();
+  double scaledMETPxDm  = (*mets)[0].px();
+  double scaledMETPyDm  = (*mets)[0].py();
+  double scaledMETPtDm  = (*mets)[0].pt();
+  double scaledMETPhiDm = (*mets)[0].phi();
 
-  std::auto_ptr< pat::METCollection > MEtRescaledCollU( new pat::METCollection() ) ;
+  double scaledMETPxUs  = (*mets)[0].px();
+  double scaledMETPyUs  = (*mets)[0].py();
+  double scaledMETPtUs  = (*mets)[0].pt();
+  double scaledMETPhiUs = (*mets)[0].phi();
+
+  double scaledMETPxDs  = (*mets)[0].px();
+  double scaledMETPyDs  = (*mets)[0].py();
+  double scaledMETPtDs  = (*mets)[0].pt();
+  double scaledMETPhiDs = (*mets)[0].phi();
+
   std::auto_ptr< pat::METCollection > MEtRescaledCollN( new pat::METCollection() ) ;
-  std::auto_ptr< pat::METCollection > MEtRescaledCollD( new pat::METCollection() ) ;
+
+  std::auto_ptr< pat::METCollection > MEtRescaledCollUm( new pat::METCollection() ) ;
+  std::auto_ptr< pat::METCollection > MEtRescaledCollDm( new pat::METCollection() ) ;
+  std::auto_ptr< pat::METCollection > MEtRescaledCollUs( new pat::METCollection() ) ;
+  std::auto_ptr< pat::METCollection > MEtRescaledCollDs( new pat::METCollection() ) ;
 
   if(isMC_ && eventCounter_%1000==0){
 
@@ -362,19 +378,32 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
 
       if(verbose_) cout << "Evaluating Nominal recoil-corrected MEt" << endl;
       recoilCorr_->CorrectType1(scaledMETPtN,scaledMETPhiN,genVP4.Pt() ,genVP4.Phi(), 
-			       leptPt,leptPhi, 
-				u1, u2 , 0 , TMath::Min(nJets30,2) );
-      if(verbose_) cout << "corrected MET Nominal   = "    << scaledMETPtN << endl; 
-      if(verbose_) cout << "Evaluating +1 recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtU,scaledMETPhiU,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 
-				u1, u2 , +1 , TMath::Min(nJets30,2) );
-      if(verbose_) cout << "corrected MET Up = " << scaledMETPtU << endl;
-      if(verbose_) cout << "Evaluating -1 recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtD,scaledMETPhiD,genVP4.Pt() ,genVP4.Phi(), 
+				u1, u2 , 0 , 0, TMath::Min(nJets30,2) );
+      if(verbose_) cout << "corrected MET Nominal   = "    << scaledMETPtN << endl; 
+    
+      if(verbose_) cout << "Evaluating +1 resolution recoil-corrected MEt" << endl;
+      recoilCorr_->CorrectType1(scaledMETPtUs,scaledMETPhiUs,genVP4.Pt() ,genVP4.Phi(), 
+				leptPt,leptPhi, 
+				u1, u2 , +1*numOfSigmas_ , 0, TMath::Min(nJets30,2) );
+      if(verbose_) cout << "corrected MET Up = " << scaledMETPtUs << endl;
+      if(verbose_) cout << "Evaluating -1 resolution recoil-corrected MEt" << endl;
+      recoilCorr_->CorrectType1(scaledMETPtDs,scaledMETPhiDs,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 			     
-				u1, u2 , -1 , TMath::Min(nJets30,2) );
-      if(verbose_) cout << "corrected MET Down = "    << scaledMETPtD << endl;
+				u1, u2 , -1*numOfSigmas_ , 0, TMath::Min(nJets30,2) );
+      if(verbose_) cout << "corrected MET Down = "    << scaledMETPtDs << endl;
+
+      if(verbose_) cout << "Evaluating +1 response recoil-corrected MEt" << endl;
+      recoilCorr_->CorrectType1(scaledMETPtUm,scaledMETPhiUm,genVP4.Pt() ,genVP4.Phi(), 
+				leptPt,leptPhi, 
+				u1, u2 , 0 , +1*numOfSigmas_, TMath::Min(nJets30,2) );
+      if(verbose_) cout << "corrected MET Up = " << scaledMETPtUm << endl;
+      if(verbose_) cout << "Evaluating -1 response recoil-corrected MEt" << endl;
+      recoilCorr_->CorrectType1(scaledMETPtDm,scaledMETPhiDm,genVP4.Pt() ,genVP4.Phi(), 
+				leptPt,leptPhi, 			     
+				u1, u2 , 0 , -1*numOfSigmas_, TMath::Min(nJets30,2) );
+      if(verbose_) cout << "corrected MET Down = "    << scaledMETPtDm << endl;
+
 
     }
    
@@ -487,19 +516,31 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
       if(verbose_) cout << "Evaluating Nominal recoil-corrected MEt" << endl;
       recoilCorr_->CorrectType1(scaledMETPtN,scaledMETPhiN,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 
-				u1, u2 , 0 , TMath::Min(nJets30,2) );
+				u1, u2 , 0 , 0, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Nominal   = "    << scaledMETPtN << endl; 
-      if(verbose_) cout << "Evaluating +1 recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtU,scaledMETPhiU,genVP4.Pt() ,genVP4.Phi(), 
+    
+      if(verbose_) cout << "Evaluating +1 resolution recoil-corrected MEt" << endl;
+      recoilCorr_->CorrectType1(scaledMETPtUs,scaledMETPhiUs,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 
-				u1, u2 , +1 , TMath::Min(nJets30,2) );
-      if(verbose_) cout << "corrected MET Up = " << scaledMETPtU << endl;
-      if(verbose_) cout << "Evaluating -1 recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtD,scaledMETPhiD,genVP4.Pt() ,genVP4.Phi(), 
+				u1, u2 , +1*numOfSigmas_ , 0, TMath::Min(nJets30,2) );
+      if(verbose_) cout << "corrected MET Up = " << scaledMETPtUs << endl;
+      if(verbose_) cout << "Evaluating -1 resolution recoil-corrected MEt" << endl;
+      recoilCorr_->CorrectType1(scaledMETPtDs,scaledMETPhiDs,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 			     
-				u1, u2 , -1 , TMath::Min(nJets30,2) );
-      if(verbose_) cout << "corrected MET Down = "    << scaledMETPtD << endl;
-      
+				u1, u2 , -1*numOfSigmas_ , 0, TMath::Min(nJets30,2) );
+      if(verbose_) cout << "corrected MET Down = "    << scaledMETPtDs << endl;
+
+      if(verbose_) cout << "Evaluating +1 response recoil-corrected MEt" << endl;
+      recoilCorr_->CorrectType1(scaledMETPtUm,scaledMETPhiUm,genVP4.Pt() ,genVP4.Phi(), 
+				leptPt,leptPhi, 
+				u1, u2 , 0 , +1*numOfSigmas_, TMath::Min(nJets30,2) );
+      if(verbose_) cout << "corrected MET Up = " << scaledMETPtUm << endl;
+      if(verbose_) cout << "Evaluating -1 response recoil-corrected MEt" << endl;
+      recoilCorr_->CorrectType1(scaledMETPtDm,scaledMETPhiDm,genVP4.Pt() ,genVP4.Phi(), 
+				leptPt,leptPhi, 			     
+				u1, u2 , 0 , -1*numOfSigmas_, TMath::Min(nJets30,2) );
+      if(verbose_) cout << "corrected MET Down = "    << scaledMETPtDm << endl;
+
     }
 
     // Z->ll + fakes
@@ -604,18 +645,30 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
       if(verbose_) cout << "Evaluating Nominal recoil-corrected MEt" << endl;
       recoilCorr_->CorrectType1(scaledMETPtN,scaledMETPhiN,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 
-				u1, u2 , 0 , TMath::Min(nJets30,2) );
+				u1, u2 , 0 , 0, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Nominal   = "    << scaledMETPtN << endl; 
-      if(verbose_) cout << "Evaluating +1 recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtU,scaledMETPhiU,genVP4.Pt() ,genVP4.Phi(), 
+    
+      if(verbose_) cout << "Evaluating +1 resolution recoil-corrected MEt" << endl;
+      recoilCorr_->CorrectType1(scaledMETPtUs,scaledMETPhiUs,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 
-				u1, u2 , +1 , TMath::Min(nJets30,2) );
-      if(verbose_) cout << "corrected MET Up = " << scaledMETPtU << endl;
-      if(verbose_) cout << "Evaluating -1 recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtD,scaledMETPhiD,genVP4.Pt() ,genVP4.Phi(), 
+				u1, u2 , +1*numOfSigmas_ , 0, TMath::Min(nJets30,2) );
+      if(verbose_) cout << "corrected MET Up = " << scaledMETPtUs << endl;
+      if(verbose_) cout << "Evaluating -1 resolution recoil-corrected MEt" << endl;
+      recoilCorr_->CorrectType1(scaledMETPtDs,scaledMETPhiDs,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 			     
-				u1, u2 , -1 , TMath::Min(nJets30,2) );
-      if(verbose_) cout << "corrected MET Down = "    << scaledMETPtD << endl;
+				u1, u2 , -1*numOfSigmas_ , 0, TMath::Min(nJets30,2) );
+      if(verbose_) cout << "corrected MET Down = "    << scaledMETPtDs << endl;
+
+      if(verbose_) cout << "Evaluating +1 response recoil-corrected MEt" << endl;
+      recoilCorr_->CorrectType1(scaledMETPtUm,scaledMETPhiUm,genVP4.Pt() ,genVP4.Phi(), 
+				leptPt,leptPhi, 
+				u1, u2 , 0 , +1*numOfSigmas_, TMath::Min(nJets30,2) );
+      if(verbose_) cout << "corrected MET Up = " << scaledMETPtUm << endl;
+      if(verbose_) cout << "Evaluating -1 response recoil-corrected MEt" << endl;
+      recoilCorr_->CorrectType1(scaledMETPtDm,scaledMETPhiDm,genVP4.Pt() ,genVP4.Phi(), 
+				leptPt,leptPhi, 			     
+				u1, u2 , 0 , -1*numOfSigmas_, TMath::Min(nJets30,2) );
+      if(verbose_) cout << "corrected MET Down = "    << scaledMETPtDm << endl;
 
     }
 
@@ -628,34 +681,60 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
   scaledMETPxN = LVscaledMETN.Px();
   scaledMETPyN = LVscaledMETN.Py();
 
-  TLorentzVector LVscaledMETU;
-  LVscaledMETU.SetPtEtaPhiM(scaledMETPtU,0,scaledMETPhiU,0);
-  scaledMETPxU = LVscaledMETU.Px();
-  scaledMETPyU = LVscaledMETU.Py();
+  TLorentzVector LVscaledMETUm;
+  LVscaledMETUm.SetPtEtaPhiM(scaledMETPtUm,0,scaledMETPhiUm,0);
+  scaledMETPxUm = LVscaledMETUm.Px();
+  scaledMETPyUm = LVscaledMETUm.Py();
 
-  TLorentzVector LVscaledMETD;
-  LVscaledMETD.SetPtEtaPhiM(scaledMETPtD,0,scaledMETPhiD,0);
-  scaledMETPxD = LVscaledMETD.Px();
-  scaledMETPyD = LVscaledMETD.Py();
+  TLorentzVector LVscaledMETDm;
+  LVscaledMETDm.SetPtEtaPhiM(scaledMETPtDm,0,scaledMETPhiDm,0);
+  scaledMETPxDm = LVscaledMETDm.Px();
+  scaledMETPyDm = LVscaledMETDm.Py();
+
+  TLorentzVector LVscaledMETUs;
+  LVscaledMETUs.SetPtEtaPhiM(scaledMETPtUs,0,scaledMETPhiUs,0);
+  scaledMETPxUs = LVscaledMETUs.Px();
+  scaledMETPyUs = LVscaledMETUs.Py();
+
+  TLorentzVector LVscaledMETDs;
+  LVscaledMETDs.SetPtEtaPhiM(scaledMETPtDs,0,scaledMETPhiDs,0);
+  scaledMETPxDs = LVscaledMETDs.Px();
+  scaledMETPyDs = LVscaledMETDs.Py();
 
 
-  pat::MET scaledMETU( reco::MET(((*mets)[0]).sumEt(), 
-				 reco::MET::LorentzVector(scaledMETPxU, scaledMETPyU, 0, sqrt(scaledMETPxU*scaledMETPxU+scaledMETPyU*scaledMETPyU)), 
-				 reco::MET::Point(0,0,0)) );
   pat::MET scaledMETN( reco::MET(((*mets)[0]).sumEt(), 
 				 reco::MET::LorentzVector(scaledMETPxN, scaledMETPyN, 0, sqrt(scaledMETPxN*scaledMETPxN+scaledMETPyN*scaledMETPyN)), 
 				 reco::MET::Point(0,0,0)) );
-  pat::MET scaledMETD( reco::MET(((*mets)[0]).sumEt(), 
-				 reco::MET::LorentzVector(scaledMETPxD, scaledMETPyD, 0, sqrt(scaledMETPxD*scaledMETPxD+scaledMETPyD*scaledMETPyD)), 
+
+  pat::MET scaledMETUm( reco::MET(((*mets)[0]).sumEt(), 
+				 reco::MET::LorentzVector(scaledMETPxUm, scaledMETPyUm, 0, sqrt(scaledMETPxUm*scaledMETPxUm+scaledMETPyUm*scaledMETPyUm)), 
+				 reco::MET::Point(0,0,0)) );
+  pat::MET scaledMETUs( reco::MET(((*mets)[0]).sumEt(), 
+				 reco::MET::LorentzVector(scaledMETPxUs, scaledMETPyUs, 0, sqrt(scaledMETPxUs*scaledMETPxUs+scaledMETPyUs*scaledMETPyUs)), 
+				 reco::MET::Point(0,0,0)) );
+  pat::MET scaledMETDm( reco::MET(((*mets)[0]).sumEt(), 
+				 reco::MET::LorentzVector(scaledMETPxDm, scaledMETPyDm, 0, sqrt(scaledMETPxDm*scaledMETPxDm+scaledMETPyDm*scaledMETPyDm)), 
+				 reco::MET::Point(0,0,0)) );
+  pat::MET scaledMETDs( reco::MET(((*mets)[0]).sumEt(), 
+				 reco::MET::LorentzVector(scaledMETPxDs, scaledMETPyDs, 0, sqrt(scaledMETPxDs*scaledMETPxDs+scaledMETPyDs*scaledMETPyDs)), 
 				 reco::MET::Point(0,0,0)) );
 
-  MEtRescaledCollU->push_back(scaledMETU);  
-  MEtRescaledCollN->push_back(scaledMETN);  
-  MEtRescaledCollD->push_back(scaledMETD);  
+  
+  
 
-  iEvent.put(MEtRescaledCollU, "U");
-  iEvent.put(MEtRescaledCollN, "N");
-  iEvent.put(MEtRescaledCollD, "D");
+
+  MEtRescaledCollN->push_back(scaledMETN);  
+
+  MEtRescaledCollUm->push_back(scaledMETUm);  
+  MEtRescaledCollDm->push_back(scaledMETDm);
+  MEtRescaledCollUs->push_back(scaledMETUs);  
+  MEtRescaledCollDs->push_back(scaledMETDs);  
+
+  iEvent.put(MEtRescaledCollN,  "N");
+  iEvent.put(MEtRescaledCollUm, "ResponseU");
+  iEvent.put(MEtRescaledCollDm, "ResponseD");
+  iEvent.put(MEtRescaledCollUs, "ResolutionU");
+  iEvent.put(MEtRescaledCollDs, "ResolutionD");
   
   return;
 }

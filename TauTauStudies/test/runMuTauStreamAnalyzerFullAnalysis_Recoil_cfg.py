@@ -86,17 +86,17 @@ process.rescaledMETmuon = process.rescaledMET.clone(
 process.rescaledTaus = cms.EDProducer(
     "TauRescalerProducer",
     inputCollection = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
-    shift = cms.double(0.03)
+    shift = cms.vdouble(0.03,0.03)
     )
 process.rescaledMuons = cms.EDProducer(
     "MuonRescalerProducer",
     inputCollection = cms.InputTag("muPtEtaIDIso"),
-    shift = cms.double(0.01)
+    shift = cms.vdouble(0.01,0.01)
     )
 process.rescaledMuonsRel = cms.EDProducer(
     "MuonRescalerProducer",
     inputCollection = cms.InputTag("muPtEtaRelID"),
-    shift = cms.double(0.01)
+    shift = cms.vdouble(0.01,0.01)
     )
 
 process.rescaledObjects = cms.Sequence(
@@ -118,11 +118,12 @@ process.metRecoilCorrector = cms.EDProducer(
     electronTag         = cms.InputTag(""),
     muonTag             = cms.InputTag("muPtEtaIDIso"),
     tauTag              = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
-    inputFileNamezmm42X = cms.FileInPath("Bianchi/TauTauStudies/test/Macro/recoil/RecoilCorrector/recoilfits/recoilfit_zmm42X_njet.root"),
-    inputFileNamedatamm = cms.FileInPath("Bianchi/TauTauStudies/test/Macro/recoil/RecoilCorrector/recoilfits/recoilfit_datamm_njet.root"),
-    inputFileNamewjets  = cms.FileInPath("Bianchi/TauTauStudies/test/Macro/recoil/RecoilCorrector/recoilfits/recoilfit_wjets_njet.root"),
-    inputFileNamezjets  = cms.FileInPath("Bianchi/TauTauStudies/test/Macro/recoil/RecoilCorrector/recoilfits/recoilfit_zjets_ltau_njet.root"),
-    inputFileNamehiggs  = cms.FileInPath("Bianchi/TauTauStudies/test/Macro/recoil/RecoilCorrector/recoilfits/recoilfit_higgs_njet.root"),
+    inputFileNamezmm42X = cms.FileInPath("Bianchi/TauTauStudies/test/Macro/recoilv2/RecoilCorrector/recoilfits/recoilfit_zmm42X_njet.root"),
+    inputFileNamedatamm = cms.FileInPath("Bianchi/TauTauStudies/test/Macro/recoilv2/RecoilCorrector/recoilfits/recoilfit_datamm_njet.root"),
+    inputFileNamewjets  = cms.FileInPath("Bianchi/TauTauStudies/test/Macro/recoilv2/RecoilCorrector/recoilfits/recoilfit_wjets_njet.root"),
+    inputFileNamezjets  = cms.FileInPath("Bianchi/TauTauStudies/test/Macro/recoilv2/RecoilCorrector/recoilfits/recoilfit_zjets_ltau_njet.root"),
+    inputFileNamehiggs  = cms.FileInPath("Bianchi/TauTauStudies/test/Macro/recoilv2/RecoilCorrector/recoilfits/recoilfit_higgs_njet.root"),
+    numOfSigmas         = cms.double(1.0),
     minJetPt            = cms.double(30.0),
     verbose             = cms.bool(False),
     isMC                = cms.bool(runOnMC),
@@ -172,21 +173,39 @@ process.diTauJetDown =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
 process.selectedDiTauJetDown = process.selectedDiTau.clone(src = cms.InputTag("diTauJetDown") )
 process.selectedDiTauJetDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauJetDown"))
 
-process.diTauMEtUp =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
+
+process.diTauMEtResponseUp =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                           srcLeg1 = cms.InputTag("muPtEtaIDIso"),
                                           srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
-                                          srcMET  = cms.InputTag("metRecoilCorrector",  "U")
+                                          srcMET  = cms.InputTag("metRecoilCorrector",  "ResponseU")
                                           )
-process.selectedDiTauMEtUp = process.selectedDiTau.clone(src = cms.InputTag("diTauMEtUp") )
-process.selectedDiTauMEtUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMEtUp"))
+process.selectedDiTauMEtResponseUp = process.selectedDiTau.clone(src = cms.InputTag("diTauMEtResponseUp") )
+process.selectedDiTauMEtResponseUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMEtResponseUp"))
 
-process.diTauMEtDown =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
+process.diTauMEtResponseDown =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                             srcLeg1 = cms.InputTag("muPtEtaIDIso"),
                                             srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
-                                            srcMET  = cms.InputTag("metRecoilCorrector",  "D")
+                                            srcMET  = cms.InputTag("metRecoilCorrector",  "ResponseD")
                                             )
-process.selectedDiTauMEtDown = process.selectedDiTau.clone(src = cms.InputTag("diTauMEtDown") )
-process.selectedDiTauMEtDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMEtDown"))
+process.selectedDiTauMEtResponseDown = process.selectedDiTau.clone(src = cms.InputTag("diTauMEtResponseDown") )
+process.selectedDiTauMEtResponseDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMEtResponseDown"))
+
+
+process.diTauMEtResolutionUp =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
+                                          srcLeg1 = cms.InputTag("muPtEtaIDIso"),
+                                          srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
+                                          srcMET  = cms.InputTag("metRecoilCorrector",  "ResolutionU")
+                                          )
+process.selectedDiTauMEtResolutionUp = process.selectedDiTau.clone(src = cms.InputTag("diTauMEtResolutionUp") )
+process.selectedDiTauMEtResolutionUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMEtResolutionUp"))
+
+process.diTauMEtResolutionDown =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
+                                            srcLeg1 = cms.InputTag("muPtEtaIDIso"),
+                                            srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
+                                            srcMET  = cms.InputTag("metRecoilCorrector",  "ResolutionD")
+                                            )
+process.selectedDiTauMEtResolutionDown = process.selectedDiTau.clone(src = cms.InputTag("diTauMEtResolutionDown") )
+process.selectedDiTauMEtResolutionDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMEtResolutionDown"))
 
 
 process.diTauMuUp = process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
@@ -227,8 +246,10 @@ process.allDiTau = cms.Sequence(
     (process.diTau*process.selectedDiTau*process.selectedDiTauCounter)+
     (process.diTauJetUp*process.selectedDiTauJetUp*process.selectedDiTauJetUpCounter +
      process.diTauJetDown*process.selectedDiTauJetDown*process.selectedDiTauJetDownCounter) +
-    (process.diTauMEtUp*process.selectedDiTauMEtUp*process.selectedDiTauMEtUpCounter +
-     process.diTauMEtDown*process.selectedDiTauMEtDown*process.selectedDiTauMEtDownCounter) +
+    (process.diTauMEtResolutionUp*process.selectedDiTauMEtResolutionUp*process.selectedDiTauMEtResolutionUpCounter +
+     process.diTauMEtResolutionDown*process.selectedDiTauMEtResolutionDown*process.selectedDiTauMEtResolutionDownCounter) +
+    (process.diTauMEtResponseUp*process.selectedDiTauMEtResponseUp*process.selectedDiTauMEtResponseUpCounter +
+     process.diTauMEtResponseDown*process.selectedDiTauMEtResponseDown*process.selectedDiTauMEtResponseDownCounter) +
     (process.diTauMuUp*process.selectedDiTauMuUp*process.selectedDiTauMuUpCounter +
      process.diTauMuDown*process.selectedDiTauMuDown*process.selectedDiTauMuDownCounter) +
     (process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter +
@@ -335,13 +356,21 @@ process.muTauStreamAnalyzerJetDown = process.muTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauJetDown"),
     met    =  cms.InputTag("rescaledMETjet",  "DNNND"),
     )
-process.muTauStreamAnalyzerMEtUp   = process.muTauStreamAnalyzer.clone(
-    diTaus =  cms.InputTag("selectedDiTauMEtUp"),
-    met    =  cms.InputTag("metRecoilCorrector",  "U"),
+process.muTauStreamAnalyzerMEtResolutionUp   = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauMEtResolutionUp"),
+    met    =  cms.InputTag("metRecoilCorrector",  "ResolutionU"),
     )
-process.muTauStreamAnalyzerMEtDown = process.muTauStreamAnalyzer.clone(
-    diTaus =  cms.InputTag("selectedDiTauMEtDown"),
-    met    =  cms.InputTag("metRecoilCorrector",  "D"),
+process.muTauStreamAnalyzerMEtResolutionDown = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauMEtResolutionDown"),
+    met    =  cms.InputTag("metRecoilCorrector",  "ResolutionD"),
+    )
+process.muTauStreamAnalyzerMEtResponseUp   = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauMEtResponseUp"),
+    met    =  cms.InputTag("metRecoilCorrector",  "ResponseU"),
+    )
+process.muTauStreamAnalyzerMEtResponseDown = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauMEtResponseDown"),
+    met    =  cms.InputTag("metRecoilCorrector",  "ResponseD"),
     )
 process.muTauStreamAnalyzerMuUp    = process.muTauStreamAnalyzer.clone(
     diTaus   =  cms.InputTag("selectedDiTauMuUp"),
@@ -368,8 +397,10 @@ process.allAnalyzers = cms.Sequence(
     process.muTauStreamAnalyzer+
     process.muTauStreamAnalyzerJetUp+
     process.muTauStreamAnalyzerJetDown+
-    process.muTauStreamAnalyzerMEtUp+
-    process.muTauStreamAnalyzerMEtDown+
+    process.muTauStreamAnalyzerMEtResponseUp+
+    process.muTauStreamAnalyzerMEtResponseDown+
+    process.muTauStreamAnalyzerMEtResolutionUp+
+    process.muTauStreamAnalyzerMEtResolutionDown+
     process.muTauStreamAnalyzerMuUp+
     process.muTauStreamAnalyzerMuDown+
     process.muTauStreamAnalyzerTauUp+
@@ -420,26 +451,44 @@ if runOnMC:
         process.muTauStreamAnalyzerJetDown
         )
 
-    process.pMEtUp = cms.Path(
+    process.pMEtResolutionUp = cms.Path(
         process.allEventsFilter*
         (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
         (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
         process.muPtEtaRelID *
         process.metRecoilCorrector*
-        process.rescaledObjects*
-        process.diTauMEtUp*process.selectedDiTauMEtUp*process.selectedDiTauMEtUpCounter*
-        process.muTauStreamAnalyzerMEtUp
+        process.diTauMEtResolutionUp*process.selectedDiTauMEtResolutionUp*process.selectedDiTauMEtResolutionUpCounter*
+        process.muTauStreamAnalyzerMEtResolutionUp
         )
-    process.pMEtDown = cms.Path(
+    process.pMEtResolutionDown = cms.Path(
         process.allEventsFilter*
         (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
         (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
         process.muPtEtaRelID *
         process.metRecoilCorrector*
-        process.rescaledObjects*
-        process.diTauMEtDown*process.selectedDiTauMEtDown*process.selectedDiTauMEtDownCounter*
-        process.muTauStreamAnalyzerMEtDown
+        process.diTauMEtResolutionDown*process.selectedDiTauMEtResolutionDown*process.selectedDiTauMEtResolutionDownCounter*
+        process.muTauStreamAnalyzerMEtResolutionDown
         )
+
+    process.pMEtResponseUp = cms.Path(
+        process.allEventsFilter*
+        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+        (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+        process.muPtEtaRelID *
+        process.metRecoilCorrector*
+        process.diTauMEtResponseUp*process.selectedDiTauMEtResponseUp*process.selectedDiTauMEtResponseUpCounter*
+        process.muTauStreamAnalyzerMEtResponseUp
+        )
+    process.pMEtResponseDown = cms.Path(
+        process.allEventsFilter*
+        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+        (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+        process.muPtEtaRelID *
+        process.metRecoilCorrector*
+        process.diTauMEtResponseDown*process.selectedDiTauMEtResponseDown*process.selectedDiTauMEtResponseDownCounter*
+        process.muTauStreamAnalyzerMEtResponseDown
+        )
+    
     '''
     process.pMuUp = cms.Path(
     process.allEventsFilter*

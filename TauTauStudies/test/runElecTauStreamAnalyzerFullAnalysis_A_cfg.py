@@ -35,7 +35,11 @@ process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-A/7844d4f37a96a2c29702b4cab23898d9/patTuples_ElecTauStream_1_1_L9Q.root'
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-13Oct2011/4858ffc00b76ea327a878ab2c9d1d4f3/patTuples_ElecTauStream_1_1_MHb.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-13Oct2011/4858ffc00b76ea327a878ab2c9d1d4f3/patTuples_ElecTauStream_1_1_MHb.root'
+
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-21Oct2011/72336b8f61b87f1536c6b95a5cfbfe6e/patTuples_ElecTauStream_1_1_qHA.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-21Oct2011-05AugReReco/ea0534a53ae8342d77d517a552111b33/patTuples_ElecTauStream_18_1_L7T.root'
+
     #'rfio:rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-v6/add82882179501750b106d9900e51989/patTuples_ElecTauStream_45_1_UZL.root',
     #'file:patTuples_ElecTauStream.root'
     )
@@ -83,17 +87,17 @@ process.rescaledMETelectron = process.rescaledMET.clone(
 process.rescaledTaus = cms.EDProducer(
     "TauRescalerProducer",
     inputCollection = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
-    shift = cms.double(0.03)
+    shift = cms.vdouble(0.03,0.03)
     )
 process.rescaledElectrons = cms.EDProducer(
     "ElectronRescalerProducer",
     inputCollection = cms.InputTag("elecPtEtaIDIso"),
-    shift = cms.double(0.02)
+    shift = cms.vdouble(0.01,0.025)
     )
 process.rescaledElectronsRel = cms.EDProducer(
     "ElectronRescalerProducer",
     inputCollection = cms.InputTag("elecPtEtaRelID"),
-    shift = cms.double(0.02)
+    shift = cms.vdouble(0.01,0.025)
     )
 
 process.rescaledObjects = cms.Sequence(
@@ -193,6 +197,41 @@ process.allDiTau = cms.Sequence(
     )
 #######################################################################
 
+MVA = "((pt<=20 && abs(superClusterPosition.Eta)>=0.0 && abs(superClusterPosition.Eta)<1.0 && userFloat('mva')>0.133) ||" + \
+      " (pt<=20 && abs(superClusterPosition.Eta)>=1.0 && abs(superClusterPosition.Eta)<1.5 && userFloat('mva')>0.465) ||" + \
+      " (pt<=20 && abs(superClusterPosition.Eta)>=1.5 && abs(superClusterPosition.Eta)<2.5 && userFloat('mva')>0.518) ||" + \
+      " (pt>20  && abs(superClusterPosition.Eta)>=0.0 && abs(superClusterPosition.Eta)<1.0 && userFloat('mva')>0.942) ||" + \
+      " (pt>20  && abs(superClusterPosition.Eta)>=1.0 && abs(superClusterPosition.Eta)<1.5 && userFloat('mva')>0.947) ||" + \
+      " (pt>20  && abs(superClusterPosition.Eta)>=1.5 && abs(superClusterPosition.Eta)<2.5 && userFloat('mva')>0.878) )"
+
+simpleCutsWP95 = "(userFloat('nHits')<=1"+ \
+                 " && (" + \
+                 " (isEB && userFloat('sihih')<0.010 && userFloat('dPhi')<0.80 && "+ \
+                 "          userFloat('dEta') <0.007 && userFloat('HoE') <0.15)"   + \
+                 " || "  + \
+                 " (isEE && userFloat('sihih')<0.030 && userFloat('dPhi')<0.70 && "+ \
+                 "          userFloat('dEta') <0.010 && userFloat('HoE') <0.07)"   + \
+                 "     )"+ \
+                 ")"
+simpleCutsWP80 = "(userFloat('nHits')==0 && userInt('antiConv')>0.5 "+ \
+                 " && ("   + \
+                 " (pt>=20 && ("    + \
+                 "               (isEB && userFloat('sihih')<0.010 && userFloat('dPhi')<0.06 && "  + \
+                 "                        userFloat('dEta')< 0.004 && userFloat('HoE') <0.04)"     + \
+                 "               ||"+ \
+                 "               (isEE && userFloat('sihih')<0.030 && userFloat('dPhi')<0.030 && " + \
+                 "                        userFloat('dEta') <0.007 && userFloat('HoE') <0.025) )) "+ \
+                 "     || "+ \
+                 " (pt<20 && (fbrem>0.15 || (abs(superClusterPosition.Eta)<1. && eSuperClusterOverP>0.95) ) && ( "+ \
+                 "               (isEB && userFloat('sihih')<0.010 && userFloat('dPhi')<0.030 && " + \
+                 "                        userFloat('dEta') <0.004 && userFloat('HoE') <0.025) "   + \
+                 "               ||"+ \
+                 "               (isEE && userFloat('sihih')<0.030 && userFloat('dPhi')<0.020 &&"  + \
+                 "                        userFloat('dEta') <0.005 && userFloat('HoE') <0.025) ))" + \
+                 "    )"   + \
+                 ")"
+
+
 process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
@@ -222,7 +261,7 @@ process.tauPtEtaIDAgMuAgElecIsoTauDownCounter = process.tauPtEtaIDAgMuAgElecIsoC
 process.elecPtEtaIDIso  = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("elecPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04v3')<0.10 && pt>18 && abs(eta)<2.1"),
+    cut = cms.string("userFloat('PFRelIsoDB04v3')<0.10 && pt>15 && abs(eta)<2.5 && ("+MVA+" || "+simpleCutsWP80+")"),
     filter = cms.bool(False)
     )
 process.elecPtEtaIDIsoCounter = cms.EDFilter(

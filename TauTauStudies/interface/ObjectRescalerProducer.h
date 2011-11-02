@@ -22,7 +22,7 @@ public:
   explicit ObjectRescalerProducer(const edm::ParameterSet& cfg){
 
     inputCollection_ = cfg.getParameter<edm::InputTag>("inputCollection");
-    shift_ = cfg.getParameter<double>("shift");
+    shift_ = cfg.getParameter<std::vector<double> >("shift");
 
     produces<std::vector<T> >("U");
     produces<std::vector<T> >("D");
@@ -52,12 +52,14 @@ public:
       T objectU( *ptr );
       T objectD( *ptr );
 
-      double scaleU = sqrt( ptr->energy()*(1+shift_)*ptr->energy()*(1+shift_) - ptr->mass()*ptr->mass() )/ptr->p();
-      math::XYZTLorentzVectorD p4Up( ptr->px()*scaleU , ptr->py()*scaleU, ptr->pz()*scaleU, ptr->energy()*(1+shift_) );
+      float shift = fabs(ptr->eta())<1.44 ? shift_[0] : shift_[1];
+
+      double scaleU = sqrt( ptr->energy()*(1+shift)*ptr->energy()*(1+shift) - ptr->mass()*ptr->mass() )/ptr->p();
+      math::XYZTLorentzVectorD p4Up( ptr->px()*scaleU , ptr->py()*scaleU, ptr->pz()*scaleU, ptr->energy()*(1+shift) );
       objectU.setP4( p4Up );
 
-      double scaleD = sqrt( ptr->energy()*(1-shift_)*ptr->energy()*(1-shift_) - ptr->mass()*ptr->mass() )/ptr->p();
-      math::XYZTLorentzVectorD p4Down( ptr->px()*scaleD , ptr->py()*scaleD, ptr->pz()*scaleD, ptr->energy()*(1-shift_) );
+      double scaleD = sqrt( ptr->energy()*(1-shift)*ptr->energy()*(1-shift) - ptr->mass()*ptr->mass() )/ptr->p();
+      math::XYZTLorentzVectorD p4Down( ptr->px()*scaleD , ptr->py()*scaleD, ptr->pz()*scaleD, ptr->energy()*(1-shift) );
       objectD.setP4( p4Down );
  
       ObjectRescaledU->push_back( objectU );
@@ -74,7 +76,7 @@ public:
  private:
 
   edm::InputTag inputCollection_;
-  double shift_;
+  std::vector<double> shift_;
 };
 
 

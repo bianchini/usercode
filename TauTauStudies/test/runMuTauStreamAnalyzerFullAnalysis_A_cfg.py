@@ -34,9 +34,13 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-A/eb0fd1029d421bd6defe934bc4cc3c1f/patTuples_MuTauStream_1_1_WTL.root'   
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-A/fa903dab72ded7ad712369203e92cf01/patTuples_MuTauStream_1_1_ID4.root'
-    'file:./root/patTuples_MuTauStream_sync.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi//DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_9_1_6gn.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/WJetsToLNu_TuneZ2_7TeV-madgraph-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_2_1_qa2.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_1_1_3W2.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/WW_TuneZ2_7TeV_pythia6_tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_1_1_3Hx.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/WZ_TuneZ2_7TeV_pythia6_tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_1_1_8ps.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TTJets_TuneZ2_7TeV-madgraph-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_1_1_rCW.root'
+    #'file:./root/patTuples_MuTauStream_sync.root'
     )
     )
 
@@ -82,17 +86,17 @@ process.rescaledMETmuon = process.rescaledMET.clone(
 process.rescaledTaus = cms.EDProducer(
     "TauRescalerProducer",
     inputCollection = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
-    shift = cms.double(0.03)
+    shift = cms.vdouble(0.03,0.03)
     )
 process.rescaledMuons = cms.EDProducer(
     "MuonRescalerProducer",
     inputCollection = cms.InputTag("muPtEtaIDIso"),
-    shift = cms.double(0.01)
+    shift = cms.vdouble(0.01,0.01)
     )
 process.rescaledMuonsRel = cms.EDProducer(
     "MuonRescalerProducer",
     inputCollection = cms.InputTag("muPtEtaRelID"),
-    shift = cms.double(0.01)
+    shift = cms.vdouble(0.01,0.01)
     )
 
 process.rescaledObjects = cms.Sequence(
@@ -312,6 +316,8 @@ process.muTauStreamAnalyzerTauDown = process.muTauStreamAnalyzer.clone(
     met    =  cms.InputTag("rescaledMETtau","NNNDN")
     )
 
+#######################################################################
+
 process.allAnalyzers = cms.Sequence(
     process.muTauStreamAnalyzer+
     process.muTauStreamAnalyzerJetUp+
@@ -321,7 +327,9 @@ process.allAnalyzers = cms.Sequence(
     process.muTauStreamAnalyzerTauUp+
     process.muTauStreamAnalyzerTauDown
     )
+
 #######################################################################
+
 
 process.analysis = cms.Sequence(
     process.allEventsFilter*
@@ -340,7 +348,7 @@ process.pNominal = cms.Path(
     process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
     process.muTauStreamAnalyzer
     )
-
+'''
 process.pJetUp = cms.Path(
     process.allEventsFilter*
     (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
@@ -401,7 +409,7 @@ process.pTauDown = cms.Path(
     process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
     process.muTauStreamAnalyzerTauDown
     )
-
+'''
 
 process.out = cms.OutputModule(
     "PoolOutputModule",

@@ -47,6 +47,7 @@ class MEtRecoilCorrectorProducer : public edm::EDProducer{
   bool verbose_;
   bool isMC_;
   double minJetPt_;
+  double numOfSigmas_;
   int eventCounter_;
   int genDecay_;
 
