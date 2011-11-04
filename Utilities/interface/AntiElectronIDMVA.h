@@ -74,9 +74,9 @@ class AntiElectronIDMVA {
     gammaPt_->push_back(  gamma->pt() );
     }
     
-    GammadEta               = fabs(gammadEta_[0]);
-    GammadPhi               = TMath::Min(fabs(gammadPhi_[0]),float(0.3));
-    GammaPt                 = gammaPt_[0]/pt;
+    GammadEta               = gammadEta_->size()>0 ? fabs(gammadEta_[0]) : -99;
+    GammadPhi               = gammadPhi_->size()>0 ? TMath::Min(fabs(gammadPhi_[0]),float(0.3)) : -99;
+    GammaPt                 = gammaPt_->size() ? gammaPt_[0]/pt : -99;
 
     */
 
