@@ -40,22 +40,22 @@ class AntiElectronIDMVA {
     // proposed WP:    epsilonB ~ 15%  epsilonS ~ 90% wrt signal taus passing discr. ag. electrons Medium. 
     bool pass = 
     (abs(TauEta)<1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.073) ||
-    (abs(TauEta)<1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.091) ||
-    (abs(TauEta)<1.5 && TauSignalPFGammaCands>0  && TauHasGsf<0.5 && MVAValue(...)>0.088) ||
+    (abs(TauEta)<1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.088) ||
+    (abs(TauEta)<1.5 && TauSignalPFGammaCands>0  && TauHasGsf<0.5 && MVAValue(...)>0.091) ||
     (abs(TauEta)>1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.096) ||
-    (abs(TauEta)>1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.055) ||
-    (abs(TauEta)>1.5 && TauSignalPFGammaCands>0  && TauHasGsf<0.5 && MVAValue(...)>0.042);
+    (abs(TauEta)>1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.042) ||
+    (abs(TauEta)>1.5 && TauSignalPFGammaCands>0  && TauHasGsf<0.5 && MVAValue(...)>0.055);
 
     where:
 
     TauEta                  = (*taus)[i].eta();
     TauSignalPFChargedCands = (*taus)[i].signalPFChargedHadrCands().size();
     TauSignalPFGammaCands   = (*taus)[i].signalPFGammaCands().size();
-    TauLeadPFChargedHadrMva = (*taus)[i].electronPreIDOutput();
+    TauLeadPFChargedHadrMva = TMath::Max((*taus)[i].electronPreIDOutput(),float(-1.0));
     TauLeadPFChargedHadrHoP = (*taus)[i].leadPFChargedHadrCand()->hcalEnergy()/(*taus)[i].leadPFChargedHadrCand()->p();
     TauHasGsf               = ((*taus)[i].leadPFChargedHadrCand()->gsfTrackRef()).isNonnull();
     TauVisMass              = (*taus)[i].mass();
-    TauEmFraction           = (*taus)[i].emFraction();
+    TauEmFraction           = TMath::Max((*taus)[i].emFraction(),float(0.0));
   
     gammadEta_     = new std::vector< float >();
     gammadPhi_     = new std::vector< float >();
@@ -75,7 +75,7 @@ class AntiElectronIDMVA {
     }
     
     GammadEta               = fabs(gammadEta_[0]);
-    GammadPhi               = dPhiG:=TMath::Min(abs(gammadPhi_[0]),0.3);
+    GammadPhi               = TMath::Min(fabs(gammadPhi_[0]),float(0.3));
     GammaPt                 = gammaPt_[0]/pt;
 
     */
