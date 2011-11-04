@@ -37,7 +37,7 @@ class AntiElectronIDMVA {
 		    );
 
     /* 
-    // proposed WP:
+    // proposed WP:    epsilonB ~ 15%  epsilonS ~ 90% wrt signal taus passing discr. ag. electrons Medium. 
     bool pass = 
     (abs(TauEta)<1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.073) ||
     (abs(TauEta)<1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.091) ||
@@ -45,7 +45,39 @@ class AntiElectronIDMVA {
     (abs(TauEta)>1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.096) ||
     (abs(TauEta)>1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.055) ||
     (abs(TauEta)>1.5 && TauSignalPFGammaCands>0  && TauHasGsf<0.5 && MVAValue(...)>0.042);
-    epsilonB = 13-20%  epsilonS = 90%
+
+    where:
+
+    TauEta                  = (*taus)[i].eta();
+    TauSignalPFChargedCands = (*taus)[i].signalPFChargedHadrCands().size();
+    TauSignalPFGammaCands   = (*taus)[i].signalPFGammaCands().size();
+    TauLeadPFChargedHadrMva = (*taus)[i].electronPreIDOutput();
+    TauLeadPFChargedHadrHoP = (*taus)[i].leadPFChargedHadrCand()->hcalEnergy()/(*taus)[i].leadPFChargedHadrCand()->p();
+    TauHasGsf               = ((*taus)[i].leadPFChargedHadrCand()->gsfTrackRef()).isNonnull();
+    TauVisMass              = (*taus)[i].mass();
+    TauEmFraction           = (*taus)[i].emFraction();
+  
+    gammadEta_     = new std::vector< float >();
+    gammadPhi_     = new std::vector< float >();
+    gammaPt_       = new std::vector< float >();
+    
+    for(unsigned int k = 0 ; k < ((*taus)[i].signalPFGammaCands()).size() ; k++){
+    reco::PFCandidateRef gamma = ((*taus)[i].signalPFGammaCands()).at(k);
+    if( ((*taus)[i].leadPFChargedHadrCand()).isNonnull() ){
+    gammadEta_->push_back( gamma->eta() - (*taus)[i].leadPFChargedHadrCand()->eta() );
+    gammadPhi_->push_back( gamma->phi() - (*taus)[i].leadPFChargedHadrCand()->phi() );
+    }
+    else{
+    gammadEta_->push_back( gamma->eta() - (*taus)[i].eta() );
+    gammadPhi_->push_back( gamma->phi() - (*taus)[i].phi() );
+    }
+    gammaPt_->push_back(  gamma->pt() );
+    }
+    
+    GammadEta               = fabs(gammadEta_[0]);
+    GammadPhi               = dPhiG:=TMath::Min(abs(gammadPhi_[0]),0.3);
+    GammaPt                 = gammaPt_[0]/pt;
+
     */
 
  private:
