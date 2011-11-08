@@ -8,11 +8,30 @@
 // Authors: L.Bianchini
 //--------------------------------------------------------------------------------------------------
 
+/*
+  proposed WP:    epsilonB ~ 16%  epsilonS ~ 91% wrt signal taus passing discr. ag. electrons Medium. 
+  bool pass = 
+  (abs(TauEta)<1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.056) ||
+  (abs(TauEta)<1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.063) ||
+  (abs(TauEta)<1.5 && TauSignalPFGammaCands>0  && TauHasGsf<0.5 && MVAValue(...)>0.068) ||
+  (abs(TauEta)>1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.067) ||
+  (abs(TauEta)>1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.055) ||
+  (abs(TauEta)>1.5 && TauSignalPFGammaCands>0  && TauHasGsf<0.5 && MVAValue(...)>0.049);
+*/
+
+
+
 #ifndef BIANCHI_UTILITIES_AntiElectronIDMVA_H
 #define BIANCHI_UTILITIES_AntiElectronIDMVA_H
 
+#include "DataFormats/PatCandidates/interface/Tau.h"
+
 #include "TMVA/Tools.h"
 #include "TMVA/Reader.h"
+
+#include <vector>
+
+using namespace std;
 
 class AntiElectronIDMVA {
   public:
@@ -29,56 +48,51 @@ class AntiElectronIDMVA {
                       std::string oneProng1pi0woGSF_EC
                       );
 
-    double MVAValue(Float_t TauEta, 
+    double MVAValue(Float_t TauEta, Float_t TauPt,
 		    Float_t TauSignalPFChargedCands, Float_t TauSignalPFGammaCands, 
 		    Float_t TauLeadPFChargedHadrMva, Float_t TauLeadPFChargedHadrHoP, 
 		    Float_t TauHasGsf, Float_t TauVisMass,  Float_t TauEmFraction,
-		    Float_t GammadEta, Float_t GammadPhi, Float_t GammaPt
+		    vector<Float_t>* GammasdEta, vector<Float_t>* GammasdPhi, vector<Float_t>* GammasPt
 		    );
 
     /* 
-    // proposed WP:    epsilonB ~ 15%  epsilonS ~ 90% wrt signal taus passing discr. ag. electrons Medium. 
-    bool pass = 
-    (abs(TauEta)<1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.073) ||
-    (abs(TauEta)<1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.088) ||
-    (abs(TauEta)<1.5 && TauSignalPFGammaCands>0  && TauHasGsf<0.5 && MVAValue(...)>0.091) ||
-    (abs(TauEta)>1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.096) ||
-    (abs(TauEta)>1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.042) ||
-    (abs(TauEta)>1.5 && TauSignalPFGammaCands>0  && TauHasGsf<0.5 && MVAValue(...)>0.055);
-
     where:
 
-    TauEta                  = (*taus)[i].eta();
-    TauSignalPFChargedCands = (*taus)[i].signalPFChargedHadrCands().size();
-    TauSignalPFGammaCands   = (*taus)[i].signalPFGammaCands().size();
-    TauLeadPFChargedHadrMva = TMath::Max((*taus)[i].electronPreIDOutput(),float(-1.0));
-    TauLeadPFChargedHadrHoP = (*taus)[i].leadPFChargedHadrCand()->hcalEnergy()/(*taus)[i].leadPFChargedHadrCand()->p();
-    TauHasGsf               = ((*taus)[i].leadPFChargedHadrCand()->gsfTrackRef()).isNonnull();
-    TauVisMass              = (*taus)[i].mass();
-    TauEmFraction           = TMath::Max((*taus)[i].emFraction(),float(0.0));
+    TauEta                  = myTau->eta();
+    TauSignalPFChargedCands = myTau->signalPFChargedHadrCands().size();
+    TauSignalPFGammaCands   = myTau->signalPFGammaCands().size();
+    TauLeadPFChargedHadrMva = myTau->electronPreIDOutput();
+    TauLeadPFChargedHadrHoP = myTau->leadPFChargedHadrCand()->hcalEnergy()/myTau->leadPFChargedHadrCand()->p();
+    TauHasGsf               = (myTau->leadPFChargedHadrCand()->gsfTrackRef()).isNonnull();
+    TauVisMass              = myTau->mass();
+    TauEmFraction           = myTau->emFraction();
   
-    gammadEta_     = new std::vector< float >();
-    gammadPhi_     = new std::vector< float >();
-    gammaPt_       = new std::vector< float >();
+    GammasdEta     = new std::vector< float >();
+    GammasdPhi     = new std::vector< float >();
+    GammasPt       = new std::vector< float >();
     
-    for(unsigned int k = 0 ; k < ((*taus)[i].signalPFGammaCands()).size() ; k++){
-    reco::PFCandidateRef gamma = ((*taus)[i].signalPFGammaCands()).at(k);
-    if( ((*taus)[i].leadPFChargedHadrCand()).isNonnull() ){
-    gammadEta_->push_back( gamma->eta() - (*taus)[i].leadPFChargedHadrCand()->eta() );
-    gammadPhi_->push_back( gamma->phi() - (*taus)[i].leadPFChargedHadrCand()->phi() );
+    for(unsigned int k = 0 ; k < (myTau->signalPFGammaCands()).size() ; k++){
+    reco::PFCandidateRef gamma = (myTau->signalPFGammaCands()).at(k);
+    if( (myTau->leadPFChargedHadrCand()).isNonnull() ){
+        GammasdEta->push_back( gamma->eta() - myTau->leadPFChargedHadrCand()->eta() );
+        GammasdPhi->push_back( gamma->phi() - myTau->leadPFChargedHadrCand()->phi() );
     }
     else{
-    gammadEta_->push_back( gamma->eta() - (*taus)[i].eta() );
-    gammadPhi_->push_back( gamma->phi() - (*taus)[i].phi() );
+        GammasdEta->push_back( gamma->eta() - myTau->eta() );
+        GammasdPhi->push_back( gamma->phi() - myTau->phi() );
     }
-    gammaPt_->push_back(  gamma->pt() );
+     GammasPt->push_back(  gamma->pt() );
     }
-    
-    GammadEta               = gammadEta_->size()>0 ? fabs(gammadEta_[0]) : -99;
-    GammadPhi               = gammadPhi_->size()>0 ? TMath::Min(fabs(gammadPhi_[0]),float(0.3)) : -99;
-    GammaPt                 = gammaPt_->size() ? gammaPt_[0]/pt : -99;
-
     */
+
+    double MVAValue(Float_t TauEta,  Float_t TauPt,
+		    Float_t TauSignalPFChargedCands, Float_t TauSignalPFGammaCands, 
+		    Float_t TauLeadPFChargedHadrMva, Float_t TauLeadPFChargedHadrHoP, 
+		    Float_t TauHasGsf, Float_t TauVisMass,  Float_t TauEmFraction,
+		    Float_t GammadEta, Float_t GammadPhi, Float_t GammadPt
+		    );
+    
+    double MVAValue(pat::Tau* myTau);
 
  private:
 
@@ -89,7 +103,7 @@ class AntiElectronIDMVA {
     Float_t TauVisMass_; 
     Float_t GammadEta_; 
     Float_t GammadPhi_; 
-    Float_t GammaPt_;
+    Float_t GammadPt_;
     Float_t TauLeadPFChargedHadrMva_;
     Float_t TauLeadPFChargedHadrHoP_;
     Float_t TauEmFraction_;
