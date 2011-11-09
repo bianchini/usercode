@@ -48,6 +48,7 @@ class AntiElectronIDMVA {
                       std::string oneProng1pi0woGSF_EC
                       );
 
+    // RECOMMENDED:
     double MVAValue(Float_t TauEta, Float_t TauPt,
 		    Float_t TauSignalPFChargedCands, Float_t TauSignalPFGammaCands, 
 		    Float_t TauLeadPFChargedHadrMva, Float_t TauLeadPFChargedHadrHoP, 
@@ -59,6 +60,7 @@ class AntiElectronIDMVA {
     where:
 
     TauEta                  = myTau->eta();
+    TauEta                  = myTau->pt();
     TauSignalPFChargedCands = myTau->signalPFChargedHadrCands().size();
     TauSignalPFGammaCands   = myTau->signalPFGammaCands().size();
     TauLeadPFChargedHadrMva = myTau->electronPreIDOutput();
@@ -91,7 +93,11 @@ class AntiElectronIDMVA {
 		    Float_t TauHasGsf, Float_t TauVisMass,  Float_t TauEmFraction,
 		    Float_t GammadEta, Float_t GammadPhi, Float_t GammadPt
 		    );
-    
+    /*
+      see AntiElectronIDMVA.cc for GammadEta,GammadPhi,GammadPt
+    */
+
+
     double MVAValue(pat::Tau* myTau);
 
  private:
