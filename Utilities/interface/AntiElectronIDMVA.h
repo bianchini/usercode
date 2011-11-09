@@ -9,13 +9,13 @@
 //--------------------------------------------------------------------------------------------------
 
 /*
-  proposed WP:    epsilonB ~ 16%  epsilonS ~ 91% wrt signal taus passing discr. ag. electrons Medium. 
+  proposed WP:    epsilonB ~ 17%  epsilonS ~ 91% wrt signal taus passing discr. ag. electrons Medium. 
   bool pass = 
-  (abs(TauEta)<1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.056) ||
-  (abs(TauEta)<1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.063) ||
-  (abs(TauEta)<1.5 && TauSignalPFGammaCands>0  && TauHasGsf<0.5 && MVAValue(...)>0.068) ||
-  (abs(TauEta)>1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.067) ||
-  (abs(TauEta)>1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.055) ||
+  (abs(TauEta)<1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.047) ||
+  (abs(TauEta)<1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.060) ||
+  (abs(TauEta)<1.5 && TauSignalPFGammaCands>0  && TauHasGsf<0.5 && MVAValue(...)>0.054) ||
+  (abs(TauEta)>1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.064) ||
+  (abs(TauEta)>1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.053) ||
   (abs(TauEta)>1.5 && TauSignalPFGammaCands>0  && TauHasGsf<0.5 && MVAValue(...)>0.049);
 */
 
@@ -51,7 +51,8 @@ class AntiElectronIDMVA {
     // RECOMMENDED:
     double MVAValue(Float_t TauEta, Float_t TauPt,
 		    Float_t TauSignalPFChargedCands, Float_t TauSignalPFGammaCands, 
-		    Float_t TauLeadPFChargedHadrMva, Float_t TauLeadPFChargedHadrHoP, 
+		    Float_t TauLeadPFChargedHadrMva, 
+		    Float_t TauLeadPFChargedHadrHoP, Float_t TauLeadPFChargedHadrEoP, 
 		    Float_t TauHasGsf, Float_t TauVisMass,  Float_t TauEmFraction,
 		    vector<Float_t>* GammasdEta, vector<Float_t>* GammasdPhi, vector<Float_t>* GammasPt
 		    );
@@ -60,11 +61,12 @@ class AntiElectronIDMVA {
     where:
 
     TauEta                  = myTau->eta();
-    TauEta                  = myTau->pt();
+    TauPt                   = myTau->pt();
     TauSignalPFChargedCands = myTau->signalPFChargedHadrCands().size();
     TauSignalPFGammaCands   = myTau->signalPFGammaCands().size();
     TauLeadPFChargedHadrMva = myTau->electronPreIDOutput();
     TauLeadPFChargedHadrHoP = myTau->leadPFChargedHadrCand()->hcalEnergy()/myTau->leadPFChargedHadrCand()->p();
+    TauLeadPFChargedHadrEoP = myTau->leadPFChargedHadrCand()->ecalEnergy()/myTau->leadPFChargedHadrCand()->p();
     TauHasGsf               = (myTau->leadPFChargedHadrCand()->gsfTrackRef()).isNonnull();
     TauVisMass              = myTau->mass();
     TauEmFraction           = myTau->emFraction();
@@ -89,12 +91,13 @@ class AntiElectronIDMVA {
 
     double MVAValue(Float_t TauEta,  Float_t TauPt,
 		    Float_t TauSignalPFChargedCands, Float_t TauSignalPFGammaCands, 
-		    Float_t TauLeadPFChargedHadrMva, Float_t TauLeadPFChargedHadrHoP, 
+		    Float_t TauLeadPFChargedHadrMva, 
+		    Float_t TauLeadPFChargedHadrHoP , Float_t TauLeadPFChargedHadrEoP, 
 		    Float_t TauHasGsf, Float_t TauVisMass,  Float_t TauEmFraction,
-		    Float_t GammadEta, Float_t GammadPhi, Float_t GammadPt
+		    Float_t GammaEtaMom, Float_t GammaPhiMom, Float_t GammaEnFrac
 		    );
     /*
-      see AntiElectronIDMVA.cc for GammadEta,GammadPhi,GammadPt
+      see AntiElectronIDMVA.cc for GammaEtaMom,GammaPhiMom,GammaEnFrac
     */
 
 
@@ -105,13 +108,13 @@ class AntiElectronIDMVA {
     std::string methodName_;
     TMVA::Reader* fTMVAReader_[6];
     Float_t TauSignalPFGammaCands_; 
-    Float_t TauHasGsf_;
     Float_t TauVisMass_; 
     Float_t GammadEta_; 
     Float_t GammadPhi_; 
     Float_t GammadPt_;
     Float_t TauLeadPFChargedHadrMva_;
     Float_t TauLeadPFChargedHadrHoP_;
+    Float_t TauLeadPFChargedHadrEoP_;
     Float_t TauEmFraction_;
     
 };
