@@ -35,7 +35,7 @@ void AntiElectronIDMVA::Initialize(std::string methodName,
   TMVA::Reader *readerX0BL = new TMVA::Reader( "!Color:!Silent" );  
   readerX0BL->AddVariable("HoP",       &TauLeadPFChargedHadrHoP_);
   readerX0BL->AddVariable("EoP",       &TauLeadPFChargedHadrEoP_);
-  readerX0BL->AddVariable("emFraction",&TauEmFraction_);
+  //readerX0BL->AddVariable("emFraction",&TauEmFraction_);
   readerX0BL->BookMVA( methodName_, oneProng0Pi0_BL );
 
   TMVA::Reader *reader11BL = new TMVA::Reader( "!Color:!Silent" );   
@@ -58,7 +58,7 @@ void AntiElectronIDMVA::Initialize(std::string methodName,
   TMVA::Reader *readerX0EC = new TMVA::Reader( "!Color:!Silent" );
   readerX0EC->AddVariable("HoP",       &TauLeadPFChargedHadrHoP_);
   readerX0EC->AddVariable("EoP",       &TauLeadPFChargedHadrEoP_);
-  readerX0EC->AddVariable("emFraction",&TauEmFraction_);
+  //readerX0EC->AddVariable("emFraction",&TauEmFraction_);
   readerX0EC->BookMVA( methodName_, oneProng0Pi0_EC );
 
   TMVA::Reader *reader11EC = new TMVA::Reader( "!Color:!Silent" );

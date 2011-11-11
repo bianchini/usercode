@@ -9,12 +9,12 @@
 //--------------------------------------------------------------------------------------------------
 
 /*
-  proposed WP:    epsilonB ~ 17%  epsilonS ~ 91% wrt signal taus passing discr. ag. electrons Medium. 
+  proposed WP:    epsilonB ~ 18%  epsilonS ~ 91% wrt signal taus passing discr. ag. electrons Medium. 
   bool pass = 
-  (abs(TauEta)<1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.047) ||
+  (abs(TauEta)<1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.054) ||
   (abs(TauEta)<1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.060) ||
   (abs(TauEta)<1.5 && TauSignalPFGammaCands>0  && TauHasGsf<0.5 && MVAValue(...)>0.054) ||
-  (abs(TauEta)>1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.064) ||
+  (abs(TauEta)>1.5 && TauSignalPFGammaCands==0 && MVAValue(...)>0.060) ||
   (abs(TauEta)>1.5 && TauSignalPFGammaCands>0  && TauHasGsf>0.5 && MVAValue(...)>0.053) ||
   (abs(TauEta)>1.5 && TauSignalPFGammaCands>0  && TauHasGsf<0.5 && MVAValue(...)>0.049);
 */
