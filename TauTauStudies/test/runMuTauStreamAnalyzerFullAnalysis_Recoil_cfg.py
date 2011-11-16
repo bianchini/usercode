@@ -27,20 +27,22 @@ else:
     process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(2000) )
+process.MessageLogger.cerr.FwkReport.reportEvery = 500
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi//TauPlusX/MuTauStream-13Oct2011-05AugReReco/c37c208594d74fa447903aef959eea7d/patTuples_MuTauStream_14_1_MHD.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi//DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_9_1_6gn.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/WJetsToLNu_TuneZ2_7TeV-madgraph-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_2_1_qa2.root'
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_1_1_3W2.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_1_1_3W2.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/WW_TuneZ2_7TeV_pythia6_tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_1_1_3Hx.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/WZ_TuneZ2_7TeV_pythia6_tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_1_1_8ps.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TTJets_TuneZ2_7TeV-madgraph-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_1_1_rCW.root'
-    #'file:./root/patTuples_MuTauStream_sync.root'
+    #'file:./patTuples_MuTauStream.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi//TauPlusX/MuTauStream-13Oct2011-RunBPromptReco-v1p4/c37c208594d74fa447903aef959eea7d/patTuples_MuTauStream_42_1_Vsn.root'
     )
     )
 
@@ -51,52 +53,56 @@ process.allEventsFilter = cms.EDFilter(
 ###################################################################################
 process.rescaledMET = cms.EDProducer(
     "MEtRescalerProducer",
-    metTag = cms.InputTag("metRecoilCorrector",  "N"),
-    jetTag = cms.InputTag("selectedPatJets"),
-    electronTag = cms.InputTag(""),
-    muonTag = cms.InputTag("muPtEtaIDIso"),
-    tauTag = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
+    metTag         = cms.InputTag("metRecoilCorrector",  "N"),
+    jetTag         = cms.InputTag("selectedPatJets"),
+    electronTag    = cms.InputTag(""),
+    muonTag        = cms.InputTag("muPtEtaIDIso"),
+    tauTag         = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
     unClusterShift = cms.double(0.10),
-    tauShift = cms.double(0.03),
-    muonShift = cms.double(0.01),
-    electronShift = cms.double(0.02),
-    jetThreshold  = cms.double(10),
+    tauShift       = cms.vdouble(0.03,0.03),
+    muonShift      = cms.vdouble(0.01,0.01),
+    electronShift  = cms.vdouble(0.01,0.025),
+    jetThreshold   = cms.double(10),
+    numOfSigmas    = cms.double(3.0),
     verbose = cms.bool(False)
     )
 
 process.rescaledMETjet = process.rescaledMET.clone(
     unClusterShift = cms.double(0.10),
-    tauShift = cms.double(0.0),
-    muonShift = cms.double(0.0),
-    electronShift = cms.double(0.0),
+    tauShift       = cms.vdouble(0.0,0.0),
+    muonShift      = cms.vdouble(0.0,0.0),
+    electronShift  = cms.vdouble(0.0,0.0),
     )
 process.rescaledMETtau = process.rescaledMET.clone(
     unClusterShift = cms.double(0.0),
-    tauShift = cms.double(0.03),
-    muonShift = cms.double(0.0),
-    electronShift = cms.double(0.0),
+    tauShift       = cms.vdouble(0.03,0.03),
+    muonShift      = cms.vdouble(0.0,0.0),
+    electronShift  = cms.vdouble(0.0,0.0),
     )
 process.rescaledMETmuon = process.rescaledMET.clone(
     unClusterShift = cms.double(0.0),
-    tauShift = cms.double(0.0),
-    muonShift = cms.double(0.01),
-    electronShift = cms.double(0.0),
+    tauShift       = cms.vdouble(0.0,0.0),
+    muonShift      = cms.vdouble(0.01,0.01),
+    electronShift  = cms.vdouble(0.0,0.0),
     )
 
 process.rescaledTaus = cms.EDProducer(
     "TauRescalerProducer",
     inputCollection = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
-    shift = cms.vdouble(0.03,0.03)
+    shift           = cms.vdouble(0.03,0.03),
+    numOfSigmas     = cms.double(3.0),
     )
 process.rescaledMuons = cms.EDProducer(
     "MuonRescalerProducer",
     inputCollection = cms.InputTag("muPtEtaIDIso"),
-    shift = cms.vdouble(0.01,0.01)
+    shift           = cms.vdouble(0.01,0.01),
+    numOfSigmas     = cms.double(3.0),
     )
 process.rescaledMuonsRel = cms.EDProducer(
     "MuonRescalerProducer",
     inputCollection = cms.InputTag("muPtEtaRelID"),
-    shift = cms.vdouble(0.01,0.01)
+    shift           = cms.vdouble(0.01,0.01),
+    numOfSigmas     = cms.double(3.0),
     )
 
 process.rescaledObjects = cms.Sequence(
@@ -118,12 +124,12 @@ process.metRecoilCorrector = cms.EDProducer(
     electronTag         = cms.InputTag(""),
     muonTag             = cms.InputTag("muPtEtaIDIso"),
     tauTag              = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
-    inputFileNamezmm42X = cms.FileInPath("Bianchi/TauTauStudies/test/Macro/recoilv2/RecoilCorrector/recoilfits/recoilfit_zmm42X_njet.root"),
-    inputFileNamedatamm = cms.FileInPath("Bianchi/TauTauStudies/test/Macro/recoilv2/RecoilCorrector/recoilfits/recoilfit_datamm_njet.root"),
-    inputFileNamewjets  = cms.FileInPath("Bianchi/TauTauStudies/test/Macro/recoilv2/RecoilCorrector/recoilfits/recoilfit_wjets_njet.root"),
-    inputFileNamezjets  = cms.FileInPath("Bianchi/TauTauStudies/test/Macro/recoilv2/RecoilCorrector/recoilfits/recoilfit_zjets_ltau_njet.root"),
-    inputFileNamehiggs  = cms.FileInPath("Bianchi/TauTauStudies/test/Macro/recoilv2/RecoilCorrector/recoilfits/recoilfit_higgs_njet.root"),
-    numOfSigmas         = cms.double(1.0),
+    inputFileNamezmm42X = cms.FileInPath("Bianchi/Utilities/data/recoilv3/RecoilCorrector_v2/recoilfits/recoilfit_zmm42X_njet.root"),
+    inputFileNamedatamm = cms.FileInPath("Bianchi/Utilities/data/recoilv3/RecoilCorrector_v2/recoilfits/recoilfit_datamm_njet.root"),
+    inputFileNamewjets  = cms.FileInPath("Bianchi/Utilities/data/recoilv3/RecoilCorrector_v2/recoilfits/recoilfit_wjets_njet.root"),
+    inputFileNamezjets  = cms.FileInPath("Bianchi/Utilities/data/recoilv3/RecoilCorrector_v2/recoilfits/recoilfit_zjets_ltau_njet.root"),
+    inputFileNamehiggs  = cms.FileInPath("Bianchi/Utilities/data/recoilv3/RecoilCorrector_v2/recoilfits/recoilfit_higgs_njet.root"),
+    numOfSigmas         = cms.double(3.0),
     minJetPt            = cms.double(30.0),
     verbose             = cms.bool(False),
     isMC                = cms.bool(runOnMC),
@@ -346,7 +352,7 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     deltaRLegJet   = cms.untracked.double(0.5),
     minCorrPt      = cms.untracked.double(15.),
     minJetID       = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
-    verbose        = cms.untracked.bool( False ),
+    verbose        = cms.untracked.bool( True ),
     )
 process.muTauStreamAnalyzerJetUp   = process.muTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauJetUp"),

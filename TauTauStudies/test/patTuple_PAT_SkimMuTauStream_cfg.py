@@ -4,8 +4,8 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
-postfix           =  "PFlow"
-runOnMC           =  False
+postfix     =  "PFlow"
+runOnMC     = True
 
 from Configuration.PyReleaseValidation.autoCond import autoCond
 process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
@@ -22,7 +22,8 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source.fileNames = cms.untracked.vstring(
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/AODSIM/PU_S4_START42_V11-v1/0000/0E47FBF8-0295-E011-818F-0030487E3026.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/AODSIM/PU_S4_START42_V11-v1/0000/0E47FBF8-0295-E011-818F-0030487E3026.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/FCAE02CE-7800-E111-A2CB-0022198904D4.root'
     #'file:./root/syncSkim_1_1_kvl.root',
     #'file:./root/syncSkim_5_1_vnT.root',
     )
@@ -30,7 +31,9 @@ process.source.fileNames = cms.untracked.vstring(
 #process.source.eventsToProcess = cms.untracked.VEventRange(
 #    '1:751063'
 #    )
+################### event content ##################
 
+process.printEventContent = cms.EDAnalyzer("EventContentAnalyzer")
 
 ################### filters log  ####################
 
@@ -518,8 +521,8 @@ process.selectedPrimaryVertices.src = cms.InputTag('offlinePrimaryVertices')
 if not runOnMC:
     process.skim.remove(process.printTree1)
 
+#process.p = cms.Path(process.printEventContent+process.skim)
 process.p = cms.Path(process.skim)
-
 
 ########################## output ###############################
 
@@ -551,10 +554,12 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_elecPtEtaRelID_*_*',
     'keep *_addPileupInfo_*_*',
     'keep *_generalTracks_*_*',
+    'keep *_tmfTracks_*_*',
     'keep *_electronGsfTracks_*_*',
     'keep recoTrackExtras_*_*_*',
     'keep recoGsfTrackExtras_*_*_*',
     'keep *_tauPtEtaIDAgMuAgElec_*_*',
+    'keep *_generator_*_*',
     'drop *_TriggerResults_*_HLT',
     'drop *_TriggerResults_*_RECO',
     'drop *_selectedPatElectrons_*_*',

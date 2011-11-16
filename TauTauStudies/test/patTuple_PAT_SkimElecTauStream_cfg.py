@@ -4,8 +4,8 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
-postfix           = "PFlow"
-runOnMC           =  True
+postfix     = "PFlow"
+runOnMC     = True
 
 from Configuration.PyReleaseValidation.autoCond import autoCond
 process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
@@ -22,7 +22,10 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source.fileNames = cms.untracked.vstring(
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/AODSIM/PU_S4_START42_V11-v1/0000/0E47FBF8-0295-E011-818F-0030487E3026.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/AODSIM/PU_S4_START42_V11-v1/0000/0E47FBF8-0295-E011-818F-0030487E3026.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011A_Aug05thRR_v1_embedded_trans1_tau115_ptelec1_17had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011A_Aug05thRR_v1_embedded_trans1_tau115_ptelec1_17had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/82A9FCE3-A8F9-E011-8974-00266CFCC618.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau115_ptelec1_17had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau115_ptelec1_17had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/0011BCB7-8800-E111-85F3-0023AEFDE9AC.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/embeddedTest/embedded_1_1_Zo4.root'
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -280,7 +283,6 @@ addTriggerMatchingTau(process,isMC=runOnMC,postfix="",XtriggerMu=False)
 
 getattr(process,"selectedPatJets").cut = cms.string('pt>10 && abs(eta)<5.0')
 
-
 ######################## pat::trigger ############################
 
 from PhysicsTools.PatAlgos.tools.trigTools import *
@@ -339,12 +341,12 @@ CiCTight = "((electronID('eidCiCTight')==1  ||" + \
            "  electronID('eidCiCHZZTight')==15)"+ \
            ")"
 
-MVA = "(pt<=20 && abs(superClusterPosition.Eta)>=0.0 && abs(superClusterPosition.Eta)<1.0 && userFloat('mva')>0.133) ||" + \
+MVA = "((pt<=20 && abs(superClusterPosition.Eta)>=0.0 && abs(superClusterPosition.Eta)<1.0 && userFloat('mva')>0.133) ||" + \
       "(pt<=20 && abs(superClusterPosition.Eta)>=1.0 && abs(superClusterPosition.Eta)<1.5 && userFloat('mva')>0.465) ||" + \
       "(pt<=20 && abs(superClusterPosition.Eta)>=1.5 && abs(superClusterPosition.Eta)<2.5 && userFloat('mva')>0.518) ||" + \
       "(pt>20  && abs(superClusterPosition.Eta)>=0.0 && abs(superClusterPosition.Eta)<1.0 && userFloat('mva')>0.942) ||" + \
       "(pt>20  && abs(superClusterPosition.Eta)>=1.0 && abs(superClusterPosition.Eta)<1.5 && userFloat('mva')>0.947) ||" + \
-      "(pt>20  && abs(superClusterPosition.Eta)>=1.5 && abs(superClusterPosition.Eta)<2.5 && userFloat('mva')>0.878)"
+      "(pt>20  && abs(superClusterPosition.Eta)>=1.5 && abs(superClusterPosition.Eta)<2.5 && userFloat('mva')>0.878))"
 
 process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
     "MuonsUserEmbedded",
@@ -487,7 +489,7 @@ process.tauPtEtaIDAgMuAgElec  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
     cut = cms.string(process.tauPtEtaIDAgMu.cut.value()+
-                     " && tauID('againstElectronTight')>0.5"),
+                     " && tauID('againstElectronMedium')>0.5"),
     filter = cms.bool(False)
     )
 process.atLeastOneElecTautauPtEtaIDAgMuAgElec = process.atLeastOneElecTau.clone(
@@ -627,10 +629,12 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_muons_*_*',
     'keep *_addPileupInfo_*_*',
     'keep *_generalTracks_*_*',
+    'keep *_tmfTracks_*_*',
     'keep *_electronGsfTracks_*_*',
     'keep recoTrackExtras_*_*_*',
     'keep recoGsfTrackExtras_*_*_*',
     'keep *_tauPtEtaIDAgMuAgElec_*_*',
+    'keep *_generator_*_*',
     'drop *_TriggerResults_*_HLT',
     'drop *_TriggerResults_*_RECO',
     'drop *_selectedPatElectrons_*_*',
