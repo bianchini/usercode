@@ -11,12 +11,13 @@
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
 
+#include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
+
+
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1F.h"
 #include <TRandom3.h>
-
-#include "Bianchi/Utilities/interface/PUWeight.h"
 
 
 #include <string>
@@ -50,7 +51,9 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   TTree* tree_;
 
   TRandom3* tRandom_;
- 
+
+  edm::LumiReWeighting LumiWeights_;
+
   edm::InputTag diTauTag_;
   edm::InputTag jetsTag_;
   edm::InputTag newJetsTag_;
@@ -73,6 +76,8 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< float >* jetsChEfraction_;
   std::vector< float >* jetMoments_;
 
+  std::vector< float >* gammadEta_;
+  std::vector< float >* gammadPhi_;
   std::vector< float >* gammadR_;
   std::vector< float >* gammaPt_;
 
@@ -124,7 +129,24 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   float diTauNSVfitMassErrUp_;
   float diTauNSVfitMassErrDown_;
   float visibleTauMass_;
-  float leadPFChargedHadrCandTrackPt_;
+
+  float leadPFChargedHadrMva_;
+  float leadPFChargedHadrHcalEnergy_;
+  float leadPFChargedHadrEcalEnergy_;
+  float leadPFChargedHadrTrackPt_;
+  float leadPFChargedHadrTrackP_;
+  float leadPFChargedHadrPt_;
+  float leadPFChargedHadrP_;
+  float leadPFCandMva_;
+  float leadPFCandHcalEnergy_;
+  float leadPFCandEcalEnergy_;
+  float leadPFCandPt_;
+  float leadPFCandP_;
+  int signalPFChargedHadrCands_;
+  int signalPFGammaCands_;
+  float emFraction_;
+  float hasGsf_;
+
   int tightestHPSWP_;
   int tightestHPSDBWP_;
   int isTauLegMatched_;
@@ -135,12 +157,12 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   float diTauCharge_;
   float rhoFastJet_;
   float rhoNeutralFastJet_;
+  float embeddingWeight_;
   int nPUVertices_;
   float nPUaverage_;
-  std::vector<double> weights2011_;
 
-  PUWeight* fpuweight_;
   float mcPUweight_;
+
 };
 
 

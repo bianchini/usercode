@@ -83,6 +83,8 @@ void MuTauStreamAnalyzer::beginJob(){
   jetMoments_       = new std::vector< float >();
 
   gammadR_       = new std::vector< float >();
+  gammadEta_     = new std::vector< float >();
+  gammadPhi_     = new std::vector< float >();
   gammaPt_       = new std::vector< float >();
 
   tauXTriggers_= new std::vector< int >();
@@ -109,35 +111,90 @@ void MuTauStreamAnalyzer::beginJob(){
   extraMuons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   pfMuons_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
-  fpuweight_ = 0;//new PUWeight();
+  std::vector< float > Summer11Lumi ;
+  Double_t Summer11Lumi_f[35] = {
+    1.45346E-01,
+    6.42802E-02,
+    6.95255E-02,
+    6.96747E-02,
+    6.92955E-02,
+    6.84997E-02,
+    6.69528E-02,
+    6.45515E-02,
+    6.09865E-02,
+    5.63323E-02,
+    5.07322E-02,
+    4.44681E-02,
+    3.79205E-02,
+    3.15131E-02,
+    2.54220E-02,
+    2.00184E-02,
+    1.53776E-02,
+    1.15387E-02,
+    8.47608E-03,
+    6.08715E-03,
+    4.28255E-03,
+    2.97185E-03,
+    2.01918E-03,
+    1.34490E-03,
+    8.81587E-04,
+    5.69954E-04,
+    3.61493E-04,
+    2.28692E-04,
+    1.40791E-04,
+    8.44606E-05,
+    5.10204E-05,
+    3.07802E-05,
+    1.81401E-05,
+    1.00201E-05,
+    5.80004E-06
+  };
 
-  weights2011_.push_back(0.0809561); 
-  weights2011_.push_back(0.483674); 
-  weights2011_.push_back(1.04601); 
-  weights2011_.push_back(1.6949); 
-  weights2011_.push_back(2.1009); 
-  weights2011_.push_back(2.24013); 
-  weights2011_.push_back(2.15938); 
-  weights2011_.push_back(1.73219); 
-  weights2011_.push_back(1.32508); 
-  weights2011_.push_back(0.950115);
-  weights2011_.push_back(0.6599); 
-  weights2011_.push_back(0.438093); 
-  weights2011_.push_back(0.284885); 
-  weights2011_.push_back(0.180615); 
-  weights2011_.push_back(0.112314); 
-  weights2011_.push_back(0.0687845);
-  weights2011_.push_back(0.0415087); 
-  weights2011_.push_back(0.0247498); 
-  weights2011_.push_back(0.0147688); 
-  weights2011_.push_back(0.00865185); 
-  weights2011_.push_back(0.00512891); 
-  weights2011_.push_back(0.00291561); 
-  weights2011_.push_back(0.00169447); 
-  weights2011_.push_back(0.000998808);
-  weights2011_.push_back(0.00087273); 
-  weights2011_.push_back(0); 
-  weights2011_.push_back(0); 
+  std::vector< float > Data2011Lumi;
+  Double_t Data2011Lumi_f[35] = {
+    0.00290212,
+    0.0123985,
+    0.0294783,
+    0.0504491,
+    0.0698525,
+    0.0836611,
+    0.0905799,
+    0.0914388,
+    0.0879379,
+    0.0817086,
+    0.073937,
+    0.0653785,
+    0.0565162,
+    0.047707,
+    0.0392591,
+    0.0314457,
+    0.0244864,
+    0.018523,
+    0.013608,
+    0.00970977,
+    0.00673162,
+    0.00453714,
+    0.00297524,
+    0.00189981,
+    0.00118234,
+    0.000717854,
+    0.00042561,
+    0.000246653,
+    0.000139853,
+    7.76535E-05,
+    4.22607E-05,
+    2.25608E-05,
+    1.18236E-05,
+    6.0874E-06,
+    6.04852E-06
+  };
+
+  for( int i=0; i<35; i++) {
+    Data2011Lumi.push_back(Data2011Lumi_f[i]);
+    Summer11Lumi.push_back(Summer11Lumi_f[i]);
+  }
+  
+  LumiWeights_ = edm::LumiReWeighting(Summer11Lumi, Data2011Lumi);
   
 
   tree_->Branch("jetsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsP4_);
@@ -153,6 +210,8 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("jetMoments","std::vector<float> ",&jetMoments_);
 
   tree_->Branch("gammadR","std::vector<float> ",&gammadR_);
+  tree_->Branch("gammadEta","std::vector<float> ",&gammadEta_);
+  tree_->Branch("gammadPhi","std::vector<float> ",&gammadPhi_);
   tree_->Branch("gammaPt","std::vector<float> ",&gammaPt_);
 
   tree_->Branch("jetsChEfraction","std::vector<float>",&jetsChEfraction_);
@@ -224,8 +283,25 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("tightestHPSWP",&tightestHPSWP_,"tightestHPSWP/I");
   tree_->Branch("tightestHPSDBWP",&tightestHPSDBWP_,"tightestHPSDBWP/I");
   tree_->Branch("visibleTauMass",&visibleTauMass_,"visibleTauMass/F");
-  tree_->Branch("leadPFChargedHadrCandTrackPt",&leadPFChargedHadrCandTrackPt_,"leadPFChargedHadrCandTrackPt/F");
-  
+
+  tree_->Branch("leadPFChargedHadrTrackPt",&leadPFChargedHadrTrackPt_,"leadPFChargedHadrTrackPt/F");
+  tree_->Branch("leadPFChargedHadrTrackP", &leadPFChargedHadrTrackP_,"leadPFChargedHadrTrackP/F");
+  tree_->Branch("leadPFChargedHadrPt",&leadPFChargedHadrPt_,"leadPFChargedHadrPt/F");
+  tree_->Branch("leadPFChargedHadrP", &leadPFChargedHadrP_,"leadPFChargedHadrP/F");
+  tree_->Branch("leadPFChargedHadrMva",&leadPFChargedHadrMva_,"leadPFChargedHadrMva/F");
+  tree_->Branch("leadPFChargedHadrHcalEnergy",&leadPFChargedHadrHcalEnergy_,"leadPFChargedHadrHcalEnergy/F");
+  tree_->Branch("leadPFChargedHadrEcalEnergy",&leadPFChargedHadrEcalEnergy_,"leadPFChargedHadrEcalEnergy/F");
+  tree_->Branch("leadPFCandMva",&leadPFCandMva_,"leadPFCandMva/F");
+  tree_->Branch("leadPFCandHcalEnergy",&leadPFCandHcalEnergy_,"leadPFCandHcalEnergy/F");
+  tree_->Branch("leadPFCandEcalEnergy",&leadPFCandEcalEnergy_,"leadPFCandEcalEnergy/F");
+  tree_->Branch("leadPFCandPt",&leadPFCandPt_,"leadPFCandPt/F");
+  tree_->Branch("leadPFCandP",&leadPFCandP_,"leadPFCandP/F");
+  tree_->Branch("emFraction",&emFraction_,"emFraction/F");
+  tree_->Branch("hasGsf",&hasGsf_,"hasGsf/F");
+  tree_->Branch("signalPFChargedHadrCands",&signalPFChargedHadrCands_,"signalPFChargedHadrCands/I");
+  tree_->Branch("signalPFGammaCands",&signalPFGammaCands_,"signalPFGammaCands/I");
+
+
   tree_->Branch("isTauLegMatched",&isTauLegMatched_,"isTauLegMatched/I");
   tree_->Branch("isMuLegMatched",&isMuLegMatched_,"isMuLegMatched/I");
   tree_->Branch("muFlag",&muFlag_,"muFlag/I");
@@ -236,6 +312,7 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("rhoNeutralFastJet",&rhoNeutralFastJet_,"rhoNeutralFastJet/F");
   tree_->Branch("mcPUweight",&mcPUweight_,"mcPUweight/F");
   tree_->Branch("nPUVertices",&nPUVertices_,"nPUVertices/I");
+  tree_->Branch("embeddingWeight",&embeddingWeight_,"embeddingWeight/F");
   tree_->Branch("nPUaverage",&nPUaverage_,"nPUaverage/F");
 
 
@@ -248,8 +325,8 @@ MuTauStreamAnalyzer::~MuTauStreamAnalyzer(){
   delete diTauSVfitP4_; delete genVP4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_;
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_; delete extraMuons_; delete pfMuons_; delete jetsIDL1OffsetP4_;
-  delete tRandom_ ; /*delete fpuweight_*/ delete jetsChNfraction_; delete jetsChEfraction_;delete jetMoments_;
-  delete gammadR_ ; delete gammaPt_;
+  delete tRandom_ ; delete jetsChNfraction_; delete jetsChEfraction_;delete jetMoments_;
+  delete gammadR_ ; delete gammadPhi_; delete gammadEta_; delete gammaPt_;
 }
 
 void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -273,6 +350,8 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   jetMoments_->clear();
   
   gammadR_->clear();
+  gammadEta_->clear();
+  gammadPhi_->clear();
   gammaPt_->clear();
 
   genJetsIDP4_->clear();
@@ -441,10 +520,8 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     cout << "Num of PU = " << nPUVertices_ << endl;
     cout << "Num of OOT PU = " << nOOTPUVertices_ << endl;
   }
-  if( fpuweight_ ) mcPUweight_ = fpuweight_->GetWeight(nPUVertices_);
-  //else mcPUweight_ =  int(sum_nvtx/3.+0.5) < int(weights2011_.size()) ? weights2011_[int(sum_nvtx/3.+0.5)] : weights2011_[(unsigned int)(weights2011_.size()-1)];
-  else mcPUweight_ =  int(nPUVertices_+0.5) < int(weights2011_.size()) ? weights2011_[int(nPUVertices_+0.5)] : weights2011_[(unsigned int)(weights2011_.size()-1)];
 
+  mcPUweight_ = LumiWeights_.weight( nPUVertices_ );
 
   edm::Handle<double> rhoFastJetHandle;
   iEvent.getByLabel(edm::InputTag("kt6PFJetsCentral","rho", ""), rhoFastJetHandle);
@@ -452,6 +529,10 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     edm::LogError("DataNotAvailable")
       << "No rho label available \n";
   rhoFastJet_ = (*rhoFastJetHandle);
+
+  edm::Handle<double> embeddingWeightHandle;
+  iEvent.getByLabel(edm::InputTag("generator","weight",""), embeddingWeightHandle);
+  embeddingWeight_ = embeddingWeightHandle.isValid() ? (*embeddingWeightHandle) : 1.0;
 
   edm::Handle<double> rhoNeutralFastJetHandle;
   iEvent.getByLabel(edm::InputTag("kt6PFJetsNeutral","rho", ""), rhoNeutralFastJetHandle);
@@ -495,41 +576,31 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   numOfDiTaus_ = diTaus->size();
 
   unsigned int muIndex = 0;
-  muFlag_=-99;
+  muFlag_ = 0;
 
-  if(  muons->size()==1 &&  muonsRel->size()==1 ){
-    muFlag_ = 0;
-    if(verbose_) cout<< "Just one selected muon: flag= " << muFlag_ << endl;
-  }
-  else if(  muonsRel->size()>1 ){
-    muFlag_ = 3;
-  
-    bool found = false;
-    for(unsigned int i=0; i<muonsRel->size(); i++){
-      for(unsigned int j=0; j<muons->size(); j++){
-
-	if(found) continue;
-
-	if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3 
-	    && (*muonsRel)[i].charge()*(*muons)[j].charge()<0
-	    && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
-	  muFlag_ = 1;
-	  if(verbose_) cout<< "Two muons failing diMu veto: flag= " << muFlag_ << endl;
-	  found=true; 
-	}
-	else if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3 
-		 && (*muonsRel)[i].charge()*(*muons)[j].charge()>0
-		 && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
-	  muFlag_ = 2;
-	  if(verbose_) cout<< "Two muons with SS: flag= " << muFlag_ << endl;
-	  found=true;  
-	}
+  bool found = false;
+  for(unsigned int i=0; i<muonsRel->size(); i++){
+    for(unsigned int j=0; j<muons->size(); j++){
+      
+      if(found) continue;
+      
+      if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3
+	  && (*muonsRel)[i].charge()*(*muons)[j].charge()<0
+	  && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
+	muFlag_ = 1;
+	if(verbose_) cout<< "Two muons failing diMu veto: flag= " << muFlag_ << endl;
+	found=true;
+      }
+      else if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3
+	       && (*muonsRel)[i].charge()*(*muons)[j].charge()>0
+	       && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
+	muFlag_ = 2;
+	if(verbose_) cout<< "Two muons with SS: flag= " << muFlag_ << endl;
+	found=true;
       }
     }
-  } 
-  else{
-    muFlag_ = -1;
   }
+  
 
   // select highest-pt muon that forms at least one di-tau
   // no ambiguity if "muons" are isolated ==> if extra
@@ -666,12 +737,16 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v6");
     triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v8");
     triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v9");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau20_v2");
+    triggerPaths.push_back("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v1");
+    triggerPaths.push_back("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v5");
+    triggerPaths.push_back("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v6");
+
     triggerPaths.push_back("HLT_IsoMu12_v1");
     triggerPaths.push_back("HLT_IsoMu12_v2");
 
     HLTfiltersMu.push_back("hltSingleMuIsoL3IsoFiltered12");
     HLTfiltersMu.push_back("hltSingleMuIsoL3IsoFiltered15");
+    HLTfiltersMu.push_back("hltSingleMuIsoL1s14L3IsoFiltered15eta2p1");
 
     HLTfiltersTau.push_back("hltOverlapFilterIsoMu12IsoPFTau10");
     HLTfiltersTau.push_back("hltOverlapFilterIsoMu15IsoPFTau15");
@@ -841,21 +916,54 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   else if((leg2->signalPFChargedHadrCands()).size()==3) decayMode_ = 2; 
   else  decayMode_ = -99;
 
+  
   for(unsigned int k = 0 ; k < (leg2->signalPFGammaCands()).size() ; k++){
     reco::PFCandidateRef gamma = (leg2->signalPFGammaCands()).at(k);
-    if( (leg2->leadPFChargedHadrCand()).isNonnull() )
-      gammadR_->push_back( Geom::deltaR( gamma->p4(), leg2->leadPFChargedHadrCand()->p4() ) );
-    else
-      gammadR_->push_back( Geom::deltaR( gamma->p4(), leg2->p4() ) );
+    if( (leg2->leadPFChargedHadrCand()).isNonnull() ){
+      gammadR_->push_back(   Geom::deltaR( gamma->p4(), leg2->leadPFChargedHadrCand()->p4() ) );
+      gammadPhi_->push_back( Geom::deltaPhi( gamma->p4(), leg2->leadPFChargedHadrCand()->p4() ) );
+      gammadEta_->push_back( gamma->eta() - leg2->leadPFChargedHadrCand()->eta() ) ;
+    }
+    else{
+      gammadR_->push_back(   Geom::deltaR( gamma->p4(), leg2->p4() ) );
+      gammadPhi_->push_back( Geom::deltaPhi( gamma->p4(), leg2->p4() ) );
+      gammadEta_->push_back(  gamma->eta() - leg2->eta() ) ;
+    }
     gammaPt_->push_back(  gamma->pt() );
   }
   
   visibleTauMass_ = leg2->mass();
+
   if((leg2->leadPFChargedHadrCand()->trackRef()).isNonnull()){
-    leadPFChargedHadrCandTrackPt_ = leg2->leadPFChargedHadrCand()->trackRef()->pt();
+    leadPFChargedHadrTrackPt_ = leg2->leadPFChargedHadrCand()->trackRef()->pt();
+    leadPFChargedHadrTrackP_  = leg2->leadPFChargedHadrCand()->trackRef()->p();
   } else if((leg2->leadPFChargedHadrCand()->gsfTrackRef()).isNonnull()){
-    leadPFChargedHadrCandTrackPt_ = leg2->leadPFChargedHadrCand()->gsfTrackRef()->pt();
-  } else leadPFChargedHadrCandTrackPt_ = -99;
+    leadPFChargedHadrTrackPt_ = leg2->leadPFChargedHadrCand()->gsfTrackRef()->pt();
+    leadPFChargedHadrTrackP_  = leg2->leadPFChargedHadrCand()->gsfTrackRef()->p();
+  } else{
+    leadPFChargedHadrTrackPt_ = -99;
+    leadPFChargedHadrTrackP_  = -99;
+  }
+  leadPFChargedHadrPt_  = leg2->leadPFChargedHadrCand()->pt();
+  leadPFChargedHadrP_  = leg2->leadPFChargedHadrCand()->p();  
+
+  leadPFChargedHadrMva_        =   leg2->electronPreIDOutput() ;	
+  leadPFChargedHadrHcalEnergy_ =  (leg2->leadPFChargedHadrCand()).isNonnull() ? (leg2->leadPFChargedHadrCand())->hcalEnergy() : -99 ;
+  leadPFChargedHadrEcalEnergy_ =  (leg2->leadPFChargedHadrCand()).isNonnull() ? (leg2->leadPFChargedHadrCand())->ecalEnergy() : -99;
+ 
+  if( (leg2->leadPFCand()).isNonnull() ){
+    leadPFCandMva_               =  (leg2->leadPFCand())->mva_e_pi() ;	
+    leadPFCandHcalEnergy_        =  (leg2->leadPFCand())->hcalEnergy() ;
+    leadPFCandEcalEnergy_        =  (leg2->leadPFCand())->ecalEnergy() ;
+    leadPFCandPt_                =  (leg2->leadPFCand())->pt();
+    leadPFCandP_                 =  (leg2->leadPFCand())->p();
+  }
+  
+  signalPFChargedHadrCands_ = (leg2->signalPFChargedHadrCands()).size();
+  signalPFGammaCands_       = (leg2->signalPFGammaCands()).size();
+  emFraction_ = leg2->emFraction();
+  hasGsf_     = ((leg2->leadPFChargedHadrCand())->gsfTrackRef()).isNonnull() ? 1. : 0.;
+  
 
   tightestHPSWP_ = -1;
   if(leg2->tauID("byVLooseIsolation")>0.5) tightestHPSWP_++;
@@ -904,7 +1012,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   vetos2010PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.05));
   vetos2010PhotonLeg1.push_back( new isodeposit::ThresholdVeto(1.0));
 
-  vetos2011ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
+  vetos2011ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.0001));
   vetos2011ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
   vetos2011NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
   vetos2011NeutralLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
@@ -1005,16 +1113,17 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   }
 
   math::XYZTLorentzVectorD nSVfitFitP4(0,0,0,(theDiTau->p4Vis()).M() );
-  if( theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)!=0 /* &&theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)->isValidSolution()*/ ){
+  if( theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)!=0 /*&& theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)->isValidSolution()*/ ){
     if(verbose_) cout << "Visible mass ==> " << nSVfitFitP4.E() << endl;
     nSVfitFitP4.SetPxPyPzE( 0,0,0, theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)->mass() ) ;
     if(verbose_) cout << "SVFit fit solution ==> " << nSVfitFitP4.E() << endl;
   }
   diTauSVfitP4_->push_back( nSVfitFitP4  );
 
-  diTauNSVfitMass_        = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->mass()        : -99; 
-  diTauNSVfitMassErrUp_   = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrUp()   : -99; 
-  diTauNSVfitMassErrDown_ = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrDown() : -99; 
+  int errFlag = 0;
+  diTauNSVfitMass_        = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->mass()        : -99; 
+  diTauNSVfitMassErrUp_   = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrUp()   : -99; 
+  diTauNSVfitMassErrDown_ = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrDown() : -99; 
 
   run_   = iEvent.run();
   event_ = (iEvent.eventAuxiliary()).event();
@@ -1091,7 +1200,12 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
     std::map<string,float> aMap;
 
-    if( jetID( jet , &((*vertexes)[0]), vtxZ, aMap ) < minJetID_ )  continue;
+    if( jetID( jet , &((*vertexes)[0]), vtxZ, aMap ) < minJetID_ ){
+      if(verbose_){
+	cout << "@@@@ Jet does not pass the Id" << endl;
+      }
+      continue;
+    }
 
     sortedJets.insert( make_pair( newJet->correctedJet("Uncorrected").p4().Pt() ,newJet->correctedJet("Uncorrected").p4() ) );
 
@@ -1292,6 +1406,17 @@ unsigned int  MuTauStreamAnalyzer::jetID( const pat::Jet* jet, const reco::Verte
   bool loose=false;
   bool medium=false;
   bool tight=false;
+
+
+  if(verbose_){
+    cout << "NeutrFRAC = " << energyNeutral/totalEnergyFromConst << endl;
+    cout << "PhotoFRAC = " << energyPhotons/totalEnergyFromConst << endl;
+    cout << "ChargFRAC = " << energyCharged/totalEnergyFromConst << endl;
+    cout << "nConst = "    << nConst << endl;
+    cout << "nCharged = "  << nCharged << endl;
+    cout << "ElectFRAC ="  << energyElectrons/totalEnergyFromConst << endl;
+  }
+
 
   //loose id
   if( (TMath::Abs(jet->eta())>2.4 && 

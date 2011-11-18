@@ -83,6 +83,8 @@ void ElecTauStreamAnalyzer::beginJob(){
   jetMoments_       = new std::vector< float >();
 
   gammadR_       = new std::vector< float >();
+  gammadEta_     = new std::vector< float >();
+  gammadPhi_     = new std::vector< float >();
   gammaPt_       = new std::vector< float >();
 
   tauXTriggers_= new std::vector< int >();
@@ -109,36 +111,91 @@ void ElecTauStreamAnalyzer::beginJob(){
   extraElectrons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   pfElectrons_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
-  
-  fpuweight_ = 0;// new PUWeight();
+  std::vector< float > Summer11Lumi ;
+  Double_t Summer11Lumi_f[35] = {
+    1.45346E-01,
+    6.42802E-02,
+    6.95255E-02,
+    6.96747E-02,
+    6.92955E-02,
+    6.84997E-02,
+    6.69528E-02,
+    6.45515E-02,
+    6.09865E-02,
+    5.63323E-02,
+    5.07322E-02,
+    4.44681E-02,
+    3.79205E-02,
+    3.15131E-02,
+    2.54220E-02,
+    2.00184E-02,
+    1.53776E-02,
+    1.15387E-02,
+    8.47608E-03,
+    6.08715E-03,
+    4.28255E-03,
+    2.97185E-03,
+    2.01918E-03,
+    1.34490E-03,
+    8.81587E-04,
+    5.69954E-04,
+    3.61493E-04,
+    2.28692E-04,
+    1.40791E-04,
+    8.44606E-05,
+    5.10204E-05,
+    3.07802E-05,
+    1.81401E-05,
+    1.00201E-05,
+    5.80004E-06
+  };
 
-  weights2011_.push_back(0.0809561); 
-  weights2011_.push_back(0.483674); 
-  weights2011_.push_back(1.04601); 
-  weights2011_.push_back(1.6949); 
-  weights2011_.push_back(2.1009); 
-  weights2011_.push_back(2.24013); 
-  weights2011_.push_back(2.15938); 
-  weights2011_.push_back(1.73219); 
-  weights2011_.push_back(1.32508); 
-  weights2011_.push_back(0.950115);
-  weights2011_.push_back(0.6599); 
-  weights2011_.push_back(0.438093); 
-  weights2011_.push_back(0.284885); 
-  weights2011_.push_back(0.180615); 
-  weights2011_.push_back(0.112314); 
-  weights2011_.push_back(0.0687845);
-  weights2011_.push_back(0.0415087); 
-  weights2011_.push_back(0.0247498); 
-  weights2011_.push_back(0.0147688); 
-  weights2011_.push_back(0.00865185); 
-  weights2011_.push_back(0.00512891); 
-  weights2011_.push_back(0.00291561); 
-  weights2011_.push_back(0.00169447); 
-  weights2011_.push_back(0.000998808);
-  weights2011_.push_back(0.00087273); 
-  weights2011_.push_back(0); 
-  weights2011_.push_back(0); 
+  std::vector< float > Data2011Lumi;
+  Double_t Data2011Lumi_f[35] = {
+    0.00290212,
+    0.0123985, 
+    0.0294783, 
+    0.0504491, 
+    0.0698525, 
+    0.0836611, 
+    0.0905799, 
+    0.0914388, 
+    0.0879379, 
+    0.0817086, 
+    0.073937, 
+    0.0653785,
+    0.0565162,
+    0.047707, 
+    0.0392591,
+    0.0314457,
+    0.0244864,
+    0.018523, 
+    0.013608, 
+    0.00970977, 
+    0.00673162, 
+    0.00453714, 
+    0.00297524, 
+    0.00189981, 
+    0.00118234, 
+    0.000717854,
+    0.00042561, 
+    0.000246653,
+    0.000139853,
+    7.76535E-05,
+    4.22607E-05,
+    2.25608E-05,
+    1.18236E-05,
+    6.0874E-06, 
+    6.04852E-06
+  };
+
+  for( int i=0; i<35; i++) {
+    Data2011Lumi.push_back(Data2011Lumi_f[i]);
+    Summer11Lumi.push_back(Summer11Lumi_f[i]);
+  }
+  
+  LumiWeights_ = edm::LumiReWeighting(Summer11Lumi, Data2011Lumi);
+  
 
   tree_->Branch("jetsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsP4_);
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
@@ -153,6 +210,8 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("jetMoments","std::vector<float> ",&jetMoments_);
 
   tree_->Branch("gammadR","std::vector<float> ",&gammadR_);
+  tree_->Branch("gammadEta","std::vector<float> ",&gammadEta_);
+  tree_->Branch("gammadPhi","std::vector<float> ",&gammadPhi_);
   tree_->Branch("gammaPt","std::vector<float> ",&gammaPt_);
 
   tree_->Branch("jetsChEfraction","std::vector<float>",&jetsChEfraction_);
@@ -247,9 +306,28 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("tightestHPSWP",&tightestHPSWP_,"tightestHPSWP/I");
   tree_->Branch("tightestCiCWP",&tightestCiCWP_,"tightestCiCWP/I");
   tree_->Branch("tightestCutBasedWP",&tightestCutBasedWP_,"tightestCutBasedWP/I");
+  tree_->Branch("tightestMVAWP",&tightestMVAWP_,"tightestMVAWP/I");
+  tree_->Branch("tightestAntiECutsWP",&tightestAntiECutsWP_,"tightestAntiECutsWP/I");
   tree_->Branch("tightestHPSDBWP",&tightestHPSDBWP_,"tightestHPSDBWP/I");
   tree_->Branch("visibleTauMass",&visibleTauMass_,"visibleTauMass/F");
-  tree_->Branch("leadPFChargedHadrCandTrackPt",&leadPFChargedHadrCandTrackPt_,"leadPFChargedHadrCandTrackPt/F");
+
+  tree_->Branch("leadPFChargedHadrTrackPt",&leadPFChargedHadrTrackPt_,"leadPFChargedHadrTrackPt/F");
+  tree_->Branch("leadPFChargedHadrTrackP", &leadPFChargedHadrTrackP_,"leadPFChargedHadrTrackP/F");
+  tree_->Branch("leadPFChargedHadrPt",&leadPFChargedHadrPt_,"leadPFChargedHadrPt/F");
+  tree_->Branch("leadPFChargedHadrP", &leadPFChargedHadrP_,"leadPFChargedHadrP/F");
+  tree_->Branch("leadPFChargedHadrMva",&leadPFChargedHadrMva_,"leadPFChargedHadrMva/F");
+  tree_->Branch("leadPFChargedHadrHcalEnergy",&leadPFChargedHadrHcalEnergy_,"leadPFChargedHadrHcalEnergy/F");
+  tree_->Branch("leadPFChargedHadrEcalEnergy",&leadPFChargedHadrEcalEnergy_,"leadPFChargedHadrEcalEnergy/F");
+  tree_->Branch("leadPFCandMva",&leadPFCandMva_,"leadPFCandMva/F");
+  tree_->Branch("leadPFCandHcalEnergy",&leadPFCandHcalEnergy_,"leadPFCandHcalEnergy/F");
+  tree_->Branch("leadPFCandEcalEnergy",&leadPFCandEcalEnergy_,"leadPFCandEcalEnergy/F");
+  tree_->Branch("leadPFCandPt",&leadPFCandPt_,"leadPFCandPt/F");
+  tree_->Branch("leadPFCandP",&leadPFCandP_,"leadPFCandP/F");
+  tree_->Branch("emFraction",&emFraction_,"emFraction/F");
+  tree_->Branch("hasGsf",&hasGsf_,"hasGsf/F");
+  tree_->Branch("signalPFChargedHadrCands",&signalPFChargedHadrCands_,"signalPFChargedHadrCands/I");
+  tree_->Branch("signalPFGammaCands",&signalPFGammaCands_,"signalPFGammaCands/I");
+
 
   tree_->Branch("isTauLegMatched",&isTauLegMatched_,"isTauLegMatched/I");
   tree_->Branch("isElecLegMatched",&isElecLegMatched_,"isElecLegMatched/I");
@@ -258,7 +336,9 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("rhoFastJet",&rhoFastJet_,"rhoFastJet/F");
   tree_->Branch("rhoNeutralFastJet",&rhoNeutralFastJet_,"rhoNeutralFastJet/F");
   tree_->Branch("mcPUweight",&mcPUweight_,"mcPUweight/F");
+  tree_->Branch("embeddingWeight",&embeddingWeight_,"embeddingWeight/F");
   tree_->Branch("nPUVertices",&nPUVertices_,"nPUVertices/I");
+  tree_->Branch("nPUaverage",&nPUaverage_,"nPUaverage/F");
 
 
 }
@@ -270,8 +350,8 @@ ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
   delete diTauSVfitP4_; delete genVP4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_;
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;delete extraElectrons_; delete pfElectrons_;
-  delete tRandom_ ; /*delete fpuweight_;*/ delete jetsChNfraction_; delete jetsChEfraction_; delete jetMoments_;
-  delete gammadR_ ; delete gammaPt_;
+  delete tRandom_ ; delete jetsChNfraction_; delete jetsChEfraction_; delete jetMoments_;
+  delete gammadR_ ; delete gammadPhi_; delete gammadEta_; delete gammaPt_;
 }
 
 void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -295,6 +375,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   jetMoments_->clear();
 
   gammadR_->clear();
+  gammadEta_->clear();
+  gammadPhi_->clear();
   gammaPt_->clear();
 
   genJetsIDP4_->clear();
@@ -428,6 +510,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   edm::Handle<reco::GenJetCollection> tauGenJetsHandle;
   edm::Handle<std::vector<PileupSummaryInfo> > puInfoH;
   nPUVertices_= -99;
+  nPUaverage_ = 0;
   nOOTPUVertices_=-99;
   float sum_nvtx = 0;
 
@@ -449,14 +532,14 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       }
     }
   }
+  nPUaverage_ = sum_nvtx/3.;
   if(verbose_){
     cout << "Average num of int = " << sum_nvtx/3. << endl;
     cout << "Num of PU = " << nPUVertices_ << endl;
     cout << "Num of OOT PU = " << nOOTPUVertices_ << endl;
   }
-  if( fpuweight_ ) mcPUweight_ = fpuweight_->GetWeight(nPUVertices_);
-  //else mcPUweight_ =  int(sum_nvtx/3.+0.5) < int(weights2011_.size()) ? weights2011_[int(sum_nvtx/3.+0.5)] : weights2011_[(unsigned int)(weights2011_.size()-1)];
-  else mcPUweight_ =  int(nPUVertices_+0.5) < int(weights2011_.size()) ? weights2011_[int(nPUVertices_+0.5)] : weights2011_[(unsigned int)(weights2011_.size()-1)];
+
+  mcPUweight_ = LumiWeights_.weight( nPUVertices_ );
 
   edm::Handle<double> rhoFastJetHandle;
   iEvent.getByLabel(edm::InputTag("kt6PFJetsCentral","rho",""), rhoFastJetHandle);
@@ -464,6 +547,11 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     edm::LogError("DataNotAvailable")
       << "No rho label available \n";
   rhoFastJet_ = (*rhoFastJetHandle);
+
+  edm::Handle<double> embeddingWeightHandle;
+  iEvent.getByLabel(edm::InputTag("generator","weight",""), embeddingWeightHandle);
+  embeddingWeight_ = embeddingWeightHandle.isValid() ? (*embeddingWeightHandle) : 1.0;
+
 
   edm::Handle<double> rhoNeutralFastJetHandle;
   iEvent.getByLabel(edm::InputTag("kt6PFJetsNeutral","rho", ""), rhoNeutralFastJetHandle);
@@ -507,48 +595,35 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   numOfDiTaus_ = diTaus->size();
 
   unsigned int elecIndex = 0;
-  elecFlag_=-99;
-
-  if(  electrons->size()==1 &&  (electronsRel->size()==1 || electronsRel->size()==0)){
-    //elecIndex = 0;
-    elecFlag_ = 0;
-    if(verbose_) cout<< "Just one selected electron: flag= " << elecFlag_ << endl;
-  }
-  else if(  electronsRel->size()>1 ){
-    //elecIndex = 0;
-    elecFlag_ = 3;
+  elecFlag_ = 0;
   
-    bool found = false;
-    for(unsigned int i=0; i<electronsRel->size(); i++){
-      for(unsigned int j=0; j<electrons->size(); j++){
+  bool found = false;
+  for(unsigned int i=0; i<electronsRel->size(); i++){
+    for(unsigned int j=0; j<electrons->size(); j++){ 
 
-	if(found) continue;
+      if(found) continue;
 
-	if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3 
-	    && (*electronsRel)[i].charge()*(*electrons)[j].charge()<0
-	    && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.30 
-	    && (*electronsRel)[i].userFloat("PFRelIsoDB04v2")<0.30 ){
-	  //elecIndex = 0;
-	  elecFlag_ = 1;
-	  if(verbose_) cout<< "Two electrons failing diElec veto: flag= " << elecFlag_ << endl;
-	  found=true;  
-	}
-	else if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3 
-		 && (*electronsRel)[i].charge()*(*electrons)[j].charge()>0
-		 && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.30
-		 && (*electronsRel)[i].userFloat("PFRelIsoDB04v2")<0.30 ){
-	  //elecIndex = 0;
-	  elecFlag_ = 2;
-	  if(verbose_) cout<< "Two electrons with SS: flag= " << elecFlag_ << endl;
-	  found=true;  
-	}
+      if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
+	  && (*electronsRel)[i].charge()*(*electrons)[j].charge()<0
+	  && (*electrons)[j].userFloat("PFRelIsoDB04v3")<0.30
+	  && (*electronsRel)[i].userFloat("PFRelIsoDB04v3")<0.30 ){
+	//elecIndex = 0;                                                                                                                    
+	elecFlag_ = 1;
+	if(verbose_) cout<< "Two electrons failing diElec veto: flag= " << elecFlag_ << endl;
+	found=true;
+      }
+      else if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
+	       && (*electronsRel)[i].charge()*(*electrons)[j].charge()>0
+	       && (*electrons)[j].userFloat("PFRelIsoDB04v3")<0.30
+	       && (*electronsRel)[i].userFloat("PFRelIsoDB04v3")<0.30 ){
+	//elecIndex = 0;                                                                                                                    
+	elecFlag_ = 2;
+	if(verbose_) cout<< "Two electrons with SS: flag= " << elecFlag_ << endl;
+	found=true;
       }
     }
-  } 
-  else{
-    //elecIndex = 0;
-    elecFlag_ = -1;
-  }
+  }  
+
 
   // select highest-pt electron that forms at least one di-tau 
   bool found2 = false;
@@ -691,6 +766,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v9");
     triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TightIsoPFTau20_v2");
     triggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1");
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1");
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v5");
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v6");
                               
     // watch out! name convention changed with time
     HLTfiltersElec.push_back("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter");
@@ -698,6 +776,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     // watch out! name convention changed with time
     HLTfiltersElec.push_back("hltEle18CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter");
     HLTfiltersElec.push_back("hltEle18CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter");
+ 
+    HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilterL1SingleEG18orL1SingleEG20");
+ 
    
     //HLTfiltersTau.push_back("hltPFTau15TrackLooseIso");
     //HLTfiltersTau.push_back("hltPFTau20TrackLooseIso");
@@ -705,6 +786,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     HLTfiltersTau.push_back("hltOverlapFilterIsoEle15IsoPFTau20");
     HLTfiltersTau.push_back("hltOverlapFilterIsoEle15TightIsoPFTau20");
     HLTfiltersTau.push_back("hltOverlapFilterIsoEle18MediumIsoPFTau20");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoEle20MediumIsoPFTau20");
 
   }
 
@@ -873,19 +955,52 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
   for(unsigned int k = 0 ; k < (leg2->signalPFGammaCands()).size() ; k++){
     reco::PFCandidateRef gamma = (leg2->signalPFGammaCands()).at(k);
-    if( (leg2->leadPFChargedHadrCand()).isNonnull() )
-      gammadR_->push_back( Geom::deltaR( gamma->p4(), leg2->leadPFChargedHadrCand()->p4() ) );
-    else
-      gammadR_->push_back( Geom::deltaR( gamma->p4(), leg2->p4() ) );
+    if( (leg2->leadPFChargedHadrCand()).isNonnull() ){
+      gammadR_->push_back(   Geom::deltaR( gamma->p4(), leg2->leadPFChargedHadrCand()->p4() ) );
+      gammadPhi_->push_back( Geom::deltaPhi( gamma->p4(), leg2->leadPFChargedHadrCand()->p4() ) );
+      gammadEta_->push_back( gamma->eta() - leg2->leadPFChargedHadrCand()->eta() ) ;
+    }
+    else{
+      gammadR_->push_back(   Geom::deltaR( gamma->p4(), leg2->p4() ) );
+      gammadPhi_->push_back( Geom::deltaPhi( gamma->p4(), leg2->p4() ) );
+      gammadEta_->push_back(  gamma->eta() - leg2->eta() ) ;
+    }
     gammaPt_->push_back(  gamma->pt() );
   }
-  
+
+
   visibleTauMass_ = leg2->mass();
+ 
   if((leg2->leadPFChargedHadrCand()->trackRef()).isNonnull()){
-    leadPFChargedHadrCandTrackPt_ = leg2->leadPFChargedHadrCand()->trackRef()->pt();
+    leadPFChargedHadrTrackPt_ = leg2->leadPFChargedHadrCand()->trackRef()->pt();
+    leadPFChargedHadrTrackP_  = leg2->leadPFChargedHadrCand()->trackRef()->p();
   } else if((leg2->leadPFChargedHadrCand()->gsfTrackRef()).isNonnull()){
-    leadPFChargedHadrCandTrackPt_ = leg2->leadPFChargedHadrCand()->gsfTrackRef()->pt();
-  } else leadPFChargedHadrCandTrackPt_ = -99;
+    leadPFChargedHadrTrackPt_ = leg2->leadPFChargedHadrCand()->gsfTrackRef()->pt();
+    leadPFChargedHadrTrackP_  = leg2->leadPFChargedHadrCand()->gsfTrackRef()->p();
+  } else{
+    leadPFChargedHadrTrackPt_ = -99;
+    leadPFChargedHadrTrackP_  = -99;
+  }
+  leadPFChargedHadrPt_  = leg2->leadPFChargedHadrCand()->pt();  
+  leadPFChargedHadrP_   = leg2->leadPFChargedHadrCand()->p();  
+
+  leadPFChargedHadrMva_        =   leg2->electronPreIDOutput() ;	
+  leadPFChargedHadrHcalEnergy_ =  (leg2->leadPFChargedHadrCand()).isNonnull() ? (leg2->leadPFChargedHadrCand())->hcalEnergy() : -99 ;
+  leadPFChargedHadrEcalEnergy_ =  (leg2->leadPFChargedHadrCand()).isNonnull() ? (leg2->leadPFChargedHadrCand())->ecalEnergy() : -99;
+  
+  if( (leg2->leadPFCand()).isNonnull() ){
+    leadPFCandMva_               =  (leg2->leadPFCand())->mva_e_pi() ;	
+    leadPFCandHcalEnergy_        =  (leg2->leadPFCand())->hcalEnergy() ;
+    leadPFCandEcalEnergy_        =  (leg2->leadPFCand())->ecalEnergy() ;
+    leadPFCandPt_                =  (leg2->leadPFCand())->pt();
+    leadPFCandP_                 =  (leg2->leadPFCand())->p();
+  }
+  
+  signalPFChargedHadrCands_ = (leg2->signalPFChargedHadrCands()).size();
+  signalPFGammaCands_       = (leg2->signalPFGammaCands()).size();
+  emFraction_ = leg2->emFraction();
+  hasGsf_     = ((leg2->leadPFChargedHadrCand())->gsfTrackRef()).isNonnull() ? 1. : 0.;
+  
 
   tightestHPSWP_ = -1;
   if(leg2->tauID("byVLooseIsolation")>0.5) tightestHPSWP_++;
@@ -937,7 +1052,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   vetos2010PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.05));
   vetos2010PhotonLeg1.push_back( new isodeposit::ThresholdVeto(1.0));
 
-  vetos2011ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
+  vetos2011ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.0001));
   vetos2011ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
   vetos2011NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
   vetos2011NeutralLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
@@ -1089,31 +1204,60 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       )     
      ) tightestCutBasedWP_ ++;
   
+  tightestMVAWP_ = -1;
+  bool passesMVA = 
+    (leg1->pt()<=20 && fabs(leg1->superClusterPosition().Eta())>=0.0 && fabs(leg1->superClusterPosition().Eta())<1.0 && leg1->userFloat("mva")>0.133) ||
+    (leg1->pt()<=20 && fabs(leg1->superClusterPosition().Eta())>=1.0 && fabs(leg1->superClusterPosition().Eta())<1.5 && leg1->userFloat("mva")>0.465) ||
+    (leg1->pt()<=20 && fabs(leg1->superClusterPosition().Eta())>=1.5 && fabs(leg1->superClusterPosition().Eta())<2.5 && leg1->userFloat("mva")>0.518) ||
+    (leg1->pt()>20  && fabs(leg1->superClusterPosition().Eta())>=0.0 && fabs(leg1->superClusterPosition().Eta())<1.0 && leg1->userFloat("mva")>0.942) ||
+    (leg1->pt()>20  && fabs(leg1->superClusterPosition().Eta())>=1.0 && fabs(leg1->superClusterPosition().Eta())<1.5 && leg1->userFloat("mva")>0.947) ||
+    (leg1->pt()>20  && fabs(leg1->superClusterPosition().Eta())>=1.5 && fabs(leg1->superClusterPosition().Eta())<2.5 && leg1->userFloat("mva")>0.878);
+  bool mvaPreselectionNoIso = 
+    leg1->userInt("antiConv")>0.5 && leg1->userFloat("nHits")<=0 &&
+    ((leg1->isEB()
+      && leg1->userFloat("sihih") < 0.01 
+      && TMath::Abs(leg1->userFloat("dEta")) < 0.007
+      && TMath::Abs(leg1->userFloat("dPhi")) < 0.15
+      && leg1->userFloat("HoE") < 0.12
+      ) ||
+     (leg1->isEE() 
+      && leg1->userFloat("sihih") < 0.03 
+      && TMath::Abs(leg1->userFloat("dEta")) < 0.009
+      && TMath::Abs(leg1->userFloat("dPhi")) < 0.10
+      && leg1->userFloat("HoE") < 0.10
+      ));
+  bool mvaPreselection = leg1->userInt("mvaPreselection")>0.5 ;
+
+  if( passesMVA )                        tightestMVAWP_ = 0;
+  if( passesMVA && mvaPreselectionNoIso) tightestMVAWP_ = 1;
+  if( passesMVA && mvaPreselection)      tightestMVAWP_ = 2;
     
-    
-  tightestCiCWP_ = -1;
   if( (int(leg1->electronID("eidCiCHZZTight"))&1)==1     )    tightestCiCWP_++;
   if( (int(leg1->electronID("eidCiCHZZSuperTight"))&1)==1)    tightestCiCWP_++;
   if( (int(leg1->electronID("eidCiCHZZHyperTight1"))&1)==1  ) tightestCiCWP_++;
+
+  tightestAntiECutsWP_ = -1;
+  if( leg2->tauID("againstElectronTight")>0.5 ) tightestAntiECutsWP_++;
+
 
   diTauVisP4_->push_back( theDiTau->p4Vis() );
   diTauCAP4_->push_back( theDiTau->p4CollinearApprox() );
   diTauICAP4_->push_back( theDiTau->p4ImprovedCollinearApprox() );
 
   math::XYZTLorentzVectorD nSVfitFitP4(0,0,0,(theDiTau->p4Vis()).M() );
-  if( theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)->isValidSolution() ){
+  if( theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)!=0 /*&& theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)->isValidSolution()*/ ){
     if(verbose_) cout << "Visible mass ==> " << nSVfitFitP4.E() << endl;
     nSVfitFitP4.SetPxPyPzE( 0,0,0, theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)->mass() ) ;
     if(verbose_) cout << "SVFit fit solution ==> " << nSVfitFitP4.E() << endl;
   }
   diTauSVfitP4_->push_back( nSVfitFitP4  );
 
-  
-  diTauNSVfitMass_        = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
+  int errFlag = 0;
+  diTauNSVfitMass_        = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
     ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->mass()        : -99; 
-  diTauNSVfitMassErrUp_   = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
+  diTauNSVfitMassErrUp_   = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
     ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrUp()   : -99; 
-  diTauNSVfitMassErrDown_ = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
+  diTauNSVfitMassErrDown_ = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
     ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrDown() : -99; 
 
   run_   = iEvent.run();
