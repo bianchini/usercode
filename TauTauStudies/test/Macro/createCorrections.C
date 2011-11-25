@@ -243,97 +243,92 @@ Double_t myFuncTurnOnEleAllEC(Double_t* x, Double_t *par) {
 }
 
 
-
-
-
-
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////
 
 
-
-
-Double_t myFuncRatioElecID(Double_t* x, Double_t *par) {
-
-  //TFile corrections("corrections.root");
-  //TF1* corrEffEleID = (TF1*)corrections.Get("corrEffEleID");
-
-  Float_t xx = x[0];
-  if(xx>100) xx=100.;
-  return 1.0;//corrEffEleID->Eval(xx);
-}
-
-Double_t myFuncTurnOnElecID(Double_t* x, Double_t *par) {
-
-  //TFile corrections("corrections.root");
-  //TF1* corrEffEleID = (TF1*)corrections.Get("fitEffEleID");
-
-  Float_t xx = x[0];
-  if(xx>100) xx=100.;
-  return 1.0;//corrEffEleID->Eval(xx);
-}
-
-Double_t myFuncRatioElecIso(Double_t* x, Double_t *par) {
-
-  //TFile corrections("corrections.root");
-  //TF1* corrEffEleIso = (TF1*)corrections.Get("corrEffEleIso");
-
-  Float_t xx = x[0];
-  if(xx>100) xx=100.;
-  return 1.0;//corrEffEleIso->Eval(xx);
-}
-
-Double_t myFuncTurnOnElecIso(Double_t* x, Double_t *par) {
-
-  //TFile corrections("corrections.root");
-  //TF1* corrEffEleIso = (TF1*)corrections.Get("fitEffEleIso");
-
-  Float_t xx = x[0];
-  if(xx>100) xx=100.;
-  return 1.0;//corrEffEleIso->Eval(xx);
-}
-
-
-
-
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-
-
-
-Double_t myFuncRatioMuId(Double_t* x, Double_t *par) {
-  return 0.9967;
-}
-
-Double_t myFuncTurnOnMuId(Double_t* x, Double_t *par) {
+Double_t myFuncRatioElecIDBL(Double_t* x, Double_t *par) {
   return 1.0;
 }
 
-Double_t myFuncRatioMuIso(Double_t* x, Double_t *par) {
-
-  //TFile corrections("corrections.root");
-  //TF1* corrEffMuIso = (TF1*)corrections.Get("corrEffMuIso");
-
-  Float_t xx = x[0];
-  if(xx>100) xx=100.;
-  return 1.0;//corrEffMuIso->Eval(xx);
+Double_t myFuncTurnOnElecIDBL(Double_t* x, Double_t *par) {
+  return 1.0;
 }
 
-Double_t myFuncTurnOnMuIso(Double_t* x, Double_t *par) {
+Double_t myFuncRatioElecIDEC(Double_t* x, Double_t *par) {
+  return 1.0;
+}
 
-  //TFile corrections("corrections.root");
-  //TF1* corrEffMuIso = (TF1*)corrections.Get("fitEffMuIso");
+Double_t myFuncTurnOnElecIDEC(Double_t* x, Double_t *par) {
+  return 1.0;
+}
+
+///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
+
+
+Double_t myFuncRatioElecIsoBL(Double_t* x, Double_t *par) {
+  
+  gSystem->Load("ratioEfficiencyTest_C.so");
+  ratioEfficiencyTest* ratioEffElecIsoRD = new ratioEfficiencyTest(0.1319,3.449,0.568 , 109.24,1.056);
+  ratioEfficiencyTest* ratioEffElecIsoMC = new ratioEfficiencyTest(1.699,7.7149,2.738 , 121.6, 1.0646);
+  
+  Float_t xx = x[0];
+  return ratioEffElecIsoRD->turnOn(xx)/ratioEffElecIsoMC->turnOn(xx);
+}
+
+Double_t myFuncTurnOnElecIsoBL(Double_t* x, Double_t *par) {
+
+  gSystem->Load("ratioEfficiencyTest_C.so");
+  ratioEfficiencyTest* ratioEffElecIso = new ratioEfficiencyTest(0.1319,3.449,0.568 , 109.24,1.056);
 
   Float_t xx = x[0];
-  if(xx>100) xx=100.;
-  return 1.0;//corrEffMuIso->Eval(xx);
+  return ratioEffElecIso->turnOn(xx);
+}
+
+Double_t myFuncRatioElecIsoEC(Double_t* x, Double_t *par) {
+  
+  gSystem->Load("ratioEfficiencyTest_C.so");
+  ratioEfficiencyTest* ratioEffElecIsoRD = new ratioEfficiencyTest(-0.3521,4.477,  1.0056, 113.9,     1.04108);
+  ratioEfficiencyTest* ratioEffElecIsoMC = new ratioEfficiencyTest( 7.233, 1.7088, 1.3650,    1.0521, 4.33366);
+  
+  Float_t xx = x[0];
+  return ratioEffElecIsoRD->turnOn(xx)/ratioEffElecIsoMC->turnOn(xx);
+}
+
+Double_t myFuncTurnOnElecIsoEC(Double_t* x, Double_t *par) {
+
+  gSystem->Load("ratioEfficiencyTest_C.so");
+  ratioEfficiencyTest* ratioEffElecIso = new ratioEfficiencyTest(-0.3521,4.477,1.005609, 113.9, 1.04108);
+
+  Float_t xx = x[0];
+  return ratioEffElecIso->turnOn(xx);
 }
 
 
+///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
 
 
+
+Double_t myFuncRatioMuIdBL(Double_t* x, Double_t *par) {
+  return 0.9897;
+}
+
+Double_t myFuncTurnOnMuIdBL(Double_t* x, Double_t *par) {
+  return 0.9580;
+}
+
+Double_t myFuncRatioMuIdEC(Double_t* x, Double_t *par) {
+  return 0.9758;
+}
+
+Double_t myFuncTurnOnMuIdEC(Double_t* x, Double_t *par) {
+  return 0.9373;
+}
 
 
 ///////////////////////////////////////////////////////
@@ -341,14 +336,47 @@ Double_t myFuncTurnOnMuIso(Double_t* x, Double_t *par) {
 ///////////////////////////////////////////////////////
 
 
+Double_t myFuncRatioMuIsoBL(Double_t* x, Double_t *par) {
+  
+  gSystem->Load("ratioEfficiencyTest_C.so");
+  ratioEfficiencyTest* ratioEffMuIsoRD = new ratioEfficiencyTest(0.1319,3.449,0.568 , 109.24,1.056);
+  ratioEfficiencyTest* ratioEffMuIsoMC = new ratioEfficiencyTest(1.699,7.7149,2.738 , 121.6, 1.0646);
 
+  Float_t xx = x[0];
+  return ratioEffMuIsoRD->turnOn(xx)/ratioEffMuIsoMC->turnOn(xx);
+}
 
+Double_t myFuncTurnOnMuIsoBL(Double_t* x, Double_t *par) {
 
+  gSystem->Load("ratioEfficiencyTest_C.so");
+  ratioEfficiencyTest* ratioEffMuIso = new ratioEfficiencyTest(0.1319,3.449,0.568 , 109.24,1.056);
 
+  Float_t xx = x[0];
+  return ratioEffMuIso->turnOn(xx);
+}
 
+Double_t myFuncRatioMuIsoEC(Double_t* x, Double_t *par) {
+  
+  gSystem->Load("ratioEfficiencyTest_C.so");
+  ratioEfficiencyTest* ratioEffMuIsoRD = new ratioEfficiencyTest(-0.3521,4.477,1.005609, 113.9, 1.04108);
+  ratioEfficiencyTest* ratioEffMuIsoMC = new ratioEfficiencyTest( 7.233, 1.7088, 1.3650,    1.0521, 4.33366);
 
+  Float_t xx = x[0];
+  return ratioEffMuIsoRD->turnOn(xx)/ratioEffMuIsoMC->turnOn(xx);
+}
 
+Double_t myFuncTurnOnMuIsoEC(Double_t* x, Double_t *par) {
 
+  gSystem->Load("ratioEfficiencyTest_C.so");
+  ratioEfficiencyTest* ratioEffMuIso = new ratioEfficiencyTest(-0.3521,4.477,1.005609, 113.9, 1.04108);
+
+  Float_t xx = x[0];
+  return ratioEffMuIso->turnOn(xx);
+}
+
+///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
 
 Double_t myFuncTurnOnMu12MCBL(Double_t* x, Double_t *par) {
 
@@ -379,7 +407,7 @@ Double_t myFuncRatioMu15L110BL(Double_t* x, Double_t *par) {
   if(xx<12) 
     return 0;
   else 
-    return 0.917/turnOnMu12MCBL->Eval(xx);
+    return 0.901/turnOnMu12MCBL->Eval(xx);
 
 }
 
@@ -389,7 +417,7 @@ Double_t myFuncTurnOnMu15L110BL(Double_t* x, Double_t *par) {
   if(xx<12) 
     return 0;
   else 
-    return 0.917;
+    return 0.901;
 }
 
 Double_t myFuncRatioMu15L110EC(Double_t* x, Double_t *par) {
@@ -400,7 +428,7 @@ Double_t myFuncRatioMu15L110EC(Double_t* x, Double_t *par) {
   if(xx<12) 
     return 0;
   else 
-    return 0.836/turnOnMu12MCEC->Eval(xx);
+    return 0.862/turnOnMu12MCEC->Eval(xx);
 
 }
 
@@ -410,7 +438,7 @@ Double_t myFuncTurnOnMu15L110EC(Double_t* x, Double_t *par) {
   if(xx<12) 
     return 0;
   else 
-    return 0.836;
+    return 0.862;
 }
 
 ///////////////////////////////////////////////////////
@@ -694,15 +722,15 @@ Double_t myFuncRatioTauMuTauAll(Double_t* x, Double_t *par) {
   //ratioEfficiencyTest* ratioEffTauLoose20MuTauRunB = new ratioEfficiencyTest(18.6748,2.4703,6.59219,1.10415,0.908873);
 
   //NOTE:
-  ratioEfficiencyTest* ratioEffTauLoose10MuTau = new ratioEfficiencyTest(16.785,-0.6938,4.5728,94127.12,0.8831);
-  ratioEfficiencyTest* ratioEffTauLoose15MuTau = new ratioEfficiencyTest(14.67,0.4082,0.5519,1.4477,0.9613);
-  ratioEfficiencyTest* ratioEffTauLoose20MuTau = new ratioEfficiencyTest(19.19,-1.36,2.827,1.02721,1.5086);
+  ratioEfficiencyTest* ratioEffTauLoose10MuTau = new ratioEfficiencyTest(16.785,-0.6938,4.5728, 94127.12,0.8831);
+  ratioEfficiencyTest* ratioEffTauLoose15MuTau = new ratioEfficiencyTest(14.67 , 0.4082,0.5519, 1.4477, 0.9613);
+  ratioEfficiencyTest* ratioEffTauLoose20MuTau = new ratioEfficiencyTest(19.19 ,-1.36,  2.827,  1.02721,1.5086);
  
 
   TF1* turnOnTauLoose10MuTauMC = new TF1("turnOnTauLoose10MuTauMC", myFuncTurnOnTauLoose10MuTauMC,0,400,0);
 
-  float weightLoose10 =  169.;
-  float weightLoose15 = 1968.;
+  float weightLoose10 =    0.;
+  float weightLoose15 = 1968.169;
   float weightLoose20 = 2460.;
   
   float total = weightLoose10+weightLoose15+weightLoose20;
@@ -731,8 +759,8 @@ Double_t myFuncTurnOnTauMuTauAll(Double_t* x, Double_t *par) {
   ratioEfficiencyTest* ratioEffTauLoose15MuTau = new ratioEfficiencyTest(14.67,0.4082,0.5519,1.4477,0.9613);
   ratioEfficiencyTest* ratioEffTauLoose20MuTau = new ratioEfficiencyTest(19.19,-1.36,2.827,1.02721,1.5086);
   
-  float weightLoose10 =  169.;
-  float weightLoose15 = 1968.;
+  float weightLoose10 =    0.;
+  float weightLoose15 = 1968.+169;
   float weightLoose20 = 2460.;
   
   float total = weightLoose10+weightLoose15+weightLoose20;
@@ -1052,9 +1080,9 @@ Double_t myFuncRatioTauElecTauAll(Double_t* x, Double_t *par) {
   
   gSystem->Load("ratioEfficiencyTest_C.so");
  
-  ratioEfficiencyTest* ratioEffTauLoose20ElecTau  = new ratioEfficiencyTest(19.63,-0.986,1.94,1.023979,1.911);
-  ratioEfficiencyTest* ratioEffTauMedium20ElecTau = new ratioEfficiencyTest(19.35,0.37,0.1582,3.311,0.763);
-  ratioEfficiencyTest* ratioEffTauTight20ElecTau  = new ratioEfficiencyTest(19.72,0.844,1.167,1.007466,9.351);
+  ratioEfficiencyTest* ratioEffTauLoose20ElecTau  = new ratioEfficiencyTest(19.63,-0.986,1.94,  1.023979,1.911);
+  ratioEfficiencyTest* ratioEffTauMedium20ElecTau = new ratioEfficiencyTest(19.35, 0.37, 0.1582,3.311,   0.763);
+  ratioEfficiencyTest* ratioEffTauTight20ElecTau  = new ratioEfficiencyTest(19.72, 0.844,1.167, 1.007466,9.351);
 
   TF1* turnOnTauLoose15ElecTauMC = new TF1("turnOnTauLoose15ElecTauMC", myFuncTurnOnTauLoose10ElecTauMC,0,400,0);
 
@@ -1183,119 +1211,139 @@ void makeFile(){
 
   TFile* fout = new TFile("llrCorrections.root","RECREATE");
 
-  TF1 *ratioElec15BL        = new TF1("ratioElec15BL",           myFuncRatioElec15BL,       15,400,0);
-  TF1 *turnOnElec15BL       = new TF1("turnOnElec15BL",          myFuncTurnOnElec15BL,      15,400,0);
-  TF1 *ratioElec15EC        = new TF1("ratioElec15EC",           myFuncRatioElec15EC,       15,400,0);
-  TF1 *turnOnElec15EC       = new TF1("turnOnElec15EC",          myFuncTurnOnElec15EC,      15,400,0);
+  TF1 *ratioElec15BL        = new TF1("ratioElec15BL",           myFuncRatioElec15BL,       15,800,0);
+  TF1 *turnOnElec15BL       = new TF1("turnOnElec15BL",          myFuncTurnOnElec15BL,      15,800,0);
+  TF1 *ratioElec15EC        = new TF1("ratioElec15EC",           myFuncRatioElec15EC,       15,800,0);
+  TF1 *turnOnElec15EC       = new TF1("turnOnElec15EC",          myFuncTurnOnElec15EC,      15,800,0);
 
-  TF1 *ratioElec18BL        = new TF1("ratioElec18BL",           myFuncRatioEle18BL,        15,400,0);
-  TF1 *turnOnElec18BL       = new TF1("turnOnElec18BL",          myFuncTurnOnEle18BL,       15,400,0);
-  TF1 *ratioElec18EC        = new TF1("ratioElec18EC",           myFuncRatioEle18EC,        15,400,0);
-  TF1 *turnOnElec18EC       = new TF1("turnOnElec18EC",          myFuncTurnOnEle18EC,       15,400,0);
+  TF1 *ratioElec18BL        = new TF1("ratioElec18BL",           myFuncRatioEle18BL,        15,800,0);
+  TF1 *turnOnElec18BL       = new TF1("turnOnElec18BL",          myFuncTurnOnEle18BL,       15,800,0);
+  TF1 *ratioElec18EC        = new TF1("ratioElec18EC",           myFuncRatioEle18EC,        15,800,0);
+  TF1 *turnOnElec18EC       = new TF1("turnOnElec18EC",          myFuncTurnOnEle18EC,       15,800,0);
 
-  TF1 *ratioElec20BL        = new TF1("ratioElec20BL",           myFuncRatioEle20BL,        15,400,0);
-  TF1 *turnOnElec20BL       = new TF1("turnOnElec20BL",          myFuncTurnOnEle20BL,       15,400,0);
-  TF1 *ratioElec20EC        = new TF1("ratioElec20EC",           myFuncRatioEle20EC,        15,400,0);
-  TF1 *turnOnElec20EC       = new TF1("turnOnElec20EC",          myFuncTurnOnEle20EC,       15,400,0);
+  TF1 *ratioElec20BL        = new TF1("ratioElec20BL",           myFuncRatioEle20BL,        15,800,0);
+  TF1 *turnOnElec20BL       = new TF1("turnOnElec20BL",          myFuncTurnOnEle20BL,       15,800,0);
+  TF1 *ratioElec20EC        = new TF1("ratioElec20EC",           myFuncRatioEle20EC,        15,800,0);
+  TF1 *turnOnElec20EC       = new TF1("turnOnElec20EC",          myFuncTurnOnEle20EC,       15,800,0);
 
-  TF1 *ratioElecAllBL       = new TF1("ratioElecAllBL",          myFuncRatioEleAllBL,       15,400,0);
-  TF1 *turnOnElecAllBL      = new TF1("turnOnElecAllBL",         myFuncTurnOnEleAllBL,      15,400,0);
-  TF1 *ratioElecAllEC       = new TF1("ratioElecAllEC",          myFuncRatioEleAllEC,       15,400,0);
-  TF1 *turnOnElecAllEC      = new TF1("turnOnElecAllEC",         myFuncTurnOnEleAllEC,      15,400,0);
+  TF1 *ratioElecAllBL       = new TF1("ratioElecAllBL",          myFuncRatioEleAllBL,       15,800,0);
+  TF1 *turnOnElecAllBL      = new TF1("turnOnElecAllBL",         myFuncTurnOnEleAllBL,      15,800,0);
+  TF1 *ratioElecAllEC       = new TF1("ratioElecAllEC",          myFuncRatioEleAllEC,       15,800,0);
+  TF1 *turnOnElecAllEC      = new TF1("turnOnElecAllEC",         myFuncTurnOnEleAllEC,      15,800,0);
 
-  TF1 *ratioElecID          = new TF1("ratioElecID",             myFuncRatioElecID ,        15,400,0);
-  TF1 *turnOnElecID         = new TF1("turnOnElecID",            myFuncTurnOnElecID ,       15,400,0);
-  TF1 *ratioElecIso         = new TF1("ratioElecIso",            myFuncRatioElecIso ,       15,400,0);
-  TF1 *turnOnElecIso        = new TF1("turnOnElecIso",           myFuncTurnOnElecIso ,      15,400,0);
+  TF1 *ratioElecIDBL        = new TF1("ratioElecIDBL",           myFuncRatioElecIDBL ,      15,800,0);
+  TF1 *turnOnElecIDBL       = new TF1("turnOnElecIDBL",          myFuncTurnOnElecIDBL ,     15,800,0);
+  TF1 *ratioElecIDEC        = new TF1("ratioElecIDEC",           myFuncRatioElecIDEC ,      15,800,0);
+  TF1 *turnOnElecIDEC       = new TF1("turnOnElecIDEC",          myFuncTurnOnElecIDEC ,     15,800,0);
 
-  TF1 *ratioMu15L110BL      = new TF1("ratioMu15L110BL",         myFuncRatioMu15L110BL,     14,400,0);
-  TF1 *turnOnMu15L110BL     = new TF1("turnOnMu15L110BL",        myFuncTurnOnMu15L110BL,    14,400,0);
+  TF1 *ratioElecIsoBL       = new TF1("ratioElecIsoBL",          myFuncRatioElecIsoBL ,     15,800,0);
+  TF1 *turnOnElecIsoBL      = new TF1("turnOnElecIsoBL",         myFuncTurnOnElecIsoBL ,    15,800,0);
+  TF1 *ratioElecIsoEC       = new TF1("ratioElecIsoEC",          myFuncRatioElecIsoEC ,     15,800,0);
+  TF1 *turnOnElecIsoEC      = new TF1("turnOnElecIsoEC",         myFuncTurnOnElecIsoEC ,    15,800,0);
 
-  TF1 *ratioMu15L110EC      = new TF1("ratioMu15L110EC",         myFuncRatioMu15L110EC,     14,400,0);
-  TF1 *turnOnMu15L110EC     = new TF1("turnOnMu15L110EC",        myFuncTurnOnMu15L110EC,    14,400,0);
+  TF1 *ratioMu15L110BL      = new TF1("ratioMu15L110BL",         myFuncRatioMu15L110BL,     14,800,0);
+  TF1 *turnOnMu15L110BL     = new TF1("turnOnMu15L110BL",        myFuncTurnOnMu15L110BL,    14,800,0);
 
-  TF1 *ratioMu15L114BL      = new TF1("ratioMu15L114BL",         myFuncRatioMu15L114BL,     14,400,0);
-  TF1 *turnOnMu15L114BL     = new TF1("turnOnMu15L114BL",        myFuncTurnOnMu15L114BL,    14,400,0);
+  TF1 *ratioMu15L110EC      = new TF1("ratioMu15L110EC",         myFuncRatioMu15L110EC,     14,800,0);
+  TF1 *turnOnMu15L110EC     = new TF1("turnOnMu15L110EC",        myFuncTurnOnMu15L110EC,    14,800,0);
 
-  TF1 *ratioMu15L114EC      = new TF1("ratioMu15L114EC",         myFuncRatioMu15L114EC,     14,400,0);
-  TF1 *turnOnMu15L114EC     = new TF1("turnOnMu15L114EC",        myFuncTurnOnMu15L114EC,    14,400,0);
+  TF1 *ratioMu15L114BL      = new TF1("ratioMu15L114BL",         myFuncRatioMu15L114BL,     14,800,0);
+  TF1 *turnOnMu15L114BL     = new TF1("turnOnMu15L114BL",        myFuncTurnOnMu15L114BL,    14,800,0);
+
+  TF1 *ratioMu15L114EC      = new TF1("ratioMu15L114EC",         myFuncRatioMu15L114EC,     14,800,0);
+  TF1 *turnOnMu15L114EC     = new TF1("turnOnMu15L114EC",        myFuncTurnOnMu15L114EC,    14,800,0);
  
-  TF1 *ratioMuAllBL         = new TF1("ratioMuAllBL",            myFuncRatioMuAllBL,        14,400,0);
-  TF1 *turnOnMuAllBL        = new TF1("turnOnMuAllBL",           myFuncTurnOnMuAllBL,       14,400,0);
+  TF1 *ratioMuAllBL         = new TF1("ratioMuAllBL",            myFuncRatioMuAllBL,        14,800,0);
+  TF1 *turnOnMuAllBL        = new TF1("turnOnMuAllBL",           myFuncTurnOnMuAllBL,       14,800,0);
 
-  TF1 *ratioMuAllEC         = new TF1("ratioMuAllEC",            myFuncRatioMuAllEC,        14,400,0);
-  TF1 *turnOnMuAllEC        = new TF1("turnOnMuAllEC",           myFuncTurnOnMuAllEC,       14,400,0);
+  TF1 *ratioMuAllEC         = new TF1("ratioMuAllEC",            myFuncRatioMuAllEC,        14,800,0);
+  TF1 *turnOnMuAllEC        = new TF1("turnOnMuAllEC",           myFuncTurnOnMuAllEC,       14,800,0);
  
-  TF1 *ratioMuId            = new TF1("ratioMuId",               myFuncRatioMuId ,          14,400,0);
-  TF1 *turnOnMuId           = new TF1("turnOnMuId",              myFuncTurnOnMuId ,         14,400,0);
-  TF1 *ratioMuIso           = new TF1("ratioMuIso",              myFuncRatioMuIso ,         14,400,0);
-  TF1 *turnOnMuIso          = new TF1("turnOnMuIso",             myFuncTurnOnMuIso ,        14,400,0);
+  TF1 *ratioMuIdBL          = new TF1("ratioMuIdBL",             myFuncRatioMuIdBL ,        14,800,0);
+  TF1 *turnOnMuIdBL         = new TF1("turnOnMuIdBL",            myFuncTurnOnMuIdBL ,       14,800,0);
 
-  TF1 *turnOnTauLoose10MuTauMC      = new TF1("turnOnTauLoose10MuTauMC",       myFuncTurnOnTauLoose10MuTauMC,      18,400,0);
-  TF1 *turnOnTauLoose15MuTauMC      = new TF1("turnOnTauLoose15MuTauMC",       myFuncTurnOnTauLoose15MuTauMC,      18,400,0);
-  TF1 *turnOnTauLoose20MuTauMC      = new TF1("turnOnTauLoose20MuTauMC",       myFuncTurnOnTauLoose20MuTauMC,      18,400,0);
+  TF1 *ratioMuIdEC          = new TF1("ratioMuIdEC",             myFuncRatioMuIdEC ,        14,800,0);
+  TF1 *turnOnMuIdEC         = new TF1("turnOnMuIdEC",            myFuncTurnOnMuIdEC ,       14,800,0);
 
-  TF1 *ratioTauLoose15MuTauRunA      = new TF1("ratioTauLoose15MuTauRunA",     myFuncRatioTauLoose15MuTauRunA,     18,400,0);
-  TF1 *turnOnTauLoose15MuTauRunA     = new TF1("turnOnTauLoose15MuTauRunA",    myFuncTurnOnTauLoose15MuTauRunA,    18,400,0);
-  TF1 *ratioTauLoose15ElecTauRunA    = new TF1("ratioTauLoose15ElecTauRunA",   myFuncRatioTauLoose15ElecTauRunA ,  18,400,0);
-  TF1 *turnOnTauLoose15ElecTauRunA   = new TF1("turnOnTauLoose15ElecTauRunA",  myFuncTurnOnTauLoose15ElecTauRunA,  18,400,0);
-  TF1 *ratioTauLoose20MuTauRunA      = new TF1("ratioTauLoose20MuTauRunA",     myFuncRatioTauLoose20MuTauRunA,     18,400,0);
-  TF1 *turnOnTauLoose20MuTauRunA     = new TF1("turnOnTauLoose20MuTauRunA",    myFuncTurnOnTauLoose20MuTauRunA,    18,400,0);
-  TF1 *ratioTauLoose20ElecTauRunA    = new TF1("ratioTauLoose20ElecTauRunA",   myFuncRatioTauLoose20ElecTauRunA ,  18,400,0);
-  TF1 *turnOnTauLoose20ElecTauRunA   = new TF1("turnOnTauLoose20ElecTauRunA",  myFuncTurnOnTauLoose20ElecTauRunA,  18,400,0);
-  TF1 *ratioTauMedium20ElecTauRunA   = new TF1("ratioTauMedium20ElecTauRunA",  myFuncRatioTauMedium20ElecTauRunA , 18,400,0);
-  TF1 *turnOnTauMedium20ElecTauRunA  = new TF1("turnOnTauMedium20ElecTauRunA", myFuncTurnOnTauMedium20ElecTauRunA, 18,400,0);
-  TF1 *ratioTauTight20ElecTauRunA    = new TF1("ratioTauTight20ElecTauRunA",   myFuncRatioTauTight20ElecTauRunA ,  18,400,0);
-  TF1 *turnOnTauTight20ElecTauRunA   = new TF1("turnOnTauTight20ElecTauRunA",  myFuncTurnOnTauTight20ElecTauRunA,  18,400,0);
-  TF1 *ratioTauLoose20MuTauRunB      = new TF1("ratioTauLoose20MuTauRunB",     myFuncRatioTauLoose20MuTauRunB,     18,400,0);
-  TF1 *turnOnTauLoose20MuTauRunB     = new TF1("turnOnTauLoose20MuTauRunB",    myFuncTurnOnTauLoose20MuTauRunB,    18,400,0);
-  TF1 *ratioTauLoose20ElecTauRunB    = new TF1("ratioTauLoose20ElecTauRunB",   myFuncRatioTauLoose20ElecTauRunB ,  18,400,0);
-  TF1 *turnOnTauLoose20ElecTauRunB   = new TF1("turnOnTauLoose20ElecTauRunB",  myFuncTurnOnTauLoose20ElecTauRunB,  18,400,0);
-  TF1 *ratioTauMedium20ElecTauRunB   = new TF1("ratioTauMedium20ElecTauRunB",  myFuncRatioTauMedium20ElecTauRunB , 18,400,0);
-  TF1 *turnOnTauMedium20ElecTauRunB  = new TF1("turnOnTauMedium20ElecTauRunB", myFuncTurnOnTauMedium20ElecTauRunB, 18,400,0);
-  TF1 *ratioTauTight20ElecTauRunB    = new TF1("ratioTauTight20ElecTauRunB",   myFuncRatioTauTight20ElecTauRunB ,  18,400,0);
-  TF1 *turnOnTauTight20ElecTauRunB   = new TF1("turnOnTauTight20ElecTauRunB",  myFuncTurnOnTauTight20ElecTauRunB,  18,400,0);
-  TF1 *ratioTauMedium20ElecTauRunAB  = new TF1("ratioTauMedium20ElecTauRunAB", myFuncRatioTauMedium20ElecTauRunAB ,18,400,0);
-  TF1 *turnOnTauMedium20ElecTauRunAB = new TF1("turnOnTauMedium20ElecTauRunAB",myFuncTurnOnTauMedium20ElecTauRunAB,18,400,0);
+  TF1 *ratioMuIsoBL         = new TF1("ratioMuIsoBL",            myFuncRatioMuIsoBL ,       14,800,0);
+  TF1 *turnOnMuIsoBL        = new TF1("turnOnMuIsoBL",           myFuncTurnOnMuIsoBL ,      14,800,0);
+
+  TF1 *ratioMuIsoEC         = new TF1("ratioMuIsoEC",            myFuncRatioMuIsoEC ,       14,800,0);
+  TF1 *turnOnMuIsoEC        = new TF1("turnOnMuIsoEC",           myFuncTurnOnMuIsoEC ,      14,800,0);
+
+  TF1 *turnOnTauLoose10MuTauMC      = new TF1("turnOnTauLoose10MuTauMC",       myFuncTurnOnTauLoose10MuTauMC,      18,800,0);
+  TF1 *turnOnTauLoose15MuTauMC      = new TF1("turnOnTauLoose15MuTauMC",       myFuncTurnOnTauLoose15MuTauMC,      18,800,0);
+  TF1 *turnOnTauLoose20MuTauMC      = new TF1("turnOnTauLoose20MuTauMC",       myFuncTurnOnTauLoose20MuTauMC,      18,800,0);
+
+  TF1 *ratioTauLoose15MuTauRunA      = new TF1("ratioTauLoose15MuTauRunA",     myFuncRatioTauLoose15MuTauRunA,     18,800,0);
+  TF1 *turnOnTauLoose15MuTauRunA     = new TF1("turnOnTauLoose15MuTauRunA",    myFuncTurnOnTauLoose15MuTauRunA,    18,800,0);
+  TF1 *ratioTauLoose15ElecTauRunA    = new TF1("ratioTauLoose15ElecTauRunA",   myFuncRatioTauLoose15ElecTauRunA ,  18,800,0);
+  TF1 *turnOnTauLoose15ElecTauRunA   = new TF1("turnOnTauLoose15ElecTauRunA",  myFuncTurnOnTauLoose15ElecTauRunA,  18,800,0);
+  TF1 *ratioTauLoose20MuTauRunA      = new TF1("ratioTauLoose20MuTauRunA",     myFuncRatioTauLoose20MuTauRunA,     18,800,0);
+  TF1 *turnOnTauLoose20MuTauRunA     = new TF1("turnOnTauLoose20MuTauRunA",    myFuncTurnOnTauLoose20MuTauRunA,    18,800,0);
+  TF1 *ratioTauLoose20ElecTauRunA    = new TF1("ratioTauLoose20ElecTauRunA",   myFuncRatioTauLoose20ElecTauRunA ,  18,800,0);
+  TF1 *turnOnTauLoose20ElecTauRunA   = new TF1("turnOnTauLoose20ElecTauRunA",  myFuncTurnOnTauLoose20ElecTauRunA,  18,800,0);
+  TF1 *ratioTauMedium20ElecTauRunA   = new TF1("ratioTauMedium20ElecTauRunA",  myFuncRatioTauMedium20ElecTauRunA , 18,800,0);
+  TF1 *turnOnTauMedium20ElecTauRunA  = new TF1("turnOnTauMedium20ElecTauRunA", myFuncTurnOnTauMedium20ElecTauRunA, 18,800,0);
+  TF1 *ratioTauTight20ElecTauRunA    = new TF1("ratioTauTight20ElecTauRunA",   myFuncRatioTauTight20ElecTauRunA ,  18,800,0);
+  TF1 *turnOnTauTight20ElecTauRunA   = new TF1("turnOnTauTight20ElecTauRunA",  myFuncTurnOnTauTight20ElecTauRunA,  18,800,0);
+  TF1 *ratioTauLoose20MuTauRunB      = new TF1("ratioTauLoose20MuTauRunB",     myFuncRatioTauLoose20MuTauRunB,     18,800,0);
+  TF1 *turnOnTauLoose20MuTauRunB     = new TF1("turnOnTauLoose20MuTauRunB",    myFuncTurnOnTauLoose20MuTauRunB,    18,800,0);
+  TF1 *ratioTauLoose20ElecTauRunB    = new TF1("ratioTauLoose20ElecTauRunB",   myFuncRatioTauLoose20ElecTauRunB ,  18,800,0);
+  TF1 *turnOnTauLoose20ElecTauRunB   = new TF1("turnOnTauLoose20ElecTauRunB",  myFuncTurnOnTauLoose20ElecTauRunB,  18,800,0);
+  TF1 *ratioTauMedium20ElecTauRunB   = new TF1("ratioTauMedium20ElecTauRunB",  myFuncRatioTauMedium20ElecTauRunB , 18,800,0);
+  TF1 *turnOnTauMedium20ElecTauRunB  = new TF1("turnOnTauMedium20ElecTauRunB", myFuncTurnOnTauMedium20ElecTauRunB, 18,800,0);
+  TF1 *ratioTauTight20ElecTauRunB    = new TF1("ratioTauTight20ElecTauRunB",   myFuncRatioTauTight20ElecTauRunB ,  18,800,0);
+  TF1 *turnOnTauTight20ElecTauRunB   = new TF1("turnOnTauTight20ElecTauRunB",  myFuncTurnOnTauTight20ElecTauRunB,  18,800,0);
+  TF1 *ratioTauMedium20ElecTauRunAB  = new TF1("ratioTauMedium20ElecTauRunAB", myFuncRatioTauMedium20ElecTauRunAB ,18,800,0);
+  TF1 *turnOnTauMedium20ElecTauRunAB = new TF1("turnOnTauMedium20ElecTauRunAB",myFuncTurnOnTauMedium20ElecTauRunAB,18,800,0);
  
-  TF1 *ratioTauElecTauAll    = new TF1("ratioTauElecTauAll", myFuncRatioTauElecTauAll ,18,400,0);
-  TF1 *turnOnTauElecTauAll   = new TF1("turnOnTauElecTauAll",myFuncTurnOnTauElecTauAll,18,400,0);
+  TF1 *ratioTauElecTauAll    = new TF1("ratioTauElecTauAll", myFuncRatioTauElecTauAll ,18,800,0);
+  TF1 *turnOnTauElecTauAll   = new TF1("turnOnTauElecTauAll",myFuncTurnOnTauElecTauAll,18,800,0);
  
-  TF1 *ratioTauMuTauAll      = new TF1("ratioTauMuTauAll", myFuncRatioTauMuTauAll ,18,400,0);
-  TF1 *turnOnTauMuTauAll     = new TF1("turnOnTauMuTauAll",myFuncTurnOnTauMuTauAll,18,400,0);
+  TF1 *ratioTauMuTauAll      = new TF1("ratioTauMuTauAll", myFuncRatioTauMuTauAll ,18,800,0);
+  TF1 *turnOnTauMuTauAll     = new TF1("turnOnTauMuTauAll",myFuncTurnOnTauMuTauAll,18,800,0);
  
 
   fout->cd();
   
 
-  ratioElec15BL->SetNpx(1600);
-  turnOnElec15BL->SetNpx(1600);
-  ratioElec15EC->SetNpx(1600);
-  turnOnElec15EC->SetNpx(1600);
-  ratioElec18BL->SetNpx(1600);
-  turnOnElec18BL->SetNpx(1600);
-  ratioElec18EC->SetNpx(1600);
-  turnOnElec18EC->SetNpx(1600);
-  ratioElec20BL->SetNpx(1600);
-  turnOnElec20BL->SetNpx(1600);
-  ratioElec20EC->SetNpx(1600);
-  turnOnElec20EC->SetNpx(1600);
-  ratioElecAllBL->SetNpx(1600);
-  turnOnElecAllBL->SetNpx(1600);
-  ratioElecAllEC->SetNpx(1600);
-  turnOnElecAllEC->SetNpx(1600);
-  ratioMu15L114BL->SetNpx(1600);
-  turnOnMu15L114BL->SetNpx(1600);
-  ratioMu15L114EC->SetNpx(1600);
-  turnOnMu15L114EC->SetNpx(1600);
-  ratioMuAllBL->SetNpx(1600);
-  turnOnMuAllBL->SetNpx(1600);
-  ratioMuAllEC->SetNpx(1600);
-  turnOnMuAllEC->SetNpx(1600);
-  ratioTauElecTauAll->SetNpx(1600);
-  turnOnTauElecTauAll->SetNpx(1600);
-  ratioTauMuTauAll->SetNpx(1600);
-  turnOnTauMuTauAll->SetNpx(1600);
+  ratioElecIsoBL->SetNpx(3200);
+  turnOnElecIsoBL->SetNpx(3200);
+  ratioElecIsoEC->SetNpx(3200);
+  turnOnElecIsoEC->SetNpx(3200);
+  ratioMuIsoBL->SetNpx(3200);
+  ratioMuIsoEC->SetNpx(3200);
+  turnOnMuIsoBL->SetNpx(3200);
+  turnOnMuIsoEC->SetNpx(3200);
+  ratioElec15BL->SetNpx(3200);
+  turnOnElec15BL->SetNpx(3200);
+  ratioElec15EC->SetNpx(3200);
+  turnOnElec15EC->SetNpx(3200);
+  ratioElec18BL->SetNpx(3200);
+  turnOnElec18BL->SetNpx(3200);
+  ratioElec18EC->SetNpx(3200);
+  turnOnElec18EC->SetNpx(3200);
+  ratioElec20BL->SetNpx(3200);
+  turnOnElec20BL->SetNpx(3200);
+  ratioElec20EC->SetNpx(3200);
+  turnOnElec20EC->SetNpx(3200);
+  ratioElecAllBL->SetNpx(3200);
+  turnOnElecAllBL->SetNpx(3200);
+  ratioElecAllEC->SetNpx(3200);
+  turnOnElecAllEC->SetNpx(3200);
+  ratioMu15L114BL->SetNpx(3200);
+  turnOnMu15L114BL->SetNpx(3200);
+  ratioMu15L114EC->SetNpx(3200);
+  turnOnMu15L114EC->SetNpx(3200);
+  ratioMuAllBL->SetNpx(3200);
+  turnOnMuAllBL->SetNpx(3200);
+  ratioMuAllEC->SetNpx(3200);
+  turnOnMuAllEC->SetNpx(3200);
+  ratioTauElecTauAll->SetNpx(3200);
+  turnOnTauElecTauAll->SetNpx(3200);
+  ratioTauMuTauAll->SetNpx(3200);
+  turnOnTauMuTauAll->SetNpx(3200);
 
   ratioElec15BL->Write();
   turnOnElec15BL->Write();
@@ -1313,10 +1361,14 @@ void makeFile(){
   turnOnElecAllBL->Write();
   ratioElecAllEC->Write();
   turnOnElecAllEC->Write();
-  ratioElecID->Write();
-  turnOnElecID->Write();
-  ratioElecIso->Write();
-  turnOnElecIso->Write();
+  ratioElecIDBL->Write();
+  turnOnElecIDBL->Write();
+  ratioElecIDEC->Write();
+  turnOnElecIDEC->Write();
+  ratioElecIsoBL->Write();
+  turnOnElecIsoBL->Write();
+  ratioElecIsoEC->Write();
+  turnOnElecIsoEC->Write();
   ratioMu15L110BL->Write();
   turnOnMu15L110BL->Write();
   ratioMu15L110EC->Write();
@@ -1329,10 +1381,14 @@ void makeFile(){
   turnOnMuAllBL->Write();
   ratioMuAllEC->Write();
   turnOnMuAllEC->Write();
-  ratioMuId->Write();
-  turnOnMuId->Write();
-  ratioMuIso->Write();
-  turnOnMuIso->Write();
+  ratioMuIdBL->Write();
+  ratioMuIdEC->Write();
+  turnOnMuIdBL->Write();
+  turnOnMuIdEC->Write();
+  ratioMuIsoBL->Write();
+  ratioMuIsoEC->Write();
+  turnOnMuIsoBL->Write();
+  turnOnMuIsoEC->Write();
   turnOnTauLoose10MuTauMC->Write();
   turnOnTauLoose15MuTauMC->Write();
   turnOnTauLoose20MuTauMC->Write();
