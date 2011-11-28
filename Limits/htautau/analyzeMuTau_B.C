@@ -25,7 +25,7 @@
 #define SAVE    true
 #define addVH   true
 #define EMBEDDEDSAMPLES  true
-#define kFactorSM 1/1.6
+#define kFactorSM 1.0
 
 
 
@@ -156,29 +156,38 @@ void plotMuTau( Int_t mH_ = 120,
 
   // Open the files
   TFile *fData              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream_08Nov2011//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
  TFile *fDataEmbedded              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream_08Nov2011//nTupleRun2011-MuTau-Embedded-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleRun2011-MuTau-Embedded-All_run_Open_MuTauStream.root", "READ");  
   TFile *fSignalVBF         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream_08Nov2011//nTupleVBFH%d-MuTau-powheg-PUS4_run_Open_MuTauStream.root",mH_) ,"READ");  
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_) ,"READ");  
   TFile *fSignalGGH         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream_08Nov2011//nTupleGGFH%d-MuTau-powheg-PUS4_run_Open_MuTauStream.root",mH_),"READ"); 
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_),"READ"); 
   TFile *fSignalVH         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream_08Nov2011//nTupleVH%d-MuTau-pythia-PUS4_run_Open_MuTauStream.root",mH_),"READ");  
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",mH_),"READ");  
   TFile *fBackgroundDY
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream_08Nov2011//nTupleDYJets-MuTau-50-madgraph-PUS4_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundWJets   
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream_08Nov2011//nTupleWJets-MuTau-madgraph-PUS4_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundTTbar  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream_08Nov2011//nTupleTTJets-MuTau-madgraph-PUS4_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundOthers  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStream_08Nov2011//nTupleOthers-MuTau-PUS4_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
 
   // choose the analysis: Nominal "", jet up/Down "JetUp/Down" , elec up/down "MuUp/Down" , tau up/down "TauUp/Down"
-  TString tree = "outTreePtOrd"+analysis_;
+  TString tree         = "outTreePtOrd"+analysis_;
+  TString treeEmbedded = "outTreePtOrd";
+  if(analysis_.find("TauUp")  !=string::npos) 
+    treeEmbedded = tree;
+  if(analysis_.find("TauDown")!=string::npos) 
+    treeEmbedded = tree;
+  if(analysis_.find("MuUp")  !=string::npos) 
+    treeEmbedded = tree;
+  if(analysis_.find("MuDown")!=string::npos) 
+    treeEmbedded = tree;
 
   TTree *data                = (TTree*)fData->Get("outTreePtOrd");
-  TTree *dataEmbedded        = EMBEDDEDSAMPLES ? (TTree*)fDataEmbedded->Get("outTreePtOrd") : 0;
+  TTree *dataEmbedded        = EMBEDDEDSAMPLES ? (TTree*)fDataEmbedded->Get(treeEmbedded) : 0;
   TTree *signalVBF           = (TTree*)fSignalVBF->Get(tree);
   TTree *signalGGH           = (TTree*)fSignalGGH->Get(tree);
   TTree *signalVH            = addVH ? (TTree*)fSignalVH->Get(tree) : 0;
@@ -202,10 +211,11 @@ void plotMuTau( Int_t mH_ = 120,
  
 
   TCut lpt("ptL1>17 && abs(dz1)<0.2");
-  TCut tpt("ptL2>20 && !(decayMode==0 && (HoP+EoP)<0.2)");
+  TCut tpt("ptL2>20");
+  //TCut tiso("tightestHPSDBWP>0 && !(decayMode==0 && (HoP+EoP)<0.2)");
   TCut tiso("tightestHPSDBWP>0");
   TCut liso("combRelIsoLeg1DBeta<0.10");
-  TCut lveto("(muFlag==0 || muFlag==3)");
+  TCut lveto("muFlag==0");
   TCut SS("diTauCharge!=0");
   TCut OS("diTauCharge==0");
   TCut oneJet("nJets30>=1");
@@ -214,9 +224,7 @@ void plotMuTau( Int_t mH_ = 120,
   TCut novbf("pt1<150 && pt2<30");
   TCut boost("pt1>150 && !(pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && isVetoInJets!=1)");
   TCut hltevent("HLTx==1 && (run>=163269 || run==1)");
-  //TCut hltevent("(HLTx==1  || run==1)");
   TCut hltmatch("HLTmatch==1");
-  //TCut hltmatch("(HLTmatch==1 || run==1)");
   TCut bTag("nJets30<=1 && nJets20BTagged>=1");
   TCut nobTag("nJets30<=1 && nJets20BTagged==0");
   TCut pZ( Form("((%s)<%f)",antiWcut.c_str(),antiWsgn));
@@ -525,7 +533,9 @@ void plotMuTau( Int_t mH_ = 120,
 	currentTree->Draw(variable_+">>"+h1Name, "(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFMu*SFTau)"*sbin);
       else
 	currentTree->Draw(variable_+">>"+h1Name, "(HLTTau*HLTMu*embeddingWeight)"*sbinEmbedding);
-     
+      //HqTWeight
+
+
       // scale by correction factors
       if((it->first).find("Data")==string::npos)
 	h1->Scale(Lumi/1000*hltEff_);
@@ -701,7 +711,7 @@ void plotMuTau( Int_t mH_ = 120,
   leg->AddEntry(hData,"Observed","P");
   leg->AddEntry(hSgn,Form("(%.0fx) H#rightarrow#tau#tau m_{H}=%d",magnifySgn_,mH_),"F");
   if(useEmbedding_)
-    leg->AddEntry(hZtt,"Z#rightarrow#tau#tau (embedded)","F");
+    leg->AddEntry(hDataEmb,"Z#rightarrow#tau#tau (embedded)","F");
   else
     leg->AddEntry(hZtt,"Z#rightarrow#tau#tau","F"); 
   leg->AddEntry(hTTb,"t#bar{t}","F");
@@ -721,12 +731,15 @@ void plotMuTau( Int_t mH_ = 120,
 
   leg->Draw();
 
+  return;
+
 
   c1->SaveAs(Form("plots/%s/plot_muTau_mH%d_%s_%s_%s.png",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
 
   // templates for fitting
   TFile* fout = new TFile(Form("histograms/%s/muTau_mH%d_%s_%s_%s.root",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()),"RECREATE");
   fout->cd();
+  hSiml->Write();
   hQCD->Write();
   hZmm->Write();
   hZmj->Write();
@@ -773,28 +786,30 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Nov2011/PreApprov
   variables.push_back("diTauSVFitMass");
 
   //mH.push_back(105);
-  //mH.push_back(110);
-  //mH.push_back(115);
+  mH.push_back(110);
+  mH.push_back(115);
   mH.push_back(120);
-  //mH.push_back(125);
-  //mH.push_back(130);
-  //mH.push_back(135);
-  //mH.push_back(140);
+  mH.push_back(125);
+  mH.push_back(130);
+  mH.push_back(135);
+  mH.push_back(140);
+  mH.push_back(145);
 
   for(unsigned int i = 0 ; i < variables.size(); i++){
     for(unsigned j = 0; j < mH.size(); j++){
-
-      plotMuTau(mH[j],useEmbedded,"vbf",""         ,variables[i],"mass","GeV",outputDir,-1);
-      plotMuTau(mH[j],useEmbedded,"vbf","TauUp"    ,variables[i],"mass","GeV",outputDir,-1);
-      plotMuTau(mH[j],useEmbedded,"vbf","TauDown"  ,variables[i],"mass","GeV",outputDir,-1);
-      plotMuTau(mH[j],useEmbedded,"vbf","JetUp"    ,variables[i],"mass","GeV",outputDir,-1);
-      plotMuTau(mH[j],useEmbedded,"vbf","JetDown"  ,variables[i],"mass","GeV",outputDir,-1);
 
       plotMuTau(mH[j],useEmbedded,"novbf",""       ,variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"novbf","TauUp"  ,variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"novbf","TauDown",variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"novbf","JetUp"  ,variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"novbf","JetDown",variables[i],"mass","GeV",outputDir,-1);
+
+      /*
+      plotMuTau(mH[j],useEmbedded,"vbf",""         ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],useEmbedded,"vbf","TauUp"    ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],useEmbedded,"vbf","TauDown"  ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],useEmbedded,"vbf","JetUp"    ,variables[i],"mass","GeV",outputDir,-1);
+      plotMuTau(mH[j],useEmbedded,"vbf","JetDown"  ,variables[i],"mass","GeV",outputDir,-1);
 
       plotMuTau(mH[j],useEmbedded,"boost",""       ,variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"boost","TauUp"  ,variables[i],"mass","GeV",outputDir,-1);
@@ -813,7 +828,7 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Nov2011/PreApprov
       plotMuTau(mH[j],useEmbedded,"oneJet","TauDown",variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"oneJet","JetUp"  ,variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"oneJet","JetDown",variables[i],"mass","GeV",outputDir,-1);
-
+      */
     }
   }
   
