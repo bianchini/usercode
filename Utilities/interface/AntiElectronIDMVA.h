@@ -101,10 +101,11 @@ class AntiElectronIDMVA {
     */
 
 
-    double MVAValue(pat::Tau* myTau);
+    double MVAValue(const pat::Tau* myTau);
 
  private:
 
+    Bool_t isInitialized_;
     std::string methodName_;
     TMVA::Reader* fTMVAReader_[6];
     Float_t TauSignalPFGammaCands_; 
