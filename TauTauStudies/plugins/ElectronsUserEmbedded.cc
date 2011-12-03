@@ -100,11 +100,14 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
 
   //Get the CTF tracks
   Handle<reco::TrackCollection> tracks_h;
-  iEvent.getByLabel("generalTracks", tracks_h);
-  
+  //iEvent.getByLabel(edm::InputTag("generalTracks","","RECO"), tracks_h);
+  iEvent.getByLabel(edm::InputTag("generalTracks"), tracks_h);
+  //iEvent.getByLabel("tmfTracks", tracks_h);
+
   //get GSF Tracks
   Handle<reco::GsfTrackCollection> gsftracks_h;
-  iEvent.getByLabel("electronGsfTracks", gsftracks_h);
+  //iEvent.getByLabel(edm::InputTag("electronGsfTracks","","RECO"), gsftracks_h);
+  iEvent.getByLabel(edm::InputTag("electronGsfTracks"), gsftracks_h);
   
   std::auto_ptr< pat::ElectronCollection > electronsUserEmbeddedColl( new pat::ElectronCollection() ) ;
 
@@ -117,16 +120,20 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     const reco::HitPattern& p_inner = el_track->trackerExpectedHitsInner(); 
     float nHits = p_inner.numberOfHits();
 
+    /*
+    //cout << ">>>>>>>>>>>>> ele cft ID: " << ((aGsf->core())->ctfTrack()).id() << endl;
+    //cout << ">>>>>>>>>>>>> ele gsf ID: " << ((aGsf->core())->gsfTrack()).id() << endl;
     ConversionFinder convFinder;
     vector<ConversionInfo> v_convInfos = convFinder.getConversionInfos(*(aElectron.core()), tracks_h, gsftracks_h, evt_bField);
-    ConversionInfo convInfo  = convFinder.getConversionInfo(*aGsf, tracks_h, gsftracks_h, evt_bField);
-    double els_conv_dist     = convInfo.dist();
-    double els_conv_dcot     = convInfo.dcot();
-    //double els_conv_radius   = convInfo.radiusOfConversion();
-    math::XYZPoint els_conv_Point = convInfo.pointOfConversion(); 
-    TrackRef els_conv_ctfRef = convInfo.conversionPartnerCtfTk(); 
-    GsfTrackRef els_conv_gsfRef = convInfo.conversionPartnerGsfTk();
-    //double els_conv_delMissHits =  convInfo.deltaMissingHits();
+    ConversionInfo convInfo            = convFinder.getConversionInfo(*aGsf, tracks_h, gsftracks_h, evt_bField);
+    double els_conv_dist               = convInfo.dist();
+    double els_conv_dcot               = convInfo.dcot();
+    //double els_conv_radius           = convInfo.radiusOfConversion();
+    math::XYZPoint els_conv_Point      = convInfo.pointOfConversion(); 
+    TrackRef els_conv_ctfRef           = convInfo.conversionPartnerCtfTk(); 
+    GsfTrackRef els_conv_gsfRef        = convInfo.conversionPartnerGsfTk();
+    //double els_conv_delMissHits      = convInfo.deltaMissingHits();
+    */
 
     float dPhi  = aElectron.deltaPhiSuperClusterTrackAtVtx();
     float dEta  = aElectron.deltaEtaSuperClusterTrackAtVtx();
@@ -135,8 +142,8 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     //cout << "dEta " << dEta << " dPhi " << dPhi << " -- dcot " << els_conv_dcot << " -- nHits " << nHits << endl;
 
     aElectron.addUserFloat("nHits",nHits);
-    aElectron.addUserFloat("dist",fabs(els_conv_dist));
-    aElectron.addUserFloat("dcot",fabs(els_conv_dcot));
+    aElectron.addUserFloat("dist",-999/*fabs(els_conv_dist)*/);
+    aElectron.addUserFloat("dcot",-999/*fabs(els_conv_dcot)*/);
     aElectron.addUserFloat("dPhi",fabs(dPhi));
     aElectron.addUserFloat("dEta",fabs(dEta));
     aElectron.addUserFloat("sihih",sihih);
@@ -157,7 +164,7 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     //  reducedRecHits = reducedEERecHits.product() ;
   
     double dxyWrtPV =  -99.;
-    double dzWrtPV =  -99.;
+    double dzWrtPV  =  -99.;
 
     if(vertexes->size()!=0 && (aElectron.gsfTrack()).isNonnull() ){
       dxyWrtPV = (aElectron.gsfTrack())->dxy( (*vertexes)[0].position() ) ;
@@ -306,6 +313,7 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
 
     aElectron.addUserFloat("PFRelIso04v2",(chIso04v2+nhIso04v2+phIso04v2)/aElectron.pt());
     aElectron.addUserFloat("PFRelIso03v2",(chIso03v2+nhIso03v2+phIso03v2)/aElectron.pt());
+ 
     aElectron.addUserFloat("PFRelIsoDB04v2",(chIso04v2+std::max(nhIso04v2+phIso04v2-0.5*0.5*(nhIsoPU04v2+phIsoPU04v2),0.0))/aElectron.pt());
     aElectron.addUserFloat("PFRelIsoDB03v2",(chIso03v2+std::max(nhIso03v2+phIso03v2-0.5*0.5*(nhIsoPU03v2+phIsoPU03v2),0.0))/aElectron.pt());
     aElectron.addUserFloat("PFRelIsoDB04v3",
@@ -316,6 +324,9 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
 			   (int(aElectron.isEB()))*(chIso03v2+std::max(nhIso03v2+phIso03v2-0.5*0.5*(nhIsoPU03v2+phIsoPU03v2),0.0))/aElectron.pt()+
 			   (int(aElectron.isEE()))*(chIso03EEv2+std::max(nhIso03EEv2+phIso03EEv2-0.5*0.5*(nhIsoPU03EEv2+phIsoPU03EEv2),0.0))/aElectron.pt()
 			   );
+    aElectron.addUserFloat("PFRelIsoDB04v4",(chIso04EEv2+std::max(nhIso04EEv2+phIso04EEv2-0.5*0.5*(nhIsoPU04EEv2+phIsoPU04EEv2),0.0))/aElectron.pt());
+    aElectron.addUserFloat("PFRelIsoDB03v4",(chIso03EEv2+std::max(nhIso03EEv2+phIso03EEv2-0.5*0.5*(nhIsoPU03EEv2+phIsoPU03EEv2),0.0))/aElectron.pt());
+  
 
     // cleaning
     for(unsigned int i = 0; i <vetos2010Charged.size(); i++){

@@ -64,6 +64,15 @@ ElecTauStreamAnalyzer::ElecTauStreamAnalyzer(const edm::ParameterSet & iConfig){
   deltaRLegJet_      = iConfig.getUntrackedParameter<double>("deltaRLegJet",0.3);
   minCorrPt_         = iConfig.getUntrackedParameter<double>("minCorrPt",10.);
   minJetID_          = iConfig.getUntrackedParameter<double>("minJetID",0.5);
+
+  inputFileNameX0BL_ = iConfig.getParameter<edm::FileInPath>("inputFileNameX0BL");
+  inputFileName11BL_ = iConfig.getParameter<edm::FileInPath>("inputFileName11BL");
+  inputFileName01BL_ = iConfig.getParameter<edm::FileInPath>("inputFileName01BL");
+  inputFileNameX0EC_ = iConfig.getParameter<edm::FileInPath>("inputFileNameX0EC");
+  inputFileName11EC_ = iConfig.getParameter<edm::FileInPath>("inputFileName11EC");
+  inputFileName01EC_ = iConfig.getParameter<edm::FileInPath>("inputFileName01EC");
+
+
   verbose_           = iConfig.getUntrackedParameter<bool>("verbose",false);
 
 }
@@ -97,19 +106,29 @@ void ElecTauStreamAnalyzer::beginJob(){
   jetsIDL1OffsetP4_= new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genJetsIDP4_     = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
-  diTauVisP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  diTauCAP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  diTauICAP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  diTauVisP4_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  diTauCAP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  diTauICAP4_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   diTauSVfitP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
-  diTauLegsP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  diTauLegsP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genDiTauLegsP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  METP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  genMETP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  genVP4_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  METP4_          = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  genMETP4_       = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  genVP4_         = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   
   extraElectrons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   pfElectrons_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+
+  antiE_  = new AntiElectronIDMVA();
+  antiE_->Initialize("BDT",
+		     inputFileNameX0BL_.fullPath().data(),
+		     inputFileName11BL_.fullPath().data(),
+		     inputFileName01BL_.fullPath().data(),
+		     inputFileNameX0EC_.fullPath().data(),
+		     inputFileName11EC_.fullPath().data(),
+		     inputFileName01EC_.fullPath().data()
+		     );
 
   std::vector< float > Summer11Lumi ;
   Double_t Summer11Lumi_f[35] = {
@@ -189,14 +208,181 @@ void ElecTauStreamAnalyzer::beginJob(){
     6.04852E-06
   };
 
+  std::vector< float > Data2011LumiExt;
+  Double_t Data2011LumiExt_f[50] = {
+    0.00290212,
+    0.0123985,
+    0.0294783,
+    0.0504491,
+    0.0698525,
+    0.0836611,
+    0.0905799,
+    0.0914388,
+    0.0879379,
+    0.0817086,
+    0.073937,
+    0.0653785,
+    0.0565162,
+    0.047707,
+    0.0392591,
+    0.0314457,
+    0.0244864,
+    0.018523,
+    0.013608,
+    0.00970977,
+    0.00673162,
+    0.00453714,
+    0.00297524,
+    0.00189981,
+    0.00118234,
+    0.000717854,
+    0.00042561,
+    0.000246653,
+    0.000139853,
+    7.76535E-05,
+    4.22607E-05,
+    2.25608E-05,
+    1.18236E-05,
+    6.0874E-06,
+    6.04852E-06,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  };
+
+  std::vector< float > Fall11Lumi ;
+  Double_t Fall11Lumi_f[50] = {
+    0.003388501,
+    0.010357558,
+    0.024724258,
+    0.042348605,
+    0.058279812,
+    0.068851751,
+    0.072914824,
+    0.071579609,
+    0.066811668,
+    0.060672356,
+    0.054528356,
+    0.04919354,
+    0.044886042,
+    0.041341896,
+    0.0384679,
+    0.035871463,
+    0.03341952,
+    0.030915649,
+    0.028395374,
+    0.025798107,
+    0.023237445,
+    0.020602754,
+    0.0180688,
+    0.015559693,
+    0.013211063,
+    0.010964293,
+    0.008920993,
+    0.007080504,
+    0.005499239,
+    0.004187022,
+    0.003096474,
+    0.002237361,
+    0.001566428,
+    0.001074149,
+    0.000721755,
+    0.000470838,
+    0.00030268,
+    0.000184665,
+    0.000112883,
+    6.74043E-05,
+    3.82178E-05,
+    2.22847E-05,
+    1.20933E-05,
+    6.96173E-06,
+    3.4689E-06,
+    1.96172E-06,
+    8.49283E-07,
+    5.02393E-07,
+    2.15311E-07,
+    9.56938E-08
+  };
+
+  std::vector< float > Data2011TruthLumi;
+  Double_t Data2011TruthLumi_f[50] = {
+    0, 
+    6.48087e-05, 
+    0.00122942, 
+    0.0107751, 
+    0.0572544, 
+    0.110336, 
+    0.122622, 
+    0.113354, 
+    0.0991184, 
+    0.0907195, 
+    0.0813241, 
+    0.0748131, 
+    0.0703376, 
+    0.0625598, 
+    0.0487456, 
+    0.030941, 
+    0.0158153, 
+    0.00657034, 
+    0.00232069, 
+    0.000782941, 
+    0.000240306, 
+    6.13863e-05, 
+    1.36142e-05, 
+    4.99913e-07, 
+    0, 
+    0, 
+    0, 
+    0, 
+    0, 
+    0, 
+    0, 
+    0, 
+    0, 
+    0, 
+    0, 
+    0, 
+    0, 
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  };
+
   for( int i=0; i<35; i++) {
     Data2011Lumi.push_back(Data2011Lumi_f[i]);
     Summer11Lumi.push_back(Summer11Lumi_f[i]);
   }
+  for( int i=0; i<50; i++) {
+    Data2011TruthLumi.push_back(Data2011TruthLumi_f[i]);
+    Data2011LumiExt.push_back(Data2011LumiExt_f[i]);
+    Fall11Lumi.push_back(Fall11Lumi_f[i]);
+  }
   
-  LumiWeights_ = edm::LumiReWeighting(Summer11Lumi, Data2011Lumi);
-  
-
+  //LumiWeights_ = edm::LumiReWeighting(Summer11Lumi, Data2011Lumi);
+  LumiWeights_ = edm::LumiReWeighting(Fall11Lumi, Data2011LumiExt);
+    
   tree_->Branch("jetsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsP4_);
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
   tree_->Branch("jetsIDUpP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDUpP4_);
@@ -327,7 +513,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("hasGsf",&hasGsf_,"hasGsf/F");
   tree_->Branch("signalPFChargedHadrCands",&signalPFChargedHadrCands_,"signalPFChargedHadrCands/I");
   tree_->Branch("signalPFGammaCands",&signalPFGammaCands_,"signalPFGammaCands/I");
-
+  tree_->Branch("mvaAntiE",&mvaAntiE_,"mvaAntiE/F");
 
   tree_->Branch("isTauLegMatched",&isTauLegMatched_,"isTauLegMatched/I");
   tree_->Branch("isElecLegMatched",&isElecLegMatched_,"isElecLegMatched/I");
@@ -352,6 +538,7 @@ ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;delete extraElectrons_; delete pfElectrons_;
   delete tRandom_ ; delete jetsChNfraction_; delete jetsChEfraction_; delete jetMoments_;
   delete gammadR_ ; delete gammadPhi_; delete gammadEta_; delete gammaPt_;
+  delete antiE_;
 }
 
 void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -606,8 +793,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
 	  && (*electronsRel)[i].charge()*(*electrons)[j].charge()<0
 	  && (*electrons)[j].userFloat("PFRelIsoDB04v3")<0.30
-	  && (*electronsRel)[i].userFloat("PFRelIsoDB04v3")<0.30 ){
-	//elecIndex = 0;                                                                                                                    
+	  && (*electronsRel)[i].userFloat("PFRelIsoDB04v3")<0.20 ){
 	elecFlag_ = 1;
 	if(verbose_) cout<< "Two electrons failing diElec veto: flag= " << elecFlag_ << endl;
 	found=true;
@@ -615,8 +801,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       else if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
 	       && (*electronsRel)[i].charge()*(*electrons)[j].charge()>0
 	       && (*electrons)[j].userFloat("PFRelIsoDB04v3")<0.30
-	       && (*electronsRel)[i].userFloat("PFRelIsoDB04v3")<0.30 ){
-	//elecIndex = 0;                                                                                                                    
+	       && (*electronsRel)[i].userFloat("PFRelIsoDB04v3")<0.20 ){
 	elecFlag_ = 2;
 	if(verbose_) cout<< "Two electrons with SS: flag= " << elecFlag_ << endl;
 	found=true;
@@ -721,10 +906,17 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   mTauTauMin_=  theDiTau->mTauTauMin();
 
   isElecLegMatched_  = 0;
-  isTauLegMatched_ = 0;
+  isTauLegMatched_   = 0;
 
   const pat::Electron* leg1 = dynamic_cast<const pat::Electron*>( (theDiTau->leg1()).get() );
   const pat::Tau*      leg2 = dynamic_cast<const pat::Tau*>(  (theDiTau->leg2()).get() );
+
+
+  mvaAntiE_ = antiE_->MVAValue( leg2 );
+  if(verbose_)
+    cout << "//Event " << iEvent.run() << ":" << (iEvent.eventAuxiliary()).event() << ":" << iEvent.luminosityBlock()
+	 << antiE_->MVAValue( leg2 ) 
+	 << endl;
 
   vector<string> triggerPaths;
   vector<string> XtriggerPaths;
@@ -737,17 +929,25 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*");
     XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
 
-    // Single Electron triggers + X-triggers
+    /*
+    // for Summer11
     triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v2");
     triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v2");
-
+ 
     HLTfiltersElec.push_back("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter");
     HLTfiltersElec.push_back("hltEle20CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter");
-
-    //HLTfiltersTau.push_back("hltPFTau15TrackLooseIso");
     HLTfiltersTau.push_back("hltOverlapFilterIsoEle15IsoPFTau15");
     HLTfiltersTau.push_back("hltOverlapFilterIsoEle15IsoPFTau20");
+    */
 
+    // for Fall11
+    triggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1");
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1");
+
+    HLTfiltersElec.push_back("hltEle18CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter");
+    HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoEle18MediumIsoPFTau20");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoEle20MediumIsoPFTau20");
   }
   else{
     
@@ -1052,7 +1252,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   vetos2010PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.05));
   vetos2010PhotonLeg1.push_back( new isodeposit::ThresholdVeto(1.0));
 
-  vetos2011ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.0001));
+  vetos2011ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
   vetos2011ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
   vetos2011NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
   vetos2011NeutralLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
@@ -1508,7 +1708,7 @@ unsigned int  ElecTauStreamAnalyzer::jetID( const pat::Jet* jet, const reco::Ver
       break;
     case reco::PFCandidate::h_HF: // fill neutral
       nNeutral++;
-      energyNeutral += cand.energy();
+      //energyNeutral += cand.energy();
       break;
     case reco::PFCandidate::egamma_HF: // fill e/gamma
       nPhotons++;

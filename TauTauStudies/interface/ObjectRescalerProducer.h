@@ -22,7 +22,9 @@ public:
   explicit ObjectRescalerProducer(const edm::ParameterSet& cfg){
 
     inputCollection_ = cfg.getParameter<edm::InputTag>("inputCollection");
-    shift_ = cfg.getParameter<std::vector<double> >("shift");
+    shift_           = cfg.getParameter<std::vector<double> >("shift");
+    numOfSigmas_     = cfg.getParameter<double>("numOfSigmas");
+    verbose_         = cfg.existsAs<bool>("verbose") ? cfg.getParameter<bool>("verbose") : false;
 
     produces<std::vector<T> >("U");
     produces<std::vector<T> >("D");
@@ -53,6 +55,7 @@ public:
       T objectD( *ptr );
 
       float shift = fabs(ptr->eta())<1.44 ? shift_[0] : shift_[1];
+      shift *= numOfSigmas_;
 
       double scaleU = sqrt( ptr->energy()*(1+shift)*ptr->energy()*(1+shift) - ptr->mass()*ptr->mass() )/ptr->p();
       math::XYZTLorentzVectorD p4Up( ptr->px()*scaleU , ptr->py()*scaleU, ptr->pz()*scaleU, ptr->energy()*(1+shift) );
@@ -62,6 +65,11 @@ public:
       math::XYZTLorentzVectorD p4Down( ptr->px()*scaleD , ptr->py()*scaleD, ptr->pz()*scaleD, ptr->energy()*(1-shift) );
       objectD.setP4( p4Down );
  
+      if(verbose_) 
+	std::cout << iEvent.id() 
+		  << " : visited object with pt = " << ptr->pt() << " , up = " << objectU.pt() << ", down = " << objectD.pt() 
+		  << std::endl;
+
       ObjectRescaledU->push_back( objectU );
       ObjectRescaledD->push_back( objectD );
 
@@ -77,6 +85,8 @@ public:
 
   edm::InputTag inputCollection_;
   std::vector<double> shift_;
+  float numOfSigmas_;
+  bool verbose_;
 };
 
 

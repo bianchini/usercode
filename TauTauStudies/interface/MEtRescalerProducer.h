@@ -35,9 +35,10 @@ class MEtRescalerProducer : public edm::EDProducer{
   edm::InputTag electronTag_;
   edm::InputTag muonTag_;
   float unClusterShift_;
-  float muonShift_;
-  float tauShift_;
-  float electronShift_;
+  float numOfSigmas_;
+  std::vector<double> muonShift_;
+  std::vector<double> tauShift_;
+  std::vector<double> electronShift_;
   float jetThreshold_;
   bool verbose_;
 

@@ -159,7 +159,9 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   float rhoNeutralFastJet_;
   float embeddingWeight_;
   int nPUVertices_;
-  float nPUaverage_;
+  int nPUVerticesM1_;
+  int nPUVerticesP1_;
+  int nPUtruth_;
 
   float mcPUweight_;
 

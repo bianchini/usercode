@@ -83,7 +83,7 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
   std::auto_ptr< pat::METCollection > MEtRescaledCollUs( new pat::METCollection() ) ;
   std::auto_ptr< pat::METCollection > MEtRescaledCollDs( new pat::METCollection() ) ;
 
-  if(isMC_ && eventCounter_%1000==0){
+  if(isMC_ && eventCounter_%10000==0){
 
     if(verbose_) cout << "Is MC, find out which process it is..." << endl;
 
@@ -178,7 +178,17 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
     
     int nJets30 = 0;
     for(unsigned int jet = 0 ; jet<jets->size(); jet++){
-      if((*jets)[jet].pt()>minJetPt_ && TMath::Abs((*jets)[jet].eta())<4.5) 
+      bool matchedToLept = false;
+      for(unsigned int m = 0; muons!=0 && m < muons->size() ; m++){
+	if(Geom::deltaR( (*muons)[m].p4(), (*jets)[jet].p4())<0.3 ) 
+	  matchedToLept = true;
+      }
+      for(unsigned int e = 0; electrons!=0 && e < electrons->size() ; e++){
+        if(Geom::deltaR( (*electrons)[e].p4(), (*jets)[jet].p4())<0.3 )
+	  matchedToLept = true;
+      }
+
+      if(!matchedToLept && (*jets)[jet].pt()>minJetPt_ && TMath::Abs((*jets)[jet].eta())<4.5) 
 	nJets30++;
     }
     if(verbose_) cout << "nJets30 = " << nJets30 << endl;
@@ -377,29 +387,29 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
       if(verbose_) cout << "Raw MEt " << scaledMETPtN << endl;
 
       if(verbose_) cout << "Evaluating Nominal recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtN,scaledMETPhiN,genVP4.Pt() ,genVP4.Phi(), 
+      recoilCorr_->CorrectType2(scaledMETPtN,scaledMETPhiN,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 
 				u1, u2 , 0 , 0, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Nominal   = "    << scaledMETPtN << endl; 
     
       if(verbose_) cout << "Evaluating +1 resolution recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtUs,scaledMETPhiUs,genVP4.Pt() ,genVP4.Phi(), 
+      recoilCorr_->CorrectType2(scaledMETPtUs,scaledMETPhiUs,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 
 				u1, u2 , +1*numOfSigmas_ , 0, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Up = " << scaledMETPtUs << endl;
       if(verbose_) cout << "Evaluating -1 resolution recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtDs,scaledMETPhiDs,genVP4.Pt() ,genVP4.Phi(), 
+      recoilCorr_->CorrectType2(scaledMETPtDs,scaledMETPhiDs,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 			     
 				u1, u2 , -1*numOfSigmas_ , 0, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Down = "    << scaledMETPtDs << endl;
 
       if(verbose_) cout << "Evaluating +1 response recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtUm,scaledMETPhiUm,genVP4.Pt() ,genVP4.Phi(), 
+      recoilCorr_->CorrectType2(scaledMETPtUm,scaledMETPhiUm,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 
 				u1, u2 , 0 , +1*numOfSigmas_, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Up = " << scaledMETPtUm << endl;
       if(verbose_) cout << "Evaluating -1 response recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtDm,scaledMETPhiDm,genVP4.Pt() ,genVP4.Phi(), 
+      recoilCorr_->CorrectType2(scaledMETPtDm,scaledMETPhiDm,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 			     
 				u1, u2 , 0 , -1*numOfSigmas_, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Down = "    << scaledMETPtDm << endl;
@@ -514,29 +524,29 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
       if(verbose_) cout << "Raw MEt " << scaledMETPtN << endl;
 
       if(verbose_) cout << "Evaluating Nominal recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtN,scaledMETPhiN,genVP4.Pt() ,genVP4.Phi(), 
+      recoilCorr_->CorrectType2(scaledMETPtN,scaledMETPhiN,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 
 				u1, u2 , 0 , 0, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Nominal   = "    << scaledMETPtN << endl; 
     
       if(verbose_) cout << "Evaluating +1 resolution recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtUs,scaledMETPhiUs,genVP4.Pt() ,genVP4.Phi(), 
+      recoilCorr_->CorrectType2(scaledMETPtUs,scaledMETPhiUs,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 
 				u1, u2 , +1*numOfSigmas_ , 0, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Up = " << scaledMETPtUs << endl;
       if(verbose_) cout << "Evaluating -1 resolution recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtDs,scaledMETPhiDs,genVP4.Pt() ,genVP4.Phi(), 
+      recoilCorr_->CorrectType2(scaledMETPtDs,scaledMETPhiDs,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 			     
 				u1, u2 , -1*numOfSigmas_ , 0, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Down = "    << scaledMETPtDs << endl;
 
       if(verbose_) cout << "Evaluating +1 response recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtUm,scaledMETPhiUm,genVP4.Pt() ,genVP4.Phi(), 
+      recoilCorr_->CorrectType2(scaledMETPtUm,scaledMETPhiUm,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 
 				u1, u2 , 0 , +1*numOfSigmas_, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Up = " << scaledMETPtUm << endl;
       if(verbose_) cout << "Evaluating -1 response recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtDm,scaledMETPhiDm,genVP4.Pt() ,genVP4.Phi(), 
+      recoilCorr_->CorrectType2(scaledMETPtDm,scaledMETPhiDm,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 			     
 				u1, u2 , 0 , -1*numOfSigmas_, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Down = "    << scaledMETPtDm << endl;
@@ -643,29 +653,29 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
       if(verbose_) cout << "Raw MEt " << scaledMETPtN << endl;
 
       if(verbose_) cout << "Evaluating Nominal recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtN,scaledMETPhiN,genVP4.Pt() ,genVP4.Phi(), 
+      recoilCorr_->CorrectType2(scaledMETPtN,scaledMETPhiN,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 
 				u1, u2 , 0 , 0, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Nominal   = "    << scaledMETPtN << endl; 
     
       if(verbose_) cout << "Evaluating +1 resolution recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtUs,scaledMETPhiUs,genVP4.Pt() ,genVP4.Phi(), 
+      recoilCorr_->CorrectType2(scaledMETPtUs,scaledMETPhiUs,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 
 				u1, u2 , +1*numOfSigmas_ , 0, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Up = " << scaledMETPtUs << endl;
       if(verbose_) cout << "Evaluating -1 resolution recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtDs,scaledMETPhiDs,genVP4.Pt() ,genVP4.Phi(), 
+      recoilCorr_->CorrectType2(scaledMETPtDs,scaledMETPhiDs,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 			     
 				u1, u2 , -1*numOfSigmas_ , 0, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Down = "    << scaledMETPtDs << endl;
 
       if(verbose_) cout << "Evaluating +1 response recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtUm,scaledMETPhiUm,genVP4.Pt() ,genVP4.Phi(), 
+      recoilCorr_->CorrectType2(scaledMETPtUm,scaledMETPhiUm,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 
 				u1, u2 , 0 , +1*numOfSigmas_, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Up = " << scaledMETPtUm << endl;
       if(verbose_) cout << "Evaluating -1 response recoil-corrected MEt" << endl;
-      recoilCorr_->CorrectType1(scaledMETPtDm,scaledMETPhiDm,genVP4.Pt() ,genVP4.Phi(), 
+      recoilCorr_->CorrectType2(scaledMETPtDm,scaledMETPhiDm,genVP4.Pt() ,genVP4.Phi(), 
 				leptPt,leptPhi, 			     
 				u1, u2 , 0 , -1*numOfSigmas_, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Down = "    << scaledMETPtDm << endl;
