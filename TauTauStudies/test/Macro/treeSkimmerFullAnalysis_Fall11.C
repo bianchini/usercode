@@ -91,6 +91,8 @@ void smear( float& reco, float gen = float(0.), float dM = float(0.), float dRMS
 
 float pileupWeight( int intimepileup_ ){
 
+  
+  // Fall11: intime
   std::vector< float > Fall11Lumi ;
   Double_t Fall11Lumi_f[50] = {
     0.00905444, 
@@ -144,10 +146,11 @@ float pileupWeight( int intimepileup_ ){
     4.90024e-05,
     2.50012e-05
   };
-
- /*
-   std::vector< float > Fall11Lumi ;
-   Double_t Fall11Lumi_f[50] = {
+  
+  /*
+  // Fall11: truth
+  std::vector< float > Fall11Lumi ;
+  Double_t Fall11Lumi_f[50] = {
    0.003388501,
    0.010357558,
    0.024724258,
@@ -199,8 +202,9 @@ float pileupWeight( int intimepileup_ ){
    2.15311E-07,
    9.56938E-08
    };
- */
+  */
   
+  /*
   // sigma 73.5 pb
   std::vector< float > Data2011LumiExt;
   Double_t Data2011LumiExt_f[50] = {
@@ -255,8 +259,9 @@ float pileupWeight( int intimepileup_ ){
     0,
     0
   };
+  */
 
-  /*
+  
   // sigma 68 pb
   std::vector< float > Data2011LumiExt;
   Double_t Data2011LumiExt_f[50] = {
@@ -311,7 +316,7 @@ float pileupWeight( int intimepileup_ ){
     0,
     0
   };
-  */
+  
 
   for( int i=0; i<50; i++) {
     Data2011LumiExt.push_back(Data2011LumiExt_f[i]);
@@ -613,8 +618,8 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 , AntiElectron
   outTreePtOrd->Branch("run",  &run_,  "run/l");
   outTreePtOrd->Branch("lumi", &lumi_, "lumi/l");
  
-  //string currentInName = index >= 0 ?  "/data_CMS/cms/lbianchini/ElecTauStreamFall11_16Nov2011//treeElecTauStream_"+samples[index]+".root" : "../treeElecTauStream.root";
-  string currentInName = index >= 0 ?  "/data_CMS/cms/lbianchini/ElecTauStream_08Nov2011//treeElecTauStream_"+samples[index]+".root" : "../treeElecTauStream.root";
+  string currentInName = index >= 0 ?  "/data_CMS/cms/lbianchini/ElecTauStreamFall11_16Nov2011//treeElecTauStream_"+samples[index]+".root" : "../treeElecTauStream.root";
+  //string currentInName = index >= 0 ?  "/data_CMS/cms/lbianchini/ElecTauStream_08Nov2011//treeElecTauStream_"+samples[index]+".root" : "../treeElecTauStream.root";
 
 
   TString inName(currentInName.c_str());
@@ -1283,14 +1288,17 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 , AntiElectron
 
     } else{
 
-      HLTx = float((*triggerBits)[0]);
+      HLTx     = float((*triggerBits)[0]);
       HLTmatch = ((*tauXTriggers)[0] && (*tauXTriggers)[2]) ? 1.0 : 0.0;
 
       HLTweightTau  = ratioTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() );
      
-      HLTweightElec = ((*diTauLegsP4)[0].Eta()<1.5) ? 
-	ratioElecAllBL->Eval((*diTauLegsP4)[0].Pt()) : 
-	ratioElecAllEC->Eval((*diTauLegsP4)[0].Pt());
+      if((*diTauLegsP4)[0].Pt()>18){
+	HLTweightElec = ((*diTauLegsP4)[0].Eta()<1.5) ? 
+	  ratioElecAllBL->Eval((*diTauLegsP4)[0].Pt()) : 
+	  ratioElecAllEC->Eval((*diTauLegsP4)[0].Pt());
+      }
+      else HLTweightElec = 1.0;
 
       HLTTau  = turnOnTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() );
       HLTElec = TMath::Abs((*diTauLegsP4)[0].Eta()<1.5) ? 
@@ -1315,7 +1323,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 , AntiElectron
       leptFakeTau = -99;
 
 
-    if(leptFakeTau){
+    if(leptFakeTau==1){
       float extraSmearing = ran->Gaus( -0.373, 1.18 );
       diTauVisMass += extraSmearing;
       SFEtoTau      = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ? 1.152 : 1.01;
@@ -1376,7 +1384,6 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   gSystem->Load("RecoilCorrector_hh.so");
   RecoilCorrector* recoilCorr = 0;
 
-
   TFile corrections("llrCorrections.root");
   
   TF1 *ratioMuIDIsoBL    = (TF1*)corrections.Get("ratioMuIDIsoBL");
@@ -1417,7 +1424,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 
   // samples & x-sections & skim1 & skim2
   samples.push_back("Run2011-MuTau-All_run");             crossSec.push_back( 0  );                          
-  samples.push_back("Run2011-MuTau-Embedded-All_run-v2");    crossSec.push_back( 0  );                          
+  samples.push_back("Run2011-MuTau-Embedded-All_run-v2"); crossSec.push_back( 0  );                          
 //samples.push_back("QCDmu-MuTau-pythia-20-15-PUS6_run"); crossSec.push_back( 84679          * 0.00756887  * 0.6105025);           
   samples.push_back("DYJets-MuTau-50-madgraph-PUS6_run"); crossSec.push_back( 3048           * 0.009631    * 0.641987); 
   samples.push_back("TTJets-MuTau-madgraph-PUS6_run");    crossSec.push_back( 157.5          * 0.020998    * 0.823613);  
@@ -1447,7 +1454,6 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   samples.push_back("GGFH145-MuTau-powheg-PUS6_run");     crossSec.push_back( 2.61e-02*11.27 * 1.0         * 0.095074); 
   samples.push_back("VBFH160-MuTau-powheg-PUS6_run");     crossSec.push_back( 5.32e-04*0.8787* 1.0         * 0.137951);  
   samples.push_back("GGFH160-MuTau-powheg-PUS6_run");     crossSec.push_back( 5.32e-04*9.080 * 1.0         * 0.104164);  
-
   samples.push_back("VH100-MuTau-pythia-PUS6_run");  crossSec.push_back( 2.61e-02*(1.186+ 0.6313+0.1638  ) * 0.082128 * 0.834434);  
   samples.push_back("VH110-MuTau-pythia-PUS6_run");  crossSec.push_back( 8.02e-02*(0.8754+0.4721+0.1257  ) * 0.088174 * 0.839732);
   samples.push_back("VH115-MuTau-pythia-PUS6_run");  crossSec.push_back( 7.65e-02*(0.7546+0.4107+0.1106  ) * 0.092032 * 0.841206);
@@ -2307,7 +2313,7 @@ void doAllSamplesElec(){
 		    );
 
   
-  for( unsigned int k = 4; k < 5/*40*/ ; k++) {
+  for( unsigned int k = 2; k < 3/*40*/ ; k++) {
 
     makeTrees_ElecTauStream("",                  k,antiE);
     continue;
@@ -2333,21 +2339,23 @@ void doAllSamplesElec(){
 
 void doAllSamplesMu(){
  
-  for( unsigned int k = 0; k < 39 ; k++) {
+  for( unsigned int k = 0; k < 40 ; k++) {
 
     makeTrees_MuTauStream("",        k);
-    //if( k==0 || k==1) continue;
 
     continue;
 
+    if( k==0 ) continue;
+    makeTrees_MuTauStream("TauUp",   k);
+    makeTrees_MuTauStream("TauDown", k);
+    if( k==1) continue;
     makeTrees_MuTauStream("JetUp",   k);
     makeTrees_MuTauStream("JetDown", k);
     makeTrees_MuTauStream("MEtResolutionUp",   k);
     makeTrees_MuTauStream("MEtResolutionDown",   k);
     makeTrees_MuTauStream("MEtResponseUp",     k);
     makeTrees_MuTauStream("MEtResponseDown",     k);
-    makeTrees_MuTauStream("TauUp",   k);
-    makeTrees_MuTauStream("TauDown", k);
+   
     //makeTrees_MuTauStream("MuUp",    k);
     //makeTrees_MuTauStream("MuDown",  k);
   }

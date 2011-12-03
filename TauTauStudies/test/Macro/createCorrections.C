@@ -208,6 +208,7 @@ Double_t myFuncRatioEleAllEC(Double_t* x, Double_t *par) {
   // Fall11:
   gSystem->Load("ratioEfficiencyTest_C.so");
   ratioEfficiencyTest* fitEffElec18MCEC = new ratioEfficiencyTest(16.99, 0.08302, 0.008002, 2.0694, 0.9981);
+  //ratioEfficiencyTest* fitEffElec18MCEC = new ratioEfficiencyTest(17.00, 0.07, 0.01, 1.96, 1.01);
 
   float weightElec15 = 1871.;
   float weightElec18 = 1713.;
@@ -277,12 +278,20 @@ Double_t myFuncRatioElecIDIsoBL(Double_t* x, Double_t *par) {
 
   Float_t xx = x[0];
   
-  if( xx > 10 && xx < 15 ) 
-    ratio = 1.1134;
-  else if( xx >= 15 && xx < 20 ) 
-    ratio = 0.9783  ;
-  else if( xx >= 20)
-    ratio = 0.9896;
+  if( xx < 20 ) 
+    ratio = 0.9857;
+  else if( xx >= 20 && xx< 25) 
+    ratio = 0.9857 ;
+  else if( xx >= 25 && xx< 30)
+    ratio = 0.9998;
+  else if( xx >= 30 && xx< 35)
+    ratio = 0.9908;
+  else if( xx >= 35 && xx< 50)
+    ratio = 0.9880;
+  else if( xx >= 50 && xx< 80)
+    ratio = 0.9829;
+  else if( xx >= 80)
+    ratio = 0.9794;
 
   return ratio;
 }
@@ -293,12 +302,20 @@ Double_t myFuncTurnOnElecIDIsoBL(Double_t* x, Double_t *par) {
 
   Float_t xx = x[0];
   
-  if( xx > 10 && xx < 15 ) 
-    ratio = 0.4103;
-  else if( xx >= 15 && xx < 20 ) 
-    ratio =  0.5131;
-  else if( xx >= 20)
-    ratio = 0.8265;
+ if( xx < 20 ) 
+    ratio = 0.6006;
+  else if( xx >= 20 && xx< 25) 
+    ratio = 0.6006 ;
+  else if( xx >= 25 && xx< 30)
+    ratio = 0.6820;
+  else if( xx >= 30 && xx< 35)
+    ratio = 0.7322;
+  else if( xx >= 35 && xx< 50)
+    ratio = 0.8139;
+  else if( xx >= 50 && xx< 80)
+    ratio = 0.8517;
+  else if( xx >= 80)
+    ratio = 0.8807;
 
   return ratio;
 
@@ -309,13 +326,21 @@ Double_t myFuncRatioElecIDIsoEC(Double_t* x, Double_t *par) {
   double ratio = 1.;
 
   Float_t xx = x[0];
-  
-  if( xx > 10 && xx < 15 ) 
-    ratio = 1.1946;
-  else if( xx >= 15 && xx < 20 ) 
-    ratio = 1.0623;
-  else if( xx >= 20)
-    ratio = 1.0532;
+
+  if( xx < 20 ) 
+    ratio = 1.1023;
+  else if( xx >= 20 && xx< 25) 
+    ratio = 1.1023 ;
+  else if( xx >= 25 && xx< 30)
+    ratio = 1.0783;
+  else if( xx >= 30 && xx< 35)
+    ratio = 1.0660;
+  else if( xx >= 35 && xx< 50)
+    ratio = 1.0377;
+  else if( xx >= 50 && xx< 80)
+    ratio = 1.0111;
+  else if( xx >= 80)
+    ratio = 0.9989;
 
   return ratio;
 }
@@ -325,13 +350,21 @@ Double_t myFuncTurnOnElecIDIsoEC(Double_t* x, Double_t *par) {
   double ratio = 1.;
 
   Float_t xx = x[0];
-  
-  if( xx > 10 && xx < 15 ) 
-    ratio = 0.1701;
-  else if( xx >= 15 && xx < 20 ) 
-    ratio = 0.2511;
-  else if( xx >= 20)
-    ratio = 0.6432;
+ 
+  if( xx < 20 ) 
+    ratio = 0.;
+  else if( xx >= 20 && xx< 25) 
+    ratio = 0.4780 ;
+  else if( xx >= 25 && xx< 30)
+    ratio = 0.5382;
+  else if( xx >= 30 && xx< 35)
+    ratio = 0.5896;
+  else if( xx >= 35 && xx< 50)
+    ratio = 0.6792;
+  else if( xx >= 50 && xx< 80)
+    ratio = 0.7316;
+  else if( xx >= 80)
+    ratio = 0.7702;
 
   return ratio;
 
@@ -365,12 +398,20 @@ Double_t myFuncRatioMuIDIsoBL(Double_t* x, Double_t *par) {
 
   Float_t xx = x[0];
   
-  if( xx > 10 && xx < 15 ) 
-    ratio = 0.9263;
-  else if( xx >= 15 && xx < 20 ) 
-    ratio = 0.9485 ;
-  else if( xx >= 20)
-    ratio = 0.9933;
+  if( xx < 15 ) 
+    ratio = 0.9467;
+  else if( xx >= 15 && xx< 20) 
+    ratio = 0.9467 ;
+  else if( xx >= 20 && xx< 25) 
+    ratio = 0.9557 ;
+  else if( xx >= 25 && xx< 30)
+    ratio = 0.9615;
+  else if( xx >= 30 && xx< 35)
+    ratio = 0.9778;
+  else if( xx >= 35 && xx< 50)
+    ratio = 0.9891;
+  else if( xx >= 50)
+    ratio = 0.9909;
 
   return ratio;
 }
@@ -381,12 +422,20 @@ Double_t myFuncTurnOnMuIDIsoBL(Double_t* x, Double_t *par) {
 
   Float_t xx = x[0];
   
-  if( xx > 10 && xx < 15 ) 
-    ratio = 0.6313;
-  else if( xx >= 15 && xx < 20 ) 
-    ratio = 0.7235;
-  else if( xx >= 20)
-    ratio = 0.9186;
+  if( xx < 15 ) 
+    ratio = 0.6277;
+  else if( xx >= 15 && xx< 20) 
+    ratio = 0.6277 ;
+  else if( xx >= 20 && xx< 25) 
+    ratio = 0.7073 ;
+  else if( xx >= 25 && xx< 30)
+    ratio = 0.7628;
+  else if( xx >= 30 && xx< 35)
+    ratio = 0.8150;
+  else if( xx >= 35 && xx< 50)
+    ratio = 0.8963;
+  else if( xx >= 50)
+    ratio = 0.9307;
 
   return ratio;
 
@@ -398,12 +447,20 @@ Double_t myFuncRatioMuIDIsoEC(Double_t* x, Double_t *par) {
 
   Float_t xx = x[0];
   
-  if( xx > 10 && xx < 15 ) 
-    ratio = 0.9817;
-  else if( xx >= 15 && xx < 20 ) 
-    ratio = 0.9622;
-  else if( xx >= 20)
-    ratio = 0.9982;
+  if( xx < 15 ) 
+    ratio = 0.9611;
+  else if( xx >= 15 && xx< 20) 
+    ratio = 0.9611 ;
+  else if( xx >= 20 && xx< 25) 
+    ratio = 0.9737 ;
+  else if( xx >= 25 && xx< 30)
+    ratio = 0.9818;
+  else if( xx >= 30 && xx< 35)
+    ratio = 0.9919;
+  else if( xx >= 35 && xx< 50)
+    ratio = 0.9968;
+  else if( xx >= 50)
+    ratio = 0.9954;
 
   return ratio;
 }
@@ -414,12 +471,20 @@ Double_t myFuncTurnOnMuIDIsoEC(Double_t* x, Double_t *par) {
 
   Float_t xx = x[0];
   
-  if( xx > 10 && xx < 15 ) 
-    ratio = 0.5702;
-  else if( xx >= 15 && xx < 20 ) 
-    ratio = 0.6513;
-  else if( xx >= 20)
-    ratio = 0.8636;
+  if( xx < 15 ) 
+    ratio = 0.6534;
+  else if( xx >= 15 && xx< 20) 
+    ratio = 0.6534 ;
+  else if( xx >= 20 && xx< 25) 
+    ratio = 0.7275 ;
+  else if( xx >= 25 && xx< 30)
+    ratio = 0.7813;
+  else if( xx >= 30 && xx< 35)
+    ratio = 0.8219;
+  else if( xx >= 35 && xx< 50)
+    ratio = 0.8893;
+  else if( xx >= 50)
+    ratio = 0.9201;
 
   return ratio;
 
@@ -557,18 +622,38 @@ Double_t myFuncTurnOnMu12MCEC(Double_t* x, Double_t *par) {
     return 0.84;
 }
 
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-
-Double_t myFuncRatioMu15L110BL(Double_t* x, Double_t *par) {
-
-  TF1* turnOnMu12MCBL = new TF1("turnOnMu12MCBL",myFuncTurnOnMu12MCBL,0,400,0);
+Double_t myFuncTurnOnMu15MCBL(Double_t* x, Double_t *par) {
 
   Float_t xx = x[0];
   if(xx<12) 
     return 0;
   else 
-    return 0.901/turnOnMu12MCBL->Eval(xx);
+    return 0.917;
+}
+
+Double_t myFuncTurnOnMu15MCEC(Double_t* x, Double_t *par) {
+
+  Float_t xx = x[0];
+  if(xx<12) 
+    return 0;
+  else 
+    return 0.836;
+}
+
+
+///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
+
+Double_t myFuncRatioMu15L110BL(Double_t* x, Double_t *par) {
+
+  TF1* turnOnMu15MCBL = new TF1("turnOnMu15MCBL",myFuncTurnOnMu15MCBL,0,400,0);
+
+  Float_t xx = x[0];
+  if(xx<12) 
+    return 0;
+  else 
+    //return 0.901/turnOnMu12MCBL->Eval(xx);
+    return 0.901/turnOnMu15MCBL->Eval(xx);
 
 }
 
@@ -583,13 +668,14 @@ Double_t myFuncTurnOnMu15L110BL(Double_t* x, Double_t *par) {
 
 Double_t myFuncRatioMu15L110EC(Double_t* x, Double_t *par) {
 
-  TF1* turnOnMu12MCEC = new TF1("turnOnMu12MCEC",myFuncTurnOnMu12MCEC,0,400,0);
+  TF1* turnOnMu15MCEC = new TF1("turnOnMu15MCEC",myFuncTurnOnMu15MCEC,0,400,0);
 
   Float_t xx = x[0];
   if(xx<12) 
     return 0;
   else 
-    return 0.862/turnOnMu12MCEC->Eval(xx);
+    //return 0.862/turnOnMu12MCEC->Eval(xx);
+    return 0.862/turnOnMu15MCEC->Eval(xx);
 
 }
 
@@ -607,13 +693,14 @@ Double_t myFuncTurnOnMu15L110EC(Double_t* x, Double_t *par) {
 
 Double_t myFuncRatioMu15L114BL(Double_t* x, Double_t *par) {
 
-  TF1* turnOnMu12MCBL = new TF1("turnOnMu12MCBL",myFuncTurnOnMu12MCBL,0,400,0);
+  TF1* turnOnMu15MCBL = new TF1("turnOnMu15MCBL",myFuncTurnOnMu15MCBL,0,400,0);
 
   gSystem->Load("ratioEfficiencyTest_C.so");
   ratioEfficiencyTest* ratioEffMuL114BL = new ratioEfficiencyTest(15.06, 0.55278, 1.3423, 1.002975, 3.3676);
 
   Float_t xx = x[0];
-  return ratioEffMuL114BL->turnOn(xx)/turnOnMu12MCBL->Eval(xx);
+  //return ratioEffMuL114BL->turnOn(xx)/turnOnMu12MCBL->Eval(xx);
+  return ratioEffMuL114BL->turnOn(xx)/turnOnMu15MCBL->Eval(xx);
 }
 
 Double_t myFuncTurnOnMu15L114BL(Double_t* x, Double_t *par) {
@@ -628,13 +715,14 @@ Double_t myFuncTurnOnMu15L114BL(Double_t* x, Double_t *par) {
 
 Double_t myFuncRatioMu15L114EC(Double_t* x, Double_t *par) {
 
-  TF1* turnOnMu12MCEC = new TF1("turnOnMu12MCEC",myFuncTurnOnMu12MCEC,0,400,0);
+  TF1* turnOnMu15MCEC = new TF1("turnOnMu15MCEC",myFuncTurnOnMu15MCEC,0,400,0);
 
   gSystem->Load("ratioEfficiencyTest_C.so");
   ratioEfficiencyTest* ratioEffMuL114EC = new ratioEfficiencyTest(15.32, 0.866114, 1.25008, 1.63711, 0.84490);
 
   Float_t xx = x[0];
-  return ratioEffMuL114EC->turnOn(xx)/turnOnMu12MCEC->Eval(xx);
+  //return ratioEffMuL114EC->turnOn(xx)/turnOnMu12MCEC->Eval(xx);
+  return ratioEffMuL114EC->turnOn(xx)/turnOnMu15MCEC->Eval(xx);
 }
 
 Double_t myFuncTurnOnMu15L114EC(Double_t* x, Double_t *par) {
@@ -912,7 +1000,7 @@ Double_t myFuncRatioTauMuTauAll(Double_t* x, Double_t *par) {
   turnOnTauLoose15MuTauMC_v2->SetNpx(3200);
 
   float weightLoose10 =    0.;
-  float weightLoose15 = 1968.169;
+  float weightLoose15 = 1968.+169;
   float weightLoose20 = 2460.;
   
   float total = weightLoose10+weightLoose15+weightLoose20;
@@ -937,9 +1025,9 @@ Double_t myFuncTurnOnTauMuTauAll(Double_t* x, Double_t *par) {
   //ratioEfficiencyTest* ratioEffTauLoose10MC = new ratioEfficiencyTest(12.96,1.41,3.31,1.10,0.868);
   
   //NOTE:
-  ratioEfficiencyTest* ratioEffTauLoose10MuTau = new ratioEfficiencyTest(16.785,-0.6938,4.5728,94127.12,0.8831);
-  ratioEfficiencyTest* ratioEffTauLoose15MuTau = new ratioEfficiencyTest(14.67,0.4082,0.5519,1.4477,0.9613);
-  ratioEfficiencyTest* ratioEffTauLoose20MuTau = new ratioEfficiencyTest(19.19,-1.36,2.827,1.02721,1.5086);
+  ratioEfficiencyTest* ratioEffTauLoose10MuTau = new ratioEfficiencyTest(16.785,-0.6938,4.5728, 94127.12,   0.8831);
+  ratioEfficiencyTest* ratioEffTauLoose15MuTau = new ratioEfficiencyTest(14.67,0.4082,0.5519,       1.4477, 0.9613);
+  ratioEfficiencyTest* ratioEffTauLoose20MuTau = new ratioEfficiencyTest(19.19,-1.36,2.827,         1.02721 1.5086);
   
   float weightLoose10 =    0.;
   float weightLoose15 = 1968.+169;
@@ -1567,14 +1655,15 @@ void makeFile(){
   turnOnTauElecTauAll->SetNpx(3200);
   ratioTauMuTauAll->SetNpx(3200);
   turnOnTauMuTauAll->SetNpx(3200);
-  ratioElecIDIsoBL->SetNpx(3200);
-  turnOnElecIDIsoBL->SetNpx(3200);
-  ratioElecIDIsoEC->SetNpx(3200);
-  turnOnElecIDIsoEC->SetNpx(3200);
-  ratioMuIDIsoBL->SetNpx(3200);
-  turnOnMuIDIsoBL->SetNpx(3200);
-  ratioMuIDIsoEC->SetNpx(3200);
-  turnOnMuIDIsoEC->SetNpx(3200);
+
+  ratioElecIDIsoBL->SetNpx(6400);
+  turnOnElecIDIsoBL->SetNpx(6400);
+  ratioElecIDIsoEC->SetNpx(6400);
+  turnOnElecIDIsoEC->SetNpx(6400);
+  ratioMuIDIsoBL->SetNpx(6400);
+  turnOnMuIDIsoBL->SetNpx(6400);
+  ratioMuIDIsoEC->SetNpx(6400);
+  turnOnMuIDIsoEC->SetNpx(6400);
 
   ratioElec15BL->Write();
   turnOnElec15BL->Write();
