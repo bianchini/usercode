@@ -32,17 +32,17 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-void plotMuTau( Int_t mH_ = 120,
+void plotMuTau( Int_t mH_           = 120,
 		Int_t useEmbedding_ = 0,
-		string selection_ = "inclusive",
-		string analysis_  = "",		  
-		TString variable_ = "diTauVisMass",
-		TString XTitle_ = "full mass",
-		TString Unities_ = "GeV",
-		TString outputDir = "Nov2011/",
+		string selection_   = "inclusive",
+		string analysis_    = "",		  
+		TString variable_   = "diTauVisMass",
+		TString XTitle_     = "full mass",
+		TString Unities_    = "GeV",
+		TString outputDir   = "Nov2011/",
 		Int_t nBins_ = 40, Float_t xMin_=0, Float_t xMax_=200,
 		Float_t magnifySgn_ = 1.0,
-		Float_t hltEff_ = 1.0, // muID*muIso*muHLT
+		Float_t hltEff_     = 1.0, // muID*muIso*muHLT
 		Int_t logy_ = 0
 		) 
 {   
@@ -156,23 +156,23 @@ void plotMuTau( Int_t mH_ = 120,
 
   // Open the files
   TFile *fData              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
- TFile *fDataEmbedded              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleRun2011-MuTau-Embedded-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
+  TFile *fDataEmbedded              
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleRun2011-MuTau-Embedded-All_run_Open_MuTauStream.root", "READ");  
   TFile *fSignalVBF         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_) ,"READ");  
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_) ,"READ");  
   TFile *fSignalGGH         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_),"READ"); 
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_),"READ"); 
   TFile *fSignalVH         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",mH_),"READ");  
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",mH_),"READ");  
   TFile *fBackgroundDY
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundWJets   
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundTTbar  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundOthers  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011//nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
 
   // choose the analysis: Nominal "", jet up/Down "JetUp/Down" , elec up/down "MuUp/Down" , tau up/down "TauUp/Down"
   TString tree         = "outTreePtOrd"+analysis_;
@@ -212,8 +212,8 @@ void plotMuTau( Int_t mH_ = 120,
 
   TCut lpt("ptL1>17 && abs(dz1)<0.2");
   TCut tpt("ptL2>20");
-  //TCut tiso("tightestHPSDBWP>0 && !(decayMode==0 && (HoP+EoP)<0.2)");
-  TCut tiso("tightestHPSDBWP>0");
+  TCut tiso("tightestHPSDBWP>0 && !(decayMode==0 && (HoP+EoP)<0.2)");
+  //TCut tiso("tightestHPSDBWP>0");
   TCut liso("combRelIsoLeg1DBeta<0.10");
   TCut lveto("muFlag==0");
   TCut SS("diTauCharge!=0");
@@ -225,6 +225,8 @@ void plotMuTau( Int_t mH_ = 120,
   TCut boost("pt1>150 && !(pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && isVetoInJets!=1)");
   TCut hltevent("HLTx==1 && (run>=163269 || run==1)");
   TCut hltmatch("HLTmatch==1");
+  //TCut hltevent("(HLTx==1 && run>=163269) || run==1");
+  //TCut hltmatch("(HLTmatch==1 || run==1)");
   TCut bTag("nJets30<=1 && nJets20BTagged>=1");
   TCut nobTag("nJets30<=1 && nJets20BTagged==0");
   TCut pZ( Form("((%s)<%f)",antiWcut.c_str(),antiWsgn));
@@ -534,6 +536,10 @@ void plotMuTau( Int_t mH_ = 120,
       else
 	currentTree->Draw(variable_+">>"+h1Name, "(HLTTau*HLTMu*embeddingWeight)"*sbinEmbedding);
       //HqTWeight
+
+      // TEMPORARY!!!!!!!! scale by correction factors
+      //if((it->first).find("DYToTauTau")!=string::npos)
+      //h1->Scale(1.05);
 
 
       // scale by correction factors
