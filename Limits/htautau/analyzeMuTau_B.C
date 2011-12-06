@@ -102,14 +102,19 @@ void plotMuTau( Int_t mH_           = 120,
   float Lumi = (-47.4 + 215.3 + 930.7 + 410.6 + (450.6+212.7) + (735.2+254.8+778.2+682.0) )*1.00;
 
   float OStoSSRatioQCD            = 1.11;
-  float WcorrectionFactorOS       = 0.95;  
-  float WcorrectionFactorSS       = 1.11;  
+  float WcorrectionFactorOS       = 1.02;  
+  float WcorrectionFactorSS       = 1.19;  
   float MutoTauCorrectionFactor   = 1.00;
   float JtoTauCorrectionFactor    = 1.00;
-  float VbfExtrapolationFactorZ   = 1.27;
-  float BoostExtrapolationFactorZ = 0.97;
-  float VbfExtrapolationFactorW   = 1.27;
-  float BoostExtrapolationFactorW = 0.97;
+
+  float embeddedMEtCutEff         = 1.00;
+  float madgraphMEtCutEff         = 1.00;
+
+  float NoVbfExtrapolationFactorZ = 0.995;
+  float VbfExtrapolationFactorZ   = 1.24;
+  float BoostExtrapolationFactorZ = 1.05;
+  float VbfExtrapolationFactorW   = 1.24;
+  float BoostExtrapolationFactorW = 1.05;
 
 
   bool useMt      = true;
@@ -156,23 +161,23 @@ void plotMuTau( Int_t mH_           = 120,
 
   // Open the files
   TFile *fData              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
   TFile *fDataEmbedded              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleRun2011-MuTau-Embedded-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleRun2011-MuTau-Embedded-All_run_Open_MuTauStream.root", "READ");  
   TFile *fSignalVBF         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_) ,"READ");  
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_) ,"READ");  
   TFile *fSignalGGH         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_),"READ"); 
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_),"READ"); 
   TFile *fSignalVH         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",mH_),"READ");  
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",mH_),"READ");  
   TFile *fBackgroundDY
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundWJets   
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundTTbar  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundOthers  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v2//nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
 
   // choose the analysis: Nominal "", jet up/Down "JetUp/Down" , elec up/down "MuUp/Down" , tau up/down "TauUp/Down"
   TString tree         = "outTreePtOrd"+analysis_;
@@ -232,79 +237,87 @@ void plotMuTau( Int_t mH_           = 120,
   TCut pZ( Form("((%s)<%f)",antiWcut.c_str(),antiWsgn));
   TCut apZ(Form("((%s)>%f)",antiWcut.c_str(),antiWsdb));
 
-  TCut sbin; TCut sbinEmbedding; TCut sbinPZetaRel; TCut sbinSS; TCut sbinPZetaRelSS; TCut sbinPZetaRev; TCut sbinPZetaRevSS;
+  TCut sbin; TCut sbinEmbedding; TCut sbinEmbeddingPZetaRel; TCut sbinPZetaRel; TCut sbinSS; TCut sbinPZetaRelSS; TCut sbinPZetaRev; TCut sbinPZetaRevSS;
 
   if(selection_.find("inclusive")!=string::npos){
-    sbin           =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch;
-    sbinEmbedding  =  lpt && tpt && tiso && liso && lveto && OS && pZ                         ;
-    sbinPZetaRel   =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch;
-    sbinPZetaRev   =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch;
-    sbinPZetaRevSS =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch;
-    sbinSS         =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch;
-    sbinPZetaRelSS =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch;
+    sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch;
+    sbinEmbedding          =  lpt && tpt && tiso && liso && lveto && OS && pZ                         ;
+    sbinEmbeddingPZetaRel  =  lpt && tpt && tiso && liso && lveto && OS                               ;
+    sbinPZetaRel           =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch;
+    sbinPZetaRev           =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch;
+    sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch;
+    sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch;
+    sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch;
   }
   else if(selection_.find("oneJet")!=string::npos){
-    sbin           =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && oneJet;
-    sbinEmbedding  =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && oneJet;
-    sbinPZetaRel   =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && oneJet;
-    sbinPZetaRev   =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && oneJet;
-    sbinPZetaRevSS =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && oneJet;
-    sbinSS         =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && oneJet;
-    sbinPZetaRelSS =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && oneJet;
+    sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && oneJet;
+    sbinEmbedding          =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && oneJet;
+    sbinEmbeddingPZetaRel  =  lpt && tpt && tiso && liso && lveto && OS                                && oneJet;
+    sbinPZetaRel           =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && oneJet;
+    sbinPZetaRev           =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && oneJet;
+    sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && oneJet;
+    sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && oneJet;
+    sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && oneJet;
   }
   else if(selection_.find("twoJets")!=string::npos){
-    sbin           =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && twoJets;
-    sbinEmbedding  =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && twoJets;
-    sbinPZetaRel   =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && twoJets;
-    sbinPZetaRev   =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && twoJets;
-    sbinPZetaRevSS =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && twoJets;
-    sbinSS         =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && twoJets;
-    sbinPZetaRelSS =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && twoJets;
+    sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && twoJets;
+    sbinEmbedding          =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && twoJets;
+    sbinEmbeddingPZetaRel  =  lpt && tpt && tiso && liso && lveto && OS                                && twoJets;
+    sbinPZetaRel           =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && twoJets;
+    sbinPZetaRev           =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && twoJets;
+    sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && twoJets;
+    sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && twoJets;
+    sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && twoJets;
   }
   else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-    sbin           =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && vbf;
-    sbinEmbedding  =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && vbf;
-    sbinPZetaRel   =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && vbf;
-    sbinPZetaRev   =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && vbf;
-    sbinPZetaRevSS =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && vbf;
-    sbinSS         =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && vbf;
-    sbinPZetaRelSS =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && vbf;
+    sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && vbf;
+    sbinEmbedding          =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && vbf;
+    sbinEmbeddingPZetaRel  =  lpt && tpt && tiso && liso && lveto && OS                                && vbf;
+    sbinPZetaRel           =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && vbf;
+    sbinPZetaRev           =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && vbf;
+    sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && vbf;
+    sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && vbf;
+    sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && vbf;
   }
   else if(selection_.find("novbf")!=string::npos){
-    sbin           =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && novbf;
-    sbinEmbedding  =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && novbf;
-    sbinPZetaRev   =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && novbf;
-    sbinPZetaRel   =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && novbf;
-    sbinPZetaRevSS =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && novbf;
-    sbinSS         =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && novbf;
-    sbinPZetaRelSS =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && novbf;
+    sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && novbf;
+    sbinEmbedding          =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && novbf;
+    sbinEmbeddingPZetaRel  =  lpt && tpt && tiso && liso && lveto && OS                                && novbf;
+    sbinPZetaRev           =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && novbf;
+    sbinPZetaRel           =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && novbf;
+    sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && novbf;
+    sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && novbf;
+    sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && novbf;
   }
   else if(selection_.find("boost")!=string::npos ){
-    sbin           =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && boost;
-    sbinEmbedding  =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && boost;
-    sbinPZetaRev   =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && boost;
-    sbinPZetaRel   =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && boost;
-    sbinPZetaRevSS =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && boost;
-    sbinSS         =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && boost;
-    sbinPZetaRelSS =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && boost;
+    sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && boost;
+    sbinEmbedding          =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && boost;
+    sbinEmbeddingPZetaRel  =  lpt && tpt && tiso && liso && lveto && OS                                && boost;
+    sbinPZetaRev           =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && boost;
+    sbinPZetaRel           =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && boost;
+    sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && boost;
+    sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && boost;
+    sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && boost;
   }
   else if(selection_.find("bTag")!=string::npos && selection_.find("nobTag")==string::npos){
-    sbin           =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && bTag;
-    sbinEmbedding  =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && bTag;
-    sbinPZetaRel   =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && bTag;
-    sbinPZetaRev   =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && bTag;
-    sbinPZetaRevSS =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && bTag;    
-    sbinSS         =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && bTag;
-    sbinPZetaRelSS =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && bTag;
+    sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && bTag;
+    sbinEmbedding          =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && bTag;
+    sbinEmbeddingPZetaRel  =  lpt && tpt && tiso && liso && lveto && OS                                && bTag;
+    sbinPZetaRel           =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && bTag;
+    sbinPZetaRev           =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && bTag;
+    sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && bTag;    
+    sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && bTag;
+    sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && bTag;
   }
   else if(selection_.find("nobTag")!=string::npos){
-    sbin           =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && nobTag;
-    sbinEmbedding  =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && nobTag;
-    sbinPZetaRel   =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && nobTag;
-    sbinPZetaRev   =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && nobTag;
-    sbinPZetaRevSS =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && nobTag;
-    sbinSS         =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && nobTag;
-    sbinPZetaRelSS =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && nobTag;
+    sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && nobTag;
+    sbinEmbedding          =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && nobTag;
+    sbinEmbeddingPZetaRel  =  lpt && tpt && tiso && liso && lveto && OS                                && nobTag;
+    sbinPZetaRel           =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && nobTag;
+    sbinPZetaRev           =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && nobTag;
+    sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && nobTag;
+    sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && nobTag;
+    sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && nobTag;
   }
 
   // estimate the W+jets in the selection bin using pZeta extrapolation
@@ -531,15 +544,29 @@ void plotMuTau( Int_t mH_           = 120,
     else{
 
       currentTree = (it->second);
-      if((it->first).find("Embed")==string::npos)
-	currentTree->Draw(variable_+">>"+h1Name, "(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFMu*SFTau)"*sbin);
-      else
-	currentTree->Draw(variable_+">>"+h1Name, "(HLTTau*HLTMu*embeddingWeight)"*sbinEmbedding);
-      //HqTWeight
 
-      // TEMPORARY!!!!!!!! scale by correction factors
-      //if((it->first).find("DYToTauTau")!=string::npos)
-      //h1->Scale(1.05);
+      if((it->first).find("Embed")==string::npos){
+
+	if((it->first).find("DYToTauTau")!=string::npos){
+	  currentTree->Draw(variable_+">>"+h1Name, "(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFMu*SFTau)"*sbinPZetaRel);  
+	  float madgraphNoMEtCut = h1->Integral();
+	  h1->Reset();
+	  currentTree->Draw(variable_+">>"+h1Name, "(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFMu*SFTau)"*sbin);
+	  madgraphMEtCutEff = h1->Integral()/madgraphNoMEtCut;
+	  cout << "Efficiency of antiW cut on madgraph " << madgraphMEtCutEff << endl;
+	}
+	else
+	  currentTree->Draw(variable_+">>"+h1Name, "(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*sbin);
+      }
+      else{
+	currentTree->Draw(variable_+">>"+h1Name, "(HLTTau*HLTMu*embeddingWeight)"*sbinEmbeddingPZetaRel);
+	float embeddedNoMEtCut = h1->Integral();
+	h1->Reset();
+	currentTree->Draw(variable_+">>"+h1Name, "(HLTTau*HLTMu*embeddingWeight)"*sbinEmbedding);
+
+	embeddedMEtCutEff =  h1->Integral()/embeddedNoMEtCut;
+	cout << "Efficiency of antiW cut on embedded " << embeddedMEtCutEff << endl;
+      }
 
 
       // scale by correction factors
@@ -567,9 +594,14 @@ void plotMuTau( Int_t mH_           = 120,
 
       // if DY->tautau, and vbf scale by ratio data/MC
       if((it->first).find("DYToTauTau")!=string::npos){
-	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-	cout << "DY->tautau will be rescaled by " << VbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
-	h1->Scale( VbfExtrapolationFactorZ );
+
+	if(selection_.find("novbf")!=string::npos){
+	  cout << "DY->tautau will be rescaled by " << NoVbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
+	  h1->Scale( NoVbfExtrapolationFactorZ );
+	}
+	else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
+	  cout << "DY->tautau will be rescaled by " << VbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
+	  h1->Scale( VbfExtrapolationFactorZ );
 	}
 	else if(selection_.find("boost")!=string::npos){
 	  cout << "DY->tautau will be rescaled by " << BoostExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
@@ -580,7 +612,12 @@ void plotMuTau( Int_t mH_           = 120,
       // if DY->mumu, mu->tau, scale by fake-rate
       if((it->first).find("DYMutoTau")!=string::npos){
 	float sF = MutoTauCorrectionFactor;
-	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
+
+	if(selection_.find("novbf")!=string::npos){
+	  sF *= NoVbfExtrapolationFactorZ;
+	  cout << "DY->tautau, mu->tau will be rescaled by " << NoVbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
+	}
+	else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
 	  sF *= VbfExtrapolationFactorZ;
 	  cout << "DY->tautau, mu->tau will be rescaled by " << VbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
 	}
@@ -596,7 +633,12 @@ void plotMuTau( Int_t mH_           = 120,
       // if DY->mumu, jet->tau, scale by fake-rate
       if((it->first).find("DYJtoTau")!=string::npos){
 	float sF = JtoTauCorrectionFactor;
-	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
+
+	if(selection_.find("novbf")!=string::npos){
+	  sF *= NoVbfExtrapolationFactorZ;
+	  cout << "DY->tautau, jet->tau will be rescaled by " << NoVbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
+	}
+	else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
 	  sF *= VbfExtrapolationFactorZ;
 	  cout << "DY->tautau, jet->tau will be rescaled by " << VbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
 	}
@@ -637,6 +679,7 @@ void plotMuTau( Int_t mH_           = 120,
     if( (it->first).find("Embedded")!=string::npos ) {
       hDataEmb->Add(h1,1.0);
       if(hZtt->Integral()>0) hDataEmb->Scale(hZtt->Integral()/hDataEmb->Integral());
+      hDataEmb->Scale(embeddedMEtCutEff/madgraphMEtCutEff);
       hDataEmb->SetFillColor(kYellow-9);
     }
     if( (it->first).find("TTbar")!=string::npos ) {
@@ -700,8 +743,10 @@ void plotMuTau( Int_t mH_           = 120,
   // all signal summed together:
   hSgn->Add(hSgn1,hSgn2,1,1);
   hSgn->Add(hSgn3);
-  hSgn->SetFillColor(kRed);
+  hSgn->SetFillColor(0);
+  hSgn->SetLineColor(kBlue);
   hSgn->SetLineWidth(2);
+  hSgn->SetLineStyle(kDashed);
 
   //Adding to the stack
   aStack->Add(hQCD);
@@ -711,7 +756,8 @@ void plotMuTau( Int_t mH_           = 120,
     aStack->Add(hDataEmb);
   else
     aStack->Add(hZtt);
-  aStack->Add(hSgn);
+  if(!logy_)
+    aStack->Add(hSgn);
 
   // legend
   leg->AddEntry(hData,"Observed","P");
@@ -727,6 +773,8 @@ void plotMuTau( Int_t mH_           = 120,
   hData->Draw("P");
   aStack->Draw("HISTSAME");
   hData->Draw("PSAME");
+  if(logy_)
+    hSgn->Draw("HISTSAME");
   
   TH1F* hStack = (TH1F*)aStack->GetHistogram();
   hStack->SetXTitle(XTitle_+" ("+Unities_+")");
@@ -737,10 +785,9 @@ void plotMuTau( Int_t mH_           = 120,
 
   leg->Draw();
 
-  return;
+  //return;
 
-
-  c1->SaveAs(Form("plots/%s/plot_muTau_mH%d_%s_%s_%s.png",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
+  //c1->SaveAs(Form("plots/%s/plot_muTau_mH%d_%s_%s_%s.png",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
 
   // templates for fitting
   TFile* fout = new TFile(Form("histograms/%s/muTau_mH%d_%s_%s_%s.root",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()),"RECREATE");
@@ -783,7 +830,7 @@ void plotMuTau( Int_t mH_           = 120,
 
 
 
-void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Nov2011/PreApproval"){
+void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Dec2011/"){
 
   vector<string> variables;
   vector<int> mH;
@@ -796,10 +843,11 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Nov2011/PreApprov
   mH.push_back(115);
   mH.push_back(120);
   mH.push_back(125);
-  mH.push_back(130);
-  mH.push_back(135);
-  mH.push_back(140);
-  mH.push_back(145);
+  //mH.push_back(130);
+  //mH.push_back(135);
+  //mH.push_back(140);
+  //mH.push_back(145);
+  //mH.push_back(160);
 
   for(unsigned int i = 0 ; i < variables.size(); i++){
     for(unsigned j = 0; j < mH.size(); j++){
@@ -810,7 +858,6 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Nov2011/PreApprov
       plotMuTau(mH[j],useEmbedded,"novbf","JetUp"  ,variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"novbf","JetDown",variables[i],"mass","GeV",outputDir,-1);
 
-      /*
       plotMuTau(mH[j],useEmbedded,"vbf",""         ,variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"vbf","TauUp"    ,variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"vbf","TauDown"  ,variables[i],"mass","GeV",outputDir,-1);
@@ -834,7 +881,7 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Nov2011/PreApprov
       plotMuTau(mH[j],useEmbedded,"oneJet","TauDown",variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"oneJet","JetUp"  ,variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"oneJet","JetDown",variables[i],"mass","GeV",outputDir,-1);
-      */
+
     }
   }
   
