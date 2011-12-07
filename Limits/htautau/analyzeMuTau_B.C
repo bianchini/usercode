@@ -17,6 +17,7 @@
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TPad.h"
+#include "TF1.h"
 #include "TLegend.h"
 #include "THStack.h"
 #include "TCut.h"
@@ -101,26 +102,45 @@ void plotMuTau( Int_t mH_           = 120,
   //float Lumi                      = (159.+887.+361.7+531.5)*1.00;
   float Lumi = (-47.4 + 215.3 + 930.7 + 410.6 + (450.6+212.7) + (735.2+254.8+778.2+682.0) )*1.00;
 
+  // 0.96 on PR-v4
+
+  //////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////
+
   float OStoSSRatioQCD            = 1.11;
-  float WcorrectionFactorOS       = 1.02;  
-  float WcorrectionFactorSS       = 1.19;  
   float MutoTauCorrectionFactor   = 1.00;
   float JtoTauCorrectionFactor    = 1.00;
-
   float embeddedMEtCutEff         = 1.00;
   float madgraphMEtCutEff         = 1.00;
 
+  /*
+  // Fall11_16Nov2011_v3
+  float WcorrectionFactorOS       = 1.02;  
+  float WcorrectionFactorSS       = 1.19;
   float NoVbfExtrapolationFactorZ = 0.995;
   float VbfExtrapolationFactorZ   = 1.24;
   float BoostExtrapolationFactorZ = 1.05;
   float VbfExtrapolationFactorW   = 1.24;
   float BoostExtrapolationFactorW = 1.05;
+  */
+
+  // Fall11_06Dec2011
+  float WcorrectionFactorOS       = 1.00;  
+  float WcorrectionFactorSS       = 1.17; 
+  float NoVbfExtrapolationFactorZ = 0.997;
+  float VbfExtrapolationFactorZ   = 1.37;
+  float BoostExtrapolationFactorZ = 0.98;
+  float VbfExtrapolationFactorW   = 1.37;
+  float BoostExtrapolationFactorW = 0.98;
 
 
   bool useMt      = true;
   string antiWcut = useMt ? "MtLeg1Corr" : "-(pZetaCorr-1.5*pZetaVisCorr)" ;
   float antiWsgn  = useMt ? 40. :  20. ; 
   float antiWsdb  = useMt ? 60. :  40. ; 
+
+  //////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////
 
   TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
   c1->SetGrid(0,0);
@@ -129,6 +149,17 @@ void plotMuTau( Int_t mH_           = 120,
   c1->SetTicky();
   c1->SetObjectStat(0);
   c1->SetLogy(logy_);
+
+  TPad* pad1 = new TPad("pad1DEta","",0.05,0.22,0.96,0.97);
+  TPad* pad2 = new TPad("pad2DEta","",0.05,0.02,0.96,0.20);
+ 
+  pad1->SetFillColor(0);
+  pad2->SetFillColor(0);
+  pad1->Draw();
+  pad2->Draw();
+
+  pad1->cd();
+  pad1->SetLogy(logy_);
 
   TLegend* leg = new TLegend(0.55,0.42,0.85,0.85,NULL,"brNDC");
   leg->SetFillStyle(0);
@@ -144,7 +175,7 @@ void plotMuTau( Int_t mH_           = 120,
   TH1F* hSgn1    = new TH1F( "hSgn1"   ,"vbf"               , nBins , bins);
   TH1F* hSgn2    = new TH1F( "hSgn2"   ,"ggf"               , nBins , bins);
   TH1F* hSgn3    = new TH1F( "hSgn3"   ,"vh"                , nBins , bins);
-  TH1F* hData    = new TH1F( "hData"   ,"Observed"          , nBins , bins);
+  TH1F* hData    = new TH1F( "hData"   ,"        "          , nBins , bins);
   TH1F* hDataEmb = new TH1F( "hDataEmb","Embedded"          , nBins , bins);
   TH1F* hW       = new TH1F( "hW"      ,"W+jets"            , nBins , bins);
   TH1F* hEWK     = new TH1F( "hEWK"    ,"EWK"               , nBins , bins);
@@ -161,23 +192,23 @@ void plotMuTau( Int_t mH_           = 120,
 
   // Open the files
   TFile *fData              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
   TFile *fDataEmbedded              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleRun2011-MuTau-Embedded-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011//nTupleRun2011-MuTau-Embedded-All_run_Open_MuTauStream.root", "READ");  
   TFile *fSignalVBF         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_) ,"READ");  
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_) ,"READ");  
   TFile *fSignalGGH         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_),"READ"); 
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_),"READ"); 
   TFile *fSignalVH         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",mH_),"READ");  
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",mH_),"READ");  
   TFile *fBackgroundDY
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011//nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundWJets   
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011//nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundTTbar  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011//nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundOthers  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_16Nov2011_v3//nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011//nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
 
   // choose the analysis: Nominal "", jet up/Down "JetUp/Down" , elec up/down "MuUp/Down" , tau up/down "TauUp/Down"
   TString tree         = "outTreePtOrd"+analysis_;
@@ -731,9 +762,6 @@ void plotMuTau( Int_t mH_           = 120,
       hData->SetTitleOffset(0.95,"Y");
     }
 
-    // adding alltogether
-    hSiml->Add(h1,1.0);
-
     if(VERBOSE) cout<<(it->first) << " ==> " 
 		    << h1->Integral() << " +/- " 
 		    << TMath::Sqrt(h1->GetEntries())*(h1->Integral()/h1->GetEntries())
@@ -747,6 +775,16 @@ void plotMuTau( Int_t mH_           = 120,
   hSgn->SetLineColor(kBlue);
   hSgn->SetLineWidth(2);
   hSgn->SetLineStyle(kDashed);
+
+  // adding alltogether
+  hSiml->Add(hQCD,1.0);
+  hSiml->Add(hEWK,1.0);
+  hSiml->Add(hTTb,1.0);
+  if(useEmbedding_)
+    hSiml->Add(hDataEmb,1.0);
+  else
+    hSiml->Add(hZtt,1.0);
+
 
   //Adding to the stack
   aStack->Add(hQCD);
@@ -785,9 +823,114 @@ void plotMuTau( Int_t mH_           = 120,
 
   leg->Draw();
 
+  pad2->cd();
+  //TH1F* hRatio = new TH1F("hRatio", " ; ; #frac{(DATA-MC)}{#sqrt{DATA}}",
+  //		  hStack->GetNbinsX(), 
+  //		  hStack->GetXaxis()->GetXmin(), hStack->GetXaxis()->GetXmax());
+
+  TH1F* hRatio = new TH1F( "hRatio" ," ; ; #frac{(DATA-MC)}{#sqrt{DATA}}" , nBins , bins);
+  hRatio->Reset();
+  hRatio->SetXTitle("");
+  hRatio->SetYTitle("#frac{(DATA-MC)}{#sqrt{DATA}}");
+
+  hRatio->SetMarkerStyle(kFullCircle);
+  hRatio->SetMarkerSize(0.8);
+  hRatio->SetLabelSize(0.12,"X");
+  hRatio->SetLabelSize(0.10,"Y");
+  hRatio->SetTitleSize(0.12,"Y");
+  hRatio->SetTitleOffset(0.36,"Y");
+  TH1F* hError = (TH1F*)hRatio->Clone("hError");
+  hError->Reset();
+  hError->SetFillColor(kRed);
+  hError->SetFillStyle(3004);
+  hError->SetMarkerStyle(kDot);
+
+  float uncertZtt = 0;
+  if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos){
+    uncertZtt += (0.06  * 0.06) ; // Tau-ID 
+    uncertZtt += (0.035 * 0.035); // Lumi 
+  }
+  else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
+    uncertZtt += (0.06  * 0.06) ; // Tau-ID 
+    uncertZtt += (0.035 * 0.035); // Lumi 
+    uncertZtt += (0.10  * 0.10);  // Extrap. factor 
+  }
+  else if(selection_.find("boost")!=string::npos){
+    uncertZtt += (0.06  * 0.06) ; // Tau-ID 
+    uncertZtt += (0.035 * 0.035); // Lumi 
+    uncertZtt += (0.10  * 0.10);  // Extrap. factor 
+  }
+  uncertZtt = TMath::Sqrt(uncertZtt);
+  float uncertTTb = 0;
+  if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos){
+    uncertTTb += (0.075 * 0.075) ; // xsection 
+  }
+  else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
+    uncertTTb += (0.075 * 0.075) ; // xsection 
+  }
+  else if(selection_.find("boost")!=string::npos){
+    uncertTTb += (0.075 * 0.075) ; // xsection 
+  }
+  uncertTTb = TMath::Sqrt(uncertTTb);
+  float uncertEWK = 0;
+  if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos){
+    uncertEWK += (0.07 * 0.07) ; // extrapolation 
+  }
+  else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
+    uncertEWK += (0.07 * 0.07) ; // extrapolation 
+    uncertEWK += (0.10 * 0.10) ; // extrapolation 
+  }
+  else if(selection_.find("boost")!=string::npos){
+    uncertEWK += (0.07 * 0.07) ; // extrapolation 
+    uncertEWK += (0.10 * 0.10) ; // extrapolation  
+  }
+  uncertEWK = TMath::Sqrt(uncertEWK);
+  float uncertQCD = 0;
+  if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos){
+    uncertQCD += (0.02 * 0.02) ; // extrapolation 
+  }
+  else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
+    uncertQCD += (0.02 * 0.02) ; // extrapolation 
+    uncertQCD += (0.10 * 0.10) ; // extrapolation 
+  }
+  else if(selection_.find("boost")!=string::npos){
+    uncertQCD += (0.02 * 0.02) ; // extrapolation 
+    uncertQCD += (0.10 * 0.10) ; // extrapolation  
+  }
+  uncertQCD = TMath::Sqrt(uncertQCD);
+
+  float maxPull = 0.;
+  for(int k = 0 ; k < hRatio->GetNbinsX(); k++){
+    float pull = hData->GetBinContent(k) - hSiml->GetBinContent(k);
+    if(hData->GetBinContent(k)>0)
+      pull /= TMath::Sqrt(hData->GetBinContent(k));
+    hRatio->SetBinContent(k, pull);
+    hError->SetBinContent(k, 0.0);
+    float error2 = 0.0;
+    error2 += pow(hZtt->GetBinContent(k) * uncertZtt, 2);
+    error2 += pow(hTTb->GetBinContent(k) * uncertTTb, 2);
+    error2 += pow(hEWK->GetBinContent(k) * uncertEWK, 2);
+    error2 += pow(hQCD->GetBinContent(k) * uncertQCD, 2);
+    if(hData->GetBinContent(k)>0)
+      hError->SetBinError(k, TMath::Sqrt(error2/hData->GetBinContent(k)) );
+    else
+      hError->SetBinError(k,0);
+    if(fabs(pull) > maxPull)
+      maxPull = fabs(pull);
+  }
+  hRatio->SetAxisRange(-1.2*maxPull,1.2*maxPull,"Y");
+  hRatio->Draw("P");
+  hError->Draw("E3SAME");
+
+  TF1* line = new TF1("line","0",hRatio->GetXaxis()->GetXmin(),hStack->GetXaxis()->GetXmax());
+  line->SetLineStyle(3);
+  line->SetLineWidth(1.5);
+  line->SetLineColor(kBlack);
+  line->Draw("SAME");
+  
   //return;
 
-  //c1->SaveAs(Form("plots/%s/plot_muTau_mH%d_%s_%s_%s.png",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
+  c1->SaveAs(Form("plots/%s/plot_muTau_mH%d_%s_%s_%s.png",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
 
   // templates for fitting
   TFile* fout = new TFile(Form("histograms/%s/muTau_mH%d_%s_%s_%s.root",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()),"RECREATE");
@@ -813,7 +956,7 @@ void plotMuTau( Int_t mH_           = 120,
 
   delete hQCD; delete hZmm; delete hZmj; delete hZfakes; delete hTTb; delete hZtt; delete hW;
   delete hVV; delete hSgn1; delete hSgn2; delete hSgn3; delete hData; delete hParameters;
-  delete hWMt; delete aStack;  delete hEWK; delete hSiml; delete hDataEmb; delete hSgn;
+  delete hWMt; delete aStack;  delete hEWK; delete hSiml; delete hDataEmb; delete hSgn; delete hRatio; delete line;
   delete fout;
   fSignalGGH->Close();       delete fSignalGGH; 
   fSignalVBF->Close();       delete fSignalVBF;
@@ -839,14 +982,14 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Dec2011/"){
   variables.push_back("diTauSVFitMass");
 
   //mH.push_back(105);
-  mH.push_back(110);
-  mH.push_back(115);
-  mH.push_back(120);
-  mH.push_back(125);
-  //mH.push_back(130);
-  //mH.push_back(135);
-  //mH.push_back(140);
-  //mH.push_back(145);
+  //mH.push_back(110);
+  //mH.push_back(115);
+  //mH.push_back(120);
+  //mH.push_back(125);
+  mH.push_back(130);
+  mH.push_back(135);
+  mH.push_back(140);
+  mH.push_back(145);
   //mH.push_back(160);
 
   for(unsigned int i = 0 ; i < variables.size(); i++){

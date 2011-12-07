@@ -23,6 +23,9 @@ void produce(
 
   TFile* fin_jUp   = new TFile(Form("histograms/%s/muTau_mH%d_%s_JetUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
   TFile* fin_jDown = new TFile(Form("histograms/%s/muTau_mH%d_%s_JetDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_tUp   = new TFile(Form("histograms/%s/muTau_mH%d_%s_TauUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_tDown = new TFile(Form("histograms/%s/muTau_mH%d_%s_TauDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_nominal = new TFile(Form("histograms/%s/muTau_mH%d_%s__%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
 
   string binNameSpace = "";
   if(bin_.find("inclusive")!=string::npos)      
@@ -68,8 +71,15 @@ void produce(
     ((TH1F*)fin->Get("hSgn1"))->Write(Form("VBF%d%s",mH_,suffix.c_str()));
     ((TH1F*)fin->Get("hSgn2"))->Write(Form("SM%d%s" ,mH_,suffix.c_str()));
     ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
-    ((TH1F*)fin->Get("hZtt"))->Write(Form("ZTT%s"       ,suffix.c_str()));
-    ((TH1F*)fin->Get("hQCD"))->Write(Form("QCD%s"       ,suffix.c_str()));
+    ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s"       ,suffix.c_str()));
+    if( ((TH1F*)fin->Get("hQCD"))->Integral()<0 ){
+      TH1F* hQCD = (TH1F*)fin->Get("hQCD");
+      hQCD->Scale(3./hQCD->Integral());
+      hQCD->Write(Form("QCD%s"       ,suffix.c_str()));
+    }
+    else{
+      ((TH1F*)fin->Get("hQCD"))->Write(Form("QCD%s"       ,suffix.c_str()));
+    }
     ((TH1F*)fin->Get("hW"))->Write(Form("W%s"           ,suffix.c_str()));
     ((TH1F*)fin->Get("hZmj"))->Write(Form("ZJ%s"        ,suffix.c_str()));
     ((TH1F*)fin->Get("hZmm"))->Write(Form("ZL%s"        ,suffix.c_str()));
@@ -85,9 +95,16 @@ void produce(
     fTemplOut->cd( dirName.Data() );
 
     if(dir->FindObjectAny(Form("ZTT%s"       ,suffix.c_str()))==0 )
-      ((TH1F*)fin->Get("hZtt"))->Write(Form("ZTT%s"       ,suffix.c_str()));
-    if(dir->FindObjectAny(Form("QCD%s"       ,suffix.c_str()))==0 )
-      ((TH1F*)fin->Get("hQCD"))->Write(Form("QCD%s"       ,suffix.c_str()));
+      ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s"       ,suffix.c_str()));
+    if(dir->FindObjectAny(Form("QCD%s"       ,suffix.c_str()))==0 ){
+      if( ((TH1F*)fin->Get("hQCD"))->Integral()<0 ){
+	TH1F* hQCD = (TH1F*)fin->Get("hQCD");
+	hQCD->Scale(3./hQCD->Integral());
+	hQCD->Write(Form("QCD%s"       ,suffix.c_str()));
+      }
+      else
+	((TH1F*)fin->Get("hQCD"))->Write(Form("QCD%s"       ,suffix.c_str()));
+    }
     if(dir->FindObjectAny(Form("W%s"       ,suffix.c_str()))==0 )
       ((TH1F*)fin->Get("hW"))->Write(Form("W%s"           ,suffix.c_str()));
     if(dir->FindObjectAny(Form("ZJ%s"       ,suffix.c_str()))==0 )
@@ -105,7 +122,7 @@ void produce(
     if(dir->FindObjectAny(Form("SM%d%s"          , mH_,suffix.c_str()))==0 )
       ((TH1F*)fin->Get("hSgn2"))->Write(Form("SM%d%s" ,mH_,suffix.c_str()));
     if(dir->FindObjectAny(Form("VH%d%s"          , mH_,suffix.c_str()))==0 )
-      ((TH1F*)fin->Get("hSgn3"))->Write(Form("SM%d%s" ,mH_,suffix.c_str()));
+      ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
   }
 
   fTemplOut->Close();
@@ -138,17 +155,20 @@ void produce(
 	else if(line.find("process")!=string::npos && line.find("VBF")!=string::npos){
           line.replace( line.find("XXX") , 3 , string(Form("%d",mH_))  );
           line.replace( line.find("YYY") , 3 , string(Form("%d",mH_))  );
+	  line.replace( line.find("KKK") , 3 , string(Form("%d",mH_))  );
           out << line << endl;
         }
 	else if(line.find("rate")!=string::npos){
+
+	  float QCDyield = ((TH1F*)fin->Get("hQCD"))->Integral() < 0 ? 3.0 : ((TH1F*)fin->Get("hQCD"))->Integral();
 	  string rate = "rate                                           ";
 	  string space = "              ";
 	  out << rate ;
 	  out <<          ((TH1F*)fin->Get("hSgn3"))->Integral()
 	      << space << ((TH1F*)fin->Get("hSgn2"))->Integral()
 	      << space << ((TH1F*)fin->Get("hSgn1"))->Integral()
-	      << space << ((TH1F*)fin->Get("hZtt"))->Integral()
-	      << space << ((TH1F*)fin->Get("hQCD"))->Integral()
+	      << space << ((TH1F*)fin->Get("hDataEmb"))->Integral()
+	      << space << QCDyield
 	      << space << ((TH1F*)fin->Get("hW"))->Integral();
 	  if(binNameSpace.find("SM0")!=string::npos){
 	    out << space << ((TH1F*)fin->Get("hZmj"))->Integral()
@@ -256,7 +276,7 @@ void produce(
 
 
 
-void produceAll(  TString outputDir = "Nov2011/PreApproval" ){
+void produceAll(  TString outputDir = "Dec2011/" ){
 
   vector<string> variables;
   vector<int> mH;
@@ -272,6 +292,7 @@ void produceAll(  TString outputDir = "Nov2011/PreApproval" ){
   //mH.push_back(130);
   //mH.push_back(135);
   //mH.push_back(140);
+  //mH.push_back(145);
 
   for(unsigned int i = 0 ; i < variables.size(); i++){
     for(unsigned j = 0; j < mH.size(); j++){
