@@ -21,8 +21,9 @@
 #include "TRandom3.h"
 #include "RecoilCorrector.hh"
 
-
 #include "AntiElectronIDMVA.h"
+
+#include "Lumi3DReWeightingForLorenzo.h"
 
 #include "Math/Vector3D.h"
 #include "Math/Vector4D.h"
@@ -89,10 +90,145 @@ void smear( float& reco, float gen = float(0.), float dM = float(0.), float dRMS
 }
 
 
+void createReWeighting3D(){
+
+  // truth
+  std::vector< float > Fall11Lumi ;
+  Double_t Fall11Lumi_f[50] = {
+    0.003388501,
+    0.010357558,
+    0.024724258,
+    0.042348605,
+    0.058279812,
+    0.068851751,
+    0.072914824,
+    0.071579609,
+    0.066811668,
+    0.060672356,
+    0.054528356,
+    0.04919354,
+    0.044886042,
+    0.041341896,
+    0.0384679,
+    0.035871463,
+    0.03341952,
+    0.030915649,
+    0.028395374,
+    0.025798107,
+    0.023237445,
+    0.020602754,
+    0.0180688,
+    0.015559693,
+    0.013211063,
+    0.010964293,
+    0.008920993,
+    0.007080504,
+    0.005499239,
+    0.004187022,
+    0.003096474,
+    0.002237361,
+    0.001566428,
+    0.001074149,
+    0.000721755,
+    0.000470838,
+    0.00030268,
+    0.000184665,
+    0.000112883,
+    6.74043E-05,
+    3.82178E-05,
+    2.22847E-05,
+    1.20933E-05,
+    6.96173E-06,
+    3.4689E-06,
+    1.96172E-06,
+    8.49283E-07,
+    5.02393E-07,
+    2.15311E-07,
+    9.56938E-08
+   };
+
+  for( int i=0; i<50; i++) {
+    Fall11Lumi.push_back(Fall11Lumi_f[i]);
+  }
+
+  TH1* puDist_mc = new TH1D("MC_distr", "MC_distr", 50 , 0., 50.);
+  int numBins = puDist_mc->GetNbinsX();
+  for ( int iBin = 1; iBin <= numBins; ++iBin ) {
+    double binCenter = puDist_mc->GetBinCenter(iBin);
+    int idx = TMath::FloorNint(binCenter);
+    double binContent = ( idx >= 0 && idx < (int)Fall11Lumi.size() ) ?
+      Fall11Lumi[idx] : 0.;
+    puDist_mc->SetBinContent(iBin, binContent);
+    puDist_mc->SetBinError(iBin, 0.);
+  }
+  TFile* puFile_mc = new TFile("pileUp/pileUpFall11.root", "RECREATE");
+  puDist_mc->Write();
+  delete puFile_mc;
+
+}
+
 float pileupWeight( int intimepileup_ ){
 
   
   // Fall11: intime
+  //Twiki
+  std::vector< float > Fall11Lumi ;
+  Double_t Fall11Lumi_f[50] = {
+    0.014583699,
+    0.025682975,
+    0.038460562,
+    0.049414536,
+    0.056931087,
+    0.061182816,
+    0.062534625,
+    0.061476918,
+    0.058677499,
+    0.055449877,
+    0.051549051,
+    0.047621024,
+    0.043923799,
+    0.040569076,
+    0.037414654,
+    0.034227033,
+    0.031437714,
+    0.028825596,
+    0.026218978,
+    0.023727061,
+    0.021365645,
+    0.01918743,
+    0.016972815,
+    0.014920601,
+    0.013038989,
+    0.011293777,
+    0.009612465,
+    0.008193556,
+    0.006888047,
+    0.005715239,
+    0.004711232,
+    0.003869926,
+    0.003154521,
+    0.002547417,
+    0.002024714,
+    0.001574411,
+    0.001245808,
+    0.000955206,
+    0.000735305,
+    0.000557304,
+    0.000412503,
+    0.000305502,
+    0.000231002,
+    0.000165701,
+    0.000121201,
+    9.30006E-05,
+    6.40004E-05,
+    4.22003E-05,
+    2.85002E-05,
+    1.96001E-05
+  };
+
+  /*
+  // Fall11: intime
+  Chrsitian
   std::vector< float > Fall11Lumi ;
   Double_t Fall11Lumi_f[50] = {
     0.00905444, 
@@ -146,7 +282,8 @@ float pileupWeight( int intimepileup_ ){
     4.90024e-05,
     2.50012e-05
   };
-  
+  */
+
   /*
   // Fall11: truth
   std::vector< float > Fall11Lumi ;
@@ -381,9 +518,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 , AntiElectron
   samples.push_back("Run2011-ElecTau-Embedded-All_run");    crossSec.push_back( 0  );                          
   samples.push_back("DYJets-ElecTau-50-madgraph-PUS6_run"); crossSec.push_back( 3048           * 1.0         * 0.0348744); 
   samples.push_back("TTJets-ElecTau-madgraph-PUS6_run");    crossSec.push_back( 157.5          * 1.0         * 0.1944484);  
-
-  //samples.push_back("WJets-ElecTau-madgraph-PUS6_run");     crossSec.push_back(31314.0         * 1.0         * 0.1038806);   
-  samples.push_back("WJets-ElecTau-madgraph-PUS4_run");     crossSec.push_back(31314.0         * 0.0010836   * 0.5558882);   
+  samples.push_back("WJets-ElecTau-madgraph-PUS6_run");     crossSec.push_back(31314.0         * 1.0         * 0.1038806);   
 
   samples.push_back("WZ-ElecTau-pythia-PUS6_run");          crossSec.push_back( 18.2           * 1.0         * 0.0495339);         
   samples.push_back("ZZ-ElecTau-pythia-PUS6_run");          crossSec.push_back(  5.9           * 1.0         * 0.0392576);    
@@ -918,8 +1053,8 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 , AntiElectron
   int mH          = 120;
   TH1F* histo     = 0;
   if(samples[indexHelp].find("GGFH")!=string::npos){
-    if(samples[indexHelp].find("GGFH100")!=string::npos) mH = 110;
-    if(samples[indexHelp].find("GGFH105")!=string::npos) mH = 110;
+    if(samples[indexHelp].find("GGFH100")!=string::npos) mH = 100;
+    if(samples[indexHelp].find("GGFH105")!=string::npos) mH = 105;
     if(samples[indexHelp].find("GGFH110")!=string::npos) mH = 110;
     if(samples[indexHelp].find("GGFH115")!=string::npos) mH = 115;
     if(samples[indexHelp].find("GGFH120")!=string::npos) mH = 120;
@@ -928,7 +1063,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 , AntiElectron
     if(samples[indexHelp].find("GGFH135")!=string::npos) mH = 135;
     if(samples[indexHelp].find("GGFH140")!=string::npos) mH = 140;
     if(samples[indexHelp].find("GGFH145")!=string::npos) mH = 145;
-    if(samples[indexHelp].find("GGFH160")!=string::npos) mH = 145;
+    if(samples[indexHelp].find("GGFH160")!=string::npos) mH = 160;
     cout << "Reweighting powheg with HqT mH=" << mH << endl;
     HqT = new TFile(Form("../../../Utilities/data/HqTFeHiPro/weight_ptH_%d.root", mH));
     if(!HqT) cout << "Cannot find HqT file..." << endl;
@@ -1381,6 +1516,17 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   
   cout << "Now skimming analysis " << analysis << endl;
   
+  gSystem->Load("Lumi3DReWeightingForLorenzo_cc.so");
+  edm::Lumi3DReWeightingForLorenzo* Lumi3DReWeighting = 
+    new edm::Lumi3DReWeightingForLorenzo("pileUp/pileUpFall11.root",
+					 "pileUp/Run2011PileUpTruth.root",
+					 "MC_distr",
+					 "pileup");
+  Lumi3DReWeighting->weight3D_init(73.5/68.);
+  //Lumi3DReWeighting->weight3D_init(1.00);
+  cout << "Lumi3D rewieghting initialized" << endl;
+
+
   gSystem->Load("RecoilCorrector_hh.so");
   RecoilCorrector* recoilCorr = 0;
 
@@ -1424,11 +1570,13 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 
   // samples & x-sections & skim1 & skim2
   samples.push_back("Run2011-MuTau-All_run");             crossSec.push_back( 0  );                          
-  samples.push_back("Run2011-MuTau-Embedded-All_run-v2"); crossSec.push_back( 0  );                          
+  samples.push_back("Run2011A-MuTau-05AugReReco_run");    crossSec.push_back( 0  );                          
+  samples.push_back("Run2011-MuTau-Embedded-All_run");    crossSec.push_back( 0  );                          
 //samples.push_back("QCDmu-MuTau-pythia-20-15-PUS6_run"); crossSec.push_back( 84679          * 0.00756887  * 0.6105025);           
   samples.push_back("DYJets-MuTau-50-madgraph-PUS6_run"); crossSec.push_back( 3048           * 0.009631    * 0.641987); 
   samples.push_back("TTJets-MuTau-madgraph-PUS6_run");    crossSec.push_back( 157.5          * 0.020998    * 0.823613);  
   samples.push_back("WJets-MuTau-madgraph-PUS6_run");     crossSec.push_back( 31314.0        * 0.001261    * 0.572776);   
+  samples.push_back("W3Jets-MuTau-madgraph-PUS6_run");    crossSec.push_back( 304.0          * 1.0         * 0.119569);   
   samples.push_back("WZ-MuTau-pythia-PUS6_run");          crossSec.push_back( 18.2           * 0.0068962   * 0.740770);         
   samples.push_back("ZZ-MuTau-pythia-PUS6_run");          crossSec.push_back(  5.9           * 0.0060357   * 0.753123);    
   samples.push_back("WW-MuTau-pythia-PUS6_run");          crossSec.push_back( 43.0           * 1.0         * 0.065573);        
@@ -1514,7 +1662,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   int numOfLooseIsoDiTaus_;
  
   // object-related weights and triggers
-  float HLTx,HLTmatch,HLTweightTau, HLTweightMu, SFMu, SFTau, HLTMu, HLTTau;
+  float HLTx,HLTmu,HLTmatch,HLTweightTau, HLTweightMu, SFMu, SFTau, HLTMu, HLTTau;
   int isTauLegMatched_,muFlag_,genDecay_,leptFakeTau;
 
   // event id
@@ -1630,7 +1778,8 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   outTreePtOrd->Branch("HqTWeight",          &HqTWeight,"HqTWeight/F");
   outTreePtOrd->Branch("numOfLooseIsoDiTaus",&numOfLooseIsoDiTaus_,"numOfLooseIsoDiTaus/I");
 
-  outTreePtOrd->Branch("HLTx",         &HLTx,"HLTx/F");
+  outTreePtOrd->Branch("HLTx",         &HLTx, "HLTx/F");
+  outTreePtOrd->Branch("HLTmu",        &HLTmu,"HLTmu/F");
   outTreePtOrd->Branch("HLTmatch",     &HLTmatch,"HLTmatch/F");
   outTreePtOrd->Branch("HLTweightMu",  &HLTweightMu,"HLTweightMu/F");
   outTreePtOrd->Branch("HLTweightTau", &HLTweightTau,"HLTweightTau/F");
@@ -1648,7 +1797,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   outTreePtOrd->Branch("run",  &run_,  "run/l");
   outTreePtOrd->Branch("lumi", &lumi_, "lumi/l");
  
-  string currentInName = index >= 0 ?  "/data_CMS/cms/lbianchini/MuTauStreamFall11_16Nov2011///treeMuTauStream_"+samples[index]+".root" : "../treeMuTauStream.root";
+  string currentInName = index >= 0 ?  "/data_CMS/cms/lbianchini/MuTauStreamFall11_06Dec2011///treeMuTauStream_"+samples[index]+".root" : "../treeMuTauStream.root";
 
   TString inName(currentInName.c_str());
   TFile* file   = new TFile(inName,"READ");
@@ -1762,6 +1911,8 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   currentTree->SetBranchStatus("rhoNeutralFastJet"     ,1);
   currentTree->SetBranchStatus("numPV"                 ,1);
   currentTree->SetBranchStatus("nPUVertices"           ,1);
+  currentTree->SetBranchStatus("nPUVerticesP1"         ,1);
+  currentTree->SetBranchStatus("nPUVerticesM1"         ,1);
   currentTree->SetBranchStatus("numOfDiTaus"           ,0);
   currentTree->SetBranchStatus("numOfLooseIsoDiTaus"   ,1);
  
@@ -1846,7 +1997,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   float emFraction, hasGsf, leadPFChargedHadrHcalEnergy, leadPFChargedHadrEcalEnergy;
   int signalPFChargedHadrCands, signalPFGammaCands;
   float mcPUweight,embeddingWeight;
-  int isTauLegMatched,muFlag,genDecay, nPUVertices;
+  int isTauLegMatched,muFlag,genDecay, nPUVertices, nPUVerticesM1, nPUVerticesP1;
   float rhoFastJet,rhoNeutralFastJet;
   float visibleTauMass;
   float dxy1, dz1;
@@ -1887,6 +2038,8 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   currentTree->SetBranchAddress("run",                  &run);
   currentTree->SetBranchAddress("lumi",                 &lumi);
   currentTree->SetBranchAddress("nPUVertices",          &nPUVertices);
+  currentTree->SetBranchAddress("nPUVerticesP1",        &nPUVerticesP1);
+  currentTree->SetBranchAddress("nPUVerticesM1",        &nPUVerticesM1);
   currentTree->SetBranchAddress("genDecay",             &genDecay);
   currentTree->SetBranchAddress("decayMode",            &decayMode);
   currentTree->SetBranchAddress("numOfLooseIsoDiTaus",  &numOfLooseIsoDiTaus);
@@ -1925,8 +2078,8 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   int mH          = 120;
   TH1F* histo     = 0;
   if(samples[indexHelp].find("GGFH")!=string::npos){
-    if(samples[indexHelp].find("GGFH100")!=string::npos) mH = 110;
-    if(samples[indexHelp].find("GGFH105")!=string::npos) mH = 110;
+    if(samples[indexHelp].find("GGFH100")!=string::npos) mH = 100;
+    if(samples[indexHelp].find("GGFH105")!=string::npos) mH = 105;
     if(samples[indexHelp].find("GGFH110")!=string::npos) mH = 110;
     if(samples[indexHelp].find("GGFH115")!=string::npos) mH = 115;
     if(samples[indexHelp].find("GGFH120")!=string::npos) mH = 120;
@@ -1935,7 +2088,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     if(samples[indexHelp].find("GGFH135")!=string::npos) mH = 135;
     if(samples[indexHelp].find("GGFH140")!=string::npos) mH = 140;
     if(samples[indexHelp].find("GGFH145")!=string::npos) mH = 145;
-    if(samples[indexHelp].find("GGFH160")!=string::npos) mH = 145;
+    if(samples[indexHelp].find("GGFH160")!=string::npos) mH = 160;
     cout << "Reweighting powheg with HqT mH=" << mH << endl;
     HqT = new TFile(Form("../../../Utilities/data/HqTFeHiPro/weight_ptH_%d.root", mH));
     if(!HqT) cout << "Cannot find HqT file..." << endl;
@@ -2135,6 +2288,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     sampleWeight     = scaleFactor; 
     //puWeight         = (std::string(sample.Data())).find("Run2011")!=string::npos ? 1.0 : mcPUweight ;
     puWeight         = (std::string(sample.Data())).find("Run2011")!=string::npos ? 1.0 : pileupWeight(nPUVertices);   
+    //puWeight         = (std::string(sample.Data())).find("Run2011")!=string::npos ? 1.0 : Lumi3DReWeighting->weight3D(nPUVerticesM1, nPUVertices, nPUVerticesP1) ;
     embeddingWeight_ = embeddingWeight;
 
     HqTWeight = histo!=0 ? histo->GetBinContent( histo->FindBin( (*genVP4)[0].Pt() ) ) : 1.0;
@@ -2223,6 +2377,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 
       HLTweightTau = 1.0;
       HLTweightMu  = 1.0;
+      HLTmu        = 1.0;
    
       if( (std::string(sample.Data())).find("Embed")!=string::npos ){
 
@@ -2249,7 +2404,9 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     } else{
 
 
-      HLTx =  float((*triggerBits)[0]); //HLT_IsoMu15_LooseIsoPFTau15_v9
+      HLTx  =  float((*triggerBits)[0]); //HLT_IsoMu15_LooseIsoPFTau15_v9
+      HLTmu =  triggerBits->size()>2 ? 
+	float((*triggerBits)[2]) : float(1.0); //HLT_IsoMu15_v14
       bool isTriggMatched = (*tauXTriggers)[0] && (*tauXTriggers)[2] ; //hltSingleMuIsoL3IsoFiltered15 && hltOverlapFilterIsoMu15IsoPFTau15
       HLTmatch = isTriggMatched ? 1.0 : 0.0;
 
@@ -2343,7 +2500,7 @@ void doAllSamplesMu(){
 
     makeTrees_MuTauStream("",        k);
 
-    continue;
+    //continue;
 
     if( k==0 ) continue;
     makeTrees_MuTauStream("TauUp",   k);
