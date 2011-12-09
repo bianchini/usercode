@@ -155,23 +155,23 @@ void plotElecTau( Int_t mH_           = 120,
 
   // Open the files
   TFile *fData              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_16Nov2011//nTupleRun2011-ElecTau-All_run_Open_ElecTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_06Dec2011//nTupleRun2011-ElecTau-All_run_Open_ElecTauStream.root", "READ");  
   TFile *fDataEmbedded              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_16Nov2011//nTupleRun2011-ElecTau-Embedded-All_run_Open_ElecTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_06Dec2011//nTupleRun2011-ElecTau-Embedded-All_run_Open_ElecTauStream.root", "READ");  
   TFile *fSignalVBF         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_16Nov2011//nTupleVBFH%d-ElecTau-powheg-PUS6_run_Open_ElecTauStream.root",mH_) ,"READ");  
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_06Dec2011//nTupleVBFH%d-ElecTau-powheg-PUS6_run_Open_ElecTauStream.root",mH_) ,"READ");  
   TFile *fSignalGGH         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_16Nov2011//nTupleGGFH%d-ElecTau-powheg-PUS6_run_Open_ElecTauStream.root",mH_),"READ");
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_06Dec2011//nTupleGGFH%d-ElecTau-powheg-PUS6_run_Open_ElecTauStream.root",mH_),"READ");
   TFile *fSignalVH         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_16Nov2011//nTupleVH%d-ElecTau-pythia-PUS6_run_Open_ElecTauStream.root",mH_),"READ");  
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_06Dec2011//nTupleVH%d-ElecTau-pythia-PUS6_run_Open_ElecTauStream.root",mH_),"READ");  
   TFile *fBackgroundDY
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_16Nov2011//nTupleDYJets-ElecTau-50-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_06Dec2011//nTupleDYJets-ElecTau-50-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
   TFile *fBackgroundWJets   
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_16Nov2011//nTupleWJets-ElecTau-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_06Dec2011//nTupleWJets-ElecTau-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
   TFile *fBackgroundTTbar  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_16Nov2011//nTupleTTJets-ElecTau-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_06Dec2011//nTupleTTJets-ElecTau-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
   TFile *fBackgroundOthers  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_16Nov2011//nTupleOthers-ElecTau-PUS6_run_Open_ElecTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_06Dec2011//nTupleOthers-ElecTau-PUS6_run_Open_ElecTauStream.root","READ"); 
 
   // choose the analysis: Nominal "", jet up/Down "JetUp/Down" , elec up/down "MuUp/Down" , tau up/down "TauUp/Down"
   TString tree         = "outTreePtOrd"+analysis_;
@@ -223,9 +223,10 @@ void plotElecTau( Int_t mH_           = 120,
   TCut boost("pt1>150 && !(pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && isVetoInJets!=1)");
   TCut bTag("nJets30<=1 && nJets20BTagged>=1");
   TCut nobTag("nJets30<=1 && nJets20BTagged==0");
-  //TCut hltevent("HLTx==1 && (run>=163269 || run==1)");
-  TCut hltevent("run==1 || (HLTx==1 && run>=163269)");
-  TCut hltmatch("run==1 || HLTmatch==1");
+  TCut hltevent("HLTx==1 && (run>=163269 || run==1)");
+  TCut hltmatch("HLTmatch==1");
+  //TCut hltevent("run==1 || (HLTx==1 && run>=163269)");
+  //TCut hltmatch("run==1 || HLTmatch==1");
   TCut pZ( Form("((%s)<%f)",antiWcut.c_str(),antiWsgn));
   TCut apZ(Form("((%s)>%f)",antiWcut.c_str(),antiWsdb));
 
@@ -318,11 +319,11 @@ void plotElecTau( Int_t mH_           = 120,
 
   ///////////////////////////////////////// Doing OS first...
   hWMt->Reset();
-  backgroundWJets->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau*SFEtoTau)"*(sbinPZetaRel&&pZ));
+  backgroundWJets->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*SFEtoTau)"*(sbinPZetaRel&&pZ));
   cout << "Using  " << hWMt->GetEntries() << " entries from the W+jets OS sample" << endl;
   float OSWinSignalRegionMC   = hWMt->Integral()*Lumi*hltEff_/1000.;
   hWMt->Reset();
-  backgroundWJets->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau*SFEtoTau)"*(sbinPZetaRel&&apZ));
+  backgroundWJets->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*SFEtoTau)"*(sbinPZetaRel&&apZ));
   float OSWinSidebandRegionMC = hWMt->Integral()*Lumi*hltEff_/1000.;
   float scaleFactorOS = OSWinSidebandRegionMC/OSWinSignalRegionMC;
 
@@ -333,23 +334,23 @@ void plotElecTau( Int_t mH_           = 120,
  
   cout << "Estimating cobtribution from Ztt, ttbar and others in OS low pZeta tail..." << endl;
   hWMt->Reset();
-  backgroundTTbar->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau*SFEtoTau)"*(sbinPZetaRel&&apZ));
+  backgroundTTbar->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*SFEtoTau)"*(sbinPZetaRel&&apZ));
   float ttbarExtrOS  = hWMt->Integral()*Lumi*hltEff_/1000.;
   cout << "Contribution from ttbar in OS is " << ttbarExtrOS << endl;
   hWMt->Reset();
-  backgroundOthers->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau*SFEtoTau)"*(sbinPZetaRel&&apZ));
+  backgroundOthers->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*SFEtoTau)"*(sbinPZetaRel&&apZ));
   float othersExtrOS = hWMt->Integral()*Lumi*hltEff_/1000.;
   cout << "Contribution from single-t and di-boson in OS is " << othersExtrOS << endl;
   hWMt->Reset();
-  backgroundDYTauTau->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau*SFEtoTau)"*(sbinPZetaRel&&apZ));
+  backgroundDYTauTau->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*SFEtoTau)"*(sbinPZetaRel&&apZ));
   float dytautauExtrOS = hWMt->Integral()*Lumi*hltEff_/1000.;
   cout << "Contribution from DY->tautau in OS is " << dytautauExtrOS << endl;
   hWMt->Reset();
-  backgroundDYJtoTau->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau*SFEtoTau)"*(sbinPZetaRel&&apZ));
+  backgroundDYJtoTau->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*SFEtoTau)"*(sbinPZetaRel&&apZ));
   float dyjtotauExtrOS = hWMt->Integral()*Lumi*hltEff_/1000.;
   cout << "Contribution from DY->ee, jet->tau in OS is " << dyjtotauExtrOS << endl;
   hWMt->Reset();
-  backgroundDYEtoTau->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau*SFEtoTau)"*(sbinPZetaRel&&apZ));
+  backgroundDYEtoTau->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*SFEtoTau)"*(sbinPZetaRel&&apZ));
   float dyetotauExtrOS = hWMt->Integral()*Lumi*hltEff_/1000.;
   cout << "Contribution from DY->ee, e->tau in OS is " << dyjtotauExtrOS << endl;
 
@@ -371,11 +372,11 @@ void plotElecTau( Int_t mH_           = 120,
 
   ///////////////////////////////////////// Doing SS last...
   hWMt->Reset();
-  backgroundWJets->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau*SFEtoTau)"*(sbinPZetaRelSS&&pZ));
+  backgroundWJets->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*SFEtoTau)"*(sbinPZetaRelSS&&pZ));
   cout << "Using  " << hWMt->GetEntries() << " entries from the SS W+jets sample" << endl;
   float SSWinSignalRegionMC   = hWMt->Integral()*Lumi*hltEff_/1000.;
   hWMt->Reset();
-  backgroundWJets->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau*SFEtoTau)"*(sbinPZetaRelSS&&apZ));
+  backgroundWJets->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*SFEtoTau)"*(sbinPZetaRelSS&&apZ));
   float SSWinSidebandRegionMC = hWMt->Integral()*Lumi*hltEff_/1000.;
   float scaleFactorSS = SSWinSidebandRegionMC/SSWinSignalRegionMC;
  
@@ -386,15 +387,15 @@ void plotElecTau( Int_t mH_           = 120,
 
   hWMt->Reset();
   cout << "Estimating contribution from Ztt, ttbar and others in SS low pZeta tail..." << endl;
-  backgroundTTbar->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau*SFEtoTau)"*(sbinPZetaRelSS&&apZ));
+  backgroundTTbar->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*SFEtoTau)"*(sbinPZetaRelSS&&apZ));
   float ttbarExtrSS = hWMt->Integral()*Lumi*hltEff_/1000.;
   cout << "Contribution from ttbar in SS is " << ttbarExtrSS << endl;
   hWMt->Reset();
-  backgroundOthers->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau*SFEtoTau)"*(sbinPZetaRelSS&&apZ));
+  backgroundOthers->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*SFEtoTau)"*(sbinPZetaRelSS&&apZ));
   float othersExtrSS = hWMt->Integral()*Lumi*hltEff_/1000.;
   cout << "Contribution from single-t and di-boson in SS is " << othersExtrSS << endl;
   hWMt->Reset();
-  backgroundDYJtoTau->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau*SFEtoTau)"*(sbinPZetaRelSS&&apZ));
+  backgroundDYJtoTau->Draw("etaL1>>hWMt","(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*SFEtoTau)"*(sbinPZetaRelSS&&apZ));
   float dyjtotauExtrSS = hWMt->Integral()*Lumi*hltEff_/1000.;
   cout << "Contribution from DY->ee, jet->tau in SS is " << dytautauExtrOS << endl;
  
@@ -478,7 +479,7 @@ void plotElecTau( Int_t mH_           = 120,
       h1->Add(hHelp,1);
       
       hHelp->Reset();
-      backgroundWJets->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau*SFEtoTau)"*sbinSS);
+      backgroundWJets->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*SFEtoTau)"*sbinSS);
       cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from W+jets (from " << hHelp->GetEntries() << " entries)" << endl;
       float sFWSS = 
 	( selection_.find("novbf")!=string::npos || selection_.find("nobTag")!=string::npos || selection_.find("inclusive")!=string::npos) ? SSWinSignalRegionDATA/SSWinSignalRegionMC : WcorrectionFactorSS; // from the extrapolation factor DATA/MC
@@ -493,7 +494,7 @@ void plotElecTau( Int_t mH_           = 120,
       cout << sqrt(error2OnQCD) << " <==  W" << endl;      
 
       hHelp->Reset();
-      backgroundTTbar->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau)"*sbinSS);
+      backgroundTTbar->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau)"*sbinSS);
       cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from TTbar (from " << hHelp->GetEntries() << " entries)" << endl;
       hHelp->Scale(1.0*Lumi/1000*hltEff_);
       cout << "We estimate " << hHelp->Integral() << " SS events from TTbar" << endl;
@@ -503,7 +504,7 @@ void plotElecTau( Int_t mH_           = 120,
       cout << sqrt(error2OnQCD) << " <== W + TTb" << endl;          
 
       hHelp->Reset();
-      backgroundDYJtoTau->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau)"*sbinSS);
+      backgroundDYJtoTau->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau)"*sbinSS);
       cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from DY->ee, jet->tau" << endl;
       hHelp->Scale(JtoTauCorrectionFactor*Lumi/1000*hltEff_);
       cout << "We estimate " << hHelp->Integral() << " SS events from DY->ee, jet->tau" << endl;
@@ -513,7 +514,7 @@ void plotElecTau( Int_t mH_           = 120,
       cout << sqrt(error2OnQCD) << " <== W + TTb + DY(1)" << endl;
 
       hHelp->Reset();
-      backgroundDYEtoTau->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTTau*HLTElec*SFElec)"*sbinSS);
+      backgroundDYEtoTau->Draw(variable_+">>hHelp", "(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec)"*sbinSS);
       cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from DY->ee, e->tau" << endl;
       hHelp->Scale(EtoTauCorrectionFactor*Lumi/1000*hltEff_);
       cout << "We estimate " << hHelp->Integral() << " SS events from DY->ee, e->tau" << endl;
@@ -541,15 +542,15 @@ void plotElecTau( Int_t mH_           = 120,
 
       if((it->first).find("Embed")==string::npos){
 	if((it->first).find("DYToTauTau")!=string::npos){
-	  currentTree->Draw(variable_+">>"+h1Name, "(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFElec*SFTau*HqTWeight)"*sbinPZetaRel);  
+	  currentTree->Draw(variable_+">>"+h1Name, "(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*HqTWeight)"*sbinPZetaRel);  
 	  float madgraphNoMEtCut = h1->Integral();
 	  h1->Reset();
-	  currentTree->Draw(variable_+">>"+h1Name, "(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFElec*SFTau*HqTWeight)"*sbin);
+	  currentTree->Draw(variable_+">>"+h1Name, "(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*HqTWeight)"*sbin);
 	  madgraphMEtCutEff = h1->Integral()/madgraphNoMEtCut;
 	  cout << "Efficiency of antiW cut on madgraph " << madgraphMEtCutEff << endl;
 	}
 	else
-	  currentTree->Draw(variable_+">>"+h1Name, "(sampleWeight*puWeight*HLTTau*HLTElec*SFElec*SFTau*SFEtoTau*HqTWeight)"*sbin);
+	  currentTree->Draw(variable_+">>"+h1Name, "(sampleWeight*puWeight*HLTweightTau*HLTweightElec**SFElec*SFTau*SFEtoTau*HqTWeight)"*sbin);
       }
       else{
 	currentTree->Draw(variable_+">>"+h1Name, "(HLTTau*HLTElec*embeddingWeight)"*sbinEmbeddingPZetaRel);
