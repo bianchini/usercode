@@ -249,7 +249,6 @@ void plotMuTau( Int_t mH_           = 120,
   TCut lpt("ptL1>17 && abs(dz1)<0.2");
   TCut tpt("ptL2>20");
   TCut tiso("tightestHPSDBWP>0 && !(decayMode==0 && (HoP+EoP)<0.2)");
-  //TCut tiso("tightestHPSDBWP>0");
   TCut liso("combRelIsoLeg1DBeta<0.10");
   TCut lveto("muFlag==0");
   TCut SS("diTauCharge!=0");
@@ -984,12 +983,12 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Dec2011/"){
   //mH.push_back(105);
   //mH.push_back(110);
   //mH.push_back(115);
-  //mH.push_back(120);
+  mH.push_back(120);
   //mH.push_back(125);
-  mH.push_back(130);
-  mH.push_back(135);
-  mH.push_back(140);
-  mH.push_back(145);
+  //mH.push_back(130);
+  //mH.push_back(135);
+  //mH.push_back(140);
+  //mH.push_back(145);
   //mH.push_back(160);
 
   for(unsigned int i = 0 ; i < variables.size(); i++){
@@ -1001,6 +1000,7 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Dec2011/"){
       plotMuTau(mH[j],useEmbedded,"novbf","JetUp"  ,variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"novbf","JetDown",variables[i],"mass","GeV",outputDir,-1);
 
+      /*
       plotMuTau(mH[j],useEmbedded,"vbf",""         ,variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"vbf","TauUp"    ,variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"vbf","TauDown"  ,variables[i],"mass","GeV",outputDir,-1);
@@ -1024,7 +1024,7 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Dec2011/"){
       plotMuTau(mH[j],useEmbedded,"oneJet","TauDown",variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"oneJet","JetUp"  ,variables[i],"mass","GeV",outputDir,-1);
       plotMuTau(mH[j],useEmbedded,"oneJet","JetDown",variables[i],"mass","GeV",outputDir,-1);
-
+      */
     }
   }
   
