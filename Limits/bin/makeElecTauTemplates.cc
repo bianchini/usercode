@@ -25,13 +25,13 @@ void produce(
 
 
   cout << "Now doing mass mH=" << mH_ << ", for variable " << variable_ << " analysis " << analysis_ << " and bin " << bin_ << endl;
-  TFile* fin = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_%s_%s.root", outputDir.Data(), mH_, bin_.c_str() , analysis_.c_str(), variable_.c_str()), "READ");
+  TFile* fin = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/histograms/%s/eTau_mH%d_%s_%s_%s.root", outputDir.Data(), mH_, bin_.c_str() , analysis_.c_str(), variable_.c_str()), "READ");
 
-  TFile* fin_jUp   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_JetUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_jDown = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_JetDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_tUp   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_TauUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_tDown = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_TauDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_nominal = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s__%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_jUp   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/histograms/%s/eTau_mH%d_%s_JetUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_jDown = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/histograms/%s/eTau_mH%d_%s_JetDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_tUp   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/histograms/%s/eTau_mH%d_%s_TauUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_tDown = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/histograms/%s/eTau_mH%d_%s_TauDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_nominal = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/histograms/%s/eTau_mH%d_%s__%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
 
   string binNameSpace = "";
   if(bin_.find("inclusive")!=string::npos)      
@@ -47,24 +47,24 @@ void produce(
   else if(bin_.find("oneJet")!=string::npos) 
     binNameSpace =  "SMpre2a";
 
-  TFile* fTemplOut = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/datacards/%s/muTauSM_%s.root",outputDir.Data(), variable_.c_str()),"UPDATE");
+  TFile* fTemplOut = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/datacards/%s/eTauSM_%s.root",outputDir.Data(), variable_.c_str()),"UPDATE");
   
   string suffix = "";
   if(analysis_.find("TauUp")!=string::npos)
     suffix = "_CMS_scale_tUp";
   else if(analysis_.find("TauDown")!=string::npos)
     suffix = "_CMS_scale_tDown";
-  else if(analysis_.find("MuUp")!=string::npos)
-    suffix = "_CMS_scale_mUp";
-  else if(analysis_.find("MuDown")!=string::npos)
-    suffix = "_CMS_scale_mDown";
+  else if(analysis_.find("ElecUp")!=string::npos)
+    suffix = "_CMS_scale_eUp";
+  else if(analysis_.find("ElecDown")!=string::npos)
+    suffix = "_CMS_scale_eDown";
   else if(analysis_.find("JetUp")!=string::npos)
     suffix = "_CMS_scale_jUp";
   else if(analysis_.find("JetDown")!=string::npos)
     suffix = "_CMS_scale_jDown";
   
   cout << "Adding histos with suffix " << suffix << endl;
-  TString dirName( Form("muTau_%s",binNameSpace.c_str()) );
+  TString dirName( Form("eTau_%s",binNameSpace.c_str()) );
   
   if(! (fTemplOut->cd( dirName.Data()  ) ) ){
     
@@ -83,6 +83,7 @@ void produce(
       TH1F* hAntiIsoKeys = (TH1F*)fin->Get("hAntiIsoKeys");
       hAntiIsoKeys->Scale(hQCD->Integral()/hAntiIsoKeys->Integral());
       hAntiIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
+      //hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
       ((TH1F*)fin->Get("hW"))->Write(Form("W%s"           ,suffix.c_str()));
       ((TH1F*)fin->Get("hZmj"))->Write(Form("ZJ%s"        ,suffix.c_str()));
       ((TH1F*)fin->Get("hZmm"))->Write(Form("ZL%s"        ,suffix.c_str()));
@@ -97,16 +98,14 @@ void produce(
       ((TH1F*)fin->Get("hSgn2"))->Write(Form("SM%d%s"  ,mH_,suffix.c_str()));
       ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s"  ,mH_,suffix.c_str()));
       ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s",suffix.c_str()));
-      //((TH1F*)fin->Get("hZtt"))->Write(Form("ZTT%s",suffix.c_str()));
       ((TH1F*)fin->Get("hAntiIsoKeys"))->Write(Form("QCD%s"    ,suffix.c_str()));
       ((TH1F*)fin->Get("hWKeys"))->Write(Form("W%s"           ,suffix.c_str()));
-      //((TH1F*)fin->Get("hW3JetsKeys"))->Write(Form("W%s"       ,suffix.c_str()));
       TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmjKeys");
       TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmmKeys");
       TH1F* hZfakesKeys = (TH1F*)fin->Get("hZfakes");
       hZfakesKeys->Reset();
       hZfakesKeys->Add(hZmjKeys,1.0);
-      //hZfakesKeys->Add(hZmmKeys,1.0);
+      hZfakesKeys->Add(hZmmKeys,1.0);
       hZfakesKeys->Write(Form("ZLL%s"        ,suffix.c_str()));
       ((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       ((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
@@ -162,6 +161,7 @@ void produce(
 	TH1F* hAntiIsoKeys = (TH1F*)fin->Get("hAntiIsoKeys");
 	hAntiIsoKeys->Scale(hQCD->Integral()/hAntiIsoKeys->Integral());
 	hAntiIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
+	//hQCD->Write(Form("QCD%s"    ,suffix.c_str()));     
       }
       if(dir->FindObjectAny(Form("W%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hW"))->Write(Form("W%s"           ,suffix.c_str()));
@@ -185,12 +185,10 @@ void produce(
     else if(bin_.find("boost")!=string::npos){
       if(dir->FindObjectAny(Form("ZTT%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s"       ,suffix.c_str()));
-	//((TH1F*)fin->Get("hZtt"))->Write(Form("ZTT%s"       ,suffix.c_str()));
       if(dir->FindObjectAny(Form("QCD%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hAntiIsoKeys"))->Write(Form("QCD%s"       ,suffix.c_str()));
       if(dir->FindObjectAny(Form("W%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hWKeys"))->Write(Form("W%s"           ,suffix.c_str()));
-	//((TH1F*)fin->Get("hW3JetsKeys"))->Write(Form("W%s"           ,suffix.c_str()));
       if(dir->FindObjectAny(Form("ZJ%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hZmj"))->Write(Form("ZJ%s"        ,suffix.c_str()));
       if(dir->FindObjectAny(Form("ZL%s"       ,suffix.c_str()))==0 ) 
@@ -201,7 +199,7 @@ void produce(
 	TH1F* hZfakesKeys = (TH1F*)hZmjKeys->Clone("hZfakesKeys");
 	hZfakesKeys->Reset();
 	hZfakesKeys->Add(hZmjKeys,1.0);
-	//hZfakesKeys->Add(hZmmKeys,1.0);  
+	hZfakesKeys->Add(hZmmKeys,1.0);  
 	hZfakesKeys->Write(Form("ZLL%s"        ,suffix.c_str()));
       }
       if(dir->FindObjectAny(Form("TT%s"       ,suffix.c_str()))==0 )
@@ -284,8 +282,8 @@ void produce(
   ifstream in;
 
   char* c = new char[1000];
-  in.open(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/templates/muTau_%s_template_v2.txt",     binNameSpace.c_str()));
-  ofstream out(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/datacards/%s/muTau_%s_mH%d_%s.txt", outputDir.Data(), binNameSpace.c_str(), mH_, variable_.c_str()));
+  in.open(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/templates/eTau_%s_template_v2.txt",     binNameSpace.c_str()));
+  ofstream out(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/datacards/%s/eTau_%s_mH%d_%s.txt", outputDir.Data(), binNameSpace.c_str(), mH_, variable_.c_str()));
   out.precision(8);
 
   while (in.good())
@@ -299,7 +297,7 @@ void produce(
 	  out << line << endl;
 	}
 	else if(line.find("shapes")!=string::npos){
-          line.replace( line.find("XXX") , 3 , string(Form("muTauSM_%s",variable_.c_str()))  );
+          line.replace( line.find("XXX") , 3 , string(Form("eTauSM_%s",variable_.c_str()))  );
 	  out << line << endl;
 	}
 	else if(line.find("process")!=string::npos && line.find("VBF")!=string::npos){
@@ -337,7 +335,7 @@ void produce(
 		<< space << ((TH1F*)fin->Get("hZmm"))->Integral();
 	      }
 	  else
-	    out << space << ((TH1F*)fin->Get("hZfakes"))->Integral();
+	    out << space << ((TH1F*)fin->Get("hZmj"))->Integral()+((TH1F*)fin->Get("hZmm"))->Integral();
 	  out << space << ((TH1F*)fin->Get("hTTb"))->Integral()
 	      << space << ((TH1F*)fin->Get("hVV"))->Integral()
 	      << endl;
@@ -413,12 +411,12 @@ void produce(
 	  out << space << "JEC uncertainty";
 	  out << endl;
 	}
-	else if(line.find( Form("CMS_htt_muTau_%s_QCDNorm",binNameSpace.c_str()) )!=string::npos){
+	else if(line.find( Form("CMS_htt_eTau_%s_QCDNorm",binNameSpace.c_str()) )!=string::npos){
 	  line.replace( line.find("XXX") , 3 , string(Form("%.0f",((TH1F*)fin->Get("hParameters"))->GetBinContent(5)))  );
 	  line.replace( line.find("YYY") , 3 , string(Form("%.4f",((TH1F*)fin->Get("hParameters"))->GetBinContent(6)))  );
 	  out << line << endl;
 	}
-	else if(line.find( Form("CMS_htt_muTau_%s_WNorm",binNameSpace.c_str()) )!=string::npos){
+	else if(line.find( Form("CMS_htt_eTau_%s_WNorm",binNameSpace.c_str()) )!=string::npos){
 	  line.replace( line.find("XXX") , 3 , string(Form("%.0f",((TH1F*)fin->Get("hParameters"))->GetBinContent(2)))  );
 	  line.replace( line.find("YYY") , 3 , string(Form("%.4f",((TH1F*)fin->Get("hParameters"))->GetBinContent(1)))  );
 	  out << line << endl;
