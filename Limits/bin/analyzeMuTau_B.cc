@@ -1257,7 +1257,7 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Dec2011/iter3"){
   //mH.push_back(160);
 
 
-  //plotElecTau(120,0,"inclusive",""   ,"MtLeg1Corr","M_{T}","GeV" ,outputDir,40,0,160,5.0,1.0,0,1.2);
+  //plotMuTau(120,0,"inclusive",""   ,"MtLeg1Corr","M_{T}","GeV" ,outputDir,40,0,160,5.0,1.0,0,1.2);
 
   //plotMuTau(120,0,"inclusive",""   ,"numPV","reconstructed vertexes","units" ,outputDir,30,0,30,5.0,1.0,0,1.5);
 
@@ -1282,7 +1282,7 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Dec2011/iter3"){
   //plotMuTau(120,1,"twoJets",""   ,"eta2","trailing jet #eta","units"    ,outputDir,21,-5, 5,5.0,1.0,0,2.);
   
   //plotMuTau(120,1,"twoJets",""   ,"Deta","|#Delta#eta|_{jj}","units"    ,outputDir,20,0, 8,   5.0,1.0,0,1.5);
-  plotMuTau(120,1,"twoJets",""   ,"Mjj","M_{jj}","GeV"                  ,outputDir,-1,0, 100,5.0,1.0,1,100);
+  //plotMuTau(120,1,"twoJets",""   ,"Mjj","M_{jj}","GeV"                  ,outputDir,-1,0, 100,5.0,1.0,1,100);
   
 
 
@@ -1339,8 +1339,9 @@ int main(int argc, const char* argv[])
   gSystem->Load("libFWCoreFWLite");
   AutoLibraryLoader::enable();
 
-  plotMuTauAll();
+  //plotMuTauAll();
   //plotMuTau();
+  plotMuTau(120,1,"",""   ,"MtLeg1Corr","M_{T}","GeV" ,"./",40,0,160,5.0,1.0,0,1.2);
 
   //plotMuTau(120,1,"inclusive","","diTauVisMass","","","Dec2011/iter3",10,0,7000);
   //plotMuTau(120,1,"novbf","","diTauVisMass","","","Dec2011/iter3",10,0,7000);
