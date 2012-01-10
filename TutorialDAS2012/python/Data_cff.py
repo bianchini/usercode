@@ -1,0 +1,28 @@
+import FWCore.ParameterSet.Config as cms
+
+fileList =  cms.untracked.vstring(
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_10_1_1bq.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_11_1_VJ4.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_12_1_DeQ.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_13_1_ZNF.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_14_1_1Hu.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_15_1_b8U.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_16_1_dgC.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_17_1_ny1.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_18_1_bDT.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_19_1_u8A.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_1_1_g0h.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_20_1_tGq.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_21_1_z0f.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_22_1_qfT.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_23_1_dQe.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_24_1_DXF.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_2_1_Y9e.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_3_1_jbk.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_4_1_Nce.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_5_1_PWG.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_6_1_9kk.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_7_1_kSZ.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_8_1_4W2.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/user/bianchi/TutorialDAS2012/Run2011A-MuTau-05AugReReco/patTuples_9_1_uNP.root',
+    )

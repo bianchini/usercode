@@ -6,6 +6,7 @@ process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
 postfix     = "PFlow"
 runOnMC     = True
+sample      = "DYJets"
 
 from Configuration.PyReleaseValidation.autoCond import autoCond
 process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
@@ -17,13 +18,20 @@ else:
     process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 10
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source.fileNames = cms.untracked.vstring(
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall11/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/AODSIM/PU_S6_START42_V14B-v1/0000/0655761A-01F9-E011-9989-E0CB4E553665.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/akalinow/TTJets_TuneZ2_7TeV-madgraph-tauola/424_mutau_Fall11_v1/faebd120ba0b19af7e4a67b10c186f76/tautauSkimmAOD_10_1_xWn.root'
     )
+
+from Bianchi.TutorialDAS2012.DYJets_cff import fileList as fileListDYJets
+from Bianchi.TutorialDAS2012.WJets_cff  import fileList as fileListWJets
+from Bianchi.TutorialDAS2012.TTJets_cff import fileList as fileListTTJets
+from Bianchi.TutorialDAS2012.Data_cff   import fileList as fileListData
+
+process.source.fileNames = fileListDYJets
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
 #    '1:751063'
@@ -552,14 +560,14 @@ process.out.outputCommands.extend( cms.vstring(
 
 process.TFileService = cms.Service(
     "TFileService",
-    fileName = cms.string("skimMuTau.root")
+    fileName = cms.string("treeMuTau_"+sample+".root")
     )
 
 process.out.SelectEvents = cms.untracked.PSet(
     SelectEvents = cms.vstring('p')
     )
 
-process.out.fileName = cms.untracked.string('patTuples_MuTau.root')
+process.out.fileName = cms.untracked.string('patTuples_MuTau_'+sample+'.root')
 
 #process.outpath = cms.EndPath(process.out)
 process.outpath = cms.EndPath()
