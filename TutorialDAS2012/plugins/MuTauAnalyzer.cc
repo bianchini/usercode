@@ -83,123 +83,6 @@ void MuTauAnalyzer::beginJob(){
   genMETP4_       = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genVP4_         = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
-  
-  std::vector< float > Data2011LumiExt;
-  Double_t Data2011LumiExt_f[50] = {
-    0.00290212,
-    0.0123985,
-    0.0294783,
-    0.0504491,
-    0.0698525,
-    0.0836611,
-    0.0905799,
-    0.0914388,
-    0.0879379,
-    0.0817086,
-    0.073937,
-    0.0653785,
-    0.0565162,
-    0.047707,
-    0.0392591,
-    0.0314457,
-    0.0244864,
-    0.018523,
-    0.013608,
-    0.00970977,
-    0.00673162,
-    0.00453714,
-    0.00297524,
-    0.00189981,
-    0.00118234,
-    0.000717854,
-    0.00042561,
-    0.000246653,
-    0.000139853,
-    7.76535E-05,
-    4.22607E-05,
-    2.25608E-05,
-    1.18236E-05,
-    6.0874E-06,
-    6.04852E-06,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0
-  };
-
-  std::vector< float > Fall11Lumi ;
-  Double_t Fall11Lumi_f[50] = {
-    0.003388501,
-    0.010357558,
-    0.024724258,
-    0.042348605,
-    0.058279812,
-    0.068851751,
-    0.072914824,
-    0.071579609,
-    0.066811668,
-    0.060672356,
-    0.054528356,
-    0.04919354,
-    0.044886042,
-    0.041341896,
-    0.0384679,
-    0.035871463,
-    0.03341952,
-    0.030915649,
-    0.028395374,
-    0.025798107,
-    0.023237445,
-    0.020602754,
-    0.0180688,
-    0.015559693,
-    0.013211063,
-    0.010964293,
-    0.008920993,
-    0.007080504,
-    0.005499239,
-    0.004187022,
-    0.003096474,
-    0.002237361,
-    0.001566428,
-    0.001074149,
-    0.000721755,
-    0.000470838,
-    0.00030268,
-    0.000184665,
-    0.000112883,
-    6.74043E-05,
-    3.82178E-05,
-    2.22847E-05,
-    1.20933E-05,
-    6.96173E-06,
-    3.4689E-06,
-    1.96172E-06,
-    8.49283E-07,
-    5.02393E-07,
-    2.15311E-07,
-    9.56938E-08
-  };
-
- 
-  for( int i=0; i<50; i++) {
-    Data2011LumiExt.push_back(Data2011LumiExt_f[i]);
-    Fall11Lumi.push_back(Fall11Lumi_f[i]);
-  }
-  cout << "MC = " << Fall11Lumi.size() << ", DATA = " << Data2011LumiExt.size() << endl;
-  LumiWeights_ = edm::LumiReWeighting(Fall11Lumi, Data2011LumiExt);
-  
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
   tree_->Branch("genJetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genJetsIDP4_);
   
@@ -258,8 +141,6 @@ void MuTauAnalyzer::beginJob(){
 
   tree_->Branch("diTauCharge",&diTauCharge_,"diTauCharge/F");
   tree_->Branch("rhoFastJet",&rhoFastJet_,"rhoFastJet/F");
-
-  tree_->Branch("mcPUweight",&mcPUweight_,"mcPUweight/F");
 
   tree_->Branch("nPUVertices",&nPUVertices_,"nPUVertices/I");
   tree_->Branch("nPUVerticesM1",&nPUVerticesM1_,"nPUVerticesM1/I");
@@ -427,8 +308,6 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
     cout << "Num of OOT PU = "      << nPUVerticesM1_+nPUVerticesP1_<< endl;
   }
 
-  mcPUweight_ = LumiWeights_.weight( nPUVertices_ );
-
   edm::Handle<double> rhoFastJetHandle;
   iEvent.getByLabel(edm::InputTag("kt6PFJetsCentral","rho", ""), rhoFastJetHandle);
   if( !rhoFastJetHandle.isValid() )  
@@ -557,42 +436,14 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
 
     // for Fall11
     triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v9");
-    triggerPaths.push_back("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v1");
     triggerPaths.push_back("HLT_IsoMu15_v14");
-
     HLTfiltersMu.push_back("hltSingleMuIsoL3IsoFiltered15");
-    HLTfiltersMu.push_back("hltSingleMuIsoL1s14L3IsoFiltered15eta2p1");
     HLTfiltersTau.push_back("hltOverlapFilterIsoMu15IsoPFTau15");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoMu15IsoPFTau20");
-    HLTfiltersTau.push_back("hltPFTau15TrackLooseIso");
-    HLTfiltersTau.push_back("hltPFTau20TrackLooseIso");
-
   }
   else{
-
-    triggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v1");
-    triggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v2");
-    triggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v4");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v2");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v4");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v5");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v6");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v8");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v9");
-    triggerPaths.push_back("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v1");
-    triggerPaths.push_back("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v5");
-    triggerPaths.push_back("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v6");
-
-    triggerPaths.push_back("HLT_IsoMu12_v1");
-    triggerPaths.push_back("HLT_IsoMu12_v2");
-
-    HLTfiltersMu.push_back("hltSingleMuIsoL3IsoFiltered12");
+    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v8");    
     HLTfiltersMu.push_back("hltSingleMuIsoL3IsoFiltered15");
-    HLTfiltersMu.push_back("hltSingleMuIsoL1s14L3IsoFiltered15eta2p1");
-
-    HLTfiltersTau.push_back("hltOverlapFilterIsoMu12IsoPFTau10");
     HLTfiltersTau.push_back("hltOverlapFilterIsoMu15IsoPFTau15");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoMu15IsoPFTau20");
   }
 
   for(unsigned int i=0;i<triggerPaths.size();i++){

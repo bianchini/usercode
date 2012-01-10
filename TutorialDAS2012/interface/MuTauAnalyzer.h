@@ -11,7 +11,6 @@
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
 
-#include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
 
 
 #include "TFile.h"
@@ -49,8 +48,6 @@ class MuTauAnalyzer : public edm::EDAnalyzer{
 
   TFile* file_;
   TTree* tree_;
-
-  edm::LumiReWeighting LumiWeights_;
 
   edm::InputTag diTauTag_;
   edm::InputTag jetsTag_;
@@ -111,7 +108,6 @@ class MuTauAnalyzer : public edm::EDAnalyzer{
   int nPUVertices_;
   int nPUVerticesM1_;
   int nPUVerticesP1_;
-  float mcPUweight_;
 
 };
 
