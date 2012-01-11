@@ -22,7 +22,7 @@ else:
 
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START42_V13::All')
+    process.GlobalTag.globaltag = cms.string('START42_V14B::All')
 else:
     process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
     
@@ -34,14 +34,14 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/ElecTauStream-16Nov2011//88521b2a6e3f67f72df8ed3ebcf47080/patTuples_ElecTauStream_9_1_ZWu.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/ElecTauStream-16Nov2011//88521b2a6e3f67f72df8ed3ebcf47080/patTuples_ElecTauStream_9_1_ZWu.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-A/7844d4f37a96a2c29702b4cab23898d9/patTuples_ElecTauStream_1_1_L9Q.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-13Oct2011/4858ffc00b76ea327a878ab2c9d1d4f3/patTuples_ElecTauStream_1_1_MHb.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DoubleMu/ElecTauStream-08Nov2011-v2-05AugReReco-Embedded/7254a5dfb1c71be66f71c2cfd71d6b63/patTuples_ElecTauStream_9_1_eRU.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-21Oct2011/72336b8f61b87f1536c6b95a5cfbfe6e/patTuples_ElecTauStream_1_1_qHA.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-21Oct2011-05AugReReco/ea0534a53ae8342d77d517a552111b33/patTuples_ElecTauStream_18_1_L7T.root'
     #'rfio:rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-v6/add82882179501750b106d9900e51989/patTuples_ElecTauStream_45_1_UZL.root',
-    #'file:./patTuples_ElecTauStream.root'
+    'file:./patTuples_ElecTauStream.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-08Nov2011-RunBPromptReco-v1/b9a57288ad37f0c4bdf36b8f8450de94/patTuples_ElecTauStream_792_1_ePf.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-08Nov2011-PromptReco-v6p2/b9a57288ad37f0c4bdf36b8f8450de94/patTuples_ElecTauStream_7_1_N43.root'
     )
@@ -129,11 +129,11 @@ process.metRecoilCorrector = cms.EDProducer(
     electronTag         = cms.InputTag("elecPtEtaIDIso"),
     muonTag             = cms.InputTag(""),
     tauTag              = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
-    inputFileNamezmm42X = cms.FileInPath("Bianchi/Utilities/data/recoilv3/RecoilCorrector_v2/recoilfits/recoilfit_zmm42X_njet.root"),
-    inputFileNamedatamm = cms.FileInPath("Bianchi/Utilities/data/recoilv3/RecoilCorrector_v2/recoilfits/recoilfit_datamm_njet.root"),
-    inputFileNamewjets  = cms.FileInPath("Bianchi/Utilities/data/recoilv3/RecoilCorrector_v2/recoilfits/recoilfit_wjets_njet.root"),
-    inputFileNamezjets  = cms.FileInPath("Bianchi/Utilities/data/recoilv3/RecoilCorrector_v2/recoilfits/recoilfit_zjets_ltau_njet.root"),
-    inputFileNamehiggs  = cms.FileInPath("Bianchi/Utilities/data/recoilv3/RecoilCorrector_v2/recoilfits/recoilfit_higgs_njet.root"),
+    inputFileNamezmm42X = cms.FileInPath("Bianchi/Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root"),
+    inputFileNamedatamm = cms.FileInPath("Bianchi/Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root"),
+    inputFileNamewjets  = cms.FileInPath("Bianchi/Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_wjets_njet.root"),
+    inputFileNamezjets  = cms.FileInPath("Bianchi/Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zjets_ltau_njet.root"),
+    inputFileNamehiggs  = cms.FileInPath("Bianchi/Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_higgs_njet.root"),
     numOfSigmas         = cms.double(1.0),
     minJetPt            = cms.double(30.0),
     verbose             = cms.bool(False),

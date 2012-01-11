@@ -22,7 +22,7 @@ else:
         
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START42_V13::All')
+    process.GlobalTag.globaltag = cms.string('START42_V14B::All')
 else:
     process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
     
@@ -34,8 +34,8 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-16Nov2011/700226eee9a93cb10580e91b3d6e5c18/patTuples_MuTauStream_9_1_e13.root'
-    #'file:./patTuples_MuTauStream.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-16Nov2011/700226eee9a93cb10580e91b3d6e5c18/patTuples_MuTauStream_9_1_e13.root'
+    'file:./patTuples_MuTauStream.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi//TauPlusX/MuTauStream-13Oct2011-05AugReReco/c37c208594d74fa447903aef959eea7d/patTuples_MuTauStream_14_1_MHD.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi//DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_9_1_6gn.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/WJetsToLNu_TuneZ2_7TeV-madgraph-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_2_1_qa2.root'
@@ -129,11 +129,11 @@ process.metRecoilCorrector = cms.EDProducer(
     electronTag         = cms.InputTag(""),
     muonTag             = cms.InputTag("muPtEtaIDIso"),
     tauTag              = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
-    inputFileNamezmm42X = cms.FileInPath("Bianchi/Utilities/data/recoilv3/RecoilCorrector_v2/recoilfits/recoilfit_zmm42X_njet.root"),
-    inputFileNamedatamm = cms.FileInPath("Bianchi/Utilities/data/recoilv3/RecoilCorrector_v2/recoilfits/recoilfit_datamm_njet.root"),
-    inputFileNamewjets  = cms.FileInPath("Bianchi/Utilities/data/recoilv3/RecoilCorrector_v2/recoilfits/recoilfit_wjets_njet.root"),
-    inputFileNamezjets  = cms.FileInPath("Bianchi/Utilities/data/recoilv3/RecoilCorrector_v2/recoilfits/recoilfit_zjets_ltau_njet.root"),
-    inputFileNamehiggs  = cms.FileInPath("Bianchi/Utilities/data/recoilv3/RecoilCorrector_v2/recoilfits/recoilfit_higgs_njet.root"),
+    inputFileNamezmm42X = cms.FileInPath("Bianchi/Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root"),
+    inputFileNamedatamm = cms.FileInPath("Bianchi/Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root"),
+    inputFileNamewjets  = cms.FileInPath("Bianchi/Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_wjets_njet.root"),
+    inputFileNamezjets  = cms.FileInPath("Bianchi/Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zjets_ltau_njet.root"),
+    inputFileNamehiggs  = cms.FileInPath("Bianchi/Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_higgs_njet.root"),
     numOfSigmas         = cms.double(1.0),
     minJetPt            = cms.double(30.0),
     verbose             = cms.bool(False),
