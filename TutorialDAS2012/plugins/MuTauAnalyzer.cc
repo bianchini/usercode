@@ -100,26 +100,14 @@ void MuTauAnalyzer::beginJob(){
   tree_->Branch("genVP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genVP4_);
   tree_->Branch("genDecay",&genDecay_,"genDecay/I");
 
-  tree_->Branch("sumEt", &sumEt_,"sumEt/F");
   tree_->Branch("MtLeg1",&MtLeg1_,"MtLeg1/F");
 
   tree_->Branch("chIsoLeg1v2",  &chIsoLeg1v2_,"chIsoLeg1v2/F");
   tree_->Branch("nhIsoLeg1v2",  &nhIsoLeg1v2_,"nhIsoLeg1v2/F");
   tree_->Branch("phIsoLeg1v2",  &phIsoLeg1v2_,"phIsoLeg1v2/F");
-  tree_->Branch("elecIsoLeg1v2",&elecIsoLeg1v2_,"elecIsoLeg1v2/F");
-  tree_->Branch("muIsoLeg1v2",  &muIsoLeg1v2_ ,"muIsoLeg1v2/F");
   tree_->Branch("chIsoPULeg1v2",&chIsoPULeg1v2_,"chIsoPULeg1v2/F");
   tree_->Branch("nhIsoPULeg1v2",&nhIsoPULeg1v2_,"nhIsoPULeg1v2/F");
   tree_->Branch("phIsoPULeg1v2",&phIsoPULeg1v2_,"phIsoPULeg1v2/F");
-
-  tree_->Branch("chIsoLeg2",&chIsoLeg2_,"chIsoLeg2/F");
-  tree_->Branch("nhIsoLeg2",&nhIsoLeg2_,"nhIsoLeg2/F");
-  tree_->Branch("phIsoLeg2",&phIsoLeg2_,"phIsoLeg2/F");
-
-  tree_->Branch("dxy1",&dxy1_,"dxy1/F");
-  tree_->Branch("dxy2",&dxy2_,"dxy2/F");
-  tree_->Branch("dz1",&dz1_,"dz1/F");
-  tree_->Branch("dz2",&dz2_,"dz2/F");
 
   tree_->Branch("run",&run_,"run/l");
   tree_->Branch("event",&event_,"event/l");
@@ -140,14 +128,8 @@ void MuTauAnalyzer::beginJob(){
   tree_->Branch("muFlag",&muFlag_,"muFlag/I");
 
   tree_->Branch("diTauCharge",&diTauCharge_,"diTauCharge/F");
-  tree_->Branch("rhoFastJet",&rhoFastJet_,"rhoFastJet/F");
 
   tree_->Branch("nPUVertices",&nPUVertices_,"nPUVertices/I");
-  tree_->Branch("nPUVerticesM1",&nPUVerticesM1_,"nPUVerticesM1/I");
-  tree_->Branch("nPUVerticesP1",&nPUVerticesP1_,"nPUVerticesP1/I");
-
-
-
 }
 
 
@@ -161,6 +143,14 @@ MuTauAnalyzer::~MuTauAnalyzer(){
 
 void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
 
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //     Clear all vectors 
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////
+
   jetsIDP4_->clear();
   diTauVisP4_->clear();
   diTauSVfitP4_->clear();
@@ -172,7 +162,20 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
   genMETP4_->clear();
   tauXTriggers_->clear();
   triggerBits_->clear();
+
+  run_   = iEvent.run();
+  event_ = (iEvent.eventAuxiliary()).event();
+  lumi_  = iEvent.luminosityBlock();
   
+
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //     Retrieve the collections
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////
+
   edm::Handle<PATMuTauPairCollection> diTauHandle;
   iEvent.getByLabel(diTauTag_,diTauHandle);
   if( !diTauHandle.isValid() )  
@@ -198,19 +201,6 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
   for(unsigned int k = 0; k<vertexes->size(); k++){
     vtxZ.push_back(((*vertexes)[k].position()).z());
   }
-
-
-  if(verbose_){
-    cout <<  "Run " << iEvent.run() << ", event " << (iEvent.eventAuxiliary()).event() 
-	 << ", lumi " << iEvent.luminosityBlock() << endl;
-    cout << "List of vertexes " << endl;
-    for(unsigned int k = 0; k<vertexes->size(); k++){
-      cout << "Vtx[" << k << "] (x,y,z) = (" << ((*vertexes)[k].position()).x()
-	   << "," << ((*vertexes)[k].position()).y() << "," << ((*vertexes)[k].position()).z() << ")"
-	   << endl;
-    }
-  }
-
   numPV_ = vertexes->size();
 
   edm::Handle<pat::METCollection> metHandle;
@@ -234,20 +224,56 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
       << "No Trigger Objects label available \n";
   const pat::TriggerObjectStandAloneCollection* triggerObjs = triggerObjsHandle.product();
 
+  edm::Handle<pat::MuonCollection> muonsHandle;
+  iEvent.getByLabel( muonsTag_ ,muonsHandle);
+  if( !muonsHandle.isValid() )  
+    edm::LogError("DataNotAvailable")
+      << "No muons label available \n";
+  const pat::MuonCollection* muons = muonsHandle.product();
 
-  genDecay_ = -99;
+  edm::Handle<pat::MuonCollection> muonsRelHandle;
+  iEvent.getByLabel(muonsRelTag_, muonsRelHandle);
+  if( !muonsRelHandle.isValid() )  
+    edm::LogError("DataNotAvailable")
+      << "No muonsRel label available \n";
+  const pat::MuonCollection* muonsRel = muonsRelHandle.product();
+
+  edm::Handle<reco::GenJetCollection> tauGenJetsHandle;
+  edm::Handle<std::vector<PileupSummaryInfo> > puInfoH;
   edm::Handle<reco::GenParticleCollection> genHandle;
+
+  genDecay_          = -99;
+  nPUVertices_       = -99;
+  const reco::GenJetCollection* tauGenJets        = 0;
   const reco::GenParticleCollection* genParticles = 0;
+
   if(isMC_){
+
+    iEvent.getByLabel(edm::InputTag("tauGenJetsSelectorAllHadrons"),tauGenJetsHandle);
+    if( !tauGenJetsHandle.isValid() )  
+      edm::LogError("DataNotAvailable")
+	<< "No gen jet label available \n";
+    tauGenJets = tauGenJetsHandle.product();
+
+    iEvent.getByType(puInfoH);
+    if(puInfoH.isValid()){
+      for(std::vector<PileupSummaryInfo>::const_iterator it = puInfoH->begin(); it != puInfoH->end(); it++){
+	if(it->getBunchCrossing() == 0 ) 
+	  nPUVertices_  = it->getPU_NumInteractions();
+      }
+    }
+
     iEvent.getByLabel(edm::InputTag("genParticles"),genHandle);
     if( !genHandle.isValid() )  
       edm::LogError("DataNotAvailable")
 	<< "No gen particles label available \n";
     genParticles = genHandle.product();
     for(unsigned int k = 0; k < genParticles->size(); k ++){
-      if( !( (*genParticles)[k].pdgId() == 23 || abs((*genParticles)[k].pdgId()) == 24 || (*genParticles)[k].pdgId() == 25) || (*genParticles)[k].status()!=3)
+      if( !( (*genParticles)[k].pdgId() == 23 || 
+	     abs((*genParticles)[k].pdgId()) == 24 || 
+	     (*genParticles)[k].pdgId() == 25) || 
+	  (*genParticles)[k].status()!=3)
 	continue;
-      if(verbose_) cout << "Boson status, pt,phi " << (*genParticles)[k].status() << "," << (*genParticles)[k].pt() << "," << (*genParticles)[k].phi() << endl;
 
       genVP4_->push_back( (*genParticles)[k].p4() );
       genDecay_ = (*genParticles)[k].pdgId();
@@ -272,74 +298,13 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
     }
   }
 
-  edm::Handle<reco::GenJetCollection> tauGenJetsHandle;
-  edm::Handle<std::vector<PileupSummaryInfo> > puInfoH;
-  nPUVertices_       = -99;
-  nPUVerticesP1_     = -99;
-  nPUVerticesM1_     = -99;
-
-  const reco::GenJetCollection* tauGenJets = 0;
-  if(isMC_){
-    // tag gen jets
-    iEvent.getByLabel(edm::InputTag("tauGenJetsSelectorAllHadrons"),tauGenJetsHandle);
-    if( !tauGenJetsHandle.isValid() )  
-      edm::LogError("DataNotAvailable")
-	<< "No gen jet label available \n";
-    tauGenJets = tauGenJetsHandle.product();
-
-    // PU infos
-    iEvent.getByType(puInfoH);
-    if(puInfoH.isValid()){
-      for(std::vector<PileupSummaryInfo>::const_iterator it = puInfoH->begin(); it != puInfoH->end(); it++){
-
-	//cout << "Bunc crossing " << it->getBunchCrossing() << endl;
-	if(it->getBunchCrossing() == 0 ) 
-	  nPUVertices_  = it->getPU_NumInteractions();
-	else if(it->getBunchCrossing() == -1)  
-	  nPUVerticesM1_= it->getPU_NumInteractions();
-	else if(it->getBunchCrossing() == +1)  
-	  nPUVerticesP1_= it->getPU_NumInteractions();
-      }
-    }
-  }
-
-  if(verbose_){
-    cout << "Num of PU = "          << nPUVertices_ << endl;
-    cout << "Num of OOT PU = "      << nPUVerticesM1_+nPUVerticesP1_<< endl;
-  }
-
-  edm::Handle<double> rhoFastJetHandle;
-  iEvent.getByLabel(edm::InputTag("kt6PFJetsCentral","rho", ""), rhoFastJetHandle);
-  if( !rhoFastJetHandle.isValid() )  
-    edm::LogError("DataNotAvailable")
-      << "No rho label available \n";
-  rhoFastJet_ = (*rhoFastJetHandle);
-
-  edm::Handle<pat::MuonCollection> muonsHandle;
-  iEvent.getByLabel( muonsTag_ ,muonsHandle);
-  if( !muonsHandle.isValid() )  
-    edm::LogError("DataNotAvailable")
-      << "No muons label available \n";
-  const pat::MuonCollection* muons = muonsHandle.product();
-  if(muons->size()<1){
-    cout << " No muons !!! " << endl;
-    return;
-  } else if(muons->size()>1 && verbose_){
-    cout << "WARNING: "<< muons->size() << "  muons found in the event !!! We will select only one" << endl;
-  }
-
-  edm::Handle<pat::MuonCollection> muonsRelHandle;
-  iEvent.getByLabel(muonsRelTag_, muonsRelHandle);
-  if( !muonsRelHandle.isValid() )  
-    edm::LogError("DataNotAvailable")
-      << "No muonsRel label available \n";
-  const pat::MuonCollection* muonsRel = muonsRelHandle.product();
-  if(muonsRel->size()<1){
-    cout << " No muonsRel !!! " << endl;
-    return;
-  } else if(muonsRel->size()>1 && verbose_){
-    cout << "WARNING: "<< muonsRel->size() << "  muonsRel found in the event !!! We will select only one" << endl;
-  }
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //     Choosing the di-tau
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////
   
   const PATMuTauPair *theDiTau = 0;
   if(diTaus->size()<1){
@@ -377,53 +342,51 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
   }
   
 
-  // select highest-pt muon that forms at least one di-tau
-  // no ambiguity if "muons" are isolated ==> if extra
-  // isolated muon exists the event is vetoed
+  // muons are sorted by decreasing pt
   bool found2 = false;
   for(unsigned int j=0; j<muons->size(); j++){
     for(unsigned int i=0; i< diTaus->size(); i++){
-
       if(found2) continue;
-
       if( Geom::deltaR(((*diTaus)[i].leg1())->p4(),((*muons)[j]).p4())<0.01 ){
 	muIndex=j;
 	found2 = true;
       }
     }
   }
-  if(verbose_) cout<< "Selected muon with index " << muIndex << endl;
-
   std::vector<unsigned int> selectedDiTausFromMu;
   for(unsigned int i=0; i< diTaus->size(); i++){
     if( Geom::deltaR(((*diTaus)[i].leg1())->p4(),((*muons)[muIndex]).p4())<0.01 ) 
       selectedDiTausFromMu.push_back(i);
   }
-  if(verbose_) cout<< "Selection on Muons has selected " << selectedDiTausFromMu.size() << " diTaus...check tau leg now..." << endl;
-  
-  
   unsigned int index = 0;
   float maxTauPt     = 0;
-
   for(unsigned int i=0; i<selectedDiTausFromMu.size(); i++){
     if( ((*diTaus)[selectedDiTausFromMu[i]].leg2())->pt() > maxTauPt )
       index = selectedDiTausFromMu[i];
   }
-  if(verbose_) cout << "Chosen index " << index << endl;
+
+
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //     Saving the infos on the di-tau
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////
 
   theDiTau = &(*diTaus)[index];
-  
+
+  const pat::Muon* leg1 = dynamic_cast<const pat::Muon*>( (theDiTau->leg1()).get() );
+  const pat::Tau*  leg2 = dynamic_cast<const pat::Tau*>(  (theDiTau->leg2()).get() );
+
   diTauCharge_ = theDiTau->charge();
   METP4_->push_back((*met)[0].p4());
-  if(isMC_) genMETP4_->push_back( (*met)[0].genMET()->p4() );
-  sumEt_  = (*met)[0].sumEt();
+  if(isMC_) 
+    genMETP4_->push_back( (*met)[0].genMET()->p4() );
   MtLeg1_ =  theDiTau->mt1MET();
 
   isMuLegMatched_  = 0;
   isTauLegMatched_ = 0;
-
-  const pat::Muon* leg1 = dynamic_cast<const pat::Muon*>( (theDiTau->leg1()).get() );
-  const pat::Tau*  leg2 = dynamic_cast<const pat::Tau*>(  (theDiTau->leg2()).get() );
 
   diTauLegsP4_->push_back(leg1->p4());
   diTauLegsP4_->push_back(leg2->p4());
@@ -433,8 +396,6 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
   vector<string> HLTfiltersTau;
 
   if(isMC_){
-
-    // for Fall11
     triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v9");
     triggerPaths.push_back("HLT_IsoMu15_v14");
     HLTfiltersMu.push_back("hltSingleMuIsoL3IsoFiltered15");
@@ -572,15 +533,15 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
     }
   }
 
-  if((leg2->signalPFChargedHadrCands()).size()==1 && (leg2->signalPFGammaCands()).size()==0) decayMode_ = 0; 
-  else if((leg2->signalPFChargedHadrCands()).size()==1 && (leg2->signalPFGammaCands()).size()>0)  decayMode_ = 1; 
-  else if((leg2->signalPFChargedHadrCands()).size()==3) decayMode_ = 2; 
-  else  decayMode_ = -99;
-
-  
+  if((leg2->signalPFChargedHadrCands()).size()==1 && (leg2->signalPFGammaCands()).size()==0) 
+    decayMode_ = 0; 
+  else if((leg2->signalPFChargedHadrCands()).size()==1 && (leg2->signalPFGammaCands()).size()>0)  
+    decayMode_ = 1; 
+  else if((leg2->signalPFChargedHadrCands()).size()==3) 
+    decayMode_ = 2; 
+  else  
+    decayMode_ = -99;
   visibleTauMass_ = leg2->mass();
-
-   
   signalPFChargedHadrCands_ = (leg2->signalPFChargedHadrCands()).size();
   signalPFGammaCands_       = (leg2->signalPFGammaCands()).size();
    
@@ -589,23 +550,6 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
   if(leg2->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5)  tightestHPSDBWP_++;
   if(leg2->tauID("byMediumCombinedIsolationDeltaBetaCorr")>0.5) tightestHPSDBWP_++;
   if(leg2->tauID("byTightCombinedIsolationDeltaBetaCorr")>0.5)  tightestHPSDBWP_++;
-
-
-  dxy1_ = vertexes->size()!=0 ? leg1->globalTrack()->dxy( (*vertexes)[0].position() ) : -99;
-  dz1_ = vertexes->size()!=0 ? leg1->globalTrack()->dz( (*vertexes)[0].position() ) : -99;
-  dxy2_ = -99;
-  dz2_ = -99;
-
-  if( vertexes->size()!=0 && (leg2->leadPFChargedHadrCand()).isNonnull() ){
-    if( (leg2->leadPFChargedHadrCand()->trackRef()).isNonnull() ){
-      dxy2_ = leg2->leadPFChargedHadrCand()->trackRef()->dxy( (*vertexes)[0].position() );
-      dz2_ = leg2->leadPFChargedHadrCand()->trackRef()->dz( (*vertexes)[0].position() );
-    }
-    if( (leg2->leadPFChargedHadrCand()->gsfTrackRef()).isNonnull() ){
-      dxy2_ = leg2->leadPFChargedHadrCand()->gsfTrackRef()->dxy( (*vertexes)[0].position() );
-      dz2_ = leg2->leadPFChargedHadrCand()->gsfTrackRef()->dz( (*vertexes)[0].position() );
-    }
-  }
 
   // isoDeposit definition: 2011
   isodeposit::AbsVetos vetos2011ChargedLeg1; 
@@ -625,23 +569,12 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
     leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetos2011NeutralLeg1).first;
   phIsoLeg1v2_ = 
     leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2011PhotonLeg1).first;
-  elecIsoLeg1v2_ = 
-   leg1->isoDeposit(pat::User3Iso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
-  muIsoLeg1v2_   = 
-    leg1->isoDeposit(pat::User2Iso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
   chIsoPULeg1v2_ = 
     leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
   nhIsoPULeg1v2_ = 
     leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011NeutralLeg1).first;
   phIsoPULeg1v2_ = 
     leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011PhotonLeg1).first;
-
-  chIsoLeg2_ = leg2->isolationPFChargedHadrCandsPtSum();
-  nhIsoLeg2_ = 0.;
-  for(unsigned int i = 0; i < (leg2->isolationPFNeutrHadrCands()).size(); i++){
-    nhIsoLeg2_ += (leg2->isolationPFNeutrHadrCands()).at(i)->pt();
-  }
-  phIsoLeg2_ = leg2->isolationPFGammaCandsEtSum();
    
   for(unsigned int i = 0; i <vetos2011ChargedLeg1.size(); i++){
     delete vetos2011ChargedLeg1[i];
@@ -662,14 +595,19 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
   }
   diTauSVfitP4_->push_back( nSVfitFitP4  );
 
-  run_   = iEvent.run();
-  event_ = (iEvent.eventAuxiliary()).event();
-  lumi_  = iEvent.luminosityBlock();
+
+
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //     Jets
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////
+
 
   std::map<double, math::XYZTLorentzVectorD ,MuTauAnalyzer::more> sortedJetsID;
   std::map<double, math::XYZTLorentzVectorD ,MuTauAnalyzer::more> sortedGenJetsID;
- 
-
   for(unsigned int it = 0; it < jets->size() ; it++){
 
     pat::Jet* jet = const_cast<pat::Jet*>(&(*jets)[it]);
@@ -680,16 +618,6 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
 	Geom::deltaR(jet->p4(), leg2p4 )<deltaRLegJet_ ){
       if(verbose_) cout << "The jet at (" <<jet->pt()<<","<<jet->eta()<<") is closer than "<<deltaRLegJet_ << " from one of the legs" << endl;  
       continue;
-    }
-
-    if(verbose_){
-      cout << "Analyzing jet with pt " << (jet->p4()).Pt() 
-	   << "and eta " << (jet->p4()).Eta() << endl;
-      std::cout << "L1FastJet ========> " << std::endl;
-      std::cout << "Uncorrected " << jet->correctedJet("Uncorrected","none","patJetCorrFactors").pt() << std::endl;
-      std::cout << "L1FastJet "   << jet->correctedJet("L1FastJet","none",  "patJetCorrFactors").pt() << std::endl;
-      std::cout << "L2Relative "  << jet->correctedJet("L2Relative","none", "patJetCorrFactors").pt() << std::endl; 
-      std::cout << "L3Absolute "  << jet->correctedJet("L3Absolute","none", "patJetCorrFactors").pt() << std::endl; 
     }
 
     if( jetID( jet ) < minJetID_ ){
@@ -714,6 +642,14 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
     genJetsIDP4_->push_back( it->second );
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //     Fill
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////
+
   tree_->Fill();
 
 }
@@ -758,11 +694,10 @@ unsigned int  MuTauAnalyzer::jetID( const pat::Jet* jet ){
     case reco::PFCandidate::e: 
       energyElectrons += cand.energy();
       break;
-    case reco::PFCandidate::h_HF: // fill neutral
+    case reco::PFCandidate::h_HF: 
       nNeutral++;
-      //energyNeutral += cand.energy();
       break;
-    case reco::PFCandidate::egamma_HF: // fill e/gamma
+    case reco::PFCandidate::egamma_HF:
       nPhotons++;
       energyPhotons += cand.energy();
       break;

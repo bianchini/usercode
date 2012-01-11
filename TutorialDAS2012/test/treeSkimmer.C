@@ -169,18 +169,17 @@ float pileupWeight( int intimepileup_ ){
 
 
 
-void makeTrees_MuTauStream( int index = 0 ){
+void makeTrees_MuTau( int index = 0 ){
  
   cout <<  "Now analyzing sample with index " << index << endl;
 
   TFile corrections("../data/corrections.root");
-  
   TF1 *ratioMuIDIsoBL     = (TF1*)corrections.Get("ratioMuIDIsoBL");
   TF1 *ratioMuIDIsoEC     = (TF1*)corrections.Get("ratioMuIDIsoEC");
-  TF1 *ratioMuAllBL       = (TF1*)corrections.Get("ratioMuAllBL");
-  TF1 *ratioMuAllEC       = (TF1*)corrections.Get("ratioMuAllEC");
-  TF1 *ratioTauMuTauAllBL = (TF1*)corrections.Get("ratioTauMuTauAllBL");  
-  TF1 *ratioTauMuTauAllEC = (TF1*)corrections.Get("ratioTauMuTauAllEC");  
+  TF1 *ratioMuHLTBL       = (TF1*)corrections.Get("ratioMuHLTBL");
+  TF1 *ratioMuHLTEC       = (TF1*)corrections.Get("ratioMuHLTEC");
+  TF1 *ratioTauHLTBL      = (TF1*)corrections.Get("ratioTauHLTBL");  
+  TF1 *ratioTauHLTEC      = (TF1*)corrections.Get("ratioTauHLTEC");  
 
   typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LV;
 
@@ -188,14 +187,12 @@ void makeTrees_MuTauStream( int index = 0 ){
   std::vector<float> crossSec;
 
   // samples & x-sections & skim1 
-  samples.push_back("Data");                              crossSec.push_back( 0  );                          
-  samples.push_back("DYJets");                            crossSec.push_back( 3048           * 0.009631); 
-  samples.push_back("TTJets");                            crossSec.push_back( 157.5          * 0.020998);  
-  samples.push_back("WJets");                             crossSec.push_back( 31314.0        * 0.001261);   
-  //samples.push_back("VBFH120-MuTau-powheg-PUS6_run");     crossSec.push_back( 7.10e-02*1.269 * 1.0);   
-  //samples.push_back("GGFH120-MuTau-powheg-PUS6_run");     crossSec.push_back( 7.10e-02*16.63 * 1.0);  
-  //samples.push_back("VBFH140-MuTau-powheg-PUS6_run");     crossSec.push_back( 3.54e-02*1.052 * 1.0);  
-  //samples.push_back("GGFH140-MuTau-powheg-PUS6_run");     crossSec.push_back( 3.54e-02*12.13 * 1.0);  
+  samples.push_back("Data");        crossSec.push_back(     0  );                          
+  samples.push_back("DYJets");      crossSec.push_back(  3048.0     * 0.00963); 
+  samples.push_back("TTJets");      crossSec.push_back(   157.5     * 0.0210);  
+  samples.push_back("WJets");       crossSec.push_back( 31314.0     * 0.00126);   
+  samples.push_back("VBFH130");     crossSec.push_back(     0.0632  * 0.066);   
+  samples.push_back("GGFH130");     crossSec.push_back(     0.774   * 0.055);  
  
   // normalization Lumi
   Float_t Lumi= 100;
@@ -208,33 +205,62 @@ void makeTrees_MuTauStream( int index = 0 ){
 
   TTree* outTreePtOrd     = new TTree("outTreePtOrd","tree");
 
-  // kinematical variables of first 2 jets  
+  // kinematical variables of leading and trailing jet (ordered by pt)
+  // pt, eta, |eta1-eta2|, mass of the di-jet system, azimuthal angle, phi1-phi2  
   float pt1,pt2,eta1,eta2,Deta,Mjj,Dphi,phi1,phi2;
+  // number of jets above 30 or 20 GeV
   int nJets30, nJets20;
 
-  // kinematical variables of the veto jet
+  // pt, eta and phi of the third veto
   float ptVeto, etaVeto, phiVeto; 
+  // bool saying if the third jet lies within the leading and trailing jets
   int isVetoInJets;
 
   // diTau related variables
+  // full mass of the di-tau
   float diTauSVFitMass;
+  // visible mass, pt , eta and phi of the di-tau
   float diTauVisMass,diTauVisPt,diTauVisEta,diTauVisPhi;
 
   // taus/MET related variables
+  // pt and eta of the muon (1) and tau (2)
   float ptL1,ptL2,etaL1,etaL2,phiL1,phiL2,dPhiL1L2;
-  float diTauCharge_,MtLeg1_,MEt;
+  //  As in the input TTree..
+  float diTauCharge_;
+  //  As in the input TTree..
+  float MtLeg1_;
+  // MET pt
+  float MEt;
+  // relative isolation variable: w/o and w/ pile-up correction
   float combRelIsoLeg1, combRelIsoLeg1DBeta;
+  //  As in the input TTree..
   int tightestHPSDBWP_, decayMode_;
 
   // event-related variables
-  float numPV_ , sampleWeight, puWeight, HqTWeight;
-  int numOfLooseIsoDiTaus_;
- 
-  // object-related weights and triggers
-  float HLTx,HLTmatch,HLTweightTau, HLTweightMu, SFMu, SFTau;
-  int isTauLegMatched_,muFlag_,genDecay_,leptFakeTau;
+  // numnber of reconstructed vertices
+  float numPV_ ;
+  // weight to normalize the sample to 100pb-1
+  float sampleWeight;
+  // pile-up reweighting 
+  float puWeight;
+  // Higgs boson pt spectrum reweighting
+  float HqTWeight;
 
-  // event id
+  // object-related weights and triggers
+  // trigger bit: 1=FIRED ; 0=NOT FIRED
+  float HLTx;
+  // trigger matching: 1=MATCHED; 0=UNMATCHED
+  float HLTmatch;
+  // Trigger turn-on correction
+  float HLTweightTau, HLTweightMu;
+  // Muon and tau isolation(X)identification data/MC scale factor
+  float SFMu, SFTau;
+  // As in the input TTree..
+  int muFlag_;
+  // As in the input TTree..
+  int genDecay_;
+
+  // As in the input TTree..
   ULong64_t event_,run_,lumi_;
 
   outTreePtOrd->Branch("pt1",  &pt1,"pt1/F");
@@ -284,7 +310,6 @@ void makeTrees_MuTauStream( int index = 0 ){
   outTreePtOrd->Branch("sampleWeight",       &sampleWeight,"sampleWeight/F"); 
   outTreePtOrd->Branch("puWeight",           &puWeight,"puWeight/F");
   outTreePtOrd->Branch("HqTWeight",          &HqTWeight,"HqTWeight/F");
-  outTreePtOrd->Branch("numOfLooseIsoDiTaus",&numOfLooseIsoDiTaus_,"numOfLooseIsoDiTaus/I");
 
   outTreePtOrd->Branch("HLTx",         &HLTx, "HLTx/F");
   outTreePtOrd->Branch("HLTmatch",     &HLTmatch,"HLTmatch/F");
@@ -293,10 +318,8 @@ void makeTrees_MuTauStream( int index = 0 ){
   outTreePtOrd->Branch("SFTau",        &SFTau,"SFTau/F");
   outTreePtOrd->Branch("SFMu",         &SFMu,"SFMu/F");
 
-  outTreePtOrd->Branch("isTauLegMatched", &isTauLegMatched_,"isTauLegMatched/I");
   outTreePtOrd->Branch("muFlag",          &muFlag_,"muFlag/I"); 
   outTreePtOrd->Branch("genDecay",        &genDecay_,"genDecay/I");
-  outTreePtOrd->Branch("leptFakeTau",       &leptFakeTau,"leptFakeTau/I");
 
   outTreePtOrd->Branch("event",&event_,"event/l");
   outTreePtOrd->Branch("run",  &run_,  "run/l");
@@ -342,14 +365,10 @@ void makeTrees_MuTauStream( int index = 0 ){
   currentTree->SetBranchStatus("chIsoPULeg1v2"         ,1);
   currentTree->SetBranchStatus("nhIsoPULeg1v2"         ,1);
   currentTree->SetBranchStatus("phIsoPULeg1v2"         ,1);
-  currentTree->SetBranchStatus("dxy1"                  ,0);
-  currentTree->SetBranchStatus("dxy2"                  ,0);
-  currentTree->SetBranchStatus("dz1"                   ,0);
-  currentTree->SetBranchStatus("dz2"                   ,0);
   currentTree->SetBranchStatus("decayMode"             ,1);
   currentTree->SetBranchStatus("tightestHPSDBWP"       ,1);
   currentTree->SetBranchStatus("visibleTauMass"        ,1);
-  currentTree->SetBranchStatus("isTauLegMatched"       ,1);
+  currentTree->SetBranchStatus("isTauLegMatched"       ,0);
   currentTree->SetBranchStatus("isMuLegMatched"        ,0);
   currentTree->SetBranchStatus("signalPFChargedHadrCands"    ,1);
   currentTree->SetBranchStatus("signalPFGammaCands"    ,1);
@@ -357,7 +376,6 @@ void makeTrees_MuTauStream( int index = 0 ){
   // MET
   currentTree->SetBranchStatus("METP4"                 ,1);
   currentTree->SetBranchStatus("genMETP4"              ,1);
-  currentTree->SetBranchStatus("sumEt"                 ,0);
   currentTree->SetBranchStatus("MtLeg1"                ,1);
 
   // generator-level boson
@@ -368,12 +386,9 @@ void makeTrees_MuTauStream( int index = 0 ){
   currentTree->SetBranchStatus("muFlag"                ,1);
 
   // event-dependent variables
-  currentTree->SetBranchStatus("rhoFastJet"            ,0);
   currentTree->SetBranchStatus("numPV"                 ,1);
   currentTree->SetBranchStatus("nPUVertices"           ,1);
-  currentTree->SetBranchStatus("nPUVerticesP1"         ,1);
-  currentTree->SetBranchStatus("nPUVerticesM1"         ,1);
-  currentTree->SetBranchStatus("numOfLooseIsoDiTaus"   ,1);
+  currentTree->SetBranchStatus("numOfLooseIsoDiTaus"   ,0);
   currentTree->SetBranchStatus("run"                   ,1);
   currentTree->SetBranchStatus("event"                 ,1);
   currentTree->SetBranchStatus("lumi"                  ,1);
@@ -417,9 +432,8 @@ void makeTrees_MuTauStream( int index = 0 ){
   float diTauCharge;
   int tightestHPSDBWP, decayMode;
   float numPV;
-  int numOfLooseIsoDiTaus;
   int signalPFChargedHadrCands, signalPFGammaCands;
-  int isTauLegMatched,muFlag,genDecay, nPUVertices, nPUVerticesM1, nPUVerticesP1;
+  int muFlag,genDecay, nPUVertices, nPUVerticesM1, nPUVerticesP1;
   float visibleTauMass;
   float chIsoLeg1,nhIsoLeg1,phIsoLeg1; 
   float chIsoPULeg1,nhIsoPULeg1,phIsoPULeg1; 
@@ -442,9 +456,7 @@ void makeTrees_MuTauStream( int index = 0 ){
   currentTree->SetBranchAddress("nPUVerticesM1",        &nPUVerticesM1);
   currentTree->SetBranchAddress("genDecay",             &genDecay);
   currentTree->SetBranchAddress("decayMode",            &decayMode);
-  currentTree->SetBranchAddress("numOfLooseIsoDiTaus",  &numOfLooseIsoDiTaus);
   currentTree->SetBranchAddress("muFlag",               &muFlag);
-  currentTree->SetBranchAddress("isTauLegMatched",      &isTauLegMatched);
   currentTree->SetBranchAddress("visibleTauMass",       &visibleTauMass);
   currentTree->SetBranchAddress("signalPFChargedHadrCands"    ,&signalPFChargedHadrCands);
   currentTree->SetBranchAddress("signalPFGammaCands"   ,&signalPFGammaCands);
@@ -561,9 +573,6 @@ void makeTrees_MuTauStream( int index = 0 ){
 
     MtLeg1_     = TMath::Sqrt( scalarSumPt*scalarSumPt - vectorSumPt*vectorSumPt ) ;
     MEt     = (*METP4)[0].Et();
-
-    
-
     combRelIsoLeg1         = (chIsoLeg1+nhIsoLeg1+phIsoLeg1)/(*diTauLegsP4)[0].Pt();
     combRelIsoLeg1DBeta    = (chIsoLeg1+ std::max( nhIsoLeg1+phIsoLeg1-0.5*0.5*(nhIsoPULeg1+phIsoPULeg1),double(0.0)))/(*diTauLegsP4)[0].Pt();
 
@@ -574,8 +583,6 @@ void makeTrees_MuTauStream( int index = 0 ){
     puWeight         = (std::string(sample.Data())).find("Data")!=string::npos ? 1.0 : pileupWeight(nPUVertices);   
 
     HqTWeight = histo!=0 ? histo->GetBinContent( histo->FindBin( (*genVP4)[0].Pt() ) ) : 1.0;
-
-    numOfLooseIsoDiTaus_= numOfLooseIsoDiTaus;
 
     if((std::string(sample.Data())).find("Data")!=string::npos){
       
@@ -595,9 +602,9 @@ void makeTrees_MuTauStream( int index = 0 ){
       HLTmatch = isTriggMatched ? 1.0 : 0.0;
 
       HLTweightTau  = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?  
-	ratioTauMuTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) : ratioTauMuTauAllEC->Eval( (*diTauLegsP4)[1].Pt() );
+	ratioTauHLTBL->Eval( (*diTauLegsP4)[1].Pt() ) : ratioTauHLTEC->Eval( (*diTauLegsP4)[1].Pt() );
       HLTweightMu  = TMath::Abs((*diTauLegsP4)[0].Eta())<1.5 ?  
-	ratioMuAllBL->Eval( (*diTauLegsP4)[0].Pt() ) : ratioMuAllEC->Eval( (*diTauLegsP4)[0].Pt() );
+	ratioMuHLTBL->Eval( (*diTauLegsP4)[0].Pt() ) : ratioMuHLTEC->Eval( (*diTauLegsP4)[0].Pt() );
       SFTau  = 1.0;
       SFMu   =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.5 ?
 	ratioMuIDIsoBL->Eval( (*diTauLegsP4)[0].Pt() ): 
@@ -605,13 +612,6 @@ void makeTrees_MuTauStream( int index = 0 ){
       
     }
    
-    isTauLegMatched_ = isTauLegMatched;
-    if((std::string(sample.Data())).find("Data")==string::npos)
-      leptFakeTau      = (isTauLegMatched==0 && (*genDiTauLegsP4)[1].E()>0) ? 1 : 0;
-    else 
-      leptFakeTau = -99;
-
-
     muFlag_          = muFlag;
     genDecay_        = genDecay ;
     event_           = event;
@@ -637,9 +637,9 @@ void makeTrees_MuTauStream( int index = 0 ){
 }
 
 
-void doAllSamplesMu(){
+void doAllSamples(){
  
-  for( unsigned int k = 0; k < 4 ; k++) makeTrees_MuTauStream(k);
+  for( unsigned int k = 0; k < 6 ; k++) makeTrees_MuTau(k);
 
   return;
 
