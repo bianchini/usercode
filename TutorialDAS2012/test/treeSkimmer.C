@@ -464,18 +464,8 @@ void makeTrees_MuTau( int index = 0 ){
   TFile* HqT      = 0;
   int mH          = 120;
   TH1F* histo     = 0;
-  if(samples[index].find("GGFH")!=string::npos){
-    if(samples[index].find("GGFH100")!=string::npos) mH = 100;
-    if(samples[index].find("GGFH105")!=string::npos) mH = 105;
-    if(samples[index].find("GGFH110")!=string::npos) mH = 110;
-    if(samples[index].find("GGFH115")!=string::npos) mH = 115;
-    if(samples[index].find("GGFH120")!=string::npos) mH = 120;
-    if(samples[index].find("GGFH125")!=string::npos) mH = 125;
-    if(samples[index].find("GGFH130")!=string::npos) mH = 130;
-    if(samples[index].find("GGFH135")!=string::npos) mH = 135;
-    if(samples[index].find("GGFH140")!=string::npos) mH = 140;
-    if(samples[index].find("GGFH145")!=string::npos) mH = 145;
-    if(samples[index].find("GGFH160")!=string::npos) mH = 160;
+  if(samples[index].find("GGFH120")!=string::npos){
+    mH = 120;
     cout << "Reweighting powheg with HqT mH=" << mH << endl;
     HqT = new TFile(Form("../data/weight_ptH_%d.root", mH));
     if(!HqT) cout << "Cannot find HqT file..." << endl;
