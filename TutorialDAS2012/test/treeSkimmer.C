@@ -433,7 +433,7 @@ void makeTrees_MuTau( int index = 0 ){
   int tightestHPSDBWP, decayMode;
   float numPV;
   int signalPFChargedHadrCands, signalPFGammaCands;
-  int muFlag,genDecay, nPUVertices, nPUVerticesM1, nPUVerticesP1;
+  int muFlag,genDecay, nPUVertices;
   float visibleTauMass;
   float chIsoLeg1,nhIsoLeg1,phIsoLeg1; 
   float chIsoPULeg1,nhIsoPULeg1,phIsoPULeg1; 
@@ -452,8 +452,6 @@ void makeTrees_MuTau( int index = 0 ){
   currentTree->SetBranchAddress("run",                  &run);
   currentTree->SetBranchAddress("lumi",                 &lumi);
   currentTree->SetBranchAddress("nPUVertices",          &nPUVertices);
-  currentTree->SetBranchAddress("nPUVerticesP1",        &nPUVerticesP1);
-  currentTree->SetBranchAddress("nPUVerticesM1",        &nPUVerticesM1);
   currentTree->SetBranchAddress("genDecay",             &genDecay);
   currentTree->SetBranchAddress("decayMode",            &decayMode);
   currentTree->SetBranchAddress("muFlag",               &muFlag);
@@ -462,10 +460,10 @@ void makeTrees_MuTau( int index = 0 ){
   currentTree->SetBranchAddress("signalPFGammaCands"   ,&signalPFGammaCands);
 
   TFile* HqT      = 0;
-  int mH          = 120;
+  int mH          = 130;
   TH1F* histo     = 0;
-  if(samples[index].find("GGFH120")!=string::npos){
-    mH = 120;
+  if(samples[index].find("GGFH130")!=string::npos){
+    mH = 130;
     cout << "Reweighting powheg with HqT mH=" << mH << endl;
     HqT = new TFile(Form("../data/weight_ptH_%d.root", mH));
     if(!HqT) cout << "Cannot find HqT file..." << endl;
