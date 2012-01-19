@@ -6,7 +6,7 @@ process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
 postfix     = "PFlow"
 runOnMC     = True
-sample      = "GGF130"
+sample      = "DYJets"
 
 from Configuration.PyReleaseValidation.autoCond import autoCond
 process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
@@ -20,20 +20,20 @@ else:
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(500) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source.fileNames = cms.untracked.vstring(
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/akalinow/TTJets_TuneZ2_7TeV-madgraph-tauola/424_mutau_Fall11_v1/faebd120ba0b19af7e4a67b10c186f76/tautauSkimmAOD_10_1_xWn.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/akalinow/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/424_mutau_Fall11_v1/faebd120ba0b19af7e4a67b10c186f76/tautauSkimmAOD_2_1_J1N.root'
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/akalinow/GluGluToHToTauTau_M-130_7TeV-powheg-pythia6/424_mutau_Fall11_v1/faebd120ba0b19af7e4a67b10c186f76/tautauSkimmAOD_2_1_CPf.root'
+    '/store/user/bianchi/TutorialDAS2012/DYJets-MuTau-50-madgraph-PUS6-Pisa/patTuples_10_1_BUN.root'
     )
 
-from Bianchi.TutorialDAS2012.DYJets_cff import fileList as fileListDYJets
-from Bianchi.TutorialDAS2012.WJets_cff  import fileList as fileListWJets
-from Bianchi.TutorialDAS2012.TTJets_cff import fileList as fileListTTJets
-from Bianchi.TutorialDAS2012.Data_cff   import fileList as fileListData
+from Bianchi.TutorialDAS2012.DYJets_cff  import fileList as fileListDYJets
+from Bianchi.TutorialDAS2012.WJets_cff   import fileList as fileListWJets
+from Bianchi.TutorialDAS2012.TTJets_cff  import fileList as fileListTTJets
+from Bianchi.TutorialDAS2012.VBFH130_cff import fileList as fileListVBFH130
+from Bianchi.TutorialDAS2012.GGFH130_cff import fileList as fileListGGFH130
+from Bianchi.TutorialDAS2012.Data_cff    import fileList as fileListData
 
-#process.source.fileNames = fileListDYJets
+process.source.fileNames = fileListDYJets
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
 #    '1:751063'
@@ -237,7 +237,7 @@ process.muPtEtaRelID = cms.EDFilter(
 process.tauPtEtaIDAgMuAgElec  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("selectedPatTausUserEmbedded"),
-    cut = cms.string("pt>20 && abs(eta)<2.3"+
+    cut = cms.string("pt>19 && abs(eta)<2.3"+
                      " && tauID('decayModeFinding')>0.5"+
                      " && tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5"+
                      " && userFloat('dzWrtPV')<0.2"+
