@@ -45,15 +45,15 @@
   hGGFH130->SetLineColor(kBlue);
 
   // full signal selection
-  TCut sbin(         "ptL1>17 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0 && MtLeg1<40 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
+  TCut sbin(         "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0 && MtLeg1<40 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
   // selection of opposite-sign W-enriched control region
-  TCut sbinAntiW(    "ptL1>17 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0 && MtLeg1>60 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
+  TCut sbinAntiW(    "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0 && MtLeg1>60 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
   // selection of smae-sign enriched control-region 
-  TCut sbinSSAntiW(  "ptL1>17 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1>60 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
+  TCut sbinSSAntiW(  "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1>60 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
   // selection of same-sign control region
-  TCut sbinSS(       "ptL1>17 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1<40 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
+  TCut sbinSS(       "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1<40 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
   // selection of same sign loosely-isolated control region
-  TCut sbinSSRelIso( "ptL1>17 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1<40 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.30 && muFlag==0");
+  TCut sbinSSRelIso( "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1<40 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.30 && muFlag==0");
  
   // luminoisty of data is 53 pb
   float lumiFact    = 53./100;
