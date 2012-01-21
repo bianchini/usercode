@@ -227,7 +227,7 @@ process.selectedPatTausUserEmbedded = cms.EDProducer(
 process.muPtEtaID = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsUserEmbedded"),
-    cut = cms.string("pt>14 && abs(eta)<2.1"+
+    cut = cms.string("pt>15 && abs(eta)<2.1"+
                      " && isTrackerMuon && isGlobalMuon"+
                      " && numberOfMatches>=2"+
                      " && globalTrack.isNonnull "+

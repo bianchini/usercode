@@ -44,14 +44,23 @@
   hGGFH130->SetLineStyle(kDashed);
   hGGFH130->SetLineColor(kBlue);
 
+  // full signal selection
   TCut sbin(         "ptL1>17 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0 && MtLeg1<40 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
+  // selection of opposite-sign W-enriched control region
   TCut sbinAntiW(    "ptL1>17 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0 && MtLeg1>60 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
-  TCut sbinSS(       "ptL1>17 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1<40 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
-  TCut sbinSSRelIso( "ptL1>17 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1<40 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.30 && muFlag==0");
+  // selection of smae-sign enriched control-region 
   TCut sbinSSAntiW(  "ptL1>17 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1>60 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
-
+  // selection of same-sign control region
+  TCut sbinSS(       "ptL1>17 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1<40 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
+  // selection of same sign loosely-isolated control region
+  TCut sbinSSRelIso( "ptL1>17 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1<40 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.30 && muFlag==0");
+ 
+  // luminoisty of data is 53 pb
   float lumiFact    = 53./100;
+  // opposite-sign to same-sign ratio for QCD
   float OStoSSRatio = 1.07;
+
+  /////////////////////////////////////////////////////////////////////
   // estimation of W+jets
   TH1F* h1 = new TH1F("h1","",1,-10,10);
   tWJets->Draw("etaL1>>h1",   "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbinAntiW);
@@ -70,7 +79,9 @@
   cout << "Wsbin (MC) = " << Wsbin << endl;
   float Wsbin = (DatasbinAntiW - TTsbinAntiW)*(Wsbin/WsbinAntiW);
   cout << "Wsbin = (" << DatasbinAntiW << " - " << TTsbinAntiW << " )*" << Wsbin/WsbinAntiW << " = " << Wsbin << endl;
+  /////////////////////////////////////////////////////////////////////
 
+  /////////////////////////////////////////////////////////////////////
   // estimation of QCD
   TH1F* h1 = new TH1F("h1","",1,-10,10);
   tWJets->Draw("etaL1>>h1",   "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbinSSAntiW);
@@ -94,7 +105,10 @@
   cout << "WsbinSS = (" << DatasbinSSAntiW << " - " << TTsbinSSAntiW << " )*" << WsbinSS/WsbinSSAntiW << " = " << WsbinSS << endl;
   float QCDsbinSS = DatasbinSS - WsbinSS;
   float QCDsbin   = QCDsbinSS*OStoSSRatio;
+  /////////////////////////////////////////////////////////////////////
 
+
+  // Draw with cuts and weights !!!
   tData->Draw(  variable+">>hData",   sbin);
   tData->Draw(  variable+">>hQCD",    sbinSSRelIso);
   tDYJets->Draw(variable+">>hDYJets", "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
@@ -104,18 +118,18 @@
   tVBFH130->Draw(variable+">>hVBFH130", "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
   tGGFH130->Draw(variable+">>hGGFH130", "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight*HqTWeight"*sbin);
   
-
+  // Scale histograms
   hDYJets->Scale( lumiFact );
   hWJets->Scale(     Wsbin/hWJets->Integral());
   hWJetsSS->Scale( WsbinSS/hWJetsSS->Integral());
   hTTJets->Scale( lumiFact );
   hQCD->Add(   hWJetsSS, -1);
   hQCD->Scale( QCDsbin/hQCD->Integral());
-
   hVBFH130->Scale( lumiFact*100 );
   hGGFH130->Scale( lumiFact*100 );
   hVBFH130->Add(hGGFH130,1.0);
 
+  // Add all together
   THStack* aStack = new THStack("aStack","");
   aStack->Add(hTTJets);
   aStack->Add(hQCD);
@@ -127,8 +141,10 @@
   hData->Draw("P");
   aStack->Draw("HISTSAME");
   hData->Draw("PSAME");
-  //hVBFH130->Draw("HISTSAME");
 
+
+
+  // Legend
   TLegend* leg = new TLegend(0.52,0.50,0.75,0.87,NULL,"brNDC");
   leg->SetFillStyle(0);
   leg->SetBorderSize(0);
