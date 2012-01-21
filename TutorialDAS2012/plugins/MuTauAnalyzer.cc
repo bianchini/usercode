@@ -52,7 +52,7 @@ MuTauAnalyzer::MuTauAnalyzer(const edm::ParameterSet & iConfig){
   //////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////
   //
-  //    In the contructor, the input collections and parameters are read from the cfg
+  //    Contructor: the input collections and parameters are read from the cfg
   //
   //////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +77,7 @@ void MuTauAnalyzer::beginJob(){
   //////////////////////////////////////////////////////////////////////////////////////////
   //
   //     Declare all branches to be added to the TTree;
-  //     All std::vectors need to be instantiated
+  //     All std::vectors need to be instantiated here
   //
   //////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -538,11 +538,11 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
 
   // tau decay mode
   if((leg2->signalPFChargedHadrCands()).size()==1 && (leg2->signalPFGammaCands()).size()==0) 
-    decayMode_ = 0; 
+    decayMode_ = 0; // one-prong
   else if((leg2->signalPFChargedHadrCands()).size()==1 && (leg2->signalPFGammaCands()).size()>0)  
-    decayMode_ = 1; 
+    decayMode_ = 1; // one-prong + pi0s
   else if((leg2->signalPFChargedHadrCands()).size()==3) 
-    decayMode_ = 2; 
+    decayMode_ = 2; // three-prong
   else  
     decayMode_ = -99;
 
@@ -558,36 +558,37 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
   if(leg2->tauID("byTightCombinedIsolationDeltaBetaCorr")>0.5)  tightestHPSDBWP_++;
 
   // isolation definition for the muon
-  isodeposit::AbsVetos vetos2011ChargedLeg1; 
-  isodeposit::AbsVetos vetos2011NeutralLeg1; 
-  isodeposit::AbsVetos vetos2011PhotonLeg1;
+  isodeposit::AbsVetos vetosChargedLeg1; 
+  isodeposit::AbsVetos vetosNeutralLeg1; 
+  isodeposit::AbsVetos vetosPhotonLeg1;
  
   //// here we define 'vetoes' for particles to be considered
-  //// as isolation particles 
-  vetos2011ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.0001));
-  vetos2011ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
-  vetos2011NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
-  vetos2011NeutralLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
-  vetos2011PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
-  vetos2011PhotonLeg1.push_back( new isodeposit::ThresholdVeto(0.5));
+  //// as isolation particles:
+  //// > ConeVeto: veto particles within a cone of a given radius around the muon direction
+  //// > ThresholdVeto: veto particles with pt less than a given threshold
+  vetosChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.0001));
+  vetosChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
+  vetosNeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
+  vetosNeutralLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
+  vetosPhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
+  vetosPhotonLeg1.push_back( new isodeposit::ThresholdVeto(0.5));
 
   chIsoLeg1v2_   = 
-    leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
+    leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetosChargedLeg1).first;
   nhIsoLeg1v2_ = 
-    leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetos2011NeutralLeg1).first;
+    leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetosNeutralLeg1).first;
   phIsoLeg1v2_ = 
-    leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2011PhotonLeg1).first;
+    leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetosPhotonLeg1).first;
   nhIsoPULeg1v2_ = 
-    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011NeutralLeg1).first;
+    leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetosNeutralLeg1).first;
    
-  for(unsigned int i = 0; i <vetos2011ChargedLeg1.size(); i++){
-    delete vetos2011ChargedLeg1[i];
+  for(unsigned int i = 0; i <vetosChargedLeg1.size(); i++){
+    delete vetosChargedLeg1[i];
   }
-  for(unsigned int i = 0; i <vetos2011NeutralLeg1.size(); i++){
-    delete vetos2011NeutralLeg1[i];
-    delete vetos2011PhotonLeg1[i];
+  for(unsigned int i = 0; i <vetosNeutralLeg1.size(); i++){
+    delete vetosNeutralLeg1[i];
+    delete vetosPhotonLeg1[i];
   }
-
 
 
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -648,6 +649,14 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
 
 
 unsigned int  MuTauAnalyzer::jetID( const pat::Jet* jet ){
+
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //     Jet-ID quality based on the particle-flow event content
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////
 
   if( (jet->pt())<10 ) return 99; // always pass jet ID
 
