@@ -319,7 +319,7 @@ process.diTauSequence = cms.Sequence( process.diTau )
 
 ########################## analyzer  ##########################
 # refer to https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideCMSDataAnalysisSchoolPhysicsWithTausExercise
-# for the exacyìt meaning
+# for the exact meaning
 
 process.muTauAnalyzer = cms.EDAnalyzer(
     "MuTauAnalyzer",
@@ -339,7 +339,7 @@ process.muTauAnalyzer = cms.EDAnalyzer(
 
 ########################## path ###############################
 # refer to https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideCMSDataAnalysisSchoolPhysicsWithTausExercise
-# for the exacyìt meaning
+# for the exact meaning
 
 process.skim = cms.Sequence(
     process.allEventsFilter+
