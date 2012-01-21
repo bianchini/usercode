@@ -101,7 +101,7 @@ class MuTauAnalyzer : public edm::EDAnalyzer{
   float chIsoLeg1v2_,nhIsoLeg1v2_,phIsoLeg1v2_;
   // scalar SumPt of all PF candidates around the muon of type 
   // PFCandidate::h FROM PILEUP VERTICES!!! 
-  float chIsoPULeg1v2_,nhIsoPULeg1v2_,phIsoPULeg1v2_;
+  float nhIsoPULeg1v2_;
   // transverse mass between the muon and the MET
   float MtLeg1_;
   // number of reconstructed primary vertices

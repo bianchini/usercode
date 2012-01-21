@@ -362,9 +362,7 @@ void makeTrees_MuTau( int index = 0 ){
   currentTree->SetBranchStatus("chIsoLeg1v2"           ,1);
   currentTree->SetBranchStatus("nhIsoLeg1v2"           ,1);
   currentTree->SetBranchStatus("phIsoLeg1v2"           ,1);
-  currentTree->SetBranchStatus("chIsoPULeg1v2"         ,1);
   currentTree->SetBranchStatus("nhIsoPULeg1v2"         ,1);
-  currentTree->SetBranchStatus("phIsoPULeg1v2"         ,1);
   currentTree->SetBranchStatus("decayMode"             ,1);
   currentTree->SetBranchStatus("tightestHPSDBWP"       ,1);
   currentTree->SetBranchStatus("visibleTauMass"        ,1);
@@ -436,15 +434,13 @@ void makeTrees_MuTau( int index = 0 ){
   int muFlag,genDecay, nPUVertices;
   float visibleTauMass;
   float chIsoLeg1,nhIsoLeg1,phIsoLeg1; 
-  float chIsoPULeg1,nhIsoPULeg1,phIsoPULeg1; 
+  float nhIsoPULeg1; 
   ULong64_t event,run,lumi;
 
   currentTree->SetBranchAddress("chIsoLeg1v2",          &chIsoLeg1);
   currentTree->SetBranchAddress("nhIsoLeg1v2",          &nhIsoLeg1);
   currentTree->SetBranchAddress("phIsoLeg1v2",          &phIsoLeg1);
-  currentTree->SetBranchAddress("chIsoPULeg1v2",        &chIsoPULeg1);
   currentTree->SetBranchAddress("nhIsoPULeg1v2",        &nhIsoPULeg1);
-  currentTree->SetBranchAddress("phIsoPULeg1v2",        &phIsoPULeg1);
   currentTree->SetBranchAddress("tightestHPSDBWP",      &tightestHPSDBWP);
   currentTree->SetBranchAddress("diTauCharge",          &diTauCharge);
   currentTree->SetBranchAddress("numPV",                &numPV);
@@ -562,7 +558,7 @@ void makeTrees_MuTau( int index = 0 ){
     MtLeg1_     = TMath::Sqrt( scalarSumPt*scalarSumPt - vectorSumPt*vectorSumPt ) ;
     MEt     = (*METP4)[0].Et();
     combRelIsoLeg1         = (chIsoLeg1+nhIsoLeg1+phIsoLeg1)/(*diTauLegsP4)[0].Pt();
-    combRelIsoLeg1DBeta    = (chIsoLeg1+ std::max( nhIsoLeg1+phIsoLeg1-0.5*0.5*(nhIsoPULeg1+phIsoPULeg1),double(0.0)))/(*diTauLegsP4)[0].Pt();
+    combRelIsoLeg1DBeta    = (chIsoLeg1+ std::max( nhIsoLeg1+phIsoLeg1-0.5*(nhIsoPULeg1),double(0.0)))/(*diTauLegsP4)[0].Pt();
 
     tightestHPSDBWP_ = tightestHPSDBWP;
     decayMode_       = decayMode;
