@@ -26,6 +26,7 @@
   TFile fTTJets("treeSkimmedMuTau_TTJets.root");
   TFile fVBFH130("treeSkimmedMuTau_VBFH130.root");
   TFile fGGFH130("treeSkimmedMuTau_GGFH130.root");
+  TFile fQCD("treeSkimmedMuTau_QCD.root");
 
   TTree* tData   = (TTree*)fData.Get("outTreePtOrd");
   TTree* tDYJets = (TTree*)fDYJets.Get("outTreePtOrd");
@@ -33,6 +34,7 @@
   TTree* tTTJets = (TTree*)fTTJets.Get("outTreePtOrd");
   TTree* tVBFH130= (TTree*)fVBFH130.Get("outTreePtOrd");
   TTree* tGGFH130= (TTree*)fGGFH130.Get("outTreePtOrd");
+  TTree* tQCD    = (TTree*)fQCD.Get("outTreePtOrd");
 
   int nBins = 11;
   TArrayF bins(nBins+1);
@@ -46,7 +48,6 @@
   TH1F* hQCD     = new TH1F("hQCD"    ,labels, nBins, bins.GetArray());
   TH1F* hDYJets  = new TH1F("hDYJets" ,labels, nBins, bins.GetArray());
   TH1F* hWJets   = new TH1F("hWJets"  ,labels, nBins, bins.GetArray());
-  TH1F* hWJetsSS = new TH1F("hWJetsSS",labels, nBins, bins.GetArray());
   TH1F* hTTJets  = new TH1F("hTTJets" ,labels, nBins, bins.GetArray());
   TH1F* hVBFH130 = new TH1F("hVBFH130",labels, nBins, bins.GetArray());
   TH1F* hGGFH130 = new TH1F("hGGFH130",labels, nBins, bins.GetArray());
@@ -65,50 +66,14 @@
 
   // full signal selection
   TCut sbin(         "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0&& HLTx && HLTmatch");
-  // selection of opposite-sign W-enriched control region
-  TCut sbinAntiW(    "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0 && HLTx && HLTmatch");
-  // selection of smae-sign enriched control-region 
-  TCut sbinSSAntiW(  "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1>60 && HLTx && HLTmatch");
-  // selection of same-sign control region
-  TCut sbinSS(       "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && HLTx && HLTmatch");
- 
-  // luminoisty of data is 53 pb
+  // luminosity of data is 53 pb
   float lumiFact    = 53./100;
-  // opposite-sign to same-sign ratio for QCD
-  float OStoSSRatio = 1.07;
-
-  /////////////////////////////////////////////////////////////////////
-  // estimation of QCD
-  TH1F* h1 = new TH1F("h1","",1,-10,10);
-  tWJets->Draw("etaL1>>h1",   "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbinSSAntiW);
-  float WsbinSSAntiW  = h1->Integral()*lumiFact;
-  h1->Reset();
-  tWJets->Draw("etaL1>>h1",   "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbinSS);
-  float WsbinSS       = h1->Integral()*lumiFact;
-  h1->Reset();
-  tTTJets->Draw("etaL1>>h1",   "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbinSSAntiW);
-  float TTsbinSSAntiW = h1->Integral()*lumiFact;
-  h1->Reset();
-  tData->Draw("etaL1>>h1",   sbinSSAntiW);
-  float DatasbinSSAntiW = h1->Integral();
-  h1->Reset();
-  tData->Draw("etaL1>>h1",   sbinSS);
-  float DatasbinSS = h1->Integral();
-  h1->Reset();
-  cout << "WsbinSS (MC) = " << WsbinSS << endl; 
-  float WsbinSS   = (DatasbinSSAntiW - TTsbinSSAntiW)*(WsbinSS/WsbinSSAntiW);
-  cout << "WsbinSS = (" << DatasbinSSAntiW << " - " << TTsbinSSAntiW << " )*" << WsbinSS/WsbinSSAntiW << " = " << WsbinSS << endl;
-  float QCDsbinSS = DatasbinSS - WsbinSS;
-  float QCDsbin   = QCDsbinSS*OStoSSRatio;
-  /////////////////////////////////////////////////////////////////////
-
 
   // Draw with cuts and weights !!!
   tData->Draw(  variable+">>hData",   sbin);
-  tData->Draw(  variable+">>hQCD",    sbinSS);
+  tQCD->Draw(  variable+">>hQCD",     "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
   tDYJets->Draw(variable+">>hDYJets", "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
   tWJets->Draw( variable+">>hWJets",  "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
-  tWJets->Draw( variable+">>hWJetsSS","puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbinSS);
   tTTJets->Draw(variable+">>hTTJets", "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
   tVBFH130->Draw(variable+">>hVBFH130", "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
   tGGFH130->Draw(variable+">>hGGFH130", "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight*HqTWeight"*sbin);
@@ -117,9 +82,7 @@
   hDYJets->Scale( lumiFact );
   hWJets->Scale( lumiFact );
   hTTJets->Scale( lumiFact );
-  hWJetsSS->Scale( WsbinSS/hWJetsSS->Integral());
-  hQCD->Add(   hWJetsSS, -1);
-  hQCD->Scale( QCDsbin/hQCD->Integral());
+  hQCD->Scale( lumiFact );
   hVBFH130->Scale( lumiFact*100 );
   hGGFH130->Scale( lumiFact*100 );
   hVBFH130->Add(hGGFH130,1.0);
@@ -133,8 +96,7 @@
   aStack->Add(hVBFH130);
 
   hData->Sumw2();
-  hData->Draw("P");
-  aStack->Draw("HISTSAME");
+  aStack->Draw("HIST");
   hData->Draw("PSAME");
 
 
@@ -146,7 +108,7 @@
   leg->SetFillColor(10);
   leg->SetTextSize(0.03);
 
-  leg->SetHeader("CMS Preliminary 2011 #sqrt{s}=7 TeV, L=53 pb^{-1}");
+  leg->SetHeader("#splitline{CMS Preliminary 2011}{#sqrt{s}=7 TeV, L=53 pb^{-1}}");
   leg->AddEntry(hData,"Observed","P");
   leg->AddEntry(hDYJets,"Z#rightarrow#tau#tau","F");
   leg->AddEntry(hWJets,"W+jets","F");

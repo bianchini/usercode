@@ -171,7 +171,7 @@
   leg->SetFillColor(10);
   leg->SetTextSize(0.03);
 
-  leg->SetHeader("CMS Preliminary 2011 #sqrt{s}=7 TeV, L=53 pb^{-1}");
+  leg->SetHeader("#splitline{CMS Preliminary 2011}{#sqrt{s}=7 TeV, L=53 pb^{-1}}");
   leg->AddEntry(hData,"Observed","P");
   leg->AddEntry(hDYJets,"Z#rightarrow#tau#tau","F");
   leg->AddEntry(hWJets,"W+jets","F");
