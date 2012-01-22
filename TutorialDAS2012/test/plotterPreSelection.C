@@ -20,7 +20,6 @@
   gStyle->SetTitleFillColor(0);
   gStyle->SetPalette(1);
 
-
   TFile fData("treeSkimmedMuTau_Data.root");
   TFile fDYJets("treeSkimmedMuTau_DYJets.root");
   TFile fWJets("treeSkimmedMuTau_WJets.root");
@@ -65,41 +64,18 @@
   hGGFH130->SetLineColor(kBlue);
 
   // full signal selection
-  TCut sbin(         "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0 && MtLeg1<40 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
+  TCut sbin(         "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0&& HLTx && HLTmatch");
   // selection of opposite-sign W-enriched control region
-  TCut sbinAntiW(    "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0 && MtLeg1>60 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
+  TCut sbinAntiW(    "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0 && HLTx && HLTmatch");
   // selection of smae-sign enriched control-region 
-  TCut sbinSSAntiW(  "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1>60 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
+  TCut sbinSSAntiW(  "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1>60 && HLTx && HLTmatch");
   // selection of same-sign control region
-  TCut sbinSS(       "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1<40 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10 && muFlag==0");
-  // selection of same sign loosely-isolated control region
-  TCut sbinSSRelIso( "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && MtLeg1<40 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.30 && muFlag==0");
+  TCut sbinSS(       "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0 && HLTx && HLTmatch");
  
   // luminoisty of data is 53 pb
   float lumiFact    = 53./100;
   // opposite-sign to same-sign ratio for QCD
   float OStoSSRatio = 1.07;
-
-  /////////////////////////////////////////////////////////////////////
-  // estimation of W+jets
-  TH1F* h1 = new TH1F("h1","",1,-10,10);
-  tWJets->Draw("etaL1>>h1",   "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbinAntiW);
-  float WsbinAntiW  = h1->Integral()*lumiFact;
-  h1->Reset();
-  tWJets->Draw("etaL1>>h1",   "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
-  float Wsbin       = h1->Integral()*lumiFact;
-  h1->Reset();
-  tTTJets->Draw("etaL1>>h1",   "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbinAntiW);
-  float TTsbinAntiW = h1->Integral()*lumiFact;
-  h1->Reset();
-  tData->Draw("etaL1>>h1",   sbinAntiW);
-  float DatasbinAntiW = h1->Integral();
-  h1->Reset();
-
-  cout << "Wsbin (MC) = " << Wsbin << endl;
-  float Wsbin = (DatasbinAntiW - TTsbinAntiW)*(Wsbin/WsbinAntiW);
-  cout << "Wsbin = (" << DatasbinAntiW << " - " << TTsbinAntiW << " )*" << Wsbin/WsbinAntiW << " = " << Wsbin << endl;
-  /////////////////////////////////////////////////////////////////////
 
   /////////////////////////////////////////////////////////////////////
   // estimation of QCD
@@ -119,7 +95,6 @@
   tData->Draw("etaL1>>h1",   sbinSS);
   float DatasbinSS = h1->Integral();
   h1->Reset();
-  
   cout << "WsbinSS (MC) = " << WsbinSS << endl; 
   float WsbinSS   = (DatasbinSSAntiW - TTsbinSSAntiW)*(WsbinSS/WsbinSSAntiW);
   cout << "WsbinSS = (" << DatasbinSSAntiW << " - " << TTsbinSSAntiW << " )*" << WsbinSS/WsbinSSAntiW << " = " << WsbinSS << endl;
@@ -130,7 +105,7 @@
 
   // Draw with cuts and weights !!!
   tData->Draw(  variable+">>hData",   sbin);
-  tData->Draw(  variable+">>hQCD",    sbinSSRelIso);
+  tData->Draw(  variable+">>hQCD",    sbinSS);
   tDYJets->Draw(variable+">>hDYJets", "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
   tWJets->Draw( variable+">>hWJets",  "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
   tWJets->Draw( variable+">>hWJetsSS","puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbinSS);
@@ -140,9 +115,9 @@
   
   // Scale histograms
   hDYJets->Scale( lumiFact );
-  hWJets->Scale(     Wsbin/hWJets->Integral());
-  hWJetsSS->Scale( WsbinSS/hWJetsSS->Integral());
+  hWJets->Scale( lumiFact );
   hTTJets->Scale( lumiFact );
+  hWJetsSS->Scale( WsbinSS/hWJetsSS->Integral());
   hQCD->Add(   hWJetsSS, -1);
   hQCD->Scale( QCDsbin/hQCD->Integral());
   hVBFH130->Scale( lumiFact*100 );
