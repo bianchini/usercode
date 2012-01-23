@@ -232,7 +232,7 @@ void makeTrees_MuTau( int index = 0 ){
   // MET pt
   float MEt;
   // relative isolation variable: w/o and w/ pile-up correction
-  float combRelIsoLeg1, combRelIsoLeg1DBeta;
+  float combRelIsoLeg1DBeta;
   //  As in the input TTree..
   int tightestHPSDBWP_, decayMode_;
   float visibleTauMass_;
@@ -301,7 +301,6 @@ void makeTrees_MuTau( int index = 0 ){
   outTreePtOrd->Branch("MtLeg1",      &MtLeg1_,"MtLeg1/F");
   outTreePtOrd->Branch("MEt",         &MEt,"MEt/F");
 
-  outTreePtOrd->Branch("combRelIsoLeg1",     &combRelIsoLeg1,"combRelIsoLeg1/F");
   outTreePtOrd->Branch("combRelIsoLeg1DBeta",&combRelIsoLeg1DBeta,"combRelIsoLeg1DBeta/F");
 
   outTreePtOrd->Branch("tightestHPSDBWP",  &tightestHPSDBWP_,"tightestHPSDBWP/I");
@@ -559,7 +558,6 @@ void makeTrees_MuTau( int index = 0 ){
 
     MtLeg1_     = TMath::Sqrt( scalarSumPt*scalarSumPt - vectorSumPt*vectorSumPt ) ;
     MEt     = (*METP4)[0].Et();
-    combRelIsoLeg1         = (chIsoLeg1+nhIsoLeg1+phIsoLeg1)/(*diTauLegsP4)[0].Pt();
     combRelIsoLeg1DBeta    = (chIsoLeg1+ std::max( nhIsoLeg1+phIsoLeg1-0.5*(nhIsoPULeg1),double(0.0)))/(*diTauLegsP4)[0].Pt();
 
     tightestHPSDBWP_ = tightestHPSDBWP;
