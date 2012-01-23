@@ -193,6 +193,7 @@ void makeTrees_MuTau( int index = 0 ){
   samples.push_back("WJets");       crossSec.push_back( 31314.0     * 0.00126);   
   samples.push_back("VBFH130");     crossSec.push_back(     0.0632  * 0.066);   
   samples.push_back("GGFH130");     crossSec.push_back(     0.774   * 0.055);  
+  samples.push_back("QCD");         crossSec.push_back(   641              );
  
   // normalization Lumi
   Float_t Lumi= 100;
