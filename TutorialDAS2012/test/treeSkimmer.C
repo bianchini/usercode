@@ -235,6 +235,7 @@ void makeTrees_MuTau( int index = 0 ){
   float combRelIsoLeg1, combRelIsoLeg1DBeta;
   //  As in the input TTree..
   int tightestHPSDBWP_, decayMode_;
+  float visibleTauMass_;
 
   // event-related variables
   // numnber of reconstructed vertices
@@ -305,6 +306,7 @@ void makeTrees_MuTau( int index = 0 ){
 
   outTreePtOrd->Branch("tightestHPSDBWP",  &tightestHPSDBWP_,"tightestHPSDBWP/I");
   outTreePtOrd->Branch("decayMode",        &decayMode_,"decayMode/I");
+  outTreePtOrd->Branch("visibleTauMass",&visibleTauMass_,"visibleTauMass/F");
 
   outTreePtOrd->Branch("numPV",              &numPV_,"numPV/F");
   outTreePtOrd->Branch("sampleWeight",       &sampleWeight,"sampleWeight/F"); 
@@ -561,6 +563,7 @@ void makeTrees_MuTau( int index = 0 ){
     combRelIsoLeg1DBeta    = (chIsoLeg1+ std::max( nhIsoLeg1+phIsoLeg1-0.5*(nhIsoPULeg1),double(0.0)))/(*diTauLegsP4)[0].Pt();
 
     tightestHPSDBWP_ = tightestHPSDBWP;
+    visibleTauMass_  = visibleTauMass;
     decayMode_       = decayMode;
     numPV_           = numPV;
     sampleWeight     = scaleFactor; 
