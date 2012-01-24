@@ -39,7 +39,7 @@
   TArrayF bins(nBins+1);
   bins[0] = 0;    bins[1] = 30;    bins[2] = 40;    bins[3] = 50;    bins[4]  = 60;    bins[5] = 70;
   bins[6] = 80;   bins[7] = 90;    bins[8] = 100;   bins[9] = 120;   bins[10] = 150;  bins[11] = 200;
-  //for(int k = 0 ; k <= nBins ; k++) bins[k] = 25*k; 
+  //for(int k = 0 ; k <= nBins ; k++) bins[k] = 15*k; 
   TString variable("diTauVisMass");
   TString labels(" ; mass (GeV) ; Events");
 
@@ -162,7 +162,10 @@
   aStack->Draw("HISTSAME");
   hData->Draw("PSAME");
 
-
+  cout << "DYJets = " << hDYJets->Integral() << endl;
+  cout << "TT = " << hTTJets->Integral() << endl;
+  cout << "QCD = " << hQCD->Integral() << endl;
+  cout << "WJets = " << hWJets->Integral() << endl;
 
   // Legend
   TLegend* leg = new TLegend(0.52,0.50,0.75,0.87,NULL,"brNDC");
