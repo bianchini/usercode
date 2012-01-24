@@ -96,7 +96,8 @@
   aStack->Add(hVBFH130);
 
   hData->Sumw2();
-  aStack->Draw("HIST");
+  hData->Draw("P");
+  aStack->Draw("HISTSAME");
   hData->Draw("PSAME");
 
 
