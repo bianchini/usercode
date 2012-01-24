@@ -16,6 +16,7 @@
   gStyle->SetStatColor(0);
   gStyle->SetOptStat(0000000);
   gStyle->SetOptFit(0111);
+  gStyle->SetOptTitle(0);
   gStyle->SetTitleStyle(0);
   gStyle->SetTitleFillColor(0);
   gStyle->SetPalette(1);

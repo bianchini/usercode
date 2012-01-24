@@ -16,6 +16,7 @@
   gStyle->SetStatColor(0);
   gStyle->SetOptStat(0000000);
   gStyle->SetOptFit(0111);
+  gStyle->SetOptTitle(0);
   gStyle->SetTitleStyle(0);
   gStyle->SetTitleFillColor(0);
   gStyle->SetPalette(1);
@@ -40,9 +41,9 @@
   TArrayF bins(nBins+1);
   bins[0] = 0;    bins[1] = 30;    bins[2] = 40;    bins[3] = 50;    bins[4]  = 60;    bins[5] = 70;
   bins[6] = 80;   bins[7] = 90;    bins[8] = 100;   bins[9] = 120;   bins[10] = 150;  bins[11] = 200;
-  //for(int k = 0 ; k <= nBins ; k++) bins[k] = 25*k; 
+  //for(int k = 0 ; k <= nBins ; k++) bins[k] = 15*k; 
   TString variable("diTauVisMass");
-  TString labels(" ; mass (GeV) ; Events");
+  TString labels(" ; visible mass (GeV/c^{2}) ; Events");
 
   TH1F* hData    = new TH1F("hData"   ,labels, nBins, bins.GetArray());
   TH1F* hQCD     = new TH1F("hQCD"    ,labels, nBins, bins.GetArray());
@@ -65,7 +66,7 @@
   hGGFH130->SetLineColor(kBlue);
 
   // full signal selection
-  TCut sbin(         "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0&& HLTx && HLTmatch");
+  TCut sbin(         "ptL1>15 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0 && HLTx && HLTmatch");
   // luminosity of data is 53 pb
   float lumiFact    = 53./100;
 
