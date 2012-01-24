@@ -72,12 +72,12 @@
 
   // Draw with cuts and weights !!!
   tData->Draw(  variable+">>hData",   sbin);
-  tQCD->Draw(  variable+">>hQCD",     "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
-  tDYJets->Draw(variable+">>hDYJets", "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
-  tWJets->Draw( variable+">>hWJets",  "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
-  tTTJets->Draw(variable+">>hTTJets", "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
-  tVBFH130->Draw(variable+">>hVBFH130", "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
-  tGGFH130->Draw(variable+">>hGGFH130", "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight*HqTWeight"*sbin);
+  tQCD->Draw(  variable+">>hQCD",     "sampleWeight"*sbin);
+  tDYJets->Draw(variable+">>hDYJets", "sampleWeight"*sbin);
+  tWJets->Draw( variable+">>hWJets",  "sampleWeight"*sbin);
+  tTTJets->Draw(variable+">>hTTJets", "sampleWeight"*sbin);
+  tVBFH130->Draw(variable+">>hVBFH130", "sampleWeight"*sbin);
+  tGGFH130->Draw(variable+">>hGGFH130", "sampleWeight"*sbin);
   
   // Scale histograms
   hDYJets->Scale( lumiFact );
