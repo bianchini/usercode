@@ -390,10 +390,12 @@ void MuTauAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & i
   unsigned int index = 0;
   float maxTauPt     = 0;
   for(unsigned int i=0; i<selectedDiTausFromMu.size(); i++){
-    if( ((*diTaus)[selectedDiTausFromMu[i]].leg2())->pt() > maxTauPt )
+    if( ((*diTaus)[selectedDiTausFromMu[i]].leg2())->pt() > maxTauPt ){
       index = selectedDiTausFromMu[i];
+      maxTauPt =  ((*diTaus)[selectedDiTausFromMu[i]].leg2())->pt() ;
+    }
   }
-
+  
 
   //////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////
