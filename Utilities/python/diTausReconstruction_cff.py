@@ -57,28 +57,12 @@ allElecTauPairs.nSVfit.psKine_MEt_logM_fit.algorithm = cms.PSet(
             verbosity = cms.int32(0)
         )
 
-
+'''
 allElecTauPairs.nSVfit.psKine_MEt_logM_int = cms.PSet()
 allElecTauPairs.nSVfit.psKine_MEt_logM_int.config = allElecTauPairs.nSVfit.psKine_MEt_logM_fit.config
 allElecTauPairs.nSVfit.psKine_MEt_logM_int.algorithm = nSVfitProducerByIntegration.algorithm
 '''
-cms.PSet(
-        pluginName = cms.string("nSVfitAlgorithmByIntegration"),
-            pluginType = cms.string("NSVfitAlgorithmByIntegration"),
-            parameters = cms.PSet(
-            mass_A = cms.PSet(
-                min = cms.double(20.),
-                            max = cms.double(750.),
-                            stepSize = cms.double(5.),
-                            replace = cms.string("leg1.x"),
-                            by = cms.string("(A.p4.mass/mass_A)*(A.p4.mass/mass_A)/leg2.x")
-                        )
-                ),
-            vegasOptions = cms.PSet(
-            numCalls = cms.uint32(10000)
-                )
-        )
-'''
+
 #--------------------------------------------------------------------------------
 
 elecTauPairProdConfigurator = objProdConfigurator(
@@ -143,34 +127,10 @@ allMuTauPairs.nSVfit.psKine_MEt_logM_fit.algorithm = cms.PSet(
             verbosity = cms.int32(0)
         )
 
-
+'''
 allMuTauPairs.nSVfit.psKine_MEt_logM_int = cms.PSet()
 allMuTauPairs.nSVfit.psKine_MEt_logM_int.config = allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config
 allMuTauPairs.nSVfit.psKine_MEt_logM_int.algorithm = nSVfitProducerByIntegration.algorithm
-'''
-cms.PSet(
-    pluginName = cms.string("nSVfitAlgorithmByIntegration"),
-    pluginType = cms.string("NSVfitAlgorithmByIntegration"),
-    parameters = cms.PSet(
-    mass_A = cms.PSet(
-    min = cms.double(20.),
-    max = cms.double(750.),
-    #stepSize = cms.double(5.),
-    stepSizeFactor = cms.double(1.025), # nextM = max(stepSizeFactor*currentM, minStepSize)
-    minStepSize = cms.double(2.5),      
-    replace = cms.string("leg1.x"),
-    by = cms.string("(A.p4.mass/mass_A)*(A.p4.mass/mass_A)/leg2.x")
-    )
-    ),
-    vegasOptions = cms.PSet(
-    #numCalls = cms.uint32(10000)
-    numCallsGridOpt = cms.uint32(1000),
-    numCallsIntEval = cms.uint32(10000),
-    maxChi2         = cms.double(2.),
-    maxIntEvalIter  = cms.uint32(5),                                          
-    precision       = cms.double(0.00001)
-    )
-    )
 '''
 
 muTauPairProdConfigurator = objProdConfigurator(
@@ -232,27 +192,10 @@ allElecMuPairs.nSVfit.psKine_MEt_logM_fit.algorithm = cms.PSet(
             verbosity = cms.int32(0)
         )
 
-
+'''
 allElecMuPairs.nSVfit.psKine_MEt_logM_int = cms.PSet()
 allElecMuPairs.nSVfit.psKine_MEt_logM_int.config = allElecMuPairs.nSVfit.psKine_MEt_logM_fit.config
 allElecMuPairs.nSVfit.psKine_MEt_logM_int.algorithm = nSVfitProducerByIntegration.algorithm
-'''
-cms.PSet(
-        pluginName = cms.string("nSVfitAlgorithmByIntegration"),
-            pluginType = cms.string("NSVfitAlgorithmByIntegration"),
-            parameters = cms.PSet(
-            mass_A = cms.PSet(
-                min = cms.double(20.),
-                            max = cms.double(750.),
-                            stepSize = cms.double(5.),
-                            replace = cms.string("leg1.x"),
-                            by = cms.string("(A.p4.mass/mass_A)*(A.p4.mass/mass_A)/leg2.x")
-                        )
-                ),
-            vegasOptions = cms.PSet(
-            numCalls = cms.uint32(10000)
-                )
-        )
 '''
 #--------------------------------------------------------------------------------
 

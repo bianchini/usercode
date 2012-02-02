@@ -29,11 +29,11 @@ void AntiElectronIDMVA::Initialize(std::string methodName,
 				   std::string oneProng1pi0wGSF_EC,
 				   std::string oneProng1pi0woGSF_EC
 				   ){
-
+  
   for(UInt_t i=0; i<6; ++i) {
     if (fTMVAReader_[i]) delete fTMVAReader_[i];
   }
-
+  
   isInitialized_ = kTRUE;
   methodName_    = methodName;
 
