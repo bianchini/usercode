@@ -512,9 +512,13 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 /*, AntiElectr
   TF1 *ratioElecIDIsoEC   = (TF1*)corrections.Get("ratioElecIDIsoEC");
 
   TF1 *ratioTauElecTauAll = (TF1*)corrections.Get("ratioTauElecTauAll");
+  TF1 *ratioTauElecTauAllBL = (TF1*)corrections.Get("ratioTauElecTauAllBL");
+  TF1 *ratioTauElecTauAllEC = (TF1*)corrections.Get("ratioTauElecTauAllEC");
   TF1 *ratioElecAllBL     = (TF1*)corrections.Get("ratioElecAllBL");
   TF1 *ratioElecAllEC     = (TF1*)corrections.Get("ratioElecAllEC");
   TF1 *turnOnTauElecTauAll= (TF1*)corrections.Get("turnOnTauElecTauAll");
+  TF1 *turnOnTauElecTauAllBL = (TF1*)corrections.Get("turnOnTauElecTauAllBL");
+  TF1 *turnOnTauElecTauAllEC = (TF1*)corrections.Get("turnOnTauElecTauAllEC");
   TF1 *turnOnElecAllBL    = (TF1*)corrections.Get("turnOnElecAllBL");
   TF1 *turnOnElecAllEC    = (TF1*)corrections.Get("turnOnElecAllEC");
 
@@ -826,14 +830,11 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 /*, AntiElectr
   currentTree->SetBranchStatus("chIsoPULeg1v2"         ,1);
   currentTree->SetBranchStatus("nhIsoPULeg1v2"         ,1);
   currentTree->SetBranchStatus("phIsoPULeg1v2"         ,1);
-
   currentTree->SetBranchStatus("chIsoEELeg1v2"         ,1);
   currentTree->SetBranchStatus("nhIsoEELeg1v2"         ,1);
   currentTree->SetBranchStatus("phIsoEELeg1v2"         ,1);
-  currentTree->SetBranchStatus("chIsoEEPULeg1v2"       ,1);
   currentTree->SetBranchStatus("nhIsoEEPULeg1v2"       ,1);
   currentTree->SetBranchStatus("phIsoEEPULeg1v2"       ,1);
-
   currentTree->SetBranchStatus("chIsoLeg2"             ,1);
   currentTree->SetBranchStatus("nhIsoLeg2"             ,0);
   currentTree->SetBranchStatus("phIsoLeg2"             ,1);
@@ -998,7 +999,7 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 /*, AntiElectr
   float chIsoLeg1,nhIsoLeg1,phIsoLeg1; 
   float chIsoPULeg1,nhIsoPULeg1,phIsoPULeg1;
   float chIsoEELeg1,nhIsoEELeg1,phIsoEELeg1; 
-  float chIsoEEPULeg1,nhIsoEEPULeg1,phIsoEEPULeg1; 
+  float nhIsoEEPULeg1,phIsoEEPULeg1; 
   ULong64_t event,run,lumi;
 
   currentTree->SetBranchAddress("chIsoLeg2",            &chIsoLeg2);
@@ -1013,7 +1014,6 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 /*, AntiElectr
   currentTree->SetBranchAddress("chIsoEELeg1v2",        &chIsoEELeg1);
   currentTree->SetBranchAddress("nhIsoEELeg1v2",        &nhIsoEELeg1);    
   currentTree->SetBranchAddress("phIsoEELeg1v2",        &phIsoEELeg1);
-  currentTree->SetBranchAddress("chIsoEEPULeg1v2",      &chIsoEEPULeg1);  
   currentTree->SetBranchAddress("nhIsoEEPULeg1v2",      &nhIsoEEPULeg1);
   currentTree->SetBranchAddress("phIsoEEPULeg1v2",      &phIsoEEPULeg1);
 
@@ -1437,7 +1437,9 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 /*, AntiElectr
 	  turnOnElecAllBL->Eval((*diTauLegsP4)[0].Pt()) : 
 	  turnOnElecAllEC->Eval((*diTauLegsP4)[0].Pt());
 
-	HLTTau  = turnOnTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() );
+	HLTTau  = ((*diTauLegsP4)[1].Eta()<1.5) ? 
+	  turnOnTauElecTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) :
+	  turnOnTauElecTauAllEC->Eval( (*diTauLegsP4)[1].Pt() ) ;
 
 	SFTau         = 1.0;
 	SFElec        =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.5 ? 
@@ -1465,7 +1467,10 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 /*, AntiElectr
       HLTx     = float((*triggerBits)[0]);
       HLTmatch = ((*tauXTriggers)[0] && (*tauXTriggers)[2]) ? 1.0 : 0.0;
 
-      HLTweightTau  = ratioTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() );
+      //HLTweightTau  = ratioTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() );
+      HLTweightTau  = ((*diTauLegsP4)[1].Eta()<1.5) ? 
+	ratioTauElecTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) :
+	ratioTauElecTauAllEC->Eval( (*diTauLegsP4)[1].Pt() ) ;
      
       if((*diTauLegsP4)[0].Pt()>18){
 	HLTweightElec = ((*diTauLegsP4)[0].Eta()<1.5) ? 
@@ -1474,7 +1479,11 @@ void makeTrees_ElecTauStream(string analysis = "", int index = -1 /*, AntiElectr
       }
       else HLTweightElec = 1.0;
 
-      HLTTau  = turnOnTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() );
+      //HLTTau  = turnOnTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() );
+      HLTTau  = ((*diTauLegsP4)[1].Eta()<1.5) ? 
+	turnOnTauElecTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) :
+	turnOnTauElecTauAllEC->Eval( (*diTauLegsP4)[1].Pt() ) ;
+
       HLTElec = TMath::Abs((*diTauLegsP4)[0].Eta()<1.5) ? 
 	turnOnElecAllBL->Eval((*diTauLegsP4)[0].Pt()) : 
 	turnOnElecAllEC->Eval((*diTauLegsP4)[0].Pt());
@@ -1580,13 +1589,17 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   TF1 *ratioMuIsoBL      = (TF1*)corrections.Get("ratioMuIsoBL");
   TF1 *ratioMuIsoEC      = (TF1*)corrections.Get("ratioMuIsoEC");
 
-  TF1 *ratioMuAllBL      = (TF1*)corrections.Get("ratioMuAllBL");
-  TF1 *ratioMuAllEC      = (TF1*)corrections.Get("ratioMuAllEC");
-  TF1 *ratioTauMuTauAll  = (TF1*)corrections.Get("ratioTauMuTauAll");
+  TF1 *ratioMuAllBL       = (TF1*)corrections.Get("ratioMuAllBL");
+  TF1 *ratioMuAllEC       = (TF1*)corrections.Get("ratioMuAllEC");
+  TF1 *ratioTauMuTauAll   = (TF1*)corrections.Get("ratioTauMuTauAll");
+  TF1 *ratioTauMuTauAllBL = (TF1*)corrections.Get("ratioTauMuTauAllBL");
+  TF1 *ratioTauMuTauAllEC = (TF1*)corrections.Get("ratioTauMuTauAllEC");
 
-  TF1 *turnOnMuAllBL     = (TF1*)corrections.Get("turnOnMuAllBL");
-  TF1 *turnOnMuAllEC     = (TF1*)corrections.Get("turnOnMuAllEC");
-  TF1 *turnOnTauMuTauAll = (TF1*)corrections.Get("turnOnTauMuTauAll");  
+  TF1 *turnOnMuAllBL       = (TF1*)corrections.Get("turnOnMuAllBL");
+  TF1 *turnOnMuAllEC       = (TF1*)corrections.Get("turnOnMuAllEC");
+  TF1 *turnOnTauMuTauAll   = (TF1*)corrections.Get("turnOnTauMuTauAll");  
+  TF1 *turnOnTauMuTauAllBL = (TF1*)corrections.Get("turnOnTauMuTauAllBL");  
+  TF1 *turnOnTauMuTauAllEC = (TF1*)corrections.Get("turnOnTauMuTauAllEC");  
 
   if(!ratioMuIDIsoBL)   cout << "Missing corrections for MuID+Iso (BL)" << endl;
   if(!ratioMuIDIsoEC)   cout << "Missing corrections for MuID+Iso (EC)" << endl;
@@ -1598,6 +1611,8 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   if(!ratioMuAllBL)     cout << "Missing corrections for Mu HLT (BL)" << endl;
   if(!ratioMuAllEC)     cout << "Missing corrections for Mu HLT (EC)" << endl;
   if(!ratioTauMuTauAll) cout << "Missing corrections for tau HLT" << endl;
+  if(!ratioTauMuTauAllBL) cout << "Missing corrections for tau HLT (BL)" << endl;
+  if(!ratioTauMuTauAllEC) cout << "Missing corrections for tau HLT (EC)" << endl;
   if(!turnOnMuAllBL)    cout << "Missing turnOn for mu (BL)" << endl;
   if(!turnOnMuAllEC)    cout << "Missing turnOn for mu (EC)" << endl;
   if(!turnOnTauMuTauAll)cout << "Missing turnOn for tau" << endl;
@@ -1609,7 +1624,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 
   // samples & x-sections & skim1 & skim2
   samples.push_back("Run2011-MuTau-All_run");             crossSec.push_back( 0  );                          
-  samples.push_back("Run2011-MuTau-All-LooseIso_run");    crossSec.push_back( 0  );                          
+  samples.push_back("Run2011-MuTau-LooseIso-All_run");    crossSec.push_back( 0  );                          
   samples.push_back("Run2011-MuTau-Embedded-All_run");    crossSec.push_back( 0  );                          
   samples.push_back("DYJets-MuTau-50-madgraph-PUS6_run"); crossSec.push_back( 3048           * 0.009631    * 0.641987); 
   samples.push_back("TTJets-MuTau-madgraph-PUS6_run");    crossSec.push_back( 157.5          * 0.020998    * 0.823613);  
@@ -1682,11 +1697,12 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   float diTauNSVfitMass_,diTauNSVfitMassErrUp_,diTauNSVfitMassErrDown_, diTauSVFitMass, diTauSVFitPt, diTauSVFitEta , diTauSVFitPhi ;
   float diTauCAMass, diTauCAPt, diTauCAEta, diTauCAPhi;
   float diTauVisMass,diTauVisPt,diTauVisEta,diTauVisPhi;
+  float diTauRecoPt;
   float diTauMinMass;
 
   // taus/MET related variables
   float ptL1,ptL2,etaL1,etaL2,phiL1,phiL2,dPhiL1L2, dxy1_, dz1_;
-  float diTauCharge_,MtLeg1_,MtLeg1Corr_,pZeta_,pZetaCorr_,pZetaVis_,pZetaVisCorr_,MEt,MEtCorr,pZetaSig_;;
+  float diTauCharge_,MtLeg1_,MtLeg1Corr_,pZeta_,pZetaCorr_,pZetaVis_,pZetaVisCorr_,MEt,MEtCorr,MEtPhi,pZetaSig_;
   float combRelIsoLeg1,combRelIsoLeg1Beta,combRelIsoLeg1DBeta,combRelIsoLeg1Rho, combIsoLeg2;
   int tightestHPSDBWP_, decayMode_;
 
@@ -1751,6 +1767,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   outTreePtOrd->Branch("diTauSVFitPt",  &diTauSVFitPt,  "diTauSVFitPt/F");
   outTreePtOrd->Branch("diTauSVFitEta", &diTauSVFitEta, "diTauSVFitEta/F");
   outTreePtOrd->Branch("diTauSVFitPhi", &diTauSVFitPhi, "diTauSVFitPhi/F");
+  outTreePtOrd->Branch("diTauRecoPt",   &diTauRecoPt,  "diTauRecoPt/F");
   
   outTreePtOrd->Branch("diTauCAMass",&diTauCAMass,"diTauCAMass/F");
   outTreePtOrd->Branch("diTauCAPt",  &diTauCAPt,  "diTauCAPt/F");
@@ -1798,6 +1815,7 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
   outTreePtOrd->Branch("pZetaVisCorr",&pZetaVisCorr_,"pZetaVisCorr/F");
   outTreePtOrd->Branch("MEt",         &MEt,"MEt/F");
   outTreePtOrd->Branch("MEtCorr",     &MEtCorr,"MEtCorr/F");
+  outTreePtOrd->Branch("MEtPhi",      &MEtPhi,"MEtPhi/F");
   outTreePtOrd->Branch("pZetaSig",    &pZetaSig_,"pZetaSig/F");
 
   outTreePtOrd->Branch("combRelIsoLeg1",     &combRelIsoLeg1,"combRelIsoLeg1/F");
@@ -2236,6 +2254,8 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
     diTauSVFitEta  = (*diTauSVfitP4)[0].Eta();
     diTauSVFitPhi  = (*diTauSVfitP4)[0].Phi();
 
+    diTauRecoPt = ((*diTauVisP4)[0]+(*METP4)[0]).Pt();
+
     diTauCAMass = (*diTauCAP4)[0].M();
     diTauCAPt   = (*diTauCAP4)[0].Pt();
     diTauCAEta  = (*diTauCAP4)[0].Eta();
@@ -2309,6 +2329,8 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 
     MEt     = (*METP4)[0].Et();
     MEtCorr = recoilCorrecMET.Et();
+
+    MEtPhi  = (*METP4)[0].Phi();
 
     combRelIsoLeg1         = (chIsoLeg1+nhIsoLeg1+phIsoLeg1)/(*diTauLegsP4)[0].Pt();
     float PUtoPVratio      = (chIsoLeg1+chIsoPULeg1)>0 ? chIsoPULeg1/(chIsoLeg1+chIsoPULeg1) : 0.0;
@@ -2392,7 +2414,8 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
       else if(run>=173236 && run<=173692)
 	HLTx =  float((*triggerBits)[8]);  //HLT_IsoMu15_LooseIsoPFTau15_v9
       else if(run>=175860 && run<=178380)
-	HLTx =  float((*triggerBits)[9] || (*triggerBits)[8]);  //HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v1
+	//HLTx =  float((*triggerBits)[9] || (*triggerBits)[8]);  //HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v1
+	HLTx =  float((*triggerBits)[9]);  //HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v1
       else if(run>=178420 && run<=179889)
 	HLTx =  float((*triggerBits)[10]); //HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v5
       else if(run>=179959 && run<=180252)
@@ -2408,8 +2431,9 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 	HLTmatch = isTriggMatched ? 1.0 : 0.0;
       }
       else if(run>=175860 && run<=180252){
-	bool isTriggMatched = ((*tauXTriggers)[2] && (*tauXTriggers)[5]) ||
-	  ((*tauXTriggers)[1] && (*tauXTriggers)[4]); //hltSingleMuIsoL3IsoFiltered15 && hltOverlapFilterIsoMu15IsoPFTau20
+	//bool isTriggMatched = ((*tauXTriggers)[2] && (*tauXTriggers)[5]) ||
+	//((*tauXTriggers)[1] && (*tauXTriggers)[4]); //hltSingleMuIsoL3IsoFiltered15 && hltOverlapFilterIsoMu15IsoPFTau20
+	bool isTriggMatched =  ((*tauXTriggers)[2] && (*tauXTriggers)[5]);
 	HLTmatch = isTriggMatched ? 1.0 : 0.0;
       }
 
@@ -2422,7 +2446,9 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
 	HLTMu  = TMath::Abs((*diTauLegsP4)[0].Eta())<1.5 ? 
 	  turnOnMuAllBL->Eval( (*diTauLegsP4)[0].Pt() ) : turnOnMuAllEC->Eval( (*diTauLegsP4)[0].Pt() );
 
-	HLTTau = turnOnTauMuTauAll->Eval( (*diTauLegsP4)[1].Pt() );
+	//HLTTau = turnOnTauMuTauAll->Eval( (*diTauLegsP4)[1].Pt() );
+	HLTTau = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?  
+	  turnOnTauMuTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) : turnOnTauMuTauAllEC->Eval( (*diTauLegsP4)[1].Pt() ) ;
 
 	SFTau = 1.0;
 	SFMu  =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.5 ? 
@@ -2448,7 +2474,9 @@ void makeTrees_MuTauStream(string analysis = "", int index = -1 ){
       bool isTriggMatched = (*tauXTriggers)[0] && (*tauXTriggers)[2] ; //hltSingleMuIsoL3IsoFiltered15 && hltOverlapFilterIsoMu15IsoPFTau15
       HLTmatch = isTriggMatched ? 1.0 : 0.0;
 
-      HLTweightTau = ratioTauMuTauAll->Eval( (*diTauLegsP4)[1].Pt() );
+      //HLTweightTau = ratioTauMuTauAll->Eval( (*diTauLegsP4)[1].Pt() );
+      HLTweightTau  = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?  
+	ratioTauMuTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) : ratioTauMuTauAllEC->Eval( (*diTauLegsP4)[1].Pt() );
       HLTweightMu  = TMath::Abs((*diTauLegsP4)[0].Eta())<1.5 ?  
 	ratioMuAllBL->Eval( (*diTauLegsP4)[0].Pt() ) : ratioMuAllEC->Eval( (*diTauLegsP4)[0].Pt() );
       HLTMu  = TMath::Abs((*diTauLegsP4)[0].Eta())<1.5 ? 
@@ -2509,7 +2537,7 @@ void doAllSamplesElec(){
 		    );
   */
   
-  for( unsigned int k = 0; k < 42 ; k++) {
+  for( unsigned int k = 1; k < 2/*42*/ ; k++) {
 
     makeTrees_ElecTauStream("",                  k/*,antiE*/);
     if( k < 2) continue;
@@ -2534,22 +2562,22 @@ void doAllSamplesElec(){
 
 void doAllSamplesMu(){
  
-  for( unsigned int k = 0; k < 40 ; k++) {
+  for( unsigned int k = 0; k < 42 ; k++) {
 
     makeTrees_MuTauStream("",        k);
 
     //continue;
 
-    if( k==0 ) continue;
+    if( k<2) continue;
     makeTrees_MuTauStream("TauUp",   k);
     makeTrees_MuTauStream("TauDown", k);
-    if( k==1) continue;
+    if( k<3) continue;
     makeTrees_MuTauStream("JetUp",   k);
     makeTrees_MuTauStream("JetDown", k);
-    makeTrees_MuTauStream("MEtResolutionUp",   k);
-    makeTrees_MuTauStream("MEtResolutionDown",   k);
-    makeTrees_MuTauStream("MEtResponseUp",     k);
-    makeTrees_MuTauStream("MEtResponseDown",     k);
+    //makeTrees_MuTauStream("MEtResolutionUp",   k);
+    //makeTrees_MuTauStream("MEtResolutionDown", k);
+    //makeTrees_MuTauStream("MEtResponseUp",     k);
+    //makeTrees_MuTauStream("MEtResponseDown",   k);
    
     //makeTrees_MuTauStream("MuUp",    k);
     //makeTrees_MuTauStream("MuDown",  k);
