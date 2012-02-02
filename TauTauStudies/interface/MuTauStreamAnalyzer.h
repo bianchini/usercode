@@ -98,6 +98,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauLegsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* genDiTauLegsP4_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* genTausP4_; 
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* METP4_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* genMETP4_;
@@ -152,6 +153,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   int isTauLegMatched_;
   int isMuLegMatched_;
   int muFlag_;
+  float muVetoRelIso_;
   int hasKft_;
 
   float diTauCharge_;

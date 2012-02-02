@@ -20,7 +20,7 @@ void produce(
 	     string variable_  = "diTauVisMass",
 	     string analysis_  = "",
 	     string bin_       = "inclusive",
-	     TString outputDir = "Nov2011"
+	     TString outputDir = "Dec2011"
 	     ){
 
 
@@ -86,7 +86,7 @@ void produce(
       ((TH1F*)fin->Get("hW"))->Write(Form("W%s"           ,suffix.c_str()));
       ((TH1F*)fin->Get("hZmj"))->Write(Form("ZJ%s"        ,suffix.c_str()));
       ((TH1F*)fin->Get("hZmm"))->Write(Form("ZL%s"        ,suffix.c_str()));
-      ((TH1F*)fin->Get("hZfakes"))->Write(Form("ZLL%s"        ,suffix.c_str()));
+      ((TH1F*)fin->Get("hZfakes"))->Write(Form("ZLL%s"    ,suffix.c_str()));
       ((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       ((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
 
@@ -106,7 +106,7 @@ void produce(
       TH1F* hZfakesKeys = (TH1F*)fin->Get("hZfakes");
       hZfakesKeys->Reset();
       hZfakesKeys->Add(hZmjKeys,1.0);
-      //hZfakesKeys->Add(hZmmKeys,1.0);
+      hZfakesKeys->Add(hZmmKeys,1.0);
       hZfakesKeys->Write(Form("ZLL%s"        ,suffix.c_str()));
       ((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       ((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
@@ -117,14 +117,24 @@ void produce(
       ((TH1F*)fin->Get("hSgn2"))->Write(Form("SM%d%s"  ,mH_,suffix.c_str()));
       ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s"  ,mH_,suffix.c_str()));
       ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s",suffix.c_str()));
-      ((TH1F*)fin->Get("hAntiIsoKeys"))->Write(Form("QCD%s"    ,suffix.c_str()));
+      //((TH1F*)fin->Get("hAntiIsoKeys"))->Write(Form("QCD%s"    ,suffix.c_str()));
+      //// to use LooseIso:
+      TH1F* hAntiIsoKeys  = (TH1F*)fin->Get("hAntiIsoKeys");
+      TH1F* hAntiIso      = (TH1F*)fin->Get("hAntiIso");
+      TH1F* hLooseIsoKeys = (TH1F*)fin->Get("hLooseIsoKeys");
+      hLooseIsoKeys->Scale(hAntiIso->Integral()/hLooseIsoKeys->Integral());
+      hLooseIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
       ((TH1F*)fin->Get("hW3JetsKeys"))->Write(Form("W%s"           ,suffix.c_str()));
       TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmjKeys");
       TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmmKeys");
+      TH1F* hZmj        = (TH1F*)fin->Get("hZmj");
+      TH1F* hZmm        = (TH1F*)fin->Get("hZmm");
       TH1F* hZfakesKeys = (TH1F*)hZmjKeys->Clone("hZfakesKeys");
       hZfakesKeys->Reset();
-      hZfakesKeys->Add(hZmjKeys,1.0);
-      hZfakesKeys->Add(hZmmKeys,1.0);  
+      if(hZmjKeys->Integral()>0) hZfakesKeys->Add(hZmjKeys,1.0);
+      else hZfakesKeys->Add(hZmj,1.0);
+      if(hZmmKeys->Integral()>0) hZfakesKeys->Add(hZmmKeys,1.0);  
+      else hZfakesKeys->Add(hZmm,1.0);
       hZfakesKeys->Write(Form("ZLL%s"        ,suffix.c_str()));
       ((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       ((TH1F*)fin->Get("hVVKeys"))->Write(Form("VV%s"         ,suffix.c_str()));
@@ -201,7 +211,7 @@ void produce(
 	TH1F* hZfakesKeys = (TH1F*)hZmjKeys->Clone("hZfakesKeys");
 	hZfakesKeys->Reset();
 	hZfakesKeys->Add(hZmjKeys,1.0);
-	//hZfakesKeys->Add(hZmmKeys,1.0);  
+	hZfakesKeys->Add(hZmmKeys,1.0);  
 	hZfakesKeys->Write(Form("ZLL%s"        ,suffix.c_str()));
       }
       if(dir->FindObjectAny(Form("TT%s"       ,suffix.c_str()))==0 )
@@ -229,10 +239,14 @@ void produce(
       if(dir->FindObjectAny(Form("ZLL%s"       ,suffix.c_str()))==0 ){
 	TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmjKeys");
 	TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmmKeys");
+	TH1F* hZmj        = (TH1F*)fin->Get("hZmj");
+	TH1F* hZmm        = (TH1F*)fin->Get("hZmm");
 	TH1F* hZfakesKeys = (TH1F*)hZmjKeys->Clone("hZfakesKeys");
 	hZfakesKeys->Reset();
-	hZfakesKeys->Add(hZmjKeys,1.0);
-	hZfakesKeys->Add(hZmmKeys,1.0);  
+	if(hZmjKeys->Integral()>0) hZfakesKeys->Add(hZmjKeys,1.0);
+	else hZfakesKeys->Add(hZmj,1.0);
+	if(hZmmKeys->Integral()>0) hZfakesKeys->Add(hZmmKeys,1.0);  
+	else hZfakesKeys->Add(hZmm,1.0);
 	hZfakesKeys->Write(Form("ZLL%s"        ,suffix.c_str()));
       }  
       if(dir->FindObjectAny(Form("TT%s"       ,suffix.c_str()))==0 )
@@ -315,14 +329,18 @@ void produce(
 	    QCDyield = ((TH1F*)fin->Get("hQCD"))->Integral(); 
 	  }
 	  else if(bin_.find("vbf")!=string::npos && bin_.find("novbf")==string::npos){
-	    QCDyield = ((TH1F*)fin->Get("hAntiIsoKeys"))->Integral(); 
+	    QCDyield = ((TH1F*)fin->Get("hAntiIso"))->Integral(); 
 	  }
 	  else if(bin_.find("boost")!=string::npos){
-	    QCDyield = ((TH1F*)fin->Get("hAntiIsoKeys"))->Integral(); 
+	    QCDyield = ((TH1F*)fin->Get("hAntiIso"))->Integral(); 
 	  }
 	  else{
 	    QCDyield = ((TH1F*)fin->Get("hQCD"))->Integral(); 
 	  }
+
+	  /////////////////////////////////////////////
+	  /////////////////////////////////////////////
+
 	  string rate = "rate                                           ";
 	  string space = "              ";
 	  out << rate ;
@@ -438,7 +456,7 @@ void produce(
 
 
 
-void produceAll(  TString outputDir = "Dec2011/iter2" ){
+void produceAll(  TString outputDir = "Jan2012/Vbf3" ){
 
   vector<string> variables;
   vector<int> mH;
@@ -447,13 +465,13 @@ void produceAll(  TString outputDir = "Dec2011/iter2" ){
   variables.push_back("diTauSVFitMass");
 
   //mH.push_back(105);
-  mH.push_back(110);
-  mH.push_back(115);
-  mH.push_back(120);
-  mH.push_back(125);
-  mH.push_back(130);
+  //mH.push_back(110);
+  //mH.push_back(115);
+  //mH.push_back(120);
+  //mH.push_back(125);
+  //mH.push_back(130);
   mH.push_back(135);
-  mH.push_back(140);
+  //mH.push_back(140);
   mH.push_back(145);
 
   for(unsigned int i = 0 ; i < variables.size(); i++){
@@ -465,17 +483,17 @@ void produceAll(  TString outputDir = "Dec2011/iter2" ){
       produce(mH[j],variables[i], "JetUp"   , "vbf", outputDir);
       produce(mH[j],variables[i], "JetDown" , "vbf", outputDir);
 
-      produce(mH[j],variables[i], ""        , "boost", outputDir);
-      produce(mH[j],variables[i], "TauUp"   , "boost", outputDir);
-      produce(mH[j],variables[i], "TauDown" , "boost", outputDir);
-      produce(mH[j],variables[i], "JetUp"   , "boost", outputDir);
-      produce(mH[j],variables[i], "JetDown" , "boost", outputDir);
+      //produce(mH[j],variables[i], ""        , "boost", outputDir);
+      //produce(mH[j],variables[i], "TauUp"   , "boost", outputDir);
+      //produce(mH[j],variables[i], "TauDown" , "boost", outputDir);
+      //produce(mH[j],variables[i], "JetUp"   , "boost", outputDir);
+      //produce(mH[j],variables[i], "JetDown" , "boost", outputDir);
     
-      produce(mH[j],variables[i], ""        , "novbf", outputDir);
-      produce(mH[j],variables[i], "TauUp"   , "novbf", outputDir);
-      produce(mH[j],variables[i], "TauDown" , "novbf", outputDir);
-      produce(mH[j],variables[i], "JetUp"   , "novbf", outputDir);
-      produce(mH[j],variables[i], "JetDown" , "novbf", outputDir);
+      //produce(mH[j],variables[i], ""        , "novbf", outputDir);
+      //produce(mH[j],variables[i], "TauUp"   , "novbf", outputDir);
+      //produce(mH[j],variables[i], "TauDown" , "novbf", outputDir);
+      //produce(mH[j],variables[i], "JetUp"   , "novbf", outputDir);
+      //produce(mH[j],variables[i], "JetDown" , "novbf", outputDir);
 
       //produce(mH[j],variables[i], ""        , "twoJets", outputDir);
       //produce(mH[j],variables[i], "TauUp"   , "twoJets", outputDir);

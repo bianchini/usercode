@@ -21,3 +21,51 @@
   <use   name="root"/>
   <use   name="rootgraphics"/>
 </bin>
+
+<bin   file="makeMuTauTemplates.cc" name="makeMuTauTemplates">
+  <use   name="DataFormats/FWLite"/>
+  <use   name="FWCore/FWLite"/>
+  <use   name="FWCore/ParameterSet"/>
+  <use   name="FWCore/PythonParameterSet"/>
+  <use   name="HiggsAnalysis/CombinedLimit"/>
+  <use   name="PhysicsTools/FWLite"/>
+  <use   name="roofit"/>
+  <use   name="root"/>
+  <use   name="rootgraphics"/>
+</bin>
+
+<bin   file="makeElecTauTemplates.cc" name="makeElecTauTemplates">
+  <use   name="DataFormats/FWLite"/>
+  <use   name="FWCore/FWLite"/>
+  <use   name="FWCore/ParameterSet"/>
+  <use   name="FWCore/PythonParameterSet"/>
+  <use   name="HiggsAnalysis/CombinedLimit"/>
+  <use   name="PhysicsTools/FWLite"/>
+  <use   name="roofit"/>
+  <use   name="root"/>
+  <use   name="rootgraphics"/>
+</bin>
+
+<bin   file="makeTables.cc" name="makeTables">
+  <use   name="DataFormats/FWLite"/>
+  <use   name="FWCore/FWLite"/>
+  <use   name="FWCore/ParameterSet"/>
+  <use   name="FWCore/PythonParameterSet"/>
+  <use   name="HiggsAnalysis/CombinedLimit"/>
+  <use   name="PhysicsTools/FWLite"/>
+  <use   name="roofit"/>
+  <use   name="root"/>
+  <use   name="rootgraphics"/>
+</bin>
+
+<bin   file="systematics.cc" name="systematics">
+  <use   name="DataFormats/FWLite"/>
+  <use   name="FWCore/FWLite"/>
+  <use   name="FWCore/ParameterSet"/>
+  <use   name="FWCore/PythonParameterSet"/>
+  <use   name="HiggsAnalysis/CombinedLimit"/>
+  <use   name="PhysicsTools/FWLite"/>
+  <use   name="roofit"/>
+  <use   name="root"/>
+  <use   name="rootgraphics"/>
+</bin>

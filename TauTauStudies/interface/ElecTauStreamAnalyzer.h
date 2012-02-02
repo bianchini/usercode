@@ -97,6 +97,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* diTauLegsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* genDiTauLegsP4_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* genTausP4_;
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* METP4_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* genMETP4_;
@@ -158,6 +159,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   int isTauLegMatched_;
   int isElecLegMatched_;
   int elecFlag_;
+  float elecVetoRelIso_;
   int hasKft_;
 
   // ele specific variables
@@ -179,7 +181,9 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   float embeddingWeight_;
   int nPUVertices_;
   int nPUaverage_;
-  int nOOTPUVertices_;
+  int nPUVerticesM1_;
+  int nPUVerticesP1_;
+  int nPUtruth_;
 
   float mcPUweight_;
 

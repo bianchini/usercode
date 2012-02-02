@@ -64,8 +64,8 @@ void plotElecTau( Int_t mH_           = 120,
 		  TString variable_   = "diTauVisMass",
 		  TString XTitle_     = "full mass",
 		  TString Unities_    = "GeV",
-		  TString outputDir   = "Nov2011/",
-		  Int_t nBins_ = 40, Float_t xMin_=0, Float_t xMax_=200,
+		  TString outputDir   = "./",
+		  Int_t nBins_ = 80, Float_t xMin_=0, Float_t xMax_=400,
 		  Float_t magnifySgn_ = 1.0,
 		  Float_t hltEff_     = 1.0,
 		  Int_t logy_         = 0,
@@ -134,7 +134,7 @@ void plotElecTau( Int_t mH_           = 120,
   //////////////////////////////////////////////////////////////////////////
 
   float OStoSSRatioQCD            = 1.07;
-  float SSIsoToSSAIsoRatioQCD     = 0.32;
+  float SSIsoToSSAIsoRatioQCD     = 1.954;//0.32;
   float EtoTauCorrectionFactor    = 1.00;
   float JtoTauCorrectionFactor    = 1.00;
   float embeddedMEtCutEff         = 1.00;
@@ -338,8 +338,8 @@ void plotElecTau( Int_t mH_           = 120,
     sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch;
     sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch;
     sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch;
-    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS        && hltevent && hltmatch;
-    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS        && hltevent && hltmatch;
+    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS && pZ  && hltevent && hltmatch;
+    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS && pZ  && hltevent && hltmatch;
   }
   else if(selection_.find("oneJet")!=string::npos){
     sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && oneJet;
@@ -350,8 +350,8 @@ void plotElecTau( Int_t mH_           = 120,
     sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && oneJet;
     sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && oneJet;
     sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && oneJet;
-    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS        && hltevent && hltmatch && oneJet;
-    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS        && hltevent && hltmatch && oneJet;
+    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS && pZ  && hltevent && hltmatch && oneJet;
+    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS && pZ  && hltevent && hltmatch && oneJet;
   }
   else if(selection_.find("twoJets")!=string::npos){
     sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && twoJets;
@@ -362,8 +362,8 @@ void plotElecTau( Int_t mH_           = 120,
     sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && twoJets;
     sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && twoJets;
     sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && twoJets;
-    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS        && hltevent && hltmatch && twoJets;
-    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS        && hltevent && hltmatch && twoJets;
+    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS && pZ  && hltevent && hltmatch && twoJets;
+    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS && pZ  && hltevent && hltmatch && twoJets;
   }
   else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
     sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && vbf;
@@ -374,8 +374,8 @@ void plotElecTau( Int_t mH_           = 120,
     sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && vbf;
     sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && vbf;
     sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && vbf;
-    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS        && hltevent && hltmatch && vbf;
-    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS        && hltevent && hltmatch && vbf;    
+    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS && pZ  && hltevent && hltmatch && vbf;
+    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS && pZ  && hltevent && hltmatch && vbf;    
   }
   else if(selection_.find("novbf")!=string::npos){
     sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && novbf;
@@ -386,8 +386,8 @@ void plotElecTau( Int_t mH_           = 120,
     sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && novbf;
     sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && novbf;
     sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && novbf;
-    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS        && hltevent && hltmatch && novbf;
-    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS        && hltevent && hltmatch && novbf;
+    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS && pZ  && hltevent && hltmatch && novbf;
+    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS && pZ  && hltevent && hltmatch && novbf;
   }
   else if(selection_.find("boost")!=string::npos ){
     sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && boost;
@@ -398,8 +398,8 @@ void plotElecTau( Int_t mH_           = 120,
     sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && boost;
     sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && boost;
     sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && boost;
-    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS        && hltevent && hltmatch && boost;
-    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS        && hltevent && hltmatch && boost;
+    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS && pZ  && hltevent && hltmatch && boost;
+    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS && pZ  && hltevent && hltmatch && boost;
   }
   else if(selection_.find("bTag")!=string::npos && selection_.find("nobTag")==string::npos){
     sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && bTag;
@@ -410,8 +410,8 @@ void plotElecTau( Int_t mH_           = 120,
     sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && bTag;    
     sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && bTag;
     sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && bTag;
-    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS        && hltevent && hltmatch && bTag;
-    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS        && hltevent && hltmatch && bTag;
+    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS && pZ  && hltevent && hltmatch && bTag;
+    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS && pZ  && hltevent && hltmatch && bTag;
   }
   else if(selection_.find("nobTag")!=string::npos){
     sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && nobTag;
@@ -422,8 +422,8 @@ void plotElecTau( Int_t mH_           = 120,
     sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && nobTag;
     sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && nobTag;
     sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && nobTag;
-    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS        && hltevent && hltmatch && nobTag;
-    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS        && hltevent && hltmatch && nobTag;
+    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS && pZ  && hltevent && hltmatch && nobTag;
+    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS && pZ  && hltevent && hltmatch && nobTag;
   }
 
   // estimate the W+jets in the selection bin using pZeta extrapolation
@@ -733,7 +733,10 @@ void plotElecTau( Int_t mH_           = 120,
 
 
       // scale by correction factors
-      if((it->first).find("Data")==string::npos)
+      // scale by correction factors
+      if( ! ((it->first).find("Data")!=string::npos || 
+	     (it->first).find("LooseIso")!=string::npos ||
+	     (it->first).find("AntiIso")!=string::npos) ) 
 	h1->Scale(Lumi/1000*hltEff_);
 
       // if W+jets, scale by extrapolation
@@ -832,7 +835,7 @@ void plotElecTau( Int_t mH_           = 120,
 
       if( (it->first).find("Others")!=string::npos ){
 	hVV->Add(h1,1.0);
-	if(hVV->Integral()>0) hVVKeys->Scale(hVV->Integral()/hVVKeys->Integral());
+	if(hVVKeys->Integral()>0) hVVKeys->Scale(hVV->Integral()/hVVKeys->Integral());
 	hVVKeys->SetFillColor(kRed-3);
       }
     }
@@ -848,36 +851,36 @@ void plotElecTau( Int_t mH_           = 120,
       hDataEmb->SetFillColor(kYellow-9);
     }
     if( (it->first).find("DYEtoTau")!=string::npos ) {
-      if(hZmm->Integral()>0) hZmmKeys->Scale(hZmm->Integral()/hZmmKeys->Integral());
+      if(hZmmKeys->Integral()>0) hZmmKeys->Scale(hZmm->Integral()/hZmmKeys->Integral());
       hZmmKeys->SetFillColor(kRed-3);
     }
     if( (it->first).find("DYJtoTau")!=string::npos ) {
-      if(hZmj->Integral()>0) hZmjKeys->Scale(hZmj->Integral()/hZmjKeys->Integral());
+      if(hZmjKeys->Integral()>0) hZmjKeys->Scale(hZmj->Integral()/hZmjKeys->Integral());
       hZmjKeys->SetFillColor(kRed-3);
     }
     if( (it->first).find("WJets")!=string::npos ) {
-      if(hW->Integral()>0) hWKeys->Scale(hW->Integral()/hWKeys->Integral());
+      if(hWKeys->Integral()>0) hWKeys->Scale(hW->Integral()/hWKeys->Integral());
       hWKeys->SetFillColor(kRed-3);
     }
     if( (it->first).find("W3Jets")!=string::npos ) {
       hW3Jets->Add(h1,1.0);
-      if(hW->Integral()>0) hW3Jets->Scale(hW->Integral()/hW3Jets->Integral());
+      if(hW3Jets->Integral()>0) hW3Jets->Scale(hW->Integral()/hW3Jets->Integral());
       hW3Jets->SetFillColor(kRed-3);
-      if(hW->Integral()>0) hW3JetsKeys->Scale(hW->Integral()/hW3JetsKeys->Integral());
+      if(hW3JetsKeys->Integral()>0) hW3JetsKeys->Scale(hW->Integral()/hW3JetsKeys->Integral());
       hW3JetsKeys->SetFillColor(kRed-3);
     }
     if( (it->first).find("LooseIso")!=string::npos ) {
       hLooseIso->Add(h1,1.0);
-      if(hLooseIso->Integral()>0) hLooseIsoKeys->Scale(hLooseIso->Integral()/hLooseIsoKeys->Integral());
+      if(hLooseIsoKeys->Integral()>0) hLooseIsoKeys->Scale(hLooseIso->Integral()/hLooseIsoKeys->Integral());
       hLooseIsoKeys->SetFillColor(0);
     }
     if( (it->first).find("AntiIso")!=string::npos ) {
-      float sF = SSIsoToSSAIsoRatioQCD;
+      float sF = SSIsoToSSAIsoRatioQCD*OStoSSRatioQCD;
       cout << "Anti-isolated SS data scaled by " <<  SSIsoToSSAIsoRatioQCD << " ratio measured in inclusive sample ==>" << endl;
-      cout << "   SS annti-isolated events = " << h1->Integral() << " ==> " << h1->Integral()*SSIsoToSSAIsoRatioQCD << " predicted in signal region" << endl;
+      cout << "   SS annti-isolated events = " << h1->GetEntries() << " ==> " << h1->Integral()*SSIsoToSSAIsoRatioQCD << " predicted in signal region" << endl;
       h1->Scale(sF);
       hAntiIso->Add(h1,1.0);
-      if(hAntiIso->Integral()>0) hAntiIsoKeys->Scale(hAntiIso->Integral()/hAntiIsoKeys->Integral());
+      if(hAntiIsoKeys->Integral()>0) hAntiIsoKeys->Scale(hAntiIso->Integral()/hAntiIsoKeys->Integral());
       hAntiIsoKeys->SetFillColor(0);
     }
     if( (it->first).find("TTbar")!=string::npos ) {
@@ -1238,7 +1241,7 @@ void plotElecTau( Int_t mH_           = 120,
 
 
 
-void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "Dec2011/iter3"){
+void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "Jan2012/checks"){
 
   vector<string> variables;
   vector<int> mH;
@@ -1249,7 +1252,7 @@ void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "Dec2011/iter3")
   //mH.push_back(105);
   //mH.push_back(110);
   //mH.push_back(115);
-  //mH.push_back(120);
+  mH.push_back(120);
   //mH.push_back(125);
   //mH.push_back(130);
   //mH.push_back(135);
@@ -1259,30 +1262,30 @@ void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "Dec2011/iter3")
 
   //plotElecTau(120,0,"inclusive",""   ,"MtLeg1Corr","M_{T}","GeV" ,outputDir,40,0,160,5.0,1.0,0,1.2);
 
-  plotElecTau(120,0,"inclusive",""   ,"numPV","reconstructed vertexes","units" ,outputDir,30,0,30,5.0,1.0,0,1.5);
+  //plotElecTau(120,0,"inclusive",""   ,"numPV","reconstructed vertexes","units" ,outputDir,30,0,30,5.0,1.0,0,1.5);
 
-  plotElecTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV" ,outputDir,50,0,200,5.0,1.0,0,1.2);
-  plotElecTau(120,1,"inclusive",""   ,"ptL2","#tau p_{T}","GeV"           ,outputDir,30,0, 90,5.0,1.0,0,1.2);
-  plotElecTau(120,1,"inclusive",""   ,"ptL1","e p_{T}", "GeV"             ,outputDir,30,0, 90,5.0,1.0,0,1.2);
+  //plotElecTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV" ,outputDir,50,0,200,5.0,1.0,0,1.2);
+  //plotElecTau(120,1,"inclusive",""   ,"ptL2","#tau p_{T}","GeV"           ,outputDir,30,0, 90,5.0,1.0,0,1.2);
+  //plotElecTau(120,1,"inclusive",""   ,"ptL1","e p_{T}", "GeV"             ,outputDir,30,0, 90,5.0,1.0,0,1.2);
 
-  plotElecTau(120,1,"inclusive",""   ,"diTauSVFitMass","mass","GeV",outputDir,-1,0,100,5.0,1.0,0,1.2);
+  //plotElecTau(120,1,"inclusive",""   ,"diTauSVFitMass","mass","GeV",outputDir,-1,0,100,5.0,1.0,0,1.2);
  
-  plotElecTau(120,0,"inclusive",""   ,"etaL1","e #eta", "units"           ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
-  plotElecTau(120,0,"inclusive",""   ,"etaL2","#tau #eta","units"         ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
+  //plotElecTau(120,0,"inclusive",""   ,"etaL1","e #eta", "units"           ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
+  //plotElecTau(120,0,"inclusive",""   ,"etaL2","#tau #eta","units"         ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
 
-  plotElecTau(120,0,"inclusive",""   ,"nJets30","jet multiplicity","units",outputDir,10,0, 10,5.0,1.0,1,10);
-  plotElecTau(120,0,"inclusive",""   ,"nJets20BTagged","b-tagged jet multiplicity","units",outputDir,5,0, 5,5.0,1.0,1,10);
+  //plotElecTau(120,0,"inclusive",""   ,"nJets30","jet multiplicity","units",outputDir,10,0, 10,5.0,1.0,1,10);
+  //plotElecTau(120,0,"inclusive",""   ,"nJets20BTagged","b-tagged jet multiplicity","units",outputDir,5,0, 5,5.0,1.0,1,10);
 
-  plotElecTau(120,1,"oneJet",""   ,"pt1","leading jet p_{T}","GeV"        ,outputDir,-1,0, 100,5.0,1.0,1,100);
-  plotElecTau(120,1,"oneJet",""   ,"eta1","leading jet #eta","units"      ,outputDir,21,-5, 5,5.0,1.0,0,2.);
+  //plotElecTau(120,1,"oneJet",""   ,"pt1","leading jet p_{T}","GeV"        ,outputDir,-1,0, 100,5.0,1.0,1,100);
+  //plotElecTau(120,1,"oneJet",""   ,"eta1","leading jet #eta","units"      ,outputDir,21,-5, 5,5.0,1.0,0,2.);
 
-  plotElecTau(120,1,"twoJets",""   ,"pt1","leading jet p_{T}","GeV"       ,outputDir,-1,0, 100,5.0,1.0,1,100);
-  plotElecTau(120,1,"twoJets",""   ,"pt2","trailing jet p_{T}","GeV"      ,outputDir,-1,0, 100,5.0,1.0,1,100);
-  plotElecTau(120,1,"twoJets",""   ,"eta1","leading jet #eta","units"     ,outputDir,21,-5, 5,5.0,1.0,0,2.);
-  plotElecTau(120,1,"twoJets",""   ,"eta2","trailing jet #eta","units"    ,outputDir,21,-5, 5,5.0,1.0,0,2.);
+  //plotElecTau(120,1,"twoJets",""   ,"pt1","leading jet p_{T}","GeV"       ,outputDir,-1,0, 100,5.0,1.0,1,100);
+  //plotElecTau(120,1,"twoJets",""   ,"pt2","trailing jet p_{T}","GeV"      ,outputDir,-1,0, 100,5.0,1.0,1,100);
+  //plotElecTau(120,1,"twoJets",""   ,"eta1","leading jet #eta","units"     ,outputDir,21,-5, 5,5.0,1.0,0,2.);
+  //plotElecTau(120,1,"twoJets",""   ,"eta2","trailing jet #eta","units"    ,outputDir,21,-5, 5,5.0,1.0,0,2.);
   
-  plotElecTau(120,1,"twoJets",""   ,"Deta","|#Delta#eta|_{jj}","units"    ,outputDir,20,0, 8,   5.0,1.0,0,1.5);
-  plotElecTau(120,1,"twoJets",""   ,"Mjj","M_{jj}","GeV"                  ,outputDir,-1,0, 100,5.0,1.0,1,100);
+  //plotElecTau(120,1,"twoJets",""   ,"Deta","|#Delta#eta|_{jj}","units"    ,outputDir,20,0, 8,   5.0,1.0,0,1.5);
+  //plotElecTau(120,1,"twoJets",""   ,"Mjj","M_{jj}","GeV"                  ,outputDir,-1,0, 100,5.0,1.0,1,100);
   
 
   for(unsigned int i = 0 ; i < variables.size(); i++){
@@ -1291,22 +1294,22 @@ void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "Dec2011/iter3")
       plotElecTau(mH[j],useEmbedded,"inclusive",""   ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
 
       plotElecTau(mH[j],useEmbedded,"novbf",""       ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"novbf","TauUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"novbf","TauDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"novbf","JetUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"novbf","JetDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"novbf","TauUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"novbf","TauDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"novbf","JetUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"novbf","JetDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
  
       plotElecTau(mH[j],useEmbedded,"vbf",""         ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"vbf","TauUp"    ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"vbf","TauDown"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"vbf","JetUp"    ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"vbf","JetDown"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"vbf","TauUp"    ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"vbf","TauDown"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"vbf","JetUp"    ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"vbf","JetDown"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
 
       plotElecTau(mH[j],useEmbedded,"boost",""       ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"boost","TauUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"boost","TauDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"boost","JetUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"boost","JetDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"boost","TauUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"boost","TauDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"boost","JetUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"boost","JetDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
 
       //plotElecTau(mH[j],useEmbedded,"twoJets",""       ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
       //plotElecTau(mH[j],useEmbedded,"twoJets","TauUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
@@ -1339,6 +1342,7 @@ int main(int argc, const char* argv[])
   gSystem->Load("libFWCoreFWLite");
   AutoLibraryLoader::enable();
 
+  //plotElecTau();
   plotElecTauAll();
   //plotElecTau(120,1,"inclusive","","diTauVisMass","","","Dec2011/iter3",10,0,7000);
   //plotElecTau(120,1,"novbf","",    "diTauVisMass","","","Dec2011/iter3",10,0,7000);

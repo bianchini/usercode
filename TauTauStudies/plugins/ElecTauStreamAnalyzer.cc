@@ -113,6 +113,7 @@ void ElecTauStreamAnalyzer::beginJob(){
 
   diTauLegsP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genDiTauLegsP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  genTausP4_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   METP4_          = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genMETP4_       = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genVP4_         = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
@@ -417,6 +418,7 @@ void ElecTauStreamAnalyzer::beginJob(){
 
   tree_->Branch("diTauLegsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diTauLegsP4_);
   tree_->Branch("genDiTauLegsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genDiTauLegsP4_);
+  tree_->Branch("genTausP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genTausP4_);
 
   tree_->Branch("METP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&METP4_);
   tree_->Branch("genMETP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genMETP4_);
@@ -479,6 +481,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   //tree_->Branch("isEleLikelihoodID",&isEleLikelihoodID_,"isEleLikelihoodID/I");
   //tree_->Branch("isEleCutBasedID",&isEleCutBasedID_,"isEleCutBasedID/I");
   tree_->Branch("elecFlag",&elecFlag_,"elecFlag/I");
+  tree_->Branch("elecVetoRelIso",&elecVetoRelIso_,"elecVetoRelIso/F");
   tree_->Branch("hasKft",&hasKft_,"hasKft/I");
 
 
@@ -524,6 +527,8 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("mcPUweight",&mcPUweight_,"mcPUweight/F");
   tree_->Branch("embeddingWeight",&embeddingWeight_,"embeddingWeight/F");
   tree_->Branch("nPUVertices",&nPUVertices_,"nPUVertices/I");
+  tree_->Branch("nPUVerticesM1",&nPUVerticesM1_,"nPUVerticesM1/I");
+  tree_->Branch("nPUVerticesP1",&nPUVerticesP1_,"nPUVerticesP1/I");
   tree_->Branch("nPUaverage",&nPUaverage_,"nPUaverage/F");
 
 
@@ -536,6 +541,7 @@ ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
   delete diTauSVfitP4_; delete genVP4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_;
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;delete extraElectrons_; delete pfElectrons_;
+  delete genTausP4_;
   delete tRandom_ ; delete jetsChNfraction_; delete jetsChEfraction_; delete jetMoments_;
   delete gammadR_ ; delete gammadPhi_; delete gammadEta_; delete gammaPt_;
   delete antiE_;
@@ -568,6 +574,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
   genJetsIDP4_->clear();
   genDiTauLegsP4_->clear();
+  genTausP4_->clear();
   genMETP4_->clear();
   jetsBtagHE_->clear();
   jetsBtagHP_->clear();
@@ -660,6 +667,31 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   genDecay_ = -99;
   edm::Handle<reco::GenParticleCollection> genHandle;
   const reco::GenParticleCollection* genParticles = 0;
+  iEvent.getByLabel(edm::InputTag("genParticles"),genHandle);
+
+  if(genHandle.isValid()){
+    genParticles = genHandle.product();
+    int index1 = -99;
+    int index2 = -99;
+    for(unsigned int k = 0; k < genParticles->size(); k ++){
+      if( fabs((*genParticles)[k].pdgId()) != 15 || 
+	  (*genParticles)[k].status()!=2) continue;
+      if(index1<0) 
+	index1 = k;
+      else 
+	index2 = k;
+    }
+    if(index1>=0 && index2>=0){
+      if((*genParticles)[index1].pt()<(*genParticles)[index2].pt()){
+	int indexBkp = index1;
+	index1 = index2;
+	index2 = indexBkp;
+      }
+      genTausP4_->push_back((*genParticles)[index1].p4());
+      genTausP4_->push_back((*genParticles)[index2].p4());
+    }
+  }
+
   if(isMC_){
     iEvent.getByLabel(edm::InputTag("genParticles"),genHandle);
     if( !genHandle.isValid() )  
@@ -696,10 +728,11 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
   edm::Handle<reco::GenJetCollection> tauGenJetsHandle;
   edm::Handle<std::vector<PileupSummaryInfo> > puInfoH;
-  nPUVertices_= -99;
-  nPUaverage_ = 0;
-  nOOTPUVertices_=-99;
-  float sum_nvtx = 0;
+  nPUVertices_       = -99;
+  nPUVerticesP1_     = -99;
+  nPUVerticesM1_     = -99;
+
+  nPUtruth_          = -99;
 
   const reco::GenJetCollection* tauGenJets = 0;
   if(isMC_){
@@ -713,17 +746,24 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     iEvent.getByType(puInfoH);
     if(puInfoH.isValid()){
       for(std::vector<PileupSummaryInfo>::const_iterator it = puInfoH->begin(); it != puInfoH->end(); it++){
-	if(it->getBunchCrossing() ==0) nPUVertices_ = it->getPU_NumInteractions();
-	else  nOOTPUVertices_ = it->getPU_NumInteractions();
-	sum_nvtx += float(it->getPU_NumInteractions());
+
+	//cout << "Bunc crossing " << it->getBunchCrossing() << endl;
+	if(it->getBunchCrossing() == 0 ) 
+	  nPUVertices_  = it->getPU_NumInteractions();
+	else if(it->getBunchCrossing() == -1)  
+	  nPUVerticesM1_= it->getPU_NumInteractions();
+	else if(it->getBunchCrossing() == +1)  
+	  nPUVerticesP1_= it->getPU_NumInteractions();
+
+	nPUtruth_ = it->getTrueNumInteractions();
+
       }
     }
   }
-  nPUaverage_ = sum_nvtx/3.;
   if(verbose_){
-    cout << "Average num of int = " << sum_nvtx/3. << endl;
-    cout << "Num of PU = " << nPUVertices_ << endl;
-    cout << "Num of OOT PU = " << nOOTPUVertices_ << endl;
+    cout << "Num of PU = "          << nPUVertices_ << endl;
+    cout << "Num of OOT PU = "      << nPUVerticesM1_+nPUVerticesP1_<< endl;
+    cout << "Num of true interactions = " << nPUtruth_ << endl;
   }
 
   mcPUweight_ = LumiWeights_.weight( nPUVertices_ );
@@ -782,27 +822,45 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   numOfDiTaus_ = diTaus->size();
 
   unsigned int elecIndex = 0;
-  elecFlag_ = 0;
-  
+  elecFlag_       = 0;
+  elecVetoRelIso_ = 0;
+
   bool found = false;
   for(unsigned int i=0; i<electronsRel->size(); i++){
     for(unsigned int j=0; j<electrons->size(); j++){ 
 
       if(found) continue;
 
+      bool mvaPreselectionNoIsoElecI = 
+	(*electrons)[j].userInt("antiConv")>0.5 && (*electrons)[j].userFloat("nHits")<=0 &&
+	(((*electrons)[j].isEB()
+	  && (*electrons)[j].userFloat("sihih") < 0.01 
+	  && TMath::Abs((*electrons)[j].userFloat("dEta")) < 0.007
+	  && TMath::Abs((*electrons)[j].userFloat("dPhi")) < 0.15
+	  && (*electrons)[j].userFloat("HoE") < 0.12
+	  ) ||
+	 ((*electrons)[j].isEE() 
+	  && (*electrons)[j].userFloat("sihih") < 0.03 
+	  && TMath::Abs((*electrons)[j].userFloat("dEta")) < 0.009
+	  && TMath::Abs((*electrons)[j].userFloat("dPhi")) < 0.10
+	  && (*electrons)[j].userFloat("HoE") < 0.10
+	  ));
+
       if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
 	  && (*electronsRel)[i].charge()*(*electrons)[j].charge()<0
-	  && (*electrons)[j].userFloat("PFRelIsoDB04v3")<0.30
+	  && (*electrons)[j].userFloat("PFRelIsoDB04v3")<0.30 && mvaPreselectionNoIsoElecI
 	  && (*electronsRel)[i].userFloat("PFRelIsoDB04v3")<0.20 ){
-	elecFlag_ = 1;
+	elecFlag_       = 1;
+	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04v3");
 	if(verbose_) cout<< "Two electrons failing diElec veto: flag= " << elecFlag_ << endl;
 	found=true;
       }
       else if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
 	       && (*electronsRel)[i].charge()*(*electrons)[j].charge()>0
-	       && (*electrons)[j].userFloat("PFRelIsoDB04v3")<0.30
+	       && (*electrons)[j].userFloat("PFRelIsoDB04v3")<0.30 && mvaPreselectionNoIsoElecI
 	       && (*electronsRel)[i].userFloat("PFRelIsoDB04v3")<0.20 ){
-	elecFlag_ = 2;
+	elecFlag_       = 2;
+	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04v3");
 	if(verbose_) cout<< "Two electrons with SS: flag= " << elecFlag_ << endl;
 	found=true;
       }

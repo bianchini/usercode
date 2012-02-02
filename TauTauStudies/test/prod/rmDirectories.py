@@ -29,7 +29,8 @@ def remove( directory ):
 
 
 #remove( "DoubleMu" )
-
+remove( "W3Jets_TuneZ2_7TeV-madgraph-tauola")
+remove( "SUSYBBHToTauTau_M-100_7TeV-pythia6-tauola")
 remove( "SUSYBBHToTauTau_M-100_7TeV-pythia6-tauola")
 remove( "SUSYBBHToTauTau_M-120_7TeV-pythia6-tauola")
 remove( "SUSYBBHToTauTau_M-130_7TeV-pythia6-tauola")

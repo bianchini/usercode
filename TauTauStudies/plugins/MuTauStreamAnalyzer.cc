@@ -104,6 +104,7 @@ void MuTauStreamAnalyzer::beginJob(){
 
   diTauLegsP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genDiTauLegsP4_ = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  genTausP4_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   METP4_          = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genMETP4_       = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genVP4_         = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
@@ -400,6 +401,7 @@ void MuTauStreamAnalyzer::beginJob(){
 
   tree_->Branch("diTauLegsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&diTauLegsP4_);
   tree_->Branch("genDiTauLegsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genDiTauLegsP4_);
+  tree_->Branch("genTausP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genTausP4_);
 
   tree_->Branch("METP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&METP4_);
   tree_->Branch("genMETP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genMETP4_);
@@ -474,6 +476,7 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("isTauLegMatched",&isTauLegMatched_,"isTauLegMatched/I");
   tree_->Branch("isMuLegMatched",&isMuLegMatched_,"isMuLegMatched/I");
   tree_->Branch("muFlag",&muFlag_,"muFlag/I");
+  tree_->Branch("muVetoRelIso",&muVetoRelIso_,"muVetoRelIso/F");
   tree_->Branch("hasKft",&hasKft_,"hasKft/I");
 
   tree_->Branch("diTauCharge",&diTauCharge_,"diTauCharge/F");
@@ -497,6 +500,7 @@ MuTauStreamAnalyzer::~MuTauStreamAnalyzer(){
   delete diTauSVfitP4_; delete genVP4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_;
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_; delete extraMuons_; delete pfMuons_; delete jetsIDL1OffsetP4_;
+  delete genTausP4_;
   delete tRandom_ ; delete jetsChNfraction_; delete jetsChEfraction_;delete jetMoments_;
   delete gammadR_ ; delete gammadPhi_; delete gammadEta_; delete gammaPt_;
 }
@@ -528,6 +532,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
   genJetsIDP4_->clear();
   genDiTauLegsP4_->clear();
+  genTausP4_->clear();
   genMETP4_->clear();
   extraMuons_->clear();
   pfMuons_->clear();
@@ -625,8 +630,32 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   genDecay_ = -99;
   edm::Handle<reco::GenParticleCollection> genHandle;
   const reco::GenParticleCollection* genParticles = 0;
+  iEvent.getByLabel(edm::InputTag("genParticles"),genHandle);
+
+  if(genHandle.isValid()){
+    genParticles = genHandle.product();
+    int index1 = -99;
+    int index2 = -99;
+    for(unsigned int k = 0; k < genParticles->size(); k ++){
+      if( fabs((*genParticles)[k].pdgId()) != 15 || (*genParticles)[k].status()!=2) continue;
+      if(index1<0) 
+	index1 = k;
+      else 
+	index2 = k;
+    }
+    if(index1>=0 && index2>=0){
+      if((*genParticles)[index1].pt()<(*genParticles)[index2].pt()){
+	int indexBkp = index1;
+	index1 = index2;
+	index2 = indexBkp;
+      }
+      genTausP4_->push_back((*genParticles)[index1].p4());
+      genTausP4_->push_back((*genParticles)[index2].p4());
+    }
+
+  }
+
   if(isMC_){
-    iEvent.getByLabel(edm::InputTag("genParticles"),genHandle);
     if( !genHandle.isValid() )  
       edm::LogError("DataNotAvailable")
 	<< "No gen particles label available \n";
@@ -755,7 +784,8 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   numOfDiTaus_ = diTaus->size();
 
   unsigned int muIndex = 0;
-  muFlag_ = 0;
+  muFlag_       = 0;
+  muVetoRelIso_ = 0;
 
   bool found = false;
   for(unsigned int i=0; i<muonsRel->size(); i++){
@@ -765,15 +795,19 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       
       if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3
 	  && (*muonsRel)[i].charge()*(*muons)[j].charge()<0
-	  && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
-	muFlag_ = 1;
+	  && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 
+	  && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
+	muFlag_       = 1;
+	muVetoRelIso_ = (*muonsRel)[i].userFloat("PFRelIsoDB04v2");
 	if(verbose_) cout<< "Two muons failing diMu veto: flag= " << muFlag_ << endl;
 	found=true;
       }
       else if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3
 	       && (*muonsRel)[i].charge()*(*muons)[j].charge()>0
-	       && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
-	muFlag_ = 2;
+	       && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 
+	       && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
+	muFlag_       = 2;
+	muVetoRelIso_ = (*muonsRel)[i].userFloat("PFRelIsoDB04v2");
 	if(verbose_) cout<< "Two muons with SS: flag= " << muFlag_ << endl;
 	found=true;
       }
