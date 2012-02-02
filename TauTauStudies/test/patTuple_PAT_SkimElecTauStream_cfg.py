@@ -17,7 +17,7 @@ else:
     process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -361,13 +361,15 @@ process.selectedPatElectronsTriggerMatchUserEmbedded = cms.EDProducer(
     electronTag = cms.InputTag("selectedPatElectronsTriggerMatch"),
     vertexTag   = cms.InputTag("offlinePrimaryVertices"),
     isMC        = cms.bool(runOnMC),
-    doMVA       = cms.bool(True),
+    doMVAMIT    = cms.bool(True),
+    doMVADaniele= cms.bool(True),
     inputFileName0 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet0LowPt_NoIPInfo_BDTG.weights.xml'),
     inputFileName1 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet1LowPt_NoIPInfo_BDTG.weights.xml'),
     inputFileName2 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet2LowPt_NoIPInfo_BDTG.weights.xml'),
     inputFileName3 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet0HighPt_NoIPInfo_BDTG.weights.xml'),
     inputFileName4 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet1HighPt_NoIPInfo_BDTG.weights.xml'),
-    inputFileName5 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet2HighPt_NoIPInfo_BDTG.weights.xml')  
+    inputFileName5 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet2HighPt_NoIPInfo_BDTG.weights.xml'),
+    inputFileNameMVADaniele = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/TMVA_BDTSimpleCat.weights.xml')
     )
 
 process.selectedPatTausTriggerMatchUserEmbedded = cms.EDProducer(
@@ -414,7 +416,8 @@ process.elecPtEtaID = cms.EDFilter(
     src = cms.InputTag("selectedPatElectronsTriggerMatchUserEmbedded"),
     cut = cms.string(process.elecPtEta.cut.value()+
                      " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2 &&"
-                     +"("+simpleCutsWP80+" || "+CiCTight+" || "+MVA+")"),
+                     #+"("+simpleCutsWP80+" || "+CiCTight+" || "+MVA+")"),
+                     +simpleCutsWP95),
     filter = cms.bool(False)
     )
 process.atLeastOneElecTauelecPtEtaID = process.atLeastOneElecTau.clone(

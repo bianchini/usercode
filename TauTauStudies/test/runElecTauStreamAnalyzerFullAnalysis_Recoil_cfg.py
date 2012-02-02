@@ -27,7 +27,7 @@ else:
     process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 50
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
@@ -304,13 +304,15 @@ simpleCutsWP80 = "(userFloat('nHits')==0 && userInt('antiConv')>0.5 "+ \
 process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
-    cut = cms.string("tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 && pt>20 && abs(eta)<2.3"),
+    cut = cms.string("tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 && pt>20 && abs(eta)<2.3 &&"+
+                     "tauID('againstElectronMVA')>0.5"),
     filter = cms.bool(False)
     )
 process.tauPtEtaIDAgMuAgElecIsoPtRel  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
-    cut = cms.string("tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 && pt>19 && abs(eta)<2.3"),
+    cut = cms.string("tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 && pt>19 && abs(eta)<2.3 &&"+
+                     "tauID('againstElectronMVA')>0.5"),
     filter = cms.bool(False)
     )
 
@@ -337,13 +339,13 @@ process.tauPtEtaIDAgMuAgElecIsoTauDownCounter = process.tauPtEtaIDAgMuAgElecIsoC
 process.elecPtEtaIDIso  = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("elecPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04v3')<0.10 && pt>20 && abs(eta)<2.1 && "+MVA),
+    cut = cms.string("userFloat('PFRelIsoDB04v3')<0.10 && pt>20 && abs(eta)<2.1 && "+simpleCutsWP95),
     filter = cms.bool(False)
     )
 process.elecPtEtaIDIsoPtRel  = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("elecPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04v3')<0.10 && pt>19 && abs(eta)<2.1 && "+MVA),
+    cut = cms.string("userFloat('PFRelIsoDB04v3')<0.10 && pt>19 && abs(eta)<2.1 && "+simpleCutsWP95),
     filter = cms.bool(False)
     )
 
@@ -404,12 +406,12 @@ process.elecTauStreamAnalyzer = cms.EDAnalyzer(
     deltaRLegJet       = cms.untracked.double(0.5),
     minCorrPt          = cms.untracked.double(15.),
     minJetID           = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
-    inputFileNameX0BL  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_X_0BL_BDT.weights.xml"),
-    inputFileName11BL  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_1_1BL_BDT.weights.xml"),
-    inputFileName01BL  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_0_1BL_BDT.weights.xml"),
-    inputFileNameX0EC  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_X_0EC_BDT.weights.xml"),
-    inputFileName11EC  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_1_1EC_BDT.weights.xml"),
-    inputFileName01EC  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_0_1EC_BDT.weights.xml"),
+    #inputFileNameX0BL  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_X_0BL_BDT.weights.xml"),
+    #inputFileName11BL  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_1_1BL_BDT.weights.xml"),
+    #inputFileName01BL  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_0_1BL_BDT.weights.xml"),
+    #inputFileNameX0EC  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_X_0EC_BDT.weights.xml"),
+    #inputFileName11EC  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_1_1EC_BDT.weights.xml"),
+    #inputFileName01EC  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_0_1EC_BDT.weights.xml"),
     verbose            = cms.untracked.bool( False ),
     )
 process.elecTauStreamAnalyzerJetUp     = process.elecTauStreamAnalyzer.clone(
@@ -493,7 +495,7 @@ if runOnMC:
         process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
         process.elecTauStreamAnalyzer
         )
-
+    '''
     process.pJetUp = cms.Path(
         process.allEventsFilter*
         (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
@@ -599,7 +601,7 @@ if runOnMC:
         process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
         process.elecTauStreamAnalyzerTauDown
         )
-
+    '''
 else:
     
     process.pNominal = cms.Path(

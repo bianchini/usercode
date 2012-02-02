@@ -65,12 +65,12 @@ ElecTauStreamAnalyzer::ElecTauStreamAnalyzer(const edm::ParameterSet & iConfig){
   minCorrPt_         = iConfig.getUntrackedParameter<double>("minCorrPt",10.);
   minJetID_          = iConfig.getUntrackedParameter<double>("minJetID",0.5);
 
-  inputFileNameX0BL_ = iConfig.getParameter<edm::FileInPath>("inputFileNameX0BL");
-  inputFileName11BL_ = iConfig.getParameter<edm::FileInPath>("inputFileName11BL");
-  inputFileName01BL_ = iConfig.getParameter<edm::FileInPath>("inputFileName01BL");
-  inputFileNameX0EC_ = iConfig.getParameter<edm::FileInPath>("inputFileNameX0EC");
-  inputFileName11EC_ = iConfig.getParameter<edm::FileInPath>("inputFileName11EC");
-  inputFileName01EC_ = iConfig.getParameter<edm::FileInPath>("inputFileName01EC");
+  //inputFileNameX0BL_ = iConfig.getParameter<edm::FileInPath>("inputFileNameX0BL");
+  //inputFileName11BL_ = iConfig.getParameter<edm::FileInPath>("inputFileName11BL");
+  //inputFileName01BL_ = iConfig.getParameter<edm::FileInPath>("inputFileName01BL");
+  //inputFileNameX0EC_ = iConfig.getParameter<edm::FileInPath>("inputFileNameX0EC");
+  //inputFileName11EC_ = iConfig.getParameter<edm::FileInPath>("inputFileName11EC");
+  //inputFileName01EC_ = iConfig.getParameter<edm::FileInPath>("inputFileName01EC");
 
 
   verbose_           = iConfig.getUntrackedParameter<bool>("verbose",false);
@@ -121,15 +121,15 @@ void ElecTauStreamAnalyzer::beginJob(){
   extraElectrons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   pfElectrons_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
-  antiE_  = new AntiElectronIDMVA();
-  antiE_->Initialize("BDT",
-		     inputFileNameX0BL_.fullPath().data(),
-		     inputFileName11BL_.fullPath().data(),
-		     inputFileName01BL_.fullPath().data(),
-		     inputFileNameX0EC_.fullPath().data(),
-		     inputFileName11EC_.fullPath().data(),
-		     inputFileName01EC_.fullPath().data()
-		     );
+  //antiE_  = new AntiElectronIDMVA();
+  //antiE_->Initialize("BDT",
+  //	     inputFileNameX0BL_.fullPath().data(),
+  //	     inputFileName11BL_.fullPath().data(),
+  //	     inputFileName01BL_.fullPath().data(),
+  //	     inputFileNameX0EC_.fullPath().data(),
+  //	     inputFileName11EC_.fullPath().data(),
+  //	     inputFileName01EC_.fullPath().data()
+  //	     );
 
   std::vector< float > Summer11Lumi ;
   Double_t Summer11Lumi_f[35] = {
@@ -496,6 +496,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("tightestCiCWP",&tightestCiCWP_,"tightestCiCWP/I");
   tree_->Branch("tightestCutBasedWP",&tightestCutBasedWP_,"tightestCutBasedWP/I");
   tree_->Branch("tightestMVAWP",&tightestMVAWP_,"tightestMVAWP/I");
+  tree_->Branch("tightestDanieleMVAWP",&tightestDanieleMVAWP_,"tightestDanieleMVAWP/F");
   tree_->Branch("tightestAntiECutsWP",&tightestAntiECutsWP_,"tightestAntiECutsWP/I");
   tree_->Branch("tightestHPSDBWP",&tightestHPSDBWP_,"tightestHPSDBWP/I");
   tree_->Branch("visibleTauMass",&visibleTauMass_,"visibleTauMass/F");
@@ -516,7 +517,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("hasGsf",&hasGsf_,"hasGsf/F");
   tree_->Branch("signalPFChargedHadrCands",&signalPFChargedHadrCands_,"signalPFChargedHadrCands/I");
   tree_->Branch("signalPFGammaCands",&signalPFGammaCands_,"signalPFGammaCands/I");
-  tree_->Branch("mvaAntiE",&mvaAntiE_,"mvaAntiE/F");
+  //tree_->Branch("mvaAntiE",&mvaAntiE_,"mvaAntiE/F");
 
   tree_->Branch("isTauLegMatched",&isTauLegMatched_,"isTauLegMatched/I");
   tree_->Branch("isElecLegMatched",&isElecLegMatched_,"isElecLegMatched/I");
@@ -544,7 +545,7 @@ ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
   delete genTausP4_;
   delete tRandom_ ; delete jetsChNfraction_; delete jetsChEfraction_; delete jetMoments_;
   delete gammadR_ ; delete gammadPhi_; delete gammadEta_; delete gammaPt_;
-  delete antiE_;
+  //delete antiE_;
 }
 
 void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -970,11 +971,11 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   const pat::Tau*      leg2 = dynamic_cast<const pat::Tau*>(  (theDiTau->leg2()).get() );
 
 
-  mvaAntiE_ = antiE_->MVAValue( leg2 );
-  if(verbose_)
-    cout << "//Event " << iEvent.run() << ":" << (iEvent.eventAuxiliary()).event() << ":" << iEvent.luminosityBlock()
-	 << antiE_->MVAValue( leg2 ) 
-	 << endl;
+  //mvaAntiE_ = antiE_->MVAValue( leg2 );
+  //if(verbose_)
+  //cout << "//Event " << iEvent.run() << ":" << (iEvent.eventAuxiliary()).event() << ":" << iEvent.luminosityBlock()
+  // << antiE_->MVAValue( leg2 ) 
+  // << endl;
 
   vector<string> triggerPaths;
   vector<string> XtriggerPaths;
@@ -1493,6 +1494,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   if( (int(leg1->electronID("eidCiCHZZTight"))&1)==1     )    tightestCiCWP_++;
   if( (int(leg1->electronID("eidCiCHZZSuperTight"))&1)==1)    tightestCiCWP_++;
   if( (int(leg1->electronID("eidCiCHZZHyperTight1"))&1)==1  ) tightestCiCWP_++;
+
+  tightestDanieleMVAWP_ = leg1->userFloat("mvaDaniele");
 
   tightestAntiECutsWP_ = -1;
   if( leg2->tauID("againstElectronTight")>0.5 ) tightestAntiECutsWP_++;

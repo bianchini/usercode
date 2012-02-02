@@ -12,7 +12,7 @@
 #include "DataFormats/Math/interface/LorentzVector.h"
 
 #include "FWCore/ParameterSet/interface/FileInPath.h"
-#include "Bianchi/Utilities/interface/AntiElectronIDMVA.h"
+//#include "Bianchi/Utilities/interface/AntiElectronIDMVA.h"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -152,6 +152,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
 
   int tightestCutBasedWP_;
   int tightestMVAWP_;
+  float tightestDanieleMVAWP_;
   int tightestAntiECutsWP_;
   int tightestCiCWP_;
   int tightestHPSWP_;
@@ -187,14 +188,14 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
 
   float mcPUweight_;
 
-  AntiElectronIDMVA* antiE_;
-  edm::FileInPath inputFileNameX0BL_;
-  edm::FileInPath inputFileName11BL_;
-  edm::FileInPath inputFileName01BL_;
-  edm::FileInPath inputFileNameX0EC_;
-  edm::FileInPath inputFileName11EC_;
-  edm::FileInPath inputFileName01EC_;
-  float mvaAntiE_;
+  //AntiElectronIDMVA* antiE_;
+  //edm::FileInPath inputFileNameX0BL_;
+  //edm::FileInPath inputFileName11BL_;
+  //edm::FileInPath inputFileName01BL_;
+  //edm::FileInPath inputFileNameX0EC_;
+  //edm::FileInPath inputFileName11EC_;
+  //edm::FileInPath inputFileName01EC_;
+  //float mvaAntiE_;
 
 
 };

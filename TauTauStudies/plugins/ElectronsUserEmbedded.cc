@@ -28,7 +28,8 @@ ElectronsUserEmbedded::ElectronsUserEmbedded(const edm::ParameterSet & iConfig){
   electronTag_ = iConfig.getParameter<edm::InputTag>("electronTag");
   vertexTag_   = iConfig.getParameter<edm::InputTag>("vertexTag");
   isMC_        = iConfig.getParameter<bool>("isMC");
-  doMVA_       = iConfig.getParameter<bool>("doMVA");
+  doMVAMIT_    = iConfig.getParameter<bool>("doMVAMIT");
+  doMVADaniele_= iConfig.getParameter<bool>("doMVADaniele");
 
   edm::FileInPath inputFileName0 = iConfig.getParameter<edm::FileInPath>("inputFileName0");
   edm::FileInPath inputFileName1 = iConfig.getParameter<edm::FileInPath>("inputFileName1");
@@ -37,7 +38,10 @@ ElectronsUserEmbedded::ElectronsUserEmbedded(const edm::ParameterSet & iConfig){
   edm::FileInPath inputFileName4 = iConfig.getParameter<edm::FileInPath>("inputFileName4");
   edm::FileInPath inputFileName5 = iConfig.getParameter<edm::FileInPath>("inputFileName5");
 
-  if(doMVA_){
+  edm::FileInPath inputFileNameMVADaniele 
+    = iConfig.getParameter<edm::FileInPath>("inputFileNameMVADaniele");
+  
+  if(doMVAMIT_){
     fMVA_ = new ElectronIDMVA();
     fMVA_->Initialize("BDTG method",
 		      inputFileName0.fullPath().data(),
@@ -48,6 +52,10 @@ ElectronsUserEmbedded::ElectronsUserEmbedded(const edm::ParameterSet & iConfig){
 		      inputFileName5.fullPath().data(),                
 		      ElectronIDMVA::kNoIPInfo);
   }
+  if(doMVADaniele_){
+    fMVADaniele_ = new ElectronMVAEstimator(inputFileNameMVADaniele.fullPath().data());
+  }
+
 
 
  
@@ -56,7 +64,9 @@ ElectronsUserEmbedded::ElectronsUserEmbedded(const edm::ParameterSet & iConfig){
 }
 
 ElectronsUserEmbedded::~ElectronsUserEmbedded(){
-  if(doMVA_) delete fMVA_;
+  if(doMVAMIT_) delete fMVA_;
+  if(doMVADaniele_) delete fMVADaniele_;
+  
 }
 
 void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -181,7 +191,8 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     EcalClusterLazyTools lazyTools(iEvent,iSetup,
 				   edm::InputTag("reducedEcalRecHitsEB"),
 				   edm::InputTag("reducedEcalRecHitsEE"));
-    float mva = -99;    
+    float mva  = -99;    
+    float mva2 = -99; 
     int mvaPreselection = passconversionveto && nHits<=0 && dxyWrtPV<0.045 && dzWrtPV<0.2 &&
       ((aElectron.isEB() && sihih < 0.01 
 	&& fabs(dEta) < 0.007
@@ -200,10 +211,16 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
 	&& (TMath::Max(aElectron.dr03EcalRecHitSumEt() - 1.0, 0.0))/aElectron.pt() < 0.20
 	&& aElectron.dr03HcalTowerSumEt()/aElectron.pt() < 0.20
 	));
-    if(doMVA_ /*&& mvaPreselection*/)
+    if(doMVAMIT_)
       mva = fMVA_->MVAValue(aGsf, lazyTools);
+    if(doMVADaniele_)
+      mva2 = fMVADaniele_->mva(*aGsf, vertexes->size());
+      
+    //cout << "Daniele's MVA = " << mva2 << endl;
+
     aElectron.addUserFloat("mva",mva);
     aElectron.addUserInt("mvaPreselection",mvaPreselection);
+    aElectron.addUserFloat("mvaDaniele",mva2);
 
 
     // iso deposits
