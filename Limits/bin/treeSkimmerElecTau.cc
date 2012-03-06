@@ -1387,7 +1387,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
 
 
-void doAllSamplesElec(string inputDir_ = "ElecTauStreamFall11_09Feb2012"){
+void doAllSamplesElec(string inputDir_ = "ElecTauStreamFall11_06Dec2011"){
 
   std::vector<std::string> samples;
   std::vector<float> crossSec;
@@ -1440,6 +1440,7 @@ void doAllSamplesElec(string inputDir_ = "ElecTauStreamFall11_09Feb2012"){
   for( unsigned int k = 0; k < samples.size() ; k++) {
 
     makeTrees_ElecTauStream("",        samples[k], crossSec[k], inputDir_);
+
     if( samples[k].find("Run2011-ElecTau-All")!=string::npos )
       continue;
     makeTrees_ElecTauStream("TauUp",   samples[k], crossSec[k], inputDir_);

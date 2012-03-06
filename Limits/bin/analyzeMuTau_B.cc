@@ -73,7 +73,7 @@ void plotMuTau( Int_t mH_           = 120,
 		) 
 {   
 
-  ofstream out(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/histograms/%s/yieldsMuTau_mH%d_%s_%s.txt",outputDir.Data(),mH_,selection_.c_str(), analysis_.c_str() ),ios_base::out); 
+  ofstream out(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7/src/Bianchi/Limits/htautau/histograms/%s/yieldsMuTau_mH%d_%s_%s.txt",outputDir.Data(),mH_,selection_.c_str(), analysis_.c_str() ),ios_base::out); 
   out.precision(5);
   out<< " => " << selection_ << endl;
 
@@ -82,7 +82,7 @@ void plotMuTau( Int_t mH_           = 120,
   ifstream is;
 
   char* c = new char[10];
-  is.open(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/bins/bins_muTau_%s_%s.txt",variable_.Data(), selection_.c_str())); 
+  is.open(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7/src/Bianchi/Limits/htautau/bins/bins_muTau_%s_%s.txt",variable_.Data(), selection_.c_str())); 
   if(nBins_<0 &&  !is.good()){
     cout << "Bins file not found" << endl;
     return;
@@ -104,7 +104,7 @@ void plotMuTau( Int_t mH_           = 120,
   cout << "Making histograms with " << nBins << " bins:" << endl;
 
   is.close();
-  is.open(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/bins/bins_muTau_%s_%s.txt",variable_.Data(), selection_.c_str())); 
+  is.open(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7/src/Bianchi/Limits/htautau/bins/bins_muTau_%s_%s.txt",variable_.Data(), selection_.c_str())); 
   
   nBinsFromFile = 0;
 
@@ -127,7 +127,8 @@ void plotMuTau( Int_t mH_           = 120,
   }
 
   // Luminosity analyzed & parameters
-  float Lumi = (-47.4 + 215.3 + 930.7 + 410.6 + (450.6+212.7) + (735.2+254.8+778.2+682.0) )*1.00;
+  //float Lumi = (-47.4 + 215.3 + 930.7 + 410.6 + (450.6+212.7) + (735.2+254.8+778.2+682.0) )*1.00;
+  float Lumi = (-47.4 + 215.3 + 930.7 + 410.6 + (450.6+212.7) + (735.2+254.8+778.2/*+682.0*/) )*1.00;
 
   //////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////
@@ -169,7 +170,7 @@ void plotMuTau( Int_t mH_           = 120,
   float antiWsgn  = useMt ? 40. :  20. ; 
   float antiWsdb  = useMt ? 60. :  40. ; 
 
-  bool use2Dcut   = true;
+  bool use2Dcut   = false;
   if( use2Dcut ){
     antiWcut = "!(MtLeg1Corr<40 && (pZetaCorr-1.5*pZetaVisCorr)>-20)";
     antiWsgn = 0.5;
@@ -253,27 +254,27 @@ void plotMuTau( Int_t mH_           = 120,
 
   // Open the files
   TFile *fData              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011_v4//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
-  TFile *fDataLooseIso              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011_v4//nTupleRun2011-MuTau-LooseIso-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_09Feb2012_MVA//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
+  TFile *fDataLooseIso  ///////////////////            
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_09Feb2012_MVA//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
   TFile *fDataEmbedded              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011_v4//nTupleRun2011-MuTau-Embedded-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_09Feb2012_MVA//nTupleRun2011-MuTau-Embedded-All_run_Open_MuTauStream.root", "READ");  
   TFile *fSignalVBF         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011_v4//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_) ,"READ");  
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_09Feb2012_MVA//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_) ,"READ");  
   TFile *fSignalGGH         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011_v4//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_),"READ"); 
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_09Feb2012_MVA//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_),"READ"); 
   TFile *fSignalVH         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011_v4//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",mH_),"READ");  
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_09Feb2012_MVA//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",mH_),"READ");  
   TFile *fBackgroundDY
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011_v4//nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_09Feb2012_MVA//nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundWJets   
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011_v4//nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_09Feb2012_MVA//nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundW3Jets   
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011_v4//nTupleW3Jets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_09Feb2012_MVA//nTupleW3Jets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundTTbar  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011_v4//nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_09Feb2012_MVA//nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundOthers  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_06Dec2011_v4//nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_09Feb2012_MVA//nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
 
   // choose the analysis: Nominal "", jet up/Down "JetUp/Down" , elec up/down "MuUp/Down" , tau up/down "TauUp/Down"
   TString tree         = "outTreePtOrd"+analysis_;
@@ -314,7 +315,7 @@ void plotMuTau( Int_t mH_           = 120,
  
 
   TCut lpt("ptL1>17 && abs(dz1)<0.2");
-  TCut tpt("ptL2>20");                                                      /// <--------
+  TCut tpt("ptL2>20");
   TCut tiso("tightestHPSDBWP>0 && !(decayMode==0 && (HoP+EoP)<0.2)");
   TCut liso("combRelIsoLeg1DBeta<0.10");
   TCut laiso("combRelIsoLeg1DBeta>0.30 && combRelIsoLeg1DBeta<0.50");
@@ -325,14 +326,9 @@ void plotMuTau( Int_t mH_           = 120,
   TCut oneJet("nJets30>=1");
   TCut twoJets("nJets30>=2");
   TCut vbf("pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && isVetoInJets!=1");
-  //TCut vbf("nJets30>=2 && pt1>30 && pt2>50 && Mjj>60 && Mjj<110 && diTauRecoPt>=100 && nJets20BTagged<=0");
   //TCut vbf("pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && isVetoInJets!=1 && (80*min(abs(diTauVisEta-eta1),abs(diTauVisEta-eta2))+2.5*diTauVisPt)>200");
-  TCut novbf("pt1<150 && pt2<30");
-  //TCut novbf("pt1<30");
-  //if(mH_==110) novbf = novbf&&TCut("MVA0jetmH110>-0.18");
-  //if(mH_==120) novbf = novbf&&TCut("MVA0jetmH120>-0.22"); //-0.22
-  //if(mH_==130) novbf = novbf&&TCut("MVA0jetmH130>-0.10");
-  //if(mH_==140) novbf = novbf&&TCut("MVA0jetmH140>-0.10");
+  //TCut novbf("pt1<150 && pt2<30");  /// <--- here
+  TCut novbf("!(pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && isVetoInJets!=1)");  /// <--- here
   TCut boost("pt1>150 && !(pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && isVetoInJets!=1)");  
   TCut hltevent("HLTx==1 && (run>=163269 || run==1)");
   TCut hltmatch("HLTmatch==1");
@@ -393,16 +389,16 @@ void plotMuTau( Int_t mH_           = 120,
     
   }
   else if(selection_.find("novbf")!=string::npos){
-    sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && novbf;
-    sbinEmbedding          =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && novbf;
+    sbin                   =  lpt && tpt && tiso && liso && lveto && OS /*&& pZ*/  && hltevent && hltmatch && novbf;
+    sbinEmbedding          =  lpt && tpt && tiso && liso && lveto && OS /*&& pZ*/                          && novbf;
     sbinEmbeddingPZetaRel  =  lpt && tpt && tiso && liso && lveto && OS                                && novbf;
     sbinPZetaRev           =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && novbf;
     sbinPZetaRel           =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && novbf;
     sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && novbf;
-    sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && novbf;
+    sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS /*&& pZ*/  && hltevent && hltmatch && novbf;
     sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && novbf;
-    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS && pZ  && hltevent && hltmatch && novbf;
-    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS && pZ  && hltevent && hltmatch && novbf;
+    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS /*&& pZ*/  && hltevent && hltmatch && novbf;
+    sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS /*&& pZ*/  && hltevent && hltmatch && novbf;
   }
   else if(selection_.find("boost")!=string::npos ){
     sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && boost;
@@ -1148,11 +1144,11 @@ void plotMuTau( Int_t mH_           = 120,
   
   //return;
 
-  c1->SaveAs(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/plots/%s/plot_muTau_mH%d_%s_%s_%s.png",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
-  c1->SaveAs(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/plots/%s/plot_muTau_mH%d_%s_%s_%s.pdf",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
+  c1->SaveAs(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7/src/Bianchi/Limits/htautau/plots/%s/plot_muTau_mH%d_%s_%s_%s.png",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
+  c1->SaveAs(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7/src/Bianchi/Limits/htautau/plots/%s/plot_muTau_mH%d_%s_%s_%s.pdf",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
 
   // templates for fitting
-  TFile* fout = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_5/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_%s_%s.root",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()),"RECREATE");
+  TFile* fout = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_%s_%s.root",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()),"RECREATE");
   fout->cd();
 
   hSiml->Write();
@@ -1252,24 +1248,54 @@ void plotMuTau( Int_t mH_           = 120,
 
 
 
-void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Feb2012/MVA0jet/tune2"){
+void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Feb2012/MVANew"){
 
   vector<string> variables;
   vector<int> mH;
 
   //variables.push_back("diTauVisMass");
-  variables.push_back("diTauSVFitMass");
+  //variables.push_back("diTauSVFitMass");
+  //variables.push_back("diTauSVFitMassCal0");
+  //variables.push_back("diTauSVFitMassCal1");
+  //variables.push_back("diTauSVFitMassCal2");
+  //variables.push_back("MVA0jetmH120");
 
   //mH.push_back(105);
-  //mH.push_back(110);
+  mH.push_back(110);
   //mH.push_back(115);
   mH.push_back(120);
   //mH.push_back(125);
-  //mH.push_back(130);
+  mH.push_back(130);
   //mH.push_back(135);
-  //mH.push_back(140);
+  mH.push_back(140);
   //mH.push_back(145);
   //mH.push_back(160);
+
+  //plotMuTau(120,1,"inclusive","","MVA0jetmH120"   ,"","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+
+  plotMuTau(110,1,"novbf","","MVA0jetmH110"   ,       "","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(110,1,"novbf","TauUp","MVA0jetmH110"   ,  "","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(110,1,"novbf","TauDown","MVA0jetmH110"   ,"","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(110,1,"novbf","JetUp","MVA0jetmH110"   ,  "","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(110,1,"novbf","JetDown","MVA0jetmH110"   ,"","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+
+  plotMuTau(120,1,"novbf","","MVA0jetmH120"   ,       "","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(120,1,"novbf","TauUp","MVA0jetmH120"   ,  "","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(120,1,"novbf","TauDown","MVA0jetmH120"   ,"","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(120,1,"novbf","JetUp","MVA0jetmH120"   ,  "","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(120,1,"novbf","JetDown","MVA0jetmH120"   ,"","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+
+  plotMuTau(130,1,"novbf","","MVA0jetmH130"   ,       "","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(130,1,"novbf","TauUp","MVA0jetmH130"   ,  "","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(130,1,"novbf","TauDown","MVA0jetmH130"   ,"","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(130,1,"novbf","JetUp","MVA0jetmH130"   ,  "","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(130,1,"novbf","JetDown","MVA0jetmH130"   ,"","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+
+  plotMuTau(140,1,"novbf","","MVA0jetmH140"   ,       "","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(140,1,"novbf","TauUp","MVA0jetmH140"   ,  "","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(140,1,"novbf","TauDown","MVA0jetmH140"   ,"","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(140,1,"novbf","JetUp","MVA0jetmH140"   ,  "","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
+  plotMuTau(140,1,"novbf","JetDown","MVA0jetmH140"   ,"","MVA",outputDir,50,-1,0,1.0,1.0,0,1.2);
 
 
   //plotMuTau(120,0,"inclusive",""   ,"MtLeg1Corr","M_{T}","GeV" ,outputDir,40,0,160,5.0,1.0,0,1.2);
@@ -1306,23 +1332,23 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "Feb2012/MVA0jet/t
 
       //plotMuTau(mH[j],useEmbedded,"inclusive",""   ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
 
-      plotMuTau(mH[j],useEmbedded,"novbf",""       ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotMuTau(mH[j],useEmbedded,"novbf","TauUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotMuTau(mH[j],useEmbedded,"novbf","TauDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotMuTau(mH[j],useEmbedded,"novbf","JetUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotMuTau(mH[j],useEmbedded,"novbf","JetDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotMuTau(mH[j],useEmbedded,"novbf",""       ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotMuTau(mH[j],useEmbedded,"novbf","TauUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotMuTau(mH[j],useEmbedded,"novbf","TauDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotMuTau(mH[j],useEmbedded,"novbf","JetUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotMuTau(mH[j],useEmbedded,"novbf","JetDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
       
-      //plotMuTau(mH[j],useEmbedded,"vbf",""         ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      //plotMuTau(mH[j],useEmbedded,"vbf","TauUp"    ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      //plotMuTau(mH[j],useEmbedded,"vbf","TauDown"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      //plotMuTau(mH[j],useEmbedded,"vbf","JetUp"    ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      //plotMuTau(mH[j],useEmbedded,"vbf","JetDown"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotMuTau(mH[j],useEmbedded,"vbf",""         ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotMuTau(mH[j],useEmbedded,"vbf","TauUp"    ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotMuTau(mH[j],useEmbedded,"vbf","TauDown"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotMuTau(mH[j],useEmbedded,"vbf","JetUp"    ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotMuTau(mH[j],useEmbedded,"vbf","JetDown"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
 
-      //plotMuTau(mH[j],useEmbedded,"boost",""       ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      //plotMuTau(mH[j],useEmbedded,"boost","TauUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      //plotMuTau(mH[j],useEmbedded,"boost","TauDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      //plotMuTau(mH[j],useEmbedded,"boost","JetUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      //plotMuTau(mH[j],useEmbedded,"boost","JetDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotMuTau(mH[j],useEmbedded,"boost",""       ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotMuTau(mH[j],useEmbedded,"boost","TauUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotMuTau(mH[j],useEmbedded,"boost","TauDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotMuTau(mH[j],useEmbedded,"boost","JetUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotMuTau(mH[j],useEmbedded,"boost","JetDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
 
       //plotMuTau(mH[j],useEmbedded,"twoJets",""       ,variables[i],"mass","GeV",outputDir,-1,0,100,5.0,1.0,0,1.2);
       //plotMuTau(mH[j],useEmbedded,"twoJets","TauUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,5.0,1.0,0,1.2);

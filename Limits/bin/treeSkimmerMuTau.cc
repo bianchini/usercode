@@ -6,6 +6,9 @@
 #include "TMath.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TH3F.h"
+#include "TMatrixT.h"
+#include "TMatrixTBase.h"
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TPad.h"
@@ -24,6 +27,7 @@
 #include "TROOT.h"
 #include "Bianchi/Utilities/interface/RecoilCorrector.hh"
 #include "Bianchi/Utilities/interface/Lumi3DReWeightingForLorenzo.h"
+#include "TauAnalysis/SVFitStandAlone/interface/NSVfitStandaloneAlgorithm.h"
 
 #include "Math/Vector3D.h"
 #include "Math/Vector4D.h"
@@ -39,6 +43,7 @@
 #define PtVETO 30.0
 #define MAXEta  4.5 
 #define USERECOILALGO true
+#define USEFAKERATE true
 
 using namespace ROOT::Math;
 using namespace std;
@@ -352,17 +357,18 @@ float pileupWeight( int intimepileup_ ){
 
 void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xsec_ = 0., string inputDir_ = "./"){
   
+
   cout << "Now skimming analysis " << analysis_ << endl;
 
   
   //////////////////////////////////////////////////////////
-  edm::Lumi3DReWeightingForLorenzo* Lumi3DReWeighting = 
-    new edm::Lumi3DReWeightingForLorenzo("../../Utilities/data/pileUp/pileUpFall11.root",
-					 "../../Utilities/data/pileUp/Run2011PileUpTruth.root",
-					 "MC_distr",
-					 "pileup");
-  Lumi3DReWeighting->weight3D_init(1.00);
-  cout << "Lumi3D rewieghting initialized" << endl;
+  //edm::Lumi3DReWeightingForLorenzo* Lumi3DReWeighting = 
+  //new edm::Lumi3DReWeightingForLorenzo("../../Utilities/data/pileUp/pileUpFall11.root",
+  //				 "../../Utilities/data/pileUp/Run2011PileUpTruth.root",
+  //				 "MC_distr",
+  //				 "pileup");
+  //Lumi3DReWeighting->weight3D_init(1.00);
+  //cout << "Lumi3D rewieghting initialized" << endl;
   //////////////////////////////////////////////////////////
   
   RecoilCorrector* recoilCorr = 0;
@@ -393,20 +399,57 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   TF1 *turnOnTauMuTauAllBL = (TF1*)corrections.Get("turnOnTauMuTauAllBL");  
   TF1 *turnOnTauMuTauAllEC = (TF1*)corrections.Get("turnOnTauMuTauAllEC");  
 
-  if(!ratioMuIDIsoBL)   cout << "Missing corrections for MuID+Iso (BL)" << endl;
-  if(!ratioMuIDIsoEC)   cout << "Missing corrections for MuID+Iso (EC)" << endl;
-  if(!ratioMuIdBL)      cout << "Missing corrections for MuID (BL)" << endl;
-  if(!ratioMuIdEC)      cout << "Missing corrections for MuID (EC)" << endl;
-  if(!ratioMuIsoBL)     cout << "Missing corrections for MuIso (BL)" << endl;
-  if(!ratioMuIsoEC)     cout << "Missing corrections for MuIso (EC)" << endl;
-  if(!ratioMuAllBL)     cout << "Missing corrections for Mu HLT (BL)" << endl;
-  if(!ratioMuAllEC)     cout << "Missing corrections for Mu HLT (EC)" << endl;
-  if(!ratioTauMuTauAll) cout << "Missing corrections for tau HLT" << endl;
+  if(!ratioMuIDIsoBL)     cout << "Missing corrections for MuID+Iso (BL)" << endl;
+  if(!ratioMuIDIsoEC)     cout << "Missing corrections for MuID+Iso (EC)" << endl;
+  if(!ratioMuIdBL)        cout << "Missing corrections for MuID (BL)" << endl;
+  if(!ratioMuIdEC)        cout << "Missing corrections for MuID (EC)" << endl;
+  if(!ratioMuIsoBL)       cout << "Missing corrections for MuIso (BL)" << endl;
+  if(!ratioMuIsoEC)       cout << "Missing corrections for MuIso (EC)" << endl;
+  if(!ratioMuAllBL)       cout << "Missing corrections for Mu HLT (BL)" << endl;
+  if(!ratioMuAllEC)       cout << "Missing corrections for Mu HLT (EC)" << endl;
+  if(!ratioTauMuTauAll)   cout << "Missing corrections for tau HLT" << endl;
   if(!ratioTauMuTauAllBL) cout << "Missing corrections for tau HLT (BL)" << endl;
   if(!ratioTauMuTauAllEC) cout << "Missing corrections for tau HLT (EC)" << endl;
-  if(!turnOnMuAllBL)    cout << "Missing turnOn for mu (BL)" << endl;
-  if(!turnOnMuAllEC)    cout << "Missing turnOn for mu (EC)" << endl;
-  if(!turnOnTauMuTauAll)cout << "Missing turnOn for tau" << endl;
+  if(!turnOnMuAllBL)      cout << "Missing turnOn for mu (BL)" << endl;
+  if(!turnOnMuAllEC)      cout << "Missing turnOn for mu (EC)" << endl;
+  if(!turnOnTauMuTauAll)  cout << "Missing turnOn for tau" << endl;
+
+  //////////////////////////////////////////////////////////
+
+  
+  cout << "Using fake-rate method from fakeRate.root" << endl;
+  TFile fakeRate_DYJets ("../../Utilities/data/fakeRate/fakeRate_DYJetsToTauTau.root","READ");
+  TFile fakeRate_Run2011("../../Utilities/data/fakeRate/fakeRate_Run2011AB.root","READ");
+  TFile fakeRate_WJets  ("../../Utilities/data/fakeRate/fakeRate_WJetsToMuNu.root","READ");
+
+ 
+  TH3F* hfakeRateDYJets  = 0;
+  TH3F* hfakeRateRun2011 = 0;
+  TH3F* hfakeRateWJets   = 0;
+
+
+  if(USEFAKERATE){
+    if(!fakeRate_DYJets.IsZombie()){
+      cout << "Tau Efficiency from DY->tautau avalilable" << endl;
+      hfakeRateDYJets  = (TH3F*)fakeRate_DYJets.Get("hRatio");
+    }
+    //fakeRate_DYJets.Close();
+
+    if(!fakeRate_Run2011.IsZombie()){
+      cout << "Fake-rate from Run2011 avalilable" << endl;
+      hfakeRateRun2011 = (TH3F*)fakeRate_Run2011.Get("hRatio");
+    }
+    //fakeRate_Run2011.Close();
+
+    if(!fakeRate_WJets.IsZombie()){
+      cout << "Fake Rate from W+jets available" << endl;
+      hfakeRateWJets   = (TH3F*)fakeRate_WJets.Get("hRatio");
+    }
+    //fakeRate_WJets.Close();
+  }
+  
+  //////////////////////////////////////////////////////////
+
 
   //////////////////////////////////////////////////////////
 
@@ -420,6 +463,8 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   TFile *outFile = new TFile(outName,"UPDATE");
 
   TTree* outTreePtOrd     = new TTree(TString(("outTreePtOrd"+analysis_).c_str()),"tree jets pT-ord");
+
+  //////////////////////////////////////////////////////////
 
   // kinematical variables of first 2 jets  
   float pt1,pt2,eta1,eta2,Deta,Mjj,Dphi,phi1,phi2;
@@ -437,21 +482,26 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
 
   // diTau related variables
   float diTauNSVfitMass_,diTauNSVfitMassErrUp_,diTauNSVfitMassErrDown_, diTauSVFitMass, diTauSVFitMassCal0, diTauSVFitMassCal1, diTauSVFitMassCal2, diTauSVFitPt, diTauSVFitEta , diTauSVFitPhi ;
+  float diTauSVFitMassSA, diTauSVFitMassErrSA;
   float diTauCAMass, diTauCAPt, diTauCAEta, diTauCAPhi;
   float diTauVisMass,diTauVisPt,diTauVisEta,diTauVisPhi;
   float diTauRecoPt,diTauRecoPhi;
   float diTauMinMass;
+
+  float etaTau1Fit, etaTau2Fit, phiTau1Fit, phiTau2Fit, ptTau1Fit, ptTau2Fit;
 
   // taus/MET related variables
   float ptL1,ptL2,etaL1,etaL2,phiL1,phiL2,dPhiL1L2, dxy1_, dz1_;
   float diTauCharge_,MtLeg1_,MtLeg1Corr_,pZeta_,pZetaCorr_,pZetaVis_,pZetaVisCorr_,MEt,MEtCorr,MEtPhi,pZetaSig_;
   float combRelIsoLeg1,combRelIsoLeg1Beta,combRelIsoLeg1DBeta,combRelIsoLeg1Rho, combIsoLeg2;
   int tightestHPSDBWP_, decayMode_;
+  float pfJetPt_;
 
   //tau related variables
   float HoP,EoP, emFraction_, leadPFChargedHadrMva_;
   float hasGsf_, signalPFGammaCands_, signalPFChargedHadrCands_;
   float etaMom2,phiMom2,gammaFrac,visibleTauMass_;
+  float fakeRateRun2011, fakeRateWMC, effDYMC, CDFWeight;
 
   // event-related variables
   float numPV_ , sampleWeight, puWeight, embeddingWeight_,HqTWeight;
@@ -463,6 +513,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
 
   // event id
   ULong64_t event_,run_,lumi_;
+  int index_;
 
   outTreePtOrd->Branch("pt1",  &pt1,"pt1/F");
   outTreePtOrd->Branch("pt2",  &pt2,"pt2/F");
@@ -515,6 +566,15 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   outTreePtOrd->Branch("diTauRecoPt",   &diTauRecoPt,  "diTauRecoPt/F");
   outTreePtOrd->Branch("diTauRecoPhi",  &diTauRecoPhi,  "diTauRecoPhi/F");
   
+  outTreePtOrd->Branch("diTauSVFitMassSA",     &diTauSVFitMassSA,     "diTauSVFitMassSA/F");
+  outTreePtOrd->Branch("diTauSVFitMassErrSA",  &diTauSVFitMassErrSA,  "diTauSVFitMassErrSA/F");
+  outTreePtOrd->Branch("etaTau1Fit",           &etaTau1Fit,  "etaTau1Fit/F");
+  outTreePtOrd->Branch("etaTau2Fit",           &etaTau2Fit,  "etaTau2Fit/F");
+  outTreePtOrd->Branch("phiTau1Fit",           &phiTau1Fit,  "phiTau1Fit/F");
+  outTreePtOrd->Branch("phiTau2Fit",           &phiTau2Fit,  "phiTau2Fit/F");
+  outTreePtOrd->Branch("ptTau1Fit",            &ptTau1Fit,   "ptTau1Fit/F");
+  outTreePtOrd->Branch("ptTau2Fit",            &ptTau2Fit,   "ptTau2Fit/F");
+
   outTreePtOrd->Branch("diTauCAMass",&diTauCAMass,"diTauCAMass/F");
   outTreePtOrd->Branch("diTauCAPt",  &diTauCAPt,  "diTauCAPt/F");
   outTreePtOrd->Branch("diTauCAEta", &diTauCAEta, "diTauCAEta/F");
@@ -550,8 +610,12 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   outTreePtOrd->Branch("phiMom2",                 &phiMom2,"phiMom2/F");
   outTreePtOrd->Branch("gammaFrac",               &gammaFrac,"gammaFrac/F");
 
-
-
+  outTreePtOrd->Branch("pfJetPt",                 &pfJetPt_,"pfJetPt/F");
+  outTreePtOrd->Branch("fakeRateRun2011",         &fakeRateRun2011,"fakeRateRun2011/F");
+  outTreePtOrd->Branch("fakeRateWMC",             &fakeRateWMC,"fakeRateWMC/F");
+  outTreePtOrd->Branch("effDYMC",                 &effDYMC,"effDYMC/F");
+  outTreePtOrd->Branch("CDFWeight",               &CDFWeight,"CDFWeight/F");
+  
   outTreePtOrd->Branch("diTauCharge", &diTauCharge_,"diTauCharge/F");
   outTreePtOrd->Branch("MtLeg1",      &MtLeg1_,"MtLeg1/F");
   outTreePtOrd->Branch("MtLeg1Corr",  &MtLeg1Corr_,"MtLeg1Corr/F");
@@ -593,13 +657,16 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   outTreePtOrd->Branch("isTauLegMatched", &isTauLegMatched_,"isTauLegMatched/I");
   outTreePtOrd->Branch("muFlag",          &muFlag_,"muFlag/I"); 
   outTreePtOrd->Branch("genDecay",        &genDecay_,"genDecay/I");
-  outTreePtOrd->Branch("leptFakeTau",       &leptFakeTau,"leptFakeTau/I");
+  outTreePtOrd->Branch("leptFakeTau",     &leptFakeTau,"leptFakeTau/I");
 
   outTreePtOrd->Branch("event",&event_,"event/l");
   outTreePtOrd->Branch("run",  &run_,  "run/l");
   outTreePtOrd->Branch("lumi", &lumi_, "lumi/l");
+
+  outTreePtOrd->Branch("index", &index_, "index/I");
  
-  string currentInName = "/data_CMS/cms/lbianchini/"+inputDir_+"//treeMuTauStream_"+sample_+".root" ;
+  //string currentInName = "/data_CMS/cms/lbianchini/"+inputDir_+"//treeMuTauStream_"+sample_+".root" ;
+  string currentInName = inputDir_+"//treeMuTauStream_"+sample_+".root" ;
 
   TString inName(currentInName.c_str());
   TFile* file   = new TFile(inName,"READ");
@@ -688,6 +755,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   currentTree->SetBranchStatus("gammadEta"             ,1);
   currentTree->SetBranchStatus("gammadPhi"             ,1);
   currentTree->SetBranchStatus("gammaPt"               ,1);
+  currentTree->SetBranchStatus("pfJetPt"               ,1);
 
   // MET
   currentTree->SetBranchStatus("METP4"                 ,1);
@@ -697,7 +765,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   currentTree->SetBranchStatus("pZeta"                 ,0);
   currentTree->SetBranchStatus("pZetaVis"              ,0);
   currentTree->SetBranchStatus("pZetaSig"              ,1);
-
+  currentTree->SetBranchStatus("metSgnMatrix"          ,1);
 
   // generator-level boson
   currentTree->SetBranchStatus("genVP4"                ,1);
@@ -723,6 +791,8 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   currentTree->SetBranchStatus("lumi"                  ,1);
   currentTree->SetBranchStatus("mcPUweight"            ,1);
   currentTree->SetBranchStatus("embeddingWeight"       ,1);
+
+  currentTree->SetBranchStatus("index"                 ,1);
 
   // triggers
   currentTree->SetBranchStatus("tauXTriggers"          ,1);
@@ -788,6 +858,11 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   std::vector< float >* gammaPt =  new std::vector< float >();
   currentTree->SetBranchAddress("gammaPt", &gammaPt);
 
+  std::vector< float >* metSgnMatrix = new std::vector< float >();
+  currentTree->SetBranchAddress("metSgnMatrix", &metSgnMatrix);
+
+  
+
   // auxiliary float to store branch values
   float diTauNSVfitMass,diTauNSVfitMassErrUp,diTauNSVfitMassErrDown,mTauTauMin;;
   float diTauCharge;
@@ -796,6 +871,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   int numOfLooseIsoDiTaus;
   float leadPFChargedHadrCandP;
   float leadPFChargedHadrMva;
+  float pfJetPt;
   float emFraction, hasGsf, leadPFChargedHadrHcalEnergy, leadPFChargedHadrEcalEnergy;
   int signalPFChargedHadrCands, signalPFGammaCands;
   float mcPUweight,embeddingWeight;
@@ -808,6 +884,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   float chIsoLeg1,nhIsoLeg1,phIsoLeg1; 
   float chIsoPULeg1,nhIsoPULeg1,phIsoPULeg1; 
   ULong64_t event,run,lumi;
+  int index;
 
   currentTree->SetBranchAddress("chIsoLeg2",            &chIsoLeg2);
   currentTree->SetBranchAddress("phIsoLeg2",            &phIsoLeg2);
@@ -856,6 +933,8 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   currentTree->SetBranchAddress("signalPFGammaCands"   ,&signalPFGammaCands);
   currentTree->SetBranchAddress("leadPFChargedHadrHcalEnergy" ,&leadPFChargedHadrHcalEnergy);
   currentTree->SetBranchAddress("leadPFChargedHadrEcalEnergy" ,&leadPFChargedHadrEcalEnergy);
+  currentTree->SetBranchAddress("pfJetPt"              ,&pfJetPt);
+  currentTree->SetBranchAddress("index",                &index);
 
   if(sample_.find("WJets")!=string::npos){
     recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_wjets_njet.root");
@@ -897,6 +976,11 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     }
   }
 
+  // protection against multiple pairs per event
+  ULong64_t lastEvent = 0;
+  ULong64_t lastRun   = 0;
+  ULong64_t lastLumi  = 0;
+  int eventFlag       = 0;
 
   for (int n = 0; n < nEntries ; n++) {
     
@@ -1113,8 +1197,44 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
 
     MEt     = (*METP4)[0].Et();
     MEtCorr = recoilCorrecMET.Et();
-
     MEtPhi  = (*METP4)[0].Phi();
+
+    ////////////////////////////////////////////////
+    TMatrixD* metsig = new TMatrixD(2,2);
+    (*metsig)[0][0] = (*metSgnMatrix)[0]; 
+    (*metsig)[0][1] = (*metSgnMatrix)[1]; 
+    (*metsig)[1][0] = (*metSgnMatrix)[1]; 
+    (*metsig)[1][1] = (*metSgnMatrix)[2]; 
+    NSVfitStandalone::Vector measuredMET( (*METP4)[1].Px(), (*METP4)[1].Py(), 0);
+    std::vector<NSVfitStandalone::MeasuredTauLepton> measuredTauLeptons;
+    NSVfitStandalone::LorentzVector p1( (*diTauLegsP4)[1] );
+    measuredTauLeptons.push_back(NSVfitStandalone::MeasuredTauLepton(NSVfitStandalone::kHadDecay,p1));    
+    NSVfitStandalone::LorentzVector p2( (*diTauLegsP4)[0] );
+    measuredTauLeptons.push_back(NSVfitStandalone::MeasuredTauLepton(NSVfitStandalone::kLepDecay,p2));    
+    NSVfitStandaloneAlgorithm algo(measuredTauLeptons,measuredMET,metsig,0);
+    algo.maxObjFunctionCalls(5000);
+    algo.fit();
+    if(algo.isValidSolution()){
+      diTauSVFitMassSA    =  algo.fittedDiTauSystem().mass();
+      diTauSVFitMassErrSA =  algo.massUncert();
+      etaTau1Fit          = ((algo.fittedTauLeptons())[1]).Eta();
+      etaTau2Fit          = ((algo.fittedTauLeptons())[0]).Eta();
+      phiTau1Fit          = ((algo.fittedTauLeptons())[1]).Phi();
+      phiTau2Fit          = ((algo.fittedTauLeptons())[0]).Phi();
+      ptTau1Fit           = ((algo.fittedTauLeptons())[1]).Pt();
+      ptTau2Fit           = ((algo.fittedTauLeptons())[0]).Pt();
+    }
+    else{
+      diTauSVFitMassSA    = -99; 
+      diTauSVFitMassErrSA = -99;
+      etaTau1Fit          = -99;
+      etaTau2Fit          = -99;
+      phiTau1Fit          = -99;
+      phiTau2Fit          = -99;
+      ptTau1Fit           = -99;
+      ptTau2Fit           = -99;
+    }
+    ////////////////////////////////////////////////
 
     combRelIsoLeg1         = (chIsoLeg1+nhIsoLeg1+phIsoLeg1)/(*diTauLegsP4)[0].Pt();
     float PUtoPVratio      = (chIsoLeg1+chIsoPULeg1)>0 ? chIsoPULeg1/(chIsoLeg1+chIsoPULeg1) : 0.0;
@@ -1176,6 +1296,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     hasGsf_                   = hasGsf; 
     signalPFGammaCands_       = signalPFGammaCands; 
     signalPFChargedHadrCands_ = signalPFChargedHadrCands;
+    pfJetPt_                  = pfJetPt;
 
     if((std::string(sample.Data())).find("Run2011")!=string::npos){
       
@@ -1281,15 +1402,60 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
       leptFakeTau      = (isTauLegMatched==0 && (*genDiTauLegsP4)[1].E()>0) ? 1 : 0;
     else 
       leptFakeTau = -99;
+    
+    
+    if(hfakeRateDYJets==0 || hfakeRateRun2011==0){
+      CDFWeight       = -99;
+    }
+    else{
+      float f = hfakeRateRun2011->GetBinContent(hfakeRateRun2011->FindBin( pfJetPt, ptL2, 0.));
+      float e = hfakeRateDYJets->GetBinContent( hfakeRateDYJets->FindBin(  pfJetPt, ptL2, 0.));
+      //cout << e << ", " << f << endl;
+      if(fabs(e-f)>0)
+	CDFWeight = ((tightestHPSDBWP>0)*(f*(e-1)/(e-f)) + (tightestHPSDBWP<=0)*(f*e/(e-f)));
+      else
+	CDFWeight = f;
+    }
+    fakeRateRun2011 = (hfakeRateRun2011!=0) ? hfakeRateRun2011->GetBinContent( hfakeRateRun2011->FindBin(pfJetPt, ptL2, 0) ) : -99;
+    fakeRateWMC     = (hfakeRateWJets!=0)   ? hfakeRateWJets->GetBinContent(   hfakeRateWJets->FindBin(  pfJetPt, ptL2, 0) ) : -99;
+    effDYMC         = (hfakeRateDYJets!=0)  ? hfakeRateDYJets->GetBinContent(  hfakeRateDYJets->FindBin( pfJetPt, ptL2, 0) ) : -99;
+
+    //cout << "=> " << CDFWeight << " <=> " 
+    // << (tightestHPSDBWP<=0)*effDYMC*fakeRateRun2011/(effDYMC-fakeRateRun2011) + (tightestHPSDBWP>0)*(effDYMC-1)*fakeRateRun2011/(effDYMC-fakeRateRun2011) << endl;
+    //CDFWeight       = -99;
+    //fakeRateRun2011 = -99;
+    //fakeRateWMC     = -99;
+    //effDYMC         = -99;
+
     muFlag_          = muFlag;
     genDecay_        = genDecay ;
     event_           = event;
     run_             = run;
     lumi_            = lumi;
+
+    index_           = index;
+   
+    /*
+    if( !(run==lastRun && lumi==lastLumi && event==lastEvent)){
+      lastEvent = event;
+      lastRun   = run;
+      lastLumi  = lumi;
+      eventFlag = tightestHPSDBWP>0 ? 1 : 0;
+    }
+    else if(run==lastRun && lumi==lastLumi && event==lastEvent && eventFlag==1 && tightestHPSDBWP>0.5 ){
+      cout << "Skipping pair " << run << ":" << lumi << ":" << event << " index " << index << endl;
+      // skip subleading pairs of isolated taus in events with more than 1 isolated taus
+      continue; 
+    }
+    else if(run==lastRun && lumi==lastLumi && event==lastEvent){
+      eventFlag = int(bool(eventFlag) || tightestHPSDBWP>0.5);
+    }
+    */
     
     outTreePtOrd->Fill();
   }
 
+  return;
 
   file->Close();
   
@@ -1300,13 +1466,15 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   delete tauXTriggers; delete triggerBits;
   delete METP4; delete jetsBtagHE; delete jetsBtagHP; delete jetsChNfraction; delete genVP4; delete genMETP4;
   delete gammadEta; delete gammadPhi; delete gammaPt; delete HqT;
-  
+
   return;
 
 }
 
 
-void doAllSamplesMu(string inputDir_ = "MuTauStreamFall11_09Feb2012"){
+void doAllSamplesMu(string inputDir_ =// "MuTauStreamFall11_06Dec2011"
+		    "../../TauTauStudies/test/prod/MuTauStream/"
+		    ){
 
 
   std::vector<std::string> samples;
@@ -1315,7 +1483,8 @@ void doAllSamplesMu(string inputDir_ = "MuTauStreamFall11_09Feb2012"){
   ////////////// samples & x-sections & skim1 & skim2 /////////////
 
   samples.push_back("Run2011-MuTau-All_run");             crossSec.push_back( 0  );                          
-  //samples.push_back("Run2011-MuTau-LooseIso-All_run");    crossSec.push_back( 0  );                          
+//samples.push_back("Run2011-MuTau-LooseIso-All_run");    crossSec.push_back( 0  );                          
+  samples.push_back("Run2011A-MuTau-05AugReReco-NoTauIso-v3_run");    crossSec.push_back( 0  );                          
   samples.push_back("Run2011-MuTau-Embedded-All_run");    crossSec.push_back( 0  );                          
   samples.push_back("DYJets-MuTau-50-madgraph-PUS6_run"); crossSec.push_back( 3048           * 0.009631    * 0.641987); 
   samples.push_back("TTJets-MuTau-madgraph-PUS6_run");    crossSec.push_back( 157.5          * 0.020998    * 0.823613);  
@@ -1357,9 +1526,13 @@ void doAllSamplesMu(string inputDir_ = "MuTauStreamFall11_09Feb2012"){
   samples.push_back("VH145-MuTau-pythia-PUS6_run");       crossSec.push_back( 2.61e-02*(0.3406+0.1930+0.05435 ) * 1.0      * 0.191843);  
   samples.push_back("VH160-MuTau-pythia-PUS6_run");       crossSec.push_back( 5.32e-04*(0.2291+0.1334+0.03942 ) * 1.0      * 0.203857);  
  
-  for( unsigned int k = 0; k < samples.size() ; k++) {
+  makeTrees_MuTauStream("",        samples[1], crossSec[1], inputDir_);
+  return;
 
+  for( unsigned int k = 0; k < samples.size() ; k++) {
+    
     makeTrees_MuTauStream("",        samples[k], crossSec[k], inputDir_);
+
     if( samples[k].find("Run2011-MuTau-All")!=string::npos )
       continue;
     makeTrees_MuTauStream("TauUp",   samples[k], crossSec[k], inputDir_);
@@ -1369,7 +1542,7 @@ void doAllSamplesMu(string inputDir_ = "MuTauStreamFall11_09Feb2012"){
     makeTrees_MuTauStream("JetUp",   samples[k], crossSec[k], inputDir_);
     makeTrees_MuTauStream("JetDown", samples[k], crossSec[k], inputDir_);
   }
-
+  
   return;
 
 }

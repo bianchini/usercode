@@ -1241,7 +1241,7 @@ void plotElecTau( Int_t mH_           = 120,
 
 
 
-void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "Jan2012/checks"){
+void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "Feb2012/"){
 
   vector<string> variables;
   vector<int> mH;
@@ -1252,7 +1252,7 @@ void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "Jan2012/checks"
   //mH.push_back(105);
   //mH.push_back(110);
   //mH.push_back(115);
-  mH.push_back(120);
+  //mH.push_back(120);
   //mH.push_back(125);
   //mH.push_back(130);
   //mH.push_back(135);
@@ -1264,7 +1264,7 @@ void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "Jan2012/checks"
 
   //plotElecTau(120,0,"inclusive",""   ,"numPV","reconstructed vertexes","units" ,outputDir,30,0,30,5.0,1.0,0,1.5);
 
-  //plotElecTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV" ,outputDir,50,0,200,5.0,1.0,0,1.2);
+  plotElecTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV" ,outputDir,50,0,200,5.0,1.0,0,1.2);
   //plotElecTau(120,1,"inclusive",""   ,"ptL2","#tau p_{T}","GeV"           ,outputDir,30,0, 90,5.0,1.0,0,1.2);
   //plotElecTau(120,1,"inclusive",""   ,"ptL1","e p_{T}", "GeV"             ,outputDir,30,0, 90,5.0,1.0,0,1.2);
 
