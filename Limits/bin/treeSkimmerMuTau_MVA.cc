@@ -379,8 +379,10 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   mHMVAs.push_back(145);
 
   vector<string> bkgMVAs;
-  bkgMVAs.push_back("AntiW");
+  //bkgMVAs.push_back("AntiW");
   bkgMVAs.push_back("AntiZ");
+  bkgMVAs.push_back("AntiAll");
+  bkgMVAs.push_back("AntiAllWCut");
 
   std::map< string , TMVA::Reader*> readers;
   Float_t PTL2, PTL1, PTL1oPTL2, COSDPHIL1L2, ETAL1, ETAL2, DXY1,DXY2,
@@ -419,6 +421,40 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
 	reader->AddVariable( "etaL1",          &ETAL1);
 	reader->AddVariable( "etaL2",          &ETAL2);
 	reader->BookMVA( "BDT", Form("../../TauTauStudies/test/Macro/tmva/weights/TMVAClassificationPtOrd_MuTau_mH%d_W_wSVFit_nTrees300_maxDepth2_BDT.weights.xml",mHMVAs[k]));  
+	readers.insert(  make_pair(Form("%d%s",mHMVAs[k],bkgMVAs[j].c_str()), reader));
+      }
+      else if(bkgMVAs[j].find("AntiAll")!=string::npos && bkgMVAs[j].find("AntiAllWCut")==string::npos){
+	reader->AddVariable( "diTauSVFitMass", &DITAUSVFITMASS);
+	reader->AddVariable( "cos(dPhiL1L2)",  &COSDPHIL1L2);
+	reader->AddVariable( "diTauVisEta",    &DITAUVISETA);
+	reader->AddVariable( "ptL2",           &PTL2);
+	reader->AddVariable( "diTauVisPt",     &DITAUVISPT);
+	reader->AddVariable( "ptL1/ptL2",      &PTL1oPTL2);
+	reader->AddVariable( "MEt",            &MET);
+	reader->AddVariable( "diTauVisMass",   &DITAUVISMASS);
+	reader->AddVariable( "MtLeg1" ,        &MTLEG1);
+	reader->AddVariable( "pZetaVis",       &PZETAVIS);
+	reader->AddVariable( "pZeta-pZetaVis", &PZETAMISS);
+	reader->BookMVA( "BDT", Form("../../TauTauStudies/test/Macro/tmva/weights/TMVAClassificationPtOrd_MuTau_mH%d_All_wSVFit_nTrees500_maxDepth2_BDT.weights.xml",mHMVAs[k]));  
+	readers.insert(  make_pair(Form("%d%s",mHMVAs[k],bkgMVAs[j].c_str()), reader));
+      }
+      else if(bkgMVAs[j].find("AntiAllWCut")!=string::npos){
+	reader->AddVariable( "diTauSVFitMass", &DITAUSVFITMASS);
+	reader->AddVariable( "cos(dPhiL1L2)",  &COSDPHIL1L2);
+	reader->AddVariable( "diTauVisEta",    &DITAUVISETA);
+	reader->AddVariable( "ptL2",           &PTL2);
+	reader->AddVariable( "diTauVisPt",     &DITAUVISPT);
+	reader->AddVariable( "ptL1/ptL2",      &PTL1oPTL2);
+	reader->AddVariable( "MEt",            &MET);
+	reader->AddVariable( "diTauVisMass",   &DITAUVISMASS);
+	//reader->AddVariable( "MtLeg1" ,        &MTLEG1);
+	reader->AddVariable( "pZetaVis",       &PZETAVIS);
+	reader->AddVariable( "pZeta-pZetaVis", &PZETAMISS);
+	reader->AddVariable( "dxy1",           &DXY1);	
+	reader->AddVariable( "dxy2",           &DXY2);	
+	reader->AddVariable( "etaL1",          &ETAL1);
+	reader->AddVariable( "etaL2",          &ETAL2);
+	reader->BookMVA( "BDT", Form("../../TauTauStudies/test/Macro/tmva/weights/TMVAClassificationPtOrd_MuTau_mH%d_AllWCut_wSVFit_nTrees150_maxDepth3_BDT.weights.xml",mHMVAs[k]));  
 	readers.insert(  make_pair(Form("%d%s",mHMVAs[k],bkgMVAs[j].c_str()), reader));
       }
     }
@@ -587,6 +623,8 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   //MVAs
   float MVAmH110AntiW,MVAmH115AntiW,MVAmH120AntiW,MVAmH125AntiW,MVAmH130AntiW,MVAmH135AntiW,MVAmH140AntiW,MVAmH145AntiW;
   float MVAmH110AntiZ,MVAmH115AntiZ,MVAmH120AntiZ,MVAmH125AntiZ,MVAmH130AntiZ,MVAmH135AntiZ,MVAmH140AntiZ,MVAmH145AntiZ;
+  float MVAmH110AntiAll,MVAmH115AntiAll,MVAmH120AntiAll,MVAmH125AntiAll,MVAmH130AntiAll,MVAmH135AntiAll,MVAmH140AntiAll,MVAmH145AntiAll;
+  float MVAmH110AntiAllWCut,MVAmH115AntiAllWCut,MVAmH120AntiAllWCut,MVAmH125AntiAllWCut,MVAmH130AntiAllWCut,MVAmH135AntiAllWCut,MVAmH140AntiAllWCut,MVAmH145AntiAllWCut;
 
 
   outTreePtOrd->Branch("pt1",  &pt1,"pt1/F");
@@ -755,6 +793,22 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   outTreePtOrd->Branch("MVAmH135AntiZ",   &MVAmH135AntiZ,"MVAmH135AntiZ/F");
   outTreePtOrd->Branch("MVAmH140AntiZ",   &MVAmH140AntiZ,"MVAmH140AntiZ/F");
   outTreePtOrd->Branch("MVAmH145AntiZ",   &MVAmH145AntiZ,"MVAmH145AntiZ/F");
+  outTreePtOrd->Branch("MVAmH110AntiAll",   &MVAmH110AntiAll,"MVAmH110AntiAll/F");
+  outTreePtOrd->Branch("MVAmH115AntiAll",   &MVAmH115AntiAll,"MVAmH115AntiAll/F");
+  outTreePtOrd->Branch("MVAmH120AntiAll",   &MVAmH120AntiAll,"MVAmH120AntiAll/F");
+  outTreePtOrd->Branch("MVAmH125AntiAll",   &MVAmH125AntiAll,"MVAmH125AntiAll/F");
+  outTreePtOrd->Branch("MVAmH130AntiAll",   &MVAmH130AntiAll,"MVAmH130AntiAll/F");
+  outTreePtOrd->Branch("MVAmH135AntiAll",   &MVAmH135AntiAll,"MVAmH135AntiAll/F");
+  outTreePtOrd->Branch("MVAmH140AntiAll",   &MVAmH140AntiAll,"MVAmH140AntiAll/F");
+  outTreePtOrd->Branch("MVAmH145AntiAll",   &MVAmH145AntiAll,"MVAmH145AntiAll/F");
+  outTreePtOrd->Branch("MVAmH110AntiAllWCut",   &MVAmH110AntiAllWCut,"MVAmH110AntiAllWCut/F");
+  outTreePtOrd->Branch("MVAmH115AntiAllWCut",   &MVAmH115AntiAllWCut,"MVAmH115AntiAllWCut/F");
+  outTreePtOrd->Branch("MVAmH120AntiAllWCut",   &MVAmH120AntiAllWCut,"MVAmH120AntiAllWCut/F");
+  outTreePtOrd->Branch("MVAmH125AntiAllWCut",   &MVAmH125AntiAllWCut,"MVAmH125AntiAllWCut/F");
+  outTreePtOrd->Branch("MVAmH130AntiAllWCut",   &MVAmH130AntiAllWCut,"MVAmH130AntiAllWCut/F");
+  outTreePtOrd->Branch("MVAmH135AntiAllWCut",   &MVAmH135AntiAllWCut,"MVAmH135AntiAllWCut/F");
+  outTreePtOrd->Branch("MVAmH140AntiAllWCut",   &MVAmH140AntiAllWCut,"MVAmH140AntiAllWCut/F");
+  outTreePtOrd->Branch("MVAmH145AntiAllWCut",   &MVAmH145AntiAllWCut,"MVAmH145AntiAllWCut/F");
  
   string currentInName = "/data_CMS/cms/lbianchini/"+inputDir_+"//treeMuTauStream_"+sample_+".root" ;
   //string currentInName = inputDir_+"//treeMuTauStream_"+sample_+".root" ;
@@ -1556,6 +1610,24 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     MVAmH140AntiZ    = readers["140AntiZ"]!=0 ? readers["140AntiZ"]->EvaluateMVA( "BDT" ) : -99;
     MVAmH145AntiZ    = readers["145AntiZ"]!=0 ? readers["145AntiZ"]->EvaluateMVA( "BDT" ) : -99;
 
+    MVAmH110AntiAll  = readers["110AntiAll"]!=0 ? readers["110AntiAll"]->EvaluateMVA( "BDT" ) : -99;
+    MVAmH115AntiAll  = readers["115AntiAll"]!=0 ? readers["115AntiAll"]->EvaluateMVA( "BDT" ) : -99;
+    MVAmH120AntiAll  = readers["120AntiAll"]!=0 ? readers["120AntiAll"]->EvaluateMVA( "BDT" ) : -99;
+    MVAmH125AntiAll  = readers["125AntiAll"]!=0 ? readers["125AntiAll"]->EvaluateMVA( "BDT" ) : -99;
+    MVAmH130AntiAll  = readers["130AntiAll"]!=0 ? readers["130AntiAll"]->EvaluateMVA( "BDT" ) : -99;
+    MVAmH135AntiAll  = readers["135AntiAll"]!=0 ? readers["135AntiAll"]->EvaluateMVA( "BDT" ) : -99;
+    MVAmH140AntiAll  = readers["140AntiAll"]!=0 ? readers["140AntiAll"]->EvaluateMVA( "BDT" ) : -99;
+    MVAmH145AntiAll  = readers["145AntiAll"]!=0 ? readers["145AntiAll"]->EvaluateMVA( "BDT" ) : -99;
+
+    MVAmH110AntiAllWCut  = readers["110AntiAllWCut"]!=0 ? readers["110AntiAllWCut"]->EvaluateMVA( "BDT" ) : -99;
+    MVAmH115AntiAllWCut  = readers["115AntiAllWCut"]!=0 ? readers["115AntiAllWCut"]->EvaluateMVA( "BDT" ) : -99;
+    MVAmH120AntiAllWCut  = readers["120AntiAllWCut"]!=0 ? readers["120AntiAllWCut"]->EvaluateMVA( "BDT" ) : -99;
+    MVAmH125AntiAllWCut  = readers["125AntiAllWCut"]!=0 ? readers["125AntiAllWCut"]->EvaluateMVA( "BDT" ) : -99;
+    MVAmH130AntiAllWCut  = readers["130AntiAllWCut"]!=0 ? readers["130AntiAllWCut"]->EvaluateMVA( "BDT" ) : -99;
+    MVAmH135AntiAllWCut  = readers["135AntiAllWCut"]!=0 ? readers["135AntiAllWCut"]->EvaluateMVA( "BDT" ) : -99;
+    MVAmH140AntiAllWCut  = readers["140AntiAllWCut"]!=0 ? readers["140AntiAllWCut"]->EvaluateMVA( "BDT" ) : -99;
+    MVAmH145AntiAllWCut  = readers["145AntiAllWCut"]!=0 ? readers["145AntiAllWCut"]->EvaluateMVA( "BDT" ) : -99;
+
     /*
     if( !(run==lastRun && lumi==lastLumi && event==lastEvent)){
       lastEvent = event;
@@ -1587,10 +1659,13 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   delete tauXTriggers; delete triggerBits;
   delete METP4; delete jetsBtagHE; delete jetsBtagHP; delete jetsChNfraction; delete genVP4; delete genMETP4;
   delete gammadEta; delete gammadPhi; delete gammaPt; delete HqT;
-
+  
+  for(std::map<string , TMVA::Reader*>::iterator read = readers.begin() ; read!=readers.end(); read++)
+    delete (*read).second;
+  
   return;
-
-  }
+  
+}
 
 
 void doAllSamplesMu(string inputDir_ = "MuTauStreamFall11_06Dec2011")
@@ -1686,7 +1761,8 @@ int main(int argc, const char* argv[])
 
   //doAllSamplesMu( "MuTauStreamFall11_06Dec2011");
 
-  string inputDir = "MuTauStreamFall11_06Dec2011";
+  //string inputDir = "MuTauStreamFall11_06Dec2011";
+  string inputDir = "MuTauStreamFall11_09Feb2012";
 
   makeTrees_MuTauStream("",        argv[1], atof(argv[2]), inputDir);
   if( string(argv[1]).find("Run2011-MuTau-All")!=string::npos )

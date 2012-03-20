@@ -27,6 +27,7 @@
 #include "TCut.h"
 #include "TArrayF.h"
 #include "TStyle.h"
+#include "TGraph.h"
 
 #include "TauAnalysis/CandidateTools/interface/SVfitVMlineShapeIntegral.h"
 #include "PhysicsTools/FWLite/interface/TFileService.h"
@@ -55,6 +56,13 @@ void lineShape(){
 
   fwlite::TFileService fs = fwlite::TFileService("shapes.root");
 
+
+  Double_t x[100];
+  Double_t yMinus[100];
+  Double_t yPlus [100];
+  Double_t yIntegMinus[100];
+  Double_t yIntegPlus [100];
+
   cout << "Now doing for Rho L" << endl;
   TH1F* hRhoLMinus = new TH1F("hRhoLMinus","#tau_{L}^{-1} #rightarrow #rho_{L} ; x_{h} ; d#Gamma/dx_{h}",100,0,1);
   TH1F* hRhoLPlus  = new TH1F("hRhoLPlus", "#tau_{R}^{-1} #rightarrow #rho_{L} ; x_{h} ; d#Gamma/dx_{h}",100,0,1);
@@ -63,10 +71,33 @@ void lineShape(){
 				 SVfitVMlineShapeIntegrand::kVMlongitudinalPol,
 				 true);
   for(int i = 1; i <= 100; i++){
-    hRhoLMinus->SetBinContent( i, (*lmLineShapeRhoL)(-1,i*0.01));
-    hRhoLPlus->SetBinContent(  i, (*lmLineShapeRhoL)(+1,i*0.01));
+    double valueMinus = (*lmLineShapeRhoL)(-1,i*0.01); 
+    double valuePlus  = (*lmLineShapeRhoL)(+1,i*0.01);
+    hRhoLMinus->SetBinContent( i, valueMinus );
+    hRhoLPlus->SetBinContent(  i, valuePlus);
+    x[i-1] = i*0.01;
+    yMinus[i-1] = valueMinus;
+    yPlus[i-1]  = valuePlus;
   }
+  for(int i = 1; i <= hRhoLMinus->GetNbinsX(); i++){
+    yIntegMinus[i-1] = hRhoLMinus->Integral(1, i)/hRhoLMinus->Integral();
+    yIntegPlus[i-1] = hRhoLPlus->Integral(1, i)/hRhoLPlus->Integral();
+  }
+
   c1->cd();
+  TGraph* gRhoLMinus = new TGraph(100, x, yMinus);
+  gRhoLMinus->SetName("gRhoLMinus");
+  gDirectory->Append(gRhoLMinus);
+  TGraph* gRhoLPlus = new TGraph(100,  x, yPlus);
+  gRhoLPlus->SetName("gRhoLPlus");
+  gDirectory->Append(gRhoLPlus);
+  TGraph* gNormRhoLMinus = new TGraph(100, x, yIntegMinus);
+  gNormRhoLMinus->SetName("gNormRhoLMinus");
+  gDirectory->Append(gNormRhoLMinus);
+  TGraph* gNormRhoLPlus = new TGraph(100,  x, yIntegPlus);
+  gNormRhoLPlus->SetName("gNormRhoLPlus");
+  gDirectory->Append(gNormRhoLPlus);
+
   hRhoLMinus->Draw();
   c1->SaveAs("hRhoLMinus.pdf");
   hRhoLPlus->Draw();
@@ -82,10 +113,33 @@ void lineShape(){
 				 SVfitVMlineShapeIntegrand::kVMtransversePol,
 				 true);
   for(int i = 1; i <= 100; i++){
-    hRhoTMinus->SetBinContent( i, (*lmLineShapeRhoT)(-1,i*0.01));
-    hRhoTPlus->SetBinContent(  i, (*lmLineShapeRhoT)(+1,i*0.01));
+    double valueMinus = (*lmLineShapeRhoT)(-1,i*0.01); 
+    double valuePlus  = (*lmLineShapeRhoT)(+1,i*0.01);
+    hRhoTMinus->SetBinContent( i, valueMinus);
+    hRhoTPlus->SetBinContent(  i, valuePlus);
+    x[i-1] = i*0.01;
+    yMinus[i-1] = valueMinus;
+    yPlus[i-1]  = valuePlus;
   }
+  for(int i = 1; i <= hRhoTMinus->GetNbinsX(); i++){
+    yIntegMinus[i-1] = hRhoTMinus->Integral(1, i)/hRhoTMinus->Integral();
+    yIntegPlus[i-1]  = hRhoTPlus->Integral(1, i)/hRhoTPlus->Integral();
+  }
+
   c1->cd();
+  TGraph* gRhoTMinus = new TGraph(100, x, yMinus);
+  gRhoTMinus->SetName("gRhoTMinus");
+  gDirectory->Append(gRhoTMinus);
+  TGraph* gRhoTPlus = new TGraph(100,  x, yPlus);
+  gRhoTPlus->SetName("gRhoTPlus");
+  gDirectory->Append(gRhoTPlus);
+  TGraph* gNormRhoTMinus = new TGraph(100, x, yIntegMinus);
+  gNormRhoTMinus->SetName("gNormRhoTMinus");
+  gDirectory->Append(gNormRhoTMinus);
+  TGraph* gNormRhoTPlus = new TGraph(100,  x, yIntegPlus);
+  gNormRhoTPlus->SetName("gNormRhoTPlus");
+  gDirectory->Append(gNormRhoTPlus);
+
   hRhoTMinus->Draw();
   c1->SaveAs("hRhoTMinus.pdf");
   hRhoTPlus->Draw();
@@ -100,10 +154,33 @@ void lineShape(){
 				 SVfitVMlineShapeIntegrand::kVMlongitudinalPol,
 				 true);
   for(int i = 1; i <= 100; i++){
-    hA1LMinus->SetBinContent( i, (*lmLineShapeA1L)(-1,i*0.01));
-    hA1LPlus->SetBinContent(  i, (*lmLineShapeA1L)(+1,i*0.01));
+    double valueMinus = (*lmLineShapeA1L)(-1,i*0.01); 
+    double valuePlus  = (*lmLineShapeA1L)(+1,i*0.01);
+    hA1LMinus->SetBinContent( i, valueMinus);
+    hA1LPlus->SetBinContent(  i, valuePlus);
+    x[i-1] = i*0.01;
+    yMinus[i-1] = valueMinus;
+    yPlus[i-1]  = valuePlus;
   }
+  for(int i = 1; i <= hA1LMinus->GetNbinsX(); i++){
+    yIntegMinus[i-1] = hA1LMinus->Integral(1, i)/hA1LMinus->Integral();
+    yIntegPlus[i-1]  = hA1LPlus->Integral(1, i)/hA1LPlus->Integral();
+  }
+
   c1->cd();
+  TGraph* gA1LMinus = new TGraph(100, x, yMinus);
+  gA1LMinus->SetName("gA1LMinus");
+  gDirectory->Append(gA1LMinus);
+  TGraph* gA1LPlus = new TGraph(100,  x, yPlus);
+  gA1LPlus->SetName("gA1LPlus");
+  gDirectory->Append(gA1LPlus);
+  TGraph* gNormA1LMinus = new TGraph(100, x, yIntegMinus);
+  gNormA1LMinus->SetName("gNormA1LMinus");
+  gDirectory->Append(gNormA1LMinus);
+  TGraph* gNormA1LPlus = new TGraph(100,  x, yIntegPlus);
+  gNormA1LPlus->SetName("gNormA1LPlus");
+  gDirectory->Append(gNormA1LPlus);
+
   hA1LMinus->Draw();
   c1->SaveAs("hA1LMinus.pdf");
   hA1LPlus->Draw();
@@ -118,10 +195,33 @@ void lineShape(){
 				 SVfitVMlineShapeIntegrand::kVMtransversePol,
 				 true);
   for(int i = 1; i <= 100; i++){
-    hA1TMinus->SetBinContent( i, (*lmLineShapeA1T)(-1,i*0.01));
-    hA1TPlus->SetBinContent(  i, (*lmLineShapeA1T)(+1,i*0.01));
+    double valueMinus = (*lmLineShapeA1T)(-1,i*0.01); 
+    double valuePlus  = (*lmLineShapeA1T)(+1,i*0.01);
+    hA1TMinus->SetBinContent( i, valueMinus);
+    hA1TPlus->SetBinContent(  i, valuePlus);
+    x[i-1] = i*0.01;
+    yMinus[i-1] = valueMinus;
+    yPlus[i-1]  = valuePlus;
   }
+  for(int i = 1; i <= hA1TMinus->GetNbinsX(); i++){
+    yIntegMinus[i-1] = hA1TMinus->Integral(1, i)/hA1TMinus->Integral();
+    yIntegPlus[i-1]  = hA1TPlus->Integral(1, i)/hA1TPlus->Integral();
+  }
+
   c1->cd();
+  TGraph* gA1TMinus = new TGraph(100, x, yMinus);
+  gA1TMinus->SetName("gA1TMinus");
+  gDirectory->Append(gA1TMinus);
+  TGraph* gA1TPlus = new TGraph(100,  x, yPlus);
+  gA1TPlus->SetName("gA1TPlus");
+  gDirectory->Append(gA1TPlus);
+  TGraph* gNormA1TMinus = new TGraph(100, x, yIntegMinus);
+  gNormA1TMinus->SetName("gNormA1TMinus");
+  gDirectory->Append(gNormA1TMinus);
+  TGraph* gNormA1TPlus = new TGraph(100,  x, yIntegPlus);
+  gNormA1TPlus->SetName("gNormA1TPlus");
+  gDirectory->Append(gNormA1TPlus);
+
   hA1TMinus->Draw();
   c1->SaveAs("hA1TMinus.pdf");
   hA1TPlus->Draw();

@@ -52,21 +52,23 @@ public:
 private:
   double z_;
   double DoEval(const double*) const;
-  unsigned int NDim() const { return 3;}
+  unsigned int NDim() const { return 2;}
+  mutable long counter_;
 };
 
 
-Integrand::Integrand(double z): z_(z){
+Integrand::Integrand(double z): z_(z), counter_(0){
 }
 void Integrand::SetParameterZ(double z){
   z_ = z;
 }
-Integrand::~Integrand(){}
+Integrand::~Integrand(){ cout << "counter " << counter_ << endl;}
 
 double Integrand::DoEval(const double* input) const{
 
   //cout <<  input[0] << " --- " << input[1] << endl;
 
+  counter_++;
   
   double mRho = 0.770;
   double mA1  = 1.260;
@@ -74,28 +76,25 @@ double Integrand::DoEval(const double* input) const{
   double A    = ( mRho*mRho + mA1*mA1)/(mA1*mRho);
   double B    = (-mRho*mRho + mA1*mA1)/(mA1*mRho);
   double C    = 2*mA1/mRho;
-  double q             = 1./2*TMath::Sqrt(mRho*mRho-4*mPi*mPi);
+  double q    = 1./2*TMath::Sqrt(mRho*mRho-4*mPi*mPi);
 
-  double x =  1./mA1*(mRho/4*A + mRho/4*B*input[0] + q*B/2*input[1] + q*A/2*input[0]*input[1]  - 
-		      q*TMath::Sqrt(1-input[1]*input[1])*TMath::Sqrt(1-input[0]*input[0])*TMath::Cos(input[2]));
+  //double x =  1./mA1*(mRho/4*A + mRho/4*B*input[0] + q*B/2*input[1] + q*A/2*input[0]*input[1]  - 
+  //	      q*TMath::Sqrt(1-input[1]*input[1])*TMath::Sqrt(1-input[0]*input[0])*TMath::Cos(input[2]));
   
-  double integrand = TMath::Abs(x-z_)<0.06 ? 
-    (A*input[0]*input[1]-2*TMath::Sqrt(1-input[0]*input[0])*TMath::Sqrt(1-input[1]*input[1])*TMath::Cos(input[2]))*
-    (A*input[0]*input[1]-2*TMath::Sqrt(1-input[0]*input[0])*TMath::Sqrt(1-input[1]*input[1])*TMath::Cos(input[2]))/
-    (8*TMath::Pi()/9*(A*A+8)) : 0;
+  double cosPhiRho =
+    -(mA1*z_ - mRho/4*A - mRho/4*B*input[0] - q*B/2*input[1] - q*A/2*input[0]*input[1])/
+    (q*TMath::Sqrt(1-input[0]*input[0])*TMath::Sqrt(1-input[1]*input[1]));
+  if( cosPhiRho<-1 || cosPhiRho>1) return 0.;
 
-  //double integrand = TMath::Abs(x-z_)<0.06 ? 
-  //((A*TMath::Sqrt(1-input[0]*input[0])*input[1] + 2*input[0]*TMath::Sqrt(1-input[1]*input[1])*TMath::Cos(input[2]))*
-  // (A*TMath::Sqrt(1-input[0]*input[0])*input[1] + 2*input[0]*TMath::Sqrt(1-input[1]*input[1])*TMath::Cos(input[2])) +
-  // 4*(1-input[1]*input[1])*TMath::Sin(input[2])*TMath::Sin(input[2]))/
-  //(16*TMath::Pi()/9*(A*A+8)) : 0;
+  double integrand =   
+    (A*input[0]*input[1]-2*TMath::Sqrt(1-input[0]*input[0])*TMath::Sqrt(1-input[1]*input[1])* cosPhiRho)*
+    (A*input[0]*input[1]-2*TMath::Sqrt(1-input[0]*input[0])*TMath::Sqrt(1-input[1]*input[1])* cosPhiRho)/
+    (8*TMath::Pi()/9*(A*A+8))/
+    (q/mA1 * TMath::Sqrt(1-cosPhiRho*cosPhiRho) * TMath::Sqrt(1-input[0]*input[0]) * TMath::Sqrt(1-input[1]*input[1]));
+  if(integrand<0) cout << "Negative value at cosPhiRho" << cosPhiRho << ", cosThetaA1 "
+ 		       << input[0] << ", cosThetaRho " << input[1] << " !!!!" << endl;
   
-
-  //double V    = C*z_ - A/2 - B/2*TMath::Cos(input[0])- B/2*TMath::Cos(input[1]) -A/2*TMath::Cos(input[1])*TMath::Cos(input[0]);
-  //double integrand = TMath::Sin(input[0])*TMath::Sin(input[1])*TMath::Sin(input[0])*TMath::Sin(input[1]) - V*V >0 ?
-  //(2*TMath::Sin(input[0])*TMath::Sin(input[1])/mRho/TMath::Sqrt(TMath::Sin(input[0])*TMath::Sin(input[1])*TMath::Sin(input[0])*TMath::Sin(input[1]) - V*V))*
-  //(A*A*TMath::Cos(input[0])*TMath::Cos(input[0])*TMath::Cos(input[1])*TMath::Cos(input[1]) + 4*A*TMath::Cos(input[0])*TMath::Cos(input[1])*V + 4*V*V ) :
-  //0;
+  
 
   return integrand;
 }
@@ -144,17 +143,17 @@ double pdf(string polarization, double cosThetaA, double cosThetaRho, double phi
 
 double myIntegrator(double z){
 
-  fwlite::TFileService fs = fwlite::TFileService("pdf.root");
+  //fwlite::TFileService fs = fwlite::TFileService("pdf.root");
+  //TH1F* hXL = new TH1F("hXL","",400,0,1);
+  //TH1F* hXT = new TH1F("hXT","",400,0,1);
 
-  TH1F* hXL = new TH1F("hXL","",400,0,1);
-  TH1F* hXT = new TH1F("hXT","",400,0,1);
-
-  //Integrand* IntegrandA1 = new Integrand(0);
-  //IntegrandA1->SetParameterZ(z);
-  //ROOT::Math::IntegratorMultiDim* integrator_ = new ROOT::Math::IntegratorMultiDim(*IntegrandA1);
-  //integrator_->SetRelTolerance(1E-10);
-  //integrator_->SetFunction(*IntegrandA1);
-  //(integrator_->Options()).SetNCalls(300000);
+  Integrand* IntegrandA1 = new Integrand(0);
+  IntegrandA1->SetParameterZ(z);
+  ROOT::Math::IntegratorMultiDim* integrator_ = new ROOT::Math::IntegratorMultiDim(*IntegrandA1,
+										   ROOT::Math::IntegrationMultiDim::kADAPTIVE,
+										   1.E-9, 1E-9,1000000);
+  integrator_->SetRelTolerance(1E-16);
+  integrator_->SetFunction(*IntegrandA1);
 
   //TF3 f("pdf", pdfTF3, -1,1,-1,1, 0, 2*TMath::Pi(),1);
   //f.SetParameter(0,z);
@@ -167,15 +166,18 @@ double myIntegrator(double z){
   //ig->SetRelTolerance(0.00001);
   
 
-  //const double xMin[] = {-1,-1,0};
-  //const double xMax[] = { 1, 1,2*TMath::Pi()};
+  const double xMin[] = {-1,-1};
+  const double xMax[] = { 1, 1};
 
-  //double integral  = integrator_->Integral(xMin,xMax);
+  double integral  = integrator_->Integral(xMin,xMax);
   //double integral  = ig->Integral(xMin,xMax);
   //cout << integral << endl;
-  //return integral;
 
-  
+  delete IntegrandA1;
+
+  return integral;
+
+  /*
   double mRho = 0.770;
   double mA1  = 1.260;
   double mPi  = 0.1396;
@@ -207,16 +209,22 @@ double myIntegrator(double z){
   hXL->Scale(1./hXL->Integral());
   hXT->Scale(1./hXT->Integral());
 
-  return double(1); 
+  delete hXL; delete hXT;
+
+  return double(1);
+  */
 }
 
 void makePlot(){
 
   fwlite::TFileService fs = fwlite::TFileService("pdf.root");
-  TH1F* hXL = new TH1F("hXL","",80,0,1);
+  TH1F* hXL = new TH1F("hXL","",100,0,1);
 
-  for(int i = 0 ; i < 80; i++){
-    hXL->SetBinContent(i+1,myIntegrator( i/80.));
+  //hXL->Fill( 0.5 , myIntegrator( 0.5 ));
+
+  for(int i = 0 ; i < 1001; i++){
+      double x = i/1000.;
+      hXL->Fill( x , myIntegrator( x ));
   }
 
 }
@@ -226,16 +234,16 @@ void makePlot(){
 int main(int argc, const char* argv[])
 {
 
-  std::cout << "plotMuTau()" << std::endl;
+  std::cout << "integrator of A1 distinguishable pion xFraction" << std::endl;
   gROOT->SetBatch(true);
  
 
   gSystem->Load("libFWCoreFWLite");
   AutoLibraryLoader::enable();
 
-  //makePlot();
+  makePlot();
 
-  myIntegrator(  1.0 );
+  //myIntegrator(  1.0 );
 
 }
 
