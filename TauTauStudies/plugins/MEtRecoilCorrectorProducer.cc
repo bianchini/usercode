@@ -89,7 +89,7 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
 
     edm::Handle<reco::GenParticleCollection> genHandle;
     const reco::GenParticleCollection* genParticles = 0;
-    iEvent.getByLabel(edm::InputTag("genParticles"),genHandle);
+    iEvent.getByLabel(genParticlesTag_,genHandle);
     if( !genHandle.isValid() )  
       edm::LogError("DataNotAvailable")
 	<< "No gen particles label available \n";
@@ -163,7 +163,7 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
 
     edm::Handle<reco::GenParticleCollection> genHandle;
     const reco::GenParticleCollection* genParticles = 0;
-    iEvent.getByLabel(edm::InputTag("genParticles"),genHandle);
+    iEvent.getByLabel(genParticlesTag_,genHandle);
     if( !genHandle.isValid() )  
       edm::LogError("DataNotAvailable")
 	<< "No gen particles label available \n";

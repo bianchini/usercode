@@ -35,7 +35,8 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
       dxyWrtPV = (aMuon.globalTrack())->dxy( (*vertexes)[0].position() ) ;
       dzWrtPV  = (aMuon.globalTrack())->dz( (*vertexes)[0].position() ) ;
     }
-    else if (vertexes->size()!=0 && aMuon.isTrackerMuon()){
+    // if it is at least tracker, than use the inner track
+    if (vertexes->size()!=0 && aMuon.isTrackerMuon()){
       dxyWrtPV = (aMuon.innerTrack())->dxy( (*vertexes)[0].position() ) ;
       dzWrtPV  = (aMuon.innerTrack())->dz( (*vertexes)[0].position() ) ;
     }

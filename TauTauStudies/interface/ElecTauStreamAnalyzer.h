@@ -17,7 +17,6 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1F.h"
-#include <TRandom3.h>
 
 #include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
 
@@ -49,8 +48,6 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   TFile* file_;
   TTree* tree_;
 
-  TRandom3* tRandom_;
-
   edm::LumiReWeighting LumiWeights_;
  
   edm::InputTag diTauTag_;
@@ -62,6 +59,8 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   edm::InputTag electronsRelTag_;
   edm::InputTag verticesTag_;
   edm::InputTag triggerResultsTag_;
+  edm::InputTag genParticlesTag_;
+  edm::InputTag genTausTag_;
 
   bool isMC_;
   bool verbose_;
@@ -74,6 +73,8 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< float >* jetsChNfraction_;
   std::vector< float >* jetsChEfraction_;
   std::vector< float >* jetMoments_;
+  std::vector< float >* metSgnMatrix_;
+  
 
   std::vector< int >* tauXTriggers_;
   std::vector< int >* triggerBits_;
@@ -109,6 +110,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
 
   
   unsigned long run_,event_,lumi_;
+  int index_;
   float sumEt_;
   float chIsoLeg1v1_,nhIsoLeg1v1_,phIsoLeg1v1_,elecIsoLeg1v1_,muIsoLeg1v1_;
   float chIsoPULeg1v1_,nhIsoPULeg1v1_,phIsoPULeg1v1_;
@@ -119,6 +121,9 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   float chIsoLeg2_,nhIsoLeg2_,phIsoLeg2_;
   float dxy1_,dxy2_;
   float dz1_,dz2_;
+  float dxyE1_,dxyE2_;
+  float dzE1_,dzE2_;
+  float pfJetPt_;
   float MtLeg1_;
   float pZeta_;
   float pZetaVis_;
@@ -128,9 +133,13 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   int numOfDiTaus_;
   int numOfLooseIsoDiTaus_;
   int decayMode_;
+  int genDecayMode_;
+  int genPolarization_;
   float diTauNSVfitMass_;
   float diTauNSVfitMassErrUp_;
   float diTauNSVfitMassErrDown_;
+  float diTauSVfitMassErrUp_;
+  float diTauSVfitMassErrDown_;
   float visibleTauMass_;
 
   float leadPFChargedHadrMva_;
@@ -152,8 +161,10 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
 
   int tightestCutBasedWP_;
   int tightestMVAWP_;
-  float tightestDanieleMVAWP_;
-  int tightestAntiECutsWP_;
+  float danieleMVA_;
+  float mitMVA_;
+  int antiConv_;
+  int tightestAntiEWP_;
   int tightestCiCWP_;
   int tightestHPSWP_;
   int tightestHPSDBWP_;
@@ -177,6 +188,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   //int isEleCutBasedID_;
 
   float diTauCharge_;
+  float chargeL1_;
   float rhoFastJet_;
   float rhoNeutralFastJet_;
   float embeddingWeight_;

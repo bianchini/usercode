@@ -17,7 +17,6 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1F.h"
-#include <TRandom3.h>
 
 
 #include <string>
@@ -50,8 +49,6 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   TFile* file_;
   TTree* tree_;
 
-  TRandom3* tRandom_;
-
   edm::LumiReWeighting LumiWeights_;
 
   edm::InputTag diTauTag_;
@@ -63,6 +60,8 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   edm::InputTag muonsRelTag_;
   edm::InputTag verticesTag_;
   edm::InputTag triggerResultsTag_;
+  edm::InputTag genParticlesTag_;
+  edm::InputTag genTausTag_;
 
   bool isMC_;
   bool verbose_;
@@ -75,6 +74,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< float >* jetsChNfraction_;
   std::vector< float >* jetsChEfraction_;
   std::vector< float >* jetMoments_;
+  std::vector< float >* metSgnMatrix_;
 
   std::vector< float >* gammadEta_;
   std::vector< float >* gammadPhi_;
@@ -109,6 +109,9 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* pfMuons_; 
   
   unsigned long run_,event_,lumi_;
+  int index_;
+  int validityCA_,validityICA_;
+  float x1CollApprox_,x2CollApprox_;
   float sumEt_;
   float chIsoLeg1v1_,nhIsoLeg1v1_,phIsoLeg1v1_,elecIsoLeg1v1_,muIsoLeg1v1_;
   float chIsoPULeg1v1_,nhIsoPULeg1v1_,phIsoPULeg1v1_;
@@ -117,6 +120,9 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   float chIsoLeg2_,nhIsoLeg2_,phIsoLeg2_;
   float dxy1_,dxy2_;
   float dz1_,dz2_;
+  float dxyE1_,dxyE2_;
+  float dzE1_,dzE2_;
+  float pfJetPt_;
   float MtLeg1_;
   float pZeta_;
   float pZetaVis_;
@@ -126,10 +132,15 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   int numOfDiTaus_;
   int numOfLooseIsoDiTaus_;
   int decayMode_;
+  int genDecayMode_;
+  int genPolarization_;
   float diTauNSVfitMass_;
   float diTauNSVfitMassErrUp_;
   float diTauNSVfitMassErrDown_;
+  float diTauSVfitMassErrUp_;
+  float diTauSVfitMassErrDown_;
   float visibleTauMass_;
+  float visibleGenTauMass_;
 
   float leadPFChargedHadrMva_;
   float leadPFChargedHadrHcalEnergy_;
@@ -157,6 +168,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   int hasKft_;
 
   float diTauCharge_;
+  float chargeL1_;
   float rhoFastJet_;
   float rhoNeutralFastJet_;
   float embeddingWeight_;

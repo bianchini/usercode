@@ -35,6 +35,7 @@
 <use   name="DataFormats/TrackReco"/>
 <use   name="RecoEgamma/EgammaTools"/>
 <use   name="PhysicsTools/Utilities"/>
+<use   name="PhysicsTools/JetMCUtils"/>
 <use   name="lhapdf"/>
 <use   name="boost"/>
 <use   name="rootcore"/>
