@@ -37,6 +37,8 @@ class MuonsUserEmbedded : public edm::EDProducer{
   reco::isodeposit::AbsVetos vetos2011Neutral_;  
   reco::isodeposit::AbsVetos vetos2011Photons_;
 
+  bool fitUnbiasedVertex_;
+
 };
 
 

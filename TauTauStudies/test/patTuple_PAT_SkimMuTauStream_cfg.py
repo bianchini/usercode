@@ -265,8 +265,9 @@ if hasattr(process,"patTrigger"):
 
 process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
     "MuonsUserEmbedded",
-    muonTag   = cms.InputTag("selectedPatMuonsTriggerMatch"),
-    vertexTag = cms.InputTag("offlinePrimaryVertices")
+    muonTag            = cms.InputTag("selectedPatMuonsTriggerMatch"),
+    vertexTag          = cms.InputTag("offlinePrimaryVertices"),
+    fitUnbiasedVertex  = cms.bool(True)
     )
 
 process.selectedPatElectronsTriggerMatchUserEmbedded = cms.EDProducer(
@@ -274,13 +275,15 @@ process.selectedPatElectronsTriggerMatchUserEmbedded = cms.EDProducer(
     electronTag = cms.InputTag("selectedPatElectronsTriggerMatch"),
     vertexTag   = cms.InputTag("offlinePrimaryVertices"),
     isMC        = cms.bool(runOnMC),
-    doMVA       = cms.bool(False),
+    doMVAMIT    = cms.bool(False),
+    doMVADaniele= cms.bool(False),
     inputFileName0 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet0LowPt_NoIPInfo_BDTG.weights.xml'),
     inputFileName1 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet1LowPt_NoIPInfo_BDTG.weights.xml'),
     inputFileName2 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet2LowPt_NoIPInfo_BDTG.weights.xml'),
     inputFileName3 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet0HighPt_NoIPInfo_BDTG.weights.xml'),
     inputFileName4 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet1HighPt_NoIPInfo_BDTG.weights.xml'),
-    inputFileName5 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet2HighPt_NoIPInfo_BDTG.weights.xml')  
+    inputFileName5 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet2HighPt_NoIPInfo_BDTG.weights.xml'),
+    inputFileNameMVADaniele = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/TMVA_BDTSimpleCat.weights.xml')
     )
 
 process.selectedPatTausTriggerMatchUserEmbedded = cms.EDProducer(

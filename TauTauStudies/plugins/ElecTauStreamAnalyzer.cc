@@ -40,6 +40,19 @@
 
 #include "PhysicsTools/JetMCUtils/interface/JetMCTag.h"
 
+////// for DCA ////////////////////
+
+#include "TrackingTools/Records/interface/TransientTrackRecord.h"
+#include "TrackingTools/Records/interface/TransientRecHitRecord.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
+#include "TrackingTools/PatternTools/interface/Trajectory.h"
+#include "TrackingTools/PatternTools/interface/TrajectoryMeasurement.h"
+#include "TrackingTools/PatternTools/interface/ClosestApproachInRPhi.h"
+#include "TrackingTools/PatternTools/interface/TwoTrackMinimumDistance.h"
+#include "RecoVertex/KinematicFitPrimitives/interface/KinematicParticleFactoryFromTransientTrack.h"
+
+///////////////////////////////////
+
 #include "DataFormats/HLTReco/interface/TriggerTypeDefs.h"
 
 #include <vector>
@@ -90,6 +103,8 @@ void ElecTauStreamAnalyzer::beginJob(){
  
   jetsBtagHE_  = new std::vector< double >();
   jetsBtagHP_  = new std::vector< double >();
+
+  sigDCA_      = new std::vector< double >();
 
   jetsChEfraction_  = new std::vector< float >();
   jetsChNfraction_  = new std::vector< float >();
@@ -399,6 +414,8 @@ void ElecTauStreamAnalyzer::beginJob(){
   
   tree_->Branch("jetsBtagHE","std::vector<double> ",&jetsBtagHE_);
   tree_->Branch("jetsBtagHP","std::vector<double> ",&jetsBtagHP_);
+  tree_->Branch("sigDCA","std::vector<double>",&sigDCA_);
+
 
   tree_->Branch("jetMoments","std::vector<float> ",&jetMoments_);
 
@@ -564,7 +581,7 @@ ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
   delete jetsP4_; delete jetsIDP4_; delete jetsIDL1OffsetP4_; delete jetsIDUpP4_; delete jetsIDDownP4_; 
   delete METP4_; delete diTauVisP4_; delete diTauCAP4_; delete diTauICAP4_; 
   delete diTauSVfitP4_; delete genVP4_;
-  delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_;
+  delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_; delete sigDCA_;
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;delete extraElectrons_; delete pfElectrons_;
   delete genTausP4_;
   delete jetsChNfraction_; delete jetsChEfraction_; delete jetMoments_;
@@ -581,6 +598,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   pfElectrons_->clear();
   triggerBits_->clear();
 
+  edm::ESHandle<TransientTrackBuilder> builder;
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",builder);
+  transientTrackBuilder_ = builder.product();
   
   edm::Handle<PATElecTauPairCollection> diTauHandle;
   iEvent.getByLabel(diTauTag_,diTauHandle);
@@ -1018,6 +1038,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     genTausP4_->clear();
     jetsBtagHE_->clear();
     jetsBtagHP_->clear();
+    sigDCA_->clear();
     tauXTriggers_->clear();
     extraElectrons_->clear();
     METP4_->clear();
@@ -1050,6 +1071,30 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     for(unsigned int i=0; i<electronsRel->size(); i++){
       if( Geom::deltaR( (*electronsRel)[i].p4(),leg1->p4())>0.3) 
 	extraElectrons_->push_back( (*electronsRel)[i].p4() );
+    }
+
+
+    double iDCA3D,iDCA3DE,iDCA2D,iDCA2DE,
+      iDCARPhi3D,iDCARPhi3DE,iDCARPhi2D,iDCARPhi2DE;
+    
+    if( (leg1->gsfTrack()).isNonnull() && 
+	(leg2->leadPFChargedHadrCand()->trackRef()).isNonnull())
+      computeDCASig(iDCA3D,iDCA3DE,iDCA2D,iDCA2DE,
+		    iDCARPhi3D,iDCARPhi3DE,iDCARPhi2D,iDCARPhi2DE,
+		    (const reco::Track*)((leg1->gsfTrack()).get()),
+		    (const reco::Track*)((leg2->leadPFChargedHadrCand()->trackRef()).get())
+		    );
+    sigDCA_->push_back(iDCA3D);
+    sigDCA_->push_back(iDCA3DE);
+    sigDCA_->push_back(iDCA2D);
+    sigDCA_->push_back(iDCA2DE);
+    sigDCA_->push_back(iDCARPhi3D);
+    sigDCA_->push_back(iDCARPhi3DE);
+    sigDCA_->push_back(iDCARPhi2D);
+    sigDCA_->push_back(iDCARPhi2DE);
+    if(verbose_){
+      cout << "DCA3D: " << iDCA3D << endl;
+      cout << "DCA3DE: " << iDCA3DE << endl;
     }
 
     //mvaAntiE_ = antiE_->MVAValue( leg2 );
@@ -1887,6 +1932,161 @@ pat::Jet* ElecTauStreamAnalyzer::newJetMatched( const pat::Jet* oldJet , const p
   return matchedJet;
 
 }
+
+
+
+void ElecTauStreamAnalyzer::computeDCASig(double &iDCA3D    ,double &iDCA3DE    ,double &iDCA2D    ,double &iDCA2DE,
+					  double &iDCARPhi3D,double &iDCARPhi3DE,double &iDCARPhi2D,double &iDCARPhi2DE,
+					  const reco::Track *iTrack1,const reco::Track *iTrack2){
+  
+  iDCA3D      = -1.0;
+  iDCA3DE     = -1.0;
+  iDCA2D      = -1.0;
+  iDCA2DE     = -1.0;
+  iDCARPhi3D  = -1.0;
+  iDCARPhi3DE = -1.0;
+  iDCARPhi2D  = -1.0;
+  iDCARPhi2DE = -1.0;
+  
+  if (iTrack1==NULL) return;
+  if (iTrack2==NULL) return;
+
+  float pion_mass    = 0.139657;
+  float pion_sigma   = pion_mass*1.e-6;  
+  float muon_mass    = 0.105658;
+  float muon_sigma   = muon_mass*1.e-6;
+  float mass1        = muon_mass;
+  float mass2        = pion_mass;
+  float mass_sigma1  = muon_sigma;
+  float mass_sigma2  = pion_sigma;
+
+  reco::TransientTrack transientTrack1;
+  reco::TransientTrack transientTrack2;
+  
+  transientTrack1 = transientTrackBuilder_->build(*iTrack1);
+  transientTrack2 = transientTrackBuilder_->build(*iTrack2);
+  reco::TransientTrack * trk1Ptr = & transientTrack1;
+  reco::TransientTrack * trk2Ptr = & transientTrack2;
+
+  FreeTrajectoryState track1State = trk1Ptr->impactPointTSCP().theState();
+  FreeTrajectoryState track2State = trk2Ptr->impactPointTSCP().theState();
+  
+  if (trk1Ptr->impactPointTSCP().isValid() &&  trk2Ptr->impactPointTSCP().isValid()) {
+    
+    ClosestApproachInRPhi cApp;
+    TwoTrackMinimumDistance minDist;
+    
+    typedef ROOT::Math::SVector<double, 3> SVector3;
+    typedef ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3> > SMatrixSym3D;   
+    cApp.calculate(track1State,track2State);
+    minDist.calculate(track1State,track2State);
+    if (minDist.status()) {
+      
+      minDist.distance();
+      std::pair<GlobalPoint,GlobalPoint> pcaLeptons = minDist.points();
+      GlobalPoint track1PCA = pcaLeptons.first;
+      GlobalPoint track2PCA = pcaLeptons.second;
+      
+      //Creating a KinematicParticleFactory
+      KinematicParticleFactoryFromTransientTrack pFactory;
+      
+      //initial chi2 and ndf before kinematic fits.
+      float chi = 0.;
+      float ndf = 0.;
+      RefCountedKinematicParticle track1Part = pFactory.particle(transientTrack1,mass1,chi,ndf,mass_sigma1); 
+      RefCountedKinematicParticle track2Part = pFactory.particle(transientTrack2,mass2,chi,ndf,mass_sigma2); 
+
+      SVector3 distanceVector(track1PCA.x()-track2PCA.x(),
+			      track1PCA.y()-track2PCA.y(),
+			      track1PCA.z()-track2PCA.z());
+      
+      iDCA3D = ROOT::Math::Mag(distanceVector);
+      
+      std::vector<float> vvv(6);
+      
+      vvv[0] = track1Part->stateAtPoint(track1PCA).kinematicParametersError().matrix()(0,0);
+      vvv[1] = track1Part->stateAtPoint(track1PCA).kinematicParametersError().matrix()(0,1);   
+      vvv[2] = track1Part->stateAtPoint(track1PCA).kinematicParametersError().matrix()(1,1);
+      vvv[3] = track1Part->stateAtPoint(track1PCA).kinematicParametersError().matrix()(0,2);
+      vvv[4] = track1Part->stateAtPoint(track1PCA).kinematicParametersError().matrix()(1,2);   
+      vvv[5] = track1Part->stateAtPoint(track1PCA).kinematicParametersError().matrix()(2,2);
+      
+      SMatrixSym3D track1PCACov(vvv.begin(),vvv.end());
+      
+      vvv[0] = track2Part->stateAtPoint(track2PCA).kinematicParametersError().matrix()(0,0);
+      vvv[1] = track2Part->stateAtPoint(track2PCA).kinematicParametersError().matrix()(0,1);   
+      vvv[2] = track2Part->stateAtPoint(track2PCA).kinematicParametersError().matrix()(1,1);
+      vvv[3] = track2Part->stateAtPoint(track2PCA).kinematicParametersError().matrix()(0,2);
+      vvv[4] = track2Part->stateAtPoint(track2PCA).kinematicParametersError().matrix()(1,2);   
+      vvv[5] = track2Part->stateAtPoint(track2PCA).kinematicParametersError().matrix()(2,2);
+      
+      SMatrixSym3D track2PCACov(vvv.begin(),vvv.end());
+      
+      SMatrixSym3D totCov = track1PCACov + track2PCACov;
+      
+      if(iDCA3D != 0) iDCA3DE   = sqrt(ROOT::Math::Similarity(totCov, distanceVector))/iDCA3D;
+      if(iDCA3D == 0) iDCA3DE   = 0.;
+
+      distanceVector(2) = 0.0;
+      iDCA2D    = ROOT::Math::Mag(distanceVector);
+      if(iDCA2D != 0) iDCA2DE   = sqrt(ROOT::Math::Similarity(totCov, distanceVector))/iDCA2D;
+      if(iDCA2D == 0) iDCA2DE   = 0.;
+    }
+    if (cApp.status()) {
+      
+      cApp.distance();
+      std::pair<GlobalPoint,GlobalPoint> pcaLeptons = cApp.points();
+      GlobalPoint track1PCA = pcaLeptons.first;
+      GlobalPoint track2PCA = pcaLeptons.second;
+
+      //Creating a KinematicParticleFactory
+      KinematicParticleFactoryFromTransientTrack pFactory;
+      
+      //initial chi2 and ndf before kinematic fits.
+      float chi = 0.;
+      float ndf = 0.;
+      RefCountedKinematicParticle track1Part = pFactory.particle(transientTrack1,mass1,chi,ndf,mass_sigma1); 
+      RefCountedKinematicParticle track2Part = pFactory.particle(transientTrack2,mass2,chi,ndf,mass_sigma2); 
+ 
+      SVector3 distanceVector(track1PCA.x()-track2PCA.x(),
+			      track1PCA.y()-track2PCA.y(),
+			      track1PCA.z()-track2PCA.z());
+      iDCARPhi3D = ROOT::Math::Mag(distanceVector);
+      
+      std::vector<float> vvv(6);
+      
+      vvv[0] = track1Part->stateAtPoint(track1PCA).kinematicParametersError().matrix()(0,0);
+      vvv[1] = track1Part->stateAtPoint(track1PCA).kinematicParametersError().matrix()(0,1);	   
+      vvv[2] = track1Part->stateAtPoint(track1PCA).kinematicParametersError().matrix()(1,1);
+      vvv[3] = track1Part->stateAtPoint(track1PCA).kinematicParametersError().matrix()(0,2);
+      vvv[4] = track1Part->stateAtPoint(track1PCA).kinematicParametersError().matrix()(1,2);	   
+      vvv[5] = track1Part->stateAtPoint(track1PCA).kinematicParametersError().matrix()(2,2);
+      
+      SMatrixSym3D track1PCACov(vvv.begin(),vvv.end());
+
+      vvv[0] = track2Part->stateAtPoint(track2PCA).kinematicParametersError().matrix()(0,0);
+      vvv[1] = track2Part->stateAtPoint(track2PCA).kinematicParametersError().matrix()(0,1);	   
+      vvv[2] = track2Part->stateAtPoint(track2PCA).kinematicParametersError().matrix()(1,1);
+      vvv[3] = track2Part->stateAtPoint(track2PCA).kinematicParametersError().matrix()(0,2);
+      vvv[4] = track2Part->stateAtPoint(track2PCA).kinematicParametersError().matrix()(1,2);	   
+      vvv[5] = track2Part->stateAtPoint(track2PCA).kinematicParametersError().matrix()(2,2);
+      
+      SMatrixSym3D track2PCACov(vvv.begin(),vvv.end());
+
+      SMatrixSym3D totCov = track1PCACov + track2PCACov;
+      
+      if(iDCARPhi3D != 0) iDCARPhi3DE = sqrt(ROOT::Math::Similarity(totCov, distanceVector))/iDCARPhi3D;
+      if(iDCARPhi3D == 0) iDCARPhi3DE = 0.;
+
+      distanceVector(2) = 0.0;
+      iDCARPhi2D  = ROOT::Math::Mag(distanceVector);
+      if(iDCARPhi2D != 0) iDCARPhi2DE = sqrt(ROOT::Math::Similarity(totCov, distanceVector))/iDCARPhi2D;
+      if(iDCARPhi2D == 0) iDCARPhi2DE = 0.;
+    }
+  }
+ 
+}
+
 
 
 void ElecTauStreamAnalyzer::endJob(){}

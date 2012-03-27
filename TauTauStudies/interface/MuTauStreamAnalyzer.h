@@ -10,6 +10,9 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
+#include "DataFormats/TrackReco/interface/Track.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
+
 
 #include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
 
@@ -40,6 +43,10 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   unsigned int jetID( const pat::Jet* jet, const reco::Vertex* vtx, std::vector<float> vtxZ, std::map<std::string,float>& map_);
   pat::Jet* newJetMatched( const pat::Jet* oldJet , const pat::JetCollection* newJets);
 
+  void computeDCASig(double &iDCA3D    ,double &iDCA3DE    ,double &iDCA2D    ,double &iDCA2DE,
+		     double &iDCARPhi3D,double &iDCARPhi3DE,double &iDCARPhi2D,double &iDCARPhi2DE,
+		     const reco::Track *iTrack1,const reco::Track *iTrack2);
+
   void beginJob() ;
   void analyze(const edm::Event&  iEvent, const edm::EventSetup& iSetup);
   void endJob() ;
@@ -62,6 +69,8 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   edm::InputTag triggerResultsTag_;
   edm::InputTag genParticlesTag_;
   edm::InputTag genTausTag_;
+  const  TransientTrackBuilder *transientTrackBuilder_;
+
 
   bool isMC_;
   bool verbose_;
@@ -83,6 +92,8 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
 
   std::vector< int >* tauXTriggers_;
   std::vector< int >* triggerBits_;
+
+  std::vector< double >* sigDCA_;
 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsP4_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* jetsIDP4_;
