@@ -29,7 +29,7 @@ class ElectronMVAEstimator {
   Float_t       e1x5e5x5;
   Float_t       eleopout;
   Float_t       detaeleout;
- Float_t       kfchi2;
+  Float_t       kfchi2;
   Float_t       dist;
   Float_t       dcot;
   Float_t       eta;

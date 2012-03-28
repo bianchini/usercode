@@ -80,8 +80,8 @@ void lineShape(){
     yPlus[i-1]  = valuePlus;
   }
   for(int i = 1; i <= hRhoLMinus->GetNbinsX(); i++){
-    yIntegMinus[i-1] = hRhoLMinus->Integral(1, i)/hRhoLMinus->Integral();
-    yIntegPlus[i-1] = hRhoLPlus->Integral(1, i)/hRhoLPlus->Integral();
+    yIntegMinus[i-1] = hRhoLMinus->Integral(1, i,"width");
+    yIntegPlus[i-1] = hRhoLPlus->Integral(1, i,"width");
   }
 
   c1->cd();
@@ -122,8 +122,8 @@ void lineShape(){
     yPlus[i-1]  = valuePlus;
   }
   for(int i = 1; i <= hRhoTMinus->GetNbinsX(); i++){
-    yIntegMinus[i-1] = hRhoTMinus->Integral(1, i)/hRhoTMinus->Integral();
-    yIntegPlus[i-1]  = hRhoTPlus->Integral(1, i)/hRhoTPlus->Integral();
+    yIntegMinus[i-1] = hRhoTMinus->Integral(1, i,"width");
+    yIntegPlus[i-1]  = hRhoTPlus->Integral(1, i,"width");
   }
 
   c1->cd();
@@ -163,8 +163,8 @@ void lineShape(){
     yPlus[i-1]  = valuePlus;
   }
   for(int i = 1; i <= hA1LMinus->GetNbinsX(); i++){
-    yIntegMinus[i-1] = hA1LMinus->Integral(1, i)/hA1LMinus->Integral();
-    yIntegPlus[i-1]  = hA1LPlus->Integral(1, i)/hA1LPlus->Integral();
+    yIntegMinus[i-1] = hA1LMinus->Integral(1, i,"width");
+    yIntegPlus[i-1]  = hA1LPlus->Integral(1, i,"width");
   }
 
   c1->cd();
@@ -204,8 +204,8 @@ void lineShape(){
     yPlus[i-1]  = valuePlus;
   }
   for(int i = 1; i <= hA1TMinus->GetNbinsX(); i++){
-    yIntegMinus[i-1] = hA1TMinus->Integral(1, i)/hA1TMinus->Integral();
-    yIntegPlus[i-1]  = hA1TPlus->Integral(1, i)/hA1TPlus->Integral();
+    yIntegMinus[i-1] = hA1TMinus->Integral(1, i,"width");
+    yIntegPlus[i-1]  = hA1TPlus->Integral(1, i,"width");
   }
 
   c1->cd();

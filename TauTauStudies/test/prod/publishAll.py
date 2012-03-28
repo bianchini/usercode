@@ -306,10 +306,11 @@ tasksMuTauA = [
     #'VH145-MuTau-pythia-PUS6_skim',
     #'VH160-MuTau-pythia-PUS6_skim',
     #'WJets-MuTau-madgraph-PUS6_skim',
-    'W3Jets-MuTau-madgraph-PUS6_skim'
+    #'W3Jets-MuTau-madgraph-PUS6_skim'
     #'WW-MuTau-pythia-PUS6_skim',
     #'WZ-MuTau-pythia-PUS6_skim',
     #'ZZ-MuTau-pythia-PUS6_skim'
+    'QCDmu-MuTau-pythia-20-15-PUS6_skim'
     ]
 
 tasksMuTauB = [
@@ -389,6 +390,18 @@ tasksMuEmbedding  = [
     'Run2011A-MuTau-05AugReReco-Embedded_skim'
     #'Run2011B-MuTau-PromptReco-v1-Embedded_skim'
     ]
+
+tasksMuNoTauIso = [
+    #'Run2011A-MuTau-05AugReReco-NoTauIso_skim',
+    #'Run2011A-MuTau-May10ReReco-NoTauIso_skim',
+    #'Run2011A-MuTau-PromptReco-NoTauIso-v4_skim',
+    #'Run2011B-MuTau-PromptReco-v1-NoTauIso-v2_skim',
+    #'Run2011A-MuTau-PromptReco-v6-NoTauIso_skim',
+    #'QCDmu-MuTau-pythia-20-15-PUS6-v4_skim'
+    'GGFH120-MuTau-powheg-PUS6-NoTauIso-v2_skim',
+    'WJets-MuTau-madgraph-PUS6-NoTauIso-v2_skim'
+    ]
+
 #publishSkim( "MuTauStream_patch2",  tasksMu )
 #publishSkim( "ElecTauStream_patchVV",  tasksElec   )
 #publishSkim( "ElecMuStream",  tasksElecMu   )
@@ -400,9 +413,13 @@ tasksMuEmbedding  = [
 #publishSkim( "ElecTauStream_08Nov2011_patch1",  tasksElecTauA   )
 #publishSkim( "ElecTauStream_08Nov2011_Embedded_patch1",  tasksElecEmbedding   )
 #publishSkim( "MuTauStream_16Nov2011_patch5",  tasksMuTauA   )
-publishSkim( "ElecTauStream_01Dec2011_patch2",  tasksElecTauA   )
+#publishSkim( "ElecTauStream_01Dec2011_patch2",  tasksElecTauA   )
 #publishSkim( "ElecTauStream_01Dec2011_patchSUSY_patch1",  tasksElecSUSY   )
 #publishSkim( "MuTauStream_16Nov2011_patchSUSY",  tasksMuSUSY   )
 #publishSkim( "MuTauStream_13Oct2011_Embedded_patch1",  tasksMuEmbedding   )
 #publishSkim( "MuTauStream_13Oct2011_patchB",  tasksMuTauB   )
 #publishSkim( "ElecTauStream_08Nov2011_Embedded", tasksElecEmbedding)
+
+publishSkim( "MuTauStream_14Feb2012_NoTauIso_patch4",tasksMuNoTauIso)
+
+#publishSkim( "MuTauStream_16Nov2011_patchQCD",    tasksMuTauA   )

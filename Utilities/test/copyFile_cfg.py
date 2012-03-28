@@ -4,7 +4,7 @@ process = cms.Process("COPY")
 
 
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 5000
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.printTree1 = cms.EDAnalyzer(
@@ -19,8 +19,18 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/vbfSkim/fd3d8d2e69bbd9130b63d5f62133a3a0/vbfSkim_250_0_vWt.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/akalinow/WJetsToLNu_TuneZ2_7TeV-madgraph-tauola/424_mutau_Fall11_v1/faebd120ba0b19af7e4a67b10c186f76/tautauSkimmAOD_99_1_uns.root'
     )
+    )
+
+process.HLTFilter = cms.EDFilter(
+    "HLTHighLevel",
+    TriggerResultsTag  = cms.InputTag("TriggerResults","","HLT"),
+    HLTPaths           = cms.vstring("HLT_IsoMu15_LooseIsoPFTau15_v9",
+                                     "HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1"),
+    eventSetupPathsKey = cms.string(''),
+    andOr              = cms.bool(True),
+    throw              = cms.bool(True)
     )
 
 
@@ -38,12 +48,16 @@ process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool(True)
     )
 
-#process.p = cms.Path( process.printTree1 )
+process.p = cms.Path( process.HLTFilter )
 
 process.out = cms.OutputModule(
     "PoolOutputModule",
     outputCommands = cms.untracked.vstring( 'keep *'),
-    fileName = cms.untracked.string('embedded.root'),
+    fileName = cms.untracked.string('WJets.root'),
 )
+
+process.out.SelectEvents = cms.untracked.PSet(
+    SelectEvents = cms.vstring('p')
+    )
 
 process.outpath = cms.EndPath(process.out)

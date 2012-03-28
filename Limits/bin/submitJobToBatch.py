@@ -50,6 +50,8 @@ def treeSkim( sample, xsection, runInSeries=False):
 ###########################################
 ###########################################
 
+#treeSkim("GGFH120-MuTau-powheg-PUS6_run",      7.10e-02*16.63 * 1.0         * 0.076531)  
+
 
 treeSkim("Run2011-MuTau-All_run",              0)                            
 treeSkim("Run2011-MuTau-Embedded-All_run",     0)                           
@@ -92,4 +94,3 @@ treeSkim("VH135-MuTau-pythia-PUS6_run",        4.52e-02*(0.4390+0.2453+0.06810 )
 treeSkim("VH140-MuTau-pythia-PUS6_run",        3.54e-02*(0.3857+0.2172+0.06072 ) * 0.108278 * 0.842954)  
 treeSkim("VH145-MuTau-pythia-PUS6_run",        2.61e-02*(0.3406+0.1930+0.05435 ) * 1.0      * 0.191843)  
 treeSkim("VH160-MuTau-pythia-PUS6_run",        5.32e-04*(0.2291+0.1334+0.03942 ) * 1.0      * 0.203857)  
-

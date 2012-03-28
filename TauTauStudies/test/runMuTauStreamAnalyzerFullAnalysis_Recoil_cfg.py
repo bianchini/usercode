@@ -27,15 +27,26 @@ else:
     process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 500
+process.MessageLogger.cerr.FwkReport.reportEvery = 5
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-16Nov2011/700226eee9a93cb10580e91b3d6e5c18/patTuples_MuTauStream_9_1_e13.root'
-    'file:./patTuples_MuTauStream.root'
+    #'file:/home/llr/cms/akalinow/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/analysis_DiTau_VBF_PAT_31_1_t3K.root'
+    #'file:./patTuples_MuTauStream.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-16Nov2011/700226eee9a93cb10580e91b3d6e5c18/patTuples_MuTauStream_10_1_w41.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-16Nov2011/700226eee9a93cb10580e91b3d6e5c18/patTuples_MuTauStream_11_1_Wuv.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-16Nov2011/700226eee9a93cb10580e91b3d6e5c18/patTuples_MuTauStream_12_1_7aY.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-16Nov2011/700226eee9a93cb10580e91b3d6e5c18/patTuples_MuTauStream_13_1_L5C.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-16Nov2011/700226eee9a93cb10580e91b3d6e5c18/patTuples_MuTauStream_14_1_8pv.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/MuTauStream-16Nov2011/cea16f7ce381f249953e69976c5a9109/patTuples_MuTauStream_10_1_yRu.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/MuTauStream-16Nov2011/cea16f7ce381f249953e69976c5a9109/patTuples_MuTauStream_11_1_Bh8.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/MuTauStream-16Nov2011/cea16f7ce381f249953e69976c5a9109/patTuples_MuTauStream_12_1_VDN.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/MuTauStream-16Nov2011/cea16f7ce381f249953e69976c5a9109/patTuples_MuTauStream_13_1_Hwg.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/MuTauStream-16Nov2011/cea16f7ce381f249953e69976c5a9109/patTuples_MuTauStream_14_1_XKE.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/SUSYGluGluToHToTauTau_M-500_7TeV-pythia6-tauola/MuTauStream-16Nov2011/d67d72c0e0080ba7d4d6c9945ad37260/patTuples_MuTauStream_10_1_8Pf.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi//TauPlusX/MuTauStream-13Oct2011-05AugReReco/c37c208594d74fa447903aef959eea7d/patTuples_MuTauStream_14_1_MHD.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi//DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_9_1_6gn.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/WJetsToLNu_TuneZ2_7TeV-madgraph-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_2_1_qa2.root'
@@ -308,13 +319,13 @@ process.tauPtEtaIDAgMuAgElecIsoTauDownCounter = process.tauPtEtaIDAgMuAgElecIsoC
 process.muPtEtaIDIso  = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("muPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04v2')<0.10 && pt>15 && abs(eta)<2.1"),
+    cut = cms.string("userFloat('PFRelIsoDB04v2')<0.50 && pt>15 && abs(eta)<2.1"),
     filter = cms.bool(False)
     )
 process.muPtEtaIDIsoPtRel  = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("muPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04v2')<0.10 && pt>14 && abs(eta)<2.1"),
+    cut = cms.string("userFloat('PFRelIsoDB04v2')<0.50 && pt>14 && abs(eta)<2.1"),
     filter = cms.bool(False)
     )
 
@@ -371,6 +382,8 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     muonsRel       = cms.InputTag("muPtEtaRelID"),
     vertices       = cms.InputTag("selectedPrimaryVertices"),
     triggerResults = cms.InputTag("patTriggerEvent"),
+    genParticles   = cms.InputTag("genParticles"),
+    genTaus        = cms.InputTag("tauGenJetsSelectorAllHadrons"),
     isMC           = cms.bool(runOnMC),
     deltaRLegJet   = cms.untracked.double(0.5),
     minCorrPt      = cms.untracked.double(15.),
@@ -458,7 +471,6 @@ if runOnMC:
         process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
         process.muTauStreamAnalyzer
         )
-
     '''
     process.pJetUp = cms.Path(
         process.allEventsFilter*
@@ -480,7 +492,8 @@ if runOnMC:
         process.diTauJetDown*process.selectedDiTauJetDown*process.selectedDiTauJetDownCounter*
         process.muTauStreamAnalyzerJetDown
         )
-
+    '''
+    '''
     process.pMEtResolutionUp = cms.Path(
         process.allEventsFilter*
         (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
@@ -518,8 +531,6 @@ if runOnMC:
         process.diTauMEtResponseDown*process.selectedDiTauMEtResponseDown*process.selectedDiTauMEtResponseDownCounter*
         process.muTauStreamAnalyzerMEtResponseDown
         )
-    '''
-    '''
     process.pMuUp = cms.Path(
     process.allEventsFilter*
     process.muPtEtaIDIsoPtRel *
@@ -543,6 +554,7 @@ if runOnMC:
     process.muTauStreamAnalyzerMuDown
     )
     '''
+
     '''
     process.pTauUp = cms.Path(
         process.allEventsFilter*
@@ -638,4 +650,36 @@ process.TFileService = cms.Service(
     fileName = cms.string("treeMuTauStream.root")
     )
 
+
+## To work on Artur's skim
+#from PhysicsTools.PatAlgos.tools.helpers import massSearchReplaceAnyInputTag
+#massSearchReplaceAnyInputTag(process.pNominal,
+#                             "muPtEtaID",
+#                             "selectedPatMuonsTriggerMatch",
+#                             verbose=False)
+#massSearchReplaceAnyInputTag(process.pNominal,
+#                             "muPtEtaRelID",
+#                             "selectedPatMuonsTriggerMatch",
+#                             verbose=False)
+#massSearchReplaceAnyInputTag(process.pNominal,
+#                             "selectedPrimaryVertices",
+#                             "offlinePrimaryVertices",
+#                             verbose=False)
+#massSearchReplaceAnyInputTag(process.pNominal,
+#                            "tauPtEtaIDAgMuAgElec",
+#                             "selectedPatTausTriggerMatch",
+#                             verbose=False)
+#massSearchReplaceAnyInputTag(process.pNominal,
+#                             "genParticles",
+#                             "prunedGenParticles",
+#                             verbose=False)
+#massSearchReplaceAnyInputTag(process.pNominal,
+#                             "tauGenJetsSelectorAllHadrons",
+#                             "genTauDecaysToHadrons",
+#                             verbose=False)
+
+
 process.outpath = cms.EndPath()
+
+processDumpFile = open('runMuTauStreamAnalyzerFullAnalysis_Recoil.dump', 'w')
+print >> processDumpFile, process.dumpPython()

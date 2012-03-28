@@ -27,6 +27,8 @@
 #include "TCut.h"
 #include "TArrayF.h"
 #include "TStyle.h"
+#include "TGraph.h"
+
 #include "TF3.h"
 #include "Math/WrappedMultiTF1.h"
 #include "Math/AdaptiveIntegratorMultiDim.h"
@@ -143,17 +145,37 @@ double pdf(string polarization, double cosThetaA, double cosThetaRho, double phi
 
 double myIntegrator(double z){
 
-  //fwlite::TFileService fs = fwlite::TFileService("pdf.root");
-  //TH1F* hXL = new TH1F("hXL","",400,0,1);
-  //TH1F* hXT = new TH1F("hXT","",400,0,1);
+  TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
+  c1->SetGrid(0,0);
+  c1->SetFillStyle(4000);
+  c1->SetFillColor(10);
+  c1->SetGrid(0,0);
+  c1->SetTicky();
+  c1->SetObjectStat(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetStatColor(0);
+  gStyle->SetOptStat(0000000);
+  gStyle->SetOptFit(0111);
+  //gStyle->SetOptTitle(0);
+  gStyle->SetTitleStyle(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetPalette(1);
 
-  Integrand* IntegrandA1 = new Integrand(0);
-  IntegrandA1->SetParameterZ(z);
-  ROOT::Math::IntegratorMultiDim* integrator_ = new ROOT::Math::IntegratorMultiDim(*IntegrandA1,
-										   ROOT::Math::IntegrationMultiDim::kADAPTIVE,
-										   1.E-9, 1E-9,1000000);
-  integrator_->SetRelTolerance(1E-16);
-  integrator_->SetFunction(*IntegrandA1);
+  Double_t x[100];
+  Double_t yL[100];
+  Double_t yT[100];
+
+  fwlite::TFileService fs = fwlite::TFileService("polarimeterA1.root");
+  TH1F* hXL = new TH1F("hXL","a^{-}_{1 L} #rightarrow #pi^{-}#pi^{0}#pi^{0}; x_{#pi^{-}} ; d#Gamma/dx_{#pi^{-}}",100,0,1);
+  TH1F* hXT = new TH1F("hXT","a^{-}_{1 T} #rightarrow #pi^{-}#pi^{0}#pi^{0}; x_{#pi^{-}} ; d#Gamma/dx_{#pi^{-}}",100,0,1);
+
+  //Integrand* IntegrandA1 = new Integrand(0);
+  //IntegrandA1->SetParameterZ(z);
+  //ROOT::Math::IntegratorMultiDim* integrator_ = new ROOT::Math::IntegratorMultiDim(*IntegrandA1,
+  //									   ROOT::Math::IntegrationMultiDim::kADAPTIVE,
+  //									   1.E-9, 1E-9,1000000);
+  //integrator_->SetRelTolerance(1E-16);
+  //integrator_->SetFunction(*IntegrandA1);
 
   //TF3 f("pdf", pdfTF3, -1,1,-1,1, 0, 2*TMath::Pi(),1);
   //f.SetParameter(0,z);
@@ -165,19 +187,15 @@ double myIntegrator(double z){
   //ig->SetFunction(wf1);
   //ig->SetRelTolerance(0.00001);
   
-
-  const double xMin[] = {-1,-1};
-  const double xMax[] = { 1, 1};
-
-  double integral  = integrator_->Integral(xMin,xMax);
+  //const double xMin[] = {-1,-1};
+  //const double xMax[] = { 1, 1};
+  //double integral  = integrator_->Integral(xMin,xMax);
   //double integral  = ig->Integral(xMin,xMax);
   //cout << integral << endl;
+  //delete IntegrandA1;
+  //return integral;
 
-  delete IntegrandA1;
-
-  return integral;
-
-  /*
+  
   double mRho = 0.770;
   double mA1  = 1.260;
   double mPi  = 0.1396;
@@ -206,13 +224,31 @@ double myIntegrator(double z){
     }
   }
 
-  hXL->Scale(1./hXL->Integral());
-  hXT->Scale(1./hXT->Integral());
+  hXL->Scale(1./hXL->Integral()/hXL->GetBinWidth(1));
+  hXT->Scale(1./hXT->Integral()/hXL->GetBinWidth(1));
 
-  delete hXL; delete hXT;
+  for(int i = 1; i <=hXL->GetNbinsX(); i++){
+    x[i]      = i*hXL->GetBinWidth(1);
+    yL[i]     = hXL->GetBinContent(i);
+    yT[i]     = hXT->GetBinContent(i);
+  } 
+  TGraph* a1L =  new TGraph(100, x, yL);
+  a1L->SetName("a1LzFraction");
+  gDirectory->Append(a1L);
+  TGraph* a1T =  new TGraph(100, x, yT);
+  a1T->SetName("a1TzFraction");
+  gDirectory->Append(a1T);
+
+  c1->cd();
+  hXL->Draw();
+  c1->SaveAs("hzA1L.pdf");
+  c1->cd();
+  hXT->Draw();
+  c1->SaveAs("hzA1T.pdf");
+  //delete hXL; delete hXT;
 
   return double(1);
-  */
+  
 }
 
 void makePlot(){
@@ -241,9 +277,9 @@ int main(int argc, const char* argv[])
   gSystem->Load("libFWCoreFWLite");
   AutoLibraryLoader::enable();
 
-  makePlot();
+  //makePlot();
 
-  //myIntegrator(  1.0 );
+  myIntegrator(  1.0 );
 
 }
 
