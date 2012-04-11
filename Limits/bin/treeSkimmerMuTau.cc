@@ -44,6 +44,7 @@
 #define MAXEta  4.5 
 #define USERECOILALGO true
 #define USEFAKERATE true
+#define DOSVFITSTANDALONE false
 
 using namespace ROOT::Math;
 using namespace std;
@@ -1213,7 +1214,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     measuredTauLeptons.push_back(NSVfitStandalone::MeasuredTauLepton(NSVfitStandalone::kLepDecay,p2));    
     NSVfitStandaloneAlgorithm algo(measuredTauLeptons,measuredMET,metsig,0);
     algo.maxObjFunctionCalls(5000);
-    algo.fit();
+    if(DOSVFITSTANDALONE) algo.fit();
     if(algo.isValidSolution()){
       diTauSVFitMassSA    =  algo.fittedDiTauSystem().mass();
       diTauSVFitMassErrSA =  algo.massUncert();
@@ -1410,7 +1411,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     else{
       float f = hfakeRateRun2011->GetBinContent(hfakeRateRun2011->FindBin( pfJetPt, ptL2, 0.));
       float e = hfakeRateDYJets->GetBinContent( hfakeRateDYJets->FindBin(  pfJetPt, ptL2, 0.));
-      //cout << e << ", " << f << endl;
+
       if(fabs(e-f)>0)
 	CDFWeight = ((tightestHPSDBWP>0)*(f*(e-1)/(e-f)) + (tightestHPSDBWP<=0)*(f*e/(e-f)));
       else
@@ -1420,12 +1421,6 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     fakeRateWMC     = (hfakeRateWJets!=0)   ? hfakeRateWJets->GetBinContent(   hfakeRateWJets->FindBin(  pfJetPt, ptL2, 0) ) : -99;
     effDYMC         = (hfakeRateDYJets!=0)  ? hfakeRateDYJets->GetBinContent(  hfakeRateDYJets->FindBin( pfJetPt, ptL2, 0) ) : -99;
 
-    //cout << "=> " << CDFWeight << " <=> " 
-    // << (tightestHPSDBWP<=0)*effDYMC*fakeRateRun2011/(effDYMC-fakeRateRun2011) + (tightestHPSDBWP>0)*(effDYMC-1)*fakeRateRun2011/(effDYMC-fakeRateRun2011) << endl;
-    //CDFWeight       = -99;
-    //fakeRateRun2011 = -99;
-    //fakeRateWMC     = -99;
-    //effDYMC         = -99;
 
     muFlag_          = muFlag;
     genDecay_        = genDecay ;
@@ -1484,7 +1479,7 @@ void doAllSamplesMu(string inputDir_ =// "MuTauStreamFall11_06Dec2011"
 
   samples.push_back("Run2011-MuTau-All_run");             crossSec.push_back( 0  );                          
 //samples.push_back("Run2011-MuTau-LooseIso-All_run");    crossSec.push_back( 0  );                          
-  samples.push_back("Run2011A-MuTau-05AugReReco-NoTauIso-v3_run");    crossSec.push_back( 0  );                          
+  samples.push_back("Run2011-MuTau-NoTauIso-All_run");    crossSec.push_back( 0  );                          
   samples.push_back("Run2011-MuTau-Embedded-All_run");    crossSec.push_back( 0  );                          
   samples.push_back("DYJets-MuTau-50-madgraph-PUS6_run"); crossSec.push_back( 3048           * 0.009631    * 0.641987); 
   samples.push_back("TTJets-MuTau-madgraph-PUS6_run");    crossSec.push_back( 157.5          * 0.020998    * 0.823613);  
