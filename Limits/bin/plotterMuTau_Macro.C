@@ -32,6 +32,7 @@ void plot( string variable_ = "diTauVisMass",
 	   string xTitle_   = " ; mass (GeV) ; Events",
 	   float binWidth_  = -1,
 	   string MtCut_    = "MtLeg1<40",
+	   string charge_   = "diTauCharge==0",
 	   string outFile_  = "visibleMass"
 	   ){
 
@@ -124,19 +125,23 @@ void plot( string variable_ = "diTauVisMass",
   // full signal selection
   TCut sbinRel(      "ptL1>18 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0 && muFlag==0 && HLTx && HLTmatch");
   // full signal selection
-  TCut sbin(         "ptL1>18 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0  && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10");
+  TCut sbin(         "ptL1>18 && ptL2>20 && tightestHPSDBWP>0 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10");
   // selection of opposite-sign W-enriched control region
-  TCut sbinAntiW(    "ptL1>18 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge==0  && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10");
+  TCut sbinAntiW(    "ptL1>18 && ptL2>20 && tightestHPSDBWP>0 && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10");
   // selection of smae-sign enriched control-region 
   TCut sbinSSAntiW(  "ptL1>18 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0  && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10");
   // selection of same-sign control region
   TCut sbinSS(       "ptL1>18 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0  && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.10");
   // selection of same sign loosely-isolated control region
   TCut sbinSSRelIso( "ptL1>18 && ptL2>20 && tightestHPSDBWP>0 && diTauCharge!=0  && muFlag==0 && HLTx && HLTmatch && combRelIsoLeg1DBeta<0.20");
+
   TCut highMt("MtLeg1>60");
   TCut lowMt("MtLeg1<40");
-
   TCut slowMt(MtCut_.c_str());
+
+  TCut SSCharge("diTauCharge!=0");
+  TCut OSCharge("diTauCharge==0");
+  TCut sCharge(charge_.c_str());
 
   /////////// get approximated pu reweighting factors /////////////////
   TH1F* numPVData     = new TH1F("numPVData","",  20,0,40);
@@ -210,23 +215,27 @@ void plot( string variable_ = "diTauVisMass",
 
   // opposite-sign to same-sign ratio for QCD
   float OStoSSRatio = 1.07;
+  if( (string(sCharge.GetTitle())).find("diTauCharge!=0")!=string::npos ){
+    OStoSSRatio = 1.0;
+    cout << "SS selection" << endl;
+  }
 
   /////////////////////////////////////////////////////////////////////
   // estimation of W+jets
   TH1F* h1 = new TH1F("h1","",1,-10,10);
-  tWJets->Draw("etaL1>>h1",   TString(("sampleWeight*"+scaleFactWJets).c_str())*(sbinAntiW&&highMt));
+  tWJets->Draw("etaL1>>h1",   TString(("sampleWeight*"+scaleFactWJets).c_str())*(sbinAntiW&&OSCharge&&highMt));
   float WsbinMCAntiW  = h1->Integral()*lumiFact*crossSecScalingW;
   h1->Reset();
-  tWJets->Draw("etaL1>>h1",   TString(("sampleWeight*"+scaleFactWJets).c_str())*(sbin&&lowMt));
+  tWJets->Draw("etaL1>>h1",   TString(("sampleWeight*"+scaleFactWJets).c_str())*(sbin&&OSCharge&&lowMt));
   float WsbinMC       = h1->Integral()*lumiFact*crossSecScalingW;
   h1->Reset();
-  tTTJets->Draw("etaL1>>h1",  TString(("sampleWeight*"+scaleFactWJets).c_str())*(sbin&&highMt));
+  tTTJets->Draw("etaL1>>h1",  TString(("sampleWeight*"+scaleFactWJets).c_str())*(sbin&&OSCharge&&highMt));
   float TTsbinAntiW = h1->Integral()*lumiFact*crossSecScalingTT;
   h1->Reset();
-  tDYJets->Draw("etaL1>>h1",  TString(("sampleWeight*"+scaleFactDYJets).c_str())*(sbin&&highMt));
+  tDYJets->Draw("etaL1>>h1",  TString(("sampleWeight*"+scaleFactDYJets).c_str())*(sbin&&OSCharge&&highMt));
   float DYJetssbinAntiW = h1->Integral()*lumiFact;
   h1->Reset();
-  tData->Draw("etaL1>>h1",   sbin&&highMt);
+  tData->Draw("etaL1>>h1",   sbin&&OSCharge&&highMt);
   float DatasbinAntiW = h1->Integral();
   h1->Reset();
 
@@ -279,18 +288,19 @@ void plot( string variable_ = "diTauVisMass",
 
 
   // Draw with cuts and weights !!!
-  tData->Draw(  variable+">>hData",   "(index==0)"*(sbin&&slowMt));
+  tData->Draw(  variable+">>hData",   "(index==0)"*(sbin&&sCharge&&slowMt));
   tData->Draw(  variable+">>hQCD",    "(index==0)"*(sbinSSRelIso&&slowMt));
-  tDYJets->Draw(variable+">>hDYJets", TString(("sampleWeight*(index==0)*"+scaleFactDYJets).c_str())*(sbin&&slowMt));
-  tWJets->Draw( variable+">>hWJets",  TString(("sampleWeight*"+scaleFactWJets).c_str())*(sbin&&slowMt));
+  tDYJets->Draw(variable+">>hDYJets", TString(("sampleWeight*(index==0)*"+scaleFactDYJets).c_str())*(sbin&&sCharge&&slowMt));
+  tWJets->Draw( variable+">>hWJets",  TString(("sampleWeight*"+scaleFactWJets).c_str())*(sbin&&sCharge&&slowMt));
   tWJets->Draw( variable+">>hWJetsSS",TString(("sampleWeight*"+scaleFactWJets).c_str())*(sbinSS&&slowMt));
-  tTTJets->Draw(variable+">>hTTJets", TString(("sampleWeight*"+scaleFactWJets).c_str())*(sbin&&slowMt));
+  tTTJets->Draw(variable+">>hTTJets", TString(("sampleWeight*"+scaleFactWJets).c_str())*(sbin&&sCharge&&slowMt));
   //tVBFH130->Draw(variable+">>hVBFH130", "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight"*sbin);
   //tGGFH130->Draw(variable+">>hGGFH130", "puWeight*HLTweightMu*HLTweightTau*SFMu*SFTau*sampleWeight*HqTWeight"*sbin);
   
   // Scale histograms
   hDYJets->Scale( lumiFact );
-  hWJets->Scale(  lumiFact*crossSecScalingW*WscaleFactorOS );
+  hWJets->Scale(  lumiFact*crossSecScalingW*( int((string(sCharge.GetTitle())).find("diTauCharge==0")!=string::npos)*WscaleFactorOS +
+					      int((string(sCharge.GetTitle())).find("diTauCharge!=0")!=string::npos)*WscaleFactorSS) );
   hWJetsSS->Scale(lumiFact*crossSecScalingW*WscaleFactorSS );
   hTTJets->Scale( lumiFact*crossSecScalingTT );
   hQCD->Add(   hWJetsSS, -1);
@@ -304,16 +314,16 @@ void plot( string variable_ = "diTauVisMass",
 
   cout << "Old ==>" << endl;
 
-  tData2011->Draw(variable+">>hOld", (sbin&&slowMt));
+  tData2011->Draw(variable+">>hOld", (sbin&&sCharge&&slowMt));
   float data2011 = hOld->Integral();
   h1->Reset();
-  tDYJets2011->Draw(variable+">>hOld",  "puWeight*sampleWeight*HLTweightTau*HLTweightMu*SFMu"*(sbin&&slowMt));
+  tDYJets2011->Draw(variable+">>hOld",  "puWeight*sampleWeight*HLTweightTau*HLTweightMu*SFMu"*(sbin&&sCharge&&slowMt));
   float DYJets2011 = hOld->Integral();
   h1->Reset();
-  tWJets2011->Draw(variable+">>hOld",   "puWeight*sampleWeight*HLTweightTau*HLTweightMu*SFMu"*(sbin&&slowMt));
+  tWJets2011->Draw(variable+">>hOld",   "puWeight*sampleWeight*HLTweightTau*HLTweightMu*SFMu"*(sbin&&sCharge&&slowMt));
   float WJets2011 = hOld->Integral();
   h1->Reset();
-  tTTJets2011->Draw(  variable+">>hOld","puWeight*sampleWeight*HLTweightTau*HLTweightMu*SFMu"*(sbin&&slowMt));
+  tTTJets2011->Draw(  variable+">>hOld","puWeight*sampleWeight*HLTweightTau*HLTweightMu*SFMu"*(sbin&&sCharge&&slowMt));
   float TTJets2011 = hOld->Integral();
   h1->Reset();
 
@@ -378,7 +388,7 @@ void plot( string variable_ = "diTauVisMass",
 
 
   // Legend
-  TLegend* leg = new TLegend(0.60,0.70,0.75,0.80,NULL,"brNDC");
+  TLegend* leg = new TLegend(0.60,0.62,0.78,0.87,NULL,"brNDC");
   leg->SetFillStyle(0);
   leg->SetBorderSize(0);
   leg->SetFillColor(10);
@@ -386,15 +396,21 @@ void plot( string variable_ = "diTauVisMass",
 
   leg->SetHeader("#splitline{CMS Preliminary 2012}{#sqrt{s}=8 TeV, L=57.2 pb^{-1}, #tau_{#mu}#tau_{h}}");
   leg->AddEntry(hData,"Observed","P");
-  leg->AddEntry(hDYJets,"Z#rightarrow#tau#tau","F");
+  leg->AddEntry(hDYJets,"Z#rightarrow ll","F");
   leg->AddEntry(hWJets,"W+jets","F");
   leg->AddEntry(hQCD,"QCD","F");
   leg->AddEntry(hTTJets,"t#bar{t}","F");
   //leg->AddEntry(hVBFH130,"100 X H#rightarrow#tau#tau, m_{H}=130 GeV","F");
   leg->Draw();
 
-  c1->SaveAs(("plots/plotMuTauDataMC_"+outFile_+".png").c_str());
-  c1->SaveAs(("plots/plotMuTauDataMC_"+outFile_+".pdf").c_str());
+  if(charge_.find("diTauCharge==0")!=string::npos)
+    c1->SaveAs(("plots/plotMuTauDataMC_"+outFile_+".png").c_str());
+  else
+    c1->SaveAs(("plots/plotMuTauDataMC_"+outFile_+"_SS.png").c_str());
+  if(charge_.find("diTauCharge==0")!=string::npos)
+    c1->SaveAs(("plots/plotMuTauDataMC_"+outFile_+".pdf").c_str());
+  else
+    c1->SaveAs(("plots/plotMuTauDataMC_"+outFile_+"_SS.pdf").c_str());
 
 
 
@@ -409,7 +425,7 @@ void plot( string variable_ = "diTauVisMass",
   c2->SetObjectStat(0);
 
   // Legend
-  TLegend* leg2 = new TLegend(0.60,0.60,0.78,0.75,NULL,"brNDC");
+  TLegend* leg2 = new TLegend(0.50,0.70,0.70,0.85,NULL,"brNDC");
   leg2->SetFillStyle(0);
   leg2->SetBorderSize(0);
   leg2->SetFillColor(10);
@@ -417,8 +433,8 @@ void plot( string variable_ = "diTauVisMass",
 
   hDataOld->Sumw2();
   hDataNew->Sumw2();
-  tData2011->Draw(variable+">>hDataOld", (sbin&&slowMt));
-  tData->Draw(variable+">>hDataNew", (sbin&&slowMt));
+  tData2011->Draw(variable+">>hDataOld", (sbin&&sCharge&&slowMt));
+  tData->Draw(variable+">>hDataNew", (sbin&&sCharge&&slowMt));
   hDataOld->SetLineColor(kBlack);
   hDataOld->SetLineWidth(3);
   hDataNew->SetLineColor(kRed);
@@ -427,7 +443,7 @@ void plot( string variable_ = "diTauVisMass",
   hDataNew->Scale(1./hDataNew->Integral());
   hDataOld->Scale(1./hDataOld->Integral());
 
-  hDataNew->SetAxisRange( 0, TMath::Max(hDataNew->GetMaximum(), hDataOld->GetMaximum())*1.12, "Y");
+  hDataNew->SetAxisRange( 0, TMath::Max(hDataNew->GetMaximum(), hDataOld->GetMaximum())*1.20, "Y");
 
   hDataNew->Draw("EHIST");
   hDataOld->Draw("HISTSAME");
@@ -438,8 +454,14 @@ void plot( string variable_ = "diTauVisMass",
 
   leg2->Draw();
 
-  c2->SaveAs(("plots/plotMuTauDataData_"+outFile_+".png").c_str());
-  c2->SaveAs(("plots/plotMuTauDataData_"+outFile_+".pdf").c_str());
+  if(charge_.find("diTauCharge==0")!=string::npos)
+    c2->SaveAs(("plots/plotMuTauDataData_"+outFile_+".png").c_str());
+  else
+    c2->SaveAs(("plots/plotMuTauDataData_"+outFile_+"_SS.png").c_str());
+  if(charge_.find("diTauCharge==0")!=string::npos)
+    c2->SaveAs(("plots/plotMuTauDataData_"+outFile_+".pdf").c_str());
+  else
+    c2->SaveAs(("plots/plotMuTauDataData_"+outFile_+"_SS.pdf").c_str());
 
   return;
 
@@ -449,20 +471,40 @@ void plot( string variable_ = "diTauVisMass",
 
 void plotAll(){
 
-  plot("diTauVisMass",   " ; mass (GeV) ; Events", -1,      "MtLeg1<40", "visibleMass");
-  plot("diTauSVFitMass", " ; full mass (GeV) ; Events", 18, "MtLeg1<40", "fullMass");
-  plot("ptL1", " ; #mu p_{T} (GeV) ; Events", 6 ,           "MtLeg1<40", "muonPt");
-  plot("ptL2", " ; #tau p_{T} (GeV) ; Events", 5 ,          "MtLeg1<40", "tauPt");
-  plot("abs(etaL1)", " ; #mu #eta ; Events", 0.2 ,          "MtLeg1<40", "muonEta");
-  plot("abs(etaL2)", " ; #tau #eta ; Events",0.2 ,           "MtLeg1<40", "tauEta");
-  plot("MtLeg1",     " ; M_{T}(#mu,MET) (GeV) ; Events", 10, "MtLeg1<999", "Mt");
-  plot("MEt",       " ; MET (GeV) ; Events", 8, "MtLeg1<999", "Mt");
+  //////// SS
 
-  plot("numPV",     " ; vertices ; Events", 3, "MtLeg1<40", "PV");
+  plot("diTauVisMass",   " ; mass (GeV) ; Events", -1,      "MtLeg1<40", "diTauCharge!=0", "visibleMass");
+  plot("diTauSVFitMass", " ; full mass (GeV) ; Events", 18, "MtLeg1<40", "diTauCharge!=0",  "fullMass");
+  plot("ptL1", " ; #mu p_{T} (GeV) ; Events", 6 ,           "MtLeg1<40", "diTauCharge!=0",  "muonPt");
+  plot("ptL2", " ; #tau p_{T} (GeV) ; Events", 5 ,          "MtLeg1<40", "diTauCharge!=0",  "tauPt");
+  plot("abs(etaL1)", " ; #mu #eta ; Events", 0.2 ,          "MtLeg1<40", "diTauCharge!=0",  "muonEta");
+  plot("abs(etaL2)", " ; #tau #eta ; Events",0.2 ,           "MtLeg1<40", "diTauCharge!=0",  "tauEta");
+  plot("MtLeg1",     " ; M_{T}(#mu,MET) (GeV) ; Events", 10, "MtLeg1<999", "diTauCharge!=0",  "Mt");
+  plot("MEt",       " ; MET (GeV) ; Events", 8, "MtLeg1<999", "diTauCharge!=0", "MEt");
+  plot("numPV",     " ; vertices ; Events", 3,  "MtLeg1<40",  "diTauCharge!=0",  "PV");
 
-  plot("pt1",   " ; lead jet p_{T} (GeV) ; Events", 10,           "MtLeg1<40", "jet1Pt");
-  plot("pt2",   " ; sublead jet p_{T} (GeV) ; Events", 10,           "MtLeg1<40", "jet2Pt");
-  plot("abs(eta1)",   " ; lead jet #eta ; Events", 0.2,        "MtLeg1<40", "jet1Eta");
-  plot("abs(eta2)",   " ; sublead jet #eta ; Events", 0.2,        "MtLeg1<40", "jet2Eta");
+  plot("nJets30",   " ; jet multiplicity ; Events", 1,            "MtLeg1<40", "diTauCharge!=0",  "jetMult");
+  plot("pt1",   " ; lead jet p_{T} (GeV) ; Events", 10,           "MtLeg1<40", "diTauCharge!=0",  "jet1Pt");
+  plot("pt2",   " ; sublead jet p_{T} (GeV) ; Events", 10,        "MtLeg1<40", "diTauCharge!=0",  "jet2Pt");
+  plot("abs(eta1)",   " ; lead jet #eta ; Events", 0.2,           "MtLeg1<40", "diTauCharge!=0",  "jet1Eta");
+  plot("abs(eta2)",   " ; sublead jet #eta ; Events", 0.2,        "MtLeg1<40", "diTauCharge!=0",  "jet2Eta");
+
+  //////// OS
+
+  plot("diTauVisMass",   " ; mass (GeV) ; Events", -1,      "MtLeg1<40", "diTauCharge==0", "visibleMass");
+  plot("diTauSVFitMass", " ; full mass (GeV) ; Events", 18, "MtLeg1<40", "diTauCharge==0",  "fullMass");
+  plot("ptL1", " ; #mu p_{T} (GeV) ; Events", 6 ,           "MtLeg1<40", "diTauCharge==0",  "muonPt");
+  plot("ptL2", " ; #tau p_{T} (GeV) ; Events", 5 ,          "MtLeg1<40", "diTauCharge==0",  "tauPt");
+  plot("abs(etaL1)", " ; #mu #eta ; Events", 0.2 ,          "MtLeg1<40", "diTauCharge==0",  "muonEta");
+  plot("abs(etaL2)", " ; #tau #eta ; Events",0.2 ,           "MtLeg1<40", "diTauCharge==0",  "tauEta");
+  plot("MtLeg1",     " ; M_{T}(#mu,MET) (GeV) ; Events", 10, "MtLeg1<999", "diTauCharge==0",  "Mt");
+  plot("MEt",       " ; MET (GeV) ; Events", 8, "MtLeg1<999", "diTauCharge==0", "MEt");
+  plot("numPV",     " ; vertices ; Events", 3, "MtLeg1<40",   "diTauCharge==0",  "PV");
+
+  plot("nJets30",   " ; jet multiplicity ; Events", 1,            "MtLeg1<40", "diTauCharge==0",  "jetMult");
+  plot("pt1",   " ; lead jet p_{T} (GeV) ; Events", 10,           "MtLeg1<40", "diTauCharge==0",  "jet1Pt");
+  plot("pt2",   " ; sublead jet p_{T} (GeV) ; Events", 10,        "MtLeg1<40", "diTauCharge==0",  "jet2Pt");
+  plot("abs(eta1)",   " ; lead jet #eta ; Events", 0.2,           "MtLeg1<40", "diTauCharge==0",  "jet1Eta");
+  plot("abs(eta2)",   " ; sublead jet #eta ; Events", 0.2,        "MtLeg1<40", "diTauCharge==0",  "jet2Eta");
 
 }
