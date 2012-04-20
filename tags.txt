@@ -1,0 +1,20 @@
+#TAGS FOR CMSSW_4_2_8_patch7
+
+#b4_2_x_2012Apr03 AnalysisDataFormats/TauAnalysis  <--- new svfit
+b4_2_x_2011Sep13 AnalysisDataFormats/TauAnalysis                  
+Lorenzo_20Apr2012_2011Analysis          Bianchi/Limits                                   
+Lorenzo_20Apr2012_2011Analysis          Bianchi/TauTauStudies                            
+Lorenzo_20Apr2012_2011Analysis          Bianchi/Utilities                                
+V03-02-01-00   DataFormats/METReco                              
+CMSSW_4_2_8_patch7 DataFormats/PatCandidates                        
+V01-12-03      HiggsAnalysis/CombinedLimit                      
+For2011-October-21st-reload HiggsAnalysis/HiggsToWW2Leptons                  
+V08-06-41      PhysicsTools/PatAlgos                            
+V00-03-33      RecoEgamma/ElectronIdentification                
+V01-02-12      RecoTauTag/Configuration                         
+V01-02-16      RecoTauTag/RecoTau                               
+NoTag          RecoTauTag/TauTagTools                           
+#4_2_x_2012Apr03 TauAnalysis/CandidateTools    <--- new svfit
+b4_2_x_2011Sep13 TauAnalysis/CandidateTools                       
+joseNov14      TauAnalysis/SVFitStandAlone                      
+NoTag          UserCode/MitPhysics     

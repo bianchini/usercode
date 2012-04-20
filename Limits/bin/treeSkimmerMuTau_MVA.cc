@@ -369,20 +369,20 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   TMVA::Tools::Instance();
 
   vector<int> mHMVAs;
-  mHMVAs.push_back(110);
-  mHMVAs.push_back(115);
+  //mHMVAs.push_back(110);
+  //mHMVAs.push_back(115);
   mHMVAs.push_back(120);
-  mHMVAs.push_back(125);
-  mHMVAs.push_back(130);
-  mHMVAs.push_back(135);
-  mHMVAs.push_back(140);
-  mHMVAs.push_back(145);
+  //mHMVAs.push_back(125);
+  //mHMVAs.push_back(130);
+  //mHMVAs.push_back(135);
+  //mHMVAs.push_back(140);
+  //mHMVAs.push_back(145);
 
   vector<string> bkgMVAs;
   //bkgMVAs.push_back("AntiW");
-  bkgMVAs.push_back("AntiZ");
+  //bkgMVAs.push_back("AntiZ");
   bkgMVAs.push_back("AntiAll");
-  bkgMVAs.push_back("AntiAllWCut");
+  //bkgMVAs.push_back("AntiAllWCut");
 
   std::map< string , TMVA::Reader*> readers;
   Float_t PTL2, PTL1, PTL1oPTL2, COSDPHIL1L2, ETAL1, ETAL2, DXY1,DXY2,
@@ -1762,7 +1762,8 @@ int main(int argc, const char* argv[])
   //doAllSamplesMu( "MuTauStreamFall11_06Dec2011");
 
   //string inputDir = "MuTauStreamFall11_06Dec2011";
-  string inputDir = "MuTauStreamFall11_09Feb2012";
+  //string inputDir = "MuTauStreamFall11_09Feb2012";
+  string inputDir = "MuTauStreamFall11_04Apr2012";
 
   makeTrees_MuTauStream("",        argv[1], atof(argv[2]), inputDir);
   if( string(argv[1]).find("Run2011-MuTau-All")!=string::npos )

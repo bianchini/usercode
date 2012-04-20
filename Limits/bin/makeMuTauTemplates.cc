@@ -38,8 +38,10 @@ void produce(
     binNameSpace =  "inclusive";
   else if(bin_.find("novbf")!=string::npos) 
     binNameSpace =  "SM0";
-  else if(bin_.find("boost")!=string::npos) 
+  else if(bin_.find("boost")!=string::npos && bin_.find("boost2")==string::npos) 
     binNameSpace =  "SM1";
+  else if(bin_.find("boost2")!=string::npos) 
+    binNameSpace =  "SM3";
   else if(bin_.find("vbf")!=string::npos && bin_.find("novbf")==string::npos) 
     binNameSpace =  "SM2";
   else if(bin_.find("twoJets")!=string::npos) 
@@ -458,27 +460,27 @@ void produce(
 
 
 
-void produceAll(  TString outputDir = "Feb2012/MVANew/" ){
+void produceAll(  TString outputDir = "Apr2012/NewSVfit_pres" ){
 
   vector<string> variables;
   vector<int> mH;
 
   //variables.push_back("diTauVisMass");
-  //variables.push_back("diTauSVFitMass");
+  variables.push_back("diTauSVFitMass");
   //variables.push_back("diTauSVFitMassCal0");
   //variables.push_back("diTauSVFitMassCal1");
   //variables.push_back("diTauSVFitMassCal2");
-  //variables.push_back("MVA0jetmH110");
-  //variables.push_back("MVA0jetmH120");
-  //variables.push_back("MVA0jetmH130");
-  variables.push_back("MVA0jetmH140");
+  //variables.push_back("MVAmH110AntiZ");
+  //variables.push_back("MVAmH120AntiZ");
+  //variables.push_back("MVAmH130AntiZ");
+  //variables.push_back("MVAmH140AntiZ");
 
   //mH.push_back(105);
-  //mH.push_back(110);
+  mH.push_back(110);
   //mH.push_back(115);
-  //mH.push_back(120);
+  mH.push_back(120);
   //mH.push_back(125);
-  //mH.push_back(130);
+  mH.push_back(130);
   //mH.push_back(135);
   mH.push_back(140);
   //mH.push_back(145);
@@ -486,18 +488,30 @@ void produceAll(  TString outputDir = "Feb2012/MVANew/" ){
   for(unsigned int i = 0 ; i < variables.size(); i++){
     for(unsigned j = 0; j < mH.size(); j++){
 
-      //produce(mH[j],variables[i], ""        , "vbf", outputDir);
-      //produce(mH[j],variables[i], "TauUp"   , "vbf", outputDir);
-      //produce(mH[j],variables[i], "TauDown" , "vbf", outputDir);
-      //produce(mH[j],variables[i], "JetUp"   , "vbf", outputDir);
-      //produce(mH[j],variables[i], "JetDown" , "vbf", outputDir);
+      produce(mH[j],variables[i], ""        , "vbf", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "vbf", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "vbf", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "vbf", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "vbf", outputDir);
 
-      //produce(mH[j],variables[i], ""        , "boost", outputDir);
-      //produce(mH[j],variables[i], "TauUp"   , "boost", outputDir);
-      //produce(mH[j],variables[i], "TauDown" , "boost", outputDir);
-      //produce(mH[j],variables[i], "JetUp"   , "boost", outputDir);
-      //produce(mH[j],variables[i], "JetDown" , "boost", outputDir);
-    
+      produce(mH[j],variables[i], ""        , "boost", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "boost", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "boost", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "boost", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "boost", outputDir);
+      
+      //       produce(mH[j],variables[i], ""        , "boost2", outputDir);
+      //       produce(mH[j],variables[i], "TauUp"   , "boost2", outputDir);
+      //       produce(mH[j],variables[i], "TauDown" , "boost2", outputDir);
+      //       produce(mH[j],variables[i], "JetUp"   , "boost2", outputDir);
+      //       produce(mH[j],variables[i], "JetDown" , "boost2", outputDir);
+  
+      //if(!((mH[j]==110 && variables[i].find("110")!=string::npos) ||
+      //   (mH[j]==120 && variables[i].find("120")!=string::npos) ||
+      //   (mH[j]==130 && variables[i].find("130")!=string::npos) ||
+      //   (mH[j]==140 && variables[i].find("140")!=string::npos))
+      // ) continue;
+  
       produce(mH[j],variables[i], ""        , "novbf", outputDir);
       produce(mH[j],variables[i], "TauUp"   , "novbf", outputDir);
       produce(mH[j],variables[i], "TauDown" , "novbf", outputDir);

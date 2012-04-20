@@ -644,8 +644,8 @@ int main(int argc, const char* argv[])
 	     << " => skipping!!" << endl;
 	continue;
       }
-      if(h2->GetEntries()<100){
-	cout << "Histogram contains less than 100 entries => skipping!!" << endl;
+      if(h2->GetEntries()<10){
+	cout << "Histogram contains less than 10 entries => skipping!!" << endl;
 	continue;
       }
       
@@ -675,12 +675,12 @@ int main(int argc, const char* argv[])
 	
 	for(int m = 1 ; m <= h2v3_py->GetNbinsX() ; m++){
 	  double mass_bin_m = (m-0.5)*h2v3_py->GetBinWidth(1);
-	  double rescaled_mass_bin_m = mass_bin_m - calibration->Eval(sigma_bin_k, 120.);
+	  double rescaled_mass_bin_m = mass_bin_m - calibration->Eval(sigma_bin_k, 90.);
 
 	  double bias    = calibration->Eval(sigma_bin_k,mass_bin_m);
 	  double massNew = mass_bin_m;
 	  double diff    = 999.;
-	  int nMax       = 100;
+	  int nMax       = -1;
 	  bool exit      = false;
 
 	  for(int it=0; it< nMax && !exit; it++){
