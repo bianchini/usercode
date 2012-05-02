@@ -124,7 +124,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   jetsIDP4_        = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   jetsIDUpP4_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   jetsIDDownP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  jetsIDL1OffsetP4_= new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  //jetsIDL1OffsetP4_= new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genJetsIDP4_     = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
   diTauVisP4_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
@@ -409,7 +409,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
   tree_->Branch("jetsIDUpP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDUpP4_);
   tree_->Branch("jetsIDDownP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDDownP4_);
-  tree_->Branch("jetsIDL1OffsetP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDL1OffsetP4_);
+  //tree_->Branch("jetsIDL1OffsetP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDL1OffsetP4_);
   tree_->Branch("genJetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genJetsIDP4_);
   
   tree_->Branch("jetsBtagHE","std::vector<double> ",&jetsBtagHE_);
@@ -500,6 +500,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("dz2",&dz2_,"dz2/F");
   tree_->Branch("dzE1",&dzE1_,"dzE1/F");
   tree_->Branch("dzE2",&dzE2_,"dzE2/F");
+  tree_->Branch("pfJetPt",&pfJetPt_,"pfJetPt/F");
 
   // electron specific variables
   tree_->Branch("nBrehm",&nBrehm_,"nBrehm/F");
@@ -511,6 +512,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("HoE",&HoE_,"HoE/F");
   tree_->Branch("EoP",&EoP_,"EoP/F");
   tree_->Branch("fbrem",&fbrem_,"fbrem/F");
+  tree_->Branch("pfId",&pfId_,"pfId/I");
   //tree_->Branch("isEleLikelihoodID",&isEleLikelihoodID_,"isEleLikelihoodID/I");
   //tree_->Branch("isEleCutBasedID",&isEleCutBasedID_,"isEleCutBasedID/I");
   tree_->Branch("elecFlag",&elecFlag_,"elecFlag/I");
@@ -538,6 +540,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("tightestAntiEWP",&tightestAntiEWP_,"tightestAntiEWP/I");
   tree_->Branch("tightestHPSDBWP",&tightestHPSDBWP_,"tightestHPSDBWP/I");
   tree_->Branch("visibleTauMass",&visibleTauMass_,"visibleTauMass/F");
+  tree_->Branch("visibleGenTauMass",&visibleGenTauMass_,"visibleGenTauMass/F");
 
   tree_->Branch("leadPFChargedHadrTrackPt",&leadPFChargedHadrTrackPt_,"leadPFChargedHadrTrackPt/F");
   tree_->Branch("leadPFChargedHadrTrackP", &leadPFChargedHadrTrackP_,"leadPFChargedHadrTrackP/F");
@@ -578,7 +581,8 @@ void ElecTauStreamAnalyzer::beginJob(){
 
 
 ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
-  delete jetsP4_; delete jetsIDP4_; delete jetsIDL1OffsetP4_; delete jetsIDUpP4_; delete jetsIDDownP4_; 
+  delete jetsP4_; delete jetsIDP4_; //delete jetsIDL1OffsetP4_; 
+  delete jetsIDUpP4_; delete jetsIDDownP4_; 
   delete METP4_; delete diTauVisP4_; delete diTauCAP4_; delete diTauICAP4_; 
   delete diTauSVfitP4_; delete genVP4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_; delete sigDCA_;
@@ -861,19 +865,19 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
       if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
 	  && (*electronsRel)[i].charge()*(*electrons)[j].charge()<0
-	  && (*electrons)[j].userFloat("PFRelIsoDB04v3")<0.30 && mvaPreselectionNoIsoElecI
-	  && (*electronsRel)[i].userFloat("PFRelIsoDB04v3")<0.20 ){
+	  && (*electrons)[j].userFloat("PFRelIsoDB04")<0.30 && mvaPreselectionNoIsoElecI
+	  && (*electronsRel)[i].userFloat("PFRelIsoDB04")<0.20 ){
 	elecFlag_       = 1;
-	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04v3");
+	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04");
 	if(verbose_) cout<< "Two electrons failing diElec veto: flag= " << elecFlag_ << endl;
 	found=true;
       }
       else if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
 	       && (*electronsRel)[i].charge()*(*electrons)[j].charge()>0
-	       && (*electrons)[j].userFloat("PFRelIsoDB04v3")<0.30 && mvaPreselectionNoIsoElecI
-	       && (*electronsRel)[i].userFloat("PFRelIsoDB04v3")<0.20 ){
+	       && (*electrons)[j].userFloat("PFRelIsoDB04")<0.30 && mvaPreselectionNoIsoElecI
+	       && (*electronsRel)[i].userFloat("PFRelIsoDB04")<0.20 ){
 	elecFlag_       = 2;
-	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04v3");
+	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04");
 	if(verbose_) cout<< "Two electrons with SS: flag= " << elecFlag_ << endl;
 	found=true;
       }
@@ -882,62 +886,60 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
 
   vector<string> triggerPaths;
-  vector<string> XtriggerPaths;
   vector<string> HLTfiltersElec;
   vector<string> HLTfiltersTau;
 
   if(isMC_){
 
-    // X-triggers
-    XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*");
-    XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
-
     // for Fall11
-    triggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1");
-    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1");
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v1");
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20L1Jet_v1");
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_TrkIdT_LooseIsoPFTau20_v1");
 
-    HLTfiltersElec.push_back("hltEle18CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter");
-    HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoEle18MediumIsoPFTau20");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoEle20MediumIsoPFTau20");
-  }
-  else{
+    /*
+    // https://j2eeps.cern.ch/cms-project-confdb-hltdev/browser/
     
-    // X-triggers
-    XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*");
-    XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
-    XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TightIsoPFTau20_v*");
-    XtriggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
+    path HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v4 = 
+    HLTBeginSequence + hltL1sL1SingleIsoEG18erOREG20 + hltPreEle20CaloIdVTCaloIsoRhoTTrkIdTTrkIsoTLooseIsoPFTau20 + 
+    HLTEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTRhoCorrL1IsoEG18OrEG20Sequence + HLTRecoJetSequencePrePF + hltTauJet5 + 
+    hltOverlapFilterIsoEle18CaloJet5 + HLTPFJetTriggerSequence + hltPFJet20 + HLTLooseIsoPFTauSequence + hltPFTau20 + 
+    hltPFTau20Track + hltPFTau20TrackLooseIso + hltIsoElePFTauVertexFinder + hltPFTauIsoEleVertex20 + 
+    hltOverlapFilterIsoEle20LooseIsoPFTau20 + HLTEndSequence
 
-    // Single Electron triggers + X-triggers
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v1");
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v2");
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v4");
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v6");
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v8");
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v9");
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TightIsoPFTau20_v2");
-    triggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1");
-    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1");
-    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v5");
-    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v6");
-                              
-    // watch out! name convention changed with time
-    HLTfiltersElec.push_back("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter");
-    HLTfiltersElec.push_back("hltEle15CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter");
-    // watch out! name convention changed with time
-    HLTfiltersElec.push_back("hltEle18CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter");
-    HLTfiltersElec.push_back("hltEle18CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter");
- 
-    HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilterL1SingleEG18orL1SingleEG20");
- 
-    //HLTfiltersTau.push_back("hltPFTau15TrackLooseIso");
-    //HLTfiltersTau.push_back("hltPFTau20TrackLooseIso");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoEle15IsoPFTau15");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoEle15IsoPFTau20");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoEle15TightIsoPFTau20");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoEle18MediumIsoPFTau20");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoEle20MediumIsoPFTau20");
+    path HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20L1Jet_v4 = 
+    HLTBeginSequence + hltL1sL1EG18erJetCCen28Tau20dPhi1ORL1IsoEG18erJetCCen32Tau24dPhi1 + 
+    hltPreEle20CaloIdVTCaloIsoRhoTTrkIdTTrkIsoTLooseIsoPFTau20L1Jet + HLTEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTRhoCorrL1Tau20Sequence + 
+    HLTRecoJetSequencePrePF + hltTauJet5 + hltOverlapFilterIsoEle20CaloJet5L1Tau20 + HLTPFJetTriggerSequence + hltPFJet20 + 
+    HLTLooseIsoPFTauSequence + hltPFTau20 + hltPFTau20Track + hltPFTau20TrackLooseIso + hltIsoElePFTauL1JetVertexFinder + 
+    hltPFTauIsoEleL1Tau20Vertex20 + hltL1JetLooseIsoPFTau20Matched + hltL1MatchedLooseIsoPFTau20 + 
+    hltOverlapFilterIsoEle20LooseIsoPFTau20L1Jet + HLTEndSequence
+
+    path HLT_Ele20_CaloIdVT_TrkIdT_LooseIsoPFTau20_v4 = 
+    HLTBeginSequence + hltL1sL1EG18er + hltPreEle20CaloIdVTTrkIdTLooseIsoPFTau20 + HLTEle20CaloIdVTTrkIdTSequence + 
+    HLTRecoJetSequencePrePF + hltTauJet5 + hltOverlapFilterEle20CaloJet5 + HLTPFJetTriggerSequence + hltPFJet20 + 
+    HLTLooseIsoPFTauSequence + hltPFTau20 + hltPFTau20Track + hltPFTau20TrackLooseIso + hltElePFTauVertexFinder + 
+    hltPFTauEleVertex20 + hltOverlapFilterEle20LooseIsoPFTau20 + HLTEndSequence
+
+    */
+
+    HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilterL1IsoEG18OrEG20");
+    HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTL1JetTrackIsoFilter");
+    HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoEle20LooseIsoPFTau20");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoEle20LooseIsoPFTau20L1Jet");
+  }
+  else{    
+
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v4");
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v5");
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20L1Jet_v4");
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_TrkIdT_LooseIsoPFTau20_v4");
+
+    HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilterL1IsoEG18OrEG20");
+    HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTL1JetTrackIsoFilter");
+    HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoEle20LooseIsoPFTau20");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoEle20LooseIsoPFTau20L1Jet");
 
   }
 
@@ -1019,7 +1021,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     jetsIDP4_->clear();
     jetsIDUpP4_->clear();
     jetsIDDownP4_->clear();
-    jetsIDL1OffsetP4_->clear();
+    //jetsIDL1OffsetP4_->clear();
     diTauVisP4_->clear();
     diTauCAP4_->clear();
     diTauICAP4_->clear();
@@ -1284,8 +1286,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   }
     
 
-    visibleTauMass_ = leg2->mass();
-    
+    visibleTauMass_    = leg2->mass();
+    visibleGenTauMass_ = (leg2->genJet())!=0 ? (leg2->genJet()->p4()).M() : -99 ;
+
     if((leg2->leadPFChargedHadrCand()->trackRef()).isNonnull()){
       leadPFChargedHadrTrackPt_ = leg2->leadPFChargedHadrCand()->trackRef()->pt();
     leadPFChargedHadrTrackP_  = leg2->leadPFChargedHadrCand()->trackRef()->p();
@@ -1318,10 +1321,10 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     
     
     tightestHPSWP_ = -1;
-    if(leg2->tauID("byVLooseIsolation")>0.5) tightestHPSWP_++;
-    if(leg2->tauID("byLooseIsolation")>0.5)  tightestHPSWP_++;
-    if(leg2->tauID("byMediumIsolation")>0.5) tightestHPSWP_++;
-    if(leg2->tauID("byTightIsolation")>0.5)  tightestHPSWP_++;
+    //if(leg2->tauID("byVLooseIsolation")>0.5) tightestHPSWP_++;
+    //if(leg2->tauID("byLooseIsolation")>0.5)  tightestHPSWP_++;
+    //if(leg2->tauID("byMediumIsolation")>0.5) tightestHPSWP_++;
+    //if(leg2->tauID("byTightIsolation")>0.5)  tightestHPSWP_++;
     tightestHPSDBWP_ = -1;
     if(leg2->tauID("byVLooseCombinedIsolationDeltaBetaCorr")>0.5) tightestHPSDBWP_++;
     if(leg2->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5)  tightestHPSDBWP_++;
@@ -1357,10 +1360,6 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       }
     }
     
-    // isoDeposit definition: 2010
-    isodeposit::AbsVetos vetos2010ChargedLeg1; 
-    isodeposit::AbsVetos vetos2010NeutralLeg1; 
-    isodeposit::AbsVetos vetos2010PhotonLeg1;
     // isoDeposit definition: 2011
     isodeposit::AbsVetos vetos2011ChargedLeg1; 
     isodeposit::AbsVetos vetos2011NeutralLeg1; 
@@ -1369,15 +1368,14 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     isodeposit::AbsVetos vetos2011EEChargedLeg1; 
     isodeposit::AbsVetos vetos2011EENeutralLeg1;  
     isodeposit::AbsVetos vetos2011EEPhotonLeg1;
-    
- 
-    vetos2010ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
-    vetos2010ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
-    vetos2010NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
-    vetos2010NeutralLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
-    vetos2010PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.05));
-    vetos2010PhotonLeg1.push_back( new isodeposit::ThresholdVeto(1.0));
-    
+
+    reco::isodeposit::AbsVetos vetos2012EBChargedLeg1; 
+    reco::isodeposit::AbsVetos vetos2012EBNeutralLeg1;  
+    reco::isodeposit::AbsVetos vetos2012EBPhotonsLeg1;
+    reco::isodeposit::AbsVetos vetos2012EEChargedLeg1; 
+    reco::isodeposit::AbsVetos vetos2012EENeutralLeg1;  
+    reco::isodeposit::AbsVetos vetos2012EEPhotonsLeg1;
+      
     vetos2011ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
     vetos2011ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
     vetos2011NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
@@ -1392,34 +1390,41 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     vetos2011EEPhotonLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
     vetos2011EEPhotonLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
     
-    
-    chIsoLeg1v1_   = 
-      leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
-    nhIsoLeg1v1_   = 
-      leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetos2010NeutralLeg1).first;
-    phIsoLeg1v1_   = 
-    leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2010PhotonLeg1).first;
-    elecIsoLeg1v1_ = 
-      leg1->isoDeposit(pat::User3Iso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
-    muIsoLeg1v1_   = 
-      leg1->isoDeposit(pat::User2Iso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
-    chIsoPULeg1v1_ = 
-      leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
-    nhIsoPULeg1v1_ = 
-      leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010NeutralLeg1).first;
-    phIsoPULeg1v1_ = 
-      leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010PhotonLeg1).first;
-    
+    vetos2012EEChargedLeg1.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.015));
+    vetos2012EEPhotonsLeg1.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
+  
+    chIsoLeg1v1_ = leg1->isEB() ? 
+      leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4, vetos2012EBChargedLeg1).first :
+      leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4, vetos2012EEChargedLeg1).first ;
+    nhIsoLeg1v1_ =  leg1->isEB() ? 
+      leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4, vetos2012EBNeutralLeg1).first :
+      leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4, vetos2012EENeutralLeg1).first ;
+    phIsoLeg1v1_ =  leg1->isEB() ? 
+      leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4, vetos2012EBPhotonsLeg1).first :
+      leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4, vetos2012EEPhotonsLeg1).first ;
+    chIsoPULeg1v1_ =  leg1->isEB() ? 
+      leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2012EBChargedLeg1).first :
+      leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2012EEChargedLeg1).first ;
+    nhIsoPULeg1v1_ =  leg1->isEB() ? 
+      leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2012EBNeutralLeg1).first :
+      leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2012EENeutralLeg1).first ;
+    phIsoPULeg1v1_ =  leg1->isEB() ? 
+      leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2012EBPhotonsLeg1).first :
+      leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2012EEPhotonsLeg1).first ;
+    elecIsoLeg1v1_ = -99;
+    muIsoLeg1v1_   = -99;
+
+  
     chIsoLeg1v2_   = 
       leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
     nhIsoLeg1v2_   = 
       leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetos2011NeutralLeg1).first;
     phIsoLeg1v2_   = 
       leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2011PhotonLeg1).first;
-    elecIsoLeg1v2_ = 
-      leg1->isoDeposit(pat::User3Iso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
-    muIsoLeg1v2_   = 
-      leg1->isoDeposit(pat::User2Iso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
+    elecIsoLeg1v2_ = -99;
+    //leg1->isoDeposit(pat::User3Iso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
+    muIsoLeg1v2_   = -99;
+    //leg1->isoDeposit(pat::User2Iso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
     chIsoPULeg1v2_ = 
       leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
     nhIsoPULeg1v2_ = 
@@ -1437,10 +1442,10 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2011EENeutralLeg1).first;
     phIsoEEPULeg1v2_ = 
       leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2011EEPhotonLeg1).first;
-    elecIsoEELeg1v2_     = 
-      leg1->isoDeposit(pat::User3Iso)->depositAndCountWithin(0.4,vetos2011EEChargedLeg1).first;
-    muIsoEELeg1v2_       = 
-      leg1->isoDeposit(pat::User2Iso)->depositAndCountWithin(0.4,vetos2011EEChargedLeg1).first;
+    elecIsoEELeg1v2_     =  -99;
+    //leg1->isoDeposit(pat::User3Iso)->depositAndCountWithin(0.4,vetos2011EEChargedLeg1).first;
+    muIsoEELeg1v2_       =  -99;
+    //leg1->isoDeposit(pat::User2Iso)->depositAndCountWithin(0.4,vetos2011EEChargedLeg1).first;
     
 
 
@@ -1465,13 +1470,6 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     phIsoLeg2_ = leg2->isolationPFGammaCandsEtSum();
     
     // cleaning
-    for(unsigned int i = 0; i <vetos2010ChargedLeg1.size(); i++){
-      delete vetos2010ChargedLeg1[i];
-    }
-    for(unsigned int i = 0; i <vetos2010NeutralLeg1.size(); i++){
-      delete vetos2010NeutralLeg1[i];
-      delete vetos2010PhotonLeg1[i];
-    }
     for(unsigned int i = 0; i <vetos2011ChargedLeg1.size(); i++){
       delete vetos2011ChargedLeg1[i];
     }
@@ -1484,7 +1482,25 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     }
     for(unsigned int i = 0; i <vetos2011EENeutralLeg1.size(); i++){
       delete vetos2011EENeutralLeg1[i];
-    delete vetos2011EEPhotonLeg1[i];
+      delete vetos2011EEPhotonLeg1[i];
+    }
+    for(unsigned int i = 0; i <vetos2012EBChargedLeg1.size(); i++){
+      delete vetos2012EBChargedLeg1[i];
+    }
+    for(unsigned int i = 0; i <vetos2012EBNeutralLeg1.size(); i++){
+      delete vetos2012EBNeutralLeg1[i];
+    }
+    for(unsigned int i = 0; i <vetos2012EBPhotonsLeg1.size(); i++){
+      delete vetos2012EBPhotonsLeg1[i];
+    }
+    for(unsigned int i = 0; i <vetos2012EEChargedLeg1.size(); i++){
+      delete vetos2012EEChargedLeg1[i];
+    }
+    for(unsigned int i = 0; i <vetos2012EENeutralLeg1.size(); i++){
+      delete vetos2012EENeutralLeg1[i];
+    }
+    for(unsigned int i = 0; i <vetos2012EEPhotonsLeg1.size(); i++){
+      delete vetos2012EEPhotonsLeg1[i];
     }
   
     
@@ -1498,6 +1514,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     HoE_   = leg1->hadronicOverEm();
     EoP_   = leg1->eSuperClusterOverP();
     fbrem_ = leg1->fbrem();
+    pfId_  = leg1->userInt("pfId");
     
     
     tightestCutBasedWP_ = -1;
@@ -1595,7 +1612,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     //diTauNSVfitMassErrDown_ = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrDown() : -99; 
     
     std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJets;
-    std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJetsIDL1Offset;
+    //std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJetsIDL1Offset;
     std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJetsID;
     std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJetsIDUp;
     std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJetsIDDown;
@@ -1654,11 +1671,11 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 	std::cout << "L1FastJet "   << newJet->correctedJet("L1FastJet","none",  "patJetCorrFactors").pt() << std::endl;
 	std::cout << "L2Relative "  << newJet->correctedJet("L2Relative","none", "patJetCorrFactors").pt() << std::endl; 
 	std::cout << "L3Absolute "  << newJet->correctedJet("L3Absolute","none", "patJetCorrFactors").pt() << std::endl; 
-	std::cout << "L1Offset ========> " << std::endl;
-	std::cout << "Uncorrected " << newJet->jecFactor("Uncorrected","none","patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;
-	std::cout << "L1Offset"     << newJet->jecFactor("L1Offset","none",   "patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;
-	std::cout << "L2Relative "  << newJet->jecFactor("L2Relative","none", "patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;
-	std::cout << "L3Absolute"   << newJet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;  
+	//std::cout << "L1Offset ========> " << std::endl;
+	//std::cout << "Uncorrected " << newJet->jecFactor("Uncorrected","none","patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;
+	//std::cout << "L1Offset"     << newJet->jecFactor("L1Offset","none",   "patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;
+	//std::cout << "L2Relative "  << newJet->jecFactor("L2Relative","none", "patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;
+	//std::cout << "L3Absolute"   << newJet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;  
       }
       
       std::map<string,float> aMap;
@@ -1679,12 +1696,12 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       jetMoments.insert(       make_pair( newJet->p4().Pt(), make_pair( jet->etaetaMoment(),
 									jet->phiphiMoment()) ) );
       
-      if(isMC_) 
-	sortedJetsIDL1Offset.insert( make_pair( newJet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*newJet->pt() , 
-						newJet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*newJet->p4()) );   
-      else 
-	sortedJetsIDL1Offset.insert( make_pair( newJet->jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*newJet->pt() , 
-						newJet->jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*newJet->p4()) ); 
+      //if(isMC_) 
+      //sortedJetsIDL1Offset.insert( make_pair( newJet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*newJet->pt() , 
+      //					newJet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*newJet->p4()) );   
+      //else 
+      //sortedJetsIDL1Offset.insert( make_pair( newJet->jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*newJet->pt() , 
+      //					newJet->jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*newJet->p4()) ); 
 
       if(verbose_) cout << "Components: "
 			<< "px=" << (newJet->p4()).Px() << " (" << newJet->px() << "), "
@@ -1717,9 +1734,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     for(CImap it = sortedJetsIDDown.begin(); it != sortedJetsIDDown.end() ; it++){
       jetsIDDownP4_->push_back( it->second );
     }
-    for(CImap it = sortedJetsIDL1Offset.begin(); it != sortedJetsIDL1Offset.end() ; it++){
-      jetsIDL1OffsetP4_->push_back( it->second );
-    }
+    //for(CImap it = sortedJetsIDL1Offset.begin(); it != sortedJetsIDL1Offset.end() ; it++){
+    //jetsIDL1OffsetP4_->push_back( it->second );
+    //}
     for(CImap it = sortedGenJetsID.begin(); it != sortedGenJetsID.end() ; it++){
       genJetsIDP4_->push_back( it->second );
     }

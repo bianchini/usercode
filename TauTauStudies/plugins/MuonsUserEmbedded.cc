@@ -56,7 +56,7 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
     for(unsigned int j = 0; j < recoMuons->size(); j++){
       if( Geom::deltaR( (*recoMuons)[j].p4() , aMuon.p4()) < 1e-03 ) { 
 	aRecoMuon = &((*recoMuons)[j]);
-	std::cout << "Match to recoMuon" << std::endl;
+	//std::cout << "Match to recoMuon" << std::endl;
       }
     }
     
@@ -87,7 +87,7 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
 
     /////////////////////////////////////////////////////
 
-    if ((aMuon.track()).isNonnull()) {
+    if (fitUnbiasedVertex_ && (aMuon.track()).isNonnull()) {
 
       const reco::TransientTrack &tt = 
 	transientTrackBuilder->build(aMuon.track()); 
@@ -118,20 +118,20 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
 	  newTkCollection.push_back(*itk->get());
       }
 
-      if(foundMatch && fitUnbiasedVertex_) { 
+      if(foundMatch) { 
 
-	std::cout << "Found match..." << std::endl;    
+	//std::cout << "Found match..." << std::endl;    
         edm::Handle<reco::BeamSpot> bs;
         iEvent.getByLabel(edm::InputTag("offlineBeamSpot"),bs);
       
         VertexReProducer revertex( allVertexHandle , iEvent);
         edm::Handle<reco::BeamSpot> pvbeamspot;
         iEvent.getByLabel(revertex.inputBeamSpot(),pvbeamspot);
-	std::cout << "Creating new vertex..." << std::endl;    
+	//std::cout << "Creating new vertex..." << std::endl;    
 	std::vector<TransientVertex> pvs = revertex.makeVertices(newTkCollection,*pvbeamspot,iSetup);
         if(pvs.size()>0) {
           thevtxub = pvs.front();
-	  std::cout << "Created unbiased vertex" << std::endl;
+	  //std::cout << "Created unbiased vertex" << std::endl;
         }
       }
 
@@ -199,24 +199,11 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
     ////////////////////////////////////////////////////
 
 
-
-
-
     // iso deposits
-    reco::isodeposit::AbsVetos vetos2010Charged;
-    reco::isodeposit::AbsVetos vetos2010Neutral;  
-    reco::isodeposit::AbsVetos vetos2010Photons;
     reco::isodeposit::AbsVetos vetos2011Charged; 
     reco::isodeposit::AbsVetos vetos2011Neutral;  
     reco::isodeposit::AbsVetos vetos2011Photons;
-
-    vetos2010Charged.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aMuon.eta(),aMuon.phi()),0.01));
-    vetos2010Charged.push_back(new reco::isodeposit::ThresholdVeto(0.5));
-    vetos2010Neutral.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aMuon.eta(),aMuon.phi()),0.08));
-    vetos2010Neutral.push_back(new reco::isodeposit::ThresholdVeto(1.0));
-    vetos2010Photons.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aMuon.eta(),aMuon.phi()),0.05));
-    vetos2010Photons.push_back(new reco::isodeposit::ThresholdVeto(1.0));
-    
+   
     vetos2011Charged.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aMuon.eta(),aMuon.phi()),0.0001));
     vetos2011Charged.push_back(new reco::isodeposit::ThresholdVeto(0.0));
     vetos2011Neutral.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aMuon.eta(),aMuon.phi()),0.01));
@@ -224,69 +211,45 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
     vetos2011Photons.push_back(new reco::isodeposit::ConeVeto(reco::isodeposit::Direction(aMuon.eta(),aMuon.phi()),0.01));
     vetos2011Photons.push_back(new reco::isodeposit::ThresholdVeto(0.5));
 
-    float chIso03v1 = 
-      aMuon.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.3, vetos2010Charged).first;
-    float nhIso03v1 = 
-      aMuon.isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.3, vetos2010Neutral).first;
-    float phIso03v1 = 
-      aMuon.isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.3, vetos2010Photons).first;
-    float nhIsoPU03v1 = 
-      aMuon.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.3, vetos2010Neutral).first;
-    float phIsoPU03v1 = 
-      aMuon.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.3, vetos2010Photons).first;
-
-    float chIso04v1 = 
-      aMuon.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4, vetos2010Charged).first;
-    float nhIso04v1 = 
-      aMuon.isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4, vetos2010Neutral).first;
-    float phIso04v1 = 
-      aMuon.isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4, vetos2010Photons).first;
-    float nhIsoPU04v1 = 
-      aMuon.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2010Neutral).first;
-    float phIsoPU04v1 = 
-      aMuon.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2010Photons).first;
-
-    float chIso03v2 = 
+    float chIso03 = 
       aMuon.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.3, vetos2011Charged).first;
-    float nhIso03v2 = 
+    float nhIso03 = 
       aMuon.isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.3, vetos2011Neutral).first;
-    float phIso03v2 = 
+    float phIso03 = 
       aMuon.isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.3, vetos2011Photons).first;
-    float nhIsoPU03v2 = 
+    float nhIsoPU03 = 
       aMuon.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.3, vetos2011Neutral).first;
-    float phIsoPU03v2 = 
+    float phIsoPU03 = 
       aMuon.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.3, vetos2011Photons).first;
 
-    float chIso04v2 = 
+    float chIso04 = 
       aMuon.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4, vetos2011Charged).first;
-    float nhIso04v2 = 
+    float nhIso04 = 
       aMuon.isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4, vetos2011Neutral).first;
-    float phIso04v2 = 
+    float phIso04 = 
       aMuon.isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4, vetos2011Photons).first;
-    float nhIsoPU04v2 = 
+    float nhIsoPU04 = 
       aMuon.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2011Neutral).first;
-    float phIsoPU04v2 = 
+    float phIsoPU04 = 
       aMuon.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2011Photons).first;
 
+    aMuon.addUserFloat("PFRelIso04",(chIso04+nhIso04+phIso04)/aMuon.pt());
+    aMuon.addUserFloat("PFRelIso03",(chIso03+nhIso03+phIso03)/aMuon.pt());
+    aMuon.addUserFloat("PFRelIsoDB04",(chIso04+std::max(nhIso04+phIso04-0.5*(nhIsoPU04),0.0))/aMuon.pt());
+    aMuon.addUserFloat("PFRelIsoDB03",(chIso03+std::max(nhIso03+phIso03-0.5*(nhIsoPU03),0.0))/aMuon.pt());
 
-    aMuon.addUserFloat("PFRelIso04v1",(chIso04v1+nhIso04v1+phIso04v1)/aMuon.pt());
-    aMuon.addUserFloat("PFRelIso03v1",(chIso03v1+nhIso03v1+phIso03v1)/aMuon.pt());
-    aMuon.addUserFloat("PFRelIsoDB04v1",(chIso04v1+std::max(nhIso04v1+phIso04v1-0.5*0.5*(nhIsoPU04v1+phIsoPU04v1),0.0))/aMuon.pt());
-    aMuon.addUserFloat("PFRelIsoDB03v1",(chIso03v1+std::max(nhIso03v1+phIso03v1-0.5*0.5*(nhIsoPU03v1+phIsoPU03v1),0.0))/aMuon.pt());
+    //std::cout << aMuon.pt() << " => "
+    //      << chIso04v2 << ", "
+    //      << nhIso04v2 << ", "
+    //      << phIso04v2 << ", "
+    //      << nhIsoPU04v2 << ", "
+    //      << phIsoPU04v2
+    //      << std::endl;
+    //std::cout << aMuon.userFloat("PFRelIso04v2")
+    //      << std::endl;
 
-    aMuon.addUserFloat("PFRelIso04v2",(chIso04v2+nhIso04v2+phIso04v2)/aMuon.pt());
-    aMuon.addUserFloat("PFRelIso03v2",(chIso03v2+nhIso03v2+phIso03v2)/aMuon.pt());
-    aMuon.addUserFloat("PFRelIsoDB04v2",(chIso04v2+std::max(nhIso04v2+phIso04v2-0.5*0.5*(nhIsoPU04v2+phIsoPU04v2),0.0))/aMuon.pt());
-    aMuon.addUserFloat("PFRelIsoDB03v2",(chIso03v2+std::max(nhIso03v2+phIso03v2-0.5*0.5*(nhIsoPU03v2+phIsoPU03v2),0.0))/aMuon.pt());
 
     // cleaning
-    for(unsigned int i = 0; i <vetos2010Charged.size(); i++){
-      delete vetos2010Charged[i];
-    }
-    for(unsigned int i = 0; i <vetos2010Neutral.size(); i++){
-      delete vetos2010Neutral[i];
-      delete vetos2010Photons[i];
-    }
     for(unsigned int i = 0; i <vetos2011Charged.size(); i++){
       delete vetos2011Charged[i];
     }

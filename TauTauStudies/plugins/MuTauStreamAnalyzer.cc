@@ -115,7 +115,7 @@ void MuTauStreamAnalyzer::beginJob(){
   jetsIDP4_        = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   jetsIDUpP4_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   jetsIDDownP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  jetsIDL1OffsetP4_= new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  //jetsIDL1OffsetP4_= new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genJetsIDP4_     = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
   diTauVisP4_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
@@ -392,7 +392,7 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("jetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDP4_);
   tree_->Branch("jetsIDUpP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDUpP4_);
   tree_->Branch("jetsIDDownP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDDownP4_);
-  tree_->Branch("jetsIDL1OffsetP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDL1OffsetP4_);
+  //tree_->Branch("jetsIDL1OffsetP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&jetsIDL1OffsetP4_);
   tree_->Branch("genJetsIDP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genJetsIDP4_);
   
   tree_->Branch("jetsBtagHE","std::vector<double>",&jetsBtagHE_);
@@ -450,14 +450,14 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("pZetaVis",&pZetaVis_,"pZetaVis/F");
   tree_->Branch("pZetaSig",&pZetaSig_,"pZetaSig/F");
 
-  tree_->Branch("chIsoLeg1v1",&chIsoLeg1v1_,"chIsoLeg1v1/F");
-  tree_->Branch("nhIsoLeg1v1",&nhIsoLeg1v1_,"nhIsoLeg1v1/F");
-  tree_->Branch("phIsoLeg1v1",&phIsoLeg1v1_,"phIsoLeg1v1/F");
-  tree_->Branch("elecIsoLeg1v1",&elecIsoLeg1v1_,"elecIsoLeg1v1/F");
-  tree_->Branch("muIsoLeg1v1",&muIsoLeg1v1_,"muIsoLeg1v1/F");
-  tree_->Branch("chIsoPULeg1v1",&chIsoPULeg1v1_,"chIsoPULeg1v1/F");
-  tree_->Branch("nhIsoPULeg1v1",&nhIsoPULeg1v1_,"nhIsoPULeg1v1/F");
-  tree_->Branch("phIsoPULeg1v1",&phIsoPULeg1v1_,"phIsoPULeg1v1/F");
+  //tree_->Branch("chIsoLeg1v1",&chIsoLeg1v1_,"chIsoLeg1v1/F");
+  //tree_->Branch("nhIsoLeg1v1",&nhIsoLeg1v1_,"nhIsoLeg1v1/F");
+  //tree_->Branch("phIsoLeg1v1",&phIsoLeg1v1_,"phIsoLeg1v1/F");
+  //tree_->Branch("elecIsoLeg1v1",&elecIsoLeg1v1_,"elecIsoLeg1v1/F");
+  //tree_->Branch("muIsoLeg1v1",&muIsoLeg1v1_,"muIsoLeg1v1/F");
+  //tree_->Branch("chIsoPULeg1v1",&chIsoPULeg1v1_,"chIsoPULeg1v1/F");
+  //tree_->Branch("nhIsoPULeg1v1",&nhIsoPULeg1v1_,"nhIsoPULeg1v1/F");
+  //tree_->Branch("phIsoPULeg1v1",&phIsoPULeg1v1_,"phIsoPULeg1v1/F");
 
   tree_->Branch("chIsoLeg1v2",&chIsoLeg1v2_,"chIsoLeg1v2/F");
   tree_->Branch("nhIsoLeg1v2",&nhIsoLeg1v2_,"nhIsoLeg1v2/F");
@@ -541,7 +541,7 @@ MuTauStreamAnalyzer::~MuTauStreamAnalyzer(){
   delete METP4_; delete diTauVisP4_; delete diTauCAP4_; delete diTauICAP4_; 
   delete diTauSVfitP4_; delete genVP4_;
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_; delete sigDCA_;
-  delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_; delete extraMuons_; delete pfMuons_; delete jetsIDL1OffsetP4_;
+  delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_; delete extraMuons_; delete pfMuons_; //delete jetsIDL1OffsetP4_;
   delete genTausP4_;
   delete jetsChNfraction_; delete jetsChEfraction_;delete jetMoments_;
   delete gammadR_ ; delete gammadPhi_; delete gammadEta_; delete gammaPt_;
@@ -816,19 +816,19 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       
       if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3
 	  && (*muonsRel)[i].charge()*(*muons)[j].charge()<0
-	  && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 
-	  && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
+	  && (*muons)[j].userFloat("PFRelIsoDB04")<0.3 
+	  && (*muonsRel)[i].userFloat("PFRelIsoDB04")<0.3 ){
 	muFlag_       = 1;
-	muVetoRelIso_ = (*muonsRel)[i].userFloat("PFRelIsoDB04v2");
+	muVetoRelIso_ = (*muonsRel)[i].userFloat("PFRelIsoDB04");
 	if(verbose_) cout<< "Two muons failing diMu veto: flag= " << muFlag_ << endl;
 	found=true;
       }
       else if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3
 	       && (*muonsRel)[i].charge()*(*muons)[j].charge()>0
-	       && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 
-	       && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
+	       && (*muons)[j].userFloat("PFRelIsoDB04")<0.3 
+	       && (*muonsRel)[i].userFloat("PFRelIsoDB04")<0.3 ){
 	muFlag_       = 2;
-	muVetoRelIso_ = (*muonsRel)[i].userFloat("PFRelIsoDB04v2");
+	muVetoRelIso_ = (*muonsRel)[i].userFloat("PFRelIsoDB04");
 	if(verbose_) cout<< "Two muons with SS: flag= " << muFlag_ << endl;
 	found=true;
       }
@@ -837,62 +837,40 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   
 
   vector<string> triggerPaths;
-  vector<string> XtriggerPaths;
   vector<string> HLTfiltersMu;
   vector<string> HLTfiltersTau;
 
   if(isMC_){
     
-    // X-triggers 
-    XtriggerPaths.push_back("HLT_Mu15_LooseIsoPFTau20_v*");
-    XtriggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v*");
-    XtriggerPaths.push_back("HLT_Mu15_v*");
-    XtriggerPaths.push_back("HLT_IsoMu12_v*");
+    // for Summer12
+    triggerPaths.push_back("HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v1");
+    triggerPaths.push_back("HLT_Mu18_eta2p1_LooseIsoPFTau20_v1");
+    triggerPaths.push_back("HLT_IsoMu20_eta2p1_v1");
 
-    // for Fall11
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v9");
-    triggerPaths.push_back("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v1");
-    triggerPaths.push_back("HLT_IsoMu15_v14");
+    /*
+    // https://j2eeps.cern.ch/cms-project-confdb-hltdev/browser/
 
-    HLTfiltersMu.push_back("hltSingleMuIsoL3IsoFiltered15");
-    HLTfiltersMu.push_back("hltSingleMuIsoL1s14L3IsoFiltered15eta2p1");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoMu15IsoPFTau15");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoMu15IsoPFTau20");
-    HLTfiltersTau.push_back("hltPFTau15TrackLooseIso");
-    HLTfiltersTau.push_back("hltPFTau20TrackLooseIso");
+    path HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v4 = 
+    HLTBeginSequence + hltL1sMu16Eta2p1 + hltPreIsoMu18eta2p1LooseIsoPFTau20 + 
+    hltL1fL1sMu16Eta2p1L1Filtered0 + HLTL2muonrecoSequence + hltL2fL1sMu16Eta2p1L1f0L2Filtered16Q + HLTL3muonrecoSequence + 
+    hltL3fL1sMu16Eta2p1L1f0L2f16QL3Filtered18Q + HLTL3muoncaloisorecoSequenceNoBools + HLTL3muonisorecoSequence + 
+    hltL3crIsoL1sMu16Eta2p1L1f0L2f16QL3f18QL3crIsoFiltered10 + HLTRecoJetSequencePrePF + hltTauJet5 + HLTPFJetTriggerSequenceMuTau + 
+    hltPFJet20 + HLTLooseIsoPFTauSequence + hltPFTau20 + hltPFTau20Track + hltPFTau20TrackLooseIso + hltIsoMuPFTauVertexFinder + 
+    hltPFTau20IsoMuVertex + hltOverlapFilterIsoMu18LooseIsoPFTau20 + HLTEndSequence
+    */
+
+    HLTfiltersMu.push_back("hltL3crIsoL1sMu16Eta2p1L1f0L2f16QL3f18QL3crIsoFiltered10");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoMu18LooseIsoPFTau20");
 
   }
   else{
     
-    XtriggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v*");
-    XtriggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v*");
-    XtriggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau20_v*");
-    XtriggerPaths.push_back("HLT_IsoMu12_v*");
+    triggerPaths.push_back("HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v4");
+    triggerPaths.push_back("HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v5");
+    triggerPaths.push_back("HLT_IsoMu20_eta2p1_LooseIsoPFTau20_v3");
 
-
-    triggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v1");
-    triggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v2");
-    triggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v4");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v2");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v4");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v5");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v6");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v8");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v9");
-    triggerPaths.push_back("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v1");
-    triggerPaths.push_back("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v5");
-    triggerPaths.push_back("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v6");
-
-    triggerPaths.push_back("HLT_IsoMu12_v1");
-    triggerPaths.push_back("HLT_IsoMu12_v2");
-
-    HLTfiltersMu.push_back("hltSingleMuIsoL3IsoFiltered12");
-    HLTfiltersMu.push_back("hltSingleMuIsoL3IsoFiltered15");
-    HLTfiltersMu.push_back("hltSingleMuIsoL1s14L3IsoFiltered15eta2p1");
-
-    HLTfiltersTau.push_back("hltOverlapFilterIsoMu12IsoPFTau10");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoMu15IsoPFTau15");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoMu15IsoPFTau20");
+    HLTfiltersMu.push_back("hltL3crIsoL1sMu16Eta2p1L1f0L2f16QL3f18QL3crIsoFiltered10");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoMu18LooseIsoPFTau20");
   }
 
   for(unsigned int i=0;i<triggerPaths.size();i++){
@@ -982,7 +960,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     jetsIDP4_->clear();
     jetsIDUpP4_->clear();
     jetsIDDownP4_->clear();
-    jetsIDL1OffsetP4_->clear();
+    //jetsIDL1OffsetP4_->clear();
     diTauVisP4_->clear();
     diTauCAP4_->clear();
     diTauICAP4_->clear();
@@ -1285,10 +1263,10 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
         
     
     tightestHPSWP_ = -1;
-    if(leg2->tauID("byVLooseIsolation")>0.5) tightestHPSWP_++;
-    if(leg2->tauID("byLooseIsolation")>0.5)  tightestHPSWP_++;
-    if(leg2->tauID("byMediumIsolation")>0.5) tightestHPSWP_++;
-    if(leg2->tauID("byTightIsolation")>0.5)  tightestHPSWP_++;
+    //if(leg2->tauID("byVLooseIsolation")>0.5) tightestHPSWP_++;
+    //if(leg2->tauID("byLooseIsolation")>0.5)  tightestHPSWP_++;
+    //if(leg2->tauID("byMediumIsolation")>0.5) tightestHPSWP_++;
+    //if(leg2->tauID("byTightIsolation")>0.5)  tightestHPSWP_++;
     tightestHPSDBWP_ = -1;
     if(leg2->tauID("byVLooseCombinedIsolationDeltaBetaCorr")>0.5) tightestHPSDBWP_++;
     if(leg2->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5)  tightestHPSDBWP_++;
@@ -1325,56 +1303,28 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     
       
     
-    // isoDeposit definition: 2010
-    isodeposit::AbsVetos vetos2010ChargedLeg1; 
-    isodeposit::AbsVetos vetos2010NeutralLeg1; 
-    isodeposit::AbsVetos vetos2010PhotonLeg1;
     // isoDeposit definition: 2011
     isodeposit::AbsVetos vetos2011ChargedLeg1; 
     isodeposit::AbsVetos vetos2011NeutralLeg1; 
     isodeposit::AbsVetos vetos2011PhotonLeg1;
-    
-    vetos2010ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
-    vetos2010ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
-    vetos2010NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
-    vetos2010NeutralLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
-    vetos2010PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.05));
-    vetos2010PhotonLeg1.push_back( new isodeposit::ThresholdVeto(1.0));
-    
+     
     vetos2011ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.0001));
     vetos2011ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
     vetos2011NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
     vetos2011NeutralLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
     vetos2011PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
     vetos2011PhotonLeg1.push_back( new isodeposit::ThresholdVeto(0.5));
-    
-    chIsoLeg1v1_   = 
-      leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
-    nhIsoLeg1v1_ = 
-      leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetos2010NeutralLeg1).first;
-    phIsoLeg1v1_ = 
-      leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2010PhotonLeg1).first;
-    elecIsoLeg1v1_ = 
-      leg1->isoDeposit(pat::User3Iso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
-    muIsoLeg1v1_   = 
-      leg1->isoDeposit(pat::User2Iso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
-    chIsoPULeg1v1_ = 
-      leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
-    nhIsoPULeg1v1_ = 
-      leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010NeutralLeg1).first;
-    phIsoPULeg1v1_ = 
-      leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010PhotonLeg1).first;
-    
+       
     chIsoLeg1v2_   = 
       leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
     nhIsoLeg1v2_ = 
       leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetos2011NeutralLeg1).first;
     phIsoLeg1v2_ = 
       leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2011PhotonLeg1).first;
-    elecIsoLeg1v2_ = 
-      leg1->isoDeposit(pat::User3Iso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
-    muIsoLeg1v2_   = 
-      leg1->isoDeposit(pat::User2Iso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
+    elecIsoLeg1v2_ = -99;
+      //leg1->isoDeposit(pat::User3Iso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
+    muIsoLeg1v2_   = -99;
+      //leg1->isoDeposit(pat::User2Iso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
     chIsoPULeg1v2_ = 
       leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
     nhIsoPULeg1v2_ = 
@@ -1401,13 +1351,6 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     
     
     // cleaning
-    for(unsigned int i = 0; i <vetos2010ChargedLeg1.size(); i++){
-      delete vetos2010ChargedLeg1[i];
-    }
-    for(unsigned int i = 0; i <vetos2010NeutralLeg1.size(); i++){
-      delete vetos2010NeutralLeg1[i];
-      delete vetos2010PhotonLeg1[i];
-    }
     for(unsigned int i = 0; i <vetos2011ChargedLeg1.size(); i++){
       delete vetos2011ChargedLeg1[i];
     }
@@ -1444,7 +1387,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     if(verbose_) cout << "SVFit fit solution ==> " << nSVfitFitP4.E() << endl;
     }
     diTauSVfitP4_->push_back( nSVfitFitP4  );
-    cout << "Fit: " << nSVfitFitP4.M() << endl;
+    //cout << "Fit: " << nSVfitFitP4.M() << endl;
     int errFlag = 0;
     diTauSVfitMassErrUp_    = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",&errFlag)!=0 /*&& theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution()*/ ) 
       ? theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)->massErrUp()   : -99; 
@@ -1453,7 +1396,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     
     diTauNSVfitMass_        = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
       ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->mass()        : -99; 
-    cout << "Int: " << diTauNSVfitMass_ << endl;
+    //cout << "Int: " << diTauNSVfitMass_ << endl;
     diTauNSVfitMassErrUp_   = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
       ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrUp()   : -99; 
     diTauNSVfitMassErrDown_ = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
@@ -1462,7 +1405,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     
 
     std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedJets;
-    std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedJetsIDL1Offset;
+    //std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedJetsIDL1Offset;
     std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedJetsID;
     std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedJetsIDUp;
     std::map<double, math::XYZTLorentzVectorD ,MuTauStreamAnalyzer::more> sortedJetsIDDown;
@@ -1523,11 +1466,11 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	std::cout << "L1FastJet "   << newJet->correctedJet("L1FastJet","none",  "patJetCorrFactors").pt() << std::endl;
 	std::cout << "L2Relative "  << newJet->correctedJet("L2Relative","none", "patJetCorrFactors").pt() << std::endl; 
 	std::cout << "L3Absolute "  << newJet->correctedJet("L3Absolute","none", "patJetCorrFactors").pt() << std::endl; 
-	std::cout << "L1Offset ========> " << std::endl;
-	std::cout << "Uncorrected " << newJet->jecFactor("Uncorrected","none","patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;
-	std::cout << "L1Offset"     << newJet->jecFactor("L1Offset","none",   "patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;
-	std::cout << "L2Relative "  << newJet->jecFactor("L2Relative","none", "patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;
-	std::cout << "L3Absolute"   << newJet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;  
+	//std::cout << "L1Offset ========> " << std::endl;
+	//std::cout << "Uncorrected " << newJet->jecFactor("Uncorrected","none","patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;
+	//std::cout << "L1Offset"     << newJet->jecFactor("L1Offset","none",   "patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;
+	//std::cout << "L2Relative "  << newJet->jecFactor("L2Relative","none", "patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;
+	//std::cout << "L3Absolute"   << newJet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*newJet->pt() << std::endl;  
       }
       
       std::map<string,float> aMap;
@@ -1553,12 +1496,12 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       jetMoments.insert(       make_pair( newJet->p4().Pt(), make_pair( jet->etaetaMoment(),
 									jet->phiphiMoment()) ) );
       
-      if(isMC_) 
-	sortedJetsIDL1Offset.insert( make_pair( newJet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*newJet->pt() , 
-						newJet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*newJet->p4()) );   
-      else 
-	sortedJetsIDL1Offset.insert( make_pair( newJet->jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*newJet->pt() , 
-						newJet->jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*newJet->p4()) ); 
+      //if(isMC_) 
+      //sortedJetsIDL1Offset.insert( make_pair( newJet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*newJet->pt() , 
+      //					newJet->jecFactor("L3Absolute","none", "patJetCorrFactorsL1Offset")*newJet->p4()) );   
+      //else 
+      //sortedJetsIDL1Offset.insert( make_pair( newJet->jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*newJet->pt() , 
+      //					newJet->jecFactor("L2L3Residual","none", "patJetCorrFactorsL1Offset")*newJet->p4()) ); 
 
       if(verbose_) cout << "Components: "
 			<< "px=" << (newJet->p4()).Px() << " (" << newJet->px() << "), "
@@ -1590,9 +1533,9 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     for(CImap it = sortedJetsIDDown.begin(); it != sortedJetsIDDown.end() ; it++){
       jetsIDDownP4_->push_back( it->second );
     }
-    for(CImap it = sortedJetsIDL1Offset.begin(); it != sortedJetsIDL1Offset.end() ; it++){
-      jetsIDL1OffsetP4_->push_back( it->second );
-    }
+    //for(CImap it = sortedJetsIDL1Offset.begin(); it != sortedJetsIDL1Offset.end() ; it++){
+    //jetsIDL1OffsetP4_->push_back( it->second );
+    //}
     for(CImap it = sortedGenJetsID.begin(); it != sortedGenJetsID.end() ; it++){
       genJetsIDP4_->push_back( it->second );
     }

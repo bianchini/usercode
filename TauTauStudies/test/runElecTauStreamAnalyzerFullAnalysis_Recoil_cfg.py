@@ -7,12 +7,12 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load("Configuration.StandardSequences.Geometry_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 
-from Configuration.PyReleaseValidation.autoCond import autoCond
-process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
+#from Configuration.PyReleaseValidation.autoCond import autoCond
+#process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
-runOnMC     = True
+runOnMC     = False
 doSVFitReco = True
 
 if runOnMC:
@@ -22,30 +22,106 @@ else:
 
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START42_V14B::All')
+    process.GlobalTag.globaltag = cms.string('START52_V7::All')
+
 else:
-    process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_52_V7::All')
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 500
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/inaranjo/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-08Feb2012/8ae263ffff46f0cc089ee8d4d13b7116/patTuples_ElecTauStream_10_1_Sed.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/inaranjo/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-08Feb2012-v2/8ae263ffff46f0cc089ee8d4d13b7116/patTuples_ElecTauStream_10_1_78b.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/ElecTauStream-16Nov2011//88521b2a6e3f67f72df8ed3ebcf47080/patTuples_ElecTauStream_9_1_ZWu.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-A/7844d4f37a96a2c29702b4cab23898d9/patTuples_ElecTauStream_1_1_L9Q.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-13Oct2011/4858ffc00b76ea327a878ab2c9d1d4f3/patTuples_ElecTauStream_1_1_MHb.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DoubleMu/ElecTauStream-08Nov2011-v2-05AugReReco-Embedded/7254a5dfb1c71be66f71c2cfd71d6b63/patTuples_ElecTauStream_9_1_eRU.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-21Oct2011/72336b8f61b87f1536c6b95a5cfbfe6e/patTuples_ElecTauStream_1_1_qHA.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-21Oct2011-05AugReReco/ea0534a53ae8342d77d517a552111b33/patTuples_ElecTauStream_18_1_L7T.root'
-    #'rfio:rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-v6/add82882179501750b106d9900e51989/patTuples_ElecTauStream_45_1_UZL.root',
     #'file:./patTuples_ElecTauStream.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-08Nov2011-RunBPromptReco-v1/b9a57288ad37f0c4bdf36b8f8450de94/patTuples_ElecTauStream_792_1_ePf.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-08Nov2011-PromptReco-v6p2/b9a57288ad37f0c4bdf36b8f8450de94/patTuples_ElecTauStream_7_1_N43.root'
+
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_101_1_Q8V.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_102_1_fyV.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_103_1_xEA.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_107_2_Y1L.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_109_1_5pG.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_11_2_Wtu.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_12_1_jIz.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_13_1_mCk.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_16_1_WeO.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_17_2_BI3.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_18_1_k1t.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_19_2_sty.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_1_1_UQS.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_20_1_oEP.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_22_2_UDX.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_23_1_PWw.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_24_1_ya3.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_26_1_Bx1.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_2_1_GCq.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_30_1_0RW.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_32_1_f6Q.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_34_1_QJs.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_36_1_nKS.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_38_2_TNX.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_39_1_psz.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_3_1_wfg.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_41_1_7Im.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_42_1_EoO.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_45_2_uTH.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_46_1_r84.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_47_2_PYf.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_48_1_WJA.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_49_2_8A2.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_4_1_lTn.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_51_2_CZ6.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_52_1_Pjo.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_53_2_j8d.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_54_1_ogs.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_56_1_ArY.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_58_1_LjP.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_59_1_R7Z.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_5_1_3Yc.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_60_1_FWU.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_62_2_5OG.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_63_1_esB.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_64_1_e2W.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_65_1_IDs.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_66_1_zed.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_69_2_XWA.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_6_1_PQz.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_70_1_oBJ.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_71_1_OuU.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_72_1_CtV.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_75_1_MzX.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_76_1_fXJ.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_7_1_3GB.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_80_1_gB1.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_82_1_J23.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_83_1_RHl.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_84_1_3Fz.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_86_1_6eb.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_87_2_4Er.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_8_1_Hmt.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_90_1_kr2.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_93_1_b2e.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_94_1_fnZ.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_95_2_Cdi.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_97_1_ZM9.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_98_1_juL.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_99_1_DRT.root',
+
+
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_10_2_9pt.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_11_2_GDL.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_12_2_4In.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_13_2_Cbc.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_1_2_6iw.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_2_2_8Oi.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_3_2_qlY.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_4_2_3B3.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_5_2_Ntc.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_6_2_fT2.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_7_2_OBt.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_8_2_AfI.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_9_2_pdJ.root',
     )
     )
 
@@ -127,7 +203,7 @@ process.metRecoilCorrector = cms.EDProducer(
     "MEtRecoilCorrectorProducer",
     genParticleTag      = cms.InputTag("genParticles"),
     jetTag              = cms.InputTag("selectedPatJets"),
-    metTag              = cms.InputTag("patMETsPFlow"),
+    metTag              = cms.InputTag("patMETsPF"),
     electronTag         = cms.InputTag("elecPtEtaIDIso"),
     muonTag             = cms.InputTag(""),
     tauTag              = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
@@ -307,7 +383,7 @@ process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
     cut = cms.string("tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 && pt>20 && abs(eta)<2.3"
-                     #"&& tauID('againstElectronMVA')>0.5"
+                     "&& tauID('againstElectronMVA')>0.5"
                      ),
     filter = cms.bool(False)
     )
@@ -315,7 +391,7 @@ process.tauPtEtaIDAgMuAgElecIsoPtRel  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
     cut = cms.string("tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 && pt>19 && abs(eta)<2.3"
-                     #"&& tauID('againstElectronMVA')>0.5"
+                     "&& tauID('againstElectronMVA')>0.5"
                      ),
     filter = cms.bool(False)
     )
@@ -343,13 +419,13 @@ process.tauPtEtaIDAgMuAgElecIsoTauDownCounter = process.tauPtEtaIDAgMuAgElecIsoC
 process.elecPtEtaIDIso  = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("elecPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04v3')<0.50 && pt>20 && abs(eta)<2.1 && "+simpleCutsWP95),
+    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>20 && abs(eta)<2.1 && "+simpleCutsWP95),
     filter = cms.bool(False)
     )
 process.elecPtEtaIDIsoPtRel  = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("elecPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04v3')<0.50 && pt>19 && abs(eta)<2.1 && "+simpleCutsWP95),
+    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>19 && abs(eta)<2.1 && "+simpleCutsWP95),
     filter = cms.bool(False)
     )
 
@@ -401,7 +477,7 @@ process.elecTauStreamAnalyzer = cms.EDAnalyzer(
     jets               = cms.InputTag("selectedPatJets"),
     newJets            = cms.InputTag(""),
     met                = cms.InputTag("metRecoilCorrector",  "N"),
-    rawMet             = cms.InputTag("patMETsPFlow"),
+    rawMet             = cms.InputTag("patMETsPF"),
     electrons          = cms.InputTag("elecPtEtaID"),
     electronsRel       = cms.InputTag("elecPtEtaRelID"),
     vertices           = cms.InputTag("selectedPrimaryVertices"),
@@ -501,7 +577,7 @@ if runOnMC:
         process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
         process.elecTauStreamAnalyzer
         )
-    
+    '''
     process.pJetUp = cms.Path(
         process.allEventsFilter*
         (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
@@ -522,7 +598,6 @@ if runOnMC:
         process.diTauJetDown*process.selectedDiTauJetDown*process.selectedDiTauJetDownCounter*
         process.elecTauStreamAnalyzerJetDown
         )
-    '''
     process.pMEtResolutionUp = cms.Path(
         process.allEventsFilter*
         (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
@@ -584,6 +659,41 @@ if runOnMC:
         process.diTauElecDown*process.selectedDiTauElecDown*process.selectedDiTauElecDownCounter*
         process.elecTauStreamAnalyzerElecDown
         )
+    process.pTauUp = cms.Path(
+        process.allEventsFilter*
+        (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
+        process.tauPtEtaIDAgMuAgElecIsoPtRel*
+        process.elecPtEtaRelID *
+        process.metRecoilCorrector*
+        (process.rescaledMETtau+process.rescaledTaus)*
+        (process.tauPtEtaIDAgMuAgElecIsoTauUp*process.tauPtEtaIDAgMuAgElecIsoTauUpCounter)*
+        process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter*
+        process.elecTauStreamAnalyzerTauUp
+        )
+    process.pTauDown = cms.Path(
+        process.allEventsFilter*
+        (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
+        process.tauPtEtaIDAgMuAgElecIsoPtRel*
+        process.elecPtEtaRelID *
+        process.metRecoilCorrector*
+        (process.rescaledMETtau+process.rescaledTaus)*
+        (process.tauPtEtaIDAgMuAgElecIsoTauDown*process.tauPtEtaIDAgMuAgElecIsoTauDownCounter)*
+        process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
+        process.elecTauStreamAnalyzerTauDown
+        )
+    '''
+    
+else:
+    
+    process.pNominal = cms.Path(
+        process.allEventsFilter*
+        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+        process.elecPtEtaRelID *
+        process.metRecoilCorrector*
+        process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
+        process.elecTauStreamAnalyzer
+        )
     '''
     process.pTauUp = cms.Path(
         process.allEventsFilter*
@@ -607,42 +717,6 @@ if runOnMC:
         process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
         process.elecTauStreamAnalyzerTauDown
         )
-    
-else:
-    
-    process.pNominal = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
-        process.elecTauStreamAnalyzer
-        )
-
-    process.pTauUp = cms.Path(
-        process.allEventsFilter*
-        (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
-        process.tauPtEtaIDAgMuAgElecIsoPtRel*
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        (process.rescaledMETtau+process.rescaledTaus)*
-        (process.tauPtEtaIDAgMuAgElecIsoTauUp*process.tauPtEtaIDAgMuAgElecIsoTauUpCounter)*
-        process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter*
-        process.elecTauStreamAnalyzerTauUp
-        )
-    process.pTauDown = cms.Path(
-        process.allEventsFilter*
-        (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
-        process.tauPtEtaIDAgMuAgElecIsoPtRel*
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        (process.rescaledMETtau+process.rescaledTaus)*
-        (process.tauPtEtaIDAgMuAgElecIsoTauDown*process.tauPtEtaIDAgMuAgElecIsoTauDownCounter)*
-        process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
-        process.elecTauStreamAnalyzerTauDown
-        )
-
        
     process.pElecUp = cms.Path(
         process.allEventsFilter*
@@ -666,7 +740,7 @@ else:
         process.diTauElecDown*process.selectedDiTauElecDown*process.selectedDiTauElecDownCounter*
         process.elecTauStreamAnalyzerElecDown
         )
-    
+    '''
 
 process.out = cms.OutputModule(
     "PoolOutputModule",

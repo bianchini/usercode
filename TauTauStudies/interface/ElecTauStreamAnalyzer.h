@@ -150,6 +150,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   float diTauSVfitMassErrUp_;
   float diTauSVfitMassErrDown_;
   float visibleTauMass_;
+  float visibleGenTauMass_;
 
   float leadPFChargedHadrMva_;
   float leadPFChargedHadrHcalEnergy_;
@@ -193,6 +194,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   float HoE_;
   float EoP_;
   float fbrem_;
+  int pfId_;
   //int isEleLikelihoodID_;
   //int isEleCutBasedID_;
 

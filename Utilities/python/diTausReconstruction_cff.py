@@ -6,7 +6,7 @@ from TauAnalysis.CandidateTools.resolutions_cfi import *
 from TauAnalysis.CandidateTools.nSVfitAlgorithmDiTau_cfi import *
 from TauAnalysis.CandidateTools.nSVfitAlgorithmTauDecayKineMC_cfi import *
 from RecoMET.METProducers.METSigParams_cfi import *
-from TauAnalysis.CandidateTools.nSVfitAlgorithmVisPtCutCorrections_cfi import *
+#from TauAnalysis.CandidateTools.nSVfitAlgorithmVisPtCutCorrections_cfi import *
 
 #--------------------------------------------------------------------------------
 # produce combinations of electron + tau-jet pairs
@@ -130,38 +130,38 @@ allMuTauPairs.nSVfit.psKine_MEt_logM_fit.algorithm = cms.PSet(
 
 ############# PtCorr
 
-nSVfitResonanceLikelihoodPolarization.LR.formula = cms.string("[0]")
-nSVfitResonanceLikelihoodPolarization.RL.formula = cms.string("[0]")
-nSVfitResonanceLikelihoodPolarization.LL.formula = cms.string("[0]")
-nSVfitResonanceLikelihoodPolarization.RR.formula = cms.string("[0]")
-
-#nSVfitResonanceLikelihoodPolarization
-allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.likelihoodFunctions = cms.VPSet()
-
-nSVfitTauLikelihoodMatrixElement.applySinThetaFactor   = cms.bool(True)
-nSVfitTauLikelihoodPhaseSpace.applySinThetaFactor      = cms.bool(True)
-nSVfitMuonLikelihoodPhaseSpace.applySinThetaFactor     = cms.bool(True)
-nSVfitMuonLikelihoodMatrixElement.applySinThetaFactor  = cms.bool(True)
-
-#allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg1.likelihoodFunctions = cms.VPSet(nSVfitMuonLikelihoodMatrixElement)
-allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg1.likelihoodFunctions = cms.VPSet(nSVfitMuonLikelihoodPhaseSpace)
-allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg1.likelihoodFunctions[0].applyVisPtCutCorrection = cms.bool(True)
-allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg1.likelihoodFunctions[0].visPtCutThreshold = cms.double(15)
-allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg1.likelihoodFunctions[0].visPtCutCorrection = visPtCutCorrectionMuon15
-
-#allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg2.likelihoodFunctions = cms.VPSet(nSVfitTauLikelihoodMatrixElement)
-allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg2.likelihoodFunctions = cms.VPSet(nSVfitTauLikelihoodPhaseSpace)
-allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg2.likelihoodFunctions[0].applyVisPtCutCorrection = cms.bool(True)
-allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg2.likelihoodFunctions[0].visPtCutThreshold = cms.double(20)
-allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg2.likelihoodFunctions[0].visPtCutCorrection = visPtCutCorrectionTau20
-
-#allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.builder.polStates = cms.vstring("RR","LL")
-allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.builder.polStates = cms.vstring("undefined")
-
-
-allMuTauPairs.nSVfit.psKine_MEt_logM_int = cms.PSet()
-allMuTauPairs.nSVfit.psKine_MEt_logM_int.config = allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config
-allMuTauPairs.nSVfit.psKine_MEt_logM_int.algorithm = nSVfitProducerByIntegration.algorithm
+#nSVfitResonanceLikelihoodPolarization.LR.formula = cms.string("[0]")
+#nSVfitResonanceLikelihoodPolarization.RL.formula = cms.string("[0]")
+#nSVfitResonanceLikelihoodPolarization.LL.formula = cms.string("[0]")
+#nSVfitResonanceLikelihoodPolarization.RR.formula = cms.string("[0]")
+#
+##nSVfitResonanceLikelihoodPolarization
+#allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.likelihoodFunctions = cms.VPSet()
+#
+#nSVfitTauLikelihoodMatrixElement.applySinThetaFactor   = cms.bool(True)
+#nSVfitTauLikelihoodPhaseSpace.applySinThetaFactor      = cms.bool(True)
+#nSVfitMuonLikelihoodPhaseSpace.applySinThetaFactor     = cms.bool(True)
+#nSVfitMuonLikelihoodMatrixElement.applySinThetaFactor  = cms.bool(True)
+#
+##allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg1.likelihoodFunctions = cms.VPSet(nSVfitMuonLikelihoodMatrixElement)
+#allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg1.likelihoodFunctions = cms.VPSet(nSVfitMuonLikelihoodPhaseSpace)
+#allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg1.likelihoodFunctions[0].applyVisPtCutCorrection = cms.bool(True)
+#allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg1.likelihoodFunctions[0].visPtCutThreshold = cms.double(15)
+#allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg1.likelihoodFunctions[0].visPtCutCorrection = visPtCutCorrectionMuon15
+#
+##allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg2.likelihoodFunctions = cms.VPSet(nSVfitTauLikelihoodMatrixElement)
+#allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg2.likelihoodFunctions = cms.VPSet(nSVfitTauLikelihoodPhaseSpace)
+#allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg2.likelihoodFunctions[0].applyVisPtCutCorrection = cms.bool(True)
+#allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg2.likelihoodFunctions[0].visPtCutThreshold = cms.double(20)
+#allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg2.likelihoodFunctions[0].visPtCutCorrection = visPtCutCorrectionTau20
+#
+##allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.builder.polStates = cms.vstring("RR","LL")
+#allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.builder.polStates = cms.vstring("undefined")
+#
+#
+#allMuTauPairs.nSVfit.psKine_MEt_logM_int = cms.PSet()
+#allMuTauPairs.nSVfit.psKine_MEt_logM_int.config = allMuTauPairs.nSVfit.psKine_MEt_logM_fit.config
+#allMuTauPairs.nSVfit.psKine_MEt_logM_int.algorithm = nSVfitProducerByIntegration.algorithm
 
 
 muTauPairProdConfigurator = objProdConfigurator(

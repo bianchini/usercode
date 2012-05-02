@@ -17,7 +17,9 @@
 #include "DataFormats/PatCandidates/interface/Isolation.h"
 
 #include "HiggsAnalysis/HiggsToWW2Leptons/interface/ElectronIDMVA.h"
-#include "Bianchi/Utilities/interface/ElectronMVAEstimator.h"
+//#include "Bianchi/Utilities/interface/ElectronMVAEstimator.h"
+#include "EGamma/EGammaAnalysisTools/interface/EGammaMvaEleEstimator.h"
+
 
 
 class ElectronsUserEmbedded : public edm::EDProducer{
@@ -39,7 +41,9 @@ class ElectronsUserEmbedded : public edm::EDProducer{
   bool doMVAMIT_;
   bool doMVADaniele_;
   ElectronIDMVA* fMVA_;
-  ElectronMVAEstimator* fMVADaniele_;
+  //ElectronMVAEstimator* fMVADaniele_;
+  EGammaMvaEleEstimator* myMVATrig_;
+
 
 };
 

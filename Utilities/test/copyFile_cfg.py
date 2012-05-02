@@ -19,18 +19,20 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/akalinow/WJetsToLNu_TuneZ2_7TeV-madgraph-tauola/424_mutau_Fall11_v1/faebd120ba0b19af7e4a67b10c186f76/tautauSkimmAOD_99_1_uns.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/Test_52X/439eae0c5ab5b9ee314b9645ffd1dade/DYJets_5_1_stC.root'
     )
     )
 
 process.HLTFilter = cms.EDFilter(
     "HLTHighLevel",
     TriggerResultsTag  = cms.InputTag("TriggerResults","","HLT"),
-    HLTPaths           = cms.vstring("HLT_IsoMu15_LooseIsoPFTau15_v9",
-                                     "HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1"),
+    HLTPaths           = cms.vstring("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v7",
+                                     "HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v7",
+                                     "HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v1",
+                                     "HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v1"),
     eventSetupPathsKey = cms.string(''),
     andOr              = cms.bool(True),
-    throw              = cms.bool(True)
+    throw              = cms.bool(False)
     )
 
 
@@ -48,12 +50,12 @@ process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool(True)
     )
 
-process.p = cms.Path( process.HLTFilter )
+process.p = cms.Path(process.HLTFilter)
 
 process.out = cms.OutputModule(
     "PoolOutputModule",
     outputCommands = cms.untracked.vstring( 'keep *'),
-    fileName = cms.untracked.string('WJets.root'),
+    fileName = cms.untracked.string('skimAOD.root')
 )
 
 process.out.SelectEvents = cms.untracked.PSet(
