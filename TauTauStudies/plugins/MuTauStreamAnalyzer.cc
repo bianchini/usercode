@@ -596,7 +596,7 @@ MuTauStreamAnalyzer::~MuTauStreamAnalyzer(){
 void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
 
 
-  METP4_->clear();
+  //METP4_->clear();
   genVP4_->clear();
   genMETP4_->clear();
   genTausP4_->clear();
