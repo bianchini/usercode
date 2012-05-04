@@ -402,6 +402,7 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     newJets        = cms.InputTag(""),
     met            = cms.InputTag("metRecoilCorrector",  "N"),
     rawMet         = cms.InputTag("patMETsPFlow"),
+    mvaMet         = cms.InputTag("patPFMetByMVA"),
     muons          = cms.InputTag("muPtEtaIDIso"),
     muonsRel       = cms.InputTag("muPtEtaRelID"),
     vertices       = cms.InputTag("selectedPrimaryVertices"),

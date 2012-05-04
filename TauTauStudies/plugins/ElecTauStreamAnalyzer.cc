@@ -87,6 +87,7 @@ ElecTauStreamAnalyzer::ElecTauStreamAnalyzer(const edm::ParameterSet & iConfig){
   newJetsTag_        = iConfig.getParameter<edm::InputTag>("newJets");
   metTag_            = iConfig.getParameter<edm::InputTag>("met");
   rawMetTag_         = iConfig.getParameter<edm::InputTag>("rawMet");
+  mvaMetTag_         = iConfig.getParameter<edm::InputTag>("mvaMet");
   electronsTag_      = iConfig.getParameter<edm::InputTag>("electrons");
   electronsRelTag_   = iConfig.getParameter<edm::InputTag>("electronsRel");
   verticesTag_       = iConfig.getParameter<edm::InputTag>("vertices");
@@ -128,6 +129,7 @@ void ElecTauStreamAnalyzer::beginJob(){
  
   jetsBtagHE_  = new std::vector< double >();
   jetsBtagHP_  = new std::vector< double >();
+  jetsBtagCSV_ = new std::vector< double >();
 
   sigDCA_      = new std::vector< double >();
 
@@ -441,6 +443,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   
   tree_->Branch("jetsBtagHE","std::vector<double> ",&jetsBtagHE_);
   tree_->Branch("jetsBtagHP","std::vector<double> ",&jetsBtagHP_);
+  tree_->Branch("jetsBtagCSV","std::vector<double>",&jetsBtagCSV_);
   tree_->Branch("sigDCA","std::vector<double>",&sigDCA_);
 
   tree_->Branch("jetMoments","std::vector<float> ",&jetMoments_);
@@ -609,7 +612,8 @@ ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
   delete jetsP4_; delete jetsIDP4_; delete jetsIDL1OffsetP4_; delete jetsIDUpP4_; delete jetsIDDownP4_; 
   delete METP4_; delete diTauVisP4_; delete diTauCAP4_; delete diTauICAP4_; 
   delete diTauSVfitP4_; delete genVP4_;
-  delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete tauXTriggers_; delete triggerBits_; delete sigDCA_;
+  delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete jetsBtagCSV_;
+  delete tauXTriggers_; delete triggerBits_; delete sigDCA_;
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;delete extraElectrons_; delete pfElectrons_;
   delete genTausP4_;
   delete jetsChNfraction_; delete jetsChEfraction_; delete jetMoments_;
@@ -625,6 +629,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
   genVP4_->clear();
   genMETP4_->clear();
+  genTausP4_->clear();
   pfElectrons_->clear();
   triggerBits_->clear();
 
@@ -708,6 +713,13 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     edm::LogError("DataNotAvailable")
       << "No raw MET label available \n";
   const pat::METCollection* rawMet = rawMetHandle.product();
+
+  edm::Handle<pat::METCollection> mvaMetHandle;
+  iEvent.getByLabel( mvaMetTag_, mvaMetHandle);
+  if( !mvaMetHandle.isValid() )  
+    edm::LogError("DataNotAvailable")
+      << "No mva MET label available \n";
+  const pat::METCollection* mvaMet = mvaMetHandle.product();
 
   edm::Handle<pat::TriggerEvent> triggerHandle;
   iEvent.getByLabel(triggerResultsTag_, triggerHandle);
@@ -1039,8 +1051,6 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
   ////////////////////////////////////////////////////////
 
-  METP4_->push_back((*rawMet)[0].p4()); 
-  METP4_->push_back((*met)[0].p4());
   if(isMC_) 
     genMETP4_->push_back( (*rawMet)[0].genMET()->p4() );
   sumEt_  = (*met)[0].sumEt();
@@ -1084,6 +1094,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     genTausP4_->clear();
     jetsBtagHE_->clear();
     jetsBtagHP_->clear();
+    jetsBtagCSV_->clear();
     sigDCA_->clear();
     tauXTriggers_->clear();
     extraElectrons_->clear();
@@ -1107,7 +1118,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     METP4_->push_back((*rawMet)[0].p4()); 
     METP4_->push_back((*met)[0].p4());
     METP4_->push_back(theDiTau->met()->p4());
-    
+    METP4_->push_back((*mvaMet)[0].p4()); 
+
+
     isElecLegMatched_  = 0;
     isTauLegMatched_   = 0;
 
@@ -1691,6 +1704,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJetsIDDown;
     std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedGenJetsID;
     std::map<double, std::pair<float,float> ,  ElecTauStreamAnalyzer::more> bTaggers;
+    std::map<double, double                 ,  ElecTauStreamAnalyzer::more> newBTagger;
     std::map<double, std::pair<float,float> ,  ElecTauStreamAnalyzer::more> jetPVassociation;
     std::map<double, std::pair<float,float> ,  ElecTauStreamAnalyzer::more> jetMoments;
     std::map<double, std::vector<float> ,      ElecTauStreamAnalyzer::more> jetPUID;
@@ -1763,6 +1777,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       // add b-tag info
       bTaggers.insert(         make_pair( newJet->p4().Pt(), make_pair( jet->bDiscriminator("trackCountingHighEffBJetTags"),
 									jet->bDiscriminator("trackCountingHighPurBJetTags")  ) ) );
+      // add new b-tag info
+      newBTagger.insert(       make_pair( newJet->p4().Pt(), jet->bDiscriminator("combinedSecondaryVertexBJetTags") ) );
+
       // add pu information
       jetPVassociation.insert( make_pair( newJet->p4().Pt(), make_pair(aMap["chFracRawJetE"],
 								       aMap["chFracAllChargE"]) ) );
@@ -1847,6 +1864,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     for(std::map<double, std::pair<float,float> >::iterator it = bTaggers.begin(); it != bTaggers.end() ; it++){
       jetsBtagHE_->push_back( (it->second).first  );
       jetsBtagHP_->push_back( (it->second).second );
+    }
+    for(std::map<double, double >::iterator it = newBTagger.begin(); it != newBTagger.end() ; it++){
+      jetsBtagCSV_->push_back( it->second  );
     }
     for(std::map<double, std::pair<float,float> >::iterator it = jetPVassociation.begin(); it != jetPVassociation.end() ; it++){
       jetsChEfraction_->push_back( (it->second).first  );

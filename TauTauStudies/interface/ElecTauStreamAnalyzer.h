@@ -63,6 +63,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   edm::InputTag newJetsTag_;
   edm::InputTag metTag_;
   edm::InputTag rawMetTag_;
+  edm::InputTag mvaMetTag_;
   edm::InputTag electronsTag_;
   edm::InputTag electronsRelTag_;
   edm::InputTag verticesTag_;
@@ -79,6 +80,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
 
   std::vector< double >* jetsBtagHE_;
   std::vector< double >* jetsBtagHP_;
+  std::vector< double >* jetsBtagCSV_;
   std::vector< float >* jetsChNfraction_;
   std::vector< float >* jetsChEfraction_;
   std::vector< float >* jetMoments_;
