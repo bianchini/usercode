@@ -13,7 +13,7 @@ process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
 runOnMC     = True
-doSVFitReco = True
+doSVFitReco = False
 
 if runOnMC:
     print "Running on MC"
@@ -22,40 +22,64 @@ else:
         
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START42_V14B::All')
+    process.GlobalTag.globaltag = cms.string('START42_V17::All')
 else:
-    process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_42_V23::All')
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 5
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    #'file:/home/llr/cms/akalinow/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/analysis_DiTau_VBF_PAT_31_1_t3K.root'
-    #'file:./patTuples_MuTauStream.root'
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-16Nov2011/700226eee9a93cb10580e91b3d6e5c18/patTuples_MuTauStream_10_1_w41.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-16Nov2011/700226eee9a93cb10580e91b3d6e5c18/patTuples_MuTauStream_11_1_Wuv.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-16Nov2011/700226eee9a93cb10580e91b3d6e5c18/patTuples_MuTauStream_12_1_7aY.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-16Nov2011/700226eee9a93cb10580e91b3d6e5c18/patTuples_MuTauStream_13_1_L5C.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-16Nov2011/700226eee9a93cb10580e91b3d6e5c18/patTuples_MuTauStream_14_1_8pv.root',
+    'file:./patTuples_MuTauStream.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-16Nov2011/700226eee9a93cb10580e91b3d6e5c18/patTuples_MuTauStream_10_1_w41.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/MuTauStream-16Nov2011/cea16f7ce381f249953e69976c5a9109/patTuples_MuTauStream_10_1_yRu.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/MuTauStream-16Nov2011/cea16f7ce381f249953e69976c5a9109/patTuples_MuTauStream_11_1_Bh8.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/MuTauStream-16Nov2011/cea16f7ce381f249953e69976c5a9109/patTuples_MuTauStream_12_1_VDN.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/MuTauStream-16Nov2011/cea16f7ce381f249953e69976c5a9109/patTuples_MuTauStream_13_1_Hwg.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/MuTauStream-16Nov2011/cea16f7ce381f249953e69976c5a9109/patTuples_MuTauStream_14_1_XKE.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/SUSYGluGluToHToTauTau_M-500_7TeV-pythia6-tauola/MuTauStream-16Nov2011/d67d72c0e0080ba7d4d6c9945ad37260/patTuples_MuTauStream_10_1_8Pf.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi//TauPlusX/MuTauStream-13Oct2011-05AugReReco/c37c208594d74fa447903aef959eea7d/patTuples_MuTauStream_14_1_MHD.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi//DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_9_1_6gn.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/WJetsToLNu_TuneZ2_7TeV-madgraph-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_2_1_qa2.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_1_1_3W2.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/WW_TuneZ2_7TeV_pythia6_tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_1_1_3Hx.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/WZ_TuneZ2_7TeV_pythia6_tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_1_1_8ps.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TTJets_TuneZ2_7TeV-madgraph-tauola/MuTauStream-13Oct2011/d01a4e7ec19203c158c3dddf2fa0ec05/patTuples_MuTauStream_1_1_rCW.root'
-    #'file:./patTuples_MuTauStream.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi//TauPlusX/MuTauStream-13Oct2011-RunBPromptReco-v1p4/c37c208594d74fa447903aef959eea7d/patTuples_MuTauStream_42_1_Vsn.root'
+
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_10_1_rrD.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_11_1_lXv.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_12_1_ttU.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_13_1_Lfe.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_14_1_lVu.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_15_1_EJp.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_16_1_4Si.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_17_1_MaR.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_18_1_YDx.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_19_1_d86.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_1_1_VIM.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_20_1_zSB.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_21_1_osQ.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_22_1_XVu.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_23_1_IiZ.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_24_1_2Cj.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_25_1_bSv.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_26_1_UFe.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_27_1_dXQ.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_28_1_msA.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_29_1_uAN.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_2_1_V4V.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_30_1_6Oc.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_31_1_i7T.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_32_1_HB5.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_33_1_siv.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_34_1_YZA.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_35_1_LZD.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_36_1_ypv.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_37_1_MED.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_38_1_k2p.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_39_1_W4J.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_3_1_PtW.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_40_1_FRE.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_4_1_zIn.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_5_1_RzE.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_6_1_WxC.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_7_1_HCE.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_8_1_363.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_9_1_129.root',    
     )
     )
 
@@ -282,17 +306,17 @@ process.allDiTau = cms.Sequence(
 process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
-    cut = cms.string("tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 && pt>20 && abs(eta)<2.3 && "+
-                     "!(signalPFChargedHadrCands.size==1 && signalPFGammaCands.size==0 && "+
-                     "(leadPFChargedHadrCand.hcalEnergy + leadPFChargedHadrCand.ecalEnergy)/leadPFChargedHadrCand.p<0.2)"),
+    cut = cms.string("pt>20 && abs(eta)<2.3"+
+                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"
+                     ),
     filter = cms.bool(False)
     )
 process.tauPtEtaIDAgMuAgElecIsoPtRel  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
-    cut = cms.string("tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 && pt>19 && abs(eta)<2.3 && "+
-                     "!(signalPFChargedHadrCands.size==1 && signalPFGammaCands.size==0 && "+
-                     "(leadPFChargedHadrCand.hcalEnergy + leadPFChargedHadrCand.ecalEnergy)/leadPFChargedHadrCand.p<0.2)"),
+    cut = cms.string("pt>19 && abs(eta)<2.3"+
+                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"
+                     ),
     filter = cms.bool(False)
     )
 
@@ -319,13 +343,13 @@ process.tauPtEtaIDAgMuAgElecIsoTauDownCounter = process.tauPtEtaIDAgMuAgElecIsoC
 process.muPtEtaIDIso  = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("muPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04v2')<0.50 && pt>15 && abs(eta)<2.1"),
+    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>15 && abs(eta)<2.1"),
     filter = cms.bool(False)
     )
 process.muPtEtaIDIsoPtRel  = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("muPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04v2')<0.50 && pt>14 && abs(eta)<2.1"),
+    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>14 && abs(eta)<2.1"),
     filter = cms.bool(False)
     )
 
@@ -389,7 +413,15 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     minCorrPt      = cms.untracked.double(15.),
     minJetID       = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
     verbose        = cms.untracked.bool( False ),
+    doMuIsoMVA     = cms.bool( True ),
+    inputFileName0 = cms.FileInPath("Muon/MuonAnalysisTools/data/MuonIsoMVA_sixie-BarrelPt5To10_V1_BDTG.weights.xml"),
+    inputFileName1 = cms.FileInPath("Muon/MuonAnalysisTools/data/MuonIsoMVA_sixie-EndcapPt5To10_V1_BDTG.weights.xml"),
+    inputFileName2 = cms.FileInPath("Muon/MuonAnalysisTools/data/MuonIsoMVA_sixie-BarrelPt10ToInf_V1_BDTG.weights.xml"),
+    inputFileName3 = cms.FileInPath("Muon/MuonAnalysisTools/data/MuonIsoMVA_sixie-EndcapPt10ToInf_V1_BDTG.weights.xml"),                 
+    inputFileName4 = cms.FileInPath("Muon/MuonAnalysisTools/data/MuonIsoMVA_sixie-Tracker_V1_BDTG.weights.xml"),
+    inputFileName5 = cms.FileInPath("Muon/MuonAnalysisTools/data/MuonIsoMVA_sixie-Global_V1_BDTG.weights.xml"),
     )
+
 process.muTauStreamAnalyzerJetUp   = process.muTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauJetUp"),
     met    =  cms.InputTag("rescaledMETjet",  "UNNNU"),

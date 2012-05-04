@@ -11,13 +11,13 @@ from Configuration.PyReleaseValidation.autoCond import autoCond
 process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START42_V14B::All')
+    process.GlobalTag.globaltag = cms.string('START42_V17::All')
 
 else:
-    process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_42_V23::All')
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 10
+process.MessageLogger.cerr.FwkReport.reportEvery = 50
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -78,7 +78,13 @@ process.printTree1 = cms.EDAnalyzer(
 
 process.load('RecoJets.Configuration.RecoPFJets_cff')
 
+process.kt6PFJetsForRhoComputationVoronoi = process.kt6PFJets.clone(
+    doRhoFastjet = True,
+    voronoiRfact = 0.9
+    )
+
 process.kt6PFJets.doRhoFastjet  = True
+process.kt6PFJets.doAreaFastjet = True
 process.kt6PFJets.Rho_EtaMax    = cms.double(4.4)
 process.kt6PFJets.Ghost_EtaMax  = cms.double(5.0)
 process.ak5PFJets.doAreaFastjet = True
@@ -86,21 +92,27 @@ process.ak5PFJets.doAreaFastjet = True
 ## re-run kt4PFJets within lepton acceptance to compute rho
 process.load('RecoJets.JetProducers.kt4PFJets_cfi')
 
-process.kt6PFJetsCentral = process.kt4PFJets.clone(
+process.kt6PFJetsCentral = process.kt6PFJets.clone(
     rParam = 0.6,
     doRhoFastjet = True )
 process.kt6PFJetsCentral.Rho_EtaMax   = cms.double(1.9)
 process.kt6PFJetsCentral.Ghost_EtaMax = cms.double(2.5)
 
-process.kt6PFJetsNeutral = process.kt4PFJets.clone(
-    rParam = 0.6,
-    doRhoFastjet = True,
-    src="pfAllNeutral" )
-process.kt6PFJetsNeutral.Rho_EtaMax   = cms.double(1.9)
-process.kt6PFJetsNeutral.Ghost_EtaMax = cms.double(2.5)
+#process.kt6PFJetsNeutral = process.kt4PFJets.clone(
+#    rParam = 0.6,
+#    doRhoFastjet = True,
+#    src="pfAllNeutral" )
+#process.kt6PFJetsNeutral.Rho_EtaMax   = cms.double(1.9)
+#process.kt6PFJetsNeutral.Ghost_EtaMax = cms.double(2.5)
 
-process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets+process.kt6PFJetsCentral)
+process.fjSequence = cms.Sequence(process.kt6PFJets+
+                                  process.ak5PFJets+
+                                  process.kt6PFJetsCentral
+                                  #+process.kt6PFJetsForRhoComputationVoronoi
+                                  )
 
+# load the PU JetID sequence
+process.load("CMGTools.External.pujetidsequence_cff")
 
 ################### vertex sequence ####################
 
@@ -126,9 +138,9 @@ if not runOnMC:
     removeMCMatching(process,["All"])
     
 removeSpecificPATObjects(process, ['Photons'],
-                         outputInProcess=False)
+                         outputInProcess=None)
 removeCleaning(process,
-               outputInProcess=False)
+               outputInProcess=None)
 
 restrictInputToAOD(process, ['All'])
 
@@ -220,61 +232,130 @@ process.tauGenJetMatch.resolveAmbiguities = cms.bool(False)
 process.tauGenJetMatch.maxDeltaR          = 0.15
 process.tauGenJetMatch.maxDPtRel          = 999
 
+#from RecoTauTag.RecoTau.TauDiscriminatorTools import requireLeadTrack
+#from RecoTauTag.RecoTau.PFRecoTauDiscriminationByMVAIsolation_cfi import *
+#process.hpsPFTauDiscriminationByMVAIsolation = pfRecoTauDiscriminationByMVAIsolation.clone(
+#    PFTauProducer = cms.InputTag('hpsPFTauProducer'),
+#    Prediscriminants = cms.PSet(
+#    BooleanOperator = cms.string('and'),
+#    decayMode = cms.PSet(
+#    cut = cms.double(0.5),
+#    Producer = cms.InputTag("hpsPFTauDiscriminationByDecayModeFinding")
+#    )
+#    ),
+#    )
+# add to the PFTau sequence
+#process.recoTauClassicHPSSequence.replace( process.hpsPFTauDiscriminationByTightCombinedIsolationDBSumPtCorr,
+#                                           process.hpsPFTauDiscriminationByTightCombinedIsolationDBSumPtCorr+process.hpsPFTauDiscriminationByMVAIsolation )
+
+
+##################################################################
+
+from CommonTools.ParticleFlow.Tools.pfIsolation import setupPFMuonIso, setupPFElectronIso
+process.muIsoSequence       = setupPFMuonIso(process,'muons')
+process.electronIsoSequence = setupPFElectronIso(process,'gsfElectrons')
+from CommonTools.ParticleFlow.pfParticleSelection_cff import pfParticleSelectionSequence
+process.pfParticleSelectionSequence = pfParticleSelectionSequence
+
+process.patMuons.isoDeposits = cms.PSet(
+    pfAllParticles   = cms.InputTag("muPFIsoDepositPUPFIso"),      # all PU   CH+MU+E
+    pfChargedHadrons = cms.InputTag("muPFIsoDepositChargedPFIso"), # all noPU CH
+    pfNeutralHadrons = cms.InputTag("muPFIsoDepositNeutralPFIso"), # all NH
+    pfPhotons        = cms.InputTag("muPFIsoDepositGammaPFIso"),   # all PH
+    user = cms.VInputTag(
+    cms.InputTag("muPFIsoDepositChargedAllPFIso"),                 # all noPU CH+MU+E
+    )
+    )
+process.patMuons.isolationValues = cms.PSet(
+    pfAllParticles   = cms.InputTag("muPFIsoValuePU04PFIso"),
+    pfChargedHadrons = cms.InputTag("muPFIsoValueCharged04PFIso"),
+    pfNeutralHadrons = cms.InputTag("muPFIsoValueNeutral04PFIso"),
+    pfPhotons        = cms.InputTag("muPFIsoValueGamma04PFIso"),
+    user = cms.VInputTag(
+    cms.InputTag("muPFIsoValueChargedAll04PFIso"),
+    )
+    )
+
+process.patElectrons.isoDeposits = cms.PSet(
+    pfAllParticles   = cms.InputTag("elPFIsoDepositPUPFIso"),      # all PU   CH+MU+E
+    pfChargedHadrons = cms.InputTag("elPFIsoDepositChargedPFIso"), # all noPU CH
+    pfNeutralHadrons = cms.InputTag("elPFIsoDepositNeutralPFIso"), # all NH
+    pfPhotons        = cms.InputTag("elPFIsoDepositGammaPFIso"),   # all PH
+    user = cms.VInputTag(
+    cms.InputTag("elPFIsoDepositChargedAllPFIso"),                 # all noPU CH+MU+E
+    )
+    )
+process.patElectrons.isolationValues = cms.PSet(
+    pfAllParticles   = cms.InputTag("elPFIsoValuePU04PFIdPFIso"),
+    pfChargedHadrons = cms.InputTag("elPFIsoValueCharged04PFIdPFIso"),
+    pfNeutralHadrons = cms.InputTag("elPFIsoValueNeutral04PFIdPFIso"),
+    pfPhotons        = cms.InputTag("elPFIsoValueGamma04PFIdPFIso"),
+    user = cms.VInputTag(
+    cms.InputTag("elPFIsoValueChargedAll04PFIdPFIso"),
+    cms.InputTag("elPFIsoValueChargedAll04NoPFIdPFIso"),
+    cms.InputTag("elPFIsoValuePU04NoPFIdPFIso"),
+    cms.InputTag("elPFIsoValueCharged04NoPFIdPFIso"),
+    cms.InputTag("elPFIsoValueGamma04NoPFIdPFIso"),
+    cms.InputTag("elPFIsoValueNeutral04NoPFIdPFIso")
+    )
+    )
+
+process.patElectrons.isolationValues = cms.PSet()
 
 ########################  pat::muon  #############################
 
-addPFMuonIsolation(process,process.patMuons)
-addTriggerMatchingMuon(process,isMC=runOnMC)
+#addPFMuonIsolation(process,process.patMuons)
+#addTriggerMatchingMuon(process,isMC=runOnMC)
 getattr(process,"patMuons").embedTrack = True
 
 
 ######################## pat::electron ###########################
 
-addPFElectronIsolation(process,process.patElectrons)
+#addPFElectronIsolation(process,process.patElectrons)
 getattr(process,"patElectrons").embedTrack = True
 getattr(process,"patElectrons").embedGsfTrack = True
-addTriggerMatchingElectron(process,isMC=runOnMC)
+#addTriggerMatchingElectron(process,isMC=runOnMC)
 
-import RecoEgamma.ElectronIdentification.cutsInCategoriesElectronIdentificationV06_DataTuning_cfi as cic
-process.eidCiCVeryLoose = cic.eidVeryLoose.clone()
-process.eidCiCLoose     = cic.eidLoose.clone()
-process.eidCiCMedium    = cic.eidMedium.clone()
-process.eidCiCTight     = cic.eidTight.clone() 
+#import RecoEgamma.ElectronIdentification.cutsInCategoriesElectronIdentificationV06_DataTuning_cfi as cic
+#process.eidCiCVeryLoose = cic.eidVeryLoose.clone()
+#process.eidCiCLoose     = cic.eidLoose.clone()
+#process.eidCiCMedium    = cic.eidMedium.clone()
+#process.eidCiCTight     = cic.eidTight.clone() 
 
-import RecoEgamma.ElectronIdentification.cutsInCategoriesHZZElectronIdentificationV06_cfi as cicHZZ
-process.eidCiCHZZVeryLoose   = cicHZZ.eidHZZVeryLoose.clone()
-process.eidCiCHZZLoose       = cicHZZ.eidHZZLoose.clone()
-process.eidCiCHZZMedium      = cicHZZ.eidHZZMedium.clone()
-process.eidCiCHZZTight       = cicHZZ.eidHZZTight.clone()
-process.eidCiCHZZSuperTight  = cicHZZ.eidHZZSuperTight.clone()
-process.eidCiCHZZHyperTight1 = cicHZZ.eidHZZHyperTight1.clone()
+#import RecoEgamma.ElectronIdentification.cutsInCategoriesHZZElectronIdentificationV06_cfi as cicHZZ
+#process.eidCiCHZZVeryLoose   = cicHZZ.eidHZZVeryLoose.clone()
+#process.eidCiCHZZLoose       = cicHZZ.eidHZZLoose.clone()
+#process.eidCiCHZZMedium      = cicHZZ.eidHZZMedium.clone()
+#process.eidCiCHZZTight       = cicHZZ.eidHZZTight.clone()
+#process.eidCiCHZZSuperTight  = cicHZZ.eidHZZSuperTight.clone()
+#process.eidCiCHZZHyperTight1 = cicHZZ.eidHZZHyperTight1.clone()
 
-process.patElectrons.addElectronID = True
-process.patElectrons.electronIDSources.eidCiCVeryLoose      = cms.InputTag("eidCiCVeryLoose")
-process.patElectrons.electronIDSources.eidCiCLoose          = cms.InputTag("eidCiCLoose")
-process.patElectrons.electronIDSources.eidCiCMedium         = cms.InputTag("eidCiCMedium")
-process.patElectrons.electronIDSources.eidCiCTight          = cms.InputTag("eidCiCTight")
-process.patElectrons.electronIDSources.eidCiCHZZVeryLoose   = cms.InputTag("eidCiCHZZVeryLoose")
-process.patElectrons.electronIDSources.eidCiCHZZLoose       = cms.InputTag("eidCiCHZZLoose")
-process.patElectrons.electronIDSources.eidCiCHZZMedium      = cms.InputTag("eidCiCHZZMedium")
-process.patElectrons.electronIDSources.eidCiCHZZTight       = cms.InputTag("eidCiCHZZTight")
-process.patElectrons.electronIDSources.eidCiCHZZSuperTight  = cms.InputTag("eidCiCHZZSuperTight")
-process.patElectrons.electronIDSources.eidCiCHZZHyperTight1 = cms.InputTag("eidCiCHZZHyperTight1")
+#process.patElectrons.addElectronID = True
+#process.patElectrons.electronIDSources.eidCiCVeryLoose      = cms.InputTag("eidCiCVeryLoose")
+#process.patElectrons.electronIDSources.eidCiCLoose          = cms.InputTag("eidCiCLoose")
+#process.patElectrons.electronIDSources.eidCiCMedium         = cms.InputTag("eidCiCMedium")
+#process.patElectrons.electronIDSources.eidCiCTight          = cms.InputTag("eidCiCTight")
+#process.patElectrons.electronIDSources.eidCiCHZZVeryLoose   = cms.InputTag("eidCiCHZZVeryLoose")
+#process.patElectrons.electronIDSources.eidCiCHZZLoose       = cms.InputTag("eidCiCHZZLoose")
+#process.patElectrons.electronIDSources.eidCiCHZZMedium      = cms.InputTag("eidCiCHZZMedium")
+#process.patElectrons.electronIDSources.eidCiCHZZTight       = cms.InputTag("eidCiCHZZTight")
+#process.patElectrons.electronIDSources.eidCiCHZZSuperTight  = cms.InputTag("eidCiCHZZSuperTight")
+#process.patElectrons.electronIDSources.eidCiCHZZHyperTight1 = cms.InputTag("eidCiCHZZHyperTight1")
 
-process.cicIDSequence = cms.Sequence(
-    process.eidCiCVeryLoose +
-    process.eidCiCLoose +
-    process.eidCiCMedium +
-    process.eidCiCTight + 
-    process.eidCiCHZZVeryLoose +
-    process.eidCiCHZZLoose +
-    process.eidCiCHZZMedium +
-    process.eidCiCHZZTight +
-    process.eidCiCHZZSuperTight +
-    process.eidCiCHZZHyperTight1
-)
-process.patDefaultSequence.replace(process.patElectrons,
-                                   process.cicIDSequence+process.patElectrons)
+#process.cicIDSequence = cms.Sequence(
+#    process.eidCiCVeryLoose +
+#    process.eidCiCLoose +
+#    process.eidCiCMedium +
+#    process.eidCiCTight + 
+#    process.eidCiCHZZVeryLoose +
+#    process.eidCiCHZZLoose +
+#    process.eidCiCHZZMedium +
+#    process.eidCiCHZZTight +
+#    process.eidCiCHZZSuperTight +
+#    process.eidCiCHZZHyperTight1
+#)
+#process.patDefaultSequence.replace(process.patElectrons,
+#                                   process.cicIDSequence+process.patElectrons)
 
 ######################## pat::tau ################################
 
@@ -297,6 +378,15 @@ if hasattr(process,"patTrigger"):
 
 ######################## embedding ###############################
 
+simpleCutsVeto = "(userFloat('nHits')<=999"+ \
+                 " && (" + \
+                 " (isEB && userFloat('sihih')<0.010 && userFloat('dPhi')<0.80 && "+ \
+                 "          userFloat('dEta') <0.007 && userFloat('HoE') <0.15)"   + \
+                 " || "  + \
+                 " (isEE && userFloat('sihih')<0.030 && userFloat('dPhi')<0.70 && "+ \
+                 "          userFloat('dEta') <0.010 && userFloat('HoE') <999)"   + \
+                 "     )"+ \
+                 ")"
 simpleCutsWP95 = "(userFloat('nHits')<=1"+ \
                  " && (" + \
                  " (isEB && userFloat('sihih')<0.010 && userFloat('dPhi')<0.80 && "+ \
@@ -350,15 +440,16 @@ MVA = "((pt<=20 && abs(superClusterPosition.Eta)>=0.0 && abs(superClusterPositio
       "(pt>20  && abs(superClusterPosition.Eta)>=1.0 && abs(superClusterPosition.Eta)<1.5 && userFloat('mva')>0.947) ||" + \
       "(pt>20  && abs(superClusterPosition.Eta)>=1.5 && abs(superClusterPosition.Eta)<2.5 && userFloat('mva')>0.878))"
 
-process.selectedPatMuonsTriggerMatchUserEmbedded = cms.EDProducer(
+process.selectedPatMuonsUserEmbedded = cms.EDProducer(
     "MuonsUserEmbedded",
-    muonTag   = cms.InputTag("selectedPatMuonsTriggerMatch"),
-    vertexTag = cms.InputTag("offlinePrimaryVertices")
+    muonTag            = cms.InputTag("selectedPatMuons"),
+    vertexTag          = cms.InputTag("offlinePrimaryVertices"),
+    fitUnbiasedVertex  = cms.bool(False)
     )
 
-process.selectedPatElectronsTriggerMatchUserEmbedded = cms.EDProducer(
+process.selectedPatElectronsUserEmbedded = cms.EDProducer(
     "ElectronsUserEmbedded",
-    electronTag = cms.InputTag("selectedPatElectronsTriggerMatch"),
+    electronTag = cms.InputTag("selectedPatElectrons"),
     vertexTag   = cms.InputTag("offlinePrimaryVertices"),
     isMC        = cms.bool(runOnMC),
     doMVAMIT    = cms.bool(True),
@@ -369,12 +460,24 @@ process.selectedPatElectronsTriggerMatchUserEmbedded = cms.EDProducer(
     inputFileName3 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet0HighPt_NoIPInfo_BDTG.weights.xml'),
     inputFileName4 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet1HighPt_NoIPInfo_BDTG.weights.xml'),
     inputFileName5 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet2HighPt_NoIPInfo_BDTG.weights.xml'),
-    inputFileNameMVADaniele = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/TMVA_BDTSimpleCat.weights.xml')
+    inputFileName0v2 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_TrigV0_Cat1.weights.xml'),
+    inputFileName1v2 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_TrigV0_Cat2.weights.xml'),
+    inputFileName2v2 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_TrigV0_Cat3.weights.xml'),
+    inputFileName3v2 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_TrigV0_Cat4.weights.xml'),
+    inputFileName4v2 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_TrigV0_Cat5.weights.xml'),
+    inputFileName5v2 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_TrigV0_Cat6.weights.xml'),
+    inputFileName0v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat1.weights.xml'),
+    inputFileName1v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat2.weights.xml'),
+    inputFileName2v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat3.weights.xml'),
+    inputFileName3v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat4.weights.xml'),
+    inputFileName4v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat5.weights.xml'),
+    inputFileName5v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat6.weights.xml'),
+    #inputFileNameMVADaniele = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/TMVA_BDTSimpleCat.weights.xml')
     )
 
-process.selectedPatTausTriggerMatchUserEmbedded = cms.EDProducer(
+process.selectedPatTausUserEmbedded = cms.EDProducer(
     "TausUserEmbedded",
-    tauTag = cms.InputTag("selectedPatTausTriggerMatch"),
+    tauTag = cms.InputTag("selectedPatTaus"),
     vertexTag = cms.InputTag("offlinePrimaryVertices"),
     )
 
@@ -383,7 +486,7 @@ process.selectedPatTausTriggerMatchUserEmbedded = cms.EDProducer(
 
 process.atLeastOneElecTau = cms.EDProducer(
     "CandViewShallowCloneCombiner",
-    decay = cms.string("selectedPatElectronsTriggerMatchUserEmbedded selectedPatTausTriggerMatchUserEmbedded"),
+    decay = cms.string("selectedPatElectronsUserEmbedded selectedPatTausUserEmbedded"),
     cut = cms.string("sqrt((daughter(0).eta-daughter(1).eta)*(daughter(0).eta-daughter(1).eta)+  min( abs(daughter(0).phi-daughter(1).phi), 2*3.1415926 - abs(daughter(0).phi-daughter(1).phi)  ) *  min( abs(daughter(0).phi-daughter(1).phi), 2*3.1415926 - abs(daughter(0).phi-daughter(1).phi)  )  )>0.5"),
     checkCharge = cms.bool(False)
     )
@@ -397,12 +500,12 @@ process.atLeastOneElecTauCounter = cms.EDFilter(
 
 process.elecPtEta = cms.EDFilter(
     "PATElectronSelector",
-    src = cms.InputTag("selectedPatElectronsTriggerMatchUserEmbedded"),
-    cut = cms.string("pt>14 && abs(eta)<2.5 && !isEBEEGap"),
+    src = cms.InputTag("selectedPatElectronsUserEmbedded"),
+    cut = cms.string("pt>14 && abs(eta)<2.5"),
     filter = cms.bool(False)
     )
 process.atLeastOneElecTauelecPtEta = process.atLeastOneElecTau.clone(
-    decay=cms.string("elecPtEta selectedPatTausTriggerMatchUserEmbedded")
+    decay=cms.string("elecPtEta selectedPatTausUserEmbedded")
     )
 process.elecPtEtaCounter = cms.EDFilter(
     "CandViewCountFilter",
@@ -413,15 +516,18 @@ process.elecPtEtaCounter = cms.EDFilter(
 
 process.elecPtEtaID = cms.EDFilter(
     "PATElectronSelector",
-    src = cms.InputTag("selectedPatElectronsTriggerMatchUserEmbedded"),
+    src = cms.InputTag("selectedPatElectronsUserEmbedded"),
     cut = cms.string(process.elecPtEta.cut.value()+
-                     " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2 &&"
+                     " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"+
+                     " && dr03TkSumPt/pt<0.30 &&"+
+                     simpleCutsVeto
+                     #" && userInt('isTriggerElectron')>0.5"
                      #+"("+simpleCutsWP80+" || "+CiCTight+" || "+MVA+")"),
-                     +simpleCutsWP95),
+                     ),
     filter = cms.bool(False)
     )
 process.atLeastOneElecTauelecPtEtaID = process.atLeastOneElecTau.clone(
-    decay=cms.string("elecPtEtaID selectedPatTausTriggerMatchUserEmbedded")
+    decay=cms.string("elecPtEtaID selectedPatTausUserEmbedded")
     )
 process.elecPtEtaIDCounter = cms.EDFilter(
     "CandViewCountFilter",
@@ -432,15 +538,17 @@ process.elecPtEtaIDCounter = cms.EDFilter(
 
 process.elecPtEtaRelID = cms.EDFilter(
     "PATElectronSelector",
-    src = cms.InputTag("selectedPatElectronsTriggerMatchUserEmbedded"),
-    cut = cms.string("pt>14 && abs(eta)<2.5 && !isEBEEGap && "+
-                     simpleCutsWP95),
+    src = cms.InputTag("selectedPatElectronsUserEmbedded"),
+    cut = cms.string("pt>14 && abs(eta)<2.5 &&"+
+                     "abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2 &&"+
+                     simpleCutsVeto
+                     ),
     filter = cms.bool(False)
     )
 
 process.tauPtEta  = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
+    src = cms.InputTag("selectedPatTausUserEmbedded"),
     cut = cms.string("pt>19 && abs(eta)<2.3"),
     filter = cms.bool(False)
     )
@@ -457,10 +565,10 @@ process.tauPtEtaCounter = cms.EDFilter(
 
 process.tauPtEtaID  = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
+    src = cms.InputTag("selectedPatTausUserEmbedded"),
     cut = cms.string(process.tauPtEta.cut.value()+
                      " && tauID('decayModeFinding')>0.5"+
-                     " && userFloat('dzWrtPV')<0.2"),
+                     " && abs(userFloat('dzWrtPV'))<0.2"),
     filter = cms.bool(False)
     )
 process.atLeastOneElecTautauPtEtaID = process.atLeastOneElecTau.clone(
@@ -475,7 +583,7 @@ process.tauPtEtaIDCounter = cms.EDFilter(
 
 process.tauPtEtaIDAgMu  = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
+    src = cms.InputTag("selectedPatTausUserEmbedded"),
     cut = cms.string(process.tauPtEtaID.cut.value()+
                      " && tauID('againstMuonLoose')>0.5"),
     filter = cms.bool(False)
@@ -492,9 +600,9 @@ process.tauPtEtaIDAgMuCounter = cms.EDFilter(
 
 process.tauPtEtaIDAgMuAgElec  = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("selectedPatTausTriggerMatchUserEmbedded"),
+    src = cms.InputTag("selectedPatTausUserEmbedded"),
     cut = cms.string(process.tauPtEtaIDAgMu.cut.value()+
-                     " && tauID('againstElectronMedium')>0.5"),
+                     " && tauID('againstElectronLoose')>0.5"),
     filter = cms.bool(False)
     )
 process.atLeastOneElecTautauPtEtaIDAgMuAgElec = process.atLeastOneElecTau.clone(
@@ -511,7 +619,7 @@ process.tauPtEtaIDAgMuAgElecCounter = cms.EDFilter(
 
 process.muPtEtaRelID = cms.EDFilter(
     "PATMuonSelector",
-    src = cms.InputTag("selectedPatMuonsTriggerMatchUserEmbedded"),
+    src = cms.InputTag("selectedPatMuonsUserEmbedded"),
     cut = cms.string("pt>15 && abs(eta)<2.4 && isGlobalMuon"),
     filter = cms.bool(False)
     )
@@ -578,18 +686,22 @@ process.jetCleaningSequence = cms.Sequence(
 process.skim = cms.Sequence(
     process.allEventsFilter+
     process.atLeastOneGoodVertexSequence*
-    process.PFTau*
     process.fjSequence*
+    process.PFTau*
+    process.pfParticleSelectionSequence*
+    process.muIsoSequence*
+    process.electronIsoSequence*
     process.patDefaultSequence*
-    process.kt6PFJetsNeutral*
-    process.selectedPatMuonsTriggerMatchUserEmbedded*
+    process.puJetIdSqeuence *
+    ##process.kt6PFJetsNeutral*
+    process.selectedPatMuonsUserEmbedded*
     process.muPtEtaRelID*
-    process.selectedPatElectronsTriggerMatchUserEmbedded*
-    process.selectedPatTausTriggerMatchUserEmbedded*
+    process.selectedPatElectronsUserEmbedded*
+    process.selectedPatTausUserEmbedded*
     process.alLeastOneElecTauSequence*
     process.elecLegSequence*
     process.tauLegSequence*
-    process.jetCleaningSequence*
+    ##process.jetCleaningSequence*
     process.printTree1
     )
 
@@ -626,8 +738,10 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_offlineBeamSpot_*_*',
     'keep *_patMETsPFlow_*_*',
     'keep *_tauGenJetsSelectorAllHadrons_*_*',
+    'keep *_kt6PFJets_rho_*',
     'keep *_kt6PFJetsCentral_rho_*',
     'keep *_kt6PFJetsNeutral_rho_*',
+    'keep *_kt6PFJetsForRhoComputationVoronoi_rho_*',
     'keep *_elecPtEtaID_*_*',
     'keep *_elecPtEtaRelID_*_*',
     'keep *_muPtEtaRelID_*_*',
@@ -640,17 +754,27 @@ process.out.outputCommands.extend( cms.vstring(
     'keep recoGsfTrackExtras_*_*_*',
     'keep *_tauPtEtaIDAgMuAgElec_*_*',
     'keep *_generator_*_*',
+    'keep *_reducedEcalRecHitsEB_*_*',
+    'keep *_reducedEcalRecHitsEE_*_*',
     'drop *_TriggerResults_*_HLT',
     'drop *_TriggerResults_*_RECO',
     'drop *_selectedPatElectrons_*_*',
     'drop *_selectedPatMuons_*_*',
     'drop *_selectedPatTaus_*_*',
     'drop *_patMETs_*_*',
-    'drop *_selectedPatElectronsTriggerMatch_*_*',
-    'drop *_selectedPatMuonsTriggerMatch_*_*',
-    'drop *_selectedPatTausTriggerMatch_*_*',
-    'drop *_selectedPatElectronsTriggerMatchUserEmbedded_*_*',
-    'drop *_selectedPatTausTriggerMatchUserEmbedded_*_*',
+    'drop *_selectedPatElectrons_*_*',
+    'drop *_selectedPatMuons_*_*',
+    'drop *_selectedPatTaus_*_*',
+    'drop *_selectedPatElectronsUserEmbedded_*_*',
+    'drop *_selectedPatTausUserEmbedded_*_*',
+    'keep *_puJetId_*_*',
+    'keep *_puJetMva_*_*',
+    'keep *_hfEMClusters_*_*',
+    'keep *_hybridSuperClusters_*_*',
+    'keep *_multi5x5BasicClusters_*_*',
+    'keep *_pfElectronTranslator_*_*',
+    'keep *_pfPhotonTranslator_*_*',
+    'keep *_hybridSuperClusters_*_*',
     )
                                    )
 

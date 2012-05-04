@@ -13,7 +13,7 @@ process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
 runOnMC     = True
-doSVFitReco = True
+doSVFitReco = False
 
 if runOnMC:
     print "Running on MC"
@@ -27,26 +27,47 @@ else:
     process.GlobalTag.globaltag = cms.string('GR_R_42_V19::All')
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 500
+process.MessageLogger.cerr.FwkReport.reportEvery = 5
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/inaranjo/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-08Feb2012/8ae263ffff46f0cc089ee8d4d13b7116/patTuples_ElecTauStream_10_1_Sed.root'
+    'file:./patTuples_ElecTauStream.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/inaranjo/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-08Feb2012/8ae263ffff46f0cc089ee8d4d13b7116/patTuples_ElecTauStream_10_1_Sed.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/inaranjo/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-08Feb2012-v2/8ae263ffff46f0cc089ee8d4d13b7116/patTuples_ElecTauStream_10_1_78b.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/ElecTauStream-16Nov2011//88521b2a6e3f67f72df8ed3ebcf47080/patTuples_ElecTauStream_9_1_ZWu.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-A/7844d4f37a96a2c29702b4cab23898d9/patTuples_ElecTauStream_1_1_L9Q.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-13Oct2011/4858ffc00b76ea327a878ab2c9d1d4f3/patTuples_ElecTauStream_1_1_MHb.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DoubleMu/ElecTauStream-08Nov2011-v2-05AugReReco-Embedded/7254a5dfb1c71be66f71c2cfd71d6b63/patTuples_ElecTauStream_9_1_eRU.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-21Oct2011/72336b8f61b87f1536c6b95a5cfbfe6e/patTuples_ElecTauStream_1_1_qHA.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-21Oct2011-05AugReReco/ea0534a53ae8342d77d517a552111b33/patTuples_ElecTauStream_18_1_L7T.root'
-    #'rfio:rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-v6/add82882179501750b106d9900e51989/patTuples_ElecTauStream_45_1_UZL.root',
-    #'file:./patTuples_ElecTauStream.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-08Nov2011-RunBPromptReco-v1/b9a57288ad37f0c4bdf36b8f8450de94/patTuples_ElecTauStream_792_1_ePf.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-08Nov2011-PromptReco-v6p2/b9a57288ad37f0c4bdf36b8f8450de94/patTuples_ElecTauStream_7_1_N43.root'
-    )
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_11_1_RoD.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_12_1_Ngp.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_16_1_jDg.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_17_1_Dku.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_19_1_tpa.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_1_1_TFX.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_21_1_vg0.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_23_1_xNA.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_24_1_cXV.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_25_1_tP0.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_26_1_NMV.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_27_1_COw.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_28_1_FxB.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_29_1_7kM.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_2_1_rMx.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_30_1_93N.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_31_1_Q1q.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_33_1_W1X.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_34_1_RSJ.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_36_1_UDn.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_37_1_dN5.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_38_1_gjY.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_39_1_tRm.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_3_1_BC4.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_40_1_WOP.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_4_1_ejW.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_7_1_0lv.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_8_1_5Gg.root',
+     )
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -306,7 +327,8 @@ simpleCutsWP80 = "(userFloat('nHits')==0 && userInt('antiConv')>0.5 "+ \
 process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
-    cut = cms.string("tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 && pt>20 && abs(eta)<2.3"
+    cut = cms.string("pt>20 && abs(eta)<2.3"+
+                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"
                      #"&& tauID('againstElectronMVA')>0.5"
                      ),
     filter = cms.bool(False)
@@ -314,7 +336,8 @@ process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
 process.tauPtEtaIDAgMuAgElecIsoPtRel  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
-    cut = cms.string("tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 && pt>19 && abs(eta)<2.3"
+    cut = cms.string("pt>19 && abs(eta)<2.3"+
+                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"
                      #"&& tauID('againstElectronMVA')>0.5"
                      ),
     filter = cms.bool(False)
@@ -343,13 +366,13 @@ process.tauPtEtaIDAgMuAgElecIsoTauDownCounter = process.tauPtEtaIDAgMuAgElecIsoC
 process.elecPtEtaIDIso  = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("elecPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04v3')<0.50 && pt>20 && abs(eta)<2.1 && "+simpleCutsWP95),
+    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>20 && abs(eta)<2.1 && userInt('antiConv')>0.5"),
     filter = cms.bool(False)
     )
 process.elecPtEtaIDIsoPtRel  = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("elecPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04v3')<0.50 && pt>19 && abs(eta)<2.1 && "+simpleCutsWP95),
+    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>19 && abs(eta)<2.1 && userInt('antiConv')>0.5"),
     filter = cms.bool(False)
     )
 
@@ -412,14 +435,14 @@ process.elecTauStreamAnalyzer = cms.EDAnalyzer(
     deltaRLegJet       = cms.untracked.double(0.5),
     minCorrPt          = cms.untracked.double(15.),
     minJetID           = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
-    #inputFileNameX0BL  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_X_0BL_BDT.weights.xml"),
-    #inputFileName11BL  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_1_1BL_BDT.weights.xml"),
-    #inputFileName01BL  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_0_1BL_BDT.weights.xml"),
-    #inputFileNameX0EC  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_X_0EC_BDT.weights.xml"),
-    #inputFileName11EC  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_1_1EC_BDT.weights.xml"),
-    #inputFileName01EC  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_0_1EC_BDT.weights.xml"),
     verbose            = cms.untracked.bool( False ),
+    doElecIsoMVA       = cms.bool( True ),
+    inputFileName0     = cms.FileInPath("UserCode/sixie/EGamma/EGammaAnalysisTools/data/ElectronIso_BDTG_V0_BarrelPt5To10.weights.xml"),
+    inputFileName1     = cms.FileInPath("UserCode/sixie/EGamma/EGammaAnalysisTools/data/ElectronIso_BDTG_V0_EndcapPt5To10.weights.xml"),
+    inputFileName2     = cms.FileInPath("UserCode/sixie/EGamma/EGammaAnalysisTools/data/ElectronIso_BDTG_V0_BarrelPt10ToInf.weights.xml"),
+    inputFileName3     = cms.FileInPath("UserCode/sixie/EGamma/EGammaAnalysisTools/data/ElectronIso_BDTG_V0_EndcapPt10ToInf.weights.xml"),
     )
+
 process.elecTauStreamAnalyzerJetUp     = process.elecTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauJetUp"),
     met    =  cms.InputTag("rescaledMETjet",  "UNNNU"),
@@ -501,7 +524,7 @@ if runOnMC:
         process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
         process.elecTauStreamAnalyzer
         )
-    
+    '''
     process.pJetUp = cms.Path(
         process.allEventsFilter*
         (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
@@ -522,7 +545,6 @@ if runOnMC:
         process.diTauJetDown*process.selectedDiTauJetDown*process.selectedDiTauJetDownCounter*
         process.elecTauStreamAnalyzerJetDown
         )
-    '''
     process.pMEtResolutionUp = cms.Path(
         process.allEventsFilter*
         (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
@@ -584,7 +606,6 @@ if runOnMC:
         process.diTauElecDown*process.selectedDiTauElecDown*process.selectedDiTauElecDownCounter*
         process.elecTauStreamAnalyzerElecDown
         )
-    '''
     process.pTauUp = cms.Path(
         process.allEventsFilter*
         (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
@@ -607,6 +628,7 @@ if runOnMC:
         process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
         process.elecTauStreamAnalyzerTauDown
         )
+    '''
     
 else:
     

@@ -16,6 +16,7 @@
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 
+#include "EGamma/EGammaAnalysisTools/interface/EGammaMvaEleEstimator.h"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -81,6 +82,8 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< float >* jetsChNfraction_;
   std::vector< float >* jetsChEfraction_;
   std::vector< float >* jetMoments_;
+  std::vector< float >* jetPUMVA_;
+  std::vector< float >* jetPUWP_;
   std::vector< float >* metSgnMatrix_;
   
   std::vector< int >* tauXTriggers_;
@@ -150,6 +153,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   float diTauSVfitMassErrUp_;
   float diTauSVfitMassErrDown_;
   float visibleTauMass_;
+  float visibleGenTauMass_;
 
   float leadPFChargedHadrMva_;
   float leadPFChargedHadrHcalEnergy_;
@@ -170,13 +174,17 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
 
   int tightestCutBasedWP_;
   int tightestMVAWP_;
-  float danieleMVA_;
+  float mvaPOGTrig_;
+  float mvaPOGNonTrig_;
   float mitMVA_;
   int antiConv_;
+  int isTriggerElectron_;
   int tightestAntiEWP_;
+  int tightestAntiEMVAWP_;
   int tightestCiCWP_;
   int tightestHPSWP_;
   int tightestHPSDBWP_;
+  int tightestHPSMVAWP_;
   int isTauLegMatched_;
   int isElecLegMatched_;
   int elecFlag_;
@@ -193,6 +201,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   float HoE_;
   float EoP_;
   float fbrem_;
+  int pfId_;
   //int isEleLikelihoodID_;
   //int isEleCutBasedID_;
 
@@ -217,6 +226,10 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   //edm::FileInPath inputFileName11EC_;
   //edm::FileInPath inputFileName01EC_;
   //float mvaAntiE_;
+
+  bool doElecIsoMVA_;
+  float isoLeg1MVA_;
+  EGammaMvaEleEstimator* fElectronIsoMVA_;
 
 
 };

@@ -14,6 +14,8 @@
 #include "DataFormats/RecoCandidate/interface/IsoDeposit.h"
 #include "DataFormats/PatCandidates/interface/Isolation.h"
 
+//#include "Muon/MuonAnalysisTools/interface/MuonMVAEstimator.h"
+
 class MuonsUserEmbedded : public edm::EDProducer{
 
 
@@ -38,6 +40,8 @@ class MuonsUserEmbedded : public edm::EDProducer{
   reco::isodeposit::AbsVetos vetos2011Photons_;
 
   bool fitUnbiasedVertex_;
+  //bool doMuIsoMVA_;
+  //MuonMVAEstimator *fMuonIsoMVA_;
 
 };
 

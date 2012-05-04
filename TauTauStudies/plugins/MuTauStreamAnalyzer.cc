@@ -12,6 +12,10 @@
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/Tau.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
+#include "DataFormats/MuonReco/interface/Muon.h"
+#include "DataFormats/MuonReco/interface/MuonFwd.h"
+#include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
+#include "DataFormats/EgammaCandidates/interface/GsfElectronFwd.h"
 
 #include <DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h>
 
@@ -43,7 +47,7 @@
 
 #include "PhysicsTools/JetMCUtils/interface/JetMCTag.h"
 
-////// for DCA ////////////////////
+////// for DCA ///////////////////////////////
 
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include "TrackingTools/Records/interface/TransientRecHitRecord.h"
@@ -54,7 +58,9 @@
 #include "TrackingTools/PatternTools/interface/TwoTrackMinimumDistance.h"
 #include "RecoVertex/KinematicFitPrimitives/interface/KinematicParticleFactoryFromTransientTrack.h"
 
-///////////////////////////////////
+/////// for jet-ID ///////////////////////////
+
+#include "CMGTools/External/interface/PileupJetIdentifier.h"
 
 
 
@@ -86,6 +92,30 @@ MuTauStreamAnalyzer::MuTauStreamAnalyzer(const edm::ParameterSet & iConfig){
   minCorrPt_         = iConfig.getUntrackedParameter<double>("minCorrPt",10.);
   minJetID_          = iConfig.getUntrackedParameter<double>("minJetID",0.5);
   verbose_           = iConfig.getUntrackedParameter<bool>("verbose",false);
+  
+
+  doMuIsoMVA_        = iConfig.getParameter<bool>("doMuIsoMVA");
+  if( doMuIsoMVA_ ){
+    fMuonIsoMVA_ = new MuonMVAEstimator();
+    edm::FileInPath inputFileName0 = iConfig.getParameter<edm::FileInPath>("inputFileName0");
+    edm::FileInPath inputFileName1 = iConfig.getParameter<edm::FileInPath>("inputFileName1");
+    edm::FileInPath inputFileName2 = iConfig.getParameter<edm::FileInPath>("inputFileName2");
+    edm::FileInPath inputFileName3 = iConfig.getParameter<edm::FileInPath>("inputFileName3");
+    edm::FileInPath inputFileName4 = iConfig.getParameter<edm::FileInPath>("inputFileName4");
+    edm::FileInPath inputFileName5 = iConfig.getParameter<edm::FileInPath>("inputFileName5");   
+    vector<string> muoniso_weightfiles;
+    muoniso_weightfiles.push_back(inputFileName0.fullPath().data());
+    muoniso_weightfiles.push_back(inputFileName1.fullPath().data());
+    muoniso_weightfiles.push_back(inputFileName2.fullPath().data());
+    muoniso_weightfiles.push_back(inputFileName3.fullPath().data());
+    muoniso_weightfiles.push_back(inputFileName4.fullPath().data());
+    muoniso_weightfiles.push_back(inputFileName5.fullPath().data());   
+    fMuonIsoMVA_->initialize("MuonIso_BDTG_IsoRingsRad",
+			     MuonMVAEstimator::kIsoRingsRadial,
+			     kTRUE,
+			     muoniso_weightfiles);
+  }
+  
 }
 
 void MuTauStreamAnalyzer::beginJob(){
@@ -101,6 +131,8 @@ void MuTauStreamAnalyzer::beginJob(){
   jetsChEfraction_  = new std::vector< float >();
   jetsChNfraction_  = new std::vector< float >();
   jetMoments_       = new std::vector< float >();
+  jetPUMVA_         = new std::vector< float >();
+  jetPUWP_          = new std::vector< float >();
 
   gammadR_       = new std::vector< float >();
   gammadEta_     = new std::vector< float >();
@@ -400,6 +432,8 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("sigDCA","std::vector<double>",&sigDCA_);
 
   tree_->Branch("jetMoments","std::vector<float> ",&jetMoments_);
+  tree_->Branch("jetPUMVA","std::vector<float> ",&jetPUMVA_);
+  tree_->Branch("jetPUWP","std::vector<float> ", &jetPUWP_);
 
   tree_->Branch("gammadR","std::vector<float> ",&gammadR_);
   tree_->Branch("gammadEta","std::vector<float> ",&gammadEta_);
@@ -450,14 +484,14 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("pZetaVis",&pZetaVis_,"pZetaVis/F");
   tree_->Branch("pZetaSig",&pZetaSig_,"pZetaSig/F");
 
-  tree_->Branch("chIsoLeg1v1",&chIsoLeg1v1_,"chIsoLeg1v1/F");
-  tree_->Branch("nhIsoLeg1v1",&nhIsoLeg1v1_,"nhIsoLeg1v1/F");
-  tree_->Branch("phIsoLeg1v1",&phIsoLeg1v1_,"phIsoLeg1v1/F");
-  tree_->Branch("elecIsoLeg1v1",&elecIsoLeg1v1_,"elecIsoLeg1v1/F");
-  tree_->Branch("muIsoLeg1v1",&muIsoLeg1v1_,"muIsoLeg1v1/F");
-  tree_->Branch("chIsoPULeg1v1",&chIsoPULeg1v1_,"chIsoPULeg1v1/F");
-  tree_->Branch("nhIsoPULeg1v1",&nhIsoPULeg1v1_,"nhIsoPULeg1v1/F");
-  tree_->Branch("phIsoPULeg1v1",&phIsoPULeg1v1_,"phIsoPULeg1v1/F");
+  //tree_->Branch("chIsoLeg1v1",&chIsoLeg1v1_,"chIsoLeg1v1/F");
+  //tree_->Branch("nhIsoLeg1v1",&nhIsoLeg1v1_,"nhIsoLeg1v1/F");
+  //tree_->Branch("phIsoLeg1v1",&phIsoLeg1v1_,"phIsoLeg1v1/F");
+  //tree_->Branch("elecIsoLeg1v1",&elecIsoLeg1v1_,"elecIsoLeg1v1/F");
+  //tree_->Branch("muIsoLeg1v1",&muIsoLeg1v1_,"muIsoLeg1v1/F");
+  //tree_->Branch("chIsoPULeg1v1",&chIsoPULeg1v1_,"chIsoPULeg1v1/F");
+  //tree_->Branch("nhIsoPULeg1v1",&nhIsoPULeg1v1_,"nhIsoPULeg1v1/F");
+  //tree_->Branch("phIsoPULeg1v1",&phIsoPULeg1v1_,"phIsoPULeg1v1/F");
 
   tree_->Branch("chIsoLeg1v2",&chIsoLeg1v2_,"chIsoLeg1v2/F");
   tree_->Branch("nhIsoLeg1v2",&nhIsoLeg1v2_,"nhIsoLeg1v2/F");
@@ -467,6 +501,9 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("chIsoPULeg1v2",&chIsoPULeg1v2_,"chIsoPULeg1v2/F");
   tree_->Branch("nhIsoPULeg1v2",&nhIsoPULeg1v2_,"nhIsoPULeg1v2/F");
   tree_->Branch("phIsoPULeg1v2",&phIsoPULeg1v2_,"phIsoPULeg1v2/F");
+
+  tree_->Branch("isoLeg1MVA",&isoLeg1MVA_,"isoLeg1MVA/F");
+
 
   tree_->Branch("chIsoLeg2",&chIsoLeg2_,"chIsoLeg2/F");
   tree_->Branch("nhIsoLeg2",&nhIsoLeg2_,"nhIsoLeg2/F");
@@ -492,6 +529,7 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("genPolarization",&genPolarization_,"genPolarization/I");
   tree_->Branch("tightestHPSWP",&tightestHPSWP_,"tightestHPSWP/I");
   tree_->Branch("tightestHPSDBWP",&tightestHPSDBWP_,"tightestHPSDBWP/I");
+  tree_->Branch("tightestHPSMVAWP",&tightestHPSMVAWP_,"tightestHPSMVAWP/I");
   tree_->Branch("visibleTauMass",&visibleTauMass_,"visibleTauMass/F");
   tree_->Branch("visibleGenTauMass",&visibleGenTauMass_,"visibleGenTauMass/F");
 
@@ -516,6 +554,7 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("isTauLegMatched",&isTauLegMatched_,"isTauLegMatched/I");
   tree_->Branch("isMuLegMatched",&isMuLegMatched_,"isMuLegMatched/I");
   tree_->Branch("muFlag",&muFlag_,"muFlag/I");
+  tree_->Branch("isPFMuon",&isPFMuon_,"isPFMuon/I");
   tree_->Branch("muVetoRelIso",&muVetoRelIso_,"muVetoRelIso/F");
   tree_->Branch("hasKft",&hasKft_,"hasKft/I");
 
@@ -544,8 +583,10 @@ MuTauStreamAnalyzer::~MuTauStreamAnalyzer(){
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_; delete extraMuons_; delete pfMuons_; delete jetsIDL1OffsetP4_;
   delete genTausP4_;
   delete jetsChNfraction_; delete jetsChEfraction_;delete jetMoments_;
+  delete jetPUMVA_; delete jetPUWP_;
   delete gammadR_ ; delete gammadPhi_; delete gammadEta_; delete gammaPt_;
   delete metSgnMatrix_;
+  if( doMuIsoMVA_ ) delete fMuonIsoMVA_;
 }
 
 void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -577,6 +618,9 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       << "No jets label available \n";
   const pat::JetCollection* jets = jetsHandle.product();
 
+  edm::Handle<edm::View<pat::Jet> > jetsHandleForMVA;
+  iEvent.getByLabel(jetsTag_,jetsHandleForMVA);
+
   edm::Handle<pat::JetCollection> newJetsHandle;
   const pat::JetCollection* newJets = 0;
   if(newJetsTag_.label()!=""){
@@ -586,6 +630,13 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	<< "No newJets label available \n";
     newJets = newJetsHandle.product();
   }
+
+  edm::Handle<edm::ValueMap<float> > puJetIdMVA;
+  iEvent.getByLabel("puJetMva","fullDiscriminant",puJetIdMVA);
+  
+  edm::Handle<edm::ValueMap<int> > puJetIdFlag;
+  iEvent.getByLabel("puJetMva","fullId",puJetIdFlag);
+
 
   edm::Handle<reco::PFCandidateCollection> pfHandle;
   iEvent.getByLabel("particleFlow",pfHandle);
@@ -758,9 +809,12 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
   mcPUweight_ = LumiWeights_.weight( nPUVertices_ );
 
+  //edm::Handle<double> rhoFastJetHandle;
+  //iEvent.getByLabel(edm::InputTag("kt6PFJetsCentral","rho",""), rhoFastJetHandle);
+  //rhoFastJet_ = rhoFastJetHandle.isValid() ? (*rhoFastJetHandle) : -99;
 
   edm::Handle<double> rhoFastJetHandle;
-  iEvent.getByLabel(edm::InputTag("kt6PFJetsCentral","rho",""), rhoFastJetHandle);
+  iEvent.getByLabel(edm::InputTag("kt6PFJetsForRhoComputationVoronoi","rho"), rhoFastJetHandle);
   rhoFastJet_ = rhoFastJetHandle.isValid() ? (*rhoFastJetHandle) : -99;
 
   edm::Handle<double> embeddingWeightHandle;
@@ -806,7 +860,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   numOfDiTaus_ = diTaus->size();
 
   muFlag_       = 0;
-  muVetoRelIso_ = 0;
+  muVetoRelIso_ = 0.;
 
   bool found = false;
   for(unsigned int i=0; i<muonsRel->size(); i++){
@@ -816,19 +870,19 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       
       if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3
 	  && (*muonsRel)[i].charge()*(*muons)[j].charge()<0
-	  && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 
-	  && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
+	  && (*muons)[j].userFloat("PFRelIsoDB04")<0.3 
+	  && (*muonsRel)[i].userFloat("PFRelIsoDB04")<0.3 ){
 	muFlag_       = 1;
-	muVetoRelIso_ = (*muonsRel)[i].userFloat("PFRelIsoDB04v2");
+	muVetoRelIso_ = (*muonsRel)[i].userFloat("PFRelIsoDB04");
 	if(verbose_) cout<< "Two muons failing diMu veto: flag= " << muFlag_ << endl;
 	found=true;
       }
       else if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3
 	       && (*muonsRel)[i].charge()*(*muons)[j].charge()>0
-	       && (*muons)[j].userFloat("PFRelIsoDB04v2")<0.3 
-	       && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
+	       && (*muons)[j].userFloat("PFRelIsoDB04")<0.3 
+	       && (*muonsRel)[i].userFloat("PFRelIsoDB04")<0.3 ){
 	muFlag_       = 2;
-	muVetoRelIso_ = (*muonsRel)[i].userFloat("PFRelIsoDB04v2");
+	muVetoRelIso_ = (*muonsRel)[i].userFloat("PFRelIsoDB04");
 	if(verbose_) cout<< "Two muons with SS: flag= " << muFlag_ << endl;
 	found=true;
       }
@@ -931,7 +985,8 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     int pairCharge = (((*diTaus)[i].leg1())->charge()*((*diTaus)[i].leg2())->charge());
 
     const pat::Tau*  tau_i = dynamic_cast<const pat::Tau*>(  ((*diTaus)[i].leg2()).get() );
-    if(tau_i->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5)
+    if(tau_i->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5 ||
+       tau_i->tauID("byLooseIsolationMVA")>0.5)
       sortedDiTausLooseIso.insert( make_pair( sumPt, i ) );
     sortedDiTaus.insert( make_pair( sumPt, i ) );
     if(pairCharge<0) 
@@ -991,6 +1046,8 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     jetsChNfraction_->clear();
     jetsChEfraction_->clear();
     jetMoments_->clear();
+    jetPUMVA_->clear();
+    jetPUWP_->clear();
     gammadR_->clear();
     gammadEta_->clear();
     gammadPhi_->clear();
@@ -1294,7 +1351,12 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     if(leg2->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5)  tightestHPSDBWP_++;
     if(leg2->tauID("byMediumCombinedIsolationDeltaBetaCorr")>0.5) tightestHPSDBWP_++;
     if(leg2->tauID("byTightCombinedIsolationDeltaBetaCorr")>0.5)  tightestHPSDBWP_++;
-    
+    tightestHPSMVAWP_ = -1;
+    if(leg2->tauID("byLooseIsolationMVA") >0.5) tightestHPSMVAWP_++;
+    if(leg2->tauID("byMediumIsolationMVA")>0.5) tightestHPSMVAWP_++;
+    if(leg2->tauID("byTightIsolationMVA") >0.5) tightestHPSMVAWP_++;
+
+
     pfJetPt_ = (leg2->pfJetRef()).isNonnull() ? leg2->pfJetRef()->pt() : -99;
      
     dxy1_  = vertexes->size()!=0 && (leg1->innerTrack()).isNonnull() ? leg1->innerTrack()->dxy( (*vertexes)[0].position() ) : -99;
@@ -1323,65 +1385,60 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       }
     }
     
+    isPFMuon_   = leg1->userInt("isPFMuon");
+    isoLeg1MVA_ = -99;
+    if(doMuIsoMVA_ && vertexes->size()){
       
+      const reco::GsfElectronCollection dummyGsfColl;
+      const reco::MuonCollection dummyRecoMuon;
+      
+      const reco::Muon* aMuon = static_cast<const reco::Muon*>(leg1); 
+      // Mu-Iso MVA
+      isoLeg1MVA_ = isMC_ ?
+	fMuonIsoMVA_->mvaValue( *aMuon, (*vertexes)[0], 
+				*pfCandidates, rhoFastJet_, 
+				MuonEffectiveArea::kMuEAFall11MC, 
+				dummyGsfColl, dummyRecoMuon) :
+	fMuonIsoMVA_->mvaValue( *aMuon, (*vertexes)[0], 
+				*pfCandidates, rhoFastJet_, 
+				MuonEffectiveArea::kMuEAData2011, 
+				dummyGsfColl, dummyRecoMuon) ;
+      //cout << "Muon Iso MVA = " << isoLeg1MVA_ << endl;
+    }
     
-    // isoDeposit definition: 2010
-    isodeposit::AbsVetos vetos2010ChargedLeg1; 
-    isodeposit::AbsVetos vetos2010NeutralLeg1; 
-    isodeposit::AbsVetos vetos2010PhotonLeg1;
     // isoDeposit definition: 2011
     isodeposit::AbsVetos vetos2011ChargedLeg1; 
+    isodeposit::AbsVetos vetos2011AllChargedLeg1; 
     isodeposit::AbsVetos vetos2011NeutralLeg1; 
     isodeposit::AbsVetos vetos2011PhotonLeg1;
-    
-    vetos2010ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
-    vetos2010ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
-    vetos2010NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
-    vetos2010NeutralLeg1.push_back(new isodeposit::ThresholdVeto(1.0));
-    vetos2010PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.05));
-    vetos2010PhotonLeg1.push_back( new isodeposit::ThresholdVeto(1.0));
-    
+     
     vetos2011ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.0001));
     vetos2011ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
+    vetos2011AllChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
+    vetos2011AllChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
     vetos2011NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
     vetos2011NeutralLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
     vetos2011PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
     vetos2011PhotonLeg1.push_back( new isodeposit::ThresholdVeto(0.5));
-    
-    chIsoLeg1v1_   = 
-      leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
-    nhIsoLeg1v1_ = 
-      leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetos2010NeutralLeg1).first;
-    phIsoLeg1v1_ = 
-      leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2010PhotonLeg1).first;
-    elecIsoLeg1v1_ = 
-      leg1->isoDeposit(pat::User3Iso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
-    muIsoLeg1v1_   = 
-      leg1->isoDeposit(pat::User2Iso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
-    chIsoPULeg1v1_ = 
-      leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010ChargedLeg1).first;
-    nhIsoPULeg1v1_ = 
-      leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010NeutralLeg1).first;
-    phIsoPULeg1v1_ = 
-      leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2010PhotonLeg1).first;
-    
+       
     chIsoLeg1v2_   = 
       leg1->isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
     nhIsoLeg1v2_ = 
       leg1->isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(0.4,vetos2011NeutralLeg1).first;
     phIsoLeg1v2_ = 
       leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2011PhotonLeg1).first;
-    elecIsoLeg1v2_ = 
-      leg1->isoDeposit(pat::User3Iso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
-    muIsoLeg1v2_   = 
-      leg1->isoDeposit(pat::User2Iso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
+    // all charged particles
+    elecIsoLeg1v2_ =
+      leg1->isoDeposit(pat::User1Iso)->depositAndCountWithin(0.4,vetos2011AllChargedLeg1).first;
+    muIsoLeg1v2_   = elecIsoLeg1v2_; 
+      //leg1->isoDeposit(pat::User2Iso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
     chIsoPULeg1v2_ = 
       leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
     nhIsoPULeg1v2_ = 
       leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011NeutralLeg1).first;
     phIsoPULeg1v2_ = 
       leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011PhotonLeg1).first;
-    
+   
     
     chIsoLeg2_ = leg2->isolationPFChargedHadrCandsPtSum();
     //
@@ -1399,24 +1456,17 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     }
     phIsoLeg2_ = leg2->isolationPFGammaCandsEtSum();
     
-    
     // cleaning
-    for(unsigned int i = 0; i <vetos2010ChargedLeg1.size(); i++){
-      delete vetos2010ChargedLeg1[i];
-    }
-    for(unsigned int i = 0; i <vetos2010NeutralLeg1.size(); i++){
-      delete vetos2010NeutralLeg1[i];
-      delete vetos2010PhotonLeg1[i];
-    }
     for(unsigned int i = 0; i <vetos2011ChargedLeg1.size(); i++){
       delete vetos2011ChargedLeg1[i];
+      delete vetos2011AllChargedLeg1[i];
     }
     for(unsigned int i = 0; i <vetos2011NeutralLeg1.size(); i++){
       delete vetos2011NeutralLeg1[i];
       delete vetos2011PhotonLeg1[i];
     }
     //
-    
+
     diTauVisP4_->push_back( theDiTau->p4Vis() );
     diTauCAP4_->push_back(  theDiTau->p4CollinearApprox() );
     diTauICAP4_->push_back( theDiTau->p4ImprovedCollinearApprox() );
@@ -1470,7 +1520,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     std::map<double, std::pair<float,float> ,  MuTauStreamAnalyzer::more> bTaggers;
     std::map<double, std::pair<float,float> ,  MuTauStreamAnalyzer::more> jetPVassociation;
     std::map<double, std::pair<float,float> ,  MuTauStreamAnalyzer::more> jetMoments;
-    
+    std::map<double, std::vector<float> ,      MuTauStreamAnalyzer::more> jetPUID;
 
 
     for(unsigned int it = 0; it < jets->size() ; it++){
@@ -1485,7 +1535,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       if(!newJet){
 	if(verbose_) cout << "No jet from the new collection can be matched ==> using old one..." << endl;
 	newJet = jet;
-    }
+      }
       
       math::XYZTLorentzVectorD leg2p4 = ( (leg2->pfJetRef()).isNonnull() ) ? leg2->pfJetRef()->p4() : leg2->p4();
       
@@ -1575,7 +1625,35 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	if(jet->genJet() != 0) sortedGenJetsID.insert( make_pair( newJet->p4().Pt() ,jet->genJet()->p4() ) );
 	else sortedGenJetsID.insert( make_pair( newJet->p4().Pt() , math::XYZTLorentzVectorD(0,0,0,0) ) );
       }
+
+      /////////////////////////////////////////////////////////////////////
       
+      float mva   = (*puJetIdMVA)[jetsHandleForMVA->refAt(it)];
+      int  idflag = (*puJetIdFlag)[jetsHandleForMVA->refAt(it)];
+      if( verbose_ ){
+	cout << "jet " << it << " pt " << jet->pt() << " eta " << jet->eta() << " PU JetID MVA " << mva << endl; 
+	cout << "X-check " << " pt " << jetsHandleForMVA->refAt(it)->pt() << " eta " << jetsHandleForMVA->refAt(it)->eta(); 
+	if( PileupJetIdentifier::passJetId( idflag, PileupJetIdentifier::kLoose ) ) {
+	  cout << " pass loose wp";
+	}
+	if( PileupJetIdentifier::passJetId( idflag, PileupJetIdentifier::kMedium ) ){
+	  cout << " pass medium wp";
+	}
+	if( PileupJetIdentifier::passJetId( idflag, PileupJetIdentifier::kTight ) ){
+	  cout << " pass tight wp";
+	}
+	cout << endl;
+      }
+
+      vector<float> pileupResults;
+      pileupResults.push_back(mva);
+      pileupResults.push_back(float(PileupJetIdentifier::passJetId( idflag, PileupJetIdentifier::kLoose )));
+      pileupResults.push_back(float(PileupJetIdentifier::passJetId( idflag, PileupJetIdentifier::kMedium )));
+      pileupResults.push_back(float(PileupJetIdentifier::passJetId( idflag, PileupJetIdentifier::kTight )));
+
+      jetPUID.insert(  make_pair( newJet->p4().Pt() ,  pileupResults ) );
+      
+      /////////////////////////////////////////////////////////////////////    
     }
     
     for(CImap it = sortedJets.begin(); it != sortedJets.end() ; it++){
@@ -1607,6 +1685,12 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     for(std::map<double, std::pair<float,float> >::iterator it = jetMoments.begin(); it != jetMoments.end() ; it++){
       jetMoments_->push_back( (it->second).first  );
       jetMoments_->push_back( (it->second).second );
+    }
+    for(std::map<double, std::vector<float> >::iterator it = jetPUID.begin(); it != jetPUID.end() ; it++){
+      jetPUMVA_->push_back( (it->second)[0]  );
+      jetPUWP_->push_back( (it->second)[1] );
+      jetPUWP_->push_back( (it->second)[2] );
+      jetPUWP_->push_back( (it->second)[3] );
     }
     
     tree_->Fill();
