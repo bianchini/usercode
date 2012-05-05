@@ -12,7 +12,7 @@ process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
-runOnMC     = True
+runOnMC     = False
 doSVFitReco = False
 
 if runOnMC:

@@ -1243,6 +1243,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     diTauLegsP4_->push_back(leg1->p4());
     diTauLegsP4_->push_back(leg2->p4());
   
+    genDecayMode_    = -99;
+    genPolarization_ = -99;
+
     if(isMC_){
       if( (leg1->genParticleById(11,0,true)).isNonnull()  ){
 	genDiTauLegsP4_->push_back( leg1->genParticleById(11,0,true)->p4() );

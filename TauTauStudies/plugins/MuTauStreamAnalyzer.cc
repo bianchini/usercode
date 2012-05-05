@@ -111,8 +111,8 @@ MuTauStreamAnalyzer::MuTauStreamAnalyzer(const edm::ParameterSet & iConfig){
     muoniso_weightfiles.push_back(inputFileName3.fullPath().data());
     muoniso_weightfiles.push_back(inputFileName4.fullPath().data());
     muoniso_weightfiles.push_back(inputFileName5.fullPath().data());   
-    fMuonIsoMVA_->initialize("MuonIso_BDTG_IsoRingsRad",
-			     MuonMVAEstimator::kIsoRingsRadial,
+    fMuonIsoMVA_->initialize("MuonIso_BDTG_IsoRings",
+			     MuonMVAEstimator::kIsoRings,
 			     kTRUE,
 			     muoniso_weightfiles);
   }
@@ -1210,6 +1210,9 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     diTauLegsP4_->push_back(leg1->p4());
     diTauLegsP4_->push_back(leg2->p4());
     
+    genDecayMode_    = -99;
+    genPolarization_ = -99;
+
     if(isMC_){
       if( (leg1->genParticleById(13,0,true)).isNonnull() ){
 	genDiTauLegsP4_->push_back( leg1->genParticleById(13,0,true)->p4() );
@@ -1247,8 +1250,6 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	if(verbose_) cout << "WARNING: no genJet matched to the leg2 with eta,phi " << leg2->eta() << ", " << leg2->phi() << endl;
       }
       
-      genDecayMode_    = -99;
-      genPolarization_ = -99;
       bool tauHadMatched = false;
       for(unsigned int k = 0; k < tauGenJets->size(); k++){
 	if( Geom::deltaR( (*tauGenJets)[k].p4(),leg2->p4() ) < 0.15 ) tauHadMatched = true;

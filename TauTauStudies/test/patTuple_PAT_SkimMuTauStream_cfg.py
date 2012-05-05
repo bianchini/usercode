@@ -7,6 +7,7 @@ process.load("JetMETCorrections.Configuration.JetCorrectionServices_cff")
 
 postfix     = "PFlow"
 runOnMC     = True
+runOnEmbed  = False
 
 from Configuration.PyReleaseValidation.autoCond import autoCond
 process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
@@ -18,14 +19,16 @@ else:
     process.GlobalTag.globaltag = cms.string('GR_R_42_V23::All') #GR_R_42_V19
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 50
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source.fileNames = cms.untracked.vstring(
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/AODSIM/PU_S4_START42_V11-v1/0000/0E47FBF8-0295-E011-818F-0030487E3026.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/FCAE02CE-7800-E111-A2CB-0022198904D4.root'
-    'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall11/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/AODSIM/PU_S6_START42_V14B-v1/0000/F4ACA82D-FDF8-E011-A31A-E0CB4E29C51E.root',
+    #'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall11/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/AODSIM/PU_S6_START42_V14B-v1/0000/F4ACA82D-FDF8-E011-A31A-E0CB4E29C51E.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/akalinow/TauPlusX/428_mutau_skim_Run2011A-05Aug2011-v1_v4/b8ede77eca865a3526029ca11820f552/tautauSkimmAOD_9_1_coF.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/FCAE02CE-7800-E111-A2CB-0022198904D4.root'
     #'file:./root/pickevents.root',
     #'file:./root/syncSkim_5_1_vnT.root',
     )
@@ -135,13 +138,16 @@ process.patPFMetByMVA = process.patMETs.clone(
     genMETSource = cms.InputTag('genMetTrue')
     )
 
+process.patPFMetByMVA.addGenMET = cms.bool(runOnMC)
+
+
 ################### bTag ##############################
 
-#process.load('RecoBTag/Configuration/RecoBTag_cff')
-#process.load('RecoJets/JetAssociationProducers/ak5JTA_cff')
-#process.ak5JetTracksAssociatorAtVertex.jets = cms.InputTag("ak5PFJets")
-#process.ak5JetTracksAssociatorAtVertex.tracks =
-#cms.InputTag("tmfTracks")
+if runOnEmbed:
+    process.load('RecoBTag/Configuration/RecoBTag_cff')
+    process.load('RecoJets/JetAssociationProducers/ak5JTA_cff')
+    process.ak5JetTracksAssociatorAtVertex.jets   = cms.InputTag("ak5PFJets")
+    process.ak5JetTracksAssociatorAtVertex.tracks = cms.InputTag("tmfTracks")
 
 ## Plus, add this to your path:
 #process.ak5JetTracksAssociatorAtVertex*process.btagging
@@ -680,6 +686,7 @@ process.skim = cms.Sequence(
     process.pfParticleSelectionSequence*
     process.muIsoSequence*
     process.electronIsoSequence*
+    (process.ak5JetTracksAssociatorAtVertex*process.btagging)*
     process.patDefaultSequence*
     process.puJetIdSqeuence *
     ##process.kt6PFJetsNeutral*
@@ -705,6 +712,9 @@ process.selectedPrimaryVertices.src = cms.InputTag('offlinePrimaryVertices')
 
 if not runOnMC:
     process.skim.remove(process.printTree1)
+if not runOnEmbed:
+     process.skim.remove(process.ak5JetTracksAssociatorAtVertex)
+     process.skim.remove(process.btagging)
 
 #process.p = cms.Path(process.printEventContent+process.skim)
 process.p = cms.Path(process.skim)
