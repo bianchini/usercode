@@ -9,7 +9,8 @@
 #include "Bianchi/Utilities/interface/VertexReProducer.h"
 #include "DataFormats/MuonReco/interface/Muon.h"
 #include "DataFormats/GeometryVector/interface/VectorUtil.h"
-
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
 
 MuonsUserEmbedded::MuonsUserEmbedded(const edm::ParameterSet & iConfig){
 
@@ -17,11 +18,34 @@ MuonsUserEmbedded::MuonsUserEmbedded(const edm::ParameterSet & iConfig){
   vertexTag_         = iConfig.getParameter<edm::InputTag>("vertexTag");
   fitUnbiasedVertex_ = iConfig.getParameter<bool>("fitUnbiasedVertex");
 
+  //doMuIsoMVA_        = iConfig.getParameter<bool>("doMuIsoMVA");
+  // if( doMuIsoMVA_ ){
+ //   fMuonIsoMVA_ = new MuonMVAEstimator();
+ //   edm::FileInPath inputFileName0 = iConfig.getParameter<edm::FileInPath>("inputFileName0");
+ //   edm::FileInPath inputFileName1 = iConfig.getParameter<edm::FileInPath>("inputFileName1");
+ //   edm::FileInPath inputFileName2 = iConfig.getParameter<edm::FileInPath>("inputFileName2");
+ //   edm::FileInPath inputFileName3 = iConfig.getParameter<edm::FileInPath>("inputFileName3");
+ //   edm::FileInPath inputFileName4 = iConfig.getParameter<edm::FileInPath>("inputFileName4");
+ //   edm::FileInPath inputFileName5 = iConfig.getParameter<edm::FileInPath>("inputFileName5");   
+ //   vector<string> muoniso_weightfiles;
+ //   muoniso_weightfiles.push_back(inputFileName0.fullPath().data());
+ //   muoniso_weightfiles.push_back(inputFileName1.fullPath().data());
+ //   muoniso_weightfiles.push_back(inputFileName2.fullPath().data());
+ //   muoniso_weightfiles.push_back(inputFileName3.fullPath().data());
+ //   muoniso_weightfiles.push_back(inputFileName4.fullPath().data());
+ //   muoniso_weightfiles.push_back(inputFileName5.fullPath().data());   
+ //   fMuonIsoMVA->initialize("MuonIso_BDTG_IsoRings",
+ // 	    MuonMVAEstimator::kIsoRings,
+ // 	    kTRUE,
+ // 	    muoniso_weightfiles);
+ // }
+  
   produces<pat::MuonCollection>("");
 
 }
 
 MuonsUserEmbedded::~MuonsUserEmbedded(){
+  //if(doMuIsoMVA_) delete fMuonIsoMVA_;
 }
 
 void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -42,6 +66,13 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
   iEvent.getByLabel("offlinePrimaryVertices",allVertexHandle);
   const reco::VertexCollection* allVertexes = allVertexHandle.product();
 
+  edm::Handle<reco::PFCandidateCollection> pfHandle;
+  iEvent.getByLabel("particleFlow",pfHandle);
+  if( !pfHandle.isValid() )  
+    edm::LogError("DataNotAvailable")
+      << "No pf particles label available \n";
+  const reco::PFCandidateCollection* pfCandidates = pfHandle.product();
+  
   edm::ESHandle<TransientTrackBuilder> hTransientTrackBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",hTransientTrackBuilder);
   const TransientTrackBuilder *transientTrackBuilder = hTransientTrackBuilder.product();
@@ -57,6 +88,22 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
       if( Geom::deltaR( (*recoMuons)[j].p4() , aMuon.p4()) < 1e-03 ) { 
 	aRecoMuon = &((*recoMuons)[j]);
 	//std::cout << "Match to recoMuon" << std::endl;
+      }
+    }
+
+    //std::cout << "@@@@@@@@ recoMuon: " << aMuon.px() << ", " << aMuon.py() << ", " << aMuon.pz() << std::endl;
+    int isPFMuon = 0;
+    for(unsigned int j = 0; j < pfCandidates->size(); j++){
+      if( (*pfCandidates)[j].particleId() == reco::PFCandidate::mu ) { 
+	reco::MuonRef muonRefToPFMuon = (*pfCandidates)[j].muonRef();
+	//if( muonRefToPFMuon.isNonnull() ){
+	//std::cout << j << ": muonRefToPFMuon: " << muonRefToPFMuon->px() << ", " 
+	//    << muonRefToPFMuon->py() << ", " << muonRefToPFMuon->pz() << std::endl;
+	//}
+	if( muonRefToPFMuon.isNonnull() && 
+	    Geom::deltaR( muonRefToPFMuon->p4() , aMuon.p4()) < 1e-04 &&
+	    (muonRefToPFMuon->isGlobalMuon() || muonRefToPFMuon->isTrackerMuon() ) )
+	  isPFMuon = 1;
       }
     }
     
@@ -83,7 +130,7 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
 
     aMuon.addUserFloat("dxyWrtPV",dxyWrtPV);
     aMuon.addUserFloat("dzWrtPV",dzWrtPV);
-
+    aMuon.addUserInt("isPFMuon",isPFMuon);
 
     /////////////////////////////////////////////////////
 

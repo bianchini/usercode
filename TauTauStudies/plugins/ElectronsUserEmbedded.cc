@@ -48,6 +48,13 @@ ElectronsUserEmbedded::ElectronsUserEmbedded(const edm::ParameterSet & iConfig){
   edm::FileInPath inputFileName4v2 = iConfig.getParameter<edm::FileInPath>("inputFileName4v2");
   edm::FileInPath inputFileName5v2 = iConfig.getParameter<edm::FileInPath>("inputFileName5v2");
 
+  edm::FileInPath inputFileName0v3 = iConfig.getParameter<edm::FileInPath>("inputFileName0v3");
+  edm::FileInPath inputFileName1v3 = iConfig.getParameter<edm::FileInPath>("inputFileName1v3");
+  edm::FileInPath inputFileName2v3 = iConfig.getParameter<edm::FileInPath>("inputFileName2v3");
+  edm::FileInPath inputFileName3v3 = iConfig.getParameter<edm::FileInPath>("inputFileName3v3");
+  edm::FileInPath inputFileName4v3 = iConfig.getParameter<edm::FileInPath>("inputFileName4v3");
+  edm::FileInPath inputFileName5v3 = iConfig.getParameter<edm::FileInPath>("inputFileName5v3");
+
   //edm::FileInPath inputFileNameMVADaniele 
   //= iConfig.getParameter<edm::FileInPath>("inputFileNameMVADaniele");
   
@@ -81,6 +88,21 @@ ElectronsUserEmbedded::ElectronsUserEmbedded(const edm::ParameterSet & iConfig){
 			   EGammaMvaEleEstimator::kTrig,
 			   manualCat,
 			   myManualCatWeigthsTrig); 
+
+    std::vector<string> myManualCatWeigthsNonTrig;
+    myManualCatWeigthsNonTrig.push_back(inputFileName0v3.fullPath().data());
+    myManualCatWeigthsNonTrig.push_back(inputFileName1v3.fullPath().data());
+    myManualCatWeigthsNonTrig.push_back(inputFileName2v3.fullPath().data());
+    myManualCatWeigthsNonTrig.push_back(inputFileName3v3.fullPath().data());
+    myManualCatWeigthsNonTrig.push_back(inputFileName4v3.fullPath().data());
+    myManualCatWeigthsNonTrig.push_back(inputFileName5v3.fullPath().data());
+    
+    myMVANonTrig_ = new EGammaMvaEleEstimator();
+    myMVANonTrig_->initialize("BDT",
+			      EGammaMvaEleEstimator::kNonTrig,
+			      manualCat,
+			      myManualCatWeigthsNonTrig); 
+    
   }
 
 
@@ -92,7 +114,10 @@ ElectronsUserEmbedded::ElectronsUserEmbedded(const edm::ParameterSet & iConfig){
 
 ElectronsUserEmbedded::~ElectronsUserEmbedded(){
   if(doMVAMIT_) delete fMVA_;
-  if(doMVADaniele_) delete myMVATrig_; //delete fMVADaniele_;
+  if(doMVADaniele_){
+    delete myMVATrig_; //delete fMVADaniele_;
+    delete myMVANonTrig_;
+  }
   
 }
 
@@ -102,9 +127,9 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
   iEvent.getByLabel(electronTag_,electronsHandle);
   const pat::ElectronCollection* electrons = electronsHandle.product();
 
-  edm::Handle<reco::GsfElectronCollection> gsfElectronsHandle;
-  iEvent.getByLabel("gsfElectrons",gsfElectronsHandle);
-  const reco::GsfElectronCollection* gsfElectrons = gsfElectronsHandle.product();
+  //edm::Handle<reco::GsfElectronCollection> gsfElectronsHandle;
+  //iEvent.getByLabel("gsfElectrons",gsfElectronsHandle);
+  //const reco::GsfElectronCollection* gsfElectrons = gsfElectronsHandle.product();
 
   edm::Handle<reco::VertexCollection> vertexHandle;
   iEvent.getByLabel(vertexTag_,vertexHandle);
@@ -118,9 +143,9 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
   iEvent.getByLabel("allConversions", hConversions);
 
   // PFCandidateMap
-  edm::Handle<edm::ValueMap<reco::PFCandidatePtr> >ValMapH;
-  iEvent.getByLabel(edm::InputTag("particleFlow","electrons"),ValMapH);    // The InputTag is 'particleFlow:electrons'
-  const edm::ValueMap<reco::PFCandidatePtr> & myValMap(*ValMapH); 
+  //edm::Handle<edm::ValueMap<reco::PFCandidatePtr> >ValMapH;
+  //iEvent.getByLabel(edm::InputTag("particleFlow","electrons"),ValMapH);    // The InputTag is 'particleFlow:electrons'
+  //const edm::ValueMap<reco::PFCandidatePtr> & myValMap(*ValMapH); 
 
   //Get the CTF tracks
   Handle<reco::TrackCollection> tracks_h;
@@ -144,18 +169,17 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     pat::Electron aElectron( (*electrons)[i] );
     const reco::GsfElectron* aGsf = static_cast<reco::GsfElectron*>(&aElectron); 
 
-    unsigned int position = 0;
-    bool matchedToGsf = false;
-    for(unsigned int j = 0; j < gsfElectrons->size(); j++){
-      if( Geom::deltaR((*gsfElectrons)[j].p4(), aGsf->p4()) < 1e-03 ){
-	matchedToGsf = true;
-	position = j;
-      }
-    }
-
-    reco::GsfElectronRef aGsfElectronRef(gsfElectronsHandle, position);
-    const reco::PFCandidatePtr pfElePtr(myValMap[aGsfElectronRef]); 
-    int pfId = pfElePtr.isNonnull();
+    //unsigned int position = 0;
+    //bool matchedToGsf = false;
+    //for(unsigned int j = 0; j < gsfElectrons->size(); j++){
+    //if( Geom::deltaR((*gsfElectrons)[j].p4(), aGsf->p4()) < 1e-03 ){
+    //matchedToGsf = true;
+    //position = j;
+    //}
+    //}
+    //reco::GsfElectronRef aGsfElectronRef(gsfElectronsHandle, position);
+    //const reco::PFCandidatePtr pfElePtr(myValMap[aGsfElectronRef]); 
+    int pfId = 1; //pfElePtr.isNonnull();
 
     //cout << "pfId = " << pfId << endl;
 
@@ -224,6 +248,7 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
 
     float mva  = -99;    
     float mva2 = -99; 
+    float mva3 = -99; 
     int mvaPreselection = passconversionveto && nHits<=0 && dxyWrtPV<0.045 && dzWrtPV<0.2 &&
       ((aElectron.isEB() && sihih < 0.01 
 	&& fabs(dEta) < 0.007
@@ -248,6 +273,7 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     if(doMVADaniele_){
       //mva2 = fMVADaniele_->mva(*aGsf, vertexes->size());
       mva2 = myMVATrig_->mvaValue( *aGsf , (*vertexes)[0], *transientTrackBuilder, lazyTools, false);
+      mva3 = myMVANonTrig_->mvaValue( *aGsf , (*vertexes)[0], *transientTrackBuilder, lazyTools, false);
       //cout << mva2 << endl; 
     }
 
@@ -256,11 +282,11 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     aElectron.addUserFloat("mva",mva);
     aElectron.addUserInt("mvaPreselection",mvaPreselection);
     aElectron.addUserInt("isTriggerElectron",myTrigPresel);
-    aElectron.addUserFloat("mvaDaniele",mva2);
+    aElectron.addUserFloat("mvaPOGTrig"   ,mva2);
+    aElectron.addUserFloat("mvaPOGNonTrig",mva3);
 
 
-    // iso deposits
-   
+    // iso deposits   
     reco::isodeposit::AbsVetos vetos2012EBPFIdCharged; 
     reco::isodeposit::AbsVetos vetos2012EBPFIdNeutral;  
     reco::isodeposit::AbsVetos vetos2012EBPFIdPhotons;

@@ -43,6 +43,7 @@ class ElectronsUserEmbedded : public edm::EDProducer{
   ElectronIDMVA* fMVA_;
   //ElectronMVAEstimator* fMVADaniele_;
   EGammaMvaEleEstimator* myMVATrig_;
+  EGammaMvaEleEstimator* myMVANonTrig_;
 
 
 };

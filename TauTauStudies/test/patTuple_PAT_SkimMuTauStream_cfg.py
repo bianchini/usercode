@@ -1,22 +1,22 @@
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
-
-
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
+process.load("JetMETCorrections.Configuration.JetCorrectionServices_cff")
 
-postfix     = "PF"
-runOnMC     = False
+postfix     = "PFlow"
+runOnMC     = True
+runOnEmbed  = False
 
-#from Configuration.PyReleaseValidation.autoCond import autoCond
-#process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
+from Configuration.PyReleaseValidation.autoCond import autoCond
+process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START52_V7::All')
+    process.GlobalTag.globaltag = cms.string('START42_V17::All') #START42_V14B
 
 else:
-    process.GlobalTag.globaltag = cms.string('GR_R_52_V7::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_42_V23::All') #GR_R_42_V19
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
@@ -24,9 +24,14 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source.fileNames = cms.untracked.vstring(
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/Test_52X/439eae0c5ab5b9ee314b9645ffd1dade/DYJets_1_1_MAU.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/Test_52X/439eae0c5ab5b9ee314b9645ffd1dade/Run2012_9_1_Vc9.root'
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/Test_51X/439eae0c5ab5b9ee314b9645ffd1dade/out_10_1_8Te.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/AODSIM/PU_S4_START42_V11-v1/0000/0E47FBF8-0295-E011-818F-0030487E3026.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/FCAE02CE-7800-E111-A2CB-0022198904D4.root'
+    #'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall11/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/AODSIM/PU_S6_START42_V14B-v1/0000/F4ACA82D-FDF8-E011-A31A-E0CB4E29C51E.root',
+    #'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat/store/user/akalinow/TauPlusX/428_mutau_skim_Run2011A-05Aug2011-v1_v4/b8ede77eca865a3526029ca11820f552/tautauSkimmAOD_9_1_coF.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/akalinow/TauPlusX/428_mutau_skim_Run2011A-05Aug2011-v1_v4/b8ede77eca865a3526029ca11820f552/tautauSkimmAOD_9_1_coF.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/FCAE02CE-7800-E111-A2CB-0022198904D4.root'
+    #'file:./root/pickevents.root',
+    #'file:./root/syncSkim_5_1_vnT.root',
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -69,34 +74,38 @@ process.atLeast1selectedDiTauFilter = cms.EDFilter(
     "AllEventsFilter"
     )
 
-
 ################### gen listing  ####################
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.printTree1 = cms.EDAnalyzer(
     "ParticleListDrawer",
     src = cms.InputTag("genParticles"),
-    maxEventsToPrint  = cms.untracked.int32(100)
+    maxEventsToPrint  = cms.untracked.int32(1)
     )
-
 
 ################### jet sequence ####################
 
-#process.load('RecoJets.Configuration.RecoPFJets_cff')
+process.load('RecoJets.Configuration.RecoPFJets_cff')
 
-#process.kt6PFJets.doRhoFastjet  = True
-#process.kt6PFJets.Rho_EtaMax    = cms.double(4.4)
-#process.kt6PFJets.Ghost_EtaMax  = cms.double(5.0)
-#process.ak5PFJets.doAreaFastjet = True
+process.kt6PFJetsForRhoComputationVoronoi = process.kt6PFJets.clone(
+    doRhoFastjet = True,
+    voronoiRfact = 0.9
+    )
+
+process.kt6PFJets.doRhoFastjet  = True
+process.kt6PFJets.doAreaFastjet = True
+process.kt6PFJets.Rho_EtaMax    = cms.double(4.4)
+process.kt6PFJets.Ghost_EtaMax  = cms.double(5.0)
+process.ak5PFJets.doAreaFastjet = True
 
 ## re-run kt4PFJets within lepton acceptance to compute rho
-#process.load('RecoJets.JetProducers.kt4PFJets_cfi')
+process.load('RecoJets.JetProducers.kt4PFJets_cfi')
 
-#process.kt6PFJetsCentral = process.kt4PFJets.clone(
-#    rParam       = 0.6,
-#    doRhoFastjet = True )
-#process.kt6PFJetsCentral.Rho_EtaMax   = cms.double(1.9)
-#process.kt6PFJetsCentral.Ghost_EtaMax = cms.double(2.5)
+process.kt6PFJetsCentral = process.kt6PFJets.clone(
+    rParam       = 0.6,
+    doRhoFastjet = True )
+process.kt6PFJetsCentral.Rho_EtaMax   = cms.double(1.9)
+process.kt6PFJetsCentral.Ghost_EtaMax = cms.double(2.5)
 
 #process.kt6PFJetsNeutral = process.kt4PFJets.clone(
 #    rParam       = 0.6,
@@ -105,8 +114,44 @@ process.printTree1 = cms.EDAnalyzer(
 #process.kt6PFJetsNeutral.Rho_EtaMax   = cms.double(1.9)
 #process.kt6PFJetsNeutral.Ghost_EtaMax = cms.double(2.5)
 
-#process.fjSequence = cms.Sequence(process.kt6PFJets+process.ak5PFJets+process.kt6PFJetsCentral)
+process.fjSequence = cms.Sequence(process.kt6PFJets+
+                                  process.ak5PFJets+
+                                  process.kt6PFJetsCentral
+                                  #+process.kt6PFJetsForRhoComputationVoronoi
+                                  )
 
+# load the PU JetID sequence
+process.load("CMGTools.External.pujetidsequence_cff")
+
+################### met ################################
+
+process.load("RecoMET.METProducers.mvaPFMET_cff")
+if runOnMC:
+    process.calibratedAK5PFJetsForPFMEtMVA.correctors = cms.vstring("ak5PFL1FastL2L3")
+else:
+    process.calibratedAK5PFJetsForPFMEtMVA.correctors = cms.vstring("ak5PFL1FastL2L3Residual") 
+
+process.pfMEtMVA.srcLeptons = cms.VInputTag( cms.InputTag('elecPtEtaRelIDRelIso'), cms.InputTag('muPtEtaRelIDRelIso'), cms.InputTag('tauPtEtaIDAgMuAgElecRelIso') )
+
+process.patPFMetByMVA = process.patMETs.clone(
+    metSource = cms.InputTag('pfMEtMVA'),
+    addMuonCorrections = cms.bool(False),
+    genMETSource = cms.InputTag('genMetTrue')
+    )
+
+process.patPFMetByMVA.addGenMET = cms.bool(runOnMC)
+
+
+################### bTag ##############################
+
+if runOnEmbed:
+    process.load('RecoBTag/Configuration/RecoBTag_cff')
+    process.load('RecoJets/JetAssociationProducers/ak5JTA_cff')
+    process.ak5JetTracksAssociatorAtVertex.jets   = cms.InputTag("ak5PFJets")
+    process.ak5JetTracksAssociatorAtVertex.tracks = cms.InputTag("tmfTracks")
+
+## Plus, add this to your path:
+#process.ak5JetTracksAssociatorAtVertex*process.btagging
 
 ################### vertex sequence ####################
 
@@ -132,11 +177,10 @@ from PhysicsTools.PatAlgos.tools.coreTools import *
 if not runOnMC:
     removeMCMatching(process,["All"])
     
-#removeSpecificPATObjects(process, ['Photons'],
-#                         outputInProcess=False)
-
-#removeCleaning(process,
-#               outputInProcess=False)
+removeSpecificPATObjects(process, ['Photons'],
+                         outputInProcess=None)
+removeCleaning(process,
+               outputInProcess=None)
 
 restrictInputToAOD(process, ['All'])
 
@@ -144,20 +188,19 @@ from Bianchi.Utilities.customizePAT  import *
 addSelectedPFlowParticle(process)
 
 from PhysicsTools.PatAlgos.tools.metTools import *
-addPfMET(process, 'PF')
-
+addPfMET(process, postfix)
 
 from PhysicsTools.PatAlgos.tools.jetTools import *
 
 switchJetCollection(process,cms.InputTag('ak5PFJets'),
-                 doJTA        = True,
-                 doBTagging   = True,
-                 jetCorrLabel = ('AK5PF', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute'])),
-                 doType1MET   = True,
-                 genJetCollection=cms.InputTag("ak5GenJets"),
-                 doJetID      = True
-                 )
-    
+                    doJTA        = True,
+                    doBTagging   = True,
+                    jetCorrLabel = ('AK5PF', ['L2Relative', 'L3Absolute',]),
+                    doType1MET   = False,
+                    genJetCollection=cms.InputTag("ak5GenJets"),
+                    doJetID      = True,
+                    jetIdLabel   = 'ak5'
+                    )
 
 JEClevels = cms.vstring(['L2Relative', 'L3Absolute'])
 if runOnMC:
@@ -169,20 +212,20 @@ process.patJetCorrFactors.levels = JEClevels
 process.patJetCorrFactors.rho    = cms.InputTag('kt6PFJets','rho')
 process.patJetCorrFactors.useRho = True
 
-#process.patJetCorrFactorsL1Offset = process.patJetCorrFactors.clone(
-#    levels = cms.vstring('L1Offset',
-#                         'L2Relative',
-#                         'L3Absolute')
-#    )
-#if runOnMC:
-#    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute']
-#else:
-#    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute', 'L2L3Residual']
+process.patJetCorrFactorsL1Offset = process.patJetCorrFactors.clone(
+    levels = cms.vstring('L1Offset',
+                         'L2Relative',
+                         'L3Absolute')
+    )
+if runOnMC:
+    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute']
+else:
+    process.patJetCorrFactorsL1Offset.levels = ['L1Offset', 'L2Relative', 'L3Absolute', 'L2L3Residual']
 
-#process.patJets.jetCorrFactorsSource = cms.VInputTag(cms.InputTag("patJetCorrFactors"),
-#                                                     cms.InputTag("patJetCorrFactorsL1Offset"))
-#process.patDefaultSequence.replace(process.patJetCorrFactors,
-#                                   process.patJetCorrFactors+process.patJetCorrFactorsL1Offset)
+process.patJets.jetCorrFactorsSource = cms.VInputTag(cms.InputTag("patJetCorrFactors"),
+                                                     cms.InputTag("patJetCorrFactorsL1Offset"))
+process.patDefaultSequence.replace(process.patJetCorrFactors,
+                                   process.patJetCorrFactors+process.patJetCorrFactorsL1Offset)
 
 if runOnMC:
     process.load("RecoJets.Configuration.GenJetParticles_cff")
@@ -195,17 +238,18 @@ if runOnMC:
     process.patJetGenJetMatch.matched = cms.InputTag("ak5GenJetsNoNu")
 
 
-
 #################### tau sequence #######################
 
-#process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
-#from PhysicsTools.PatAlgos.tools.tauTools import *
-#switchToPFTauHPS(process, 
-#                 pfTauLabelOld = 'shrinkingConePFTauProducer',
-#                 pfTauLabelNew = 'hpsPFTauProducer'
-#                 )
-
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
+
+from PhysicsTools.PatAlgos.tools.tauTools import *
+switchToPFTauHPS(process, 
+                 pfTauLabelOld = 'shrinkingConePFTauProducer',
+                 pfTauLabelNew = 'hpsPFTauProducer'
+                 )
+
+#switchToPFTauHPS(process)
+
 
 getattr(process,"patTaus").embedIsolationTracks             = cms.bool(True)
 getattr(process,"patTaus").embedSignalTracks                = cms.bool(True)
@@ -230,6 +274,21 @@ process.tauGenJetMatch.resolveAmbiguities = cms.bool(False)
 process.tauGenJetMatch.maxDeltaR          = 0.15
 process.tauGenJetMatch.maxDPtRel          = 999
 
+#from RecoTauTag.RecoTau.TauDiscriminatorTools import requireLeadTrack
+#from RecoTauTag.RecoTau.PFRecoTauDiscriminationByMVAIsolation_cfi import *
+#process.hpsPFTauDiscriminationByMVAIsolation = pfRecoTauDiscriminationByMVAIsolation.clone(
+#    PFTauProducer = cms.InputTag('hpsPFTauProducer'),
+#    Prediscriminants = cms.PSet(
+#    BooleanOperator = cms.string('and'),
+#    decayMode = cms.PSet(
+#    cut = cms.double(0.5),
+#    Producer = cms.InputTag("hpsPFTauDiscriminationByDecayModeFinding")
+#    )
+#    ),
+#    )
+# add to the PFTau sequence
+#process.recoTauClassicHPSSequence.replace( process.hpsPFTauDiscriminationByTightCombinedIsolationDBSumPtCorr,
+#                                           process.hpsPFTauDiscriminationByTightCombinedIsolationDBSumPtCorr+process.hpsPFTauDiscriminationByMVAIsolation )
 
 ##################################################################
 
@@ -282,12 +341,19 @@ process.patElectrons.isolationValues = cms.PSet(
     )
     )
 
+#process.patElectrons.isoDeposits = cms.PSet(
+#    pfAllParticles   = cms.InputTag("elPFIsoDepositPUPFIso"),
+#    )
+process.patElectrons.isolationValues = cms.PSet(
+    #pfAllParticles   = cms.InputTag("elPFIsoValuePU04PFIdPFIso"),
+    )
+
 ########################  pat::muon  #############################
 
 #addPFMuonIsolation(process,process.patMuons)
 #addTriggerMatchingMuon(process,isMC=runOnMC)
-
 getattr(process,"patMuons").embedTrack = True
+
 
 ######################## pat::electron ###########################
 
@@ -331,7 +397,7 @@ process.selectedPatElectronsUserEmbedded = cms.EDProducer(
     electronTag = cms.InputTag("selectedPatElectrons"),
     vertexTag   = cms.InputTag("offlinePrimaryVertices"),
     isMC        = cms.bool(runOnMC),
-    doMVAMIT    = cms.bool(False),
+    doMVAMIT    = cms.bool(True),
     doMVADaniele= cms.bool(True),
     inputFileName0 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet0LowPt_NoIPInfo_BDTG.weights.xml'),
     inputFileName1 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet1LowPt_NoIPInfo_BDTG.weights.xml'),
@@ -345,6 +411,12 @@ process.selectedPatElectronsUserEmbedded = cms.EDProducer(
     inputFileName3v2 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_TrigV0_Cat4.weights.xml'),
     inputFileName4v2 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_TrigV0_Cat5.weights.xml'),
     inputFileName5v2 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_TrigV0_Cat6.weights.xml'),
+    inputFileName0v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat1.weights.xml'),
+    inputFileName1v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat2.weights.xml'),
+    inputFileName2v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat3.weights.xml'),
+    inputFileName3v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat4.weights.xml'),
+    inputFileName4v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat5.weights.xml'),
+    inputFileName5v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat6.weights.xml'),
     #inputFileNameMVADaniele = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/TMVA_BDTSimpleCat.weights.xml')
     )
 
@@ -373,7 +445,7 @@ process.atLeastOneMuTauCounter = cms.EDFilter(
 process.muPtEta = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsUserEmbedded"),
-    cut = cms.string("pt>14 && abs(eta)<2.5"),
+    cut = cms.string("pt>14 && abs(eta)<2.4"),
     filter = cms.bool(False)
     )
 process.atLeastOneMuTaumuPtEta = process.atLeastOneMuTau.clone(
@@ -389,7 +461,17 @@ process.muPtEtaCounter = cms.EDFilter(
 process.muPtEtaRelID = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsUserEmbedded"),
-    cut = cms.string("pt>14 && abs(eta)<2.4 && isGlobalMuon"),
+    cut = cms.string("pt>14 && abs(eta)<2.4 && isGlobalMuon"+
+                     "&& abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"
+                     ),
+    filter = cms.bool(False)
+    )
+
+process.muPtEtaRelIDRelIso = cms.EDFilter(
+    "PATMuonSelector",
+    src = cms.InputTag("selectedPatMuonsUserEmbedded"),
+    cut = cms.string(process.muPtEtaRelID.cut.value()+
+                     " && userFloat('PFRelIsoDB04')<0.20"),
     filter = cms.bool(False)
     )
 
@@ -397,6 +479,7 @@ process.muPtEtaID = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsUserEmbedded"),
     cut = cms.string(process.muPtEta.cut.value()+
+                     " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"+
                      " && ("+
                      "(   isGlobalMuon"+
                      " && globalTrack.isNonnull "+
@@ -404,9 +487,8 @@ process.muPtEtaID = cms.EDFilter(
                      " && globalTrack.hitPattern.numberOfValidMuonHits>0"+                     
                      " && numberOfMatchedStations>1"+                     
                      " && innerTrack.hitPattern.numberOfValidPixelHits>0"+
-                     " && track.hitPattern.trackerLayersWithMeasurement > 8"+
-                     " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2)"+
-                     " || isPFMuon)"
+                     " && track.hitPattern.trackerLayersWithMeasurement > 8)"+
+                     " || userInt('isPFMuon')>0.5)"
                      ),
     filter = cms.bool(False)
     )
@@ -441,7 +523,7 @@ process.tauPtEtaID  = cms.EDFilter(
     src = cms.InputTag("selectedPatTausUserEmbedded"),
     cut = cms.string(process.tauPtEta.cut.value()+
                      " && tauID('decayModeFinding')>0.5"+
-                     " && userFloat('dzWrtPV')<0.2"),
+                     " && abs(userFloat('dzWrtPV'))<0.2"),
     filter = cms.bool(False)
     )
 process.atLeastOneMuTautauPtEtaID = process.atLeastOneMuTau.clone(
@@ -487,14 +569,51 @@ process.tauPtEtaIDAgMuAgElecCounter = cms.EDFilter(
     minNumber = cms.uint32(1),
     maxNumber = cms.uint32(999),
     )
+
+process.tauPtEtaIDAgMuAgElecRelIso  = cms.EDFilter(
+    "PATTauSelector",
+    src = cms.InputTag("selectedPatTausUserEmbedded"),
+    cut = cms.string(process.tauPtEtaIDAgMuAgElec.cut.value()+
+                     " && tauID('byVLooseCombinedIsolationDeltaBetaCorr')>0.5"),
+    filter = cms.bool(False)
+    )
 ###################### electrons ####################################
+
+#https://twiki.cern.ch/twiki/bin/view/CMS/EgammaCutBasedIdentification
+
+simpleCutsVeto = "(userFloat('nHits')<=999"+ \
+                 " && (" + \
+                 " (isEB && userFloat('sihih')<0.010 && userFloat('dPhi')<0.80 && "+ \
+                 "          userFloat('dEta') <0.007 && userFloat('HoE') <0.15)"   + \
+                 " || "  + \
+                 " (isEE && userFloat('sihih')<0.030 && userFloat('dPhi')<0.70 && "+ \
+                 "          userFloat('dEta') <0.010 && userFloat('HoE') <999)"   + \
+                 "     )"+ \
+                 ")"
+simpleCutsWP95 = "(userFloat('nHits')<=1"+ \
+                 " && (" + \
+                 " (isEB && userFloat('sihih')<0.010 && userFloat('dPhi')<0.80 && "+ \
+                 "          userFloat('dEta') <0.007 && userFloat('HoE') <0.15)"   + \
+                 " || "  + \
+                 " (isEE && userFloat('sihih')<0.030 && userFloat('dPhi')<0.70 && "+ \
+                 "          userFloat('dEta') <0.010 && userFloat('HoE') <0.07)"   + \
+                 "     )"+ \
+                 ")"
 
 process.elecPtEtaRelID = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("selectedPatElectronsUserEmbedded"),
-    cut = cms.string("pt>15 && abs(eta)<2.4"+
-                     " && (userFloat('nHits')<=1"+
-                     " && ( (isEB && userFloat('sihih')<0.01 && userFloat('dPhi')<0.8 && userFloat('dEta')<0.007 && userFloat('HoE')<0.15) || (isEE && userFloat('sihih')<0.03 && userFloat('dPhi')<0.7 && userFloat('dEta')<0.01 && userFloat('HoE')<0.07) ))"
+    cut = cms.string("pt>15 && abs(eta)<2.4" +
+                     " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2 &&"+
+                     simpleCutsVeto
+                     ),
+    filter = cms.bool(False)
+    )
+process.elecPtEtaRelIDRelIso = cms.EDFilter(
+    "PATElectronSelector",
+    src = cms.InputTag("selectedPatElectronsUserEmbedded"),
+    cut = cms.string(process.elecPtEtaRelID.cut.value()+
+                     " && userFloat('PFRelIsoDB04')<0.20"
                      ),
     filter = cms.bool(False)
     )
@@ -516,14 +635,15 @@ process.alLeastOneMuTauSequence = cms.Sequence(
 process.muLegSequence = cms.Sequence(
     (process.muPtEta*process.atLeastOneMuTaumuPtEta*process.muPtEtaCounter*process.muPtEtaFilter) *
     (process.muPtEtaID*process.atLeastOneMuTaumuPtEtaID*process.muPtEtaIDCounter*process.muPtEtaIDFilter) +
-    process.muPtEtaRelID
+    process.muPtEtaRelID*process.muPtEtaRelIDRelIso
     )
 
 process.tauLegSequence = cms.Sequence(
     (process.tauPtEta*process.atLeastOneMuTautauPtEta*process.tauPtEtaCounter*process.tauPtEtaFilter) *
     (process.tauPtEtaID*process.atLeastOneMuTautauPtEtaID*process.tauPtEtaIDCounter*process.tauPtEtaIDFilter) *
     (process.tauPtEtaIDAgMu*process.atLeastOneMuTautauPtEtaIDAgMu*process.tauPtEtaIDAgMuCounter*process.tauPtEtaIDAgMuFilter)*
-    (process.tauPtEtaIDAgMuAgElec*process.atLeastOneMuTautauPtEtaIDAgMuAgElec*process.tauPtEtaIDAgMuAgElecCounter*process.tauPtEtaIDAgMuAgElecFilter)
+    (process.tauPtEtaIDAgMuAgElec*process.atLeastOneMuTautauPtEtaIDAgMuAgElec*process.tauPtEtaIDAgMuAgElecCounter*process.tauPtEtaIDAgMuAgElecFilter)*
+    process.tauPtEtaIDAgMuAgElecRelIso
     )
 
 ####################### x-cleaning of jets #########################
@@ -558,26 +678,29 @@ process.jetCleaningSequence = cms.Sequence(
     )
 
 ########################## path ###############################
-    
+
 process.skim = cms.Sequence(
     process.allEventsFilter+
     process.atLeastOneGoodVertexSequence*
+    process.fjSequence*
     process.PFTau*
-    #process.fjSequence*
     process.pfParticleSelectionSequence*
     process.muIsoSequence*
     process.electronIsoSequence*
+    (process.ak5JetTracksAssociatorAtVertex*process.btagging)*
     process.patDefaultSequence*
-    #process.kt6PFJetsNeutral*
+    process.puJetIdSqeuence *
+    ##process.kt6PFJetsNeutral*
     process.selectedPatMuonsUserEmbedded*
     process.selectedPatElectronsUserEmbedded*
-    process.elecPtEtaRelID*
+    (process.elecPtEtaRelID+process.elecPtEtaRelIDRelIso)*
     process.selectedPatTausUserEmbedded*
     process.alLeastOneMuTauSequence*
     process.muLegSequence*
-    process.tauLegSequence#*
-    #process.jetCleaningSequence*
-    #process.printTree1
+    process.tauLegSequence*
+    (process.pfMEtMVAsequence*process.patPFMetByMVA) +
+    ##process.jetCleaningSequence*
+    process.printTree1
     )
 
 
@@ -590,6 +713,9 @@ process.selectedPrimaryVertices.src = cms.InputTag('offlinePrimaryVertices')
 
 if not runOnMC:
     process.skim.remove(process.printTree1)
+if not runOnEmbed:
+     process.skim.remove(process.ak5JetTracksAssociatorAtVertex)
+     process.skim.remove(process.btagging)
 
 #process.p = cms.Path(process.printEventContent+process.skim)
 process.p = cms.Path(process.skim)
@@ -615,9 +741,12 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_offlinePrimaryVerticesWithBS_*_*',
     'keep *_offlineBeamSpot_*_*',
     'keep *_patMETsPFlow_*_*',
+    'keep *_patPFMetByMVA_*_*',
     'keep *_tauGenJetsSelectorAllHadrons_*_*',
+    'keep *_kt6PFJets_rho_*',
     'keep *_kt6PFJetsCentral_rho_*',
     'keep *_kt6PFJetsNeutral_rho_*',
+    'keep *_kt6PFJetsForRhoComputationVoronoi_rho_*',
     'keep *_muPtEtaID_*_*',
     'keep *_muPtEtaRelID_*_*',
     'keep *_muons_*_*',
@@ -630,6 +759,8 @@ process.out.outputCommands.extend( cms.vstring(
     'keep recoGsfTrackExtras_*_*_*',
     'keep *_tauPtEtaIDAgMuAgElec_*_*',
     'keep *_generator_*_*',
+    'keep *_reducedEcalRecHitsEB_*_*',
+    'keep *_reducedEcalRecHitsEE_*_*',
     'drop *_TriggerResults_*_HLT',
     'drop *_TriggerResults_*_RECO',
     'drop *_selectedPatElectrons_*_*',
@@ -641,6 +772,14 @@ process.out.outputCommands.extend( cms.vstring(
     'drop *_selectedPatTaus_*_*',
     'drop *_selectedPatMuonsUserEmbedded_*_*',
     'drop *_selectedPatTausUserEmbedded_*_*',
+    'keep *_puJetId_*_*',
+    'keep *_puJetMva_*_*',
+    'keep *_hfEMClusters_*_*',
+    'keep *_hybridSuperClusters_*_*',
+    'keep *_multi5x5BasicClusters_*_*',
+    'keep *_pfElectronTranslator_*_*',
+    'keep *_pfPhotonTranslator_*_*',
+    'keep *_hybridSuperClusters_*_*',
     )
                                    )
 
@@ -657,3 +796,6 @@ process.out.fileName = cms.untracked.string('patTuples_MuTauStream.root')
 
 process.outpath = cms.EndPath(process.out)
 
+
+processDumpFile = open('patTuplePATSkimMuTauStream.dump', 'w')
+print >> processDumpFile, process.dumpPython()
