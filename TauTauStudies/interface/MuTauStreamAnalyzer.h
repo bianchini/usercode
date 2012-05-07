@@ -181,6 +181,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   int tightestHPSWP_;
   int tightestHPSDBWP_;
   int tightestHPSMVAWP_;
+  float hpsMVA_;
   int isTauLegMatched_;
   int isMuLegMatched_;
   int muFlag_;
