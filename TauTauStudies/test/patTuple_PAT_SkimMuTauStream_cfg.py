@@ -27,6 +27,7 @@ process.source.fileNames = cms.untracked.vstring(
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/AODSIM/PU_S4_START42_V11-v1/0000/0E47FBF8-0295-E011-818F-0030487E3026.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/FCAE02CE-7800-E111-A2CB-0022198904D4.root'
     #'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall11/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/AODSIM/PU_S6_START42_V14B-v1/0000/F4ACA82D-FDF8-E011-A31A-E0CB4E29C51E.root',
+    #'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat/store/user/akalinow/TauPlusX/428_mutau_skim_Run2011A-05Aug2011-v1_v4/b8ede77eca865a3526029ca11820f552/tautauSkimmAOD_9_1_coF.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/akalinow/TauPlusX/428_mutau_skim_Run2011A-05Aug2011-v1_v4/b8ede77eca865a3526029ca11820f552/tautauSkimmAOD_9_1_coF.root'
     'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/FCAE02CE-7800-E111-A2CB-0022198904D4.root'
     #'file:./root/pickevents.root',

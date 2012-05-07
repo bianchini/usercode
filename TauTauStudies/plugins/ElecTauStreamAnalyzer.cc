@@ -554,6 +554,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("genDecayMode",&genDecayMode_,"genDecayMode/I");
   tree_->Branch("genPolarization",&genPolarization_,"genPolarization/I");
   tree_->Branch("tightestHPSWP",&tightestHPSWP_,"tightestHPSWP/I");
+  tree_->Branch("hpsMVA",&hpsMVA_,"hpsMVA/F");
   tree_->Branch("tightestCiCWP",&tightestCiCWP_,"tightestCiCWP/I");
   tree_->Branch("tightestCutBasedWP",&tightestCutBasedWP_,"tightestCutBasedWP/I");
   tree_->Branch("tightestMVAWP",&tightestMVAWP_,"tightestMVAWP/I");
@@ -1394,7 +1395,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     if(leg2->tauID("byLooseIsolationMVA") >0.5) tightestHPSMVAWP_++;
     if(leg2->tauID("byMediumIsolationMVA")>0.5) tightestHPSMVAWP_++;
     if(leg2->tauID("byTightIsolationMVA") >0.5) tightestHPSMVAWP_++;
-
+    hpsMVA_  = leg2->tauID("byIsolationMVAraw");
 
     pfJetPt_ = (leg2->pfJetRef()).isNonnull() ? leg2->pfJetRef()->pt() : -99;
 

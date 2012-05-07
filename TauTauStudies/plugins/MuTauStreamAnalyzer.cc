@@ -500,7 +500,7 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("nhIsoLeg1v2",&nhIsoLeg1v2_,"nhIsoLeg1v2/F");
   tree_->Branch("phIsoLeg1v2",&phIsoLeg1v2_,"phIsoLeg1v2/F");
   tree_->Branch("elecIsoLeg1v2",&elecIsoLeg1v2_,"elecIsoLeg1v2/F");
-  tree_->Branch("muIsoLeg1v2",&muIsoLeg1v2_ ,"muIsoLeg1v2/F");
+  tree_->Branch("muIsoLeg1v2",  &muIsoLeg1v2_ ,"muIsoLeg1v2/F");
   tree_->Branch("chIsoPULeg1v2",&chIsoPULeg1v2_,"chIsoPULeg1v2/F");
   tree_->Branch("nhIsoPULeg1v2",&nhIsoPULeg1v2_,"nhIsoPULeg1v2/F");
   tree_->Branch("phIsoPULeg1v2",&phIsoPULeg1v2_,"phIsoPULeg1v2/F");
@@ -533,6 +533,7 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("tightestHPSWP",&tightestHPSWP_,"tightestHPSWP/I");
   tree_->Branch("tightestHPSDBWP",&tightestHPSDBWP_,"tightestHPSDBWP/I");
   tree_->Branch("tightestHPSMVAWP",&tightestHPSMVAWP_,"tightestHPSMVAWP/I");
+  tree_->Branch("hpsMVA",&hpsMVA_,"hpsMVA/F");
   tree_->Branch("visibleTauMass",&visibleTauMass_,"visibleTauMass/F");
   tree_->Branch("visibleGenTauMass",&visibleGenTauMass_,"visibleGenTauMass/F");
 
@@ -1369,7 +1370,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     if(leg2->tauID("byLooseIsolationMVA") >0.5) tightestHPSMVAWP_++;
     if(leg2->tauID("byMediumIsolationMVA")>0.5) tightestHPSMVAWP_++;
     if(leg2->tauID("byTightIsolationMVA") >0.5) tightestHPSMVAWP_++;
-
+    hpsMVA_  = leg2->tauID("byIsolationMVAraw");
 
     pfJetPt_ = (leg2->pfJetRef()).isNonnull() ? leg2->pfJetRef()->pt() : -99;
      

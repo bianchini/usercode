@@ -14,6 +14,7 @@ process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
 runOnMC     = False
 doSVFitReco = False
+usePFMEtMVA = True
 
 if runOnMC:
     print "Running on MC"
@@ -95,6 +96,9 @@ process.rescaledMET = cms.EDProducer(
     verbose         = cms.bool(False)
     )
 
+if usePFMEtMVA:
+    process.rescaledMET.metTag = cms.InputTag("patPFMetByMVA")
+    
 process.rescaledMETjet = process.rescaledMET.clone(
     unClusterShift = cms.double(0.10),
     tauShift       = cms.vdouble(0.0),
@@ -173,7 +177,9 @@ process.diTau.srcLeg2  = cms.InputTag("tauPtEtaIDAgMuAgElecIso")
 process.diTau.srcMET   = cms.InputTag("metRecoilCorrector",  "N")
 process.diTau.dRmin12  = cms.double(0.5)
 process.diTau.doSVreco = cms.bool(doSVFitReco)
-
+if usePFMEtMVA:
+    process.diTau.srcMET = cms.InputTag("patPFMetByMVA")
+    
 if not runOnMC:
     process.diTau.srcGenParticles = ""
         
@@ -443,6 +449,9 @@ process.elecTauStreamAnalyzer = cms.EDAnalyzer(
     inputFileName2     = cms.FileInPath("UserCode/sixie/EGamma/EGammaAnalysisTools/data/ElectronIso_BDTG_V0_BarrelPt10ToInf.weights.xml"),
     inputFileName3     = cms.FileInPath("UserCode/sixie/EGamma/EGammaAnalysisTools/data/ElectronIso_BDTG_V0_EndcapPt10ToInf.weights.xml"),
     )
+
+if usePFMEtMVA:
+    process.elecTauStreamAnalyzer.met = cms.InputTag("patPFMetByMVA")
 
 process.elecTauStreamAnalyzerJetUp     = process.elecTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauJetUp"),

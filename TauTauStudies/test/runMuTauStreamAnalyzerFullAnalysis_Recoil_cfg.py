@@ -12,8 +12,9 @@ process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
-runOnMC     = False
-doSVFitReco = False
+runOnMC     = True
+doSVFitReco = True
+usePFMEtMVA = True
 
 if runOnMC:
     print "Running on MC"
@@ -34,12 +35,12 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    'file:./patTuples_MuTauStream.root'
+    #'file:./patTuples_MuTauStream.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-04May2012-Reload_DYJets-MuTau-50-madgraph-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_9_1_CS7.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-16Nov2011/700226eee9a93cb10580e91b3d6e5c18/patTuples_MuTauStream_10_1_w41.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/MuTauStream-16Nov2011/cea16f7ce381f249953e69976c5a9109/patTuples_MuTauStream_10_1_yRu.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/SUSYGluGluToHToTauTau_M-500_7TeV-pythia6-tauola/MuTauStream-16Nov2011/d67d72c0e0080ba7d4d6c9945ad37260/patTuples_MuTauStream_10_1_8Pf.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi//TauPlusX/MuTauStream-13Oct2011-05AugReReco/c37c208594d74fa447903aef959eea7d/patTuples_MuTauStream_14_1_MHD.root'
-
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_10_1_rrD.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_11_1_lXv.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/MuTauStream-02May2012-Test_VBFH120-MuTau-powheg-PUS6_skim/0eb1f9a73e1c7ada0f6173ee6aa7d17e/patTuples_MuTauStream_12_1_ttU.root',
@@ -103,6 +104,9 @@ process.rescaledMET = cms.EDProducer(
     numOfSigmas    = cms.double(1.0),
     verbose = cms.bool(False)
     )
+
+if usePFMEtMVA:
+    process.rescaledMET.metTag = cms.InputTag("patPFMetByMVA")
 
 process.rescaledMETjet = process.rescaledMET.clone(
     unClusterShift = cms.double(0.10),
@@ -185,6 +189,8 @@ process.diTau.srcLeg2  = cms.InputTag("tauPtEtaIDAgMuAgElecIso")
 process.diTau.srcMET   = cms.InputTag("metRecoilCorrector",  "N")
 process.diTau.dRmin12  = cms.double(0.5)
 process.diTau.doSVreco = cms.bool(doSVFitReco)
+if usePFMEtMVA:
+    process.diTau.srcMET = cms.InputTag("patPFMetByMVA")
 
 if not runOnMC:
     process.diTau.srcGenParticles = ""
@@ -343,13 +349,13 @@ process.tauPtEtaIDAgMuAgElecIsoTauDownCounter = process.tauPtEtaIDAgMuAgElecIsoC
 process.muPtEtaIDIso  = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("muPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>15 && abs(eta)<2.1"),
+    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>15 && abs(eta)<2.1 && userInt('isPFMuon')>0.5"),
     filter = cms.bool(False)
     )
 process.muPtEtaIDIsoPtRel  = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("muPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>14 && abs(eta)<2.1"),
+    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>14 && abs(eta)<2.1 && userInt('isPFMuon')>0.5"),
     filter = cms.bool(False)
     )
 
@@ -422,6 +428,9 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     inputFileName4 = cms.FileInPath("Muon/MuonAnalysisTools/data/MuonIsoMVA_sixie-Tracker_V0_BDTG.weights.xml"),
     inputFileName5 = cms.FileInPath("Muon/MuonAnalysisTools/data/MuonIsoMVA_sixie-Global_V0_BDTG.weights.xml"),
     )
+
+if usePFMEtMVA:
+    process.muTauStreamAnalyzer.met = cms.InputTag("patPFMetByMVA")
 
 process.muTauStreamAnalyzerJetUp   = process.muTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauJetUp"),
@@ -504,7 +513,7 @@ if runOnMC:
         process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
         process.muTauStreamAnalyzer
         )
-    '''
+
     process.pJetUp = cms.Path(
         process.allEventsFilter*
         (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
@@ -524,8 +533,7 @@ if runOnMC:
         process.rescaledMETjet *
         process.diTauJetDown*process.selectedDiTauJetDown*process.selectedDiTauJetDownCounter*
         process.muTauStreamAnalyzerJetDown
-        )
-    '''
+        )    
     '''
     process.pMEtResolutionUp = cms.Path(
         process.allEventsFilter*
@@ -587,8 +595,6 @@ if runOnMC:
     process.muTauStreamAnalyzerMuDown
     )
     '''
-
-    '''
     process.pTauUp = cms.Path(
         process.allEventsFilter*
         (process.muPtEtaIDIso*process.muPtEtaIDIsoCounter) *
@@ -611,7 +617,6 @@ if runOnMC:
         process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
         process.muTauStreamAnalyzerTauDown
         )
-    '''
 else:
     process.pNominal = cms.Path(
         process.allEventsFilter*
