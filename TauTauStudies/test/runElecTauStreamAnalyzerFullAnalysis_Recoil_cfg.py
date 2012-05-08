@@ -13,7 +13,7 @@ process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
 runOnMC     = False
-doSVFitReco = False
+doSVFitReco = True
 usePFMEtMVA = True
 
 if runOnMC:
@@ -35,40 +35,10 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    'file:./patTuples_ElecTauStream.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/inaranjo/GluGluToHToTauTau_M-120_7TeV-powheg-pythia6/ElecTauStream-08Feb2012/8ae263ffff46f0cc089ee8d4d13b7116/patTuples_ElecTauStream_10_1_Sed.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/inaranjo/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-08Feb2012-v2/8ae263ffff46f0cc089ee8d4d13b7116/patTuples_ElecTauStream_10_1_78b.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/ElecTauStream-16Nov2011//88521b2a6e3f67f72df8ed3ebcf47080/patTuples_ElecTauStream_9_1_ZWu.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-21Oct2011-05AugReReco/ea0534a53ae8342d77d517a552111b33/patTuples_ElecTauStream_18_1_L7T.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_11_1_RoD.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_12_1_Ngp.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_16_1_jDg.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_17_1_Dku.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_19_1_tpa.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_1_1_TFX.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_21_1_vg0.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_23_1_xNA.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_24_1_cXV.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_25_1_tP0.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_26_1_NMV.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_27_1_COw.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_28_1_FxB.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_29_1_7kM.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_2_1_rMx.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_30_1_93N.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_31_1_Q1q.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_33_1_W1X.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_34_1_RSJ.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_36_1_UDn.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_37_1_dN5.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_38_1_gjY.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_39_1_tRm.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_3_1_BC4.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_40_1_WOP.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_4_1_ejW.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_7_1_0lv.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/ElecTauStream-02May2012-Test_VBFH120-ElecTau-powheg-PUS6_skim/293e83a00ba330eb965554de21a5a504/patTuples_ElecTauStream_8_1_5Gg.root',
-     )
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/ElecTauStream-04May2012-Reload_DYJets-ElecTau-50-madgraph-PUS6_skim/4badcc5695438d7f3df80162f5ad7ed7/patTuples_ElecTauStream_9_1_Ug5.root'
+    #'file:./patTuples_ElecTauStream.root'
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-04May2012-Reload-05AugReReco/396c4fb61647929194f9a223b98504bc/patTuples_ElecTauStream_9_1_kgg.root'
+    )
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -182,7 +152,19 @@ if usePFMEtMVA:
     
 if not runOnMC:
     process.diTau.srcGenParticles = ""
-        
+
+process.pfMEtMVACov = cms.EDProducer(
+    "PFMEtSignCovMatrixUnembedder",
+    src = cms.InputTag("patPFMetByMVA")
+    )
+
+
+if usePFMEtMVA:
+    process.diTau.nSVfit.psKine_MEt_logM_fit.config.event.srcMEt = cms.InputTag("patPFMetByMVA")
+    process.diTau.nSVfit.psKine_MEt_logM_fit.config.event.likelihoodFunctions[0].srcMEtCovMatrix = cms.InputTag("pfMEtMVACov")
+    process.diTau.nSVfit.psKine_MEt_logM_int.config.event.srcMEt = cms.InputTag("patPFMetByMVA")
+    process.diTau.nSVfit.psKine_MEt_logM_int.config.event.likelihoodFunctions[0].srcMEtCovMatrix = cms.InputTag("pfMEtMVACov")
+
 process.selectedDiTau = cms.EDFilter(
     "ElecTauPairSelector",
     src = cms.InputTag("diTau"),
@@ -293,6 +275,16 @@ process.allDiTau = cms.Sequence(
     (process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter +
      process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter)
     )
+
+if usePFMEtMVA:
+    process.allDiTau.replace(process.diTau,process.pfMEtMVACov*process.diTau)
+#    process.allDiTau.replace(process.diTauJetUp,process.pfMEtMVACovJetUp*process.diTauJetUp)
+#    process.allDiTau.replace(process.diTauJetDown,process.pfMEtMVACovJetDown*process.diTauJetDown)
+#    process.allDiTau.replace(process.diTauMuUp,process.pfMEtMVACovMuUp*process.diTauMuUp)
+#    process.allDiTau.replace(process.diTauMuDown,process.pfMEtMVACovMuDown*process.diTauMuDown)
+#    process.allDiTau.replace(process.diTauTauUp,process.pfMEtMVACovTauUp*process.diTauTauUp)
+#    process.allDiTau.replace(process.diTauTauDown,process.pfMEtMVACovTauDown*process.diTauTauDown)
+
 #######################################################################
 
 MVA = "((pt<=20 && abs(superClusterPosition.Eta)>=0.0 && abs(superClusterPosition.Eta)<1.0 && userFloat('mva')>0.133) ||" + \
@@ -334,7 +326,8 @@ process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
     cut = cms.string("pt>20 && abs(eta)<2.3"+
-                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"
+                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"+
+                     " && (tauID('againstElectronTight')>0.5 || tauID('againstElectronMVA')>0.5 || tauID('againstElectronTightMVA2')>0.5)"
                      #"&& tauID('againstElectronMVA')>0.5"
                      ),
     filter = cms.bool(False)
@@ -343,7 +336,8 @@ process.tauPtEtaIDAgMuAgElecIsoPtRel  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
     cut = cms.string("pt>19 && abs(eta)<2.3"+
-                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"
+                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"+
+                     " && (tauID('againstElectronTight')>0.5 || tauID('againstElectronMVA')>0.5 || tauID('againstElectronTightMVA2')>0.5)"
                      #"&& tauID('againstElectronMVA')>0.5"
                      ),
     filter = cms.bool(False)
@@ -372,13 +366,15 @@ process.tauPtEtaIDAgMuAgElecIsoTauDownCounter = process.tauPtEtaIDAgMuAgElecIsoC
 process.elecPtEtaIDIso  = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("elecPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>20 && abs(eta)<2.1 && userInt('antiConv')>0.5"),
+    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>20 && abs(eta)<2.1"+
+                     "&& userInt('antiConv')>0.5"),
     filter = cms.bool(False)
     )
 process.elecPtEtaIDIsoPtRel  = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("elecPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>19 && abs(eta)<2.1 && userInt('antiConv')>0.5"),
+    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>19 && abs(eta)<2.1"+
+                     "&& userInt('antiConv')>0.5"),
     filter = cms.bool(False)
     )
 
@@ -523,182 +519,167 @@ process.analysis = cms.Sequence(
 
 #######################################################################
 
-if runOnMC: 
 
-    process.pNominal = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
-        process.elecTauStreamAnalyzer
-        )
-    '''
-    process.pJetUp = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.rescaledMETjet *
-        process.diTauJetUp*process.selectedDiTauJetUp*process.selectedDiTauJetUpCounter*
-        process.elecTauStreamAnalyzerJetUp
-        )
-    process.pJetDown = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.rescaledMETjet *
-        process.diTauJetDown*process.selectedDiTauJetDown*process.selectedDiTauJetDownCounter*
-        process.elecTauStreamAnalyzerJetDown
-        )
-    process.pMEtResolutionUp = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTauMEtResolutionUp*process.selectedDiTauMEtResolutionUp*process.selectedDiTauMEtResolutionUpCounter*
-        process.elecTauStreamAnalyzerMEtResolutionUp
-        )
-    process.pMEtResolutionDown = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTauMEtResolutionDown*process.selectedDiTauMEtResolutionDown*process.selectedDiTauMEtResolutionDownCounter*
-        process.elecTauStreamAnalyzerMEtResolutionDown
-        )
-    
-    process.pMEtResponseUp = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTauMEtResponseUp*process.selectedDiTauMEtResponseUp*process.selectedDiTauMEtResponseUpCounter*
-        process.elecTauStreamAnalyzerMEtResponseUp
-        )
-    process.pMEtResponseDown = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTauMEtResponseDown*process.selectedDiTauMEtResponseDown*process.selectedDiTauMEtResponseDownCounter*
-        process.elecTauStreamAnalyzerMEtResponseDown
-        )
+process.seqNominal = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    process.pfMEtMVACov*
+    process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
+    process.elecTauStreamAnalyzer
+    )
+process.seqJetUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    process.rescaledMETjet *
+    process.pfMEtMVACov*
+    process.diTauJetUp*process.selectedDiTauJetUp*process.selectedDiTauJetUpCounter*
+    process.elecTauStreamAnalyzerJetUp
+    )
+process.seqJetDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    process.rescaledMETjet *
+    process.pfMEtMVACov*
+    process.diTauJetDown*process.selectedDiTauJetDown*process.selectedDiTauJetDownCounter*
+    process.elecTauStreamAnalyzerJetDown
+    )
 
+process.seqMEtResolutionUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    process.pfMEtMVACov*
+    process.diTauMEtResolutionUp*process.selectedDiTauMEtResolutionUp*process.selectedDiTauMEtResolutionUpCounter*
+    process.elecTauStreamAnalyzerMEtResolutionUp
+    )
+process.seqMEtResolutionDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    process.pfMEtMVACov*
+    process.diTauMEtResolutionDown*process.selectedDiTauMEtResolutionDown*process.selectedDiTauMEtResolutionDownCounter*
+    process.elecTauStreamAnalyzerMEtResolutionDown
+    )
     
-    process.pElecUp = cms.Path(
-        process.allEventsFilter*
-        process.elecPtEtaIDIsoPtRel *
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        process.metRecoilCorrector*
-        (process.rescaledMETelectron+process.rescaledElectrons+process.rescaledElectronsRel)*
-        (process.elecPtEtaIDIsoElecUp*process.elecPtEtaIDIsoElecUpCounter) *
-        process.elecPtEtaRelIDElecUp *
-        process.diTauElecUp*process.selectedDiTauElecUp*process.selectedDiTauElecUpCounter*
-        process.elecTauStreamAnalyzerElecUp
-        )
-    process.pElecDown = cms.Path(
-        process.allEventsFilter*
-        process.elecPtEtaIDIsoPtRel *
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        process.metRecoilCorrector*
-        (process.rescaledMETelectron+process.rescaledElectrons+process.rescaledElectronsRel)*
-        (process.elecPtEtaIDIsoElecDown*process.elecPtEtaIDIsoElecDownCounter) *
-        process.elecPtEtaRelIDElecDown *
-        process.diTauElecDown*process.selectedDiTauElecDown*process.selectedDiTauElecDownCounter*
-        process.elecTauStreamAnalyzerElecDown
-        )
-    process.pTauUp = cms.Path(
-        process.allEventsFilter*
-        (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
-        process.tauPtEtaIDAgMuAgElecIsoPtRel*
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        (process.rescaledMETtau+process.rescaledTaus)*
-        (process.tauPtEtaIDAgMuAgElecIsoTauUp*process.tauPtEtaIDAgMuAgElecIsoTauUpCounter)*
-        process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter*
-        process.elecTauStreamAnalyzerTauUp
-        )
-    process.pTauDown = cms.Path(
-        process.allEventsFilter*
-        (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
-        process.tauPtEtaIDAgMuAgElecIsoPtRel*
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        (process.rescaledMETtau+process.rescaledTaus)*
-        (process.tauPtEtaIDAgMuAgElecIsoTauDown*process.tauPtEtaIDAgMuAgElecIsoTauDownCounter)*
-        process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
-        process.elecTauStreamAnalyzerTauDown
-        )
-    '''
+process.seqMEtResponseUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    process.pfMEtMVACov*
+    process.diTauMEtResponseUp*process.selectedDiTauMEtResponseUp*process.selectedDiTauMEtResponseUpCounter*
+    process.elecTauStreamAnalyzerMEtResponseUp
+    )
+process.seqMEtResponseDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    process.pfMEtMVACov*
+    process.diTauMEtResponseDown*process.selectedDiTauMEtResponseDown*process.selectedDiTauMEtResponseDownCounter*
+    process.elecTauStreamAnalyzerMEtResponseDown
+    )
+
+process.seqElecUp = cms.Sequence(
+    process.allEventsFilter*
+    process.elecPtEtaIDIsoPtRel *
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    process.metRecoilCorrector*
+    (process.rescaledMETelectron+process.rescaledElectrons+process.rescaledElectronsRel)*
+    (process.elecPtEtaIDIsoElecUp*process.elecPtEtaIDIsoElecUpCounter) *
+    process.elecPtEtaRelIDElecUp *
+    process.pfMEtMVACov*
+    process.diTauElecUp*process.selectedDiTauElecUp*process.selectedDiTauElecUpCounter*
+    process.elecTauStreamAnalyzerElecUp
+    )
+process.seqElecDown = cms.Sequence(
+    process.allEventsFilter*
+    process.elecPtEtaIDIsoPtRel *
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    process.metRecoilCorrector*
+    (process.rescaledMETelectron+process.rescaledElectrons+process.rescaledElectronsRel)*
+    (process.elecPtEtaIDIsoElecDown*process.elecPtEtaIDIsoElecDownCounter) *
+    process.elecPtEtaRelIDElecDown *
+    process.pfMEtMVACov*
+    process.diTauElecDown*process.selectedDiTauElecDown*process.selectedDiTauElecDownCounter*
+    process.elecTauStreamAnalyzerElecDown
+    )
+
+process.seqTauUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
+    process.tauPtEtaIDAgMuAgElecIsoPtRel*
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    (process.rescaledMETtau+process.rescaledTaus)*
+    (process.tauPtEtaIDAgMuAgElecIsoTauUp*process.tauPtEtaIDAgMuAgElecIsoTauUpCounter)*
+    process.pfMEtMVACov*
+    process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter*
+    process.elecTauStreamAnalyzerTauUp
+    )
+process.seqTauDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
+    process.tauPtEtaIDAgMuAgElecIsoPtRel*
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    (process.rescaledMETtau+process.rescaledTaus)*
+    (process.tauPtEtaIDAgMuAgElecIsoTauDown*process.tauPtEtaIDAgMuAgElecIsoTauDownCounter)*
+    process.pfMEtMVACov*
+    process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
+    process.elecTauStreamAnalyzerTauDown
+    )
+
+
+if not usePFMEtMVA:
+    process.seqNominal.remove(process.pfMEtMVACov)
+    process.seqJetUp.remove(process.pfMEtMVACov)
+    process.seqJetDown.remove(process.pfMEtMVACov)
+    process.seqMEtResolutionUp.remove(process.pfMEtMVACov)
+    process.seqMEtResolutionDown.remove(process.pfMEtMVACov)
+    process.seqMEtResponseUp.remove(process.pfMEtMVACov)
+    process.seqMEtResponseDown.remove(process.pfMEtMVACov)
+    process.seqElecUp.remove(process.pfMEtMVACov)
+    process.seqElecDown.remove(process.pfMEtMVACov)
+    process.seqTauUp.remove(process.pfMEtMVACov)
+    process.seqTauDown.remove(process.pfMEtMVACov)
     
+#######################################################################
+
+if runOnMC:
+    process.pNominal            = cms.Path( process.seqNominal )
+    process.pJetUp              = cms.Path( process.seqJetUp   )
+    process.pJetDown            = cms.Path( process.seqJetDown )
+    #process.pMEtResolutionUp    = cms.Path( process.seqMEtResolutionUp )
+    #process.pMEtResolutionDown  = cms.Path( process.seqMEtResolutionDown )
+    #process.pMEtResponseUp      = cms.Path( process.seqMEtResponseUp)
+    #process.pMEtResponseDown    = cms.Path( process.seqMEtResponseDown)
+    #process.pElecUp             = cms.Path( process.seqElecUp)
+    #process.pElecDown           = cms.Path( process.seqElecDown)
+    process.pTauUp              = cms.Path( process.seqTauUp)
+    process.pTauDown            = cms.Path( process.seqTauDown )
+
 else:
-    
-    process.pNominal = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
-        process.elecTauStreamAnalyzer
-        )
+    process.pNominal            = cms.Path( process.seqNominal )
+    process.pTauUp              = cms.Path( process.seqTauUp)
+    process.pTauDown            = cms.Path( process.seqTauDown )
 
-    process.pTauUp = cms.Path(
-        process.allEventsFilter*
-        (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
-        process.tauPtEtaIDAgMuAgElecIsoPtRel*
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        (process.rescaledMETtau+process.rescaledTaus)*
-        (process.tauPtEtaIDAgMuAgElecIsoTauUp*process.tauPtEtaIDAgMuAgElecIsoTauUpCounter)*
-        process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter*
-        process.elecTauStreamAnalyzerTauUp
-        )
-    process.pTauDown = cms.Path(
-        process.allEventsFilter*
-        (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
-        process.tauPtEtaIDAgMuAgElecIsoPtRel*
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        (process.rescaledMETtau+process.rescaledTaus)*
-        (process.tauPtEtaIDAgMuAgElecIsoTauDown*process.tauPtEtaIDAgMuAgElecIsoTauDownCounter)*
-        process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
-        process.elecTauStreamAnalyzerTauDown
-        )
-
-       
-    process.pElecUp = cms.Path(
-        process.allEventsFilter*
-        process.elecPtEtaIDIsoPtRel *
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        process.metRecoilCorrector*
-        (process.rescaledMETelectron+process.rescaledElectrons+process.rescaledElectronsRel)*
-        (process.elecPtEtaIDIsoElecUp*process.elecPtEtaIDIsoElecUpCounter) *
-        process.elecPtEtaRelIDElecUp *
-        process.diTauElecUp*process.selectedDiTauElecUp*process.selectedDiTauElecUpCounter*
-        process.elecTauStreamAnalyzerElecUp
-        )
-    process.pElecDown = cms.Path(
-        process.allEventsFilter*
-        process.elecPtEtaIDIsoPtRel *
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        process.metRecoilCorrector*
-        (process.rescaledMETelectron+process.rescaledElectrons+process.rescaledElectronsRel)*
-        (process.elecPtEtaIDIsoElecDown*process.elecPtEtaIDIsoElecDownCounter) *
-        process.elecPtEtaRelIDElecDown *
-        process.diTauElecDown*process.selectedDiTauElecDown*process.selectedDiTauElecDownCounter*
-        process.elecTauStreamAnalyzerElecDown
-        )
-    
+#######################################################################
 
 process.out = cms.OutputModule(
     "PoolOutputModule",
