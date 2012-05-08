@@ -48,8 +48,9 @@
 #define PtVETO 30.0
 #define MAXEta  4.5 
 #define USERECOILALGO true
-#define USEFAKERATE true
+#define USEFAKERATE false
 #define DOSVFITSTANDALONE false
+#define DOVBFMVA false
 
 using namespace ROOT::Math;
 using namespace std;
@@ -383,7 +384,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
       
       TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );
       
-      if(bkgMVAs[j].find("VBF")!=string::npos){
+      if(DOVBFMVA && bkgMVAs[j].find("VBF")!=string::npos){
 	reader->AddVariable("mjj", &MJJ);
 	reader->AddVariable("dEta", &DETA);
 	reader->AddVariable("dPhi", &DPHI);
@@ -995,7 +996,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   currentTree->SetBranchAddress("chIsoPULeg1v2",        &chIsoPULeg1);
   currentTree->SetBranchAddress("nhIsoPULeg1v2",        &nhIsoPULeg1);
   currentTree->SetBranchAddress("phIsoPULeg1v2",        &phIsoPULeg1);
-  currentTree->SetBranchAddress("allChIsoLeg1",         &allChIsoLeg1);
+  currentTree->SetBranchAddress("elecIsoLeg1v2",        &allChIsoLeg1);
   currentTree->SetBranchAddress("isoLeg1MVA",           &isoLeg1MVA);
   currentTree->SetBranchAddress("rhoFastJet",           &rhoFastJet);
 
@@ -1619,7 +1620,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
 }
 
 
-void doAllSamplesMu(string inputDir_ = "MuTauStreamFall11_06Dec2011")
+void doAllSamplesMu(string inputDir_ = "MuTauStreamFall11_04May2012")
 {
 
 
@@ -1671,7 +1672,7 @@ void doAllSamplesMu(string inputDir_ = "MuTauStreamFall11_06Dec2011")
   samples.push_back("VH145-MuTau-pythia-PUS6_run");       crossSec.push_back( 2.61e-02*(0.3406+0.1930+0.05435 ) * 1.0      * 0.191843);  
   samples.push_back("VH160-MuTau-pythia-PUS6_run");       crossSec.push_back( 5.32e-04*(0.2291+0.1334+0.03942 ) * 1.0      * 0.203857);  
  
-  makeTrees_MuTauStream("",             samples[18], crossSec[18], inputDir_);
+  makeTrees_MuTauStream("",             samples[2], crossSec[2], inputDir_);
  
   return;
 
@@ -1706,9 +1707,11 @@ int main(int argc, const char* argv[])
   if ( argc < 3 ) {
    std::cout << "Usage: " << argv[0] << " fileName xsection" << std::endl;
    return 0;
- }
+  }
 
-  //doAllSamplesMu( "MuTauStreamFall11_06Dec2011");
+  doAllSamplesMu( "MuTauStreamFall11_04May2012");
+
+  return 1;
 
   string inputDir = "MuTauStreamFall11_04Apr2012";
 

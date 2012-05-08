@@ -1023,7 +1023,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   currentTree->SetBranchAddress("chIsoPULeg1v2",        &chIsoPULeg1);  
   currentTree->SetBranchAddress("nhIsoPULeg1v2",        &nhIsoPULeg1);
   currentTree->SetBranchAddress("phIsoPULeg1v2",        &phIsoPULeg1);
-  currentTree->SetBranchAddress("allChIsoLeg1",         &allChIsoLeg1);
+  currentTree->SetBranchAddress("elecIsoLeg1v2" ,       &allChIsoLeg1);
   currentTree->SetBranchAddress("isoLeg1MVA",           &isoLeg1MVA);
  
   currentTree->SetBranchAddress("rhoFastJet",           &rhoFastJet);
@@ -1038,6 +1038,10 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   currentTree->SetBranchAddress("mvaPOGTrig",           &mvaPOGTrig);
   currentTree->SetBranchAddress("mvaPOGNonTrig",        &mvaPOGNonTrig);
 
+  currentTree->SetBranchAddress("dxy1",                 &dxy1);
+  currentTree->SetBranchAddress("dz1",                  &dz1);
+  currentTree->SetBranchAddress("dxy2",                 &dxy2);
+ 
   currentTree->SetBranchAddress("sihih",                &sihih);
   currentTree->SetBranchAddress("dEta",                 &dEta);
   currentTree->SetBranchAddress("dPhi",                 &dPhi);
@@ -1377,6 +1381,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     float EffArea          = TMath::Pi()*0.4*0.4;
     combRelIsoLeg1Rho      = std::max(((chIsoLeg1+nhIsoLeg1+phIsoLeg1) - rhoNeutralFastJet*EffArea),float(0.0))/(*diTauLegsP4)[0].Pt();
     combIsoLeg2            =  ( chIsoLeg2 + std::max( phIsoLeg2 - rhoFastJet*TMath::Pi()*0.5*0.5, 0.0) ) ;    
+    isoLeg1MVA_            = isoLeg1MVA;
 
     tightestCutBasedWP_ = tightestCutBasedWP;
     tightestMVAWP_      = tightestMVAWP;
