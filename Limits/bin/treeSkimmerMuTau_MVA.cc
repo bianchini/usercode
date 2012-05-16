@@ -50,7 +50,7 @@
 #define USERECOILALGO true
 #define USEFAKERATE false
 #define DOSVFITSTANDALONE false
-#define DOVBFMVA false
+#define DOVBFMVA true
 
 using namespace ROOT::Math;
 using namespace std;
@@ -498,8 +498,12 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   string currentSample = sample_ ;
   TString sample(currentSample.c_str());
 
-  string analysisFileName = !(analysis_.find("Up")!=string::npos || analysis_.find("Down")!=string::npos) ?
-    "Nominal" : analysis_;
+  string analysisFileName = analysis_;
+  if( !(analysis_.find("Up")!=string::npos || analysis_.find("Down")!=string::npos) &&  analysis_.find("Raw")==string::npos)
+    analysisFileName = "Nominal";
+  if( !(analysis_.find("Up")!=string::npos || analysis_.find("Down")!=string::npos) &&  analysis_.find("Raw")!=string::npos)
+    analysisFileName = "RawNominal";
+
   TString outName = "nTuple"+sample+"_Open_MuTauStream_"+analysisFileName+".root";
   cout << "Output file name called " << string(outName.Data()) << endl;
 
@@ -753,7 +757,14 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     return;
   }
 
-  TString treeName(("muTauStreamAnalyzer"+analysis_+"/tree").c_str());
+  string anlyzerName = analysis_;
+  if( analysis_.find("Jet")!=string::npos && analysis_.find("Raw")==string::npos)
+    anlyzerName = "";
+  if( analysis_.find("Jet")!=string::npos && analysis_.find("Raw")!=string::npos)
+    anlyzerName = "Raw";
+    
+
+  TString treeName(("muTauStreamAnalyzer"+anlyzerName+"/tree").c_str());
 
   TTree* currentTree = (TTree*)file->Get(treeName);
   int nEntries    = currentTree->GetEntries() ;
@@ -1115,7 +1126,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     for(int l = 0 ; l < int(jets->size()) ; l++){
       if((*jets)[l].Pt()>MINPt1 && TMath::Abs((*jets)[l].Eta())<MAXEta)
 	indexes.push_back(l);
-      if((*jetsBtagHE)[l] > 3.3) nJets20BTagged++;
+      if((*jetsBtagCSV)[l] > 0.679 ) nJets20BTagged++;
     }
     nJets20 = indexes.size();
     if(indexes.size()>0) lead  = indexes[0];  
@@ -1189,7 +1200,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
 	C1      = TMath::Min(TMath::Abs( (*diTauVisP4)[0].Eta() - eta1), TMath::Abs((*diTauVisP4)[0].Eta() - eta2));
 	C2      = (*diTauVisP4)[0].Pt() ;
 	
-	MVAvbf    = readers["VBF"]!=0 ? readers["VBF"]->EvaluateMVA( "BDTG" ) : -99;
+	MVAvbf    = readers["120VBF"]!=0 ? readers["120VBF"]->EvaluateMVA( "BDTG" ) : -99;
     
       }
       
@@ -1218,43 +1229,45 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     diTauSVFitEta  = (*diTauSVfitP4)[0].Eta();
     diTauSVFitPhi  = (*diTauSVfitP4)[0].Phi();
 
-    float c0L = 0.0050;
-    float c1L = 1.14;
-    float c2L = 0.40;
-    float c3L = 25;
-    diTauSVFitMassCal0 = (*diTauSVfitP4)[0].M() - 
-      (((c0L*120 + c1L)*diTauNSVfitMassErrUp + (c2L*120+c3L)) - 120);
-
-    float c0 = 9.08725e-01;
-    float c1 = 4.01539e+01;
-    float c2 = 7.48472e-02;
-    float c3 = 3.79035e+01;
-    float c4 = 1.93179e-04;
-    float c5 = 1.35327e-02;
-    float c6 = -1.36772e-02;
-    float c7 = 6.04364e-05;
-    float massH     = 120;
-    float bias120   = (c0*massH+c1) + (c2*massH+c3)*TMath::Erf((c4*massH+c5)*diTauNSVfitMassErrUp + (c6*massH+c7)) - massH;
-    diTauSVFitMassCal1 = (*diTauSVfitP4)[0].M() - bias120; 
-
-    float massNew = (*diTauSVfitP4)[0].M();
-    float bias    = bias120;
-    float diff    = 999.;
-    int nMax      = 20;
-    bool exit     = false;
-    for(int it=0; it< nMax && !exit; it++){      
-      float bias_it = (c0*massNew+c1) + (c2*massNew+c3)*TMath::Erf((c4*massNew+c5)*diTauNSVfitMassErrUp + (c6*massNew+c7)) - massNew;
-      massNew = (*diTauSVfitP4)[0].M() - bias_it;
-      diff = fabs(bias - bias_it);
-      bias = bias_it;
-      if(it==(nMax-1)) cout << "Reached Max iterartion w/o convergence" << endl;
-      if(it>0 && diff<1){
-	if((*diTauSVfitP4)[0].M()<60 && diTauNSVfitMassErrUp>0) 
-	  bias=0;
-	exit = true;
-      } 
-    }
-    diTauSVFitMassCal2 = (*diTauSVfitP4)[0].M() - bias;
+    //float c0L = 0.0050;
+    //float c1L = 1.14;
+    //float c2L = 0.40;
+    //float c3L = 25;
+    diTauSVFitMassCal0 = -99.;
+    diTauSVFitMassCal1 = -99.;
+    diTauSVFitMassCal2 = -99.;
+    //(*diTauSVfitP4)[0].M() - 
+    //(((c0L*120 + c1L)*diTauNSVfitMassErrUp + (c2L*120+c3L)) - 120);
+    //float c0 = 9.08725e-01;
+    //float c1 = 4.01539e+01;
+    //float c2 = 7.48472e-02;
+    //float c3 = 3.79035e+01;
+    //float c4 = 1.93179e-04;
+    //float c5 = 1.35327e-02;
+    //float c6 = -1.36772e-02;
+    //float c7 = 6.04364e-05;
+    //float massH     = 120;
+    //float bias120   = (c0*massH+c1) + (c2*massH+c3)*TMath::Erf((c4*massH+c5)*diTauNSVfitMassErrUp + (c6*massH+c7)) - massH;
+    //diTauSVFitMassCal1 = (*diTauSVfitP4)[0].M() - bias120; 
+    //float massNew = (*diTauSVfitP4)[0].M();
+    //float bias    = bias120;
+    //float diff    = 999.;
+    //int nMax      = 20;
+    //bool exit     = false;
+    //for(int it=0; it< nMax && !exit; it++){      
+    //float bias_it = (c0*massNew+c1) + (c2*massNew+c3)*TMath::Erf((c4*massNew+c5)*diTauNSVfitMassErrUp + (c6*massNew+c7)) - massNew;
+    // massNew = (*diTauSVfitP4)[0].M() - bias_it;
+    //diff = fabs(bias - bias_it);
+    //bias = bias_it;
+    //if(it==(nMax-1)) cout << "Reached Max iterartion w/o convergence" << endl;
+    //if(it>0 && diff<1){
+    //if((*diTauSVfitP4)[0].M()<60 && diTauNSVfitMassErrUp>0) 
+    //  bias=0;
+    //exit = true;
+    //} 
+    //}
+    //diTauSVFitMassCal2 = -99;
+    //(*diTauSVfitP4)[0].M() - bias;
 
 
     diTauRecoPt  = ((*diTauVisP4)[0]+(*METP4)[0]).Pt();
@@ -1320,8 +1333,8 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     float vectorSumPt     = ((*diTauLegsP4)[0] +      (*METP4)[0]).Pt() ;
     float scalarSumPtCorr = ( *diTauLegsP4)[0].Pt() + recoilCorrecMET.Pt();
     float vectorSumPtCorr = ((*diTauLegsP4)[0] +      recoilCorrecMET).Pt() ;
-    float scalarSumPtMVA  = ( *diTauLegsP4)[0].Pt() + (*METP4)[1].Pt();
-    float vectorSumPtMVA  = ((*diTauLegsP4)[0] +      (*METP4)[1]).Pt() ;
+    float scalarSumPtMVA  = ( *diTauLegsP4)[0].Pt() + (*METP4)[3].Pt();
+    float vectorSumPtMVA  = ((*diTauLegsP4)[0] +      (*METP4)[3]).Pt() ;
 
     MtLeg1_     = TMath::Sqrt( scalarSumPt*scalarSumPt - vectorSumPt*vectorSumPt ) ;
     MtLeg1Corr_ = TMath::Sqrt( scalarSumPtCorr*scalarSumPtCorr - vectorSumPtCorr*vectorSumPtCorr ) ;
@@ -1329,7 +1342,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
 
     pZeta_        = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[0]))[1];
     pZetaCorr_    = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], recoilCorrecMET))[1];
-    pZetaMVA_     = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[1]))[1];
+    pZetaMVA_     = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[3]))[1];
     pZetaVis_     = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[0]))[0];
     pZetaVisCorr_ = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], recoilCorrecMET))[0];
 
@@ -1385,7 +1398,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     float scaled_nhIsoLeg1 = std::max( nhIsoLeg1*(1-PUtoPVratio), float(0.0));
     float scaled_phIsoLeg1 = std::max( phIsoLeg1*(1-PUtoPVratio), float(0.0));
     combRelIsoLeg1Beta     = (chIsoLeg1+scaled_nhIsoLeg1+scaled_phIsoLeg1)/(*diTauLegsP4)[0].Pt();
-    combRelIsoLeg1DBeta    = (chIsoLeg1+ std::max( nhIsoLeg1+phIsoLeg1-0.5*(nhIsoPULeg1),double(0.0)))/(*diTauLegsP4)[0].Pt();
+    combRelIsoLeg1DBeta    = (chIsoLeg1    + std::max( nhIsoLeg1+phIsoLeg1-0.5*(nhIsoPULeg1),double(0.0)))/(*diTauLegsP4)[0].Pt();
     combRelIsoLeg1DBetav2  = (allChIsoLeg1 + std::max( nhIsoLeg1+phIsoLeg1-0.5*(nhIsoPULeg1),double(0.0)))/(*diTauLegsP4)[0].Pt();
     isoLeg1MVA_            = isoLeg1MVA;
     float EffArea          = TMath::Pi()*0.4*0.4;
@@ -1709,20 +1722,30 @@ int main(int argc, const char* argv[])
    return 0;
   }
 
-  doAllSamplesMu( "MuTauStreamFall11_04May2012");
+  //doAllSamplesMu( "MuTauStreamFall11_04May2012");
+  //return 1;
 
-  return 1;
+  string inputDir = "MuTauStreamFall11_04May2012";
 
-  string inputDir = "MuTauStreamFall11_04Apr2012";
+  makeTrees_MuTauStream("",           argv[1], atof(argv[2]), inputDir);
+  makeTrees_MuTauStream("Raw",        argv[1], atof(argv[2]), inputDir);
 
-  makeTrees_MuTauStream("",        argv[1], atof(argv[2]), inputDir);
+  return 0;
+
   if( string(argv[1]).find("Run2011-MuTau-All")!=string::npos )
     return 0;
-  makeTrees_MuTauStream("TauUp",   argv[1], atof(argv[2]), inputDir);
-  makeTrees_MuTauStream("TauDown", argv[1], atof(argv[2]), inputDir);
+  makeTrees_MuTauStream("TauUp",      argv[1], atof(argv[2]), inputDir);
+  makeTrees_MuTauStream("TauDown",    argv[1], atof(argv[2]), inputDir);
+  makeTrees_MuTauStream("RawTauUp",   argv[1], atof(argv[2]), inputDir);
+  makeTrees_MuTauStream("RawTauDown", argv[1], atof(argv[2]), inputDir);
   if( string(argv[1]).find("Embedded")!=string::npos)
     return 0;
-  makeTrees_MuTauStream("JetUp",   argv[1], atof(argv[2]), inputDir);
-  makeTrees_MuTauStream("JetDown", argv[1], atof(argv[2]), inputDir);
+  makeTrees_MuTauStream("JetUp",      argv[1], atof(argv[2]), inputDir);
+  makeTrees_MuTauStream("JetDown",    argv[1], atof(argv[2]), inputDir);
+  makeTrees_MuTauStream("RawJetUp",   argv[1], atof(argv[2]), inputDir);
+  makeTrees_MuTauStream("RawJetDown", argv[1], atof(argv[2]), inputDir);
+
+
+
 
 }

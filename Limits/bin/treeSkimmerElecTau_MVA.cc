@@ -46,8 +46,10 @@
 #define PtVETO 30.0
 #define MAXEta  4.5 
 #define USERECOILALGO true
-#define USEFAKERATE true
+#define USEFAKERATE false
 #define DOSVFITSTANDALONE false
+#define DOVBFMVA true
+
 
 using namespace ROOT::Math;
 using namespace std;
@@ -383,7 +385,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
       
       TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );
       
-      if(bkgMVAs[j].find("VBF")!=string::npos){
+      if(DOVBFMVA && bkgMVAs[j].find("VBF")!=string::npos){
 	reader->AddVariable("mjj", &MJJ);
 	reader->AddVariable("dEta", &DETA);
 	reader->AddVariable("dPhi", &DPHI);
@@ -498,9 +500,12 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   string currentSample = sample_ ;
   TString sample(currentSample.c_str());
 
+  string analysisFileName = analysis_;
+  if( !(analysis_.find("Up")!=string::npos || analysis_.find("Down")!=string::npos) &&  analysis_.find("Raw")==string::npos)
+    analysisFileName = "Nominal";
+  if( !(analysis_.find("Up")!=string::npos || analysis_.find("Down")!=string::npos) &&  analysis_.find("Raw")!=string::npos)
+    analysisFileName = "RawNominal";
 
-  string analysisFileName = !(analysis_.find("Up")!=string::npos || analysis_.find("Down")!=string::npos) ?
-    "Nominal" : analysis_;
   TString outName = "nTuple"+sample+"_Open_ElecTauStream_"+analysisFileName+".root";
   cout << "Output file name called " << string(outName.Data()) << endl;
 
@@ -563,7 +568,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
   // electron related variables
   int tightestCutBasedWP_, tightestMVAWP_;
-  float mvaPOGTrig_, mvaPOGNonTrig_;
+  float mvaPOGTrig_, mvaPOGNonTrig_, mitMVA_;
 
   float sihih_, dEta_, dPhi_, HoE_;
 
@@ -699,12 +704,14 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   outTreePtOrd->Branch("combRelIsoLeg1Rho",  &combRelIsoLeg1Rho,"combRelIsoLeg1Rho/F");
   outTreePtOrd->Branch("combRelIsoLeg1DBeta",&combRelIsoLeg1DBeta,"combRelIsoLeg1DBeta/F");
   outTreePtOrd->Branch("combRelIsoLeg1DBetav2",&combRelIsoLeg1DBetav2,"combRelIsoLeg1DBetav2/F");
+  outTreePtOrd->Branch("isoLeg1MVA",         &isoLeg1MVA_,"isoLeg1MVA/F");
   outTreePtOrd->Branch("combIsoLeg2",        &combIsoLeg2,"combIsoLeg2/F");
 
   outTreePtOrd->Branch("tightestCutBasedWP", &tightestCutBasedWP_,"tightestCutBasedWP/I");
   outTreePtOrd->Branch("tightestMVAWP",      &tightestMVAWP_,"tightestMVAWP/I");
   outTreePtOrd->Branch("mvaPOGTrig",         &mvaPOGTrig_,   "mvaPOGTrig/F");
   outTreePtOrd->Branch("mvaPOGNonTrig",      &mvaPOGNonTrig_,"mvaPOGNonTrig/F");
+  outTreePtOrd->Branch("mitMVA",             &mitMVA_,"mitMVA/F");
 
   outTreePtOrd->Branch("tightestAntiEMVAWP", &tightestAntiEMVAWP_,"tightestAntiEMVAWP/I");
   outTreePtOrd->Branch("tightestAntiECutWP", &tightestAntiECutWP_,"tightestAntiECutWP/I");
@@ -757,7 +764,13 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     return;
   }
 
-  TString treeName(("elecTauStreamAnalyzer"+analysis_+"/tree").c_str());
+  string anlyzerName = analysis_;
+  if( analysis_.find("Jet")!=string::npos && analysis_.find("Raw")==string::npos)
+    anlyzerName = "";
+  if( analysis_.find("Jet")!=string::npos && analysis_.find("Raw")!=string::npos)
+    anlyzerName = "Raw";
+
+  TString treeName(("elecTauStreamAnalyzer"+anlyzerName+"/tree").c_str());
 
   TTree* currentTree = (TTree*)file->Get(treeName);
   int nEntries    = currentTree->GetEntries() ;
@@ -870,7 +883,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   currentTree->SetBranchStatus("tightestMVAWP"         ,1);
   currentTree->SetBranchStatus("mvaPOGTrig"            ,1);
   currentTree->SetBranchStatus("mvaPOGNonTrig"         ,1);
-  currentTree->SetBranchStatus("mitMVA"                ,0);
+  currentTree->SetBranchStatus("mitMVA"                ,1);
   currentTree->SetBranchStatus("antiConv"              ,0);
   currentTree->SetBranchStatus("isTriggerElectron"     ,0);
 
@@ -990,9 +1003,10 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   float diTauNSVfitMass,diTauNSVfitMassErrUp,diTauNSVfitMassErrDown,mTauTauMin;
   float diTauCharge;
   int tightestHPSDBWP, tightestHPSMVAWP, decayMode;
+  int tightestAntiEMVAWP, tightestAntiECutWP;
   float hpsMVA;
   int tightestCutBasedWP, tightestMVAWP;
-  float mvaPOGTrig, mvaPOGNonTrig;
+  float mvaPOGTrig, mvaPOGNonTrig, mitMVA;
   float sihih, dEta, dPhi, HoE;
   float numPV;
   float mcPUweight,embeddingWeight;
@@ -1037,6 +1051,9 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   currentTree->SetBranchAddress("tightestMVAWP",        &tightestMVAWP);
   currentTree->SetBranchAddress("mvaPOGTrig",           &mvaPOGTrig);
   currentTree->SetBranchAddress("mvaPOGNonTrig",        &mvaPOGNonTrig);
+  currentTree->SetBranchAddress("mitMVA",               &mitMVA);
+  currentTree->SetBranchAddress("tightestAntiEMVAWP",   &tightestAntiEMVAWP);
+  currentTree->SetBranchAddress("tightestAntiEWP",      &tightestAntiECutWP);
 
   currentTree->SetBranchAddress("dxy1",                 &dxy1);
   currentTree->SetBranchAddress("dz1",                  &dz1);
@@ -1221,7 +1238,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 	C1      = TMath::Min(TMath::Abs( (*diTauVisP4)[0].Eta() - eta1), TMath::Abs((*diTauVisP4)[0].Eta() - eta2));
 	C2      = (*diTauVisP4)[0].Pt() ;
 	
-	MVAvbf    = readers["VBF"]!=0 ? readers["VBF"]->EvaluateMVA( "BDTG" ) : -99;	
+	MVAvbf    = readers["120VBF"]!=0 ? readers["120VBF"]->EvaluateMVA( "BDTG" ) : -99;	
 	
       }
 
@@ -1387,6 +1404,10 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     tightestMVAWP_      = tightestMVAWP;
     mvaPOGTrig_         = mvaPOGTrig;
     mvaPOGNonTrig_      = mvaPOGNonTrig;
+    mitMVA_             = mitMVA;
+
+    tightestAntiECutWP_ = tightestAntiECutWP;
+    tightestAntiEMVAWP_ = tightestAntiEMVAWP;
 
     sihih_ = sihih; 
     dEta_  = dEta; 
@@ -1436,6 +1457,8 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     tightestHPSMVAWP_   = tightestHPSMVAWP;
     hpsMVA_           = hpsMVA;
     
+    pfJetPt_            = pfJetPt;
+
     decayMode_          = decayMode;
     numPV_              = numPV;
     sampleWeight        = scaleFactor; 
@@ -1635,7 +1658,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
 
 
-void doAllSamplesElec(string inputDir_ = "ElecTauStreamFall11_06Dec2011"){
+void doAllSamplesElec(string inputDir_ = "ElecTauStreamFall11_04May2012"){
 
   std::vector<std::string> samples;
   std::vector<float> crossSec;
@@ -1685,6 +1708,11 @@ void doAllSamplesElec(string inputDir_ = "ElecTauStreamFall11_06Dec2011"){
   samples.push_back("VH145-ElecTau-pythia-PUS6_run");  crossSec.push_back( 2.61e-02*(0.3406+0.1930+0.05435 ) * 0.10708 * 0.774027);  
   samples.push_back("VH160-ElecTau-pythia-PUS6_run");  crossSec.push_back( 5.32e-04*(0.2291+0.1334+0.03942 ) * 1.0 * 0.2120560);  
   
+  makeTrees_ElecTauStream("",             samples[2], crossSec[2], inputDir_);
+
+  return;
+
+
   for( unsigned int k = 0; k < samples.size() ; k++) {
 
     makeTrees_ElecTauStream("",        samples[k], crossSec[k], inputDir_);
@@ -1722,18 +1750,24 @@ int main(int argc, const char* argv[])
     return 0;
   }
   
-  //doAllSamplesElec( "ElecTauStreamFall11_06Dec2011");
-  
-  string inputDir = "ElecTauStreamFall11_04Apr2012";
+  //doAllSamplesElec( "ElecTauStreamFall11_04May2012");
+  //return 1;  
 
-  makeTrees_ElecTauStream("",        argv[1], atof(argv[2]), inputDir);
+  string inputDir = "ElecTauStreamFall11_04May2012";
+
+  //makeTrees_ElecTauStream("",           argv[1], atof(argv[2]), inputDir);
+  makeTrees_ElecTauStream("Raw",        argv[1], atof(argv[2]), inputDir);
   if( string(argv[1]).find("Run2011-ElecTau-All")!=string::npos )
     return 0;
-  makeTrees_ElecTauStream("TauUp",   argv[1], atof(argv[2]), inputDir);
-  makeTrees_ElecTauStream("TauDown", argv[1], atof(argv[2]), inputDir);
+  //makeTrees_ElecTauStream("TauUp",      argv[1], atof(argv[2]), inputDir);
+  //makeTrees_ElecTauStream("TauDown",    argv[1], atof(argv[2]), inputDir);
+  makeTrees_ElecTauStream("RawTauUp",   argv[1], atof(argv[2]), inputDir);
+  makeTrees_ElecTauStream("RawTauDown", argv[1], atof(argv[2]), inputDir);
   if( string(argv[1]).find("Embedded")!=string::npos)
     return 0;
-  makeTrees_ElecTauStream("JetUp",   argv[1], atof(argv[2]), inputDir);
-  makeTrees_ElecTauStream("JetDown", argv[1], atof(argv[2]), inputDir);
+  //makeTrees_ElecTauStream("JetUp",      argv[1], atof(argv[2]), inputDir);
+  //makeTrees_ElecTauStream("JetDown",    argv[1], atof(argv[2]), inputDir);
+  makeTrees_ElecTauStream("RawJetUp",   argv[1], atof(argv[2]), inputDir);
+  makeTrees_ElecTauStream("RawJetDown", argv[1], atof(argv[2]), inputDir);
 
 }

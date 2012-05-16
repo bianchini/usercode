@@ -25,13 +25,17 @@ void produce(
 
 
   cout << "Now doing mass mH=" << mH_ << ", for variable " << variable_ << " analysis " << analysis_ << " and bin " << bin_ << endl;
-  TFile* fin = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_%s_%s.root", outputDir.Data(), mH_, bin_.c_str() , analysis_.c_str(), variable_.c_str()), "READ");
+  TFile* fin = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_%s_%s.root", outputDir.Data(), mH_, bin_.c_str() , analysis_.c_str(), variable_.c_str()), "READ");
 
-  TFile* fin_jUp   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_JetUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_jDown = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_JetDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_tUp   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_TauUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_tDown = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_TauDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_nominal = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s__%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+
+  ///////////////////////////////////////////////
+  TFile* fin_jUp   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_JetUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_jDown = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_JetDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_tUp   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_TauUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_tDown = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_TauDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_nominal = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s__%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  ///////////////////////////////////////////////
+
 
   string binNameSpace = "";
   if(bin_.find("inclusive")!=string::npos)      
@@ -49,7 +53,7 @@ void produce(
   else if(bin_.find("oneJet")!=string::npos) 
     binNameSpace =  "SMpre2a";
 
-  TFile* fTemplOut = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7/src/Bianchi/Limits/htautau/datacards/%s/muTauSM_%s.root",outputDir.Data(), variable_.c_str()),"UPDATE");
+  TFile* fTemplOut = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/datacards/%s/muTauSM_%s.root",outputDir.Data(), variable_.c_str()),"UPDATE");
   
   string suffix = "";
   if(analysis_.find("TauUp")!=string::npos)
@@ -127,7 +131,8 @@ void produce(
       TH1F* hLooseIsoKeys = (TH1F*)fin->Get("hLooseIsoKeys");
       hLooseIsoKeys->Scale(hAntiIso->Integral()/hLooseIsoKeys->Integral());
       hLooseIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
-      ((TH1F*)fin->Get("hW3JetsKeys"))->Write(Form("W%s"           ,suffix.c_str()));
+      //((TH1F*)fin->Get("hW3JetsKeys"))->Write(Form("W%s"           ,suffix.c_str()));
+      ((TH1F*)fin->Get("hWKeys"))->Write(Form("W%s"           ,suffix.c_str()));
       TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmjKeys");
       TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmmKeys");
       TH1F* hZmj        = (TH1F*)fin->Get("hZmj");
@@ -235,7 +240,8 @@ void produce(
       if(dir->FindObjectAny(Form("QCD%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hAntiIsoKeys"))->Write(Form("QCD%s"       ,suffix.c_str()));
       if(dir->FindObjectAny(Form("W%s"       ,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hW3JetsKeys"))->Write(Form("W%s"           ,suffix.c_str()));
+	//((TH1F*)fin->Get("hW3JetsKeys"))->Write(Form("W%s"           ,suffix.c_str()));
+	((TH1F*)fin->Get("hWKeys"))->Write(Form("W%s"           ,suffix.c_str()));
       if(dir->FindObjectAny(Form("ZJ%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hZmj"))->Write(Form("ZJ%s"        ,suffix.c_str()));
       if(dir->FindObjectAny(Form("ZL%s"       ,suffix.c_str()))==0 ) 
@@ -296,14 +302,15 @@ void produce(
   fTemplOut->Close();
   
   // edit the datacards only for the nominal analysis
-  if(analysis_!="") return;
+  if(analysis_.find("Up")!=string::npos || analysis_.find("Down")!=string::npos) 
+    return;
 
 
   ifstream in;
 
   char* c = new char[1000];
-  in.open(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7/src/Bianchi/Limits/htautau/templates/muTau_%s_template_v2.txt",     binNameSpace.c_str()));
-  ofstream out(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7/src/Bianchi/Limits/htautau/datacards/%s/muTau_%s_mH%d_%s.txt", outputDir.Data(), binNameSpace.c_str(), mH_, variable_.c_str()));
+  in.open(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/templates/muTau_%s_template_v2.txt",     binNameSpace.c_str()));
+  ofstream out(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/datacards/%s/muTau_%s_mH%d_%s.txt", outputDir.Data(), binNameSpace.c_str(), mH_, variable_.c_str()));
   out.precision(8);
 
   while (in.good())
@@ -460,20 +467,17 @@ void produce(
 
 
 
-void produceAll(  TString outputDir = "Apr2012/NewSVfit_pres" ){
+void produceAll(  TString outputDir = "May2012/Reload_NewCategories_IntermediateBoost" ){
 
   vector<string> variables;
   vector<int> mH;
 
   //variables.push_back("diTauVisMass");
-  variables.push_back("diTauSVFitMass");
+  variables.push_back("diTauNSVfitMass");
   //variables.push_back("diTauSVFitMassCal0");
   //variables.push_back("diTauSVFitMassCal1");
   //variables.push_back("diTauSVFitMassCal2");
-  //variables.push_back("MVAmH110AntiZ");
-  //variables.push_back("MVAmH120AntiZ");
-  //variables.push_back("MVAmH130AntiZ");
-  //variables.push_back("MVAmH140AntiZ");
+
 
   //mH.push_back(105);
   mH.push_back(110);
@@ -488,35 +492,51 @@ void produceAll(  TString outputDir = "Apr2012/NewSVfit_pres" ){
   for(unsigned int i = 0 ; i < variables.size(); i++){
     for(unsigned j = 0; j < mH.size(); j++){
 
-      produce(mH[j],variables[i], ""        , "vbf", outputDir);
-      produce(mH[j],variables[i], "TauUp"   , "vbf", outputDir);
-      produce(mH[j],variables[i], "TauDown" , "vbf", outputDir);
-      produce(mH[j],variables[i], "JetUp"   , "vbf", outputDir);
-      produce(mH[j],variables[i], "JetDown" , "vbf", outputDir);
+     
+      //produce(mH[j],variables[i], ""        , "vbf", outputDir);
+      //produce(mH[j],variables[i], "TauUp"   , "vbf", outputDir);
+      //produce(mH[j],variables[i], "TauDown" , "vbf", outputDir);
+      //produce(mH[j],variables[i], "JetUp"   , "vbf", outputDir);
+      //produce(mH[j],variables[i], "JetDown" , "vbf", outputDir);
 
       produce(mH[j],variables[i], ""        , "boost", outputDir);
       produce(mH[j],variables[i], "TauUp"   , "boost", outputDir);
       produce(mH[j],variables[i], "TauDown" , "boost", outputDir);
       produce(mH[j],variables[i], "JetUp"   , "boost", outputDir);
       produce(mH[j],variables[i], "JetDown" , "boost", outputDir);
-      
-      //       produce(mH[j],variables[i], ""        , "boost2", outputDir);
-      //       produce(mH[j],variables[i], "TauUp"   , "boost2", outputDir);
-      //       produce(mH[j],variables[i], "TauDown" , "boost2", outputDir);
-      //       produce(mH[j],variables[i], "JetUp"   , "boost2", outputDir);
-      //       produce(mH[j],variables[i], "JetDown" , "boost2", outputDir);
   
-      //if(!((mH[j]==110 && variables[i].find("110")!=string::npos) ||
-      //   (mH[j]==120 && variables[i].find("120")!=string::npos) ||
-      //   (mH[j]==130 && variables[i].find("130")!=string::npos) ||
-      //   (mH[j]==140 && variables[i].find("140")!=string::npos))
-      // ) continue;
+      //produce(mH[j],variables[i], ""        , "novbf", outputDir);
+      //produce(mH[j],variables[i], "TauUp"   , "novbf", outputDir);
+      //produce(mH[j],variables[i], "TauDown" , "novbf", outputDir);
+      //produce(mH[j],variables[i], "JetUp"   , "novbf", outputDir);
+      //produce(mH[j],variables[i], "JetDown" , "novbf", outputDir);
   
-      produce(mH[j],variables[i], ""        , "novbf", outputDir);
-      produce(mH[j],variables[i], "TauUp"   , "novbf", outputDir);
-      produce(mH[j],variables[i], "TauDown" , "novbf", outputDir);
-      produce(mH[j],variables[i], "JetUp"   , "novbf", outputDir);
-      produce(mH[j],variables[i], "JetDown" , "novbf", outputDir);
+
+      /*
+      produce(mH[j],variables[i], "Raw"        , "vbf", outputDir);
+      produce(mH[j],variables[i], "RawTauUp"   , "vbf", outputDir);
+      produce(mH[j],variables[i], "RawTauDown" , "vbf", outputDir);
+      produce(mH[j],variables[i], "RawJetUp"   , "vbf", outputDir);
+      produce(mH[j],variables[i], "RawJetDown" , "vbf", outputDir);
+
+      produce(mH[j],variables[i], "Raw"        , "boost", outputDir);
+      produce(mH[j],variables[i], "RawTauUp"   , "boost", outputDir);
+      produce(mH[j],variables[i], "RawTauDown" , "boost", outputDir);
+      produce(mH[j],variables[i], "RawJetUp"   , "boost", outputDir);
+      produce(mH[j],variables[i], "RawJetDown" , "boost", outputDir);
+  
+      produce(mH[j],variables[i], "Raw"        , "novbf", outputDir);
+      produce(mH[j],variables[i], "RawTauUp"   , "novbf", outputDir);
+      produce(mH[j],variables[i], "RawTauDown" , "novbf", outputDir);
+      produce(mH[j],variables[i], "RawJetUp"   , "novbf", outputDir);
+      produce(mH[j],variables[i], "RawJetDown" , "novbf", outputDir);
+      */
+
+      //produce(mH[j],variables[i], ""        , "boost2", outputDir);
+      //produce(mH[j],variables[i], "TauUp"   , "boost2", outputDir);
+      //produce(mH[j],variables[i], "TauDown" , "boost2", outputDir);
+      //produce(mH[j],variables[i], "JetUp"   , "boost2", outputDir);
+      //produce(mH[j],variables[i], "JetDown" , "boost2", outputDir);
 
       //produce(mH[j],variables[i], ""        , "twoJets", outputDir);
       //produce(mH[j],variables[i], "TauUp"   , "twoJets", outputDir);
