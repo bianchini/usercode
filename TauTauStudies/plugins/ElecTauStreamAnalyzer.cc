@@ -526,6 +526,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("dz2",&dz2_,"dz2/F");
   tree_->Branch("dzE1",&dzE1_,"dzE1/F");
   tree_->Branch("dzE2",&dzE2_,"dzE2/F");
+  tree_->Branch("pfJetPt",&pfJetPt_,"pfJetPt/F");
 
   // electron specific variables
   tree_->Branch("nBrehm",&nBrehm_,"nBrehm/F");
@@ -901,24 +902,24 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       if(found) continue;
 
       bool mvaPreselectionNoIsoElecI = 
-	(*electrons)[j].userInt("antiConv")>0.5 && (*electrons)[j].userFloat("nHits")<=0 &&
-	(((*electrons)[j].isEB()
-	  && (*electrons)[j].userFloat("sihih") < 0.01 
-	  && TMath::Abs((*electrons)[j].userFloat("dEta")) < 0.007
-	  && TMath::Abs((*electrons)[j].userFloat("dPhi")) < 0.15
-	  && (*electrons)[j].userFloat("HoE") < 0.12
-	  ) ||
-	 ((*electrons)[j].isEE() 
-	  && (*electrons)[j].userFloat("sihih") < 0.03 
-	  && TMath::Abs((*electrons)[j].userFloat("dEta")) < 0.009
-	  && TMath::Abs((*electrons)[j].userFloat("dPhi")) < 0.10
-	  && (*electrons)[j].userFloat("HoE") < 0.10
-	  ));
+	(*electrons)[j].userInt("antiConv")>0.5 && (*electrons)[j].userFloat("nHits")<=0 ;
+      //&& (((*electrons)[j].isEB()
+      //  && (*electrons)[j].userFloat("sihih") < 0.01 
+      //  && TMath::Abs((*electrons)[j].userFloat("dEta")) < 0.007
+      //  && TMath::Abs((*electrons)[j].userFloat("dPhi")) < 0.15
+      //  && (*electrons)[j].userFloat("HoE") < 0.12
+      //  ) ||
+      // ((*electrons)[j].isEE() 
+      //  && (*electrons)[j].userFloat("sihih") < 0.03 
+      //  && TMath::Abs((*electrons)[j].userFloat("dEta")) < 0.009
+      //  && TMath::Abs((*electrons)[j].userFloat("dPhi")) < 0.10
+      //  && (*electrons)[j].userFloat("HoE") < 0.10
+      //  ));
 
       if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
 	  && (*electronsRel)[i].charge()*(*electrons)[j].charge()<0
 	  && (*electrons)[j].userFloat("PFRelIsoDB04")<0.30 && mvaPreselectionNoIsoElecI
-	  && (*electronsRel)[i].userFloat("PFRelIsoDB04")<0.20 ){
+	  && (*electronsRel)[i].userFloat("PFRelIsoDB04")<0.30 ){
 	elecFlag_       = 1;
 	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04");
 	if(verbose_) cout<< "Two electrons failing diElec veto: flag= " << elecFlag_ << endl;
@@ -927,7 +928,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       else if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
 	       && (*electronsRel)[i].charge()*(*electrons)[j].charge()>0
 	       && (*electrons)[j].userFloat("PFRelIsoDB04")<0.30 && mvaPreselectionNoIsoElecI
-	       && (*electronsRel)[i].userFloat("PFRelIsoDB04")<0.20 ){
+	       && (*electronsRel)[i].userFloat("PFRelIsoDB04")<0.30 ){
 	elecFlag_       = 2;
 	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04");
 	if(verbose_) cout<< "Two electrons with SS: flag= " << elecFlag_ << endl;
@@ -1453,7 +1454,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     }
     
 
-    isodeposit::AbsVetos vetos2011AllChargedLeg1; 
+    isodeposit::AbsVetos vetos2011AllChargedLeg1;
+    isodeposit::AbsVetos vetos2011AllChargedLeg1v2; 
+    
     // isoDeposit definition: 2011 for EB
     isodeposit::AbsVetos vetos2011EBChargedLeg1; 
     isodeposit::AbsVetos vetos2011EBNeutralLeg1; 
@@ -1465,6 +1468,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     
     vetos2011AllChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
     vetos2011AllChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
+
+    vetos2011AllChargedLeg1v2.push_back(new isodeposit::ThresholdVeto(0.0));
+    vetos2011AllChargedLeg1v2.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.001));
     
     //vetos2011ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
     //vetos2011ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
@@ -1510,8 +1516,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     // all charged particles
     elecIsoLeg1v2_ = 
       leg1->isoDeposit(pat::User1Iso)->depositAndCountWithin(0.4,vetos2011AllChargedLeg1).first ;
-    muIsoLeg1v2_   = elecIsoLeg1v2_;
-    //leg1->isoDeposit(pat::User2Iso)->depositAndCountWithin(0.4,vetos2011ChargedLeg1).first;
+    muIsoLeg1v2_   = 
+      leg1->isoDeposit(pat::User1Iso)->depositAndCountWithin(0.4,vetos2011AllChargedLeg1v2).first ;
+
     chIsoPULeg1v2_ = leg1->isEB() ? 
       leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011EBChargedLeg1).first :
       leg1->isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4,vetos2011EEChargedLeg1).first;
@@ -1547,6 +1554,10 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     for(unsigned int i = 0; i <vetos2011AllChargedLeg1.size(); i++){
       delete vetos2011AllChargedLeg1[i];
     }
+    for(unsigned int i = 0; i <vetos2011AllChargedLeg1v2.size(); i++){
+      delete vetos2011AllChargedLeg1v2[i];
+    }
+    
     for(unsigned int i = 0; i <vetos2011EBChargedLeg1.size(); i++){
       delete vetos2011EBChargedLeg1[i];
     }
@@ -1654,25 +1665,33 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     if( leg2->tauID("againstElectronTight")<0.5 && leg2->tauID("againstElectronMVA")>0.5) tightestAntiEWP_ = 2;
     if( leg2->tauID("againstElectronTight")>0.5 && leg2->tauID("againstElectronMVA")>0.5) tightestAntiEWP_ = 3;
 
+    cout << leg2->tauID("againstElectronLooseMVA2") << endl;
+
     tightestAntiEMVAWP_ = 0;
     if( leg2->tauID("againstElectronLooseMVA2")  >0.5 && 
 	leg2->tauID("againstElectronMediumMVA2") <0.5 &&
 	leg2->tauID("againstElectronTightMVA2")  <0.5) tightestAntiEMVAWP_ = 1;
+
     if( leg2->tauID("againstElectronLooseMVA2")  <0.5 && 
 	leg2->tauID("againstElectronMediumMVA2") >0.5 &&
 	leg2->tauID("againstElectronTightMVA2")  <0.5) tightestAntiEMVAWP_ = 2;
+
     if( leg2->tauID("againstElectronLooseMVA2")  <0.5 && 
 	leg2->tauID("againstElectronMediumMVA2") <0.5 &&
 	leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 3;
+
     if( leg2->tauID("againstElectronLooseMVA2")  >0.5 && 
 	leg2->tauID("againstElectronMediumMVA2") >0.5 &&
 	leg2->tauID("againstElectronTightMVA2")  <0.5) tightestAntiEMVAWP_ = 4;
+
     if( leg2->tauID("againstElectronLooseMVA2")  <0.5 && 
 	leg2->tauID("againstElectronMediumMVA2") >0.5 &&
 	leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 5;
+
     if( leg2->tauID("againstElectronLooseMVA2")  >0.5 && 
 	leg2->tauID("againstElectronMediumMVA2") <0.5 &&
 	leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 6;
+
     if( leg2->tauID("againstElectronLooseMVA2")  >0.5 && 
 	leg2->tauID("againstElectronMediumMVA2") >0.5 &&
 	leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 7;
@@ -1692,15 +1711,18 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     diTauSVfitP4_->push_back( nSVfitFitP4  );
     
     int errFlag = 0;
-    diTauNSVfitMassErrUp_   = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",&errFlag)!=0 /*&& theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution()*/ ) 
+    diTauSVfitMassErrUp_    = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",&errFlag)!=0 /*&& theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution()*/ ) 
       ? theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)->massErrUp()   : -99; 
-    diTauNSVfitMassErrDown_ = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",&errFlag)!=0 /*&& theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution()*/ ) 
+    diTauSVfitMassErrDown_  = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",&errFlag)!=0 /*&& theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution()*/ ) 
       ? theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)->massErrDown() : -99; 
     
-    diTauNSVfitMass_        = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->mass()        : -99; 
-    //diTauNSVfitMassErrUp_   = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrUp()   : -99; 
-    //diTauNSVfitMassErrDown_ = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrDown() : -99; 
-    
+    diTauNSVfitMass_        = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
+      ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->mass()        : -99; 
+    diTauNSVfitMassErrUp_   = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
+      ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrUp()   : -99; 
+    diTauNSVfitMassErrDown_ = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
+      ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrDown() : -99; 
+   
     std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJets;
     std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJetsIDL1Offset;
     std::map<double, math::XYZTLorentzVectorD ,ElecTauStreamAnalyzer::more> sortedJetsID;

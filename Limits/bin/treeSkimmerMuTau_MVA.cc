@@ -574,6 +574,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   // event id
   ULong64_t event_,run_,lumi_;
   int index_;
+  int pairIndex_;
 
 
   outTreePtOrd->Branch("pt1",  &pt1,"pt1/F");
@@ -745,6 +746,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   outTreePtOrd->Branch("run",  &run_,  "run/l");
   outTreePtOrd->Branch("lumi", &lumi_, "lumi/l");
   outTreePtOrd->Branch("index", &index_, "index/I");
+  outTreePtOrd->Branch("pairIndex", &pairIndex_, "pairIndex/I");
  
 
   string currentInName = "/data_CMS/cms/lbianchini/"+inputDir_+"//treeMuTauStream_"+sample_+".root" ;
@@ -1099,7 +1101,8 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   ULong64_t lastEvent = 0;
   ULong64_t lastRun   = 0;
   ULong64_t lastLumi  = 0;
-  int eventFlag       = 0;
+
+  int counter         = 0;
 
   for (int n = 0; n < nEntries ; n++) {
     
@@ -1588,26 +1591,35 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     event_           = event;
     run_             = run;
     lumi_            = lumi;
-
     index_           = index;
    
 
-    /*
-    if( !(run==lastRun && lumi==lastLumi && event==lastEvent)){
+    int pairIndex = -1;
+    bool passQualityCuts = tightestHPSDBWP_>0 && ptL1>20 && combRelIsoLeg1DBetav2<0.1 && ptL1>17 && HLTmatch;
+    if( !(run==lastRun && lumi==lastLumi && event==lastEvent) ){
+
       lastEvent = event;
-      lastRun   = run;
       lastLumi  = lumi;
-      eventFlag = tightestHPSDBWP>0 ? 1 : 0;
+      lastRun   = run;
+      counter   = 0;
+      if( passQualityCuts ){
+	pairIndex = counter;
+	counter++;
+      }
+      else
+	pairIndex = -1;
     }
-    else if(run==lastRun && lumi==lastLumi && event==lastEvent && eventFlag==1 && tightestHPSDBWP>0.5 ){
-      cout << "Skipping pair " << run << ":" << lumi << ":" << event << " index " << index << endl;
-      // skip subleading pairs of isolated taus in events with more than 1 isolated taus
-      continue; 
+    else{
+      if( passQualityCuts ){
+	pairIndex = counter;
+	counter++;
+      }
+      else
+	pairIndex = -1;
     }
-    else if(run==lastRun && lumi==lastLumi && event==lastEvent){
-      eventFlag = int(bool(eventFlag) || tightestHPSDBWP>0.5);
-    }
-    */
+    pairIndex_ = pairIndex;
+
+    
     
     outTreePtOrd->Fill();
   }

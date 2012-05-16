@@ -186,6 +186,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   int isMuLegMatched_;
   int muFlag_;
   int isPFMuon_;
+  int isTightMuon_;
   float muVetoRelIso_;
   int hasKft_;
 

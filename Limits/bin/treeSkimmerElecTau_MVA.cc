@@ -583,6 +583,8 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   // event id
   ULong64_t event_,run_,lumi_;
   int index_;
+  int pairIndex_;
+
 
   outTreePtOrd->Branch("pt1",  &pt1,"pt1/F");
   outTreePtOrd->Branch("pt2",  &pt2,"pt2/F");
@@ -754,6 +756,8 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   outTreePtOrd->Branch("run",  &run_,  "run/l");
   outTreePtOrd->Branch("lumi", &lumi_, "lumi/l");
   outTreePtOrd->Branch("index", &index_, "index/I");
+  outTreePtOrd->Branch("pairIndex", &pairIndex_, "pairIndex/I");
+
 
   string currentInName = "/data_CMS/cms/lbianchini/"+inputDir_+"//treeElecTauStream_"+sample_+".root" ;
 
@@ -1138,6 +1142,12 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     }
   }
 
+  // protection against multiple pairs per event
+  ULong64_t lastEvent = 0;
+  ULong64_t lastRun   = 0;
+  ULong64_t lastLumi  = 0;
+
+  int counter         = 0;
   
   for (int n = 0; n < nEntries ; n++) {
 
@@ -1627,8 +1637,34 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     event_           = event;
     run_             = run;
     lumi_            = lumi;
-
     index_           = index;
+
+
+    int pairIndex = -1;
+    bool passQualityCuts = tightestHPSDBWP>0 && ptL1>20 && combRelIsoLeg1DBetav2<0.1 && ptL1>20 && HLTmatch;
+    if( !(run==lastRun && lumi==lastLumi && event==lastEvent) ){
+
+      lastEvent = event;
+      lastLumi  = lumi;
+      lastRun   = run;
+      counter   = 0;
+      if( passQualityCuts ){
+	pairIndex = counter;
+	counter++;
+      }
+      else
+	pairIndex = -1;
+    }
+    else{
+      if( passQualityCuts ){
+	pairIndex = counter;
+	counter++;
+      }
+      else
+	pairIndex = -1;
+    }
+    pairIndex_ = pairIndex;
+
 
     outTreePtOrd->Fill();
   }
