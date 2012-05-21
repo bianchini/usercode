@@ -559,6 +559,7 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("isMuLegMatched",&isMuLegMatched_,"isMuLegMatched/I");
   tree_->Branch("muFlag",&muFlag_,"muFlag/I");
   tree_->Branch("isPFMuon",&isPFMuon_,"isPFMuon/I");
+  tree_->Branch("isTightMuon",&isTightMuon_,"isTightMuon/I");
   tree_->Branch("muVetoRelIso",&muVetoRelIso_,"muVetoRelIso/F");
   tree_->Branch("hasKft",&hasKft_,"hasKft/I");
 
@@ -1400,6 +1401,15 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       }
     }
     
+    isTightMuon_= 
+      (leg1->isGlobalMuon() &&
+       leg1->globalTrack().isNonnull() &&
+       leg1->globalTrack()->normalizedChi2()<10 &&
+       (leg1->globalTrack()->hitPattern()).numberOfValidMuonHits()>0 &&
+       leg1->numberOfMatchedStations()>1 &&    
+       (leg1->innerTrack()->hitPattern()).numberOfValidPixelHits()>0 &&
+       (leg1->track()->hitPattern()).trackerLayersWithMeasurement()>8) ? 1 : 0;
+
     isPFMuon_   = leg1->userInt("isPFMuon");
     isoLeg1MVA_ = -99;
     if(doMuIsoMVA_ && vertexes->size()){
@@ -1509,7 +1519,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     if(verbose_) cout << "SVFit fit solution ==> " << nSVfitFitP4.E() << endl;
     }
     diTauSVfitP4_->push_back( nSVfitFitP4  );
-    //cout << "Fit: " << nSVfitFitP4.M() << endl;
+  
     int errFlag = 0;
     diTauSVfitMassErrUp_    = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_fit",&errFlag)!=0 /*&& theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution()*/ ) 
       ? theDiTau->nSVfitSolution("psKine_MEt_logM_fit",0)->massErrUp()   : -99; 
@@ -1518,7 +1528,6 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     
     diTauNSVfitMass_        = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
       ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->mass()        : -99; 
-    //cout << "Int: " << diTauNSVfitMass_ << endl;
     diTauNSVfitMassErrUp_   = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
       ? theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->massErrUp()   : -99; 
     diTauNSVfitMassErrDown_ = (theDiTau->hasNSVFitSolutions() && theDiTau->nSVfitSolution("psKine_MEt_logM_int",&errFlag)!=0 && theDiTau->nSVfitSolution("psKine_MEt_logM_int",0)->isValidSolution() ) 
