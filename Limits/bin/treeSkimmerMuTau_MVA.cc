@@ -27,7 +27,7 @@
 #include "TROOT.h"
 #include "Bianchi/Utilities/interface/RecoilCorrector.hh"
 #include "Bianchi/Utilities/interface/Lumi3DReWeightingForLorenzo.h"
-#include "TauAnalysis/SVFitStandAlone/interface/NSVfitStandaloneAlgorithm.h"
+#include "TauAnalysis/CandidateTools/interface/NSVfitStandaloneAlgorithm.h"
 #include "PhysicsTools/FWLite/interface/TFileService.h"
 
 #include "Math/Vector3D.h"
@@ -1373,15 +1373,16 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     measuredTauLeptons.push_back(NSVfitStandalone::MeasuredTauLepton(NSVfitStandalone::kHadDecay,p1));    
     NSVfitStandalone::LorentzVector p2( (*diTauLegsP4)[0] );
     measuredTauLeptons.push_back(NSVfitStandalone::MeasuredTauLepton(NSVfitStandalone::kLepDecay,p2));    
-    NSVfitStandaloneAlgorithm algo(measuredTauLeptons,measuredMET,metsig,0);
+    unsigned int flagSA = 0;
+    NSVfitStandaloneAlgorithm algo(measuredTauLeptons,measuredMET,*metsig,flagSA);
     //algo.maxObjFunctionCalls(5000);
     algo.addLogM(false);
     if(DOSVFITSTANDALONE) {
       //algo.fit();
-      //algo.integrate();
+      algo.integrate();
     }
-    if(algo.isValidSolution()){
-      //diTauSVFitMassSA    =  algo.getMass();//algo.fittedDiTauSystem().mass();
+    if(DOSVFITSTANDALONE){
+      diTauSVFitMassSA    =  algo.getMass();//algo.fittedDiTauSystem().mass();
       diTauSVFitMassErrSA = -99;//algo.massUncert();
       etaTau1Fit          = -99;//((algo.fittedTauLeptons())[1]).Eta();
       etaTau2Fit          = -99;//((algo.fittedTauLeptons())[0]).Eta();

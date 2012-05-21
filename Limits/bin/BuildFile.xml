@@ -92,6 +92,7 @@
   <use   name="HiggsAnalysis/CombinedLimit"/>
   <use   name="Bianchi/Utilities"/>
   <use   name="TauAnalysis/SVFitStandAlone"/>
+  <use   name="TauAnalysis/CandidateTools"/>
   <use   name="PhysicsTools/FWLite"/>
   <use   name="roofit"/>
   <use   name="root"/>
@@ -120,6 +121,7 @@
   <use   name="HiggsAnalysis/CombinedLimit"/>
   <use   name="Bianchi/Utilities"/>
   <use   name="TauAnalysis/SVFitStandAlone"/>
+  <use   name="TauAnalysis/CandidateTools"/>
   <use   name="PhysicsTools/FWLite"/>
   <use   name="roofit"/>
   <use   name="root"/>

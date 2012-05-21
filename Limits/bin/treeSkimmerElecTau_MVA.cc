@@ -25,7 +25,8 @@
 #include "TROOT.h"
 #include "Bianchi/Utilities/interface/RecoilCorrector.hh"
 //#include "Bianchi/Utilities/interface/Lumi3DReWeightingForLorenzo.h"
-#include "TauAnalysis/SVFitStandAlone/interface/NSVfitStandaloneAlgorithm.h"
+#include "TauAnalysis/CandidateTools/interface/NSVfitStandaloneAlgorithm.h"
+//#include "TauAnalysis/SVFitStandAlone/interface/NSVfitStandaloneAlgorithm.h"
 #include "PhysicsTools/FWLite/interface/TFileService.h"
 
 #include "Math/Vector3D.h"
@@ -1378,21 +1379,26 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     measuredTauLeptons.push_back(NSVfitStandalone::MeasuredTauLepton(NSVfitStandalone::kHadDecay,p1));    
     NSVfitStandalone::LorentzVector p2( (*diTauLegsP4)[0] );
     measuredTauLeptons.push_back(NSVfitStandalone::MeasuredTauLepton(NSVfitStandalone::kLepDecay,p2));    
-    NSVfitStandaloneAlgorithm algo(measuredTauLeptons,measuredMET,metsig,0);
-    algo.maxObjFunctionCalls(5000);
-    if(DOSVFITSTANDALONE) algo.fit();
-    if(algo.isValidSolution()){
-      diTauSVFitMassSA    =  algo.fittedDiTauSystem().mass();
-      diTauSVFitMassErrSA =  algo.massUncert();
-      etaTau1Fit          = ((algo.fittedTauLeptons())[1]).Eta();
-      etaTau2Fit          = ((algo.fittedTauLeptons())[0]).Eta();
-      phiTau1Fit          = ((algo.fittedTauLeptons())[1]).Phi();
-      phiTau2Fit          = ((algo.fittedTauLeptons())[0]).Phi();
-      ptTau1Fit           = ((algo.fittedTauLeptons())[1]).Pt();
-      ptTau2Fit           = ((algo.fittedTauLeptons())[0]).Pt();
+    unsigned int flagSA = 0;
+    NSVfitStandaloneAlgorithm algo(measuredTauLeptons,measuredMET,*metsig,flagSA);
+    //algo.maxObjFunctionCalls(5000);
+    algo.addLogM(false);
+    if(DOSVFITSTANDALONE) {
+      //algo.fit();
+      algo.integrate();
+    }
+    if(DOSVFITSTANDALONE){
+      diTauSVFitMassSA    =  algo.getMass();//algo.fittedDiTauSystem().mass();
+      diTauSVFitMassErrSA = -99;//algo.massUncert();
+      etaTau1Fit          = -99;//((algo.fittedTauLeptons())[1]).Eta();
+      etaTau2Fit          = -99;//((algo.fittedTauLeptons())[0]).Eta();
+      phiTau1Fit          = -99;//((algo.fittedTauLeptons())[1]).Phi();
+      phiTau2Fit          = -99;//((algo.fittedTauLeptons())[0]).Phi();
+      ptTau1Fit           = -99;//((algo.fittedTauLeptons())[1]).Pt();
+      ptTau2Fit           = -99;//((algo.fittedTauLeptons())[0]).Pt();
     }
     else{
-      diTauSVFitMassSA    = -99; 
+      diTauSVFitMassSA    = -99;
       diTauSVFitMassErrSA = -99;
       etaTau1Fit          = -99;
       etaTau2Fit          = -99;
