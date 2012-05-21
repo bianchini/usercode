@@ -34,6 +34,7 @@ allElecTauPairs = cms.EDProducer(
     dRoverlapPFJet = cms.double(0.3),
     dRoverlapPFCandidate = cms.double(0.1)
     ),
+    doMtautauMin = cms.bool(False),   
     verbosity = cms.untracked.int32(0),
     )
 
@@ -57,6 +58,41 @@ allElecTauPairs.nSVfit.psKine_MEt_logM_fit.algorithm = cms.PSet(
             maxObjFunctionCalls = cms.uint32(5000),
             verbosity = cms.int32(0)
         )
+
+
+############# Update to latest version
+
+nSVfitResonanceLikelihoodPolarization.LR.formula = cms.string("[0]")
+nSVfitResonanceLikelihoodPolarization.RL.formula = cms.string("[0]")
+nSVfitResonanceLikelihoodPolarization.LL.formula = cms.string("[0]")
+nSVfitResonanceLikelihoodPolarization.RR.formula = cms.string("[0]")
+
+#nSVfitResonanceLikelihoodPolarization
+allElecTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.likelihoodFunctions = cms.VPSet()
+
+nSVfitTauLikelihoodMatrixElement.applySinThetaFactor       = cms.bool(False)
+nSVfitTauLikelihoodPhaseSpace.applySinThetaFactor          = cms.bool(False)
+nSVfitElectronLikelihoodPhaseSpace.applySinThetaFactor     = cms.bool(False)
+nSVfitElectronLikelihoodMatrixElement.applySinThetaFactor  = cms.bool(False)
+
+allElecTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg1.likelihoodFunctions = cms.VPSet(nSVfitElectronLikelihoodMatrixElement)
+#allElecTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg1.likelihoodFunctions = cms.VPSet(nSVfitElectronLikelihoodPhaseSpace)
+allElecTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg1.likelihoodFunctions[0].applyVisPtCutCorrection = cms.bool(False)
+allElecTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg1.likelihoodFunctions[0].visPtCutThreshold = cms.double(15)
+allElecTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg1.likelihoodFunctions[0].visPtCutCorrection = visPtCutCorrectionMuon15
+
+#allElecTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg2.likelihoodFunctions = cms.VPSet(nSVfitTauLikelihoodMatrixElement)
+allElecTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg2.likelihoodFunctions = cms.VPSet(nSVfitTauLikelihoodPhaseSpace)
+allElecTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg2.likelihoodFunctions[0].applyVisPtCutCorrection = cms.bool(False)
+allElecTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg2.likelihoodFunctions[0].visPtCutThreshold = cms.double(20)
+allElecTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.daughters.leg2.likelihoodFunctions[0].visPtCutCorrection = visPtCutCorrectionTau20
+
+#allElecTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.builder.polStates = cms.vstring("RR","LL")
+allElecTauPairs.nSVfit.psKine_MEt_logM_fit.config.event.resonances.A.builder.polStates = cms.vstring("undefined")
+
+allElecTauPairs.nSVfit.psKine_MEt_logM_int = cms.PSet()
+allElecTauPairs.nSVfit.psKine_MEt_logM_int.config = allElecTauPairs.nSVfit.psKine_MEt_logM_fit.config
+allElecTauPairs.nSVfit.psKine_MEt_logM_int.algorithm = nSVfitProducerByIntegration.algorithm
 
 '''
 allElecTauPairs.nSVfit.psKine_MEt_logM_int = cms.PSet()
@@ -101,6 +137,7 @@ allMuTauPairs = cms.EDProducer(
     dRoverlapPFJet = cms.double(0.3),
     dRoverlapPFCandidate = cms.double(0.1)
     ),
+    doMtautauMin = cms.bool(False),       
     verbosity = cms.untracked.int32(0)
     )
 
@@ -128,7 +165,7 @@ allMuTauPairs.nSVfit.psKine_MEt_logM_fit.algorithm = cms.PSet(
             verbosity = cms.int32(0)
         )
 
-############# PtCorr
+############# Update to latest version
 
 nSVfitResonanceLikelihoodPolarization.LR.formula = cms.string("[0]")
 nSVfitResonanceLikelihoodPolarization.RL.formula = cms.string("[0]")

@@ -345,14 +345,14 @@ void plotElecTau( Int_t mH_           = 120,
   // LOOSE  = (tightestAntiEMVAWP==1 || tightestAntiEMVAWP==4 || tightestAntiEMVAWP==6 || tightestAntiEMVAWP==7)
 
   ////// ELEC ISO ///////
-  TCut liso("combRelIsoLeg1DBetav2<0.10");
+  TCut liso("combRelIsoLeg1DBeta<0.10");
   //TCut liso("( (TMath::Abs(etaL1)<0.8 && isoLeg1MVA>0.905) || (TMath::Abs(etaL1)<1.479 && TMath::Abs(etaL1)>0.8 && isoLeg1MVA>0.912) || (TMath::Abs(etaL1)>1.479 && isoLeg1MVA>0.852))");
 
   TCut laiso("combRelIsoLeg1DBetav2>0.30 && combRelIsoLeg1DBetav2<0.50");
   TCut lliso("combRelIsoLeg1DBetav2<0.30");
 
   ////// EVENT WISE //////
-  TCut lveto("elecFlag==0 && MEt>20");
+  TCut lveto("elecFlag==0");
   TCut SS("diTauCharge!=0");
   TCut OS("diTauCharge==0");
   TCut hltevent("HLTx==1 && (run>=163269 || run==1)");
@@ -1294,7 +1294,7 @@ void plotElecTau( Int_t mH_           = 120,
 
 
 
-void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "May2012/Reload_NewCategories"){
+void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "May2012/Reload_NewCategories_HighMEt"){
 
   vector<string> variables;
   vector<int> mH;
@@ -1318,8 +1318,8 @@ void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "May2012/Reload_
 
   //plotElecTau(120,0,"inclusive",""   ,"numPV","reconstructed vertexes","units" ,outputDir,30,0,30,5.0,1.0,0,1.5);
 
-  //plotElecTau(120,1,"inclusive",""  ,"diTauNSVfitMass","visible mass","GeV" ,outputDir,50,0,200,5.0,1.0,0,1.2);
-
+  plotElecTau(120,1,"inclusive",""  ,"diTauNSVfitMass","visible mass","GeV" ,outputDir,50,0,200,5.0,1.0,0,1.2);
+  return;
   //plotElecTau(120,1,"inclusive",""   ,"ptL2","#tau p_{T}","GeV"           ,outputDir,30,0, 90,5.0,1.0,0,1.2);
   //plotElecTau(120,1,"inclusive",""   ,"ptL1","e p_{T}", "GeV"             ,outputDir,30,0, 90,5.0,1.0,0,1.2);
 
@@ -1348,17 +1348,17 @@ void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "May2012/Reload_
 
       //plotElecTau(mH[j],useEmbedded,"inclusive",""   ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
 
-      plotElecTau(mH[j],useEmbedded,"novbf",""       ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"novbf","TauUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"novbf","TauDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"novbf","JetUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      plotElecTau(mH[j],useEmbedded,"novbf","JetDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"novbf",""       ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"novbf","TauUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"novbf","TauDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"novbf","JetUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"novbf","JetDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
  
-      //plotElecTau(mH[j],useEmbedded,"vbf",""         ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      //plotElecTau(mH[j],useEmbedded,"vbf","TauUp"    ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      //plotElecTau(mH[j],useEmbedded,"vbf","TauDown"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      //plotElecTau(mH[j],useEmbedded,"vbf","JetUp"    ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      //plotElecTau(mH[j],useEmbedded,"vbf","JetDown"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotElecTau(mH[j],useEmbedded,"vbf",""         ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotElecTau(mH[j],useEmbedded,"vbf","TauUp"    ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotElecTau(mH[j],useEmbedded,"vbf","TauDown"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotElecTau(mH[j],useEmbedded,"vbf","JetUp"    ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotElecTau(mH[j],useEmbedded,"vbf","JetDown"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
 
       //plotElecTau(mH[j],useEmbedded,"boost",""       ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
       //plotElecTau(mH[j],useEmbedded,"boost","TauUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);

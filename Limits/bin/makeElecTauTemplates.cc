@@ -438,7 +438,7 @@ void produce(
 
 
 
-void produceAll(  TString outputDir = "May2012/Reload_NewCategories" ){
+void produceAll(  TString outputDir = "May2012/Reload_NewCategories_HighMEt" ){
 
   vector<string> variables;
   vector<int> mH;
@@ -459,11 +459,11 @@ void produceAll(  TString outputDir = "May2012/Reload_NewCategories" ){
   for(unsigned int i = 0 ; i < variables.size(); i++){
     for(unsigned j = 0; j < mH.size(); j++){
 
-      //produce(mH[j],variables[i], ""        , "vbf", outputDir);
-      //produce(mH[j],variables[i], "TauUp"   , "vbf", outputDir);
-      //produce(mH[j],variables[i], "TauDown" , "vbf", outputDir);
-      //produce(mH[j],variables[i], "JetUp"   , "vbf", outputDir);
-      //produce(mH[j],variables[i], "JetDown" , "vbf", outputDir);
+      produce(mH[j],variables[i], ""        , "vbf", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "vbf", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "vbf", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "vbf", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "vbf", outputDir);
 
       //produce(mH[j],variables[i], ""        , "boost", outputDir);
       //produce(mH[j],variables[i], "TauUp"   , "boost", outputDir);
@@ -471,11 +471,11 @@ void produceAll(  TString outputDir = "May2012/Reload_NewCategories" ){
       //produce(mH[j],variables[i], "JetUp"   , "boost", outputDir);
       //produce(mH[j],variables[i], "JetDown" , "boost", outputDir);
     
-      produce(mH[j],variables[i], ""        , "novbf", outputDir);
-      produce(mH[j],variables[i], "TauUp"   , "novbf", outputDir);
-      produce(mH[j],variables[i], "TauDown" , "novbf", outputDir);
-      produce(mH[j],variables[i], "JetUp"   , "novbf", outputDir);
-      produce(mH[j],variables[i], "JetDown" , "novbf", outputDir);
+      //produce(mH[j],variables[i], ""        , "novbf", outputDir);
+      //produce(mH[j],variables[i], "TauUp"   , "novbf", outputDir);
+      //produce(mH[j],variables[i], "TauDown" , "novbf", outputDir);
+      //produce(mH[j],variables[i], "JetUp"   , "novbf", outputDir);
+      //produce(mH[j],variables[i], "JetDown" , "novbf", outputDir);
 
       //produce(mH[j],variables[i], ""        , "twoJets", outputDir);
       //produce(mH[j],variables[i], "TauUp"   , "twoJets", outputDir);

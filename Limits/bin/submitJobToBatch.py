@@ -14,7 +14,7 @@ def treeSkim( sample, xsection, runInSeries=True):
 
     os.system( 'mkdir batch/' )
 
-    stream = "MuTau"
+    stream = "ElecTau"
     if(re.search("MuTau",sample)!=None):
         stream = "MuTau"
     else:
@@ -57,7 +57,7 @@ def treeSkim( sample, xsection, runInSeries=True):
 ###########################################
 ###########################################
 
-treeSkim("Run2011A-MuTau-05AugReReco-v2-Embedded-t3_run",     0)   
+#treeSkim("Run2011A-MuTau-05AugReReco-v2-Embedded-t3_run",     0)   
 
 #treeSkim("Run2011-MuTau-All_run",              0)                            
 #treeSkim("Run2011-MuTau-Embedded-All_run",     0)                           
@@ -115,7 +115,7 @@ treeSkim("Run2011A-MuTau-05AugReReco-v2-Embedded-t3_run",     0)
 #treeSkim("Run2011-ElecTau-All_run",              0)                            
 #treeSkim("Run2011-ElecTau-Embedded-All_run",     0)                           
 
-#treeSkim("DYJets-ElecTau-50-madgraph-PUS6_run",  3048           * 0.0537207    * 0.864464) 
+treeSkim("DYJets-ElecTau-50-madgraph-PUS6_run",  3048           * 0.0537207    * 0.864464) 
 #treeSkim("TTJets-ElecTau-madgraph-PUS6_run",     157.5          * 0.0149329    * 0.796639)  
 #treeSkim("WJets-ElecTau-madgraph-PUS6_run",      31314.0        * 0.0011910    * 0.624904)  
 ##treeSkim("W3Jets-ElecTau-madgraph-PUS6_run",     304.0          * 1.0         * 0.1257)

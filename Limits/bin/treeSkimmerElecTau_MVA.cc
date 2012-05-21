@@ -45,6 +45,7 @@
 #define MINPt2 20.0
 #define PtVETO 30.0
 #define MAXEta  4.5 
+#define MINJetID 0.5
 #define USERECOILALGO true
 #define USEFAKERATE false
 #define DOSVFITSTANDALONE false
@@ -569,6 +570,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   // electron related variables
   int tightestCutBasedWP_, tightestMVAWP_;
   float mvaPOGTrig_, mvaPOGNonTrig_, mitMVA_;
+  int isTriggerElectron_;
 
   float sihih_, dEta_, dPhi_, HoE_;
 
@@ -578,7 +580,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
  
   // object-related weights and triggers
   float HLTx,HLTmatch,HLTweightElec,HLTweightTau, SFElec, SFTau, HLTElec, HLTTau, SFEtoTau;
-  int isTauLegMatched_,elecFlag_,genDecay_, leptFakeTau;
+  int isTauLegMatched_,isElecLegMatched_,elecFlag_,genDecay_, leptFakeTau;
 
   // event id
   ULong64_t event_,run_,lumi_;
@@ -714,6 +716,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   outTreePtOrd->Branch("mvaPOGTrig",         &mvaPOGTrig_,   "mvaPOGTrig/F");
   outTreePtOrd->Branch("mvaPOGNonTrig",      &mvaPOGNonTrig_,"mvaPOGNonTrig/F");
   outTreePtOrd->Branch("mitMVA",             &mitMVA_,"mitMVA/F");
+  outTreePtOrd->Branch("isTriggerElectron",  &isTriggerElectron_,"isTriggerElectron/I");
 
   outTreePtOrd->Branch("tightestAntiEMVAWP", &tightestAntiEMVAWP_,"tightestAntiEMVAWP/I");
   outTreePtOrd->Branch("tightestAntiECutWP", &tightestAntiECutWP_,"tightestAntiECutWP/I");
@@ -748,6 +751,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   outTreePtOrd->Branch("SFEtoTau",     &SFEtoTau,"SFEtoTau/F");
 
   outTreePtOrd->Branch("isTauLegMatched", &isTauLegMatched_,"isTauLegMatched/I");
+  outTreePtOrd->Branch("isElecLegMatched",&isElecLegMatched_,"isElecLegMatched/I");
   outTreePtOrd->Branch("elecFlag",        &elecFlag_,"elecFlag/I"); 
   outTreePtOrd->Branch("genDecay",        &genDecay_,"genDecay/I");
   outTreePtOrd->Branch("leptFakeTau",     &leptFakeTau,"leptFakeTau/I");
@@ -889,7 +893,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   currentTree->SetBranchStatus("mvaPOGNonTrig"         ,1);
   currentTree->SetBranchStatus("mitMVA"                ,1);
   currentTree->SetBranchStatus("antiConv"              ,0);
-  currentTree->SetBranchStatus("isTriggerElectron"     ,0);
+  currentTree->SetBranchStatus("isTriggerElectron"     ,1);
 
   // MET
   currentTree->SetBranchStatus("METP4"                 ,1);
@@ -1011,6 +1015,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   float hpsMVA;
   int tightestCutBasedWP, tightestMVAWP;
   float mvaPOGTrig, mvaPOGNonTrig, mitMVA;
+  int isTriggerElectron;
   float sihih, dEta, dPhi, HoE;
   float numPV;
   float mcPUweight,embeddingWeight;
@@ -1055,6 +1060,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   currentTree->SetBranchAddress("tightestMVAWP",        &tightestMVAWP);
   currentTree->SetBranchAddress("mvaPOGTrig",           &mvaPOGTrig);
   currentTree->SetBranchAddress("mvaPOGNonTrig",        &mvaPOGNonTrig);
+  currentTree->SetBranchAddress("isTriggerElectron",    &isTriggerElectron);
   currentTree->SetBranchAddress("mitMVA",               &mitMVA);
   currentTree->SetBranchAddress("tightestAntiEMVAWP",   &tightestAntiEMVAWP);
   currentTree->SetBranchAddress("tightestAntiEWP",      &tightestAntiECutWP);
@@ -1172,18 +1178,17 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     int veto  = -99;
     vector<int> indexes;
     for(unsigned int l = 0 ; l < jets->size() ; l++){
-      if((*jets)[l].Pt()>MINPt1 && TMath::Abs((*jets)[l].Eta())<MAXEta){
+      if((*jets)[l].Pt()>MINPt1 && TMath::Abs((*jets)[l].Eta())<MAXEta && (*jetPUWP)[l*3]>MINJetID)
 	indexes.push_back(l);
-	if((*jetsBtagHE)[l] > 3.3) nJets20BTagged++;
-      }
     }
-    nJets20 = indexes.size();
     if(indexes.size()>0) lead  = indexes[0];  
     if(indexes.size()>1) trail = indexes[1];  
     if(indexes.size()>2) veto  = indexes[2];
 
     for(unsigned int v = 0 ; v < indexes.size() ; v++){
       if( (*jets)[indexes[v]].Pt() > 30 ) nJets30++;
+      if( (*jets)[indexes[v]].Pt() > 20 ) nJets20++;
+      if( (*jets)[indexes[v]].Pt() > 20 && (*jetsBtagCSV)[indexes[v]] > 0.679 ) nJets20BTagged++;
     }
 
     //1 or 2 jet preselection
@@ -1415,6 +1420,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     mvaPOGTrig_         = mvaPOGTrig;
     mvaPOGNonTrig_      = mvaPOGNonTrig;
     mitMVA_             = mitMVA;
+    isTriggerElectron_  = isTriggerElectron;
 
     tightestAntiECutWP_ = tightestAntiECutWP;
     tightestAntiEMVAWP_ = tightestAntiEMVAWP;
@@ -1605,6 +1611,8 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     }
  
      isTauLegMatched_ = isTauLegMatched;
+     isElecLegMatched_ = isElecLegMatched;
+
     if((std::string(sample.Data())).find("Run2011")==string::npos)
       leptFakeTau      = (isTauLegMatched==0 && (*genDiTauLegsP4)[1].E()>0) ? 1 : 0;
     else 
@@ -1793,6 +1801,9 @@ int main(int argc, const char* argv[])
 
   //makeTrees_ElecTauStream("",           argv[1], atof(argv[2]), inputDir);
   makeTrees_ElecTauStream("Raw",        argv[1], atof(argv[2]), inputDir);
+
+  return 0;
+
   if( string(argv[1]).find("Run2011-ElecTau-All")!=string::npos )
     return 0;
   //makeTrees_ElecTauStream("TauUp",      argv[1], atof(argv[2]), inputDir);
