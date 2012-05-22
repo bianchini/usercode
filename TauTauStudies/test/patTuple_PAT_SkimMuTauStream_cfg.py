@@ -19,24 +19,25 @@ else:
     process.GlobalTag.globaltag = cms.string('GR_R_42_V23::All') #GR_R_42_V19
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source.fileNames = cms.untracked.vstring(
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/FCAE02CE-7800-E111-A2CB-0022198904D4.root'
-    'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall11/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/AODSIM/PU_S6_START42_V14B-v1/0000/F4ACA82D-FDF8-E011-A31A-E0CB4E29C51E.root',
+    #'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall11/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/AODSIM/PU_S6_START42_V14B-v1/0000/F4ACA82D-FDF8-E011-A31A-E0CB4E29C51E.root',
     #'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat/store/user/akalinow/TauPlusX/428_mutau_skim_Run2011A-05Aug2011-v1_v4/b8ede77eca865a3526029ca11820f552/tautauSkimmAOD_9_1_coF.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/akalinow/TauPlusX/428_mutau_skim_Run2011A-05Aug2011-v1_v4/b8ede77eca865a3526029ca11820f552/tautauSkimmAOD_9_1_coF.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/FCAE02CE-7800-E111-A2CB-0022198904D4.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/rbonieck/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/428_mutau_Fall11_skimNoTauIsol_v1/c69db8fd1d6ad63518141f89915d27aa/tautauSkimmAOD_87_1_poE.root'
     #'file:./root/pickevents.root',
-    #'file:./root/syncSkim_5_1_vnT.root',
+    #'file:./root/GluGluToHToTauTau_M-125_7TeV-powheg-pythia6_12628F24-31FB-E011-883A-90E6BA19A248.root',
+    'file:./root/VBF_HToTauTau_M-125_7TeV-powheg-pythia6-tauola_668A54D7-53F8-E011-9D81-E0CB4E29C502.root',
     )
 
-#process.source.eventsToProcess = cms.untracked.VEventRange(
-#    '1:751063'
-#    )
+process.source.eventsToProcess = cms.untracked.VEventRange(
+    '1:82155','1:172226','1:78770'
+    )
 ################### event content ##################
 
 process.printEventContent = cms.EDAnalyzer("EventContentAnalyzer")
@@ -501,7 +502,7 @@ process.muPtEtaID = cms.EDFilter(
                      " && globalTrack.hitPattern.numberOfValidMuonHits>0"+                     
                      " && numberOfMatchedStations>1"+                     
                      " && innerTrack.hitPattern.numberOfValidPixelHits>0"+
-                     " && track.hitPattern.trackerLayersWithMeasurement > 8)"+
+                     " && track.hitPattern.trackerLayersWithMeasurement > 5)"+
                      " || userInt('isPFMuon')>0.5)"
                      ),
     filter = cms.bool(False)
@@ -537,7 +538,8 @@ process.tauPtEtaID  = cms.EDFilter(
     src = cms.InputTag("selectedPatTausUserEmbedded"),
     cut = cms.string(process.tauPtEta.cut.value()+
                      " && tauID('decayModeFinding')>0.5"+
-                     " && abs(userFloat('dzWrtPV'))<0.2"),
+                     " && abs(userFloat('dzWrtPV'))<0.2"
+                     ),
     filter = cms.bool(False)
     )
 process.atLeastOneMuTautauPtEtaID = process.atLeastOneMuTau.clone(

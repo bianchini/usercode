@@ -118,15 +118,23 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
     double ip3dPVub    =  -99.;
     double ip3dPVubErr =  -99.;
 
+
+    //std::cout << "Muon Pt " << aMuon.pt() << std::endl;
     if(vertexes->size()!=0 && aMuon.isGlobalMuon()){
       dxyWrtPV = (aMuon.globalTrack())->dxy( (*vertexes)[0].position() ) ;
       dzWrtPV  = (aMuon.globalTrack())->dz( (*vertexes)[0].position() ) ;
+      //std::cout << "Is global " << dxyWrtPV << ", " << dzWrtPV << std::endl;
     }
     // if it is at least tracker, than use the inner track
     if (vertexes->size()!=0 && aMuon.isTrackerMuon()){
       dxyWrtPV = (aMuon.innerTrack())->dxy( (*vertexes)[0].position() ) ;
       dzWrtPV  = (aMuon.innerTrack())->dz( (*vertexes)[0].position() ) ;
+      //std::cout << "Is tracker " << dxyWrtPV << ", " << dzWrtPV << std::endl;
     }
+
+
+    //for(unsigned int k = 0 ; k < vertexes->size() ; k++)
+    //std::cout << "Vertex " << k << " => z= " << ((*vertexes)[k].position()).z() <<  std::endl;
 
     aMuon.addUserFloat("dxyWrtPV",dxyWrtPV);
     aMuon.addUserFloat("dzWrtPV",dzWrtPV);
