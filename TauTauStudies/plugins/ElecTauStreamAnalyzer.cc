@@ -1666,7 +1666,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     if( leg2->tauID("againstElectronTight")<0.5 && leg2->tauID("againstElectronMVA")>0.5) tightestAntiEWP_ = 2;
     if( leg2->tauID("againstElectronTight")>0.5 && leg2->tauID("againstElectronMVA")>0.5) tightestAntiEWP_ = 3;
 
-    cout << leg2->tauID("againstElectronLooseMVA2") << endl;
+    //cout << leg2->tauID("againstElectronLooseMVA2") << endl;
 
     tightestAntiEMVAWP_ = 0;
     if( leg2->tauID("againstElectronLooseMVA2")  >0.5 && 
