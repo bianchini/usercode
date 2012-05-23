@@ -130,6 +130,7 @@ process.fjSequence = cms.Sequence(process.kt6PFJets+
 
 # load the PU JetID sequence
 process.load("CMGTools.External.pujetidsequence_cff")
+process.puJetId.algos.label = 'full_5x'
 
 ################### met ################################
 
