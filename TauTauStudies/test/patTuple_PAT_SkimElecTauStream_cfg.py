@@ -76,7 +76,7 @@ process.tauPtEtaIDAgMuAgElecFilter = cms.EDFilter(
 process.HLTFilter = cms.EDFilter(
     "HLTHighLevel",
     TriggerResultsTag  = cms.InputTag("TriggerResults","","HLT"),
-    HLTPaths           = cms.vstring("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v1"),                                     
+    HLTPaths           = cms.vstring("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v4"),                                     
     eventSetupPathsKey = cms.string(''),
     andOr              = cms.bool(True),
     throw              = cms.bool(False)

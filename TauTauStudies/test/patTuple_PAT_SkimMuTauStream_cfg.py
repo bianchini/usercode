@@ -25,7 +25,9 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 10
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source.fileNames = cms.untracked.vstring(
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/Test_52X/439eae0c5ab5b9ee314b9645ffd1dade/DYJets_5_1_stC.root'
+    'rfio:/dpm/datagrid.cea.fr/home/cms/trivcat/store/user/rbonieck/VBF_HToTauTau_M-155_8TeV-powheg-pythia6/523_mutau_skim_v2/fa99245d21209c8cd29afdb5fab22d7f/tautauSkimmAOD_9_1_X4A.root'
+
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/Test_52X/439eae0c5ab5b9ee314b9645ffd1dade/DYJets_5_1_stC.root'
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -74,7 +76,7 @@ process.atLeast1selectedDiTauFilter = cms.EDFilter(
 process.HLTFilter = cms.EDFilter(
     "HLTHighLevel",
     TriggerResultsTag  = cms.InputTag("TriggerResults","","HLT"),
-    HLTPaths           = cms.vstring("HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v1"),
+    HLTPaths           = cms.vstring("HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v4"),
     eventSetupPathsKey = cms.string(''),
     andOr              = cms.bool(True),
     throw              = cms.bool(False)
