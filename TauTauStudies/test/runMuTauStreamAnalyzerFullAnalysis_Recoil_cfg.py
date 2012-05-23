@@ -13,7 +13,8 @@ process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
 runOnMC     = True
-doSVFitReco = False
+doSVFitReco = True
+usePFMEtMVA = True
 
 if runOnMC:
     print "Running on MC"
@@ -22,196 +23,59 @@ else:
         
 if runOnMC:
     process.GlobalTag.globaltag = cms.string('START52_V7::All')
-
 else:
     process.GlobalTag.globaltag = cms.string('GR_R_52_V7::All')
+                
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 50
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    #'file:./patTuples_MuTauStream.root'
-
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_100_1_I8e.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_101_1_P8u.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_102_1_sG6.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_103_1_Li8.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_104_1_Fgr.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_105_1_zFG.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_106_1_zvC.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_107_1_kMf.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_108_1_Z4o.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_10_1_Yo7.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_110_1_ggd.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_111_1_SeT.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_112_1_1lY.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_113_1_6vR.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_114_1_NC0.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012-Summer12-50_DYJets-MuTau-madgraph-50_skim/91f7bad7a7ab94b1978a2d9f0d8f649d/patTuples_MuTauStream_115_1_b9F.root',
-
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_100_1_V3f.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_101_1_UFq.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_10_1_Ath.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_11_1_fGK.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_12_1_veW.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_13_1_vN3.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_14_1_jeL.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_15_1_4gS.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_16_1_3VO.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_17_1_vIm.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_18_1_U3T.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_19_1_cgu.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_1_1_Y0i.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_20_1_bt8.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_21_1_VpR.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_22_1_8OE.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_23_1_nr4.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_24_1_u2T.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_25_1_whT.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_26_1_Ion.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_27_1_6oe.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_28_1_isB.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_29_1_Y73.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_2_1_De8.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_30_1_1YF.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_31_1_Vbj.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_32_1_Iih.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_33_1_49D.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_34_1_23M.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_35_1_Tvg.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_36_1_U65.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_37_1_iMB.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_38_1_rmw.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_39_1_Snz.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBFHToTauTau_M-120_8TeV-pythia6/MuTauStream-30Mar2012-Summer12-50_VBFH120-MuTau-pythia-50_skim/867500062c684278db589e0b621afc8f/patTuples_MuTauStream_3_1_Euz.root',
-
-
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_100_2_YSa.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_101_2_tgJ.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_102_2_9zL.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_103_1_FvJ.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_104_2_enx.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_105_2_9A1.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_107_2_WbE.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_108_1_8Zu.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_109_1_I76.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_10_2_QML.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_11_2_fwd.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_12_1_soI.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_13_1_jtq.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_15_2_MLo.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_16_2_1lH.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_17_2_s3G.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_18_1_BXJ.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_19_1_e67.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_1_1_IS7.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_20_1_zIb.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_21_2_ksw.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_22_2_5yr.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_23_1_zFn.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_24_1_f2w.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_25_2_U3z.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_26_1_Sjw.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_29_2_uvn.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_2_1_ers.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_30_1_Ydo.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_31_2_ZYR.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_32_1_SaM.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_33_2_2rm.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_34_1_QTQ.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_35_2_eMb.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_36_2_9XZ.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_37_2_Axu.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_38_2_4wf.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_39_1_JAj.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_3_1_JDL.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_40_2_lIR.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_41_1_N7C.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_42_1_EAr.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_43_2_KiP.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_44_2_31H.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_45_1_NG3.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_46_1_uUg.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_47_2_cYC.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_48_2_kB9.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_49_2_wam.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_4_1_hJO.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_50_2_B5m.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_51_2_iPo.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_52_2_VXq.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_53_1_kRx.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_54_1_D4p.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_55_2_HAr.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_56_2_wFL.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_57_1_Ptb.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_58_1_MMR.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_59_1_HNg.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_5_2_apl.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_60_2_dRE.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_61_2_HVf.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_62_2_8NP.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_63_1_f8j.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_64_1_S3w.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_65_1_ojW.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_66_1_dvk.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_68_1_sQj.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_69_1_jab.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_6_1_fHc.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_70_1_Pks.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_71_1_cdo.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_72_1_ynK.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_73_2_BCr.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_74_2_Rsu.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_75_1_EUu.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_76_1_YQm.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_78_2_gxo.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_7_1_Min.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_80_1_XGF.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_81_2_MR7.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_82_1_yQE.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_83_1_F9e.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_84_2_RpW.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_85_2_Pom.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_87_1_HRi.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_88_2_1lf.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_89_2_kaS.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_8_1_IWq.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_90_1_eBo.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_92_2_OGR.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_93_1_d2F.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_94_1_DZ5.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_95_1_AWJ.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_96_2_XEj.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_97_1_JOL.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_98_1_bHV.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_99_1_SAu.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-madgraph-Tarball-v2_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_9_1_azg.root'
-
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-Tarball_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_10_1_gOR.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-Tarball_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_11_1_b5k.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-Tarball_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_12_1_zot.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-Tarball_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_13_1_t63.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-Tarball_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_1_1_3xN.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-Tarball_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_2_1_o8H.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-Tarball_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_3_1_QyJ.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-Tarball_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_4_1_iPl.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-Tarball_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_5_1_Wkg.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-Tarball_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_6_1_SzB.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-Tarball_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_7_1_zqZ.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-Tarball_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_8_1_7AW.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/MuTauStream-30Mar2012_DYJets-MuTau-Tarball_skim/788ef0e87cfaf0843a8d9198e4ce2a38/patTuples_MuTauStream_9_1_FHW.root',
+    'file:./patTuples_MuTauStream.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-04May2012-Reload_DYJets-MuTau-50-madgraph-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_9_1_CS7.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/MuTauStream-04May2012-Reload-05AugReReco/d7ab9a49aa7555b45f2fd6a9510b15e8/patTuples_MuTauStream_9_2_bFX.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DoubleMu/MuTauStream-04May2012-Reload-RunBPromptReco-v1-Embedded/f5416ddeffc52a24fc875c17bf3889c0/patTuples_MuTauStream_8_3_C7R.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_1_1_QFt.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_2_1_QDr.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_3_1_IXG.root',
     )
     )
+
+#process.source.eventsToProcess = cms.untracked.VEventRange(
+#    '1:69216'
+#    )
 
 process.allEventsFilter = cms.EDFilter(
     "AllEventsFilter"
     )
 
 ###################################################################################
+
+process.load("RecoMET.METProducers.mvaPFMET_cff")
+if runOnMC:
+    process.calibratedAK5PFJetsForPFMEtMVA.correctors = cms.vstring("ak5PFL1FastL2L3")
+else:
+    process.calibratedAK5PFJetsForPFMEtMVA.correctors = cms.vstring("ak5PFL1FastL2L3Residual")
+    
+
+process.pfMEtMVA.srcLeptons = cms.VInputTag( cms.InputTag('muPtEtaIDIso'), cms.InputTag('tauPtEtaIDAgMuAgElecIso') )
+
+process.load("PhysicsTools.PatAlgos.producersLayer1.metProducer_cfi")
+process.patPFMetByMVA = process.patMETs.clone(
+    metSource = cms.InputTag('pfMEtMVA'),
+    addMuonCorrections = cms.bool(False),
+    genMETSource = cms.InputTag('genMetTrue')
+    )
+
+process.pfMEtMVA.srcVertices = cms.InputTag("selectedPrimaryVertices")
+process.patPFMetByMVA.addGenMET = cms.bool(False)
+
+###################################################################################
+
 process.rescaledMET = cms.EDProducer(
     "MEtRescalerProducer",
     metTag         = cms.InputTag("metRecoilCorrector",  "N"),
@@ -228,24 +92,34 @@ process.rescaledMET = cms.EDProducer(
     verbose = cms.bool(False)
     )
 
+if usePFMEtMVA:
+    process.rescaledMET.metTag = cms.InputTag("patPFMetByMVA")
+process.rescaledMETRaw = process.rescaledMET.clone( metTag = cms.InputTag("metRecoilCorrector",  "N") )
+
+
 process.rescaledMETjet = process.rescaledMET.clone(
     unClusterShift = cms.double(0.10),
     tauShift       = cms.vdouble(0.0,0.0),
     muonShift      = cms.vdouble(0.0,0.0),
     electronShift  = cms.vdouble(0.0,0.0),
     )
+process.rescaledMETRawjet = process.rescaledMETjet.clone( metTag = cms.InputTag("metRecoilCorrector",  "N") )
+
 process.rescaledMETtau = process.rescaledMET.clone(
     unClusterShift = cms.double(0.0),
     tauShift       = cms.vdouble(0.03,0.03),
     muonShift      = cms.vdouble(0.0,0.0),
     electronShift  = cms.vdouble(0.0,0.0),
     )
+process.rescaledMETRawtau = process.rescaledMETtau.clone( metTag = cms.InputTag("metRecoilCorrector",  "N") )
+
 process.rescaledMETmuon = process.rescaledMET.clone(
     unClusterShift = cms.double(0.0),
     tauShift       = cms.vdouble(0.0,0.0),
     muonShift      = cms.vdouble(0.01,0.01),
     electronShift  = cms.vdouble(0.0,0.0),
     )
+process.rescaledMETRawmuon = process.rescaledMETmuon.clone( metTag = cms.InputTag("metRecoilCorrector",  "N") )
 
 process.rescaledTaus = cms.EDProducer(
     "TauRescalerProducer",
@@ -273,6 +147,9 @@ process.rescaledObjects = cms.Sequence(
     process.rescaledMETjet+
     process.rescaledMETtau+
     process.rescaledMETmuon+
+    process.rescaledMETRawjet+
+    process.rescaledMETRawtau+
+    process.rescaledMETRawmuon+
     process.rescaledTaus+
     process.rescaledMuons+
     process.rescaledMuonsRel
@@ -284,7 +161,7 @@ process.metRecoilCorrector = cms.EDProducer(
     "MEtRecoilCorrectorProducer",
     genParticleTag      = cms.InputTag("genParticles"),
     jetTag              = cms.InputTag("selectedPatJets"),
-    metTag              = cms.InputTag("patMETsPF"),
+    metTag              = cms.InputTag("patMETsPFlow"),
     electronTag         = cms.InputTag(""),
     muonTag             = cms.InputTag("muPtEtaIDIso"),
     tauTag              = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
@@ -309,10 +186,23 @@ process.diTau.srcLeg2  = cms.InputTag("tauPtEtaIDAgMuAgElecIso")
 process.diTau.srcMET   = cms.InputTag("metRecoilCorrector",  "N")
 process.diTau.dRmin12  = cms.double(0.5)
 process.diTau.doSVreco = cms.bool(doSVFitReco)
+if usePFMEtMVA:
+    process.diTau.srcMET = cms.InputTag("patPFMetByMVA")
 
 if not runOnMC:
     process.diTau.srcGenParticles = ""
         
+process.pfMEtMVACov = cms.EDProducer(
+    "PFMEtSignCovMatrixUnembedder",
+    src = cms.InputTag("patPFMetByMVA")
+    )
+
+if usePFMEtMVA:
+    process.diTau.nSVfit.psKine_MEt_logM_fit.config.event.srcMEt = cms.InputTag("patPFMetByMVA")
+    process.diTau.nSVfit.psKine_MEt_logM_fit.config.event.likelihoodFunctions[0].srcMEtCovMatrix = cms.InputTag("pfMEtMVACov")
+    process.diTau.nSVfit.psKine_MEt_logM_int.config.event.srcMEt = cms.InputTag("patPFMetByMVA")
+    process.diTau.nSVfit.psKine_MEt_logM_int.config.event.likelihoodFunctions[0].srcMEtCovMatrix = cms.InputTag("pfMEtMVACov")
+
 process.selectedDiTau = cms.EDFilter(
     "MuTauPairSelector",
     src = cms.InputTag("diTau"),
@@ -325,32 +215,83 @@ process.selectedDiTauCounter = cms.EDFilter(
     maxNumber = cms.uint32(999),
     )
 
+
+
+process.diTauRaw = process.allMuTauPairs.clone()
+process.diTauRaw.srcLeg1  = cms.InputTag("muPtEtaIDIso")
+process.diTauRaw.srcLeg2  = cms.InputTag("tauPtEtaIDAgMuAgElecIso")
+process.diTauRaw.srcMET   = cms.InputTag("metRecoilCorrector",  "N")
+process.diTauRaw.dRmin12  = cms.double(0.5)
+process.diTauRaw.doSVreco = cms.bool(doSVFitReco)
+
+if not runOnMC:
+    process.diTauRaw.srcGenParticles = ""
+        
+process.diTauRaw.nSVfit.psKine_MEt_logM_fit.config.event.srcMEt = cms.InputTag("metRecoilCorrector",  "N")
+process.diTauRaw.nSVfit.psKine_MEt_logM_int.config.event.srcMEt = cms.InputTag("metRecoilCorrector",  "N")
+
+process.selectedDiTauRaw =  process.selectedDiTau.clone(   src = cms.InputTag("diTauRaw") )
+process.selectedDiTauRawCounter =  process.selectedDiTauCounter.clone(   src = cms.InputTag("selectedDiTauRaw") )
+
+
 #######################################################################
+#######################################################################
+
 
 process.diTauJetUp =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                           srcLeg1 = cms.InputTag("muPtEtaIDIso"),
                                           srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
                                           srcMET  = cms.InputTag("rescaledMETjet",  "UNNNU")
                                           )
+process.pfMEtMVACovJetUp   = process.pfMEtMVACov.clone(src = cms.InputTag("rescaledMETjet",  "UNNNU"))
 process.selectedDiTauJetUp = process.selectedDiTau.clone(src = cms.InputTag("diTauJetUp") )
 process.selectedDiTauJetUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauJetUp"))
+
+process.diTauRawJetUp                = process.diTauRaw.clone(doSVreco = cms.bool(doSVFitReco),
+                                                              srcLeg1 = cms.InputTag("muPtEtaIDIso"),
+                                                              srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
+                                                              srcMET  = cms.InputTag("rescaledMETRawjet",  "UNNNU")
+                                                              )
+process.selectedDiTauRawJetUp        = process.selectedDiTauRaw.clone( src = cms.InputTag("diTauRawJetUp") )
+process.selectedDiTauRawJetUpCounter = process.selectedDiTauRawCounter.clone(src =  cms.InputTag("selectedDiTauRawJetUp"))
+
+
+#######################################################################
+
 
 process.diTauJetDown =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                             srcLeg1 = cms.InputTag("muPtEtaIDIso"),
                                             srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
                                             srcMET  = cms.InputTag("rescaledMETjet",  "DNNND")
                                             )
+process.pfMEtMVACovJetDown   = process.pfMEtMVACov.clone(src = cms.InputTag("rescaledMETjet",  "DNNND"))
 process.selectedDiTauJetDown = process.selectedDiTau.clone(src = cms.InputTag("diTauJetDown") )
 process.selectedDiTauJetDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauJetDown"))
 
+process.diTauRawJetDown                = process.diTauRaw.clone(doSVreco = cms.bool(doSVFitReco),
+                                                                srcLeg1 = cms.InputTag("muPtEtaIDIso"),
+                                                                srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
+                                                                srcMET  = cms.InputTag("rescaledMETRawjet",  "DNNND")
+                                                                )
+process.selectedDiTauRawJetDown        = process.selectedDiTauRaw.clone( src = cms.InputTag("diTauRawJetDown") )
+process.selectedDiTauRawJetDownCounter = process.selectedDiTauRawCounter.clone(src =  cms.InputTag("selectedDiTauRawJetDown"))
+
+#######################################################################
 
 process.diTauMEtResponseUp =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
-                                          srcLeg1 = cms.InputTag("muPtEtaIDIso"),
-                                          srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
-                                          srcMET  = cms.InputTag("metRecoilCorrector",  "ResponseU")
-                                          )
+                                                  srcLeg1 = cms.InputTag("muPtEtaIDIso"),
+                                                  srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
+                                                  srcMET  = cms.InputTag("metRecoilCorrector",  "ResponseU")
+                                                  )
 process.selectedDiTauMEtResponseUp = process.selectedDiTau.clone(src = cms.InputTag("diTauMEtResponseUp") )
 process.selectedDiTauMEtResponseUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMEtResponseUp"))
+
+process.diTauRawMEtResponseUp                = process.diTauMEtResponseUp.clone(  srcMET  = cms.InputTag("metRecoilCorrector",  "ResponseU") )
+process.selectedDiTauRawMEtResponseUp        = process.selectedDiTauMEtResponseUp.clone( src = cms.InputTag("diTauRawMEtResponseUp") )
+process.selectedDiTauRawMEtResponseUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauRawMEtResponseUp"))
+
+#######################################################################
+
 
 process.diTauMEtResponseDown =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                             srcLeg1 = cms.InputTag("muPtEtaIDIso"),
@@ -359,6 +300,12 @@ process.diTauMEtResponseDown =  process.diTau.clone(doSVreco = cms.bool(doSVFitR
                                             )
 process.selectedDiTauMEtResponseDown = process.selectedDiTau.clone(src = cms.InputTag("diTauMEtResponseDown") )
 process.selectedDiTauMEtResponseDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMEtResponseDown"))
+
+process.diTauRawMEtResponseDown                = process.diTauMEtResponseDown.clone(  srcMET  = cms.InputTag("metRecoilCorrector",  "ResponseU") )
+process.selectedDiTauRawMEtResponseDown        = process.selectedDiTauMEtResponseDown.clone( src = cms.InputTag("diTauRawMEtResponseDown") )
+process.selectedDiTauRawMEtResponseDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauRawMEtResponseDown"))
+
+#######################################################################
 
 
 process.diTauMEtResolutionUp =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
@@ -369,6 +316,12 @@ process.diTauMEtResolutionUp =  process.diTau.clone(doSVreco = cms.bool(doSVFitR
 process.selectedDiTauMEtResolutionUp = process.selectedDiTau.clone(src = cms.InputTag("diTauMEtResolutionUp") )
 process.selectedDiTauMEtResolutionUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMEtResolutionUp"))
 
+process.diTauRawMEtResolutionUp                = process.diTauMEtResolutionUp.clone(  srcMET  = cms.InputTag("metRecoilCorrector",  "ResolutionU") )
+process.selectedDiTauRawMEtResolutionUp        = process.selectedDiTauMEtResolutionUp.clone( src = cms.InputTag("diTauRawMEtResolutionUp") )
+process.selectedDiTauRawMEtResolutionUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauRawMEtResolutionUp"))
+
+#######################################################################
+
 process.diTauMEtResolutionDown =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                             srcLeg1 = cms.InputTag("muPtEtaIDIso"),
                                             srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
@@ -377,40 +330,80 @@ process.diTauMEtResolutionDown =  process.diTau.clone(doSVreco = cms.bool(doSVFi
 process.selectedDiTauMEtResolutionDown = process.selectedDiTau.clone(src = cms.InputTag("diTauMEtResolutionDown") )
 process.selectedDiTauMEtResolutionDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMEtResolutionDown"))
 
+process.diTauRawMEtResolutionDown                = process.diTauMEtResolutionDown.clone(  srcMET  = cms.InputTag("metRecoilCorrector",  "ResolutionU") )
+process.selectedDiTauRawMEtResolutionDown        = process.selectedDiTauMEtResolutionDown.clone( src = cms.InputTag("diTauRawMEtResolutionDown") )
+process.selectedDiTauRawMEtResolutionDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauRawMEtResolutionDown"))
+
+
+#######################################################################
 
 process.diTauMuUp = process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                         srcLeg1 = cms.InputTag("rescaledMuons","U"),
                                         srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
                                         srcMET  = cms.InputTag("rescaledMETmuon","NNUNN")
                                         )
+process.pfMEtMVACovMuUp   = process.pfMEtMVACov.clone(src = cms.InputTag("rescaledMETmuon",  "NNUNN"))
 process.selectedDiTauMuUp = process.selectedDiTau.clone(src = cms.InputTag("diTauMuUp") )
 process.selectedDiTauMuUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMuUp"))
+
+process.diTauRawMuUp                = process.diTauMuUp.clone(  srcMET  = cms.InputTag("rescaledMETRawmuon",  "NNUNN") )
+process.selectedDiTauRawMuUp        = process.selectedDiTauMuUp.clone( src = cms.InputTag("diTauRawMuUp") )
+process.selectedDiTauRawMuUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauRawMuUp"))
+
+#######################################################################
 
 process.diTauMuDown = process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                           srcLeg1 = cms.InputTag("rescaledMuons","D"),
                                           srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
                                           srcMET  = cms.InputTag("rescaledMETmuon","NNDNN")
                                           )
+process.pfMEtMVACovMuDown   = process.pfMEtMVACov.clone(src = cms.InputTag("rescaledMETmuon",  "NNDNN"))
 process.selectedDiTauMuDown = process.selectedDiTau.clone(src = cms.InputTag("diTauMuDown") )
 process.selectedDiTauMuDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMuDown"))
 
+process.diTauRawMuDown                = process.diTauMuDown.clone(  srcMET  = cms.InputTag("rescaledMETRawmuon",  "NNDNN") )
+process.selectedDiTauRawMuDown        = process.selectedDiTauMuDown.clone( src = cms.InputTag("diTauRawMuDown") )
+process.selectedDiTauRawMuDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauRawMuDown"))
 
+#######################################################################
 
 process.diTauTauUp = process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                          srcLeg1 = cms.InputTag("muPtEtaIDIso"),
                                          srcLeg2 = cms.InputTag("rescaledTaus", "U"),
                                          srcMET  = cms.InputTag("rescaledMETtau","NNNUN")
                                          )
+process.pfMEtMVACovTauUp   = process.pfMEtMVACov.clone(src = cms.InputTag("rescaledMETtau",  "NNNUN"))
 process.selectedDiTauTauUp = process.selectedDiTau.clone(src = cms.InputTag("diTauTauUp") )
 process.selectedDiTauTauUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauTauUp"))
+
+process.diTauRawTauUp                = process.diTauRaw.clone(doSVreco = cms.bool(doSVFitReco),
+                                                              srcLeg1 = cms.InputTag("muPtEtaIDIso"),
+                                                              srcLeg2 = cms.InputTag("rescaledTaus", "U"),
+                                                              srcMET  = cms.InputTag("rescaledMETRawtau","NNNUN")
+                                                              )
+process.selectedDiTauRawTauUp        = process.selectedDiTauRaw.clone( src = cms.InputTag("diTauRawTauUp") )
+process.selectedDiTauRawTauUpCounter = process.selectedDiTauRawCounter.clone(src =  cms.InputTag("selectedDiTauRawTauUp"))
+
+#######################################################################
 
 process.diTauTauDown = process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                            srcLeg1 = cms.InputTag("muPtEtaIDIso"),
                                            srcLeg2 = cms.InputTag("rescaledTaus", "D"),
                                            srcMET  = cms.InputTag("rescaledMETtau","NNNDN")
                                            )
+process.pfMEtMVACovTauDown   = process.pfMEtMVACov.clone(src = cms.InputTag("rescaledMETtau",  "NNNDN"))
 process.selectedDiTauTauDown = process.selectedDiTau.clone(src = cms.InputTag("diTauTauDown") )
 process.selectedDiTauTauDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauTauDown"))
+
+process.diTauRawTauDown                =  process.diTauRaw.clone(doSVreco = cms.bool(doSVFitReco),
+                                                                 srcLeg1 = cms.InputTag("muPtEtaIDIso"),
+                                                                 srcLeg2 = cms.InputTag("rescaledTaus", "D"),
+                                                                 srcMET  = cms.InputTag("rescaledMETRawtau","NNNDN")
+                                                                 )
+process.selectedDiTauRawTauDown        = process.selectedDiTauRaw.clone( src = cms.InputTag("diTauRawTauDown") )
+process.selectedDiTauRawTauDownCounter = process.selectedDiTauRawCounter.clone(src =  cms.InputTag("selectedDiTauRawTauDown"))
+
+#######################################################################
 
 process.allDiTau = cms.Sequence(
     (process.diTau*process.selectedDiTau*process.selectedDiTauCounter)+
@@ -423,21 +416,45 @@ process.allDiTau = cms.Sequence(
     (process.diTauMuUp*process.selectedDiTauMuUp*process.selectedDiTauMuUpCounter +
      process.diTauMuDown*process.selectedDiTauMuDown*process.selectedDiTauMuDownCounter) +
     (process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter +
-     process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter)
+     process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter)+
+     (process.diTauRaw*process.selectedDiTauRaw*process.selectedDiTauRawCounter)+
+    (process.diTauRawJetUp*process.selectedDiTauRawJetUp*process.selectedDiTauRawJetUpCounter +
+     process.diTauRawJetDown*process.selectedDiTauRawJetDown*process.selectedDiTauRawJetDownCounter) +
+    (process.diTauRawMEtResolutionUp*process.selectedDiTauRawMEtResolutionUp*process.selectedDiTauRawMEtResolutionUpCounter +
+     process.diTauRawMEtResolutionDown*process.selectedDiTauRawMEtResolutionDown*process.selectedDiTauRawMEtResolutionDownCounter) +
+    (process.diTauRawMEtResponseUp*process.selectedDiTauRawMEtResponseUp*process.selectedDiTauRawMEtResponseUpCounter +
+     process.diTauRawMEtResponseDown*process.selectedDiTauRawMEtResponseDown*process.selectedDiTauRawMEtResponseDownCounter) +
+    (process.diTauRawMuUp*process.selectedDiTauRawMuUp*process.selectedDiTauRawMuUpCounter +
+     process.diTauRawMuDown*process.selectedDiTauRawMuDown*process.selectedDiTauRawMuDownCounter) +
+    (process.diTauRawTauUp*process.selectedDiTauRawTauUp*process.selectedDiTauRawTauUpCounter +
+     process.diTauRawTauDown*process.selectedDiTauRawTauDown*process.selectedDiTauRawTauDownCounter)
     )
+
+if usePFMEtMVA:
+    process.allDiTau.replace(process.diTau,process.pfMEtMVACov*process.diTau)
+    process.allDiTau.replace(process.diTauJetUp,process.pfMEtMVACovJetUp*process.diTauJetUp)
+    process.allDiTau.replace(process.diTauJetDown,process.pfMEtMVACovJetDown*process.diTauJetDown)
+    process.allDiTau.replace(process.diTauMuUp,process.pfMEtMVACovMuUp*process.diTauMuUp)
+    process.allDiTau.replace(process.diTauMuDown,process.pfMEtMVACovMuDown*process.diTauMuDown)
+    process.allDiTau.replace(process.diTauTauUp,process.pfMEtMVACovTauUp*process.diTauTauUp)
+    process.allDiTau.replace(process.diTauTauDown,process.pfMEtMVACovTauDown*process.diTauTauDown)
+
 #######################################################################
 
 process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
-    cut = cms.string("tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 && pt>20 && abs(eta)<2.3"),
+    cut = cms.string("pt>20 && abs(eta)<2.3"+
+                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"
+                     ),
     filter = cms.bool(False)
     )
-
-process.tauPtEtaIDAgMuAgElecIsoPtRel = cms.EDFilter(
+process.tauPtEtaIDAgMuAgElecIsoPtRel  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
-    cut = cms.string("tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 && pt>19 && abs(eta)<2.3"),
+    cut = cms.string("pt>19 && abs(eta)<2.3"+
+                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"
+                     ),
     filter = cms.bool(False)
     )
 
@@ -464,13 +481,13 @@ process.tauPtEtaIDAgMuAgElecIsoTauDownCounter = process.tauPtEtaIDAgMuAgElecIsoC
 process.muPtEtaIDIso  = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("muPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>15 && abs(eta)<2.4"),
+    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>15 && abs(eta)<2.1"),
     filter = cms.bool(False)
     )
 process.muPtEtaIDIsoPtRel  = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("muPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>14 && abs(eta)<2.4"),
+    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>14 && abs(eta)<2.1"),
     filter = cms.bool(False)
     )
 
@@ -522,7 +539,8 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     jets           = cms.InputTag("selectedPatJets"),
     newJets        = cms.InputTag(""),
     met            = cms.InputTag("metRecoilCorrector",  "N"),
-    rawMet         = cms.InputTag("patMETsPF"),
+    rawMet         = cms.InputTag("patMETsPFlow"),
+    mvaMet         = cms.InputTag("patPFMetByMVA"),
     muons          = cms.InputTag("muPtEtaIDIso"),
     muonsRel       = cms.InputTag("muPtEtaRelID"),
     vertices       = cms.InputTag("selectedPrimaryVertices"),
@@ -534,7 +552,23 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     minCorrPt      = cms.untracked.double(15.),
     minJetID       = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
     verbose        = cms.untracked.bool( False ),
+    doMuIsoMVA     = cms.bool( True ),
+    inputFileName0 = cms.FileInPath("Muon/MuonAnalysisTools/data/MuonIsoMVA_sixie-BarrelPt5To10_V0_BDTG.weights.xml"),
+    inputFileName1 = cms.FileInPath("Muon/MuonAnalysisTools/data/MuonIsoMVA_sixie-EndcapPt5To10_V0_BDTG.weights.xml"),
+    inputFileName2 = cms.FileInPath("Muon/MuonAnalysisTools/data/MuonIsoMVA_sixie-BarrelPt10ToInf_V0_BDTG.weights.xml"),
+    inputFileName3 = cms.FileInPath("Muon/MuonAnalysisTools/data/MuonIsoMVA_sixie-EndcapPt10ToInf_V0_BDTG.weights.xml"),                 
+    inputFileName4 = cms.FileInPath("Muon/MuonAnalysisTools/data/MuonIsoMVA_sixie-Tracker_V0_BDTG.weights.xml"),
+    inputFileName5 = cms.FileInPath("Muon/MuonAnalysisTools/data/MuonIsoMVA_sixie-Global_V0_BDTG.weights.xml"),
     )
+
+if usePFMEtMVA:
+    process.muTauStreamAnalyzer.met = cms.InputTag("patPFMetByMVA")
+
+process.muTauStreamAnalyzerRaw   = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRaw"),
+    met    = cms.InputTag("metRecoilCorrector",  "N"),
+    )
+
 process.muTauStreamAnalyzerJetUp   = process.muTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauJetUp"),
     met    =  cms.InputTag("rescaledMETjet",  "UNNNU"),
@@ -543,6 +577,16 @@ process.muTauStreamAnalyzerJetDown = process.muTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauJetDown"),
     met    =  cms.InputTag("rescaledMETjet",  "DNNND"),
     )
+process.muTauStreamAnalyzerRawJetUp   = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawJetUp"),
+    met    =  cms.InputTag("rescaledMETRawjet",  "UNNNU"),
+    )
+process.muTauStreamAnalyzerRawJetDown = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawJetDown"),
+    met    =  cms.InputTag("rescaledMETRawjet",  "DNNND"),
+    )
+
+
 process.muTauStreamAnalyzerMEtResolutionUp   = process.muTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauMEtResolutionUp"),
     met    =  cms.InputTag("metRecoilCorrector",  "ResolutionU"),
@@ -551,6 +595,16 @@ process.muTauStreamAnalyzerMEtResolutionDown = process.muTauStreamAnalyzer.clone
     diTaus =  cms.InputTag("selectedDiTauMEtResolutionDown"),
     met    =  cms.InputTag("metRecoilCorrector",  "ResolutionD"),
     )
+
+process.muTauStreamAnalyzerRawMEtResolutionUp   = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawMEtResolutionUp"),
+    met    =  cms.InputTag("metRecoilCorrector",  "ResolutionU"),
+    )
+process.muTauStreamAnalyzerRawMEtResolutionDown = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawMEtResolutionDown"),
+    met    =  cms.InputTag("metRecoilCorrector",  "ResolutionD"),
+    )
+
 process.muTauStreamAnalyzerMEtResponseUp   = process.muTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauMEtResponseUp"),
     met    =  cms.InputTag("metRecoilCorrector",  "ResponseU"),
@@ -559,6 +613,16 @@ process.muTauStreamAnalyzerMEtResponseDown = process.muTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauMEtResponseDown"),
     met    =  cms.InputTag("metRecoilCorrector",  "ResponseD"),
     )
+
+process.muTauStreamAnalyzerRawMEtResponseUp   = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawMEtResponseUp"),
+    met    =  cms.InputTag("metRecoilCorrector",  "ResponseU"),
+    )
+process.muTauStreamAnalyzerRawMEtResponseDown = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawMEtResponseDown"),
+    met    =  cms.InputTag("metRecoilCorrector",  "ResponseD"),
+    )
+
 process.muTauStreamAnalyzerMuUp    = process.muTauStreamAnalyzer.clone(
     diTaus   =  cms.InputTag("selectedDiTauMuUp"),
     met      =  cms.InputTag("rescaledMETmuon","NNUNN"),
@@ -571,6 +635,20 @@ process.muTauStreamAnalyzerMuDown  = process.muTauStreamAnalyzer.clone(
     muons    =  cms.InputTag("muPtEtaIDIsoMuDown"),
     muonsRel =  cms.InputTag("muPtEtaRelIDMuDown"),
     )
+
+process.muTauStreamAnalyzerRawMuUp    = process.muTauStreamAnalyzer.clone(
+    diTaus   =  cms.InputTag("selectedDiRawTauMuUp"),
+    met      =  cms.InputTag("rescaledMETRawmuon","NNUNN"),
+    muons    =  cms.InputTag("muPtEtaIDIsoMuUp"),
+    muonsRel =  cms.InputTag("muPtEtaRelIDMuUp"),
+    )
+process.muTauStreamAnalyzerRawMuDown  = process.muTauStreamAnalyzer.clone(
+    diTaus   =  cms.InputTag("selectedDiTauRawMuDown"),
+    met      =  cms.InputTag("rescaledMETRawmuon","NNDNN"),
+    muons    =  cms.InputTag("muPtEtaIDIsoMuDown"),
+    muonsRel =  cms.InputTag("muPtEtaRelIDMuDown"),
+    )
+
 process.muTauStreamAnalyzerTauUp   = process.muTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauTauUp"),
     met    =  cms.InputTag("rescaledMETtau","NNNUN"),
@@ -578,6 +656,14 @@ process.muTauStreamAnalyzerTauUp   = process.muTauStreamAnalyzer.clone(
 process.muTauStreamAnalyzerTauDown = process.muTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauTauDown"),
     met    =  cms.InputTag("rescaledMETtau","NNNDN")
+    )
+process.muTauStreamAnalyzerRawTauUp   = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawTauUp"),
+    met    =  cms.InputTag("rescaledMETRawtau","NNNUN"),
+    )
+process.muTauStreamAnalyzerRawTauDown = process.muTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawTauDown"),
+    met    =  cms.InputTag("rescaledMETRawtau","NNNDN")
     )
 
 process.allAnalyzers = cms.Sequence(
@@ -591,7 +677,18 @@ process.allAnalyzers = cms.Sequence(
     process.muTauStreamAnalyzerMuUp+
     process.muTauStreamAnalyzerMuDown+
     process.muTauStreamAnalyzerTauUp+
-    process.muTauStreamAnalyzerTauDown
+    process.muTauStreamAnalyzerTauDown+
+    process.muTauStreamAnalyzerRaw+
+    process.muTauStreamAnalyzerRawJetUp+
+    process.muTauStreamAnalyzerRawJetDown+
+    process.muTauStreamAnalyzerRawMEtResponseUp+
+    process.muTauStreamAnalyzerRawMEtResponseDown+
+    process.muTauStreamAnalyzerRawMEtResolutionUp+
+    process.muTauStreamAnalyzerRawMEtResolutionDown+
+    process.muTauStreamAnalyzerRawMuUp+
+    process.muTauStreamAnalyzerRawMuDown+
+    process.muTauStreamAnalyzerRawTauUp+
+    process.muTauStreamAnalyzerRawTauDown
     )
 #######################################################################
 
@@ -605,182 +702,334 @@ process.analysis = cms.Sequence(
 
 #######################################################################
 
+
+process.seqNominal = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+    process.muPtEtaRelID *
+    (process.pfMEtMVAsequence*process.patPFMetByMVA)*
+    process.metRecoilCorrector*
+    process.pfMEtMVACov*
+    process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
+    process.muTauStreamAnalyzer
+    )
+
+process.seqJetUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+    process.muPtEtaRelID *
+    (process.pfMEtMVAsequence*process.patPFMetByMVA)*
+    process.metRecoilCorrector*
+    process.rescaledMETjet *
+    process.pfMEtMVACov*
+    process.diTauJetUp*process.selectedDiTauJetUp*process.selectedDiTauJetUpCounter*
+    process.muTauStreamAnalyzerJetUp
+    )
+
+process.seqJetDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+    process.muPtEtaRelID *
+    (process.pfMEtMVAsequence*process.patPFMetByMVA)*
+    process.metRecoilCorrector*
+    process.rescaledMETjet *
+    process.pfMEtMVACov*
+    process.diTauJetDown*process.selectedDiTauJetDown*process.selectedDiTauJetDownCounter*
+    process.muTauStreamAnalyzerJetDown
+    )
+
+process.seqMEtResolutionUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+    process.muPtEtaRelID *
+    process.metRecoilCorrector*
+    process.pfMEtMVACov*
+    process.diTauMEtResolutionUp*process.selectedDiTauMEtResolutionUp*process.selectedDiTauMEtResolutionUpCounter*
+    process.muTauStreamAnalyzerMEtResolutionUp
+    )
+process.seqMEtResolutionDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+    process.muPtEtaRelID *
+    process.metRecoilCorrector*
+    process.pfMEtMVACov*
+    process.diTauMEtResolutionDown*process.selectedDiTauMEtResolutionDown*process.selectedDiTauMEtResolutionDownCounter*
+    process.muTauStreamAnalyzerMEtResolutionDown
+    )
+
+process.seqMEtResponseUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+    process.muPtEtaRelID *
+    process.metRecoilCorrector*
+    process.pfMEtMVACov*
+    process.diTauMEtResponseUp*process.selectedDiTauMEtResponseUp*process.selectedDiTauMEtResponseUpCounter*
+    process.muTauStreamAnalyzerMEtResponseUp
+    )
+process.seqMEtResponseDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+    process.muPtEtaRelID *
+    process.metRecoilCorrector*
+    process.pfMEtMVACov*
+    process.diTauMEtResponseDown*process.selectedDiTauMEtResponseDown*process.selectedDiTauMEtResponseDownCounter*
+    process.muTauStreamAnalyzerMEtResponseDown
+    )
+
+process.seqMuUp = cms.Sequence(
+    process.allEventsFilter*
+    process.muPtEtaIDIsoPtRel *
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.pfMEtMVAsequence*process.patPFMetByMVA)*
+    process.metRecoilCorrector*
+    (process.rescaledMETmuon+process.rescaledMuons+process.rescaledMuonsRel)*
+    (process.muPtEtaIDIsoMuUp*process.muPtEtaIDIsoMuUpCounter) *
+    process.muPtEtaRelIDMuUp *
+    process.pfMEtMVACov*
+    process.diTauMuUp*process.selectedDiTauMuUp*process.selectedDiTauMuUpCounter*
+    process.muTauStreamAnalyzerMuUp
+    )
+process.seqMuDown = cms.Sequence(
+    process.allEventsFilter*
+    process.muPtEtaIDIsoPtRel *
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.pfMEtMVAsequence*process.patPFMetByMVA)*
+    process.metRecoilCorrector*
+    (process.rescaledMETmuon+process.rescaledMuons+process.rescaledMuonsRel)*
+    (process.muPtEtaIDIsoMuUp*process.muPtEtaIDIsoMuUpCounter) *
+    (process.muPtEtaIDIsoMuDown*process.muPtEtaIDIsoMuDownCounter) *
+    process.muPtEtaRelIDMuDown *
+    process.pfMEtMVACov*
+    process.diTauMuDown*process.selectedDiTauMuDown*process.selectedDiTauMuDownCounter*
+    process.muTauStreamAnalyzerMuDown
+    )
+
+process.seqTauUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.muPtEtaIDIso*process.muPtEtaIDIsoCounter) *
+    process.tauPtEtaIDAgMuAgElecIsoPtRel*
+    process.muPtEtaRelID *
+    (process.pfMEtMVAsequence*process.patPFMetByMVA)*
+    process.metRecoilCorrector*
+    (process.rescaledMETtau+process.rescaledTaus)*
+    (process.tauPtEtaIDAgMuAgElecIsoTauUp*process.tauPtEtaIDAgMuAgElecIsoTauUpCounter)*
+    process.pfMEtMVACov*
+    process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter*
+    process.muTauStreamAnalyzerTauUp
+    )
+process.seqTauDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.muPtEtaIDIso*process.muPtEtaIDIsoCounter) *
+    process.tauPtEtaIDAgMuAgElecIsoPtRel*
+    process.muPtEtaRelID *
+    (process.pfMEtMVAsequence*process.patPFMetByMVA)*
+    process.metRecoilCorrector*
+    (process.rescaledMETtau+process.rescaledTaus)*
+    (process.tauPtEtaIDAgMuAgElecIsoTauDown*process.tauPtEtaIDAgMuAgElecIsoTauDownCounter)*
+    process.pfMEtMVACov*
+    process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
+    process.muTauStreamAnalyzerTauDown
+    )
+
+
+if not usePFMEtMVA:
+    process.seqNominal.remove(process.pfMEtMVACov)
+    process.seqJetUp.remove(process.pfMEtMVACov)
+    process.seqJetDown.remove(process.pfMEtMVACov)
+    process.seqMEtResolutionUp.remove(process.pfMEtMVACov)
+    process.seqMEtResolutionDown.remove(process.pfMEtMVACov)
+    process.seqMEtResponseUp.remove(process.pfMEtMVACov)
+    process.seqMEtResponseDown.remove(process.pfMEtMVACov)
+    process.seqMuUp.remove(process.pfMEtMVACov)
+    process.seqMuDown.remove(process.pfMEtMVACov)
+    process.seqTauUp.remove(process.pfMEtMVACov)
+    process.seqTauDown.remove(process.pfMEtMVACov)
+
+
+process.seqRawNominal = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+    process.muPtEtaRelID *
+    process.metRecoilCorrector*
+    #process.pfMEtMVACov*
+    process.diTauRaw*process.selectedDiTauRaw*process.selectedDiTauRawCounter*
+    process.muTauStreamAnalyzerRaw
+    )
+
+process.seqRawJetUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+    process.muPtEtaRelID *
+    process.metRecoilCorrector*
+    process.rescaledMETRawjet *
+    #process.pfMEtMVACov*
+    process.diTauRawJetUp*process.selectedDiTauRawJetUp*process.selectedDiTauRawJetUpCounter*
+    process.muTauStreamAnalyzerRawJetUp
+    )
+
+process.seqRawJetDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+    process.muPtEtaRelID *
+    process.metRecoilCorrector*
+    process.rescaledMETRawjet *
+    #process.pfMEtMVACov*
+    process.diTauRawJetDown*process.selectedDiTauRawJetDown*process.selectedDiTauRawJetDownCounter*
+    process.muTauStreamAnalyzerRawJetDown
+    )
+
+process.seqRawMEtResolutionUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+    process.muPtEtaRelID *
+    process.metRecoilCorrector*
+    #process.pfMEtMVACov*
+    process.diTauRawMEtResolutionUp*process.selectedDiTauRawMEtResolutionUp*process.selectedDiTauRawMEtResolutionUpCounter*
+    process.muTauStreamAnalyzerRawMEtResolutionUp
+    )
+
+process.seqRawMEtResolutionDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+    process.muPtEtaRelID *
+    process.metRecoilCorrector*
+    #process.pfMEtMVACov*
+    process.diTauRawMEtResolutionDown*process.selectedDiTauRawMEtResolutionDown*process.selectedDiTauRawMEtResolutionDownCounter*
+    process.muTauStreamAnalyzerRawMEtResolutionDown
+    )
+
+process.seqRawMEtResponseUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+    process.muPtEtaRelID *
+    process.metRecoilCorrector*
+    #process.pfMEtMVACov*
+    process.diTauRawMEtResponseUp*process.selectedDiTauRawMEtResponseUp*process.selectedDiTauRawMEtResponseUpCounter*
+    process.muTauStreamAnalyzerRawMEtResponseUp
+    )
+
+process.seqRawMEtResponseDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
+    process.muPtEtaRelID *
+    process.metRecoilCorrector*
+    #process.pfMEtMVACov*
+    process.diTauRawMEtResponseDown*process.selectedDiTauRawMEtResponseDown*process.selectedDiTauRawMEtResponseDownCounter*
+    process.muTauStreamAnalyzerRawMEtResponseDown
+    )
+
+process.seqRawMuUp = cms.Sequence(
+    process.allEventsFilter*
+    process.muPtEtaIDIsoPtRel *
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    process.metRecoilCorrector*
+    (process.rescaledMETRawmuon+process.rescaledMuons+process.rescaledMuonsRel)*
+    (process.muPtEtaIDIsoMuUp*process.muPtEtaIDIsoMuUpCounter) *
+    process.muPtEtaRelIDMuUp *
+    #process.pfMEtMVACov*
+    process.diTauRawMuUp*process.selectedDiTauRawMuUp*process.selectedDiTauRawMuUpCounter*
+    process.muTauStreamAnalyzerRawMuUp
+    )
+
+process.seqRawMuDown = cms.Sequence(
+    process.allEventsFilter*
+    process.muPtEtaIDIsoPtRel *
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    process.metRecoilCorrector*
+    (process.rescaledMETRawmuon+process.rescaledMuons+process.rescaledMuonsRel)*
+    (process.muPtEtaIDIsoMuDown*process.muPtEtaIDIsoMuDownCounter) *
+    process.muPtEtaRelIDMuDown *
+    #process.pfMEtMVACov*
+    process.diTauRawMuDown*process.selectedDiTauRawMuDown*process.selectedDiTauRawMuDownCounter*
+    process.muTauStreamAnalyzerRawMuDown
+    )
+
+process.seqRawTauUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.muPtEtaIDIso*process.muPtEtaIDIsoCounter) *
+    process.tauPtEtaIDAgMuAgElecIsoPtRel*
+    process.muPtEtaRelID *
+    process.metRecoilCorrector*
+    (process.rescaledMETRawtau+process.rescaledTaus)*
+    (process.tauPtEtaIDAgMuAgElecIsoTauUp*process.tauPtEtaIDAgMuAgElecIsoTauUpCounter)*
+    #process.pfMEtMVACov*
+    process.diTauRawTauUp*process.selectedDiTauRawTauUp*process.selectedDiTauRawTauUpCounter*
+    process.muTauStreamAnalyzerRawTauUp
+    )
+
+process.seqRawTauDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.muPtEtaIDIso*process.muPtEtaIDIsoCounter) *
+    process.tauPtEtaIDAgMuAgElecIsoPtRel*
+    process.muPtEtaRelID *
+    process.metRecoilCorrector*
+    (process.rescaledMETRawtau+process.rescaledTaus)*
+    (process.tauPtEtaIDAgMuAgElecIsoTauDown*process.tauPtEtaIDAgMuAgElecIsoTauDownCounter)*
+    #process.pfMEtMVACov*
+    process.diTauRawTauDown*process.selectedDiTauRawTauDown*process.selectedDiTauRawTauDownCounter*
+    process.muTauStreamAnalyzerRawTauDown
+    )
+
+#######################################################################
+
 if runOnMC:
-    
-    process.pNominal = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
-        process.muPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
-        process.muTauStreamAnalyzer
-        )
-    '''
-    process.pJetUp = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
-        process.muPtEtaRelID *
-        process.metRecoilCorrector*
-        process.rescaledMETjet *
-        process.diTauJetUp*process.selectedDiTauJetUp*process.selectedDiTauJetUpCounter*
-        process.muTauStreamAnalyzerJetUp
-        )
-    process.pJetDown = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
-        process.muPtEtaRelID *
-        process.metRecoilCorrector*
-        process.rescaledMETjet *
-        process.diTauJetDown*process.selectedDiTauJetDown*process.selectedDiTauJetDownCounter*
-        process.muTauStreamAnalyzerJetDown
-        )
-    '''
-    '''
-    process.pMEtResolutionUp = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
-        process.muPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTauMEtResolutionUp*process.selectedDiTauMEtResolutionUp*process.selectedDiTauMEtResolutionUpCounter*
-        process.muTauStreamAnalyzerMEtResolutionUp
-        )
-    process.pMEtResolutionDown = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
-        process.muPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTauMEtResolutionDown*process.selectedDiTauMEtResolutionDown*process.selectedDiTauMEtResolutionDownCounter*
-        process.muTauStreamAnalyzerMEtResolutionDown
-        )
+    process.pNominal            = cms.Path( process.seqNominal )
+    #process.pJetUp                 = cms.Path( process.seqJetUp   )
+    #process.pJetDown               = cms.Path( process.seqJetDown )
+    #process.pMEtResolutionUp       = cms.Path( process.seqMEtResolutionUp )
+    #process.pMEtResolutionDown     = cms.Path( process.seqMEtResolutionDown )
+    #process.pMEtResponseUp         = cms.Path( process.seqMEtResponseUp)
+    #process.pMEtResponseDown       = cms.Path( process.seqMEtResponseDown)
+    #process.pMuUp                  = cms.Path( process.seqMuUp)
+    #process.pMuDown                = cms.Path( process.seqMuDown)
+    #process.pTauUp              = cms.Path( process.seqTauUp)
+    #process.pTauDown            = cms.Path( process.seqTauDown )
+    #process.pRawNominal         = cms.Path( process.seqRawNominal )
+    #process.pRawJetUp              = cms.Path( process.seqRawJetUp   )
+    #process.pRawJetDown            = cms.Path( process.seqRawJetDown )
+    #process.pRawMEtResolutionUp    = cms.Path( process.seqRawMEtResolutionUp )
+    #process.pRawMEtResolutionDown  = cms.Path( process.seqRawMEtResolutionDown )
+    #process.pRawMEtResponseUp      = cms.Path( process.seqRawMEtResponseUp)
+    #process.pRawMEtResponseDown    = cms.Path( process.seqRawMEtResponseDown)
+    #process.pRawMuUp               = cms.Path( process.seqRawMuUp)
+    #process.pRawMuDown             = cms.Path( process.seqRawMuDown)
+    #process.pRawTauUp           = cms.Path( process.seqRawTauUp )
+    #process.pRawTauDown         = cms.Path( process.seqRawTauDown )
 
-    process.pMEtResponseUp = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
-        process.muPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTauMEtResponseUp*process.selectedDiTauMEtResponseUp*process.selectedDiTauMEtResponseUpCounter*
-        process.muTauStreamAnalyzerMEtResponseUp
-        )
-    process.pMEtResponseDown = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
-        process.muPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTauMEtResponseDown*process.selectedDiTauMEtResponseDown*process.selectedDiTauMEtResponseDownCounter*
-        process.muTauStreamAnalyzerMEtResponseDown
-        )
-    process.pMuUp = cms.Path(
-    process.allEventsFilter*
-    process.muPtEtaIDIsoPtRel *
-    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-    process.metRecoilCorrector*
-    (process.rescaledMETmuon+process.rescaledMuons+process.rescaledMuonsRel)*
-    (process.muPtEtaIDIsoMuUp*process.muPtEtaIDIsoMuUpCounter) *
-    process.muPtEtaRelIDMuUp *
-    process.diTauMuUp*process.selectedDiTauMuUp*process.selectedDiTauMuUpCounter*
-    process.muTauStreamAnalyzerMuUp
-    )
-    process.pMuDown = cms.Path(
-    process.allEventsFilter*
-    process.muPtEtaIDIsoPtRel *
-    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-    process.metRecoilCorrector*
-    (process.muPtEtaIDIsoMuUp*process.muPtEtaIDIsoMuUpCounter) *
-    (process.muPtEtaIDIsoMuDown*process.muPtEtaIDIsoMuDownCounter) *
-    process.muPtEtaRelIDMuDown *
-    process.diTauMuDown*process.selectedDiTauMuDown*process.selectedDiTauMuDownCounter*
-    process.muTauStreamAnalyzerMuDown
-    )
-    '''
-
-    '''
-    process.pTauUp = cms.Path(
-        process.allEventsFilter*
-        (process.muPtEtaIDIso*process.muPtEtaIDIsoCounter) *
-        process.tauPtEtaIDAgMuAgElecIsoPtRel*
-        process.muPtEtaRelID *
-        process.metRecoilCorrector*
-        (process.rescaledMETtau+process.rescaledTaus)*
-        (process.tauPtEtaIDAgMuAgElecIsoTauUp*process.tauPtEtaIDAgMuAgElecIsoTauUpCounter)*
-        process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter*
-        process.muTauStreamAnalyzerTauUp
-    )
-    process.pTauDown = cms.Path(
-        process.allEventsFilter*
-        (process.muPtEtaIDIso*process.muPtEtaIDIsoCounter) *
-        process.tauPtEtaIDAgMuAgElecIsoPtRel*
-        process.muPtEtaRelID *
-        process.metRecoilCorrector*
-        (process.rescaledMETtau+process.rescaledTaus)*
-        (process.tauPtEtaIDAgMuAgElecIsoTauDown*process.tauPtEtaIDAgMuAgElecIsoTauDownCounter)*
-        process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
-        process.muTauStreamAnalyzerTauDown
-        )
-    '''
 else:
-    process.pNominal = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.muPtEtaIDIso *process.muPtEtaIDIsoCounter) *
-        process.muPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
-        process.muTauStreamAnalyzer
-        )
-    '''
-    process.pTauUp = cms.Path(
-        process.allEventsFilter*
-        (process.muPtEtaIDIso*process.muPtEtaIDIsoCounter) *
-        process.tauPtEtaIDAgMuAgElecIsoPtRel*
-        process.muPtEtaRelID *
-        process.metRecoilCorrector*
-        (process.rescaledMETtau+process.rescaledTaus)*
-        (process.tauPtEtaIDAgMuAgElecIsoTauUp*process.tauPtEtaIDAgMuAgElecIsoTauUpCounter)*
-        process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter*
-        process.muTauStreamAnalyzerTauUp
-    )
-    process.pTauDown = cms.Path(
-        process.allEventsFilter*
-        (process.muPtEtaIDIso*process.muPtEtaIDIsoCounter) *
-        process.tauPtEtaIDAgMuAgElecIsoPtRel*
-        process.muPtEtaRelID *
-        process.metRecoilCorrector*
-        (process.rescaledMETtau+process.rescaledTaus)*
-        (process.tauPtEtaIDAgMuAgElecIsoTauDown*process.tauPtEtaIDAgMuAgElecIsoTauDownCounter)*
-        process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
-        process.muTauStreamAnalyzerTauDown
-        )
-        
-    process.pMuUp = cms.Path(
-    process.allEventsFilter*
-    process.muPtEtaIDIsoPtRel *
-    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-    process.metRecoilCorrector*
-    (process.rescaledMETmuon+process.rescaledMuons+process.rescaledMuonsRel)*
-    (process.muPtEtaIDIsoMuUp*process.muPtEtaIDIsoMuUpCounter) *
-    process.muPtEtaRelIDMuUp *
-    process.diTauMuUp*process.selectedDiTauMuUp*process.selectedDiTauMuUpCounter*
-    process.muTauStreamAnalyzerMuUp
-    )
-    process.pMuDown = cms.Path(
-    process.allEventsFilter*
-    process.muPtEtaIDIsoPtRel *
-    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-    process.metRecoilCorrector*
-    (process.muPtEtaIDIsoMuUp*process.muPtEtaIDIsoMuUpCounter) *
-    (process.muPtEtaIDIsoMuDown*process.muPtEtaIDIsoMuDownCounter) *
-    process.muPtEtaRelIDMuDown *
-    process.diTauMuDown*process.selectedDiTauMuDown*process.selectedDiTauMuDownCounter*
-    process.muTauStreamAnalyzerMuDown
-    )
-    '''
+    process.pNominal            = cms.Path( process.seqNominal )
+    #process.pTauUp              = cms.Path( process.seqTauUp)
+    #process.pTauDown            = cms.Path( process.seqTauDown )
+    process.pRawNominal         = cms.Path( process.seqRawNominal )
+    #process.pRawTauUp           = cms.Path( process.seqRawTauUp )
+    #process.pRawTauDown         = cms.Path( process.seqRawTauDown )
+
+
+#from PhysicsTools.PatAlgos.tools.helpers import massSearchReplaceAnyInputTag
+#massSearchReplaceAnyInputTag(process.pNominalRaw,
+#                             "patPFMetByMVA",
+#                             "patMETsPFlow",
+#                             verbose=True)
+#massSearchReplaceAnyInputTag(process.pNominalRaw,
+#                             "pfMEtMVACov",
+#                             "",
+#                             verbose=True)
+
+#######################################################################
 
 process.out = cms.OutputModule(
     "PoolOutputModule",

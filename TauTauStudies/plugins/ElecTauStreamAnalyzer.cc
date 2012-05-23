@@ -9,8 +9,8 @@
 #include "AnalysisDataFormats/TauAnalysis/interface/CompositePtrCandidateT1T2MEt.h"
 #include "AnalysisDataFormats/TauAnalysis/interface/CompositePtrCandidateT1T2MEtFwd.h"
 
-#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
-#include "TrackingTools/TransientTrack/plugins/TransientTrackBuilderESProducer.h"
+//#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
+//#include "TrackingTools/TransientTrack/plugins/TransientTrackBuilderESProducer.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 
 #include "DataFormats/PatCandidates/interface/Electron.h"
@@ -846,7 +846,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   //rhoFastJet_ = rhoFastJetHandle.isValid() ? (*rhoFastJetHandle) : -99;
 
   edm::Handle<double> rhoFastJetHandle;
-  iEvent.getByLabel(edm::InputTag("kt6PFJetsForRhoComputationVoronoi","rho"), rhoFastJetHandle);
+  //iEvent.getByLabel(edm::InputTag("kt6PFJetsForRhoComputationVoronoi","rho"), rhoFastJetHandle);
+  iEvent.getByLabel(edm::InputTag("kt6PFJets","rho"), rhoFastJetHandle);
   rhoFastJet_ = rhoFastJetHandle.isValid() ? (*rhoFastJetHandle) : -99;
 
   edm::Handle<double> embeddingWeightHandle;
@@ -946,55 +947,28 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   if(isMC_){
 
     // X-triggers
-    XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*");
-    XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
+    XtriggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
 
-    // for Fall11
-    triggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1");
-    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1");
+    // for Summer11
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v1");
+    triggerPaths.push_back("");
 
-    HLTfiltersElec.push_back("hltEle18CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter");
-    HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoEle18MediumIsoPFTau20");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoEle20MediumIsoPFTau20");
+    HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilterL1IsoEG18OrEG20");
+    HLTfiltersElec.push_back("hltOverlapFilterIsoEle20LooseIsoPFTau20");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoEle20LooseIsoPFTau20");
   }
   else{
     
     // X-triggers
-    XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v*");
-    XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
-    XtriggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TightIsoPFTau20_v*");
-    XtriggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
+    XtriggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
 
     // Single Electron triggers + X-triggers
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v1");
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v2");
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v4");
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v6");
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v8");
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v9");
-    triggerPaths.push_back("HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TightIsoPFTau20_v2");
-    triggerPaths.push_back("HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1");
-    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1");
-    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v5");
-    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v6");
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v4");
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v5");
                               
-    // watch out! name convention changed with time
-    HLTfiltersElec.push_back("hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter");
-    HLTfiltersElec.push_back("hltEle15CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter");
-    // watch out! name convention changed with time
-    HLTfiltersElec.push_back("hltEle18CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter");
-    HLTfiltersElec.push_back("hltEle18CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilter");
- 
-    HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilterL1SingleEG18orL1SingleEG20");
- 
-    //HLTfiltersTau.push_back("hltPFTau15TrackLooseIso");
-    //HLTfiltersTau.push_back("hltPFTau20TrackLooseIso");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoEle15IsoPFTau15");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoEle15IsoPFTau20");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoEle15TightIsoPFTau20");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoEle18MediumIsoPFTau20");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoEle20MediumIsoPFTau20");
+    HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilterL1IsoEG18OrEG20");
+    HLTfiltersElec.push_back("hltOverlapFilterIsoEle20LooseIsoPFTau20");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoEle20LooseIsoPFTau20");
 
   }
 
@@ -1175,7 +1149,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 	    }
 	  }
 	}
-	if( Geom::deltaR( aObj->triggerObject().p4(), leg1->p4() )<0.3  && aObj->hasFilterLabel(HLTfiltersElec[i]) ){
+	if( Geom::deltaR( aObj->triggerObject().p4(), leg1->p4() )<0.3  && aObj->hasFilterLabel(HLTfiltersElec[i]) && aObj->hasTriggerObjectType(trigger::TriggerElectron)){
 	  matched = true;
 	}
       }
@@ -1199,7 +1173,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 	    }
 	  }
 	}
-	if( Geom::deltaR( aObj->triggerObject().p4(), leg2->p4() )<0.3  && aObj->hasFilterLabel(HLTfiltersTau[i]) ){
+	if( Geom::deltaR( aObj->triggerObject().p4(), leg2->p4() )<0.3  && aObj->hasFilterLabel(HLTfiltersTau[i]) && aObj->hasTriggerObjectType(trigger::TriggerTau)){
 	  matched = true;
 	}
       }
@@ -1432,25 +1406,25 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     if(doElecIsoMVA_ && vertexes->size()){
 
       //cout << "Doing MVA " << endl;
+      //EcalClusterLazyTools lazyTools(iEvent,iSetup,
+      //			     edm::InputTag("reducedEcalRecHitsEB"),
+      //			     edm::InputTag("reducedEcalRecHitsEE"));  
+      //cout << "Ecal " << endl;
 
-      EcalClusterLazyTools lazyTools(iEvent,iSetup,
-				     edm::InputTag("reducedEcalRecHitsEB"),
-				     edm::InputTag("reducedEcalRecHitsEE"));
-          
       const reco::GsfElectronCollection dummyGsfColl;
       const reco::MuonCollection dummyRecoMuon;
       
       const reco::GsfElectron* aElectron = static_cast<const reco::GsfElectron*>(leg1); 
       isoLeg1MVA_ = isMC_ ?
-	fElectronIsoMVA_->mvaValue( *aElectron, (*vertexes)[0], *transientTrackBuilder_,lazyTools, 
+	fElectronIsoMVA_->mvaValue( *aElectron, (*vertexes)[0], 
 				    *pfCandidates, rhoFastJet_, 
 				    ElectronEffectiveArea::kEleEAFall11MC, 
 				    dummyGsfColl, dummyRecoMuon) :
-	fElectronIsoMVA_->mvaValue( *aElectron, (*vertexes)[0], *transientTrackBuilder_,lazyTools, 
+	fElectronIsoMVA_->mvaValue( *aElectron, (*vertexes)[0],
 				    *pfCandidates, rhoFastJet_, 
 				    ElectronEffectiveArea::kEleEAData2011, 
 				    dummyGsfColl, dummyRecoMuon) ;
-      //cout << "Electron Iso MVA = " << isoLeg1MVA_ << endl;
+      cout << "Electron Iso MVA = " << isoLeg1MVA_ << endl;
     }
     
 

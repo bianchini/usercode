@@ -9,29 +9,23 @@ postfix     = "PFlow"
 runOnMC     = True
 runOnEmbed  = False
 
-from Configuration.PyReleaseValidation.autoCond import autoCond
-process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
+#from Configuration.PyReleaseValidation.autoCond import autoCond
+#process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START42_V17::All') #START42_V14B
+    process.GlobalTag.globaltag = cms.string('START52_V7::All')
 
 else:
-    process.GlobalTag.globaltag = cms.string('GR_R_42_V23::All') #GR_R_42_V19
+    process.GlobalTag.globaltag = cms.string('GR_R_52_V7::All')
+
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source.fileNames = cms.untracked.vstring(
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/AODSIM/PU_S4_START42_V11-v1/0000/0E47FBF8-0295-E011-818F-0030487E3026.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/FCAE02CE-7800-E111-A2CB-0022198904D4.root'
-    #'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat//store/mc/Fall11/VBF_HToTauTau_M-115_7TeV-powheg-pythia6-tauola/AODSIM/PU_S6_START42_V14B-v1/0000/F4ACA82D-FDF8-E011-A31A-E0CB4E29C51E.root',
-    #'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat/store/user/akalinow/TauPlusX/428_mutau_skim_Run2011A-05Aug2011-v1_v4/b8ede77eca865a3526029ca11820f552/tautauSkimmAOD_9_1_coF.root'
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/akalinow/TauPlusX/428_mutau_skim_Run2011A-05Aug2011-v1_v4/b8ede77eca865a3526029ca11820f552/tautauSkimmAOD_9_1_coF.root'
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau116_ptmu1_13had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/FCAE02CE-7800-E111-A2CB-0022198904D4.root'
-    #'file:./root/pickevents.root',
-    #'file:./root/syncSkim_5_1_vnT.root',
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/Test_52X/439eae0c5ab5b9ee314b9645ffd1dade/DYJets_5_1_stC.root'
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -73,6 +67,19 @@ process.tauPtEtaIDAgMuAgElecFilter = cms.EDFilter(
 process.atLeast1selectedDiTauFilter = cms.EDFilter(
     "AllEventsFilter"
     )
+
+
+################### HLT trigger  ####################
+
+process.HLTFilter = cms.EDFilter(
+    "HLTHighLevel",
+    TriggerResultsTag  = cms.InputTag("TriggerResults","","HLT"),
+    HLTPaths           = cms.vstring("HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v1"),
+    eventSetupPathsKey = cms.string(''),
+    andOr              = cms.bool(True),
+    throw              = cms.bool(False)
+    )
+
 
 ################### gen listing  ####################
 
@@ -243,12 +250,12 @@ if runOnMC:
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 
 from PhysicsTools.PatAlgos.tools.tauTools import *
-switchToPFTauHPS(process, 
-                 pfTauLabelOld = 'shrinkingConePFTauProducer',
-                 pfTauLabelNew = 'hpsPFTauProducer'
-                 )
+#switchToPFTauHPS(process, 
+#                 pfTauLabelOld = 'shrinkingConePFTauProducer',
+#                 pfTauLabelNew = 'hpsPFTauProducer'
+#                 )
 
-#switchToPFTauHPS(process)
+switchToPFTauHPS(process)
 
 
 getattr(process,"patTaus").embedIsolationTracks             = cms.bool(True)
@@ -487,7 +494,7 @@ process.muPtEtaID = cms.EDFilter(
                      " && globalTrack.hitPattern.numberOfValidMuonHits>0"+                     
                      " && numberOfMatchedStations>1"+                     
                      " && innerTrack.hitPattern.numberOfValidPixelHits>0"+
-                     " && track.hitPattern.trackerLayersWithMeasurement > 8)"+
+                     " && track.hitPattern.trackerLayersWithMeasurement > 5)"+
                      " || userInt('isPFMuon')>0.5)"
                      ),
     filter = cms.bool(False)
@@ -681,6 +688,7 @@ process.jetCleaningSequence = cms.Sequence(
 
 process.skim = cms.Sequence(
     process.allEventsFilter+
+    process.HLTFilter*
     process.atLeastOneGoodVertexSequence*
     process.fjSequence*
     process.PFTau*

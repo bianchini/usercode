@@ -12,8 +12,9 @@ process.load("Configuration.StandardSequences.MagneticField_cff")
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
-runOnMC     = False
+runOnMC     = True
 doSVFitReco = True
+usePFMEtMVA = True
 
 if runOnMC:
     print "Running on MC"
@@ -23,105 +24,22 @@ else:
 
 if runOnMC:
     process.GlobalTag.globaltag = cms.string('START52_V7::All')
-
 else:
     process.GlobalTag.globaltag = cms.string('GR_R_52_V7::All')
+                
+ 
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    #'file:./patTuples_ElecTauStream.root'
-
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_101_1_Q8V.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_102_1_fyV.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_103_1_xEA.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_107_2_Y1L.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_109_1_5pG.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_11_2_Wtu.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_12_1_jIz.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_13_1_mCk.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_16_1_WeO.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_17_2_BI3.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_18_1_k1t.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_19_2_sty.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_1_1_UQS.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_20_1_oEP.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_22_2_UDX.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_23_1_PWw.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_24_1_ya3.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_26_1_Bx1.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_2_1_GCq.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_30_1_0RW.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_32_1_f6Q.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_34_1_QJs.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_36_1_nKS.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_38_2_TNX.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_39_1_psz.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_3_1_wfg.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_41_1_7Im.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_42_1_EoO.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_45_2_uTH.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_46_1_r84.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_47_2_PYf.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_48_1_WJA.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_49_2_8A2.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_4_1_lTn.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_51_2_CZ6.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_52_1_Pjo.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_53_2_j8d.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_54_1_ogs.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_56_1_ArY.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_58_1_LjP.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_59_1_R7Z.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_5_1_3Yc.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_60_1_FWU.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_62_2_5OG.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_63_1_esB.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_64_1_e2W.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_65_1_IDs.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_66_1_zed.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_69_2_XWA.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_6_1_PQz.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_70_1_oBJ.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_71_1_OuU.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_72_1_CtV.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_75_1_MzX.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_76_1_fXJ.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_7_1_3GB.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_80_1_gB1.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_82_1_J23.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_83_1_RHl.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_84_1_3Fz.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_86_1_6eb.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_87_2_4Er.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_8_1_Hmt.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_90_1_kr2.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_93_1_b2e.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_94_1_fnZ.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_95_2_Cdi.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_97_1_ZM9.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_98_1_juL.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-madgraph-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_99_1_DRT.root',
-
-
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_10_2_9pt.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_11_2_GDL.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_12_2_4In.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_13_2_Cbc.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_1_2_6iw.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_2_2_8Oi.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_3_2_qlY.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_4_2_3B3.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_5_2_Ntc.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_6_2_fT2.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_7_2_OBt.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_8_2_AfI.root',
-    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-30Mar2012_DYJets-ElecTau-Tarball-v2_skim/c8840777bcf9a6298dca78985d99645d/patTuples_ElecTauStream_9_2_pdJ.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/ElecTauStream-04May2012-Reload_DYJets-ElecTau-50-madgraph-PUS6_skim/4badcc5695438d7f3df80162f5ad7ed7/patTuples_ElecTauStream_9_1_Ug5.root'
+    'file:./patTuples_ElecTauStream.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-04May2012-Reload-05AugReReco/396c4fb61647929194f9a223b98504bc/patTuples_ElecTauStream_9_1_kgg.root'
     )
     )
 
@@ -134,6 +52,28 @@ process.allEventsFilter = cms.EDFilter(
     )
 
 ###################################################################################
+
+process.load("RecoMET.METProducers.mvaPFMET_cff")
+if runOnMC:
+    process.calibratedAK5PFJetsForPFMEtMVA.correctors = cms.vstring("ak5PFL1FastL2L3")
+else:
+    process.calibratedAK5PFJetsForPFMEtMVA.correctors = cms.vstring("ak5PFL1FastL2L3Residual")
+    
+
+process.pfMEtMVA.srcLeptons = cms.VInputTag( cms.InputTag('elecPtEtaIDIso'), cms.InputTag('tauPtEtaIDAgMuAgElecIso') )
+
+process.load("PhysicsTools.PatAlgos.producersLayer1.metProducer_cfi")
+process.patPFMetByMVA = process.patMETs.clone(
+    metSource = cms.InputTag('pfMEtMVA'),
+    addMuonCorrections = cms.bool(False),
+    genMETSource = cms.InputTag('genMetTrue')
+    )
+
+process.pfMEtMVA.srcVertices = cms.InputTag("selectedPrimaryVertices")
+process.patPFMetByMVA.addGenMET = cms.bool(False)
+
+###################################################################################
+
 process.rescaledMET = cms.EDProducer(
     "MEtRescalerProducer",
     metTag          = cms.InputTag("metRecoilCorrector",  "N"),
@@ -150,24 +90,34 @@ process.rescaledMET = cms.EDProducer(
     verbose         = cms.bool(False)
     )
 
+if usePFMEtMVA:
+    process.rescaledMET.metTag = cms.InputTag("patPFMetByMVA")
+process.rescaledMETRaw = process.rescaledMET.clone( metTag = cms.InputTag("metRecoilCorrector",  "N") )
+
 process.rescaledMETjet = process.rescaledMET.clone(
     unClusterShift = cms.double(0.10),
     tauShift       = cms.vdouble(0.0),
     muonShift      = cms.vdouble(0.0),
     electronShift  = cms.vdouble(0.0),
     )
+process.rescaledMETRawjet = process.rescaledMETjet.clone( metTag = cms.InputTag("metRecoilCorrector",  "N") )
+
 process.rescaledMETtau = process.rescaledMET.clone(
     unClusterShift = cms.double(0.0),
     tauShift       = cms.vdouble(0.03,0.03),
     muonShift      = cms.vdouble(0.0),
     electronShift  = cms.vdouble(0.0),
     )
+process.rescaledMETRawtau = process.rescaledMETtau.clone( metTag = cms.InputTag("metRecoilCorrector",  "N") )
+
 process.rescaledMETelectron = process.rescaledMET.clone(
     unClusterShift = cms.double(0.0),
     tauShift       = cms.vdouble(0.0),
     muonShift      = cms.vdouble(0.0),
     electronShift  = cms.vdouble(0.01,0.025),
     )
+process.rescaledMETRawelectron = process.rescaledMETelectron.clone( metTag = cms.InputTag("metRecoilCorrector",  "N") )
+
 
 process.rescaledTaus = cms.EDProducer(
     "TauRescalerProducer",
@@ -192,6 +142,9 @@ process.rescaledObjects = cms.Sequence(
     process.rescaledMETjet+
     process.rescaledMETtau+
     process.rescaledMETelectron+
+    process.rescaledMETRawjet+
+    process.rescaledMETRawtau+
+    process.rescaledMETRawelectron+
     process.rescaledTaus+
     process.rescaledElectrons+
     process.rescaledElectronsRel
@@ -203,7 +156,7 @@ process.metRecoilCorrector = cms.EDProducer(
     "MEtRecoilCorrectorProducer",
     genParticleTag      = cms.InputTag("genParticles"),
     jetTag              = cms.InputTag("selectedPatJets"),
-    metTag              = cms.InputTag("patMETsPF"),
+    metTag              = cms.InputTag("patMETsPFlow"),
     electronTag         = cms.InputTag("elecPtEtaIDIso"),
     muonTag             = cms.InputTag(""),
     tauTag              = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
@@ -228,10 +181,23 @@ process.diTau.srcLeg2  = cms.InputTag("tauPtEtaIDAgMuAgElecIso")
 process.diTau.srcMET   = cms.InputTag("metRecoilCorrector",  "N")
 process.diTau.dRmin12  = cms.double(0.5)
 process.diTau.doSVreco = cms.bool(doSVFitReco)
-
+if usePFMEtMVA:
+    process.diTau.srcMET = cms.InputTag("patPFMetByMVA")
+    
 if not runOnMC:
     process.diTau.srcGenParticles = ""
-        
+
+process.pfMEtMVACov = cms.EDProducer(
+    "PFMEtSignCovMatrixUnembedder",
+    src = cms.InputTag("patPFMetByMVA")
+    )
+
+if usePFMEtMVA:
+    process.diTau.nSVfit.psKine_MEt_logM_fit.config.event.srcMEt = cms.InputTag("patPFMetByMVA")
+    process.diTau.nSVfit.psKine_MEt_logM_fit.config.event.likelihoodFunctions[0].srcMEtCovMatrix = cms.InputTag("pfMEtMVACov")
+    process.diTau.nSVfit.psKine_MEt_logM_int.config.event.srcMEt = cms.InputTag("patPFMetByMVA")
+    process.diTau.nSVfit.psKine_MEt_logM_int.config.event.likelihoodFunctions[0].srcMEtCovMatrix = cms.InputTag("pfMEtMVACov")
+
 process.selectedDiTau = cms.EDFilter(
     "ElecTauPairSelector",
     src = cms.InputTag("diTau"),
@@ -244,6 +210,24 @@ process.selectedDiTauCounter = cms.EDFilter(
     maxNumber = cms.uint32(999),
     )
 
+
+process.diTauRaw = process.allElecTauPairs.clone()
+process.diTauRaw.srcLeg1  = cms.InputTag("elecPtEtaIDIso")
+process.diTauRaw.srcLeg2  = cms.InputTag("tauPtEtaIDAgMuAgElecIso")
+process.diTauRaw.srcMET   = cms.InputTag("metRecoilCorrector",  "N")
+process.diTauRaw.dRmin12  = cms.double(0.5)
+process.diTauRaw.doSVreco = cms.bool(doSVFitReco)
+
+if not runOnMC:
+    process.diTauRaw.srcGenParticles = ""
+        
+process.diTauRaw.nSVfit.psKine_MEt_logM_fit.config.event.srcMEt = cms.InputTag("metRecoilCorrector",  "N")
+process.diTauRaw.nSVfit.psKine_MEt_logM_int.config.event.srcMEt = cms.InputTag("metRecoilCorrector",  "N")
+
+process.selectedDiTauRaw =  process.selectedDiTau.clone(   src = cms.InputTag("diTauRaw") )
+process.selectedDiTauRawCounter =  process.selectedDiTauCounter.clone(   src = cms.InputTag("selectedDiTauRaw") )
+
+#######################################################################
 #######################################################################
 
 process.diTauJetUp =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
@@ -254,6 +238,12 @@ process.diTauJetUp =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
 process.selectedDiTauJetUp = process.selectedDiTau.clone(src = cms.InputTag("diTauJetUp") )
 process.selectedDiTauJetUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauJetUp"))
 
+process.diTauRawJetUp                = process.diTauJetUp.clone(  srcMET  = cms.InputTag("rescaledMETRawjet",  "UNNNU") )
+process.selectedDiTauRawJetUp        = process.selectedDiTauJetUp.clone( src = cms.InputTag("diTauRawJetUp") )
+process.selectedDiTauRawJetUpCounter = process.selectedDiTauRawCounter.clone(src =  cms.InputTag("selectedDiTauRawJetUp"))
+
+#######################################################################
+
 process.diTauJetDown =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                             srcLeg1 = cms.InputTag("elecPtEtaIDIso"),
                                             srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
@@ -261,6 +251,12 @@ process.diTauJetDown =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                             )
 process.selectedDiTauJetDown = process.selectedDiTau.clone(src = cms.InputTag("diTauJetDown") )
 process.selectedDiTauJetDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauJetDown"))
+
+process.diTauRawJetDown                = process.diTauJetDown.clone(  srcMET  = cms.InputTag("rescaledMETRawjet",  "DNNND") )
+process.selectedDiTauRawJetDown        = process.selectedDiTauJetDown.clone( src = cms.InputTag("diTauRawJetDown") )
+process.selectedDiTauRawJetDownCounter = process.selectedDiTauRawCounter.clone(src =  cms.InputTag("selectedDiTauRawJetDown"))
+
+#######################################################################
 
 process.diTauMEtResponseUp =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                           srcLeg1 = cms.InputTag("elecPtEtaIDIso"),
@@ -270,6 +266,12 @@ process.diTauMEtResponseUp =  process.diTau.clone(doSVreco = cms.bool(doSVFitRec
 process.selectedDiTauMEtResponseUp = process.selectedDiTau.clone(src = cms.InputTag("diTauMEtResponseUp") )
 process.selectedDiTauMEtResponseUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMEtResponseUp"))
 
+process.diTauRawMEtResponseUp                = process.diTauMEtResponseUp.clone(  srcMET  = cms.InputTag("metRecoilCorrector",  "ResponseU") )
+process.selectedDiTauRawMEtResponseUp        = process.selectedDiTauMEtResponseUp.clone( src = cms.InputTag("diTauRawMEtResponseUp") )
+process.selectedDiTauRawMEtResponseUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauRawMEtResponseUp"))
+
+#######################################################################
+
 process.diTauMEtResponseDown =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                             srcLeg1 = cms.InputTag("elecPtEtaIDIso"),
                                             srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
@@ -277,6 +279,12 @@ process.diTauMEtResponseDown =  process.diTau.clone(doSVreco = cms.bool(doSVFitR
                                             )
 process.selectedDiTauMEtResponseDown = process.selectedDiTau.clone(src = cms.InputTag("diTauMEtResponseDown") )
 process.selectedDiTauMEtResponseDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMEtResponseDown"))
+
+process.diTauRawMEtResponseDown                = process.diTauMEtResponseDown.clone(  srcMET  = cms.InputTag("metRecoilCorrector",  "ResponseU") )
+process.selectedDiTauRawMEtResponseDown        = process.selectedDiTauMEtResponseDown.clone( src = cms.InputTag("diTauRawMEtResponseDown") )
+process.selectedDiTauRawMEtResponseDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauRawMEtResponseDown"))
+
+#######################################################################
 
 
 process.diTauMEtResolutionUp =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
@@ -287,6 +295,12 @@ process.diTauMEtResolutionUp =  process.diTau.clone(doSVreco = cms.bool(doSVFitR
 process.selectedDiTauMEtResolutionUp = process.selectedDiTau.clone(src = cms.InputTag("diTauMEtResolutionUp") )
 process.selectedDiTauMEtResolutionUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMEtResolutionUp"))
 
+process.diTauRawMEtResolutionUp                = process.diTauMEtResolutionUp.clone(  srcMET  = cms.InputTag("metRecoilCorrector",  "ResolutionU") )
+process.selectedDiTauRawMEtResolutionUp        = process.selectedDiTauMEtResolutionUp.clone( src = cms.InputTag("diTauRawMEtResolutionUp") )
+process.selectedDiTauRawMEtResolutionUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauRawMEtResolutionUp"))
+
+#######################################################################
+
 process.diTauMEtResolutionDown =  process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                             srcLeg1 = cms.InputTag("elecPtEtaIDIso"),
                                             srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
@@ -294,6 +308,14 @@ process.diTauMEtResolutionDown =  process.diTau.clone(doSVreco = cms.bool(doSVFi
                                             )
 process.selectedDiTauMEtResolutionDown = process.selectedDiTau.clone(src = cms.InputTag("diTauMEtResolutionDown") )
 process.selectedDiTauMEtResolutionDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauMEtResolutionDown"))
+
+process.diTauRawMEtResolutionDown                = process.diTauMEtResolutionDown.clone(  srcMET  = cms.InputTag("metRecoilCorrector",  "ResolutionU") )
+process.selectedDiTauRawMEtResolutionDown        = process.selectedDiTauMEtResolutionDown.clone( src = cms.InputTag("diTauRawMEtResolutionDown") )
+process.selectedDiTauRawMEtResolutionDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauRawMEtResolutionDown"))
+
+
+#######################################################################
+
 
 process.diTauElecUp = process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                           srcLeg1 = cms.InputTag("rescaledElectrons","U"),
@@ -303,6 +325,12 @@ process.diTauElecUp = process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
 process.selectedDiTauElecUp = process.selectedDiTau.clone(src = cms.InputTag("diTauElecUp") )
 process.selectedDiTauElecUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauElecUp"))
 
+process.diTauRawElecUp                = process.diTauElecUp.clone(  srcMET  = cms.InputTag("rescaledMETRawelectron",  "NUNNN") )
+process.selectedDiTauRawElecUp        = process.selectedDiTauElecUp.clone( src = cms.InputTag("diTauRawElecUp") )
+process.selectedDiTauRawElecUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauRawElecUp"))
+
+#######################################################################
+
 process.diTauElecDown = process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                             srcLeg1 = cms.InputTag("rescaledElectrons","D"),
                                             srcLeg2 = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
@@ -310,6 +338,12 @@ process.diTauElecDown = process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                             )
 process.selectedDiTauElecDown = process.selectedDiTau.clone(src = cms.InputTag("diTauElecDown") )
 process.selectedDiTauElecDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauElecDown"))
+
+process.diTauRawElecDown                = process.diTauElecDown.clone(  srcMET  = cms.InputTag("rescaledMETRawelectron",  "NDNNN") )
+process.selectedDiTauRawElecDown        = process.selectedDiTauElecDown.clone( src = cms.InputTag("diTauRawElecDown") )
+process.selectedDiTauRawElecDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauRawElecDown"))
+
+#######################################################################
 
 
 process.diTauTauUp = process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
@@ -320,6 +354,17 @@ process.diTauTauUp = process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
 process.selectedDiTauTauUp = process.selectedDiTau.clone(src = cms.InputTag("diTauTauUp") )
 process.selectedDiTauTauUpCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauTauUp"))
 
+process.diTauRawTauUp                = process.diTauRaw.clone(doSVreco = cms.bool(doSVFitReco),
+                                                              srcLeg1 = cms.InputTag("elecPtEtaIDIso"),
+                                                              srcLeg2 = cms.InputTag("rescaledTaus", "U"),
+                                                              srcMET  = cms.InputTag("rescaledMETRawtau","NNNUN")
+                                                              )
+process.selectedDiTauRawTauUp        = process.selectedDiTauRaw.clone( src = cms.InputTag("diTauRawTauUp") )
+process.selectedDiTauRawTauUpCounter = process.selectedDiTauRawCounter.clone(src =  cms.InputTag("selectedDiTauRawTauUp"))
+
+#######################################################################
+
+
 process.diTauTauDown = process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                            srcLeg1 = cms.InputTag("elecPtEtaIDIso"),
                                            srcLeg2 = cms.InputTag("rescaledTaus", "D"),
@@ -327,6 +372,16 @@ process.diTauTauDown = process.diTau.clone(doSVreco = cms.bool(doSVFitReco),
                                            )
 process.selectedDiTauTauDown = process.selectedDiTau.clone(src = cms.InputTag("diTauTauDown") )
 process.selectedDiTauTauDownCounter = process.selectedDiTauCounter.clone(src =  cms.InputTag("selectedDiTauTauDown"))
+
+process.diTauRawTauDown                = process.diTauRaw.clone(doSVreco = cms.bool(doSVFitReco),
+                                                                srcLeg1 = cms.InputTag("elecPtEtaIDIso"),
+                                                                srcLeg2 = cms.InputTag("rescaledTaus", "U"),
+                                                                srcMET  = cms.InputTag("rescaledMETRawtau","NNNDN")
+                                                                )
+process.selectedDiTauRawTauDown        = process.selectedDiTauRaw.clone( src = cms.InputTag("diTauRawTauDown") )
+process.selectedDiTauRawTauDownCounter = process.selectedDiTauRawCounter.clone(src =  cms.InputTag("selectedDiTauRawTauDown"))
+
+#######################################################################
 
 
 process.allDiTau = cms.Sequence(
@@ -340,8 +395,30 @@ process.allDiTau = cms.Sequence(
     (process.diTauElecUp*process.selectedDiTauElecUp*process.selectedDiTauElecUpCounter +
      process.diTauElecDown*process.selectedDiTauElecDown*process.selectedDiTauElecDownCounter) +
     (process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter +
-     process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter)
+     process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter) +
+    (process.diTauRaw*process.selectedDiTauRaw*process.selectedDiTauRawCounter)+
+    (process.diTauRawJetUp*process.selectedDiTauRawJetUp*process.selectedDiTauRawJetUpCounter +
+     process.diTauRawJetDown*process.selectedDiTauRawJetDown*process.selectedDiTauRawJetDownCounter) +
+    (process.diTauRawMEtResolutionUp*process.selectedDiTauRawMEtResolutionUp*process.selectedDiTauRawMEtResolutionUpCounter +
+     process.diTauRawMEtResolutionDown*process.selectedDiTauRawMEtResolutionDown*process.selectedDiTauRawMEtResolutionDownCounter) +
+    (process.diTauRawMEtResponseUp*process.selectedDiTauRawMEtResponseUp*process.selectedDiTauRawMEtResponseUpCounter +
+     process.diTauRawMEtResponseDown*process.selectedDiTauRawMEtResponseDown*process.selectedDiTauRawMEtResponseDownCounter) +
+    (process.diTauRawElecUp*process.selectedDiTauRawElecUp*process.selectedDiTauRawElecUpCounter +
+     process.diTauRawElecDown*process.selectedDiTauRawElecDown*process.selectedDiTauRawElecDownCounter) +
+    (process.diTauRawTauUp*process.selectedDiTauRawTauUp*process.selectedDiTauRawTauUpCounter +
+     process.diTauRawTauDown*process.selectedDiTauRawTauDown*process.selectedDiTauRawTauDownCounter)
+
     )
+
+if usePFMEtMVA:
+    process.allDiTau.replace(process.diTau,process.pfMEtMVACov*process.diTau)
+#    process.allDiTau.replace(process.diTauJetUp,process.pfMEtMVACovJetUp*process.diTauJetUp)
+#    process.allDiTau.replace(process.diTauJetDown,process.pfMEtMVACovJetDown*process.diTauJetDown)
+#    process.allDiTau.replace(process.diTauElecUp,process.pfMEtMVACovElecUp*process.diTauElecUp)
+#    process.allDiTau.replace(process.diTauElecDown,process.pfMEtMVACovElecDown*process.diTauElecDown)
+#    process.allDiTau.replace(process.diTauTauUp,process.pfMEtMVACovTauUp*process.diTauTauUp)
+#    process.allDiTau.replace(process.diTauTauDown,process.pfMEtMVACovTauDown*process.diTauTauDown)
+
 #######################################################################
 
 MVA = "((pt<=20 && abs(superClusterPosition.Eta)>=0.0 && abs(superClusterPosition.Eta)<1.0 && userFloat('mva')>0.133) ||" + \
@@ -382,16 +459,20 @@ simpleCutsWP80 = "(userFloat('nHits')==0 && userInt('antiConv')>0.5 "+ \
 process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
-    cut = cms.string("tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 && pt>20 && abs(eta)<2.3"
-                     "&& tauID('againstElectronMVA')>0.5"
+    cut = cms.string("pt>20 && abs(eta)<2.3"+
+                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"+
+                     " && (tauID('againstElectronTight')>0.5 || tauID('againstElectronMVA')>0.5)"
+                     #"&& tauID('againstElectronMVA')>0.5"
                      ),
     filter = cms.bool(False)
     )
 process.tauPtEtaIDAgMuAgElecIsoPtRel  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
-    cut = cms.string("tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 && pt>19 && abs(eta)<2.3"
-                     "&& tauID('againstElectronMVA')>0.5"
+    cut = cms.string("pt>19 && abs(eta)<2.3"+
+                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"+
+                     " && (tauID('againstElectronTight')>0.5 || tauID('againstElectronMVA')>0.5 )"
+                     #"&& tauID('againstElectronMVA')>0.5"
                      ),
     filter = cms.bool(False)
     )
@@ -419,13 +500,15 @@ process.tauPtEtaIDAgMuAgElecIsoTauDownCounter = process.tauPtEtaIDAgMuAgElecIsoC
 process.elecPtEtaIDIso  = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("elecPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>20 && abs(eta)<2.1 && "+simpleCutsWP95),
+    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>20 && abs(eta)<2.1"+
+                     "&& userInt('antiConv')>0.5 && userInt('nHits')<1"),
     filter = cms.bool(False)
     )
 process.elecPtEtaIDIsoPtRel  = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("elecPtEtaID"),
-    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>19 && abs(eta)<2.1 && "+simpleCutsWP95),
+    cut = cms.string("userFloat('PFRelIsoDB04')<0.50 && pt>19 && abs(eta)<2.1"+
+                     "&& userInt('antiConv')>0.5 && userInt('nHits')<1"),
     filter = cms.bool(False)
     )
 
@@ -477,7 +560,8 @@ process.elecTauStreamAnalyzer = cms.EDAnalyzer(
     jets               = cms.InputTag("selectedPatJets"),
     newJets            = cms.InputTag(""),
     met                = cms.InputTag("metRecoilCorrector",  "N"),
-    rawMet             = cms.InputTag("patMETsPF"),
+    rawMet             = cms.InputTag("patMETsPFlow"),
+    mvaMet             = cms.InputTag("patPFMetByMVA"),
     electrons          = cms.InputTag("elecPtEtaID"),
     electronsRel       = cms.InputTag("elecPtEtaRelID"),
     vertices           = cms.InputTag("selectedPrimaryVertices"),
@@ -488,14 +572,23 @@ process.elecTauStreamAnalyzer = cms.EDAnalyzer(
     deltaRLegJet       = cms.untracked.double(0.5),
     minCorrPt          = cms.untracked.double(15.),
     minJetID           = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
-    #inputFileNameX0BL  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_X_0BL_BDT.weights.xml"),
-    #inputFileName11BL  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_1_1BL_BDT.weights.xml"),
-    #inputFileName01BL  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_0_1BL_BDT.weights.xml"),
-    #inputFileNameX0EC  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_X_0EC_BDT.weights.xml"),
-    #inputFileName11EC  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_1_1EC_BDT.weights.xml"),
-    #inputFileName01EC  = cms.FileInPath("Bianchi/Utilities/data/antiE_v4/TMVAClassification_v2_0_1EC_BDT.weights.xml"),
-    verbose            = cms.untracked.bool( False ),
+    verbose            = cms.untracked.bool( True ),
+    doElecIsoMVA       = cms.bool( True ),
+    inputFileName0     = cms.FileInPath("UserCode/sixie/EGamma/EGammaAnalysisTools/data/ElectronIso_BDTG_V0_BarrelPt5To10.weights.xml"),
+    inputFileName1     = cms.FileInPath("UserCode/sixie/EGamma/EGammaAnalysisTools/data/ElectronIso_BDTG_V0_EndcapPt5To10.weights.xml"),
+    inputFileName2     = cms.FileInPath("UserCode/sixie/EGamma/EGammaAnalysisTools/data/ElectronIso_BDTG_V0_BarrelPt10ToInf.weights.xml"),
+    inputFileName3     = cms.FileInPath("UserCode/sixie/EGamma/EGammaAnalysisTools/data/ElectronIso_BDTG_V0_EndcapPt10ToInf.weights.xml"),
     )
+
+if usePFMEtMVA:
+    process.elecTauStreamAnalyzer.met = cms.InputTag("patPFMetByMVA")
+
+process.elecTauStreamAnalyzerRaw   = process.elecTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRaw"),
+    met    = cms.InputTag("metRecoilCorrector",  "N"),
+    )
+
+
 process.elecTauStreamAnalyzerJetUp     = process.elecTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauJetUp"),
     met    =  cms.InputTag("rescaledMETjet",  "UNNNU"),
@@ -504,6 +597,15 @@ process.elecTauStreamAnalyzerJetDown   = process.elecTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauJetDown"),
     met    =  cms.InputTag("rescaledMETjet",  "DNNND"),
     )
+process.elecTauStreamAnalyzerRawJetUp   = process.elecTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawJetUp"),
+    met    =  cms.InputTag("rescaledMETRawjet",  "UNNNU"),
+    )
+process.elecTauStreamAnalyzerRawJetDown = process.elecTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawJetDown"),
+    met    =  cms.InputTag("rescaledMETRawjet",  "DNNND"),
+    )
+
 process.elecTauStreamAnalyzerMEtResponseUp   = process.elecTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauMEtResponseUp"),
     met    =  cms.InputTag("metRecoilCorrector",  "ResponseU"),
@@ -512,6 +614,15 @@ process.elecTauStreamAnalyzerMEtResponseDown = process.elecTauStreamAnalyzer.clo
     diTaus =  cms.InputTag("selectedDiTauMEtResponseDown"),
     met    =  cms.InputTag("metRecoilCorrector",  "ResponseD"),
     )
+process.elecTauStreamAnalyzerRawMEtResponseUp   = process.elecTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawMEtResponseUp"),
+    met    =  cms.InputTag("metRecoilCorrector",  "ResponseU"),
+    )
+process.elecTauStreamAnalyzerRawMEtResponseDown = process.elecTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawMEtResponseDown"),
+    met    =  cms.InputTag("metRecoilCorrector",  "ResponseD"),
+    )
+
 process.elecTauStreamAnalyzerMEtResolutionUp  = process.elecTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauMEtResolutionUp"),
     met    =  cms.InputTag("metRecoilCorrector",  "ResolutionU"),
@@ -520,6 +631,16 @@ process.elecTauStreamAnalyzerMEtResolutionDown = process.elecTauStreamAnalyzer.c
     diTaus =  cms.InputTag("selectedDiTauMEtResolutionDown"),
     met    =  cms.InputTag("metRecoilCorrector",  "ResolutionD"),
     )
+process.elecTauStreamAnalyzerRawMEtResolutionUp   = process.elecTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawMEtResolutionUp"),
+    met    =  cms.InputTag("metRecoilCorrector",  "ResolutionU"),
+    )
+process.elecTauStreamAnalyzerRawMEtResolutionDown = process.elecTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawMEtResolutionDown"),
+    met    =  cms.InputTag("metRecoilCorrector",  "ResolutionD"),
+    )
+
+
 process.elecTauStreamAnalyzerElecUp    = process.elecTauStreamAnalyzer.clone(
     diTaus       =  cms.InputTag("selectedDiTauElecUp"),
     met          =  cms.InputTag("rescaledMETelectron","NUNNN"),
@@ -532,6 +653,20 @@ process.elecTauStreamAnalyzerElecDown  = process.elecTauStreamAnalyzer.clone(
     electrons    =  cms.InputTag("elecPtEtaIDIsoElecDown"),
     electronsRel =  cms.InputTag("elecPtEtaRelIDElecDown"),
     )
+process.elecTauStreamAnalyzerRawElecUp    = process.elecTauStreamAnalyzer.clone(
+    diTaus   =  cms.InputTag("selectedDiRawTauElecUp"),
+    met      =  cms.InputTag("rescaledMETRawelectron","NUNNN"),
+    muons    =  cms.InputTag("elecPtEtaIDIsoElecUp"),
+    muonsRel =  cms.InputTag("elecPtEtaRelIDElecUp"),
+    )
+process.elecTauStreamAnalyzerRawElecDown  = process.elecTauStreamAnalyzer.clone(
+    diTaus   =  cms.InputTag("selectedDiTauRawElecDown"),
+    met      =  cms.InputTag("rescaledMETRawelectron","NDNNN"),
+    muons    =  cms.InputTag("elecPtEtaIDIsoElecDown"),
+    muonsRel =  cms.InputTag("elecPtEtaRelIDElecDown"),
+    )
+
+
 process.elecTauStreamAnalyzerTauUp     = process.elecTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauTauUp"),
     met    =  cms.InputTag("rescaledMETtau","NNNUN")
@@ -540,6 +675,15 @@ process.elecTauStreamAnalyzerTauDown   = process.elecTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauTauDown"),
     met    =  cms.InputTag("rescaledMETtau","NNNDN")
     )
+process.elecTauStreamAnalyzerRawTauUp   = process.elecTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawTauUp"),
+    met    =  cms.InputTag("rescaledMETRawtau","NNNUN"),
+    )
+process.elecTauStreamAnalyzerRawTauDown = process.elecTauStreamAnalyzer.clone(
+    diTaus =  cms.InputTag("selectedDiTauRawTauDown"),
+    met    =  cms.InputTag("rescaledMETRawtau","NNNDN")
+    )
+
 
 process.allAnalyzers = cms.Sequence(
     process.elecTauStreamAnalyzer+
@@ -552,7 +696,18 @@ process.allAnalyzers = cms.Sequence(
     process.elecTauStreamAnalyzerElecUp+
     process.elecTauStreamAnalyzerElecDown+
     process.elecTauStreamAnalyzerTauUp+
-    process.elecTauStreamAnalyzerTauDown
+    process.elecTauStreamAnalyzerTauDown+
+    process.elecTauStreamAnalyzerRaw+
+    process.elecTauStreamAnalyzerRawJetUp+
+    process.elecTauStreamAnalyzerRawJetDown+
+    process.elecTauStreamAnalyzerRawMEtResponseUp+
+    process.elecTauStreamAnalyzerRawMEtResponseDown+
+    process.elecTauStreamAnalyzerRawMEtResolutionUp+
+    process.elecTauStreamAnalyzerRawMEtResolutionDown+
+    process.elecTauStreamAnalyzerRawElecUp+
+    process.elecTauStreamAnalyzerRawElecDown+
+    process.elecTauStreamAnalyzerRawTauUp+
+    process.elecTauStreamAnalyzerRawTauDown
     )
 #######################################################################
 
@@ -566,181 +721,320 @@ process.analysis = cms.Sequence(
 
 #######################################################################
 
-if runOnMC: 
 
-    process.pNominal = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
-        process.elecTauStreamAnalyzer
-        )
-    '''
-    process.pJetUp = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.rescaledMETjet *
-        process.diTauJetUp*process.selectedDiTauJetUp*process.selectedDiTauJetUpCounter*
-        process.elecTauStreamAnalyzerJetUp
-        )
-    process.pJetDown = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.rescaledMETjet *
-        process.diTauJetDown*process.selectedDiTauJetDown*process.selectedDiTauJetDownCounter*
-        process.elecTauStreamAnalyzerJetDown
-        )
-    process.pMEtResolutionUp = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTauMEtResolutionUp*process.selectedDiTauMEtResolutionUp*process.selectedDiTauMEtResolutionUpCounter*
-        process.elecTauStreamAnalyzerMEtResolutionUp
-        )
-    process.pMEtResolutionDown = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTauMEtResolutionDown*process.selectedDiTauMEtResolutionDown*process.selectedDiTauMEtResolutionDownCounter*
-        process.elecTauStreamAnalyzerMEtResolutionDown
-        )
-    
-    process.pMEtResponseUp = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTauMEtResponseUp*process.selectedDiTauMEtResponseUp*process.selectedDiTauMEtResponseUpCounter*
-        process.elecTauStreamAnalyzerMEtResponseUp
-        )
-    process.pMEtResponseDown = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTauMEtResponseDown*process.selectedDiTauMEtResponseDown*process.selectedDiTauMEtResponseDownCounter*
-        process.elecTauStreamAnalyzerMEtResponseDown
-        )
+process.seqNominal = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    (process.pfMEtMVAsequence*process.patPFMetByMVA)*
+    process.metRecoilCorrector*
+    process.pfMEtMVACov*
+    process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
+    process.elecTauStreamAnalyzer
+    )
+process.seqJetUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    (process.pfMEtMVAsequence*process.patPFMetByMVA)*
+    process.metRecoilCorrector*
+    process.rescaledMETjet *
+    process.pfMEtMVACov*
+    process.diTauJetUp*process.selectedDiTauJetUp*process.selectedDiTauJetUpCounter*
+    process.elecTauStreamAnalyzerJetUp
+    )
+process.seqJetDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    (process.pfMEtMVAsequence*process.patPFMetByMVA)*
+    process.metRecoilCorrector*
+    process.rescaledMETjet *
+    process.pfMEtMVACov*
+    process.diTauJetDown*process.selectedDiTauJetDown*process.selectedDiTauJetDownCounter*
+    process.elecTauStreamAnalyzerJetDown
+    )
 
+process.seqMEtResolutionUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    process.pfMEtMVACov*
+    process.diTauMEtResolutionUp*process.selectedDiTauMEtResolutionUp*process.selectedDiTauMEtResolutionUpCounter*
+    process.elecTauStreamAnalyzerMEtResolutionUp
+    )
+process.seqMEtResolutionDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    process.pfMEtMVACov*
+    process.diTauMEtResolutionDown*process.selectedDiTauMEtResolutionDown*process.selectedDiTauMEtResolutionDownCounter*
+    process.elecTauStreamAnalyzerMEtResolutionDown
+    )
     
-    process.pElecUp = cms.Path(
-        process.allEventsFilter*
-        process.elecPtEtaIDIsoPtRel *
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        process.metRecoilCorrector*
-        (process.rescaledMETelectron+process.rescaledElectrons+process.rescaledElectronsRel)*
-        (process.elecPtEtaIDIsoElecUp*process.elecPtEtaIDIsoElecUpCounter) *
-        process.elecPtEtaRelIDElecUp *
-        process.diTauElecUp*process.selectedDiTauElecUp*process.selectedDiTauElecUpCounter*
-        process.elecTauStreamAnalyzerElecUp
-        )
-    process.pElecDown = cms.Path(
-        process.allEventsFilter*
-        process.elecPtEtaIDIsoPtRel *
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        process.metRecoilCorrector*
-        (process.rescaledMETelectron+process.rescaledElectrons+process.rescaledElectronsRel)*
-        (process.elecPtEtaIDIsoElecDown*process.elecPtEtaIDIsoElecDownCounter) *
-        process.elecPtEtaRelIDElecDown *
-        process.diTauElecDown*process.selectedDiTauElecDown*process.selectedDiTauElecDownCounter*
-        process.elecTauStreamAnalyzerElecDown
-        )
-    process.pTauUp = cms.Path(
-        process.allEventsFilter*
-        (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
-        process.tauPtEtaIDAgMuAgElecIsoPtRel*
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        (process.rescaledMETtau+process.rescaledTaus)*
-        (process.tauPtEtaIDAgMuAgElecIsoTauUp*process.tauPtEtaIDAgMuAgElecIsoTauUpCounter)*
-        process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter*
-        process.elecTauStreamAnalyzerTauUp
-        )
-    process.pTauDown = cms.Path(
-        process.allEventsFilter*
-        (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
-        process.tauPtEtaIDAgMuAgElecIsoPtRel*
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        (process.rescaledMETtau+process.rescaledTaus)*
-        (process.tauPtEtaIDAgMuAgElecIsoTauDown*process.tauPtEtaIDAgMuAgElecIsoTauDownCounter)*
-        process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
-        process.elecTauStreamAnalyzerTauDown
-        )
-    '''
-    
+process.seqMEtResponseUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    process.pfMEtMVACov*
+    process.diTauMEtResponseUp*process.selectedDiTauMEtResponseUp*process.selectedDiTauMEtResponseUpCounter*
+    process.elecTauStreamAnalyzerMEtResponseUp
+    )
+process.seqMEtResponseDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    process.pfMEtMVACov*
+    process.diTauMEtResponseDown*process.selectedDiTauMEtResponseDown*process.selectedDiTauMEtResponseDownCounter*
+    process.elecTauStreamAnalyzerMEtResponseDown
+    )
+
+process.seqElecUp = cms.Sequence(
+    process.allEventsFilter*
+    process.elecPtEtaIDIsoPtRel *
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.pfMEtMVAsequence*process.patPFMetByMVA)*
+    process.metRecoilCorrector*
+    (process.rescaledMETelectron+process.rescaledElectrons+process.rescaledElectronsRel)*
+    (process.elecPtEtaIDIsoElecUp*process.elecPtEtaIDIsoElecUpCounter) *
+    process.elecPtEtaRelIDElecUp *
+    process.pfMEtMVACov*
+    process.diTauElecUp*process.selectedDiTauElecUp*process.selectedDiTauElecUpCounter*
+    process.elecTauStreamAnalyzerElecUp
+    )
+process.seqElecDown = cms.Sequence(
+    process.allEventsFilter*
+    process.elecPtEtaIDIsoPtRel *
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.pfMEtMVAsequence*process.patPFMetByMVA)*
+    process.metRecoilCorrector*
+    (process.rescaledMETelectron+process.rescaledElectrons+process.rescaledElectronsRel)*
+    (process.elecPtEtaIDIsoElecDown*process.elecPtEtaIDIsoElecDownCounter) *
+    process.elecPtEtaRelIDElecDown *
+    process.pfMEtMVACov*
+    process.diTauElecDown*process.selectedDiTauElecDown*process.selectedDiTauElecDownCounter*
+    process.elecTauStreamAnalyzerElecDown
+    )
+
+process.seqTauUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
+    process.tauPtEtaIDAgMuAgElecIsoPtRel*
+    process.elecPtEtaRelID *
+    (process.pfMEtMVAsequence*process.patPFMetByMVA)*
+    process.metRecoilCorrector*
+    (process.rescaledMETtau+process.rescaledTaus)*
+    (process.tauPtEtaIDAgMuAgElecIsoTauUp*process.tauPtEtaIDAgMuAgElecIsoTauUpCounter)*
+    process.pfMEtMVACov*
+    process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter*
+    process.elecTauStreamAnalyzerTauUp
+    )
+process.seqTauDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
+    process.tauPtEtaIDAgMuAgElecIsoPtRel*
+    process.elecPtEtaRelID *
+    (process.pfMEtMVAsequence*process.patPFMetByMVA)*
+    process.metRecoilCorrector*
+    (process.rescaledMETtau+process.rescaledTaus)*
+    (process.tauPtEtaIDAgMuAgElecIsoTauDown*process.tauPtEtaIDAgMuAgElecIsoTauDownCounter)*
+    process.pfMEtMVACov*
+    process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
+    process.elecTauStreamAnalyzerTauDown
+    )
+
+
+if not usePFMEtMVA:
+    process.seqNominal.remove(process.pfMEtMVACov)
+    process.seqJetUp.remove(process.pfMEtMVACov)
+    process.seqJetDown.remove(process.pfMEtMVACov)
+    process.seqMEtResolutionUp.remove(process.pfMEtMVACov)
+    process.seqMEtResolutionDown.remove(process.pfMEtMVACov)
+    process.seqMEtResponseUp.remove(process.pfMEtMVACov)
+    process.seqMEtResponseDown.remove(process.pfMEtMVACov)
+    process.seqElecUp.remove(process.pfMEtMVACov)
+    process.seqElecDown.remove(process.pfMEtMVACov)
+    process.seqTauUp.remove(process.pfMEtMVACov)
+    process.seqTauDown.remove(process.pfMEtMVACov)
+
+
+process.seqRawNominal = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    #process.pfMEtMVACov*
+    process.diTauRaw*process.selectedDiTauRaw*process.selectedDiTauRawCounter*
+    process.elecTauStreamAnalyzerRaw
+    )
+
+process.seqRawJetUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    process.rescaledMETRawjet *
+    #process.pfMEtMVACov*
+    process.diTauRawJetUp*process.selectedDiTauRawJetUp*process.selectedDiTauRawJetUpCounter*
+    process.elecTauStreamAnalyzerRawJetUp
+    )
+
+process.seqRawJetDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    process.rescaledMETRawjet *
+    #process.pfMEtMVACov*
+    process.diTauRawJetDown*process.selectedDiTauRawJetDown*process.selectedDiTauRawJetDownCounter*
+    process.elecTauStreamAnalyzerRawJetDown
+    )
+
+process.seqRawMEtResolutionUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    #process.pfMEtMVACov*
+    process.diTauRawMEtResolutionUp*process.selectedDiTauRawMEtResolutionUp*process.selectedDiTauRawMEtResolutionUpCounter*
+    process.elecTauStreamAnalyzerRawMEtResolutionUp
+    )
+
+process.seqRawMEtResolutionDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    #process.pfMEtMVACov*
+    process.diTauRawMEtResolutionDown*process.selectedDiTauRawMEtResolutionDown*process.selectedDiTauRawMEtResolutionDownCounter*
+    process.elecTauStreamAnalyzerRawMEtResolutionDown
+    )
+
+process.seqRawMEtResponseUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    #process.pfMEtMVACov*
+    process.diTauRawMEtResponseUp*process.selectedDiTauRawMEtResponseUp*process.selectedDiTauRawMEtResponseUpCounter*
+    process.elecTauStreamAnalyzerRawMEtResponseUp
+    )
+
+process.seqRawMEtResponseDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    #process.pfMEtMVACov*
+    process.diTauRawMEtResponseDown*process.selectedDiTauRawMEtResponseDown*process.selectedDiTauRawMEtResponseDownCounter*
+    process.elecTauStreamAnalyzerRawMEtResponseDown
+    )
+
+process.seqRawElecUp = cms.Sequence(
+    process.allEventsFilter*
+    process.elecPtEtaIDIsoPtRel *
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    process.metRecoilCorrector*
+    (process.rescaledMETRawelectron+process.rescaledElectrons+process.rescaledElectronsRel)*
+    (process.elecPtEtaIDIsoElecUp*process.elecPtEtaIDIsoElecUpCounter) *
+    process.elecPtEtaRelIDElecUp *
+    #process.pfMEtMVACov*
+    process.diTauRawElecUp*process.selectedDiTauRawElecUp*process.selectedDiTauRawElecUpCounter*
+    process.elecTauStreamAnalyzerRawElecUp
+    )
+
+process.seqRawElecDown = cms.Sequence(
+    process.allEventsFilter*
+    process.elecPtEtaIDIsoPtRel *
+    (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
+    process.metRecoilCorrector*
+    (process.rescaledMETRawelectron+process.rescaledElectrons+process.rescaledElectronsRel)*
+    (process.elecPtEtaIDIsoElecDown*process.elecPtEtaIDIsoElecDownCounter) *
+    process.elecPtEtaRelIDElecDown *
+    #process.pfMEtMVACov*
+    process.diTauRawElecDown*process.selectedDiTauRawElecDown*process.selectedDiTauRawElecDownCounter*
+    process.elecTauStreamAnalyzerRawElecDown
+    )
+
+process.seqRawTauUp = cms.Sequence(
+    process.allEventsFilter*
+    (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
+    process.tauPtEtaIDAgMuAgElecIsoPtRel*
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    (process.rescaledMETRawtau+process.rescaledTaus)*
+    (process.tauPtEtaIDAgMuAgElecIsoTauUp*process.tauPtEtaIDAgMuAgElecIsoTauUpCounter)*
+    #process.pfMEtMVACov*
+    process.diTauRawTauUp*process.selectedDiTauRawTauUp*process.selectedDiTauRawTauUpCounter*
+    process.elecTauStreamAnalyzerRawTauUp
+    )
+
+process.seqRawTauDown = cms.Sequence(
+    process.allEventsFilter*
+    (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
+    process.tauPtEtaIDAgMuAgElecIsoPtRel*
+    process.elecPtEtaRelID *
+    process.metRecoilCorrector*
+    (process.rescaledMETRawtau+process.rescaledTaus)*
+    (process.tauPtEtaIDAgMuAgElecIsoTauDown*process.tauPtEtaIDAgMuAgElecIsoTauDownCounter)*
+    #process.pfMEtMVACov*
+    process.diTauRawTauDown*process.selectedDiTauRawTauDown*process.selectedDiTauRawTauDownCounter*
+    process.elecTauStreamAnalyzerRawTauDown
+    )
+
+#######################################################################
+
+if runOnMC:
+    process.pNominal            = cms.Path( process.seqNominal )
+    #process.pJetUp                 = cms.Path( process.seqJetUp   )
+    #process.pJetDown               = cms.Path( process.seqJetDown )
+    #process.pMEtResolutionUp       = cms.Path( process.seqMEtResolutionUp )
+    #process.pMEtResolutionDown     = cms.Path( process.seqMEtResolutionDown )
+    #process.pMEtResponseUp         = cms.Path( process.seqMEtResponseUp)
+    #process.pMEtResponseDown       = cms.Path( process.seqMEtResponseDown)
+    #process.pElecUp                  = cms.Path( process.seqElecUp)
+    #process.pElecDown                = cms.Path( process.seqElecDown)
+    #process.pTauUp              = cms.Path( process.seqTauUp)
+    #process.pTauDown            = cms.Path( process.seqTauDown )
+    #process.pRawNominal         = cms.Path( process.seqRawNominal )
+    #process.pRawJetUp              = cms.Path( process.seqRawJetUp   )
+    #process.pRawJetDown            = cms.Path( process.seqRawJetDown )
+    #process.pRawMEtResolutionUp    = cms.Path( process.seqRawMEtResolutionUp )
+    #process.pRawMEtResolutionDown  = cms.Path( process.seqRawMEtResolutionDown )
+    #process.pRawMEtResponseUp      = cms.Path( process.seqRawMEtResponseUp)
+    #process.pRawMEtResponseDown    = cms.Path( process.seqRawMEtResponseDown)
+    #process.pRawElecUp               = cms.Path( process.seqRawElecUp)
+    #process.pRawElecDown             = cms.Path( process.seqRawElecDown)
+    #process.pRawTauUp           = cms.Path( process.seqRawTauUp )
+    #process.pRawTauDown         = cms.Path( process.seqRawTauDown )
+
 else:
-    
-    process.pNominal = cms.Path(
-        process.allEventsFilter*
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        (process.elecPtEtaIDIso *process.elecPtEtaIDIsoCounter) *
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        process.diTau*process.selectedDiTau*process.selectedDiTauCounter*
-        process.elecTauStreamAnalyzer
-        )
-    '''
-    process.pTauUp = cms.Path(
-        process.allEventsFilter*
-        (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
-        process.tauPtEtaIDAgMuAgElecIsoPtRel*
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        (process.rescaledMETtau+process.rescaledTaus)*
-        (process.tauPtEtaIDAgMuAgElecIsoTauUp*process.tauPtEtaIDAgMuAgElecIsoTauUpCounter)*
-        process.diTauTauUp*process.selectedDiTauTauUp*process.selectedDiTauTauUpCounter*
-        process.elecTauStreamAnalyzerTauUp
-        )
-    process.pTauDown = cms.Path(
-        process.allEventsFilter*
-        (process.elecPtEtaIDIso*process.elecPtEtaIDIsoCounter) *
-        process.tauPtEtaIDAgMuAgElecIsoPtRel*
-        process.elecPtEtaRelID *
-        process.metRecoilCorrector*
-        (process.rescaledMETtau+process.rescaledTaus)*
-        (process.tauPtEtaIDAgMuAgElecIsoTauDown*process.tauPtEtaIDAgMuAgElecIsoTauDownCounter)*
-        process.diTauTauDown*process.selectedDiTauTauDown*process.selectedDiTauTauDownCounter*
-        process.elecTauStreamAnalyzerTauDown
-        )
-       
-    process.pElecUp = cms.Path(
-        process.allEventsFilter*
-        process.elecPtEtaIDIsoPtRel *
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        process.metRecoilCorrector*
-        (process.rescaledMETelectron+process.rescaledElectrons+process.rescaledElectronsRel)*
-        (process.elecPtEtaIDIsoElecUp*process.elecPtEtaIDIsoElecUpCounter) *
-        process.elecPtEtaRelIDElecUp *
-        process.diTauElecUp*process.selectedDiTauElecUp*process.selectedDiTauElecUpCounter*
-        process.elecTauStreamAnalyzerElecUp
-        )
-    process.pElecDown = cms.Path(
-        process.allEventsFilter*
-        process.elecPtEtaIDIsoPtRel *
-        (process.tauPtEtaIDAgMuAgElecIso*process.tauPtEtaIDAgMuAgElecIsoCounter)*
-        process.metRecoilCorrector*
-        (process.rescaledMETelectron+process.rescaledElectrons+process.rescaledElectronsRel)*
-        (process.elecPtEtaIDIsoElecDown*process.elecPtEtaIDIsoElecDownCounter) *
-        process.elecPtEtaRelIDElecDown *
-        process.diTauElecDown*process.selectedDiTauElecDown*process.selectedDiTauElecDownCounter*
-        process.elecTauStreamAnalyzerElecDown
-        )
-    '''
+    #process.pNominal            = cms.Path( process.seqNominal )
+    #process.pTauUp              = cms.Path( process.seqTauUp)
+    #process.pTauDown            = cms.Path( process.seqTauDown )
+    process.pRawNominal         = cms.Path( process.seqRawNominal )
+    process.pRawTauUp           = cms.Path( process.seqRawTauUp )
+    process.pRawTauDown         = cms.Path( process.seqRawTauDown )
+
+#######################################################################
 
 process.out = cms.OutputModule(
     "PoolOutputModule",
@@ -754,3 +1048,6 @@ process.TFileService = cms.Service(
     )
 
 process.outpath = cms.EndPath()
+
+processDumpFile = open('runElecTauStreamAnalyzerFullAnalysis_Recoil.dump', 'w')
+print >> processDumpFile, process.dumpPython()
