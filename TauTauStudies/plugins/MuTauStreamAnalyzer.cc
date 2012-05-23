@@ -911,55 +911,32 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   if(isMC_){
     
     // X-triggers 
-    XtriggerPaths.push_back("HLT_Mu15_LooseIsoPFTau20_v*");
-    XtriggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v*");
-    XtriggerPaths.push_back("HLT_Mu15_v*");
-    XtriggerPaths.push_back("HLT_IsoMu12_v*");
+    XtriggerPaths.push_back("HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v*");
 
-    // for Fall11
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v9");
-    triggerPaths.push_back("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v1");
-    triggerPaths.push_back("HLT_IsoMu15_v14");
+    // for Summer11
+    triggerPaths.push_back("HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v1");
+    triggerPaths.push_back("HLT_Mu18_eta2p1_LooseIsoPFTau20_v1");
+    triggerPaths.push_back("HLT_IsoMu20_eta2p1_v1");
 
-    HLTfiltersMu.push_back("hltSingleMuIsoL3IsoFiltered15");
     HLTfiltersMu.push_back("hltSingleMuIsoL1s14L3IsoFiltered15eta2p1");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoMu15IsoPFTau15");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoMu15IsoPFTau20");
-    HLTfiltersTau.push_back("hltPFTau15TrackLooseIso");
-    HLTfiltersTau.push_back("hltPFTau20TrackLooseIso");
+    HLTfiltersMu.push_back("hltL3crIsoL1sMu16Eta2p1L1f0L2f16QL3f18QL3crIsoFiltered10");
+    HLTfiltersMu.push_back("hltOverlapFilterIsoMu15IsoPFTau20");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoMu18LooseIsoPFTau20");
 
   }
   else{
     
-    XtriggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v*");
-    XtriggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v*");
-    XtriggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau20_v*");
-    XtriggerPaths.push_back("HLT_IsoMu12_v*");
+    XtriggerPaths.push_back("HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v*");
 
+    triggerPaths.push_back("HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v4");
+    triggerPaths.push_back("HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v5");
 
-    triggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v1");
-    triggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v2");
-    triggerPaths.push_back("HLT_IsoMu12_LooseIsoPFTau10_v4");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v2");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v4");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v5");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v6");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v8");
-    triggerPaths.push_back("HLT_IsoMu15_LooseIsoPFTau15_v9");
-    triggerPaths.push_back("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v1");
-    triggerPaths.push_back("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v5");
-    triggerPaths.push_back("HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v6");
-
-    triggerPaths.push_back("HLT_IsoMu12_v1");
-    triggerPaths.push_back("HLT_IsoMu12_v2");
-
-    HLTfiltersMu.push_back("hltSingleMuIsoL3IsoFiltered12");
-    HLTfiltersMu.push_back("hltSingleMuIsoL3IsoFiltered15");
     HLTfiltersMu.push_back("hltSingleMuIsoL1s14L3IsoFiltered15eta2p1");
+    HLTfiltersMu.push_back("hltL3crIsoL1sMu16Eta2p1L1f0L2f16QL3f18QL3crIsoFiltered10");
+    HLTfiltersMu.push_back("hltOverlapFilterIsoMu18LooseIsoPFTau20");
+    HLTfiltersTau.push_back("hltOverlapFilterIsoMu18LooseIsoPFTau20");
 
-    HLTfiltersTau.push_back("hltOverlapFilterIsoMu12IsoPFTau10");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoMu15IsoPFTau15");
-    HLTfiltersTau.push_back("hltOverlapFilterIsoMu15IsoPFTau20");
+
   }
 
   for(unsigned int i=0;i<triggerPaths.size();i++){
@@ -1143,7 +1120,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	    }
 	  }
 	}
-	if( Geom::deltaR( aObj->triggerObject().p4(), leg1->p4() )<0.3  && aObj->hasFilterLabel(HLTfiltersMu[i]) ){
+	if( Geom::deltaR( aObj->triggerObject().p4(), leg1->p4() )<0.3  && aObj->hasFilterLabel(HLTfiltersMu[i]) && aObj->hasTriggerObjectType(trigger::TriggerMuon)){
 	  matched = true;
 	}
       }
@@ -1167,7 +1144,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	    }
 	  }
 	}
-	if( Geom::deltaR( aObj->triggerObject().p4(), leg2->p4() )<0.3  && aObj->hasFilterLabel(HLTfiltersTau[i]) ){
+	if( Geom::deltaR( aObj->triggerObject().p4(), leg2->p4() )<0.3  && aObj->hasFilterLabel(HLTfiltersTau[i]) && aObj->hasTriggerObjectType(trigger::TriggerTau) ){
 	  matched = true;
 	}
       }
@@ -1408,7 +1385,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
        (leg1->globalTrack()->hitPattern()).numberOfValidMuonHits()>0 &&
        leg1->numberOfMatchedStations()>1 &&    
        (leg1->innerTrack()->hitPattern()).numberOfValidPixelHits()>0 &&
-       (leg1->track()->hitPattern()).trackerLayersWithMeasurement()>8) ? 1 : 0;
+       (leg1->track()->hitPattern()).trackerLayersWithMeasurement()>5) ? 1 : 0;
 
     isPFMuon_   = leg1->userInt("isPFMuon");
     isoLeg1MVA_ = -99;
