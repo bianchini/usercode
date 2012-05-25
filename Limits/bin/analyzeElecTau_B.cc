@@ -364,9 +364,10 @@ void plotElecTau( Int_t mH_           = 120,
   TCut oneJet("nJets30>=1");
   TCut twoJets("nJets30>=2");
 
-  TCut vbf("pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && isVetoInJets!=1"); // <--- BASELINE
+  //TCut vbf("pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && isVetoInJets!=1"); // <--- BASELINE
   //TCut vbf("pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && isVetoInJets!=1 && jet1PUWP>0.5 && jet2PUWP>0.5 && (jetVetoPUWP>0.5 && jetVetoPUWP<0)");    // <--- NEW 1
-  //TCut vbf("pt1>30 && pt2>30 && isVetoInJets!=1 && jet1PUWP>0.5 && jet2PUWP>0.5 && (jetVetoPUWP>0.5 || jetVetoPUWP<0) && MVAvbf>0.40"); // <--- NEW 2
+  TCut vbf("pt1>30 && pt2>30 && isVetoInJets!=1 && jet1PUWP>0.5 && jet2PUWP>0.5 && (jetVetoPUWP>0.5 || jetVetoPUWP<0) && MVAvbf>0.40"); // <--- NEW 2
+  //TCut vbf("pt1>30 && pt2>30 && Deta>4.0"); // <--- BASELINE
 
   //TCut boost("pt1>150 && !(pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && isVetoInJets!=1)"); // <--- BASELINE
   //TCut boost("pt1>50 && nJets20BTagged==0 && !(pt1>30 && pt2>30 && isVetoInJets!=1 && jet1PUWP>0.5 && jet2PUWP>0.5 && (jetVetoPUWP>0.5 || jetVetoPUWP<0) && MVAvbf>0.40)"); // <--- NEW
@@ -1305,12 +1306,12 @@ void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "May2012/Reload_
 
   //mH.push_back(105);
   //mH.push_back(110);
-  mH.push_back(115);
-  //mH.push_back(120);
-  mH.push_back(125);
+  //mH.push_back(115);
+  mH.push_back(120);
+  //mH.push_back(125);
   //mH.push_back(130);
-  mH.push_back(135);
-  mH.push_back(140);
+  //mH.push_back(135);
+  //mH.push_back(140);
   //mH.push_back(145);
   //mH.push_back(160);
 
@@ -1318,8 +1319,8 @@ void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "May2012/Reload_
 
   //plotElecTau(120,0,"inclusive",""   ,"numPV","reconstructed vertexes","units" ,outputDir,30,0,30,5.0,1.0,0,1.5);
 
-  plotElecTau(120,1,"inclusive",""  ,"diTauNSVfitMass","visible mass","GeV" ,outputDir,50,0,200,5.0,1.0,0,1.2);
-  return;
+  //plotElecTau(120,1,"inclusive",""  ,"diTauNSVfitMass","visible mass","GeV" ,outputDir,50,0,200,5.0,1.0,0,1.2);
+  //return;
   //plotElecTau(120,1,"inclusive",""   ,"ptL2","#tau p_{T}","GeV"           ,outputDir,30,0, 90,5.0,1.0,0,1.2);
   //plotElecTau(120,1,"inclusive",""   ,"ptL1","e p_{T}", "GeV"             ,outputDir,30,0, 90,5.0,1.0,0,1.2);
 
