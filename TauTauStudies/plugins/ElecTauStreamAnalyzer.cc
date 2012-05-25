@@ -918,8 +918,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
       if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
 	  && (*electronsRel)[i].charge()*(*electrons)[j].charge()<0
-	  && (*electrons)[j].userFloat("PFRelIsoDB04")<0.30 && mvaPreselectionNoIsoElecI
-	  && (*electronsRel)[i].userFloat("PFRelIsoDB04")<0.30 ){
+	  && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.30 && mvaPreselectionNoIsoElecI
+	  && (*electronsRel)[i].userFloat("PFRelIsoDB04v2")<0.30 ){
 	elecFlag_       = 1;
 	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04");
 	if(verbose_) cout<< "Two electrons failing diElec veto: flag= " << elecFlag_ << endl;
@@ -927,10 +927,10 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       }
       else if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
 	       && (*electronsRel)[i].charge()*(*electrons)[j].charge()>0
-	       && (*electrons)[j].userFloat("PFRelIsoDB04")<0.30 && mvaPreselectionNoIsoElecI
-	       && (*electronsRel)[i].userFloat("PFRelIsoDB04")<0.30 ){
+	       && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.30 && mvaPreselectionNoIsoElecI
+	       && (*electronsRel)[i].userFloat("PFRelIsoDB04v2")<0.30 ){
 	elecFlag_       = 2;
-	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04");
+	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04v2");
 	if(verbose_) cout<< "Two electrons with SS: flag= " << elecFlag_ << endl;
 	found=true;
       }
@@ -1036,8 +1036,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     int pairCharge = (((*diTaus)[i].leg1())->charge()*((*diTaus)[i].leg2())->charge());
 
     const pat::Tau*  tau_i = dynamic_cast<const pat::Tau*>(  ((*diTaus)[i].leg2()).get() );
-    if(tau_i->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5 || 
-       tau_i->tauID("byLooseIsolationMVA")>0.5 )
+    if( tau_i->tauID("byLooseIsolationMVA")>0.5 )
       sortedDiTausLooseIso.insert( make_pair( sumPt, i ) );
     sortedDiTaus.insert( make_pair( sumPt, i ) );
     if(pairCharge<0) 
@@ -1484,7 +1483,10 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     //vetos2011EEChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
     //vetos2011EENeutralLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
     //vetos2011EENeutralLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
+
+    vetos2011EBPhotonLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
     vetos2011EEPhotonLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
+
     //vetos2011EEPhotonLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
     
     
@@ -1514,9 +1516,11 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     phIsoLeg1v2_   = leg1->isEB() ?
       leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2011EBPhotonLeg1).first  :
       leg1->isoDeposit(pat::PfGammaIso)->depositAndCountWithin(0.4,vetos2011EEPhotonLeg1).first;
+
     // all charged particles
-    elecIsoLeg1v2_ = 
-      leg1->isoDeposit(pat::User1Iso)->depositAndCountWithin(0.4,vetos2011AllChargedLeg1).first ;
+    elecIsoLeg1v2_ = leg1->isEB() ?
+      leg1->isoDeposit(pat::User1Iso)->depositAndCountWithin(0.4,vetos2011AllChargedLeg1).first :
+      leg1->isoDeposit(pat::User1Iso)->depositAndCountWithin(0.4,vetos2011EEChargedLeg1).first ;
     muIsoLeg1v2_   = 
       leg1->isoDeposit(pat::User1Iso)->depositAndCountWithin(0.4,vetos2011AllChargedLeg1v2).first ;
 

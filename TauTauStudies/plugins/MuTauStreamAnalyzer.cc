@@ -1003,7 +1003,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     int pairCharge = (((*diTaus)[i].leg1())->charge()*((*diTaus)[i].leg2())->charge());
 
     const pat::Tau*  tau_i = dynamic_cast<const pat::Tau*>(  ((*diTaus)[i].leg2()).get() );
-    if(tau_i->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5 ||
+    if(//tau_i->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5 ||
        tau_i->tauID("byLooseIsolationMVA")>0.5)
       sortedDiTausLooseIso.insert( make_pair( sumPt, i ) );
     sortedDiTaus.insert( make_pair( sumPt, i ) );
