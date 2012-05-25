@@ -32,12 +32,13 @@ process.source.fileNames = cms.untracked.vstring(
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/rbonieck/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/428_mutau_Fall11_skimNoTauIsol_v1/c69db8fd1d6ad63518141f89915d27aa/tautauSkimmAOD_87_1_poE.root'
     #'file:./root/pickevents.root',
     #'file:./root/GluGluToHToTauTau_M-125_7TeV-powheg-pythia6_12628F24-31FB-E011-883A-90E6BA19A248.root',
-    'file:./root/VBF_HToTauTau_M-125_7TeV-powheg-pythia6-tauola_668A54D7-53F8-E011-9D81-E0CB4E29C502.root',
+    #'file:./root/VBF_HToTauTau_M-125_7TeV-powheg-pythia6-tauola_668A54D7-53F8-E011-9D81-E0CB4E29C502.root',
+    'file:./root/pfembTauTau_TTJets_Fall11_PU_S6_START42_V14B_v2_1_0_pt_0_398_embedded.root'
     )
 
-process.source.eventsToProcess = cms.untracked.VEventRange(
-    '1:82155','1:172226','1:78770'
-    )
+#process.source.eventsToProcess = cms.untracked.VEventRange(
+#    '1:15460'
+#    )
 ################### event content ##################
 
 process.printEventContent = cms.EDAnalyzer("EventContentAnalyzer")
@@ -146,7 +147,7 @@ if runOnMC:
 else:
     process.calibratedAK5PFJetsForPFMEtMVA.correctors = cms.vstring("ak5PFL1FastL2L3Residual") 
 
-process.pfMEtMVA.srcLeptons = cms.VInputTag( cms.InputTag('elecPtEtaRelIDRelIso'), cms.InputTag('muPtEtaRelIDRelIso'), cms.InputTag('tauPtEtaIDAgMuAgElecRelIso') )
+process.pfMEtMVA.srcLeptons = cms.VInputTag( cms.InputTag('muPtEtaRelIDRelIso'), cms.InputTag('tauPtEtaIDAgMuAgElecRelIso') )
 
 process.patPFMetByMVA = process.patMETs.clone(
     metSource = cms.InputTag('pfMEtMVA'),
@@ -730,9 +731,14 @@ process.selectedPrimaryVertices.src = cms.InputTag('offlinePrimaryVertices')
 
 if not runOnMC:
     process.skim.remove(process.printTree1)
+    process.skim.remove(process.HLTFilter)
+    
 if not runOnEmbed:
      process.skim.remove(process.ak5JetTracksAssociatorAtVertex)
      process.skim.remove(process.btagging)
+
+if runOnMC and runOnEmbed:
+    process.skim.remove(process.HLTFilter)
 
 #process.p = cms.Path(process.printEventContent+process.skim)
 process.p = cms.Path(process.skim)

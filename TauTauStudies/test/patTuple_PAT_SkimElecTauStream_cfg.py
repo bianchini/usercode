@@ -138,7 +138,7 @@ if runOnMC:
 else:
     process.calibratedAK5PFJetsForPFMEtMVA.correctors = cms.vstring("ak5PFL1FastL2L3Residual") 
 
-process.pfMEtMVA.srcLeptons = cms.VInputTag( cms.InputTag('elecPtEtaRelIDRelIso'), cms.InputTag('muPtEtaRelIDRelIso'), cms.InputTag('tauPtEtaIDAgMuAgElecRelIso') )
+process.pfMEtMVA.srcLeptons = cms.VInputTag( cms.InputTag('elecPtEtaRelIDRelIso'), cms.InputTag('tauPtEtaIDAgMuAgElecRelIso') )
 
 process.patPFMetByMVA = process.patMETs.clone(
     metSource = cms.InputTag('pfMEtMVA'),
@@ -785,10 +785,15 @@ process.selectedPrimaryVertices.src = cms.InputTag('offlinePrimaryVertices')
 
 if not runOnMC:
     process.skim.remove(process.printTree1)
+    process.skim.remove(process.HLTFilter)
+
 if not runOnEmbed:
      process.skim.remove(process.ak5JetTracksAssociatorAtVertex)
      process.skim.remove(process.btagging)
-     
+
+if runOnMC and runOnEmbed:
+    process.skim.remove(process.HLTFilter)
+    
 process.p = cms.Path(process.skim)
 
 
