@@ -42,11 +42,15 @@
 #include "TMVA/Tools.h"
 
 #define SAVE   true
+
 #define MINPt1 20.0 
 #define MINPt2 20.0
-#define PtVETO 30.0
+#define PtVETO 20.0
 #define MAXEta  4.5 
 #define MINJetID 0.5
+#define ETOTAUEB 0.85
+#define ETOTAUEE 0.65
+
 #define USERECOILALGO true
 #define USEFAKERATE false
 #define DOSVFITSTANDALONE false
@@ -1705,11 +1709,11 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     fakeRateWMC     = (hfakeRateWJets!=0)   ? hfakeRateWJets->GetBinContent(   hfakeRateWJets->FindBin(  pfJetPt, ptL2, 0) ) : -99;
     effDYMC         = (hfakeRateDYJets!=0)  ? hfakeRateDYJets->GetBinContent(  hfakeRateDYJets->FindBin( pfJetPt, ptL2, 0) ) : -99;
 
-    //if(leptFakeTau==1){
-    //float extraSmearing = ran->Gaus( -0.373, 1.18 );
-    //diTauVisMass += extraSmearing;
-    //SFEtoTau      = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ? 1.152 : 1.01;
-    //}
+    if(leptFakeTau==1){
+      //float extraSmearing = ran->Gaus( -0.373, 1.18 );
+      //diTauVisMass += extraSmearing;
+      SFEtoTau      = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ? ETOTAUEB : ETOTAUEE;
+    }
 
     elecFlag_        = elecFlag;
     genDecay_        = genDecay ;
@@ -1720,7 +1724,8 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
 
     int pairIndex = -1;
-    bool passQualityCuts = tightestHPSMVAWP>=0 && ptL1>20 && combRelIsoLeg1DBetav2<0.1 && ptL1>20 && HLTmatch;
+    bool passQualityCuts = tightestHPSMVAWP>=0 && ptL1>20 && ptL2>20 && TMath::Abs(etaL1)<2.1 && combRelIsoLeg1DBetav2<0.1 && HLTmatch
+      && ((mvaPOGNonTrig>0.925 && TMath::Abs(etaL1)<0.8) || (mvaPOGNonTrig>0.975 && TMath::Abs(etaL1)>0.8 && TMath::Abs(etaL1)<1.497) ||  (mvaPOGNonTrig>0.985 &&  TMath::Abs(etaL1)>1.497) );
     if( !(run==lastRun && lumi==lastLumi && event==lastEvent) ){
 
       lastEvent = event;
@@ -1868,24 +1873,22 @@ int main(int argc, const char* argv[])
   //doAllSamplesElec( "ElecTauStreamFall11_04May2012");
   //return 1;  
 
-  string inputDir = "ElecTauStreamFall11_04May2012";
+  string inputDir = "ElecTauStreamFall11_04May2012_PreApproval";
 
   makeTrees_ElecTauStream("",           argv[1], atof(argv[2]), inputDir);
   //makeTrees_ElecTauStream("Raw",        argv[1], atof(argv[2]), inputDir);
 
-  return 0;
-
   if( string(argv[1]).find("Run2011-ElecTau-All")!=string::npos )
     return 0;
-  //makeTrees_ElecTauStream("TauUp",      argv[1], atof(argv[2]), inputDir);
-  //makeTrees_ElecTauStream("TauDown",    argv[1], atof(argv[2]), inputDir);
-  makeTrees_ElecTauStream("RawTauUp",   argv[1], atof(argv[2]), inputDir);
-  makeTrees_ElecTauStream("RawTauDown", argv[1], atof(argv[2]), inputDir);
+  makeTrees_ElecTauStream("TauUp",      argv[1], atof(argv[2]), inputDir);
+  makeTrees_ElecTauStream("TauDown",    argv[1], atof(argv[2]), inputDir);
+  //makeTrees_ElecTauStream("RawTauUp",   argv[1], atof(argv[2]), inputDir);
+  //makeTrees_ElecTauStream("RawTauDown", argv[1], atof(argv[2]), inputDir);
   if( string(argv[1]).find("Embedded")!=string::npos)
     return 0;
-  //makeTrees_ElecTauStream("JetUp",      argv[1], atof(argv[2]), inputDir);
-  //makeTrees_ElecTauStream("JetDown",    argv[1], atof(argv[2]), inputDir);
-  makeTrees_ElecTauStream("RawJetUp",   argv[1], atof(argv[2]), inputDir);
-  makeTrees_ElecTauStream("RawJetDown", argv[1], atof(argv[2]), inputDir);
+  makeTrees_ElecTauStream("JetUp",      argv[1], atof(argv[2]), inputDir);
+  makeTrees_ElecTauStream("JetDown",    argv[1], atof(argv[2]), inputDir);
+  //makeTrees_ElecTauStream("RawJetUp",   argv[1], atof(argv[2]), inputDir);
+  //makeTrees_ElecTauStream("RawJetDown", argv[1], atof(argv[2]), inputDir);
 
 }

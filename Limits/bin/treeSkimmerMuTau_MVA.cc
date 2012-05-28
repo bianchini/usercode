@@ -45,7 +45,7 @@
 #define SAVE   true
 #define MINPt1 20.0 
 #define MINPt2 20.0
-#define PtVETO 30.0
+#define PtVETO 20.0
 #define MAXEta  4.5 
 #define MINJetID 0.5
 #define USERECOILALGO true
@@ -1609,13 +1609,13 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     } else{
 
 
-      //HLTx  =  float((*triggerBits)[0]); //HLT_IsoMu15_LooseIsoPFTau15_v9 
-      HLTx  =  float((*triggerBits)[1]); // <----------------- HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v1 used
+      HLTx  =  float((*triggerBits)[0]); //HLT_IsoMu15_LooseIsoPFTau15_v9 
+      //HLTx  =  float((*triggerBits)[1]); // <----------------- HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v1 used
       HLTmu =  triggerBits->size()>2 ? 
 	float((*triggerBits)[2]) : float(1.0); //HLT_IsoMu15_v14
       //bool isTriggMatched = (*tauXTriggers)[0] && (*tauXTriggers)[2] ; //hltSingleMuIsoL3IsoFiltered15 && hltOverlapFilterIsoMu15IsoPFTau15
       //bool isTriggMatched = (*tauXTriggers)[1] && (*tauXTriggers)[3] ; //hltSingleMuIsoL1s14L3IsoFiltered15eta2p1 &&
-      bool isTriggMatched = (*tauXTriggers)[3] && (*tauXTriggers)[5] ; //hltOverlapFilterIsoMu15IsoPFTau20 && hltOverlapFilterIsoMu15IsoPFTau20
+      bool isTriggMatched = (*tauXTriggers)[2] && (*tauXTriggers)[4] ; //hltOverlapFilterIsoMu15IsoPFTau20 && hltOverlapFilterIsoMu15IsoPFTau20
 
       HLTmatch = isTriggMatched ? 1.0 : 0.0;
 
@@ -1814,25 +1814,23 @@ int main(int argc, const char* argv[])
   //doAllSamplesMu( "MuTauStreamFall11_04May2012");
   //return 1;
 
-  string inputDir = "MuTauStreamFall11_04May2012";
+  string inputDir = "MuTauStreamFall11_04May2012_PreApproval";
 
   makeTrees_MuTauStream("",           argv[1], atof(argv[2]), inputDir);
   //makeTrees_MuTauStream("Raw",        argv[1], atof(argv[2]), inputDir);
-
-  return 0;
 
   if( string(argv[1]).find("Run2011-MuTau-All")!=string::npos )
     return 0;
   makeTrees_MuTauStream("TauUp",      argv[1], atof(argv[2]), inputDir);
   makeTrees_MuTauStream("TauDown",    argv[1], atof(argv[2]), inputDir);
-  makeTrees_MuTauStream("RawTauUp",   argv[1], atof(argv[2]), inputDir);
-  makeTrees_MuTauStream("RawTauDown", argv[1], atof(argv[2]), inputDir);
+  //makeTrees_MuTauStream("RawTauUp",   argv[1], atof(argv[2]), inputDir);
+  //makeTrees_MuTauStream("RawTauDown", argv[1], atof(argv[2]), inputDir);
   if( string(argv[1]).find("Embedded")!=string::npos)
     return 0;
   makeTrees_MuTauStream("JetUp",      argv[1], atof(argv[2]), inputDir);
   makeTrees_MuTauStream("JetDown",    argv[1], atof(argv[2]), inputDir);
-  makeTrees_MuTauStream("RawJetUp",   argv[1], atof(argv[2]), inputDir);
-  makeTrees_MuTauStream("RawJetDown", argv[1], atof(argv[2]), inputDir);
+  //makeTrees_MuTauStream("RawJetUp",   argv[1], atof(argv[2]), inputDir);
+  //makeTrees_MuTauStream("RawJetDown", argv[1], atof(argv[2]), inputDir);
 
 
 
