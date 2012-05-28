@@ -14,11 +14,11 @@ def treeSkim( sample, xsection, runInSeries=True):
 
     os.system( 'mkdir batch/' )
 
-    stream = "ElecTau"
-    if(re.search("MuTau",sample)!=None):
-        stream = "MuTau"
-    else:
-        stream = "ElecTau"
+    stream = "MuTau"
+    #if(re.search("MuTau",sample)!=None):
+    #    stream = "MuTau"
+    #else:
+    #    stream = "ElecTau"
     print "Stream ", stream
     
     if runInSeries:
@@ -56,6 +56,14 @@ def treeSkim( sample, xsection, runInSeries=True):
   
 ###########################################
 ###########################################
+
+
+#treeSkim("GGFH125",      6.37e-02*15.31 * 1.0 * 0.0589651)
+treeSkim("VBFH125",      6.37e-02*1.211 * 1.0 * 0.0890235)
+
+#treeSkim("GGFH125",      6.37e-02*15.31 * 1.0 * 0.037848)
+#treeSkim("VBFH125",      6.37e-02*1.211 * 1.0 * 0.061610) 
+
 
 #treeSkim("Run2011A-MuTau-05AugReReco-v2-Embedded-t3_run",     0)   
 
@@ -115,7 +123,7 @@ def treeSkim( sample, xsection, runInSeries=True):
 #treeSkim("Run2011-ElecTau-All_run",              0)                            
 #treeSkim("Run2011-ElecTau-Embedded-All_run",     0)                           
 
-treeSkim("DYJets-ElecTau-50-madgraph-PUS6_run",  3048           * 0.0537207    * 0.864464) 
+#treeSkim("DYJets-ElecTau-50-madgraph-PUS6_run",  3048           * 0.0537207    * 0.864464) 
 #treeSkim("TTJets-ElecTau-madgraph-PUS6_run",     157.5          * 0.0149329    * 0.796639)  
 #treeSkim("WJets-ElecTau-madgraph-PUS6_run",      31314.0        * 0.0011910    * 0.624904)  
 ##treeSkim("W3Jets-ElecTau-madgraph-PUS6_run",     304.0          * 1.0         * 0.1257)
