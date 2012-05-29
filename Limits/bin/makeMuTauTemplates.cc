@@ -29,10 +29,10 @@ void produce(
 
 
   ///////////////////////////////////////////////
-  TFile* fin_jUp   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_JetUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_jDown = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_JetDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_tUp   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_TauUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_tDown = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_TauDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_jUp     = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_JetUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_jDown   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_JetDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_tUp     = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_TauUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_tDown   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_TauDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
   TFile* fin_nominal = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s__%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
   ///////////////////////////////////////////////
 
@@ -40,20 +40,52 @@ void produce(
   string binNameSpace = "";
   if(bin_.find("inclusive")!=string::npos)      
     binNameSpace =  "inclusive";
+
   else if(bin_.find("novbf")!=string::npos) 
     binNameSpace =  "SM0";
-  else if(bin_.find("boost")!=string::npos && bin_.find("boost2")==string::npos) 
+
+  if(bin_.find("novbfLow")  !=string::npos) 
+    binNameSpace =  "incl_low";
+
+  if(bin_.find("novbfHigh") !=string::npos) 
+    binNameSpace =  "incl_high";
+
+
+  else if(bin_.find("boost")!=string::npos) 
     binNameSpace =  "SM1";
-  else if(bin_.find("boost2")!=string::npos) 
-    binNameSpace =  "SM3";
+
+  if(bin_.find("boostLow")!=string::npos) 
+    binNameSpace =  "boost_low";
+
+  if(bin_.find("boostHigh")!=string::npos) 
+    binNameSpace =  "boost_high";
+
+
   else if(bin_.find("vbf")!=string::npos && bin_.find("novbf")==string::npos) 
-    binNameSpace =  "SM2";
+    binNameSpace =  "vbf";
+
+  else if(bin_.find("vh")!=string::npos) 
+    binNameSpace =  "2jet";
+
+
+  else if(bin_.find("bTag")!=string::npos) 
+    binNameSpace =  "SM4";
+
+  if(bin_.find("bTagLow")!=string::npos) 
+    binNameSpace =  "btag_low";
+
+  if(bin_.find("bTagHigh")!=string::npos) 
+    binNameSpace =  "btag_high";
+
+
   else if(bin_.find("twoJets")!=string::npos) 
     binNameSpace =  "SMpre2";
+
   else if(bin_.find("oneJet")!=string::npos) 
     binNameSpace =  "SMpre2a";
 
-  TFile* fTemplOut = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/datacards/%s/muTauSM_%s.root",outputDir.Data(), variable_.c_str()),"UPDATE");
+  //TFile* fTemplOut = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/datacards/%s/muTauSM_%s.root",outputDir.Data(), variable_.c_str()),"UPDATE");
+  TFile* fTemplOut = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/datacards/%s/muTauSM.root",outputDir.Data()),"UPDATE");
   
   string suffix = "";
   if(analysis_.find("TauUp")!=string::npos)
@@ -81,14 +113,22 @@ void produce(
 
     if(bin_.find("novbf")!=string::npos){
       ((TH1F*)fin->Get("hData"))->Write("data_obs");
-      ((TH1F*)fin->Get("hSgn1"))->Write(Form("VBF%d%s" ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn2"))->Write(Form("SM%d%s"  ,mH_,suffix.c_str()));
+      ((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s" ,mH_,suffix.c_str()));
+      ((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s"  ,mH_,suffix.c_str()));
       ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s"  ,mH_,suffix.c_str()));
       ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s",suffix.c_str()));
+
       TH1F* hQCD         = (TH1F*)fin->Get("hQCD");
-      TH1F* hAntiIsoKeys = (TH1F*)fin->Get("hAntiIsoKeys");
-      hAntiIsoKeys->Scale(hQCD->Integral()/hAntiIsoKeys->Integral());
-      hAntiIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
+      TH1F* hAntiIsoKeys = (TH1F*)fin->Get("hAntiIsoKeys") ;
+      //hAntiIsoKeys->Scale(hQCD->Integral()/hAntiIsoKeys->Integral());
+
+      if( bin_.find("Low")!=string::npos )
+	hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
+      else{
+	hAntiIsoKeys->Scale(hQCD->Integral()/hAntiIsoKeys->Integral());
+	hAntiIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
+      }
+   
       ((TH1F*)fin->Get("hW"))->Write(Form("W%s"           ,suffix.c_str()));
       ((TH1F*)fin->Get("hZmj"))->Write(Form("ZJ%s"        ,suffix.c_str()));
       ((TH1F*)fin->Get("hZmm"))->Write(Form("ZL%s"        ,suffix.c_str()));
@@ -98,14 +138,27 @@ void produce(
 
     }
     else if(bin_.find("boost")!=string::npos){
+
       ((TH1F*)fin->Get("hData"))->Write("data_obs");
-      ((TH1F*)fin->Get("hSgn1"))->Write(Form("VBF%d%s" ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn2"))->Write(Form("SM%d%s"  ,mH_,suffix.c_str()));
+      ((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s" ,mH_,suffix.c_str()));
+      ((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s"  ,mH_,suffix.c_str()));
       ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s"  ,mH_,suffix.c_str()));
       ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s",suffix.c_str()));
-      //((TH1F*)fin->Get("hZtt"))->Write(Form("ZTT%s",suffix.c_str()));
-      ((TH1F*)fin->Get("hAntiIsoKeys"))->Write(Form("QCD%s"    ,suffix.c_str()));
+
+      TH1F* hQCD         = (TH1F*)fin->Get("hQCD");
+      //TH1F* hAntiIsoKeys = (TH1F*)fin->Get("hAntiIsoKeys");
+      //hAntiIsoKeys->Scale(hQCD->Integral()/hAntiIsoKeys->Integral());
+      //hAntiIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
+      hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
+
+      //TH1F* hAntiIsoKeys = (TH1F*)fin->Get("hAntiIsoKeys");
+      //hAntiIsoKeys->Scale(hQCD->Integral()/hAntiIsoKeys->Integral());
+      //hAntiIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
+
+
       ((TH1F*)fin->Get("hWKeys"))->Write(Form("W%s"           ,suffix.c_str()));
+      //((TH1F*)fin->Get("hW"))->Write(Form("W%s"           ,suffix.c_str()));
+
       //TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmjKeys");
       //TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmmKeys");
       TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmj");
@@ -115,24 +168,66 @@ void produce(
       hZfakesKeys->Add(hZmjKeys,1.0);
       hZfakesKeys->Add(hZmmKeys,1.0);
       hZfakesKeys->Write(Form("ZLL%s"        ,suffix.c_str()));
+
+      ((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
+      ((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
+    }
+
+    else if(bin_.find("bTag")!=string::npos){
+
+      ((TH1F*)fin->Get("hData"))->Write("data_obs");
+      ((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s" ,mH_,suffix.c_str()));
+      ((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s"  ,mH_,suffix.c_str()));
+      ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s"  ,mH_,suffix.c_str()));
+      ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s",suffix.c_str()));
+
+      TH1F* hQCD         = (TH1F*)fin->Get("hQCD");
+      //hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
+      TH1F* hAntiIsoKeys = (TH1F*)fin->Get("hAntiIsoKeys");
+      //TH1F* hAntiIso      = (TH1F*)fin->Get("hAntiIso");
+      //TH1F* hLooseIsoKeys = (TH1F*)fin->Get("hLooseIsoKeys");
+      //hLooseIsoKeys->Scale(hAntiIso->Integral()/hLooseIsoKeys->Integral());
+      //hLooseIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
+
+      if( bin_.find("Low")!=string::npos )
+	hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
+      else
+	hAntiIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
+
+      ((TH1F*)fin->Get("hWKeys"))->Write(Form("W%s"           ,suffix.c_str()));
+      //((TH1F*)fin->Get("hW"))->Write(Form("W%s"           ,suffix.c_str()));
+
+      //TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmjKeys");
+      //TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmmKeys");
+      TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmj");
+      TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmm");
+      TH1F* hZfakesKeys = (TH1F*)fin->Get("hZfakes");
+      hZfakesKeys->Reset();
+      hZfakesKeys->Add(hZmjKeys,1.0);
+      hZfakesKeys->Add(hZmmKeys,1.0);
+      hZfakesKeys->Write(Form("ZLL%s"        ,suffix.c_str()));
+
       ((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       ((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
     }
     else if(bin_.find("vbf")!=string::npos && bin_.find("novbf")==string::npos){
+
       ((TH1F*)fin->Get("hData"))->Write("data_obs");
-      ((TH1F*)fin->Get("hSgn1"))->Write(Form("VBF%d%s" ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn2"))->Write(Form("SM%d%s"  ,mH_,suffix.c_str()));
+      ((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s" ,mH_,suffix.c_str()));
+      ((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s"  ,mH_,suffix.c_str()));
       ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s"  ,mH_,suffix.c_str()));
       ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s",suffix.c_str()));
+
       //((TH1F*)fin->Get("hAntiIsoKeys"))->Write(Form("QCD%s"    ,suffix.c_str()));
-      //// to use LooseIso:
       TH1F* hAntiIsoKeys  = (TH1F*)fin->Get("hAntiIsoKeys");
       TH1F* hAntiIso      = (TH1F*)fin->Get("hAntiIso");
       TH1F* hLooseIsoKeys = (TH1F*)fin->Get("hLooseIsoKeys");
       hLooseIsoKeys->Scale(hAntiIso->Integral()/hLooseIsoKeys->Integral());
       hLooseIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
       //((TH1F*)fin->Get("hW3JetsKeys"))->Write(Form("W%s"           ,suffix.c_str()));
+
       ((TH1F*)fin->Get("hWKeys"))->Write(Form("W%s"           ,suffix.c_str()));
+
       TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmjKeys");
       TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmmKeys");
       TH1F* hZmj        = (TH1F*)fin->Get("hZmj");
@@ -143,14 +238,48 @@ void produce(
       else hZfakesKeys->Add(hZmj,1.0);
       if(hZmmKeys->Integral()>0) hZfakesKeys->Add(hZmmKeys,1.0);  
       else hZfakesKeys->Add(hZmm,1.0);
+
+      hZfakesKeys->Write(Form("ZLL%s"        ,suffix.c_str()));
+      ((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
+      ((TH1F*)fin->Get("hVVKeys"))->Write(Form("VV%s"         ,suffix.c_str()));
+    }
+    else if(bin_.find("vh")!=string::npos){
+
+      ((TH1F*)fin->Get("hData"))->Write("data_obs");
+      ((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s" ,mH_,suffix.c_str()));
+      ((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s"  ,mH_,suffix.c_str()));
+      ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s"  ,mH_,suffix.c_str()));
+      ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s",suffix.c_str()));
+
+      //((TH1F*)fin->Get("hAntiIsoKeys"))->Write(Form("QCD%s"    ,suffix.c_str()));
+      TH1F* hAntiIsoKeys  = (TH1F*)fin->Get("hAntiIsoKeys");
+      TH1F* hAntiIso      = (TH1F*)fin->Get("hAntiIso");
+      TH1F* hLooseIsoKeys = (TH1F*)fin->Get("hLooseIsoKeys");
+      hLooseIsoKeys->Scale(hAntiIso->Integral()/hLooseIsoKeys->Integral());
+      hLooseIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
+      //((TH1F*)fin->Get("hW3JetsKeys"))->Write(Form("W%s"           ,suffix.c_str()));
+
+      ((TH1F*)fin->Get("hWKeys"))->Write(Form("W%s"           ,suffix.c_str()));
+
+      TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmjKeys");
+      TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmmKeys");
+      TH1F* hZmj        = (TH1F*)fin->Get("hZmj");
+      TH1F* hZmm        = (TH1F*)fin->Get("hZmm");
+      TH1F* hZfakesKeys = (TH1F*)hZmjKeys->Clone("hZfakesKeys");
+      hZfakesKeys->Reset();
+      if(hZmjKeys->Integral()>0) hZfakesKeys->Add(hZmjKeys,1.0);
+      else hZfakesKeys->Add(hZmj,1.0);
+      if(hZmmKeys->Integral()>0) hZfakesKeys->Add(hZmmKeys,1.0);  
+      else hZfakesKeys->Add(hZmm,1.0);
+
       hZfakesKeys->Write(Form("ZLL%s"        ,suffix.c_str()));
       ((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       ((TH1F*)fin->Get("hVVKeys"))->Write(Form("VV%s"         ,suffix.c_str()));
     }
     else{
       ((TH1F*)fin->Get("hData"))->Write("data_obs");
-      ((TH1F*)fin->Get("hSgn1"))->Write(Form("VBF%d%s" ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn2"))->Write(Form("SM%d%s"  ,mH_,suffix.c_str()));
+      ((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s" ,mH_,suffix.c_str()));
+      ((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s"  ,mH_,suffix.c_str()));
       ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s"  ,mH_,suffix.c_str()));
       ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s",suffix.c_str()));
       ((TH1F*)fin->Get("hQcd"))->Write(Form("QCD%s"    ,suffix.c_str()));
@@ -170,16 +299,20 @@ void produce(
     TDirectory* dir = (TDirectory*)fTemplOut->Get( dirName.Data() );
 
     fTemplOut->cd( dirName.Data() );
-
+    
     if(bin_.find("novbf")!=string::npos){
 
       if(dir->FindObjectAny(Form("ZTT%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s"       ,suffix.c_str()));
       if(dir->FindObjectAny(Form("QCD%s"       ,suffix.c_str()))==0 ){
 	TH1F* hQCD         = (TH1F*)fin->Get("hQCD");
-	TH1F* hAntiIsoKeys = (TH1F*)fin->Get("hAntiIsoKeys");
+	TH1F* hAntiIsoKeys = (TH1F*)fin->Get("hAntiIsoKeys") ;
 	hAntiIsoKeys->Scale(hQCD->Integral()/hAntiIsoKeys->Integral());
-	hAntiIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
+	if( bin_.find("Low")!=string::npos )
+	  hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
+	else
+	  hAntiIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
+
       }
       if(dir->FindObjectAny(Form("W%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hW"))->Write(Form("W%s"           ,suffix.c_str()));
@@ -193,25 +326,34 @@ void produce(
 	((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("VBF%d%s"         ,mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn1"))->Write(Form("VBF%d%s",mH_  ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("SM%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn2"))->Write(Form("SM%d%s" ,mH_,suffix.c_str()));
+      if(dir->FindObjectAny(Form("qqH%d%s"         ,mH_,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s",mH_  ,suffix.c_str()));
+      if(dir->FindObjectAny(Form("ggH%d%s"          , mH_,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s" ,mH_,suffix.c_str()));
       if(dir->FindObjectAny(Form("VH%d%s"          , mH_,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
     }
     else if(bin_.find("boost")!=string::npos){
+
       if(dir->FindObjectAny(Form("ZTT%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s"       ,suffix.c_str()));
-	//((TH1F*)fin->Get("hZtt"))->Write(Form("ZTT%s"       ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("QCD%s"       ,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hAntiIsoKeys"))->Write(Form("QCD%s"       ,suffix.c_str()));
+      if(dir->FindObjectAny(Form("QCD%s"       ,suffix.c_str()))==0 ){
+	//TH1F* hQCD         = (TH1F*)fin->Get("hQCD");
+	TH1F* hQCD         = (TH1F*)fin->Get("hQCD");
+	//TH1F* hAntiIsoKeys = (TH1F*)fin->Get("hAntiIsoKeys");
+	//hAntiIsoKeys->Scale(hQCD->Integral()/hAntiIsoKeys->Integral());
+	//hAntiIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
+	hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
+      }
       if(dir->FindObjectAny(Form("W%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hWKeys"))->Write(Form("W%s"           ,suffix.c_str()));
+	//((TH1F*)fin->Get("hW"))->Write(Form("W%s"           ,suffix.c_str()));
+
       if(dir->FindObjectAny(Form("ZJ%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hZmj"))->Write(Form("ZJ%s"        ,suffix.c_str()));
       if(dir->FindObjectAny(Form("ZL%s"       ,suffix.c_str()))==0 ) 
 	((TH1F*)fin->Get("hZmm"))->Write(Form("ZL%s"        ,suffix.c_str()));
+
       if(dir->FindObjectAny(Form("ZLL%s"       ,suffix.c_str()))==0 ){
 	//TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmjKeys");
 	//TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmmKeys");
@@ -227,21 +369,78 @@ void produce(
 	((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("VBF%d%s"         ,mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn1"))->Write(Form("VBF%d%s",mH_  ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("SM%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn2"))->Write(Form("SM%d%s" ,mH_,suffix.c_str()));
+      if(dir->FindObjectAny(Form("qqH%d%s"         ,mH_,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s",mH_  ,suffix.c_str()));
+      if(dir->FindObjectAny(Form("ggH%d%s"          , mH_,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s" ,mH_,suffix.c_str()));
+      if(dir->FindObjectAny(Form("VH%d%s"          , mH_,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
+    }
+    else if(bin_.find("bTag")!=string::npos){
+
+      if(dir->FindObjectAny(Form("ZTT%s"       ,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s"       ,suffix.c_str()));
+      if(dir->FindObjectAny(Form("QCD%s"       ,suffix.c_str()))==0 ){
+	TH1F* hQCD         = (TH1F*)fin->Get("hQCD");
+	TH1F* hAntiIsoKeys  = (TH1F*)fin->Get("hAntiIsoKeys");
+
+	if(  bin_.find("Low")!=string::npos )
+	  hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
+	else 
+	  hAntiIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
+      }
+      if(dir->FindObjectAny(Form("W%s"       ,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hWKeys"))->Write(Form("W%s"           ,suffix.c_str()));
+	//((TH1F*)fin->Get("hW"))->Write(Form("W%s"           ,suffix.c_str()));
+
+      if(dir->FindObjectAny(Form("ZJ%s"       ,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hZmj"))->Write(Form("ZJ%s"        ,suffix.c_str()));
+      if(dir->FindObjectAny(Form("ZL%s"       ,suffix.c_str()))==0 ) 
+	((TH1F*)fin->Get("hZmm"))->Write(Form("ZL%s"        ,suffix.c_str()));
+
+      if(dir->FindObjectAny(Form("ZLL%s"       ,suffix.c_str()))==0 ){
+	//TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmjKeys");
+	//TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmmKeys");
+	TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmj");
+	TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmm");
+	TH1F* hZfakesKeys = (TH1F*)hZmjKeys->Clone("hZfakes");
+	hZfakesKeys->Reset();
+	hZfakesKeys->Add(hZmjKeys,1.0);
+	hZfakesKeys->Add(hZmmKeys,1.0);  
+	hZfakesKeys->Write(Form("ZLL%s"        ,suffix.c_str()));
+      }
+      if(dir->FindObjectAny(Form("TT%s"       ,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
+      if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
+      if(dir->FindObjectAny(Form("qqH%d%s"         ,mH_,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s",mH_  ,suffix.c_str()));
+      if(dir->FindObjectAny(Form("ggH%d%s"          , mH_,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s" ,mH_,suffix.c_str()));
       if(dir->FindObjectAny(Form("VH%d%s"          , mH_,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
     }
     else if(bin_.find("vbf")!=string::npos && bin_.find("novbf")==string::npos){
-       if(dir->FindObjectAny(Form("ZTT%s"       ,suffix.c_str()))==0 )
+
+      if(dir->FindObjectAny(Form("ZTT%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s"       ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("QCD%s"       ,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hAntiIsoKeys"))->Write(Form("QCD%s"       ,suffix.c_str()));
+
+      if(dir->FindObjectAny(Form("QCD%s"       ,suffix.c_str()))==0 ){
+
+	TH1F* hAntiIsoKeys  = (TH1F*)fin->Get("hAntiIsoKeys");
+	TH1F* hAntiIso      = (TH1F*)fin->Get("hAntiIso");
+	TH1F* hLooseIsoKeys = (TH1F*)fin->Get("hLooseIsoKeys");
+	hLooseIsoKeys->Scale(hAntiIso->Integral()/hLooseIsoKeys->Integral());
+	hLooseIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
+    
+	hLooseIsoKeys->Write(Form("QCD%s"       ,suffix.c_str()));
+
+      }
+
       if(dir->FindObjectAny(Form("W%s"       ,suffix.c_str()))==0 )
 	//((TH1F*)fin->Get("hW3JetsKeys"))->Write(Form("W%s"           ,suffix.c_str()));
 	((TH1F*)fin->Get("hWKeys"))->Write(Form("W%s"           ,suffix.c_str()));
+
       if(dir->FindObjectAny(Form("ZJ%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hZmj"))->Write(Form("ZJ%s"        ,suffix.c_str()));
       if(dir->FindObjectAny(Form("ZL%s"       ,suffix.c_str()))==0 ) 
@@ -263,10 +462,59 @@ void produce(
 	((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hVVKeys"))->Write(Form("VV%s"         ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("VBF%d%s"         ,mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn1"))->Write(Form("VBF%d%s",mH_  ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("SM%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn2"))->Write(Form("SM%d%s" ,mH_,suffix.c_str()));
+      if(dir->FindObjectAny(Form("qqH%d%s"         ,mH_,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s",mH_  ,suffix.c_str()));
+      if(dir->FindObjectAny(Form("ggH%d%s"          , mH_,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s" ,mH_,suffix.c_str()));
+      if(dir->FindObjectAny(Form("VH%d%s"          , mH_,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
+    }
+    else if(bin_.find("vh")!=string::npos){
+
+      if(dir->FindObjectAny(Form("ZTT%s"       ,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s"       ,suffix.c_str()));
+
+      if(dir->FindObjectAny(Form("QCD%s"       ,suffix.c_str()))==0 ){
+
+	TH1F* hAntiIsoKeys  = (TH1F*)fin->Get("hAntiIsoKeys");
+	TH1F* hAntiIso      = (TH1F*)fin->Get("hAntiIso");
+	TH1F* hLooseIsoKeys = (TH1F*)fin->Get("hLooseIsoKeys");
+	hLooseIsoKeys->Scale(hAntiIso->Integral()/hLooseIsoKeys->Integral());
+	hLooseIsoKeys->Write(Form("QCD%s"    ,suffix.c_str()));
+    
+	hLooseIsoKeys->Write(Form("QCD%s"       ,suffix.c_str()));
+
+      }
+
+      if(dir->FindObjectAny(Form("W%s"       ,suffix.c_str()))==0 )
+	//((TH1F*)fin->Get("hW3JetsKeys"))->Write(Form("W%s"           ,suffix.c_str()));
+	((TH1F*)fin->Get("hWKeys"))->Write(Form("W%s"           ,suffix.c_str()));
+
+      if(dir->FindObjectAny(Form("ZJ%s"       ,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hZmj"))->Write(Form("ZJ%s"        ,suffix.c_str()));
+      if(dir->FindObjectAny(Form("ZL%s"       ,suffix.c_str()))==0 ) 
+	((TH1F*)fin->Get("hZmm"))->Write(Form("ZL%s"        ,suffix.c_str()));
+      if(dir->FindObjectAny(Form("ZLL%s"       ,suffix.c_str()))==0 ){
+	TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmjKeys");
+	TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmmKeys");
+	TH1F* hZmj        = (TH1F*)fin->Get("hZmj");
+	TH1F* hZmm        = (TH1F*)fin->Get("hZmm");
+	TH1F* hZfakesKeys = (TH1F*)hZmjKeys->Clone("hZfakesKeys");
+	hZfakesKeys->Reset();
+	if(hZmjKeys->Integral()>0) hZfakesKeys->Add(hZmjKeys,1.0);
+	else hZfakesKeys->Add(hZmj,1.0);
+	if(hZmmKeys->Integral()>0) hZfakesKeys->Add(hZmmKeys,1.0);  
+	else hZfakesKeys->Add(hZmm,1.0);
+	hZfakesKeys->Write(Form("ZLL%s"        ,suffix.c_str()));
+      }  
+      if(dir->FindObjectAny(Form("TT%s"       ,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
+      if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hVVKeys"))->Write(Form("VV%s"         ,suffix.c_str()));
+      if(dir->FindObjectAny(Form("qqH%d%s"         ,mH_,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s",mH_  ,suffix.c_str()));
+      if(dir->FindObjectAny(Form("ggH%d%s"          , mH_,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s" ,mH_,suffix.c_str()));
       if(dir->FindObjectAny(Form("VH%d%s"          , mH_,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
     }
@@ -287,10 +535,10 @@ void produce(
 	((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("VBF%d%s"         ,mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn1"))->Write(Form("VBF%d%s",mH_  ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("SM%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn2"))->Write(Form("SM%d%s" ,mH_,suffix.c_str()));
+      if(dir->FindObjectAny(Form("qqH%d%s"         ,mH_,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s",mH_  ,suffix.c_str()));
+      if(dir->FindObjectAny(Form("ggH%d%s"          , mH_,suffix.c_str()))==0 )
+	((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s" ,mH_,suffix.c_str()));
       if(dir->FindObjectAny(Form("VH%d%s"          , mH_,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
     }
@@ -299,6 +547,7 @@ void produce(
   }
 
 
+  
   fTemplOut->Close();
   
   // edit the datacards only for the nominal analysis
@@ -309,8 +558,9 @@ void produce(
   ifstream in;
 
   char* c = new char[1000];
-  in.open(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/templates/muTau_%s_template_v2.txt",     binNameSpace.c_str()));
-  ofstream out(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/datacards/%s/muTau_%s_mH%d_%s.txt", outputDir.Data(), binNameSpace.c_str(), mH_, variable_.c_str()));
+  in.open(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/templates/muTau_%s_template_v3.txt",     binNameSpace.c_str()));
+  //ofstream out(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/datacards/%s/muTau_%s_mH%d_%s.txt", outputDir.Data(), binNameSpace.c_str(), mH_, variable_.c_str()));
+  ofstream out(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/datacards/%s/muTau_%s_mH%d.txt", outputDir.Data(), binNameSpace.c_str(), mH_ ));
   out.precision(8);
 
   while (in.good())
@@ -324,7 +574,8 @@ void produce(
 	  out << line << endl;
 	}
 	else if(line.find("shapes")!=string::npos){
-          line.replace( line.find("XXX") , 3 , string(Form("muTauSM_%s",variable_.c_str()))  );
+          //line.replace( line.find("XXX") , 3 , string(Form("muTauSM_%s",variable_.c_str()))  );
+	  line.replace( line.find("XXX") , 3 , string("muTauSM")  );
 	  out << line << endl;
 	}
 	else if(line.find("process")!=string::npos && line.find("VBF")!=string::npos){
@@ -334,16 +585,25 @@ void produce(
           out << line << endl;
         }
 	else if(line.find("rate")!=string::npos){
-
+	  
 	  float QCDyield = 0;
-	  if(bin_.find("novbf")!=string::npos){
+	  if(bin_.find("boost")!=string::npos){
 	    QCDyield = ((TH1F*)fin->Get("hQCD"))->Integral(); 
 	  }
-	  else if(bin_.find("vbf")!=string::npos && bin_.find("novbf")==string::npos){
-	    QCDyield = ((TH1F*)fin->Get("hAntiIso"))->Integral(); 
+	  else if(bin_.find("novbf")!=string::npos ){
+	    if(   bin_.find("Low")!=string::npos )
+	      QCDyield = ((TH1F*)fin->Get("hQCD"))->Integral(); 	   
+	    else
+	      QCDyield = ((TH1F*)fin->Get("hQCD"))->Integral();
 	  }
-	  else if(bin_.find("boost")!=string::npos){
-	    QCDyield = ((TH1F*)fin->Get("hAntiIso"))->Integral(); 
+	  else if(bin_.find("vbf")!=string::npos && bin_.find("novbf")==string::npos || bin_.find("vh")!=string::npos ){
+	    QCDyield = ((TH1F*)fin->Get("hAntiIso"))->Integral(); 	   
+	  }
+	  else if( bin_.find("bTag")!=string::npos  ){
+	    if(   bin_.find("Low")!=string::npos )
+	      QCDyield = ((TH1F*)fin->Get("hQCD"))->Integral(); 	   
+	    else
+	      QCDyield = ((TH1F*)fin->Get("hAntiIso"))->Integral(); 	   
 	  }
 	  else{
 	    QCDyield = ((TH1F*)fin->Get("hQCD"))->Integral(); 
@@ -361,7 +621,7 @@ void produce(
 	      << space << ((TH1F*)fin->Get("hDataEmb"))->Integral()
 	      << space << QCDyield
 	      << space << ((TH1F*)fin->Get("hW"))->Integral();
-	  if(binNameSpace.find("SM0")!=string::npos){
+	  if(binNameSpace.find("incl_")!=string::npos){
 	    out << space << ((TH1F*)fin->Get("hZmj"))->Integral()
 		<< space << ((TH1F*)fin->Get("hZmm"))->Integral();
 	      }
@@ -370,6 +630,17 @@ void produce(
 	  out << space << ((TH1F*)fin->Get("hTTb"))->Integral()
 	      << space << ((TH1F*)fin->Get("hVV"))->Integral()
 	      << endl;
+	}
+	else if(line.find("CMS_htt_ztt_extrap")!=string::npos){
+
+	  float extrapFactor = ((TH1F*)fin->Get("hParameters"))->GetBinContent(8);
+	  float extrapError  = ((TH1F*)fin->Get("hParameters"))->GetBinContent(9);
+
+	  float relUnc = 1.+extrapError/extrapFactor;
+
+	  line.replace( line.find("XXX") , 3 , string(Form("%.5f",relUnc))  );
+	  out << line << endl;
+
 	}
 	else if(line.find("CMS_scale_j")!=string::npos){
 	  float VBFrel = TMath::Max(TMath::Abs((((TH1F*)fin_jUp->Get("hSgn1"))->Integral()/((TH1F*)fin->Get("hSgn1"))->Integral())),
@@ -422,7 +693,7 @@ void produce(
 	  string shortspace = "     ";
 	  out << "CMS_scale_j";
 	  out << longspace << "lnN" << shortspace;
-	  if(binNameSpace.find("SM0")!=string::npos) 
+	  if(binNameSpace.find("incl_")!=string::npos) 
 	    out <<          string(Form("%.2f",1+TMath::Max(TMath::Abs(-1+VHrelDown), TMath::Abs(-1+VHrelUp) ) * TMath::Abs(-1+VHrelUp)/(-1+VHrelUp)   )); // VH
 	  else
 	    out << space << string(Form("%.2f",1+TMath::Max(TMath::Abs(-1+SMrelDown), TMath::Abs(-1+SMrelUp))  * TMath::Abs(-1+SMrelUp)/(-1+SMrelUp)   )); // VH = GGF
@@ -432,13 +703,17 @@ void produce(
 	  out << space << "-" ;                                                // QCD
 	  out << space << "-" ; //string(Form("%.2f",1+(-1+ZTTrelDown)*1.0));  // W
 	  out << space << "-" ; //string(Form("%.2f",1+(-1+ZTTrelDown)*1.0));  // Z+fakes
-	  if(binNameSpace.find("SM0")!=string::npos) 
+
+	  if(binNameSpace.find("incl_")!=string::npos) 
 	    out << space << "-" ; //string(Form("%.2f",1+(-1+ZTTrelDown)*1.0));
+
 	  out << space << string(Form("%.2f",1+TMath::Max(  TMath::Abs(-1+TTrelDown),TMath::Abs(-1+TTrelUp))  * TMath::Abs(-1+TTrelUp)/(-1+TTrelUp) ));  // TT
-	  if(binNameSpace.find("SM0")!=string::npos) 
-	    out << space << string(Form("%.2f",1+TMath::Max(TMath::Abs(-1+VVrelDown),TMath::Abs(-1+VVrelUp) ) * TMath::Abs(-1+VVrelUp)/(-1+VVrelUp)));   // VV
-	  else
-	    out << space << string(Form("%.2f",1+TMath::Max(TMath::Abs(-1+TTrelDown),TMath::Abs(-1+TTrelUp))  * TMath::Abs(-1+TTrelUp)/(-1+TTrelUp) ));  // TT
+
+	  //if(binNameSpace.find("incl_")!=string::npos) 
+	  out << space << string(Form("%.2f",1+TMath::Max(TMath::Abs(-1+VVrelDown),TMath::Abs(-1+VVrelUp) ) * TMath::Abs(-1+VVrelUp)/(-1+VVrelUp)));   // VV
+	  //else
+	  //out << space << string(Form("%.2f",1+TMath::Max(TMath::Abs(-1+TTrelDown),TMath::Abs(-1+TTrelUp))  * TMath::Abs(-1+TTrelUp)/(-1+TTrelUp) ));  // TT
+
 	  out << space << "JEC uncertainty";
 	  out << endl;
 	}
@@ -467,7 +742,7 @@ void produce(
 
 
 
-void produceAll(  TString outputDir = "May2012/Reload_NewCategories_IntermediateBoost" ){
+void produceAll(  TString outputDir = "May2012/Reload_PreApproval" ){
 
   vector<string> variables;
   vector<int> mH;
@@ -480,30 +755,67 @@ void produceAll(  TString outputDir = "May2012/Reload_NewCategories_Intermediate
 
 
   //mH.push_back(105);
-  mH.push_back(110);
+  //mH.push_back(110);
   //mH.push_back(115);
   mH.push_back(120);
   //mH.push_back(125);
-  mH.push_back(130);
+  //mH.push_back(130);
   //mH.push_back(135);
-  mH.push_back(140);
+  //mH.push_back(140);
   //mH.push_back(145);
 
   for(unsigned int i = 0 ; i < variables.size(); i++){
     for(unsigned j = 0; j < mH.size(); j++){
 
-     
-      //produce(mH[j],variables[i], ""        , "vbf", outputDir);
-      //produce(mH[j],variables[i], "TauUp"   , "vbf", outputDir);
-      //produce(mH[j],variables[i], "TauDown" , "vbf", outputDir);
-      //produce(mH[j],variables[i], "JetUp"   , "vbf", outputDir);
-      //produce(mH[j],variables[i], "JetDown" , "vbf", outputDir);
+      produce(mH[j],variables[i], ""        , "novbfLow", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "novbfLow", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "novbfLow", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "novbfLow", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "novbfLow", outputDir);
+      
+      produce(mH[j],variables[i], ""        , "novbfHigh", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "novbfHigh", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "novbfHigh", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "novbfHigh", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "novbfHigh", outputDir);
 
-      produce(mH[j],variables[i], ""        , "boost", outputDir);
-      produce(mH[j],variables[i], "TauUp"   , "boost", outputDir);
-      produce(mH[j],variables[i], "TauDown" , "boost", outputDir);
-      produce(mH[j],variables[i], "JetUp"   , "boost", outputDir);
-      produce(mH[j],variables[i], "JetDown" , "boost", outputDir);
+      produce(mH[j],variables[i], ""        , "boostLow", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "boostLow", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "boostLow", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "boostLow", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "boostLow", outputDir);
+
+      produce(mH[j],variables[i], ""        , "boostHigh", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "boostHigh", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "boostHigh", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "boostHigh", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "boostHigh", outputDir);
+
+      produce(mH[j],variables[i], ""        , "bTagLow", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "bTagLow", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "bTagLow", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "bTagLow", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "bTagLow", outputDir);
+
+      produce(mH[j],variables[i], ""        , "bTagHigh", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "bTagHigh", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "bTagHigh", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "bTagHigh", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "bTagHigh", outputDir);
+
+      produce(mH[j],variables[i], ""        , "vbf", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "vbf", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "vbf", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "vbf", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "vbf", outputDir);
+
+      produce(mH[j],variables[i], ""        , "vh", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "vh", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "vh", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "vh", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "vh", outputDir);
+
+     
   
       //produce(mH[j],variables[i], ""        , "novbf", outputDir);
       //produce(mH[j],variables[i], "TauUp"   , "novbf", outputDir);
@@ -511,44 +823,6 @@ void produceAll(  TString outputDir = "May2012/Reload_NewCategories_Intermediate
       //produce(mH[j],variables[i], "JetUp"   , "novbf", outputDir);
       //produce(mH[j],variables[i], "JetDown" , "novbf", outputDir);
   
-
-      /*
-      produce(mH[j],variables[i], "Raw"        , "vbf", outputDir);
-      produce(mH[j],variables[i], "RawTauUp"   , "vbf", outputDir);
-      produce(mH[j],variables[i], "RawTauDown" , "vbf", outputDir);
-      produce(mH[j],variables[i], "RawJetUp"   , "vbf", outputDir);
-      produce(mH[j],variables[i], "RawJetDown" , "vbf", outputDir);
-
-      produce(mH[j],variables[i], "Raw"        , "boost", outputDir);
-      produce(mH[j],variables[i], "RawTauUp"   , "boost", outputDir);
-      produce(mH[j],variables[i], "RawTauDown" , "boost", outputDir);
-      produce(mH[j],variables[i], "RawJetUp"   , "boost", outputDir);
-      produce(mH[j],variables[i], "RawJetDown" , "boost", outputDir);
-  
-      produce(mH[j],variables[i], "Raw"        , "novbf", outputDir);
-      produce(mH[j],variables[i], "RawTauUp"   , "novbf", outputDir);
-      produce(mH[j],variables[i], "RawTauDown" , "novbf", outputDir);
-      produce(mH[j],variables[i], "RawJetUp"   , "novbf", outputDir);
-      produce(mH[j],variables[i], "RawJetDown" , "novbf", outputDir);
-      */
-
-      //produce(mH[j],variables[i], ""        , "boost2", outputDir);
-      //produce(mH[j],variables[i], "TauUp"   , "boost2", outputDir);
-      //produce(mH[j],variables[i], "TauDown" , "boost2", outputDir);
-      //produce(mH[j],variables[i], "JetUp"   , "boost2", outputDir);
-      //produce(mH[j],variables[i], "JetDown" , "boost2", outputDir);
-
-      //produce(mH[j],variables[i], ""        , "twoJets", outputDir);
-      //produce(mH[j],variables[i], "TauUp"   , "twoJets", outputDir);
-      //produce(mH[j],variables[i], "TauDown" , "twoJets", outputDir);
-      //produce(mH[j],variables[i], "JetUp"   , "twoJets", outputDir);
-      //produce(mH[j],variables[i], "JetDown" , "twoJets", outputDir);
-      
-      //produce(mH[j],variables[i], ""        , "oneJet", outputDir);
-      //produce(mH[j],variables[i], "TauUp"   , "oneJet", outputDir);
-      //produce(mH[j],variables[i], "TauDown" , "oneJet", outputDir);
-      //produce(mH[j],variables[i], "JetUp"   , "oneJet", outputDir);
-      //produce(mH[j],variables[i], "JetDown" , "oneJet", outputDir);
     }
 
   }

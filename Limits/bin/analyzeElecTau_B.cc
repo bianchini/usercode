@@ -129,7 +129,10 @@ void plotElecTau( Int_t mH_           = 120,
 
   // Luminosity analyzed & parameters
   //float Lumi = (-47.4 + 215.3 + 930.7 + 410.6 + (450.6+212.7) + (735.2+254.8+778.2+682.0) )*1.00;
-  float Lumi = (-47.4 + 220.9 + 965.3 + 390.6 + 706.4 + 2735)*1.00;
+  //float Lumi = (-47.4 + 220.9 + 965.3 + 390.6 + 706.4 + 2735)*1.00;
+
+  // from lumiPixel
+  float Lumi   = (-47.4 + 215.6 + 955.3 + 389.9 + 706.7 + 2714)*(1-0.056);
 
   //////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////
@@ -148,6 +151,7 @@ void plotElecTau( Int_t mH_           = 120,
   float WcorrectionFactorSS        = 1.00; 
   float ExtrapolationFactorZ       = 1.0;
   float ExtrapolationFactorZDataMC = 1.0;
+  float ErrorExtrapolationFactorZ  = 1.0;
 
   //float NoVbfExtrapolationFactorZ = 0.996;
   //float VbfExtrapolationFactorZ   = 1.23;
@@ -166,13 +170,13 @@ void plotElecTau( Int_t mH_           = 120,
   //////////////////////////////////////////////////////////////
 
   bool useMt      = true;
-  string antiWcut = useMt ? "MtLeg1Corr" : "-(pZetaCorr-1.5*pZetaVisCorr)" ;
+  string antiWcut = useMt ? "MtLeg1MVA" : "-(pZetaMVA-1.5*pZetaVisMVA)" ;
   float antiWsgn  = useMt ? 40. :  20. ; 
   float antiWsdb  = useMt ? 60. :  40. ; 
 
   bool use2Dcut   = false;
   if( use2Dcut ){
-    antiWcut = "!(MtLeg1Corr<40 && (pZetaCorr-1.5*pZetaVisCorr)>-20)";
+    antiWcut = "!(MtLeg1MVA<40 && (pZetaMVA-1.5*pZetaVisMVA)>-20)";
     antiWsgn = 0.5;
     antiWsdb = 0.5;
   }
@@ -250,7 +254,7 @@ void plotElecTau( Int_t mH_           = 120,
 
  
   // pZeta OS, N pZ sideband OS, pZeta SS, N sideband SS, N QCD SS, OS/SS
-  TH1F* hParameters   = new TH1F( "hParameters", "" , 7, 0,7);
+  TH1F* hParameters   = new TH1F( "hParameters", "" , 12, 0,12);
 
   // Open the files
   TFile *fData              
@@ -354,8 +358,8 @@ void plotElecTau( Int_t mH_           = 120,
   TCut bTag("nJets30<2 && nJets20BTagged>0");
   TCut nobTag("nJets30<2 && nJets20BTagged==0");
 
-  TCut novbf = !vbf && !vh && !boost && !bTag;
-  //TCut novbf("pt1<9999");
+  //TCut novbf = !vbf && !vh && !boost && !bTag;
+  TCut novbf("pt1<9999");  // <=====================================
 
   TCut sbin; TCut sbinEmbedding; TCut sbinEmbeddingPZetaRel; TCut sbinPZetaRel; TCut sbinSS; TCut sbinPZetaRelSS; TCut sbinPZetaRev; TCut sbinPZetaRevSS; TCut sbinSSaIso; TCut sbinSSlIso;
 
@@ -511,13 +515,14 @@ void plotElecTau( Int_t mH_           = 120,
 
   ExtrapolationFactorZ = ExtrapEmbedNum/ExtrapEmbedDen;
 
-  float errorExtrapolationFactorZ = TMath::Sqrt(ExtrapolationFactorZ*(1-ExtrapolationFactorZ)/ExtrapEmbedDen);
-  cout << "Extrap. factor using embedded sample: " << ExtrapolationFactorZ << " +/- " << errorExtrapolationFactorZ << endl;
+  ErrorExtrapolationFactorZ = TMath::Sqrt(ExtrapolationFactorZ*(1-ExtrapolationFactorZ)/ExtrapEmbedDen);
+  cout << "Extrap. factor using embedded sample: " << ExtrapolationFactorZ << " +/- " << ErrorExtrapolationFactorZ << endl;
   backgroundDYTauTau->Draw(variable+">>hExtrap","(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec)"*sbin);
   float ExtrapolationFactorMadGraph = hExtrap->Integral()*Lumi*hltEff_/1000./ExtrapDYInclusive;
   cout << "MadGraph prediction = " << ExtrapolationFactorMadGraph << endl;
   ExtrapolationFactorZDataMC  = ExtrapolationFactorZ/ExtrapolationFactorMadGraph;
   cout << " ==> data/MC = " << ExtrapolationFactorZDataMC << endl;
+
 
   /////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////
@@ -766,7 +771,13 @@ void plotElecTau( Int_t mH_           = 120,
       hHelp->Reset();
       backgroundWJets->Draw(variable+">>hHelp", "(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec)"*sbinSS);
       cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from W+jets (from " << hHelp->GetEntries() << " entries)" << endl;
-      float sFWSS = ( selection_.find("novbf")!=string::npos || selection_.find("nobTag")!=string::npos || selection_.find("inclusive")!=string::npos) ? SSWinSignalRegionDATA/SSWinSignalRegionMC : WcorrectionFactorSS; // from the extrapolation factor DATA/MC
+
+      float sFWSS = ( selection_.find("novbf")!=string::npos  || 
+		      selection_.find("bTag") !=string::npos  || 
+		      selection_.find("boost")!=string::npos  || 
+		      selection_.find("inclusive")!=string::npos) ? 
+	SSWinSignalRegionDATA/SSWinSignalRegionMC : WcorrectionFactorSS; // from the extrapolation factor DATA/MC
+
       if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) sFWSS *= VbfExtrapolationFactorW;
       else if(selection_.find("boost")!=string::npos)  sFWSS *= BoostExtrapolationFactorW;
       hHelp->Scale(sFWSS*Lumi/1000*hltEff_);
@@ -818,6 +829,14 @@ void plotElecTau( Int_t mH_           = 120,
       cout << "Total unceratinty from bkg subtraction in SS region is " << sqrt(error2OnQCD) << endl;
       float totalRelErrorOnQCD = 0.02 + sqrt(error2OnQCD)/h1->Integral(); //0.02 ==> uncertainty on OS/SS ratio
       hParameters->SetBinContent(7,totalRelErrorOnQCD);
+
+      ////////////////////////////////////////////////
+
+      hParameters->SetBinContent(8,ExtrapolationFactorZ);
+      hParameters->SetBinContent(9,ErrorExtrapolationFactorZ);
+      hParameters->SetBinContent(10,ExtrapolationFactorZDataMC);
+      hParameters->SetBinContent(11,SSIsoToSSAIsoRatioQCD);
+      hParameters->SetBinContent(12,embeddedMEtCutEff/madgraphMEtCutEff);
 
     }
     else{
@@ -899,8 +918,12 @@ void plotElecTau( Int_t mH_           = 120,
 	h1->Scale(Lumi/1000*hltEff_);
 
       // if W+jets, scale by extrapolation
-      float sFWOS = ( selection_.find("novbf")!=string::npos || selection_.find("nobTag")!=string::npos || selection_.find("inclusive")!=string::npos) ? 
+      float sFWOS = ( selection_.find("novbf")!=string::npos  || 
+		      selection_.find("boost")!=string::npos  || 
+		      selection_.find("bTag")!=string::npos   || 
+		      selection_.find("inclusive")!=string::npos) ? 
 	OSWinSignalRegionDATA/OSWinSignalRegionMC : WcorrectionFactorOS;
+      
       if((it->first).find("WJets")!=string::npos){
 	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
 	  sFWOS *= VbfExtrapolationFactorW;
@@ -1465,13 +1488,16 @@ void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "May2012/Reload_
 
       //plotElecTau(mH[j],useEmbedded,"inclusive",""   ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
 
-      //plotElecTau(mH[j],useEmbedded,"novbf",""       ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      plotElecTau(mH[j],useEmbedded,"novbf",""       ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+
+      return;
+
       //plotElecTau(mH[j],useEmbedded,"novbf","TauUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
       //plotElecTau(mH[j],useEmbedded,"novbf","TauDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
       //plotElecTau(mH[j],useEmbedded,"novbf","JetUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
       //plotElecTau(mH[j],useEmbedded,"novbf","JetDown",variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
  
-      plotElecTau(mH[j],useEmbedded,"vbf",""         ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
+      //plotElecTau(mH[j],useEmbedded,"vbf",""         ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
       //plotElecTau(mH[j],useEmbedded,"vbf","TauUp"    ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
       //plotElecTau(mH[j],useEmbedded,"vbf","TauDown"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
       //plotElecTau(mH[j],useEmbedded,"vbf","JetUp"    ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
