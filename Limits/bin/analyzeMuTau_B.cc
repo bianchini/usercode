@@ -253,7 +253,41 @@ void plotMuTau( Int_t mH_           = 120,
   TH1*  hZmjKeys      = 0;
   TH1*  hVVKeys       = 0;
 
- 
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////
+
+  TH1F* hggH110    = new TH1F( "hggH110"   ,"ggH110"               , nBins , bins.GetArray());
+  TH1F* hggH115    = new TH1F( "hggH115"   ,"ggH115"               , nBins , bins.GetArray());
+  TH1F* hggH120    = new TH1F( "hggH120"   ,"ggH120"               , nBins , bins.GetArray());
+  TH1F* hggH125    = new TH1F( "hggH125"   ,"ggH125"               , nBins , bins.GetArray());
+  TH1F* hggH130    = new TH1F( "hggH130"   ,"ggH130"               , nBins , bins.GetArray());
+  TH1F* hggH135    = new TH1F( "hggH135"   ,"ggH135"               , nBins , bins.GetArray());
+  TH1F* hggH140    = new TH1F( "hggH140"   ,"ggH140"               , nBins , bins.GetArray());
+  TH1F* hggH145    = new TH1F( "hggH145"   ,"ggH145"               , nBins , bins.GetArray());
+
+  TH1F* hqqH110    = new TH1F( "hqqH110"   ,"qqH110"               , nBins , bins.GetArray());
+  TH1F* hqqH115    = new TH1F( "hqqH115"   ,"qqH115"               , nBins , bins.GetArray());
+  TH1F* hqqH120    = new TH1F( "hqqH120"   ,"qqH120"               , nBins , bins.GetArray());
+  TH1F* hqqH125    = new TH1F( "hqqH125"   ,"qqH125"               , nBins , bins.GetArray());
+  TH1F* hqqH130    = new TH1F( "hqqH130"   ,"qqH130"               , nBins , bins.GetArray());
+  TH1F* hqqH135    = new TH1F( "hqqH135"   ,"qqH135"               , nBins , bins.GetArray());
+  TH1F* hqqH140    = new TH1F( "hqqH140"   ,"qqH140"               , nBins , bins.GetArray());
+  TH1F* hqqH145    = new TH1F( "hqqH145"   ,"qqH145"               , nBins , bins.GetArray());
+
+  TH1F* hVH110    = new TH1F( "hVH110"   ,"VH110"               , nBins , bins.GetArray());
+  TH1F* hVH115    = new TH1F( "hVH115"   ,"VH115"               , nBins , bins.GetArray());
+  TH1F* hVH120    = new TH1F( "hVH120"   ,"VH120"               , nBins , bins.GetArray());
+  TH1F* hVH125    = new TH1F( "hVH125"   ,"VH125"               , nBins , bins.GetArray());
+  TH1F* hVH130    = new TH1F( "hVH130"   ,"VH130"               , nBins , bins.GetArray());
+  TH1F* hVH135    = new TH1F( "hVH135"   ,"VH135"               , nBins , bins.GetArray());
+  TH1F* hVH140    = new TH1F( "hVH140"   ,"VH140"               , nBins , bins.GetArray());
+  TH1F* hVH145    = new TH1F( "hVH145"   ,"VH145"               , nBins , bins.GetArray());
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////
+
+
   // pZeta OS, N pZ sideband OS, pZeta SS, N sideband SS, N QCD SS, OS/SS
   TH1F* hParameters   = new TH1F( "hParameters", "" ,12, 0, 12);
 
@@ -280,6 +314,71 @@ void plotMuTau( Int_t mH_           = 120,
     = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundOthers  
     = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
+
+  vector<int> hMasses;
+  hMasses.push_back(110);
+  hMasses.push_back(115);
+  hMasses.push_back(120);
+  hMasses.push_back(125);
+  hMasses.push_back(130);
+  hMasses.push_back(135);
+  hMasses.push_back(140);
+  hMasses.push_back(145);
+
+
+  TFile *fSignalggH110 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",110) ,"READ");  
+  TFile *fSignalggH115 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",115) ,"READ");  
+  TFile *fSignalggH120 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",120) ,"READ");  
+  TFile *fSignalggH125 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",125) ,"READ");  
+  TFile *fSignalggH130 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",130) ,"READ");  
+  TFile *fSignalggH135 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",135) ,"READ");  
+  TFile *fSignalggH140 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",140) ,"READ");  
+  TFile *fSignalggH145 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",145) ,"READ");  
+
+  TFile *fSignalqqH110 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",110) ,"READ");  
+  TFile *fSignalqqH115 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",115) ,"READ");  
+  TFile *fSignalqqH120 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",120) ,"READ");  
+  TFile *fSignalqqH125 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",125) ,"READ");  
+  TFile *fSignalqqH130 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",130) ,"READ");  
+  TFile *fSignalqqH135 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",135) ,"READ");  
+  TFile *fSignalqqH140 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",140) ,"READ");  
+  TFile *fSignalqqH145 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",145) ,"READ");  
+ 
+  TFile *fSignalVH110 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",110) ,"READ");  
+  TFile *fSignalVH115 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",115) ,"READ");  
+  TFile *fSignalVH120 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",120) ,"READ");  
+  TFile *fSignalVH125 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",125) ,"READ");  
+  TFile *fSignalVH130 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",130) ,"READ");  
+  TFile *fSignalVH135 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",135) ,"READ");  
+  TFile *fSignalVH140 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",140) ,"READ");  
+  TFile *fSignalVH145 =          
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",145) ,"READ");  
+ 
+
+
 
   // choose the analysis: Nominal "", jet up/Down "JetUp/Down" , elec up/down "MuUp/Down" , tau up/down "TauUp/Down"
   TString tree         = "outTreePtOrd"+postfix_+analysis_;
@@ -320,6 +419,45 @@ void plotMuTau( Int_t mH_           = 120,
   TTree *backgroundOthers    = (TTree*)fBackgroundOthers->Get(tree);
  
 
+  TTree *signalGGF110        = (TTree*)fSignalggH110->Get(tree);
+  TTree *signalGGF115        = (TTree*)fSignalggH115->Get(tree);
+  TTree *signalGGF120        = (TTree*)fSignalggH120->Get(tree);
+  TTree *signalGGF125        = (TTree*)fSignalggH125->Get(tree);
+  TTree *signalGGF130        = (TTree*)fSignalggH130->Get(tree);
+  TTree *signalGGF135        = (TTree*)fSignalggH135->Get(tree);
+  TTree *signalGGF140        = (TTree*)fSignalggH140->Get(tree);
+  TTree *signalGGF145        = (TTree*)fSignalggH145->Get(tree);
+
+  TTree *signalVBF110        = (TTree*)fSignalqqH110->Get(tree);
+  TTree *signalVBF115        = (TTree*)fSignalqqH115->Get(tree);
+  TTree *signalVBF120        = (TTree*)fSignalqqH120->Get(tree);
+  TTree *signalVBF125        = (TTree*)fSignalqqH125->Get(tree);
+  TTree *signalVBF130        = (TTree*)fSignalqqH130->Get(tree);
+  TTree *signalVBF135        = (TTree*)fSignalqqH135->Get(tree);
+  TTree *signalVBF140        = (TTree*)fSignalqqH140->Get(tree);
+  TTree *signalVBF145        = (TTree*)fSignalqqH145->Get(tree);
+
+  TTree *signalVH110        = (TTree*)fSignalVH110->Get(tree);
+  TTree *signalVH115        = (TTree*)fSignalVH115->Get(tree);
+  TTree *signalVH120        = (TTree*)fSignalVH120->Get(tree);
+  TTree *signalVH125        = (TTree*)fSignalVH125->Get(tree);
+  TTree *signalVH130        = (TTree*)fSignalVH130->Get(tree);
+  TTree *signalVH135        = (TTree*)fSignalVH135->Get(tree);
+  TTree *signalVH140        = (TTree*)fSignalVH140->Get(tree);
+  TTree *signalVH145        = (TTree*)fSignalVH145->Get(tree);
+
+
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+
   ///// LEPT PT ///////
   TCut lpt("ptL1>17 && isPFMuon && isTightMuon");
   TCut tpt("ptL2>20");
@@ -355,7 +493,7 @@ void plotMuTau( Int_t mH_           = 120,
 
   //TCut vbf("pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && isVetoInJets!=1");     // <--- BASELINE
   //TCut vbf("pt1>30 && pt2>30 && eta1*eta2<0 && Mjj>400 && Deta>4.0 && isVetoInJets!=1 && jet1PUWP>0.5 && jet2PUWP>0.5 && (jetVetoPUWP>0.5 && jetVetoPUWP<0)");
-  TCut vbf("pt1>30 && pt2>30 && isVetoInJets!=1 && MVAvbf>0.80");
+  TCut vbf("pt1>30 && pt2>30 && (ptVeto<30 || isVetoInJets!=1) && MVAvbf>0.80");
 
   TCut vh("pt1>30 && pt2>30 && Mjj>70 && Mjj<120 && diJetPt>150 && MVAvbf<0.80 && nJets20BTagged<1");
 
@@ -723,10 +861,6 @@ void plotMuTau( Int_t mH_           = 120,
     samples.push_back("LooseIso");
     samples.push_back("AntiIso");
   }
-  samples.push_back("ggH115");
-  samples.push_back("qqH115");
-  if(signalVH)
-    samples.push_back("VH115");
   samples.push_back("Others");
   samples.push_back("TTbar");
   samples.push_back("SS");
@@ -738,7 +872,14 @@ void plotMuTau( Int_t mH_           = 120,
   samples.push_back("DYToTauTau");
   if(dataEmbedded)
     samples.push_back("Embedded");
-  
+
+  for(unsigned int i = 0 ; i < hMasses.size() ; i++) {
+    samples.push_back(string(Form("ggH%d",hMasses[i])));
+    samples.push_back(string(Form("qqH%d",hMasses[i])));
+    samples.push_back(string(Form("VH%d",hMasses[i])));
+  }
+
+
 
   // here I define the map between a sample name and its tree
   std::map<std::string,TTree*> tMap;
@@ -746,9 +887,6 @@ void plotMuTau( Int_t mH_           = 120,
   tMap["LooseIso"]     = dataLooseIso;
   tMap["AntiIso"]      = dataLooseIso;
   tMap["Embedded"]     = dataEmbedded;
-  tMap["ggH115"]       = signalGGH;
-  tMap["qqH115"]       = signalVBF;
-  tMap["VH115"]        = signalVH;
   tMap["DYToTauTau"]   = backgroundDYTauTau;
   tMap["DYMutoTau"]    = backgroundDYMutoTau;
   tMap["DYJtoTau"]     = backgroundDYJtoTau;
@@ -758,8 +896,35 @@ void plotMuTau( Int_t mH_           = 120,
   tMap["TTbar"]        = backgroundTTbar;
   tMap["SS"]           = data;
 
+  tMap["ggH110"]       = signalGGF110;
+  tMap["ggH115"]       = signalGGF115;
+  tMap["ggH120"]       = signalGGF120;
+  tMap["ggH125"]       = signalGGF125;
+  tMap["ggH130"]       = signalGGF130;
+  tMap["ggH135"]       = signalGGF135;
+  tMap["ggH140"]       = signalGGF140;
+  tMap["ggH145"]       = signalGGF145;
 
+  tMap["qqH110"]       = signalVBF110;
+  tMap["qqH115"]       = signalVBF115;
+  tMap["qqH120"]       = signalVBF120;
+  tMap["qqH125"]       = signalVBF125;
+  tMap["qqH130"]       = signalVBF130;
+  tMap["qqH135"]       = signalVBF135;
+  tMap["qqH140"]       = signalVBF140;
+  tMap["qqH145"]       = signalVBF145;
+
+  tMap["VH110"]       = signalVH110;
+  tMap["VH115"]       = signalVH115;
+  tMap["VH120"]       = signalVH120;
+  tMap["VH125"]       = signalVH125;
+  tMap["VH130"]       = signalVH130;
+  tMap["VH135"]       = signalVH135;
+  tMap["VH140"]       = signalVH140;
+  tMap["VH145"]       = signalVH145;
   
+
+
   std::map<TString,Float_t> vMap;
 
 
@@ -1035,9 +1200,9 @@ void plotMuTau( Int_t mH_           = 120,
 	hZfakes->Add(h1,1.0);
       }
 
-      if((it->first).find("ggH115")!=string::npos && selection_.find("boost")!=string::npos){
-	h1->Scale(kFactorSM);
-      }
+      //if((it->first).find("ggH")!=string::npos && selection_.find("boost")!=string::npos){
+      //h1->Scale(kFactorSM);
+      //}
 
 
     }
@@ -1111,7 +1276,7 @@ void plotMuTau( Int_t mH_           = 120,
       hQCD->Add(h1,1.0);
       hQCD->SetFillColor(kMagenta-9);
     }
-    if((it->first).find("qqH115")!=string::npos){
+    if((it->first).find(string(Form("qqH%d",mH_)))!=string::npos){
       hSgn1->Add(h1,1.0);
       hSgn1->Scale(magnifySgn_);
       h1->Scale(magnifySgn_);
@@ -1120,7 +1285,7 @@ void plotMuTau( Int_t mH_           = 120,
       h1->SetFillStyle(3004);
       h1->SetLineColor(kBlack);
     }
-    if((it->first).find("ggH115")!=string::npos){
+    if((it->first).find(string(Form("ggH%d",mH_)))!=string::npos){
       hSgn2->Add(h1,1.0);
       hSgn2->Scale(magnifySgn_);
       h1->Scale(magnifySgn_);
@@ -1129,7 +1294,7 @@ void plotMuTau( Int_t mH_           = 120,
       h1->SetFillStyle(3005);
       h1->SetLineColor(kBlack);
     }
-    if((it->first).find("VH115")!=string::npos){
+    if((it->first).find(string(Form("VH%d",mH_)))!=string::npos){
       hSgn3->Add(h1,1.0);
       hSgn3->Scale(magnifySgn_);
       h1->Scale(magnifySgn_);
@@ -1138,6 +1303,106 @@ void plotMuTau( Int_t mH_           = 120,
       h1->SetFillStyle(3005);
       h1->SetLineColor(kBlack);
     }
+    if((it->first).find(string(Form("ggH%d",110)))!=string::npos){
+      hggH110->Add(h1,1.0);
+      hggH110->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("ggH%d",115)))!=string::npos){
+      hggH115->Add(h1,1.0);
+      hggH115->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("ggH%d",120)))!=string::npos){
+      hggH120->Add(h1,1.0);
+      hggH120->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("ggH%d",125)))!=string::npos){
+      hggH125->Add(h1,1.0);
+      hggH125->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("ggH%d",130)))!=string::npos){
+      hggH130->Add(h1,1.0);
+      hggH130->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("ggH%d",135)))!=string::npos){
+      hggH135->Add(h1,1.0);
+      hggH135->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("ggH%d",140)))!=string::npos){
+      hggH140->Add(h1,1.0);
+      hggH140->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("ggH%d",145)))!=string::npos){
+      hggH145->Add(h1,1.0);
+      hggH145->SetLineWidth(2);
+    }
+
+    if((it->first).find(string(Form("qqH%d",110)))!=string::npos){
+      hqqH110->Add(h1,1.0);
+      hqqH110->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("qqH%d",115)))!=string::npos){
+      hqqH115->Add(h1,1.0);
+      hqqH115->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("qqH%d",120)))!=string::npos){
+      hqqH120->Add(h1,1.0);
+      hqqH120->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("qqH%d",125)))!=string::npos){
+      hqqH125->Add(h1,1.0);
+      hqqH125->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("qqH%d",130)))!=string::npos){
+      hqqH130->Add(h1,1.0);
+      hqqH130->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("qqH%d",135)))!=string::npos){
+      hqqH135->Add(h1,1.0);
+      hqqH135->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("qqH%d",140)))!=string::npos){
+      hqqH140->Add(h1,1.0);
+      hqqH140->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("qqH%d",145)))!=string::npos){
+      hqqH145->Add(h1,1.0);
+      hqqH145->SetLineWidth(2);
+    }
+
+    if((it->first).find(string(Form("VH%d",110)))!=string::npos){
+      hVH110->Add(h1,1.0);
+      hVH110->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("VH%d",115)))!=string::npos){
+      hVH115->Add(h1,1.0);
+      hVH115->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("VH%d",120)))!=string::npos){
+      hVH120->Add(h1,1.0);
+      hVH120->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("VH%d",125)))!=string::npos){
+      hVH125->Add(h1,1.0);
+      hVH125->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("VH%d",130)))!=string::npos){
+      hVH130->Add(h1,1.0);
+      hVH130->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("VH%d",135)))!=string::npos){
+      hVH135->Add(h1,1.0);
+      hVH135->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("VH%d",140)))!=string::npos){
+      hVH140->Add(h1,1.0);
+      hVH140->SetLineWidth(2);
+    }
+    if((it->first).find(string(Form("VH%d",145)))!=string::npos){
+      hVH145->Add(h1,1.0);
+      hVH145->SetLineWidth(2);
+    }
+
+
     if((it->first).find("Data")!=string::npos){
       hData->Add(h1,1.0);
       hData->Sumw2();
@@ -1427,6 +1692,37 @@ void plotMuTau( Int_t mH_           = 120,
   hSgn1->Write();
   hSgn2->Write();
   hSgn3->Write();
+
+
+  hggH110->Write();  
+  hggH115->Write();  
+  hggH120->Write();  
+  hggH125->Write();  
+  hggH130->Write();  
+  hggH135->Write();  
+  hggH140->Write();  
+  hggH145->Write(); 
+
+  hqqH110->Write();  
+  hqqH115->Write();  
+  hqqH120->Write();  
+  hqqH125->Write();  
+  hqqH130->Write();  
+  hqqH135->Write();  
+  hqqH140->Write();  
+  hqqH145->Write();  
+
+  hVH110->Write();  
+  hVH115->Write();  
+  hVH120->Write();  
+  hVH125->Write();  
+  hVH130->Write();  
+  hVH135->Write();  
+  hVH140->Write();  
+  hVH145->Write(); 
+
+
+
   hData->Write();
   hParameters->Write();
   fout->Write();
@@ -1440,6 +1736,10 @@ void plotMuTau( Int_t mH_           = 120,
   if(hVVKeys)       delete hVVKeys;
   if(hLooseIsoKeys) delete hLooseIsoKeys;
   if(hAntiIsoKeys)  delete hAntiIsoKeys;
+  delete hggH110; delete hggH115 ; delete hggH120; delete hggH125; delete hggH130; delete hggH135; delete hggH140; delete hggH145;
+  delete hqqH110; delete hqqH115 ; delete hqqH120; delete hqqH125; delete hqqH130; delete hqqH135; delete hqqH140; delete hqqH145;
+  delete hVH110;  delete hVH115 ;  delete hVH120;  delete hVH125;  delete hVH130;  delete hVH135;  delete hVH140;  delete hVH145;
+
   delete hVV; delete hSgn1; delete hSgn2; delete hSgn3; delete hData; delete hParameters;
   delete hWMt; delete aStack;  delete hEWK; delete hSiml; delete hDataEmb; delete hSgn; delete hRatio; delete line;
   delete fout;
@@ -1448,6 +1748,31 @@ void plotMuTau( Int_t mH_           = 120,
   fSignalGGH->Close();       delete fSignalGGH; 
   fSignalVBF->Close();       delete fSignalVBF;
   fSignalVH->Close();        delete fSignalVH; 
+  fSignalggH110->Close();    delete fSignalggH110;
+  fSignalggH115->Close();    delete fSignalggH115;
+  fSignalggH120->Close();    delete fSignalggH120;
+  fSignalggH125->Close();    delete fSignalggH125;
+  fSignalggH130->Close();    delete fSignalggH130;
+  fSignalggH135->Close();    delete fSignalggH135;
+  fSignalggH140->Close();    delete fSignalggH140;
+  fSignalggH145->Close();    delete fSignalggH145;
+  fSignalqqH110->Close();    delete fSignalqqH110;
+  fSignalqqH115->Close();    delete fSignalqqH115;
+  fSignalqqH120->Close();    delete fSignalqqH120;
+  fSignalqqH125->Close();    delete fSignalqqH125;
+  fSignalqqH130->Close();    delete fSignalqqH130;
+  fSignalqqH135->Close();    delete fSignalqqH135;
+  fSignalqqH140->Close();    delete fSignalqqH140;
+  fSignalqqH145->Close();    delete fSignalqqH145;
+  fSignalVH110->Close();     delete fSignalVH110;
+  fSignalVH115->Close();     delete fSignalVH115;
+  fSignalVH120->Close();     delete fSignalVH120;
+  fSignalVH125->Close();     delete fSignalVH125;
+  fSignalVH130->Close();     delete fSignalVH130;
+  fSignalVH135->Close();     delete fSignalVH135;
+  fSignalVH140->Close();     delete fSignalVH140;
+  fSignalVH145->Close();     delete fSignalVH145;
+
   fBackgroundOthers->Close();delete fBackgroundOthers;
   fBackgroundTTbar->Close(); delete fBackgroundTTbar;
   fBackgroundWJets->Close(); delete fBackgroundWJets;
@@ -1508,10 +1833,7 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "May2012/Reload_Pr
     for(unsigned j = 0; j < mH.size(); j++){
 
       //plotMuTau(mH[j],useEmbedded,"inclusive",""   ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
-      
-      plotMuTau(mH[j],useEmbedded,"novbfHigh",""       ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
- 
-      return;
+      //return;
 
       plotMuTau(mH[j],useEmbedded,"novbfLow",""       ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);
       plotMuTau(mH[j],useEmbedded,"novbfLow","TauUp"  ,variables[i],"mass","GeV",outputDir,-1,0,100,1.0,1.0,0,1.2);

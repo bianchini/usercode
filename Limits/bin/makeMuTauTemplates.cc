@@ -13,7 +13,54 @@
 #include <map>
 #include <string>
 
+
+#define RESCALETO1PB true
+
+
+
 using namespace std;
+
+
+
+float higgsXsection(int mH = 120, string process = "ggH"){
+
+  float xsection = 1.0;
+
+  if(process.find("ggH")!=string::npos){
+    if(mH == 110) xsection = 8.02e-02*19.84;
+    if(mH == 115) xsection = 7.65e-02*18.13;
+    if(mH == 120) xsection = 7.10e-02*16.63;
+    if(mH == 125) xsection = 6.37e-02*15.31;
+    if(mH == 130) xsection = 5.48e-02*14.12;
+    if(mH == 135) xsection = 4.52e-02*13.08;
+    if(mH == 140) xsection = 3.54e-02*12.13;
+    if(mH == 145) xsection = 2.61e-02*11.27;
+  }
+  if(process.find("qqH")!=string::npos){
+    if(mH == 110) xsection = 8.02e-02*1.398;
+    if(mH == 115) xsection = 7.65e-02*1.332;
+    if(mH == 120) xsection = 7.10e-02*1.269;
+    if(mH == 125) xsection = 6.37e-02*1.211;
+    if(mH == 130) xsection = 5.48e-02*1.154;
+    if(mH == 135) xsection = 4.52e-02*1.100;
+    if(mH == 140) xsection = 3.54e-02*1.052;
+    if(mH == 145) xsection = 2.61e-02*1.004;
+  }
+  if(process.find("VH")!=string::npos){
+    if(mH == 110) xsection = 8.02e-02*(0.8754+0.4721+0.1257  );
+    if(mH == 115) xsection = 7.65e-02*(0.7546+0.4107+0.1106  );
+    if(mH == 120) xsection = 7.10e-02*(0.6561+0.3598+0.09756 );
+    if(mH == 125) xsection = 6.37e-02*(0.5729+0.3158+0.08634 );
+    if(mH == 130) xsection = 5.48e-02*(0.4942+0.2778+0.07658 );
+    if(mH == 135) xsection = 4.52e-02*(0.4390+0.2453+0.06810 );
+    if(mH == 140) xsection = 3.54e-02*(0.3857+0.2172+0.06072 );
+    if(mH == 145) xsection = 2.61e-02*(0.3406+0.1930+0.05435 );
+  }
+
+  return xsection;
+}
+
+
 
 void produce(   
 	     int mH_=120,
@@ -25,16 +72,20 @@ void produce(
 
 
   cout << "Now doing mass mH=" << mH_ << ", for variable " << variable_ << " analysis " << analysis_ << " and bin " << bin_ << endl;
-  TFile* fin = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_%s_%s.root", outputDir.Data(), mH_, bin_.c_str() , analysis_.c_str(), variable_.c_str()), "READ");
+  TFile* fin = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_%s_%s.root", outputDir.Data(), 120, bin_.c_str() , analysis_.c_str(), variable_.c_str()), "READ");
 
 
   ///////////////////////////////////////////////
-  TFile* fin_jUp     = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_JetUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_jDown   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_JetDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_tUp     = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_TauUp_%s.root",   outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_tDown   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_TauDown_%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_nominal = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s__%s.root", outputDir.Data(), mH_, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_jUp     = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_JetUp_%s.root",   outputDir.Data(), 120, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_jDown   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_JetDown_%s.root", outputDir.Data(), 120, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_tUp     = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_TauUp_%s.root",   outputDir.Data(), 120, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_tDown   = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s_TauDown_%s.root", outputDir.Data(), 120, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_nominal = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/muTau_mH%d_%s__%s.root",        outputDir.Data(), 120, bin_.c_str() , variable_.c_str()), "READ");
   ///////////////////////////////////////////////
+
+  float rescaleggH = RESCALETO1PB ? higgsXsection(mH_,"ggH") : 1.0;
+  float rescaleqqH = RESCALETO1PB ? higgsXsection(mH_,"qqH") : 1.0;
+  float rescaleVH  = RESCALETO1PB ? higgsXsection(mH_,"VH")  : 1.0;
 
 
   string binNameSpace = "";
@@ -45,10 +96,10 @@ void produce(
     binNameSpace =  "SM0";
 
   if(bin_.find("novbfLow")  !=string::npos) 
-    binNameSpace =  "incl_low";
+    binNameSpace =  "0jet_low";
 
   if(bin_.find("novbfHigh") !=string::npos) 
-    binNameSpace =  "incl_high";
+    binNameSpace =  "0jet_high";
 
 
   else if(bin_.find("boost")!=string::npos) 
@@ -111,11 +162,24 @@ void produce(
     TDirectory* dir = fTemplOut->mkdir( dirName.Data() );
     dir->cd();
 
+
+    ((TH1F*)fin->Get("hData"))->Write("data_obs");
+
+    TH1F* hSgn2 = (TH1F*)fin->Get(Form("hggH%d",mH_));
+    hSgn2->Scale(1./rescaleggH);
+    hSgn2->Write(Form("ggH%d%s" ,mH_,suffix.c_str()));
+
+    TH1F* hSgn1 = (TH1F*)fin->Get(Form("hqqH%d",mH_));
+    hSgn1->Scale(1./rescaleqqH);
+    hSgn1->Write(Form("qqH%d%s" ,mH_,suffix.c_str()));
+
+    TH1F* hSgn3 = (TH1F*)fin->Get(Form("hVH%d",mH_));
+    hSgn3->Scale(1./rescaleVH);
+    hSgn3->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
+				  
+
     if(bin_.find("novbf")!=string::npos){
-      ((TH1F*)fin->Get("hData"))->Write("data_obs");
-      ((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s" ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s"  ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s"  ,mH_,suffix.c_str()));
+
       ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s",suffix.c_str()));
 
       TH1F* hQCD         = (TH1F*)fin->Get("hQCD");
@@ -139,10 +203,7 @@ void produce(
     }
     else if(bin_.find("boost")!=string::npos){
 
-      ((TH1F*)fin->Get("hData"))->Write("data_obs");
-      ((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s" ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s"  ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s"  ,mH_,suffix.c_str()));
+    
       ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s",suffix.c_str()));
 
       TH1F* hQCD         = (TH1F*)fin->Get("hQCD");
@@ -175,10 +236,6 @@ void produce(
 
     else if(bin_.find("bTag")!=string::npos){
 
-      ((TH1F*)fin->Get("hData"))->Write("data_obs");
-      ((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s" ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s"  ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s"  ,mH_,suffix.c_str()));
       ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s",suffix.c_str()));
 
       TH1F* hQCD         = (TH1F*)fin->Get("hQCD");
@@ -212,10 +269,6 @@ void produce(
     }
     else if(bin_.find("vbf")!=string::npos && bin_.find("novbf")==string::npos){
 
-      ((TH1F*)fin->Get("hData"))->Write("data_obs");
-      ((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s" ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s"  ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s"  ,mH_,suffix.c_str()));
       ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s",suffix.c_str()));
 
       //((TH1F*)fin->Get("hAntiIsoKeys"))->Write(Form("QCD%s"    ,suffix.c_str()));
@@ -245,10 +298,6 @@ void produce(
     }
     else if(bin_.find("vh")!=string::npos){
 
-      ((TH1F*)fin->Get("hData"))->Write("data_obs");
-      ((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s" ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s"  ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s"  ,mH_,suffix.c_str()));
       ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s",suffix.c_str()));
 
       //((TH1F*)fin->Get("hAntiIsoKeys"))->Write(Form("QCD%s"    ,suffix.c_str()));
@@ -277,10 +326,8 @@ void produce(
       ((TH1F*)fin->Get("hVVKeys"))->Write(Form("VV%s"         ,suffix.c_str()));
     }
     else{
-      ((TH1F*)fin->Get("hData"))->Write("data_obs");
-      ((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s" ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s"  ,mH_,suffix.c_str()));
-      ((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s"  ,mH_,suffix.c_str()));
+
+
       ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s",suffix.c_str()));
       ((TH1F*)fin->Get("hQcd"))->Write(Form("QCD%s"    ,suffix.c_str()));
       ((TH1F*)fin->Get("hW"))->Write(Form("W%s"           ,suffix.c_str()));
@@ -300,6 +347,24 @@ void produce(
 
     fTemplOut->cd( dirName.Data() );
     
+
+    if(dir->FindObjectAny(Form("qqH%d%s"         ,mH_,suffix.c_str()))==0 ){
+      TH1F* hSgn2 = (TH1F*)fin->Get(Form("hqqH%d",mH_));
+      hSgn2->Scale(1./rescaleqqH);
+      hSgn2->Write(Form("qqH%d%s" ,mH_,suffix.c_str()));
+    }
+    if(dir->FindObjectAny(Form("ggH%d%s"          , mH_,suffix.c_str()))==0 ){
+      TH1F* hSgn1 = (TH1F*)fin->Get(Form("hggH%d",mH_));
+      hSgn1->Scale(1./rescaleggH);
+      hSgn1->Write(Form("ggH%d%s" , mH_,suffix.c_str()));
+    }
+    if(dir->FindObjectAny(Form("VH%d%s"          , mH_,suffix.c_str()))==0 ){
+      TH1F* hSgn3 = (TH1F*)fin->Get(Form("hVH%d",mH_));
+      hSgn3->Scale(1./rescaleVH);
+      hSgn3->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
+    }
+
+
     if(bin_.find("novbf")!=string::npos){
 
       if(dir->FindObjectAny(Form("ZTT%s"       ,suffix.c_str()))==0 )
@@ -326,12 +391,9 @@ void produce(
 	((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("qqH%d%s"         ,mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s",mH_  ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("ggH%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s" ,mH_,suffix.c_str()));
-      if(dir->FindObjectAny(Form("VH%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
+     
+      
+
     }
     else if(bin_.find("boost")!=string::npos){
 
@@ -369,12 +431,7 @@ void produce(
 	((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("qqH%d%s"         ,mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s",mH_  ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("ggH%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s" ,mH_,suffix.c_str()));
-      if(dir->FindObjectAny(Form("VH%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
+    
     }
     else if(bin_.find("bTag")!=string::npos){
 
@@ -413,12 +470,9 @@ void produce(
 	((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("qqH%d%s"         ,mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s",mH_  ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("ggH%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s" ,mH_,suffix.c_str()));
-      if(dir->FindObjectAny(Form("VH%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
+
+   
+
     }
     else if(bin_.find("vbf")!=string::npos && bin_.find("novbf")==string::npos){
 
@@ -462,12 +516,9 @@ void produce(
 	((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hVVKeys"))->Write(Form("VV%s"         ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("qqH%d%s"         ,mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s",mH_  ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("ggH%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s" ,mH_,suffix.c_str()));
-      if(dir->FindObjectAny(Form("VH%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
+
+     
+
     }
     else if(bin_.find("vh")!=string::npos){
 
@@ -511,12 +562,9 @@ void produce(
 	((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hVVKeys"))->Write(Form("VV%s"         ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("qqH%d%s"         ,mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s",mH_  ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("ggH%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s" ,mH_,suffix.c_str()));
-      if(dir->FindObjectAny(Form("VH%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
+
+
+
     }
     else{
       if(dir->FindObjectAny(Form("ZTT%s"       ,suffix.c_str()))==0 )
@@ -535,12 +583,7 @@ void produce(
 	((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
       if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("qqH%d%s"         ,mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn1"))->Write(Form("qqH%d%s",mH_  ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("ggH%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn2"))->Write(Form("ggH%d%s" ,mH_,suffix.c_str()));
-      if(dir->FindObjectAny(Form("VH%d%s"          , mH_,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hSgn3"))->Write(Form("VH%d%s" ,mH_,suffix.c_str()));
+
     }
 
 
@@ -578,10 +621,18 @@ void produce(
 	  line.replace( line.find("XXX") , 3 , string("muTauSM")  );
 	  out << line << endl;
 	}
-	else if(line.find("process")!=string::npos && line.find("VBF")!=string::npos){
-          line.replace( line.find("XXX") , 3 , string(Form("%d",mH_))  );
-          line.replace( line.find("YYY") , 3 , string(Form("%d",mH_))  );
-	  line.replace( line.find("KKK") , 3 , string(Form("%d",mH_))  );
+	else if(line.find("process")!=string::npos && line.find("qqH")!=string::npos){
+
+	  if(!RESCALETO1PB){
+	    line.replace( line.find("XXX") , 3 , string(Form("%d",mH_))  );
+	    line.replace( line.find("YYY") , 3 , string(Form("%d",mH_))  );
+	    line.replace( line.find("KKK") , 3 , string(Form("%d",mH_))  );
+	  }
+	  else{
+	    line.replace( line.find("XXX") , 3 , string(Form("   "))  );
+	    line.replace( line.find("YYY") , 3 , string(Form("   "))  );
+	    line.replace( line.find("KKK") , 3 , string(Form("   "))  );
+	  }
           out << line << endl;
         }
 	else if(line.find("rate")!=string::npos){
@@ -611,17 +662,27 @@ void produce(
 
 	  /////////////////////////////////////////////
 	  /////////////////////////////////////////////
+	  
+	  TH1F* hSgn2 = (TH1F*)fin->Get(Form("hggH%d",mH_));
+	  //hSgn2->Scale(1./rescaleggH);
+	  
+	  TH1F* hSgn1 = (TH1F*)fin->Get(Form("hqqH%d",mH_));
+	  //hSgn1->Scale(1./rescaleqqH);
+	  
+	  TH1F* hSgn3 = (TH1F*)fin->Get(Form("hVH%d",mH_));
+	  //hSgn3->Scale(1./rescaleVH);
+
 
 	  string rate = "rate                                           ";
 	  string space = "              ";
 	  out << rate ;
-	  out <<          ((TH1F*)fin->Get("hSgn3"))->Integral()
-	      << space << ((TH1F*)fin->Get("hSgn2"))->Integral()
-	      << space << ((TH1F*)fin->Get("hSgn1"))->Integral()
+	  out <<          hSgn3->Integral()
+	      << space << hSgn2->Integral()
+	      << space << hSgn1->Integral()
 	      << space << ((TH1F*)fin->Get("hDataEmb"))->Integral()
 	      << space << QCDyield
 	      << space << ((TH1F*)fin->Get("hW"))->Integral();
-	  if(binNameSpace.find("incl_")!=string::npos){
+	  if(binNameSpace.find("0jet_")!=string::npos){
 	    out << space << ((TH1F*)fin->Get("hZmj"))->Integral()
 		<< space << ((TH1F*)fin->Get("hZmm"))->Integral();
 	      }
@@ -639,29 +700,32 @@ void produce(
 	  float relUnc = 1.+extrapError/extrapFactor;
 
 	  line.replace( line.find("XXX") , 3 , string(Form("%.5f",relUnc))  );
+	  line.replace( line.find("YYY") , 3 , string(Form("%.5f",relUnc))  );
+	  if( line.find("KKK") != string::npos )
+	    line.replace( line.find("KKK") , 3 , string(Form("%.5f",relUnc))  );
 	  out << line << endl;
 
 	}
 	else if(line.find("CMS_scale_j")!=string::npos){
-	  float VBFrel = TMath::Max(TMath::Abs((((TH1F*)fin_jUp->Get("hSgn1"))->Integral()/((TH1F*)fin->Get("hSgn1"))->Integral())),
-				    TMath::Abs((((TH1F*)fin_jDown->Get("hSgn1"))->Integral()/((TH1F*)fin->Get("hSgn1"))->Integral()))
+	  float VBFrel = TMath::Max(TMath::Abs((((TH1F*)fin_jUp->Get(Form("hVH%d",mH_)))->Integral()/((TH1F*)fin->Get(Form("hVH%d",mH_)))->Integral())),
+				    TMath::Abs((((TH1F*)fin_jDown->Get(Form("hVH%d",mH_)))->Integral()/((TH1F*)fin->Get(Form("hVH%d",mH_)))->Integral()))
 				    );
-	  float VBFrelUp   = (((TH1F*)fin_jUp->Get("hSgn1"))->Integral()/((TH1F*)fin->Get("hSgn1"))->Integral());
-	  float VBFrelDown = (((TH1F*)fin_jDown->Get("hSgn1"))->Integral()/((TH1F*)fin->Get("hSgn1"))->Integral());
+	  float VBFrelUp   = (((TH1F*)fin_jUp->Get(Form("hVH%d",mH_)))->Integral()/((TH1F*)fin->Get(Form("hVH%d",mH_)))->Integral());
+	  float VBFrelDown = (((TH1F*)fin_jDown->Get(Form("hVH%d",mH_)))->Integral()/((TH1F*)fin->Get(Form("hVH%d",mH_)))->Integral());
 
-	  float SMrel  = TMath::Max(TMath::Abs((((TH1F*)fin_jUp->Get("hSgn2"))->Integral()/((TH1F*)fin->Get("hSgn2"))->Integral())),
-				    TMath::Abs((((TH1F*)fin_jDown->Get("hSgn2"))->Integral()/((TH1F*)fin->Get("hSgn2"))->Integral()))
-				    );
-
-	  float SMrelUp   = (((TH1F*)fin_jUp->Get("hSgn2"))->Integral()/((TH1F*)fin->Get("hSgn2"))->Integral());
-	  float SMrelDown = (((TH1F*)fin_jDown->Get("hSgn2"))->Integral()/((TH1F*)fin->Get("hSgn2"))->Integral());
-
-	  float VHrel  = TMath::Max(TMath::Abs((((TH1F*)fin_jUp->Get("hSgn3"))->Integral()/((TH1F*)fin->Get("hSgn3"))->Integral())),
-				    TMath::Abs((((TH1F*)fin_jDown->Get("hSgn3"))->Integral()/((TH1F*)fin->Get("hSgn3"))->Integral()))
+	  float SMrel  = TMath::Max(TMath::Abs((((TH1F*)fin_jUp->Get(Form("hggH%d",mH_)))->Integral()/((TH1F*)fin->Get(Form("hggH%d",mH_)))->Integral())),
+				    TMath::Abs((((TH1F*)fin_jDown->Get(Form("hggH%d",mH_)))->Integral()/((TH1F*)fin->Get(Form("hggH%d",mH_)))->Integral()))
 				    );
 
-	  float VHrelUp   = (((TH1F*)fin_jUp->Get("hSgn3"))->Integral()/((TH1F*)fin->Get("hSgn3"))->Integral());
-	  float VHrelDown = (((TH1F*)fin_jDown->Get("hSgn3"))->Integral()/((TH1F*)fin->Get("hSgn3"))->Integral());
+	  float SMrelUp   = (((TH1F*)fin_jUp->Get(Form("hggH%d",mH_)))->Integral()/((TH1F*)fin->Get(Form("hggH%d",mH_)))->Integral());
+	  float SMrelDown = (((TH1F*)fin_jDown->Get(Form("hggH%d",mH_)))->Integral()/((TH1F*)fin->Get(Form("hggH%d",mH_)))->Integral());
+
+	  float VHrel  = TMath::Max(TMath::Abs((((TH1F*)fin_jUp->Get(Form("hqqH%d",mH_)))->Integral()/((TH1F*)fin->Get(Form("hqqH%d",mH_)))->Integral())),
+				    TMath::Abs((((TH1F*)fin_jDown->Get(Form("hqqH%d",mH_)))->Integral()/((TH1F*)fin->Get(Form("hqqH%d",mH_)))->Integral()))
+				    );
+
+	  float VHrelUp   = (((TH1F*)fin_jUp->Get(Form("hqqH%d",mH_)))->Integral()/((TH1F*)fin->Get(Form("hqqH%d",mH_)))->Integral());
+	  float VHrelDown = (((TH1F*)fin_jDown->Get(Form("hqqH%d",mH_)))->Integral()/((TH1F*)fin->Get(Form("hqqH%d",mH_)))->Integral());
 
 
 	  float ZTTrel = TMath::Max(TMath::Abs((((TH1F*)fin_jUp->Get("hZtt"))->Integral()/((TH1F*)fin->Get("hZtt"))->Integral())),
@@ -693,7 +757,7 @@ void produce(
 	  string shortspace = "     ";
 	  out << "CMS_scale_j";
 	  out << longspace << "lnN" << shortspace;
-	  if(binNameSpace.find("incl_")!=string::npos) 
+	  if(binNameSpace.find("0jet_")!=string::npos) 
 	    out <<          string(Form("%.2f",1+TMath::Max(TMath::Abs(-1+VHrelDown), TMath::Abs(-1+VHrelUp) ) * TMath::Abs(-1+VHrelUp)/(-1+VHrelUp)   )); // VH
 	  else
 	    out << space << string(Form("%.2f",1+TMath::Max(TMath::Abs(-1+SMrelDown), TMath::Abs(-1+SMrelUp))  * TMath::Abs(-1+SMrelUp)/(-1+SMrelUp)   )); // VH = GGF
@@ -704,12 +768,12 @@ void produce(
 	  out << space << "-" ; //string(Form("%.2f",1+(-1+ZTTrelDown)*1.0));  // W
 	  out << space << "-" ; //string(Form("%.2f",1+(-1+ZTTrelDown)*1.0));  // Z+fakes
 
-	  if(binNameSpace.find("incl_")!=string::npos) 
+	  if(binNameSpace.find("0jet_")!=string::npos) 
 	    out << space << "-" ; //string(Form("%.2f",1+(-1+ZTTrelDown)*1.0));
 
 	  out << space << string(Form("%.2f",1+TMath::Max(  TMath::Abs(-1+TTrelDown),TMath::Abs(-1+TTrelUp))  * TMath::Abs(-1+TTrelUp)/(-1+TTrelUp) ));  // TT
 
-	  //if(binNameSpace.find("incl_")!=string::npos) 
+	  //if(binNameSpace.find("0jet_")!=string::npos) 
 	  out << space << string(Form("%.2f",1+TMath::Max(TMath::Abs(-1+VVrelDown),TMath::Abs(-1+VVrelUp) ) * TMath::Abs(-1+VVrelUp)/(-1+VVrelUp)));   // VV
 	  //else
 	  //out << space << string(Form("%.2f",1+TMath::Max(TMath::Abs(-1+TTrelDown),TMath::Abs(-1+TTrelUp))  * TMath::Abs(-1+TTrelUp)/(-1+TTrelUp) ));  // TT
@@ -757,12 +821,12 @@ void produceAll(  TString outputDir = "May2012/Reload_PreApproval" ){
   //mH.push_back(105);
   //mH.push_back(110);
   //mH.push_back(115);
-  mH.push_back(120);
+  //mH.push_back(120);
   //mH.push_back(125);
   //mH.push_back(130);
   //mH.push_back(135);
-  //mH.push_back(140);
-  //mH.push_back(145);
+  mH.push_back(140);
+  mH.push_back(145);
 
   for(unsigned int i = 0 ; i < variables.size(); i++){
     for(unsigned j = 0; j < mH.size(); j++){
@@ -828,9 +892,6 @@ void produceAll(  TString outputDir = "May2012/Reload_PreApproval" ){
   }
 
 }
-
-
-
 
 
 
