@@ -132,7 +132,9 @@ void plotElecTau( Int_t mH_           = 120,
   //float Lumi = (-47.4 + 220.9 + 965.3 + 390.6 + 706.4 + 2735)*1.00;
 
   // from lumiPixel
-  float Lumi   = (-47.4 + 215.6 + 955.3 + 389.9 + 706.7 + 2714)*(1-0.056);
+  float Lumi   = (-47.4 + 215.6 + 955.3 + 389.9 + 706.7 + 2714);
+  float lumiCorrFactor = (1-0.056);
+  Lumi *= lumiCorrFactor;
 
   //////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////
@@ -220,7 +222,7 @@ void plotElecTau( Int_t mH_           = 120,
   leg->SetBorderSize(0);
   leg->SetFillColor(10);
   leg->SetTextSize(0.03);
-  leg->SetHeader(Form("#splitline{CMS Preliminary #sqrt{s}=7 TeV}{%.1f fb^{-1} #tau_{e}#tau_{had}}", Lumi/1000. ));
+  leg->SetHeader(Form("#splitline{CMS Preliminary #sqrt{s}=7 TeV}{%.1f fb^{-1} #tau_{e}#tau_{had}}", Lumi/1000./lumiCorrFactor ));
 
   THStack* aStack = new THStack("aStack","");
 
@@ -1796,6 +1798,53 @@ void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "May2012/Reload_
   //mH.push_back(140);
   //mH.push_back(145);
   //mH.push_back(160);
+
+  //plotElecTau(120,1,"inclusive",     "" ,"jetsBtagCSV1","leading jet CSV","units" ,outputDir,20,0,1,5.0,1.0,0,2);
+  //plotElecTau(120,1,"inclusive","" ,"MtLeg1MVA","M_{T}","GeV" ,             outputDir,40,0,160,5.0,1.0,0,1.2);
+  //plotElecTau(120,1,"inclusive",""   ,"MEtMVAPhi","MVA MET #phi","units" ,outputDir,32,-3.2,3.2,5.0,1.0,0,2.2);
+  //plotElecTau(120,1,"inclusive",  ""      ,"jetsBtagCSV1","leading jet CSV","units" ,outputDir,100,-11,11,5.0,1.0,0,2);
+  plotElecTau(120,1,"inclusive",     "" ,"jetsBtagCSV1","leading jet CSV","units" ,outputDir,50,0,1,5.0,1.0,0,2);
+
+  return;
+
+  plotElecTau(120,1,"inclusive","" ,"hpsMVA","#tau MVA","units"              ,outputDir,50,0.75,1.0, 5.0,1.0,0,1.8);
+  //plotElecTau(120,1,"inclusive","" ,"MtLeg1MVA","M_{T}","GeV" ,             outputDir,40,0,160,5.0,1.0,0,1.2);
+  plotElecTau(120,1,"inclusive",     "" ,"jetsBtagCSV1","leading jet CSV","units" ,outputDir,20,0,1,5.0,1.0,0,2);
+  plotElecTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV" ,  outputDir,50,0,200,5.0,1.0,0,1.2);
+  plotElecTau(120,1,"inclusive",""   ,"diTauNSVfitMass","SVfit mass","GeV" ,  outputDir,60,0,300,5.0,1.0,0,1.2);
+
+  plotElecTau(120,1,"inclusive",""   ,"MEtMVA","MVA MET","GeV" ,          outputDir,40,0,100,5.0,1.0,0,1.2);
+  plotElecTau(120,1,"inclusive",""   ,"MEtMVAPhi","MVA MET #phi","units" ,outputDir,32,-3.2,3.2,5.0,1.0,0,2.2);
+
+
+  plotElecTau(120,1,"inclusive",""   ,"ptL2","#tau p_{T}","GeV"           ,outputDir,27,11, 92,5.0,1.0,0,1.2);
+  plotElecTau(120,1,"inclusive",""   ,"ptL1","e p_{T}", "GeV"             ,outputDir,27,11, 92,5.0,1.0,0,1.2);
+  plotElecTau(120,1,"inclusive",""   ,"etaL1","e #eta", "units"           ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
+  plotElecTau(120,1,"inclusive",""   ,"etaL2","#tau #eta","units"         ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
+
+  plotElecTau(120,0,"inclusive",""   ,"numPV","reconstructed vertexes","units" ,outputDir,30,0,30,5.0,1.0,0,1.5);
+
+  plotElecTau(120,1,"inclusive",""   ,"nJets30","jet multiplicity","units"                 ,outputDir,10,0, 10,5.0,1.0,1,10);
+  plotElecTau(120,1,"inclusive",""   ,"nJets20BTagged","b-tagged jet multiplicity","units" ,outputDir,5,0, 5,5.0,1.0,1,10);
+
+  plotElecTau(120,1,"oneJet",""      ,"pt1","leading jet p_{T}","GeV"       ,outputDir,50,30, 330,5.0,1.0,1,100);
+  plotElecTau(120,1,"oneJet",""      ,"eta1","leading jet #eta","units"     ,outputDir,21,-5, 5,5.0,1.0,0,2.);
+  plotElecTau(120,1,"twoJets",""     ,"pt1","leading jet p_{T}","GeV"       ,outputDir,50,30, 330,5.0,1.0,1,200);
+  plotElecTau(120,1,"twoJets",""     ,"pt2","trailing jet p_{T}","GeV"      ,outputDir,50,30, 330,5.0,1.0,1,100);
+  plotElecTau(120,1,"twoJets",""     ,"eta1","leading jet #eta","units"     ,outputDir,21,-5, 5,5.0,1.0,0,2.);
+  plotElecTau(120,1,"twoJets",""     ,"eta2","trailing jet #eta","units"    ,outputDir,21,-5, 5,5.0,1.0,0,2.);
+  plotElecTau(120,1,"twoJets",""     ,"Deta","|#Delta#eta|_{jj}","units"    ,outputDir,20,0, 8,   5.0,1.0,0,1.5);
+  plotElecTau(120,1,"twoJets",""     ,"Mjj","M_{jj}","GeV"                  ,outputDir,20,0, 1000,5.0,1.0,1,100);
+
+  plotElecTau(120,1,"twoJets",""     ,"MVAvbf","BDT output","units"         ,outputDir,10,-1, 1,5.0,1.0,1,100);
+
+  return;
+
+
+
+
+
+
 
   //plotElecTau(120,0,"inclusive",""   ,"MtLeg1Corr","M_{T}","GeV" ,outputDir,40,0,160,5.0,1.0,0,1.2);
 

@@ -33,7 +33,7 @@
 #define SAVE             true
 #define addVH            true
 #define EMBEDDEDSAMPLES  true
-#define W3JETS           false
+#define W3JETS           true
 #define LOOSEISO         true
 #define kFactorSM         1.0
 
@@ -132,7 +132,9 @@ void plotMuTau( Int_t mH_           = 120,
   //float Lumi = (-47.4 + 215.3 + 930.7 + 410.6 + (450.6+212.7) + (735.2+254.8+778.2+682.0) )*1.00;
   //float Lumi = (-47.4 + 221.7 + 970 + 390 + 706 + 2741)*1.00;
   // from lumiPixel
-  float Lumi   = (-47.4 + 215.6 + 955.3 + 389.9 + 706.719 + 2714)*(1-0.056);
+  float Lumi           = (-47.4 + 215.6 + 955.3 + 389.9 + 706.719 + 2714);
+  float lumiCorrFactor = (1-0.056);
+  Lumi *= lumiCorrFactor;
 
   //////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////
@@ -221,7 +223,7 @@ void plotMuTau( Int_t mH_           = 120,
   leg->SetBorderSize(0);
   leg->SetFillColor(10);
   leg->SetTextSize(0.03);
-  leg->SetHeader(Form("#splitline{CMS Preliminary #sqrt{s}=7 TeV}{%.1f fb^{-1} #tau_{#mu}#tau_{had}}", Lumi/1000. ));
+  leg->SetHeader(Form("#splitline{CMS Preliminary #sqrt{s}=7 TeV}{%.1f fb^{-1} #tau_{#mu}#tau_{had}}", Lumi/1000./lumiCorrFactor ));
 
   THStack* aStack = new THStack("aStack","");
 
@@ -1539,7 +1541,8 @@ void plotMuTau( Int_t mH_           = 120,
   hError->SetMarkerStyle(kDot);
 
   float uncertZtt = 0;
-  if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos){
+  if(selection_.find("novbf")!=string::npos  || selection_.find("inclusive")!=string::npos ||
+     selection_.find("oneJet")!=string::npos || selection_.find("twoJets")!=string::npos){
     uncertZtt += (0.06  * 0.06) ; // Tau-ID 
     uncertZtt += (0.035 * 0.035); // Lumi 
   }
@@ -1555,7 +1558,8 @@ void plotMuTau( Int_t mH_           = 120,
   }
   uncertZtt = TMath::Sqrt(uncertZtt);
   float uncertTTb = 0;
-  if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos){
+  if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos||
+     selection_.find("oneJet")!=string::npos || selection_.find("twoJets")!=string::npos){
     uncertTTb += (0.075 * 0.075) ; // xsection 
   }
   else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
@@ -1566,7 +1570,8 @@ void plotMuTau( Int_t mH_           = 120,
   }
   uncertTTb = TMath::Sqrt(uncertTTb);
   float uncertEWK = 0;
-  if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos){
+  if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos ||
+     selection_.find("oneJet")!=string::npos || selection_.find("twoJets")!=string::npos){
     uncertEWK += (0.07 * 0.07) ; // extrapolation 
   }
   else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
@@ -1579,7 +1584,8 @@ void plotMuTau( Int_t mH_           = 120,
   }
   uncertEWK = TMath::Sqrt(uncertEWK);
   float uncertQCD = 0;
-  if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos){
+  if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos ||
+     selection_.find("oneJet")!=string::npos || selection_.find("twoJets")!=string::npos){
     uncertQCD += (0.02 * 0.02) ; // extrapolation 
   }
   else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
@@ -1806,28 +1812,41 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "May2012/Reload_Pr
   //mH.push_back(145);
   //mH.push_back(160);
 
-  //plotMuTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV" ,outputDir,50,0,200,5.0,1.0,0,1.2);
-  //plotMuTau(120,0,"inclusive",""   ,"MtLeg1MVA   ","M_{T}","GeV" ,       outputDir,40,0,160,5.0,1.0,0,1.2);
-  //plotMuTau(120,1,"inclusive",""   ,"ptL2","#tau p_{T}","GeV"           ,outputDir,30,0, 90,5.0,1.0,0,1.2);
-  //plotMuTau(120,1,"inclusive",""   ,"ptL1","#mu p_{T}", "GeV"           ,outputDir,30,0, 90,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"inclusive",""   ,"MtLeg1MVA","M_{T}","GeV" ,         outputDir,40,0,160,5.0,1.0,0,1.2);
+
+  //plotMuTau(120,1,"inclusive",""   ,"hpsMVA","#tau MVA","units"              ,outputDir,50,0.75,1.0, 5.0,1.0,0,1.8);
+  //plotMuTau(120,1,"inclusive",""   ,"jetsBtagCSV1","leading jet CSV","units" ,outputDir,50,0,1      ,5.0,1.0,0,2);
+  //plotMuTau(120,1,"inclusive",""   ,"diTauNSVfitMass","SVfit mass","GeV"     ,outputDir,60,0,300,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"inclusive",""   ,"MEtMVA","MVA MET","GeV"                 ,outputDir,40,0,100,5.0,1.0,0,1.2);
+  plotMuTau(120,1,"inclusive",""   ,"MEtMVAPhi","MVA MET #phi","units"       ,outputDir,33,-0.1,3.2,   5.0,1.0,0,1.5);
+
+  //plotMuTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"inclusive",""   ,"MEtMVA","MVA MET","GeV"                 ,outputDir,40,0,100,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"inclusive",""   ,"MEtMVAPhi","MVA MET #phi","units"       ,outputDir,33,-0.1,3.2,5.0,1.0,0,1.2);
+
+  plotMuTau(120,1,"inclusive",""   ,"ptL2","#tau p_{T}","GeV"           ,outputDir,27,11, 92,5.0,1.0,0,1.2);
+  
+  //plotMuTau(120,1,"inclusive",""   ,"ptL1","#mu p_{T}", "GeV"           ,outputDir,27,11, 92,5.0,1.0,0,1.2);
+  plotMuTau(120,0,"inclusive",""   ,"etaL1","#mu #eta", "units"         ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
+  plotMuTau(120,0,"inclusive",""   ,"etaL2","#tau #eta","units"         ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
 
   //plotMuTau(120,0,"inclusive",""   ,"numPV","reconstructed vertexes","units" ,outputDir,30,0,30,5.0,1.0,0,1.5);
 
-  //plotMuTau(120,0,"inclusive",""   ,"etaL1","#mu #eta", "units"                          ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
-  //plotMuTau(120,0,"inclusive",""   ,"etaL2","#tau #eta","units"                          ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
-  //plotMuTau(120,0,"inclusive",""   ,"nJets30","jet multiplicity","units"                 ,outputDir,10,0, 10,5.0,1.0,1,10);
-  //plotMuTau(120,0,"inclusive",""   ,"nJets20BTagged","b-tagged jet multiplicity","units" ,outputDir,5,0, 5,5.0,1.0,1,10);
-  //plotMuTau(120,1,"oneJet",""      ,"pt1","leading jet p_{T}","GeV"       ,outputDir,36,20, 200,5.0,1.0,1,100);
+  //plotMuTau(120,1,"inclusive",""   ,"nJets30","jet multiplicity","units"                 ,outputDir,10,0, 10,5.0,1.0,1,10);
+  //plotMuTau(120,1,"inclusive",""   ,"nJets20BTagged","b-tagged jet multiplicity","units" ,outputDir,5,0, 5,5.0,1.0,1,10);
+
+  //plotMuTau(120,1,"oneJet",""      ,"pt1","leading jet p_{T}","GeV"       ,outputDir,50,30, 330,5.0,1.0,1,100);
   //plotMuTau(120,1,"oneJet",""      ,"eta1","leading jet #eta","units"     ,outputDir,21,-5, 5,5.0,1.0,0,2.);
-  //plotMuTau(120,1,"twoJets",""     ,"pt1","leading jet p_{T}","GeV"       ,outputDir,36,20, 200,5.0,1.0,1,100);
-  //plotMuTau(120,1,"twoJets",""     ,"pt2","trailing jet p_{T}","GeV"      ,outputDir,36,20, 200,5.0,1.0,1,100);
+  //plotMuTau(120,1,"twoJets",""     ,"pt1","leading jet p_{T}","GeV"       ,outputDir,50,30, 330,5.0,1.0,1,200);
+  //plotMuTau(120,1,"twoJets",""     ,"pt2","trailing jet p_{T}","GeV"      ,outputDir,50,30, 330,5.0,1.0,1,100);
   //plotMuTau(120,1,"twoJets",""     ,"eta1","leading jet #eta","units"     ,outputDir,21,-5, 5,5.0,1.0,0,2.);
   //plotMuTau(120,1,"twoJets",""     ,"eta2","trailing jet #eta","units"    ,outputDir,21,-5, 5,5.0,1.0,0,2.);
   //plotMuTau(120,1,"twoJets",""     ,"Deta","|#Delta#eta|_{jj}","units"    ,outputDir,20,0, 8,   5.0,1.0,0,1.5);
   //plotMuTau(120,1,"twoJets",""     ,"Mjj","M_{jj}","GeV"                  ,outputDir,20,0, 1000,5.0,1.0,1,100);
-  //plotMuTau(120,1,"twoJets",""     ,"MVAvbf","BDT output","units"         ,outputDir,20,-1, 1,5.0,1.0,1,100);
+
+  //plotMuTau(120,1,"twoJets",""     ,"MVAvbf","BDT output","units"         ,outputDir,10,-1, 1,5.0,1.0,1,100);
   
-  //return;
+  return;
 
   for(unsigned int i = 0 ; i < variables.size(); i++){
     for(unsigned j = 0; j < mH.size(); j++){
