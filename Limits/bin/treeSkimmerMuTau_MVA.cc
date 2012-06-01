@@ -46,7 +46,7 @@
 #define MINPt1 20.0 
 #define MINPt2 20.0
 #define PtVETO 20.0
-#define MAXEta  4.5 
+#define MAXEta  5.0 
 #define MINJetID 0.5
 #define USERECOILALGO true
 #define USEFAKERATE false
@@ -362,6 +362,69 @@ float pileupWeight( int intimepileup_ ){
 
 }
 
+float pileupWeight2( int intimepileup_ ){
+
+  float weights[53];
+  weights[0]=1.0;
+  weights[1]=0.241725;
+  weights[2]=0.497953;
+  weights[3]=0.750906;
+  weights[4]=0.958778;
+  weights[5]=1.15292;
+  weights[6]=1.26729;
+  weights[7]=1.33763;
+  weights[8]=1.39117;
+  weights[9]=1.38692;
+  weights[10]=1.41177;
+  weights[11]=1.37077;
+  weights[12]=1.34191;
+  weights[13]=1.27619;
+  weights[14]=1.20034;
+  weights[15]=1.1264;
+  weights[16]=1.00513;
+  weights[17]=0.898563;
+  weights[18]=0.783283;
+  weights[19]=0.660026;
+  weights[20]=0.545681;
+  weights[21]=0.444979;
+  weights[22]=0.355539;
+  weights[23]=0.278989;
+  weights[24]=0.214793;
+  weights[25]=0.161305;
+  weights[26]=0.12141;
+  weights[27]=0.089384;
+  weights[28]=0.0655027;
+  weights[29]=0.0470954;
+  weights[30]=0.033824;
+  weights[31]=0.0241277;
+  weights[32]=0.0168523;
+  weights[33]=0.0118342;
+  weights[34]=0.00831188;
+  weights[35]=0.00574736;
+  weights[36]=0.00395389;
+  weights[37]=0.00270099;
+  weights[38]=0.00184071;
+  weights[39]=0.00126892;
+  weights[40]=0.000799038;
+  weights[41]=0.000568358;
+  weights[42]=0.000366065;
+  weights[43]=0.000241041;
+  weights[44]=0.000152796;
+  weights[45]=5.53181e-05;
+  weights[46]=5.53181e-05;
+  weights[47]=5.53181e-05;
+  weights[48]=5.53181e-05;
+  weights[49]=5.53181e-05;
+  weights[50]=5.53181e-05;
+  weights[51]=5.53181e-05;
+  weights[52]=5.53181e-05;
+
+  if(intimepileup_<52)
+    return weights[intimepileup_+1];
+  else
+    return 5.53181e-05;
+}
+
 
 void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xsec_ = 0., string inputDir_ = "./"){
   
@@ -456,7 +519,18 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
 
   //////////////////////////////////////////////////////////
 
-  
+  //TFile embeddingUnfoldingLead("../../Utilities/data/unfolding/Unfold2D_1.root");
+  //TFile embeddingUnfoldingSubLead("../../Utilities/data/unfolding/Unfold2D_2.root");
+  //TH2F* UnfoldDen1 = embeddingUnfoldingLead.IsZombie()    ? 0 : (TH2F*)embeddingUnfoldingLead.Get("UnfoldDen1");
+  //TH2F* UnfoldDen2 = embeddingUnfoldingSubLead.IsZombie() ? 0 : (TH2F*)embeddingUnfoldingSubLead.Get("UnfoldDen2");
+
+  TFile embeddingUnfolding("../../Utilities/data/unfolding/Unfold2DEta.root");
+  TH2F* UnfoldDen1 = embeddingUnfolding.IsZombie()    ? 0 : (TH2F*)embeddingUnfolding.Get("UnfoldDen1");
+  if(UnfoldDen1) cout << "Unfolding for embedded sample open!!" << endl;
+
+
+  //////////////////////////////////////////////////////////
+
   cout << "Using fake-rate method from fakeRate.root" << endl;
   TFile fakeRate_DYJets ("../../Utilities/data/fakeRate/fakeRate_DYJetsToTauTau_rebinned.root","READ");
   TFile fakeRate_Run2011("../../Utilities/data/fakeRate/fakeRate_Run2011AB_rebinned.root","READ");
@@ -570,7 +644,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   float fakeRateRun2011, fakeRateWMC, effDYMC, CDFWeight;
 
   // event-related variables
-  float numPV_ , sampleWeight, puWeight, embeddingWeight_,HqTWeight;
+  float numPV_ , sampleWeight, puWeight, puWeight2, embeddingWeight_,HqTWeight;
   int numOfLooseIsoDiTaus_;
   int nPUVertices_;
  
@@ -748,6 +822,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   outTreePtOrd->Branch("numPV",              &numPV_,"numPV/F");
   outTreePtOrd->Branch("sampleWeight",       &sampleWeight,"sampleWeight/F"); 
   outTreePtOrd->Branch("puWeight",           &puWeight,"puWeight/F");
+  outTreePtOrd->Branch("puWeight2",          &puWeight2,"puWeight2/F");
   outTreePtOrd->Branch("embeddingWeight",    &embeddingWeight_,"embeddingWeight/F");
   outTreePtOrd->Branch("HqTWeight",          &HqTWeight,"HqTWeight/F");
   outTreePtOrd->Branch("numOfLooseIsoDiTaus",&numOfLooseIsoDiTaus_,"numOfLooseIsoDiTaus/I");
@@ -837,6 +912,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   // taus
   currentTree->SetBranchStatus("diTauLegsP4"           ,1);
   currentTree->SetBranchStatus("genDiTauLegsP4"        ,1);
+  currentTree->SetBranchStatus("genTausP4"             ,1);
   //currentTree->SetBranchStatus("chIsoLeg1v1"           ,0);
   //currentTree->SetBranchStatus("nhIsoLeg1v1"           ,0);
   //currentTree->SetBranchStatus("phIsoLeg1v1"           ,0);
@@ -965,6 +1041,9 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
 
   std::vector< LV >* genDiTauLegsP4 = new std::vector< LV >();
   currentTree->SetBranchAddress("genDiTauLegsP4",    &genDiTauLegsP4);
+
+  std::vector< LV >* genTausP4 = new std::vector< LV >();
+  currentTree->SetBranchAddress("genTausP4",    &genTausP4);
 
   std::vector< LV >* genVP4         = new std::vector< LV >();
   currentTree->SetBranchAddress("genVP4",          &genVP4);
@@ -1486,10 +1565,18 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     numPV_           = numPV;
     sampleWeight     = scaleFactor; 
     //puWeight         = (std::string(sample.Data())).find("Run2011")!=string::npos ? 1.0 : mcPUweight ;
-    puWeight         = (std::string(sample.Data())).find("Run2011")!=string::npos ? 1.0 : pileupWeight(nPUVertices);   
+    puWeight         = (std::string(sample.Data())).find("Run2011")!=string::npos ? 1.0 : pileupWeight( nPUVertices);   
+    puWeight2        = (std::string(sample.Data())).find("Run2011")!=string::npos ? 1.0 : pileupWeight2(nPUVertices);   
     //puWeight         = (std::string(sample.Data())).find("Run2011")!=string::npos ? 1.0 : Lumi3DReWeighting->weight3D(nPUVerticesM1, nPUVertices, nPUVerticesP1) ;
     nPUVertices_     = nPUVertices;
     embeddingWeight_ = embeddingWeight;
+
+    if((std::string(sample.Data())).find("Embed")!=string::npos && UnfoldDen1 && genTausP4->size()>1){
+      float corrFactorEmbed = (UnfoldDen1->GetBinContent( UnfoldDen1->GetXaxis()->FindBin( (*genTausP4)[0].Eta() ) ,  UnfoldDen1->GetYaxis()->FindBin( (*genTausP4)[1].Eta() ) )); 
+      embeddingWeight_ *=  corrFactorEmbed;
+      //cout << "Correcting with " << corrFactorEmbed << endl;
+    }
+
 
     HqTWeight = histo!=0 ? histo->GetBinContent( histo->FindBin( (*genVP4)[0].Pt() ) ) : 1.0;
 
@@ -1707,7 +1794,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   //if(SAVE) outFile->Write();
   //outFile->Close();
 
-  delete jets; delete jets_v2; delete diTauLegsP4; delete diTauVisP4; delete diTauSVfitP4; delete diTauCAP4; delete genDiTauLegsP4;
+  delete jets; delete jets_v2; delete diTauLegsP4; delete diTauVisP4; delete diTauSVfitP4; delete diTauCAP4; delete genDiTauLegsP4; delete genTausP4;
   delete tauXTriggers; delete triggerBits;
   delete METP4; delete jetsBtagHE; delete jetsBtagHP; delete jetsBtagCSV; delete jetsChNfraction; delete genVP4; delete genMETP4;
   delete gammadEta; delete gammadPhi; delete gammaPt; delete HqT;
@@ -1817,20 +1904,19 @@ int main(int argc, const char* argv[])
   string inputDir = "MuTauStreamFall11_04May2012_PreApproval";
 
   makeTrees_MuTauStream("",           argv[1], atof(argv[2]), inputDir);
-  //makeTrees_MuTauStream("Raw",        argv[1], atof(argv[2]), inputDir);
+
+
+  return 0;
 
   if( string(argv[1]).find("Run2011-MuTau-All")!=string::npos )
     return 0;
   makeTrees_MuTauStream("TauUp",      argv[1], atof(argv[2]), inputDir);
   makeTrees_MuTauStream("TauDown",    argv[1], atof(argv[2]), inputDir);
-  //makeTrees_MuTauStream("RawTauUp",   argv[1], atof(argv[2]), inputDir);
-  //makeTrees_MuTauStream("RawTauDown", argv[1], atof(argv[2]), inputDir);
+
   if( string(argv[1]).find("Embedded")!=string::npos)
     return 0;
   makeTrees_MuTauStream("JetUp",      argv[1], atof(argv[2]), inputDir);
   makeTrees_MuTauStream("JetDown",    argv[1], atof(argv[2]), inputDir);
-  //makeTrees_MuTauStream("RawJetUp",   argv[1], atof(argv[2]), inputDir);
-  //makeTrees_MuTauStream("RawJetDown", argv[1], atof(argv[2]), inputDir);
 
 
 
