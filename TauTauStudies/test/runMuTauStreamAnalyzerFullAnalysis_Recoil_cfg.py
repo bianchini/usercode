@@ -14,7 +14,7 @@ process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
 runOnMC     = True
 doSVFitReco = True
-usePFMEtMVA = True
+usePFMEtMVA = False
 
 if runOnMC:
     print "Running on MC"
@@ -446,7 +446,7 @@ process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
     cut = cms.string("pt>20 && abs(eta)<2.3"+
-                     " && tauID('byLooseIsolationMVA')>0.5"
+                     " && tauID('byLooseIsolationMVA')>-0.5"
                      ),
     filter = cms.bool(False)
     )
@@ -454,7 +454,7 @@ process.tauPtEtaIDAgMuAgElecIsoPtRel  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
     cut = cms.string("pt>19 && abs(eta)<2.3"+
-                     " && tauID('byLooseIsolationMVA')>0.5"
+                     " && tauID('byLooseIsolationMVA')>-0.5"
                      ),
     filter = cms.bool(False)
     )
@@ -988,7 +988,7 @@ process.seqRawTauDown = cms.Sequence(
 #######################################################################
 
 if runOnMC:
-    process.pNominal            = cms.Path( process.seqNominal )
+    #process.pNominal            = cms.Path( process.seqNominal )
     #process.pJetUp                 = cms.Path( process.seqJetUp   )
     #process.pJetDown               = cms.Path( process.seqJetDown )
     #process.pMEtResolutionUp       = cms.Path( process.seqMEtResolutionUp )
@@ -997,9 +997,9 @@ if runOnMC:
     #process.pMEtResponseDown       = cms.Path( process.seqMEtResponseDown)
     #process.pMuUp                  = cms.Path( process.seqMuUp)
     #process.pMuDown                = cms.Path( process.seqMuDown)
-    process.pTauUp              = cms.Path( process.seqTauUp)
-    process.pTauDown            = cms.Path( process.seqTauDown )
-    #process.pRawNominal         = cms.Path( process.seqRawNominal )
+    #process.pTauUp              = cms.Path( process.seqTauUp)
+    #process.pTauDown            = cms.Path( process.seqTauDown )
+    process.pRawNominal         = cms.Path( process.seqRawNominal )
     #process.pRawJetUp              = cms.Path( process.seqRawJetUp   )
     #process.pRawJetDown            = cms.Path( process.seqRawJetDown )
     #process.pRawMEtResolutionUp    = cms.Path( process.seqRawMEtResolutionUp )
@@ -1008,16 +1008,16 @@ if runOnMC:
     #process.pRawMEtResponseDown    = cms.Path( process.seqRawMEtResponseDown)
     #process.pRawMuUp               = cms.Path( process.seqRawMuUp)
     #process.pRawMuDown             = cms.Path( process.seqRawMuDown)
-    #process.pRawTauUp           = cms.Path( process.seqRawTauUp )
-    #process.pRawTauDown         = cms.Path( process.seqRawTauDown )
+    process.pRawTauUp           = cms.Path( process.seqRawTauUp )
+    process.pRawTauDown         = cms.Path( process.seqRawTauDown )
 
 else:
-    process.pNominal            = cms.Path( process.seqNominal )
-    process.pTauUp              = cms.Path( process.seqTauUp)
-    process.pTauDown            = cms.Path( process.seqTauDown )
-    #process.pRawNominal         = cms.Path( process.seqRawNominal )
-    #process.pRawTauUp           = cms.Path( process.seqRawTauUp )
-    #process.pRawTauDown         = cms.Path( process.seqRawTauDown )
+    #process.pNominal            = cms.Path( process.seqNominal )
+    #process.pTauUp              = cms.Path( process.seqTauUp)
+    #process.pTauDown            = cms.Path( process.seqTauDown )
+    process.pRawNominal         = cms.Path( process.seqRawNominal )
+    process.pRawTauUp           = cms.Path( process.seqRawTauUp )
+    process.pRawTauDown         = cms.Path( process.seqRawTauDown )
 
 
 #from PhysicsTools.PatAlgos.tools.helpers import massSearchReplaceAnyInputTag
