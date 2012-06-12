@@ -135,6 +135,11 @@ void fakeRate(){
   TH1F* hExtrap        = new TH1F("hExtrap","",1, -10,10);
   TH1F* hSVfit         = new TH1F("hSVfit",     "",40, 0,400);
   TH1F* hSVfitFake     = new TH1F("hSVfitFake", "",40, 0,400);
+  TH1F* hSVfitFakeErrUp   = new TH1F("hSVfitFakeErrUp", "",40, 0,400);
+  TH1F* hSVfitFakeErrDown = new TH1F("hSVfitFakeErrDown", "",40, 0,400);
+
+  TH1F* hSVfitRatio    = new TH1F("hSVfitRatio", "",40, 0,400);
+  
   TH1F* hSVfitAIso     = new TH1F("hSVfitAIso", "",40, 0,400);
   TH1F* hSVfitHelpAdd  = new TH1F("hSVfitHelpAdd", "",40, 0,400);
   TH1F* hSVfitHelp     = new TH1F("hSVfitHelp", "",40, 0,400);
@@ -330,8 +335,8 @@ void fakeRate(){
     double integ     = fit->Integral(min,max);
     double binWidth  = max-min;
     cout << "bin " << min << "," << max << " ==> " << integ/binWidth << endl;
-    hFakeRateErrUp->SetBinContent( i+1,   (integ + 0.5*integE)/binWidth );
-    hFakeRateErrDown->SetBinContent( i+1, (integ - 0.5*integE)/binWidth );
+    hFakeRateErrUp->SetBinContent( i+1,   (integ + integE)/binWidth );
+    hFakeRateErrDown->SetBinContent( i+1, (integ - integE)/binWidth );
   }
   hFakeRateErrDown->SetLineColor(kRed);
   hFakeRateErrDown->SetLineStyle(kDashed);
@@ -355,6 +360,9 @@ void fakeRate(){
   fitE6->SetLineColor(kYellow-6);
 
   string scaleFact = "( ";
+  string scaleFactErrUp   = "( ";
+  string scaleFactErrDown = "( ";
+
   for(int i = 0; i < bins.size()-1; i++){
     
     float min = bins[i];
@@ -363,17 +371,33 @@ void fakeRate(){
     float bin = hFakeRate->FindBin((max+min)/2.);
     //float bin = i+1;
     cout << bin << endl;
-    float weightBin_i =  fit->Eval( (max+min)/2.);
-    //float weightBin_i =  hFakeRate->GetBinContent( bin );
+    float weightBin_i        =  fit->Eval( (max+min)/2.);
+    float weightBin_iErrUp   =  hFakeRateErrUp->GetBinContent( bin );
+    float weightBin_iErrDown =  hFakeRateErrDown->GetBinContent( bin );
     
-    scaleFact += string( Form("(ptL1>=%f && ptL1<%f)*%f", min , max, 1./weightBin_i ) );
-    if(i < bins.size() - 2 ) scaleFact += " + ";
+    scaleFact        += string( Form("(ptL1>=%f && ptL1<%f)*%f", min , max, 1./weightBin_i ) );
+    scaleFactErrUp   += string( Form("(ptL1>=%f && ptL1<%f)*%f", min , max, 1./weightBin_iErrUp   ) );
+    scaleFactErrDown += string( Form("(ptL1>=%f && ptL1<%f)*%f", min , max, 1./weightBin_iErrDown ) );
+
+    if(i < bins.size() - 2 ){
+      scaleFact += " + ";
+      scaleFactErrUp   += " + ";
+      scaleFactErrDown += " + ";
+    }
   }
   scaleFact += " )";
+  scaleFactErrUp   += " )";
+  scaleFactErrDown += " )";
+
   cout << scaleFact << endl;
   
   data->Draw("diTauNSVfitMass>>hSVfitAIso", sbinSSaIsoInclusiveAllPt);
+
   data->Draw("diTauNSVfitMass>>hSVfitFake", (TCut(scaleFact.c_str()))*sbinSSaIsoInclusiveAllPt);
+  data->Draw("diTauNSVfitMass>>hSVfitFakeErrUp", (TCut(scaleFactErrUp.c_str()))*sbinSSaIsoInclusiveAllPt);
+  data->Draw("diTauNSVfitMass>>hSVfitFakeErrDown", (TCut(scaleFactErrDown.c_str()))*sbinSSaIsoInclusiveAllPt);
+
+
   hSVfitFake->SetMarkerStyle(kOpenCircle);
   hSVfitFake->SetMarkerSize(1.2);
   hSVfitFake->SetMarkerColor(kRed);
@@ -416,5 +440,26 @@ void fakeRate(){
   hPurityAIs->SetLineColor(kGreen);
   hPurityAIs->Draw("SAME");
 
+  TCanvas *c3 = new TCanvas("c3","",5,30,650,600);
+  c3->SetGrid(0,0);
+  c3->SetFillStyle(4000);
+  c3->SetFillColor(10);
+  c3->SetTicky();
+  c3->SetObjectStat(0);
+
+  for( int m = 1 ; m <= hSVfitRatio->GetNbinsX() ; m++ ){
+    if(hSVfitFake->GetBinContent(m)>0 && hSVfitFakeErrUp->GetBinContent(m)>0){
+      hSVfitRatio->SetBinContent( m, hSVfit->GetBinContent(m)/hSVfitFake->GetBinContent(m) ) ;
+      hSVfitRatio->SetBinError(   m, TMath::Abs(hSVfit->GetBinContent(m)/hSVfitFake->GetBinContent(m) - 
+						hSVfit->GetBinContent(m)/hSVfitFakeErrUp->GetBinContent(m))) ;
+    }
+    else {
+      hSVfitRatio->SetBinContent( m, 1.0) ;
+      hSVfitRatio->SetBinError(   m, 1.0) ;
+    }
+   
+  }
+
+  hSVfitRatio->Draw("EHIST");
 
 }
