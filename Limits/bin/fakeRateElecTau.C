@@ -87,7 +87,7 @@ void fakeRateElec( string name_ = "ElecTau_Elec_ptL1",
   tpt = tpt&&lID;
 
   TCut tiso("tightestHPSMVAWP>=0 && tightestAntiECutWP>1"); 
-  TCut liso("combRelIsoLeg1DBeta<0.10");
+  TCut liso("combRelIsoLeg1DBetav2<0.10");
   TCut laiso("combRelIsoLeg1DBetav2>0.20 && combRelIsoLeg1DBetav2<0.50");
   TCut lliso("combRelIsoLeg1DBetav2<0.20");
   TCut lveto("elecFlag==0");

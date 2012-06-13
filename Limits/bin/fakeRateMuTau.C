@@ -28,8 +28,8 @@
 
 
 void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
-		   float nJets30 = 0){
-
+		 float nJets30 = 0){
+  
   TCanvas *c1 = new TCanvas(("c1"+name_).c_str(),"",5,30,650,600);
   c1->SetGrid(0,0);
   c1->SetFillStyle(4000);
@@ -87,9 +87,9 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
   tpt = tpt&&lID;
 
   TCut tiso("tightestHPSMVAWP>=0"); 
-  TCut liso("combRelIsoLeg1DBeta<0.10");
+  TCut liso("combRelIsoLeg1DBetav2<0.10");
   TCut laiso("combRelIsoLeg1DBetav2>0.20 && combRelIsoLeg1DBetav2<0.50");
-  TCut lliso("combRelIsoLeg1DBetav2<0.20");
+  TCut lliso("combRelIsoLeg1DBetav2<0.30");
   TCut lveto("muFlag==0");
   TCut SS("diTauCharge!=0");
   TCut OS("diTauCharge==0");
@@ -101,6 +101,7 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
 
  
   vector<int> bins;
+  bins.push_back(17);
   bins.push_back(20);
   bins.push_back(22);
   bins.push_back(24);
@@ -116,6 +117,8 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
   bins.push_back(60); 
   bins.push_back(80); 
   bins.push_back(100); 
+  bins.push_back(1000); 
+
 
   int nBins =  bins.size() ;
   TArrayF binsT(nBins);
@@ -148,7 +151,7 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
   TH1F* hSVfitHelpAdd  = new TH1F("hSVfitHelpAdd", "",40, 0,400);
   TH1F* hSVfitHelp     = new TH1F("hSVfitHelp", "",40, 0,400);
 
-  TCut sbinSSaIsoInclusiveAllPt = lpt && tpt && tiso && laiso && lveto && SS && pZ  && hltevent && hltmatch;
+  TCut sbinSSaIsoInclusiveAllPt = lpt && tpt && tiso && laiso && lveto && SS && pZ && hltevent && hltmatch;
 
   for(int i = 0; i <  bins.size()-1 ; i++){
 
@@ -228,7 +231,6 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
     totalBkg        += ExtrapSSWinSignalRegionDATA;
 
     hSVfitHelp->Reset();
-
     backgroundWJets->Draw("diTauNSVfitMass>>hSVfitHelp", "(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSInclusive);
     if(hSVfitHelp->Integral()>0) hSVfitHelp->Scale(ExtrapSSWinSignalRegionDATA/hSVfitHelp->Integral());
     hSVfit->Add(hSVfitHelp,-1);
@@ -298,7 +300,7 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
 
   //return;
 
-  TF1* fit = new TF1(("fit"+name_).c_str(),"[0]*TMath::Exp([1]*x)+[2]",20, bins[bins.size()-1]);
+  TF1* fit = new TF1(("fit_"+name_).c_str(),"[0]*TMath::Exp([1]*x)+[2]",17, bins[bins.size()-1]);
   fit->SetLineColor(kRed);
   fit->SetParLimits(0,0,20);
   fit->SetParLimits(1,-5,0);
@@ -319,7 +321,7 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
   //fit->SetParLimits(3,-100,1);
 
 
-  hFakeRate->Fit(("fit"+name_).c_str(), "", "", 20, 100);
+  hFakeRate->Fit(("fit_"+name_).c_str(), "", "", 17, 100);
 
   float par0 = fit->GetParameter(0);
   float par1 = fit->GetParameter(1);
@@ -350,12 +352,12 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
 
   cout << "error @ 30 = " << TMath::Sqrt(parE0*parE0 + parE1*parE1 + parE2*parE2) << endl;
 
-  TF1* fitE1 = new TF1("fitE1",Form("(%f)*TMath::Exp((%f)*x)+(%f)", par0+parE0, par1, par2),20, bins[bins.size()-1]);
-  TF1* fitE2 = new TF1("fitE2",Form("(%f)*TMath::Exp((%f)*x)+(%f)", par0, par1+parE1, par2),20, bins[bins.size()-1]);
-  TF1* fitE3 = new TF1("fitE3",Form("(%f)*TMath::Exp((%f)*x)+(%f)", par0, par1, par2+parE2),20, bins[bins.size()-1]);
-  TF1* fitE4 = new TF1("fitE4",Form("(%f)*TMath::Exp((%f)*x)+(%f)", par0-parE0, par1, par2),20, bins[bins.size()-1]);
-  TF1* fitE5 = new TF1("fitE5",Form("(%f)*TMath::Exp((%f)*x)+(%f)", par0, par1-parE1, par2),20, bins[bins.size()-1]);
-  TF1* fitE6 = new TF1("fitE6",Form("(%f)*TMath::Exp((%f)*x)+(%f)", par0, par1, par2-parE2),20, bins[bins.size()-1]);
+  TF1* fitE1 = new TF1("fitE1",Form("(%f)*TMath::Exp((%f)*x)+(%f)", par0+parE0, par1, par2),17, bins[bins.size()-1]);
+  TF1* fitE2 = new TF1("fitE2",Form("(%f)*TMath::Exp((%f)*x)+(%f)", par0, par1+parE1, par2),17, bins[bins.size()-1]);
+  TF1* fitE3 = new TF1("fitE3",Form("(%f)*TMath::Exp((%f)*x)+(%f)", par0, par1, par2+parE2),17, bins[bins.size()-1]);
+  TF1* fitE4 = new TF1("fitE4",Form("(%f)*TMath::Exp((%f)*x)+(%f)", par0-parE0, par1, par2),17, bins[bins.size()-1]);
+  TF1* fitE5 = new TF1("fitE5",Form("(%f)*TMath::Exp((%f)*x)+(%f)", par0, par1-parE1, par2),17, bins[bins.size()-1]);
+  TF1* fitE6 = new TF1("fitE6",Form("(%f)*TMath::Exp((%f)*x)+(%f)", par0, par1, par2-parE2),17, bins[bins.size()-1]);
 
   fitE1->SetLineColor(kBlue);
   fitE2->SetLineColor(kGreen);
@@ -405,6 +407,9 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
   data->Draw(("diTauNSVfitMass>>hSVfitFakeErrUp"+name_).c_str(), (TCut(scaleFactErrUp.c_str()))*sbinSSaIsoInclusiveAllPt);
   data->Draw(("diTauNSVfitMass>>hSVfitFakeErrDown"+name_).c_str(), (TCut(scaleFactErrDown.c_str()))*sbinSSaIsoInclusiveAllPt);
 
+  cout<< "AIso ==== " << hSVfitAIso->Integral() << endl;
+  cout<< "Fake ==== " << hSVfitFake->Integral() << endl;
+  cout<< "SS ==== " << hSVfit->Integral() << endl;
 
   hSVfitFake->SetMarkerStyle(kOpenCircle);
   hSVfitFake->SetMarkerSize(1.2);
@@ -419,7 +424,7 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
   hSVfit->Draw();
   hSVfitFake->Draw("PSAME");
   hSVfitAIso->Draw("SAME");
-  //return;
+ 
 
   out->cd();
   c1->Draw();
