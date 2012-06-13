@@ -27,9 +27,10 @@
 #include "TFitResultPtr.h"
 
 
-void fakeRate(){
+void fakeRateElec( string name_ = "ElecTau_Elec_ptL1",
+		   float nJets30 = 0){
 
-  TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
+  TCanvas *c1 = new TCanvas(("c1"+name_).c_str(),"",5,30,650,600);
   c1->SetGrid(0,0);
   c1->SetFillStyle(4000);
   c1->SetFillColor(10);
@@ -40,6 +41,9 @@ void fakeRate(){
   float Lumi   = (-47.4 + 215.6 + 955.3 + 389.9 + 706.7 + 2714);
   float lumiCorrFactor = (1-0.056);
   Lumi *= lumiCorrFactor;
+
+  TFile* out = new TFile("FakeRate.root","UPDATE");
+
 
 
   TFile *fData              
@@ -76,7 +80,7 @@ void fakeRate(){
   float antiWsgn  = useMt ? 40. :  20. ; 
   float antiWsdb  = useMt ? 60. :  40. ; 
 
-  TCut lpt("ptL1>20 && TMath::Abs(etaL1)<2.1");
+  TCut lpt(Form("ptL1>20 && TMath::Abs(etaL1)<2.1 && nJets30>=%f",nJets30));
   TCut tpt("ptL2>20 && ptL2<999 && TMath::Abs(etaL2)<2.3");
 
   TCut lID("((TMath::Abs(etaL1)<0.925 && mvaPOGNonTrig>0.85) || (TMath::Abs(etaL1)<1.479 && TMath::Abs(etaL1)>0.80 && mvaPOGNonTrig>0.975) || (TMath::Abs(etaL1)>1.479 && mvaPOGNonTrig>0.985))");
@@ -119,10 +123,10 @@ void fakeRate(){
   for(unsigned int k = 0 ; k < nBins ; k++ )
     binsT[k] = bins[k];
 
-  TH1F* hFakeRate  = new TH1F("hFakeRate", "", nBins-1, binsT.GetArray() );
+  TH1F* hFakeRate  = new TH1F(("hFakeRate"+name_).c_str(), "; electron p_{T} ; fake-rate", nBins-1, binsT.GetArray() );
 
-  TH1F* hFakeRateErrUp    = new TH1F("hFakeRateErrUp",   "", nBins-1, binsT.GetArray() );
-  TH1F* hFakeRateErrDown  = new TH1F("hFakeRateErrDown", "", nBins-1, binsT.GetArray() );
+  TH1F* hFakeRateErrUp    = new TH1F(("hFakeRateErrUp"+name_).c_str(),   "", nBins-1, binsT.GetArray() );
+  TH1F* hFakeRateErrDown  = new TH1F(("hFakeRateErrDown"+name_).c_str(), "", nBins-1, binsT.GetArray() );
 
   TH1F* hPuritySdb = new TH1F("hPuritySdb","", nBins-1, binsT.GetArray() );
   TH1F* hPurityQCD = new TH1F("hPurityQCD","", nBins-1, binsT.GetArray() );
@@ -133,14 +137,14 @@ void fakeRate(){
   //TH1F* hPurityQCD = new TH1F("hPurityQCD","", nBins-1, 20,100 );
 
   TH1F* hExtrap        = new TH1F("hExtrap","",1, -10,10);
-  TH1F* hSVfit         = new TH1F("hSVfit",     "",40, 0,400);
-  TH1F* hSVfitFake     = new TH1F("hSVfitFake", "",40, 0,400);
-  TH1F* hSVfitFakeErrUp   = new TH1F("hSVfitFakeErrUp", "",40, 0,400);
-  TH1F* hSVfitFakeErrDown = new TH1F("hSVfitFakeErrDown", "",40, 0,400);
+  TH1F* hSVfit         = new TH1F(("hSVfit"+name_).c_str(),     "",40, 0,400);
+  TH1F* hSVfitFake     = new TH1F(("hSVfitFake"+name_).c_str(), "",40, 0,400);
+  TH1F* hSVfitFakeErrUp   = new TH1F(("hSVfitFakeErrUp"+name_).c_str(), "",40, 0,400);
+  TH1F* hSVfitFakeErrDown = new TH1F(("hSVfitFakeErrDown"+name_).c_str(), "",40, 0,400);
 
   TH1F* hSVfitRatio    = new TH1F("hSVfitRatio", "",40, 0,400);
   
-  TH1F* hSVfitAIso     = new TH1F("hSVfitAIso", "",40, 0,400);
+  TH1F* hSVfitAIso     = new TH1F(("hSVfitAIso"+name_).c_str(), "",40, 0,400);
   TH1F* hSVfitHelpAdd  = new TH1F("hSVfitHelpAdd", "",40, 0,400);
   TH1F* hSVfitHelp     = new TH1F("hSVfitHelp", "",40, 0,400);
 
@@ -291,9 +295,10 @@ void fakeRate(){
 
   }
 
+
   //return;
 
-  TF1* fit = new TF1("fit","[0]*TMath::Exp([1]*x)+[2]",20, bins[bins.size()-1]);
+  TF1* fit = new TF1(("fit"+name_).c_str(),"[0]*TMath::Exp([1]*x)+[2]",20, bins[bins.size()-1]);
   fit->SetLineColor(kRed);
   fit->SetParLimits(0,0,20);
   fit->SetParLimits(1,-5,0);
@@ -314,7 +319,7 @@ void fakeRate(){
   //fit->SetParLimits(3,-100,1);
 
 
-  hFakeRate->Fit("fit", "", "", 20, 100);
+  hFakeRate->Fit(("fit"+name_).c_str(), "", "", 20, 100);
 
   float par0 = fit->GetParameter(0);
   float par1 = fit->GetParameter(1);
@@ -391,11 +396,14 @@ void fakeRate(){
 
   cout << scaleFact << endl;
   
-  data->Draw("diTauNSVfitMass>>hSVfitAIso", sbinSSaIsoInclusiveAllPt);
+  c1->cd();
 
-  data->Draw("diTauNSVfitMass>>hSVfitFake", (TCut(scaleFact.c_str()))*sbinSSaIsoInclusiveAllPt);
-  data->Draw("diTauNSVfitMass>>hSVfitFakeErrUp", (TCut(scaleFactErrUp.c_str()))*sbinSSaIsoInclusiveAllPt);
-  data->Draw("diTauNSVfitMass>>hSVfitFakeErrDown", (TCut(scaleFactErrDown.c_str()))*sbinSSaIsoInclusiveAllPt);
+
+  data->Draw(("diTauNSVfitMass>>hSVfitAIso"+name_).c_str(), sbinSSaIsoInclusiveAllPt);
+
+  data->Draw(("diTauNSVfitMass>>hSVfitFake"+name_).c_str(), (TCut(scaleFact.c_str()))*sbinSSaIsoInclusiveAllPt);
+  data->Draw(("diTauNSVfitMass>>hSVfitFakeErrUp"+name_).c_str(), (TCut(scaleFactErrUp.c_str()))*sbinSSaIsoInclusiveAllPt);
+  data->Draw(("diTauNSVfitMass>>hSVfitFakeErrDown"+name_).c_str(), (TCut(scaleFactErrDown.c_str()))*sbinSSaIsoInclusiveAllPt);
 
 
   hSVfitFake->SetMarkerStyle(kOpenCircle);
@@ -408,12 +416,17 @@ void fakeRate(){
   hSVfitFake->Print("all");
 
 
-  hSVfit->DrawNormalized();
-  hSVfitFake->DrawNormalized("PSAME");
-  hSVfitAIso->DrawNormalized("SAME");
+  hSVfit->Draw();
+  hSVfitFake->Draw("PSAME");
+  hSVfitAIso->Draw("SAME");
   //return;
 
-  TCanvas *c2 = new TCanvas("c2","",5,30,650,600);
+  out->cd();
+  c1->Draw();
+  c1->Write();
+
+
+  TCanvas *c2 = new TCanvas(("c2"+name_).c_str(),"",5,30,650,600);
   c2->SetGrid(0,0);
   c2->SetFillStyle(4000);
   c2->SetFillColor(10);
@@ -440,6 +453,16 @@ void fakeRate(){
   hPurityAIs->SetLineColor(kGreen);
   hPurityAIs->Draw("SAME");
 
+  out->cd();
+  c2->Draw();
+  c2->Write();
+  fit->Write();
+  hFakeRate->Write();
+  hFakeRateErrUp->Write();
+  hFakeRateErrDown->Write();
+
+
+
   TCanvas *c3 = new TCanvas("c3","",5,30,650,600);
   c3->SetGrid(0,0);
   c3->SetFillStyle(4000);
@@ -461,5 +484,416 @@ void fakeRate(){
   }
 
   hSVfitRatio->Draw("EHIST");
+
+  out->Write();
+  out->Close();
+
+}
+
+
+
+void fakeRateTau( string name_ = "ElecTau_Tau_pfJetPt",
+		  float nJets30 = 0,
+		  float  isoCut = 0.20,
+		  float  MtCut  =   60,
+		  float  diTauCharge = -1 // SS
+		  ){
+
+  TCanvas *c1 = new TCanvas(("c1"+name_).c_str(),"",5,30,650,600);
+  c1->SetGrid(0,0);
+  c1->SetFillStyle(4000);
+  c1->SetFillColor(10);
+  c1->SetTicky();
+  c1->SetObjectStat(0);
+
+
+  float Lumi   = (-47.4 + 215.6 + 955.3 + 389.9 + 706.7 + 2714);
+  float lumiCorrFactor = (1-0.056);
+  Lumi *= lumiCorrFactor;
+
+  TFile* out = new TFile("FakeRate.root","UPDATE");
+
+
+
+  TFile *fData              
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_PreApproval/nTupleRun2011-ElecTau-All_run_Open_ElecTauStream.root", "READ");  
+
+  TFile *fBackgroundWJets   
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_PreApproval/nTupleWJets-ElecTau-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
+  TFile *fBackgroundDY
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_PreApproval/nTupleDYJets-ElecTau-50-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
+  TFile *fBackgroundTTbar  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_PreApproval/nTupleTTJets-ElecTau-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
+  TFile *fBackgroundOthers  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_PreApproval/nTupleOthers-ElecTau-PUS6_run_Open_ElecTauStream.root","READ"); 
+  
+  TString tree         = "outTreePtOrd";
+
+  TTree *data          = (TTree*)fData->Get(tree);
+
+  TTree *backgroundTTbar     = (TTree*)fBackgroundTTbar->Get(tree);
+  TTree *backgroundWJets     = (TTree*)fBackgroundWJets->Get(tree);
+  TTree *backgroundOthers    = (TTree*)fBackgroundOthers->Get(tree);
+ 
+  TFile* dummy1 = new TFile("dummy1.root","RECREATE");
+  cout << "Now copying g/Z -> tau+ tau- " << endl;
+  TTree *backgroundDYTauTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)==(23*15)");                 // g/Z -> tau+ tau-
+  cout << "Now copying g/Z -> e+e- e->tau" << endl;
+  TTree *backgroundDYEtoTau = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) &&  leptFakeTau"); // g/Z -> mu+mu- mu->tau
+  cout << "Now copying g/Z -> e+e- jet->tau" << endl;
+  TTree *backgroundDYJtoTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) && !leptFakeTau"); // g/Z -> mu+mu- jet->tau
+
+
+  bool useMt      = true;
+  string antiWcut = useMt ? "MtLeg1MVA" : "-(pZetaMVA-1.5*pZetaVisMVA)" ;
+  float antiWsgn  = useMt ? 40.   :  20. ; 
+  float antiWsdb  = useMt ? MtCut :  40. ; 
+
+  TCut lpt(Form("ptL1>20 && TMath::Abs(etaL1)<2.1 && nJets30>=%f",nJets30));
+  TCut tpt("ptL2>20 && ptL2<999 && TMath::Abs(etaL2)<2.3");
+
+  TCut lID("((TMath::Abs(etaL1)<0.925 && mvaPOGNonTrig>0.85) || (TMath::Abs(etaL1)<1.479 && TMath::Abs(etaL1)>0.80 && mvaPOGNonTrig>0.975) || (TMath::Abs(etaL1)>1.479 && mvaPOGNonTrig>0.985))");
+  tpt = tpt&&lID;
+
+  TCut tiso("tightestHPSMVAWP>1   && tightestAntiECutWP>1"); 
+  TCut taiso("tightestHPSMVAWP>=0 && tightestAntiECutWP>1"); 
+
+  TCut liso("combRelIsoLeg1DBeta<0.10");
+  TCut laiso(Form("combRelIsoLeg1DBetav2>=%f && combRelIsoLeg1DBetav2<0.50",isoCut));
+  TCut lliso("combRelIsoLeg1DBetav2<0.20");
+  TCut lveto("elecFlag==0");
+  TCut SS("diTauCharge!=0");
+  TCut OS("diTauCharge==0");
+  TCut hltevent("pairIndex<1 && HLTx==1 && (run>=163269 || run==1)");
+  TCut hltmatch("HLTmatch==1");
+
+  TCut pZ( Form("((%s)<%f)",antiWcut.c_str(),antiWsgn));
+  TCut apZ(Form("((%s)>%f)",antiWcut.c_str(),antiWsdb));
+
+ 
+  vector<int> bins;
+  bins.push_back(20);
+  bins.push_back(22);
+  bins.push_back(24);
+  bins.push_back(26);
+  bins.push_back(28);
+  bins.push_back(30);
+  bins.push_back(32);
+  bins.push_back(34);
+  bins.push_back(36);
+  bins.push_back(40);
+  bins.push_back(45);
+  bins.push_back(50);
+  bins.push_back(60); 
+  bins.push_back(80); 
+  bins.push_back(100); 
+
+  int nBins =  bins.size() ;
+  TArrayF binsT(nBins);
+
+  for(unsigned int k = 0 ; k < nBins ; k++ )
+    binsT[k] = bins[k];
+
+  //////////////////////////////////////////////////////////////////////////////////////////
+
+  TH1F* hFakeRateQCD         = new TH1F(("hFakeRateQCD"+name_).c_str(), " ; tau jet p_{T}; fake-rate",        nBins-1, binsT.GetArray() );
+  TH1F* hFakeRateQCDErrUp    = new TH1F(("hFakeRateQCDErrUp"+name_).c_str(),   " ; tau jet p_{T}; fake-rate", nBins-1, binsT.GetArray() );
+  TH1F* hFakeRateQCDErrDown  = new TH1F(("hFakeRateQCDErrDown"+name_).c_str(), " ; tau jet p_{T}; fake-rate", nBins-1, binsT.GetArray() );
+
+  TH1F* hFakeRateW         = new TH1F(("hFakeRateW"+name_).c_str(), " ; tau jet p_{T}; fake-rate",        nBins-1, binsT.GetArray() );
+  TH1F* hFakeRateWErrUp    = new TH1F(("hFakeRateWErrUp"+name_).c_str(),   " ; tau jet p_{T}; fake-rate", nBins-1, binsT.GetArray() );
+  TH1F* hFakeRateWErrDown  = new TH1F(("hFakeRateWErrDown"+name_).c_str(), " ; tau jet p_{T}; fake-rate", nBins-1, binsT.GetArray() );
+
+  //////////////////////////////////////////////////////////////////////////////////////////
+ 
+  TH1F* hExtrap        = new TH1F("hExtrap","",1, -10,10);
+  TH1F* hSVfitFake     = new TH1F(("hSVfitFake"+name_).c_str(), "",40, 0,400);
+  TH1F* hSVfitFakeErrUp   = new TH1F(("hSVfitFakeErrUp"+name_).c_str(), "",40, 0,400);
+  TH1F* hSVfitFakeErrDown = new TH1F(("hSVfitFakeErrDown"+name_).c_str(), "",40, 0,400);
+  TH1F* hSVfitRatio    = new TH1F("hSVfitRatio", "",40, 0,400);
+  TH1F* hSVfitAIso     = new TH1F(("hSVfitAIso"+name_).c_str(), "",40, 0,400);
+
+  TCut sbinSSaIsoInclusiveAllPt    = lpt && tpt && tiso && laiso && lveto && SS && pZ  && hltevent && hltmatch;
+  TCut sbinSSaIsoAIdInclusiveAllPt = lpt && tpt && taiso&& laiso && lveto && SS && pZ  && hltevent && hltmatch;
+
+  for(int i = 0; i <  bins.size()-1 ; i++){
+
+    float min = bins[i];
+    float max = bins[i+1]  ;
+
+    TCut tpt_i = tpt && TCut(Form("pfJetPt>%f && pfJetPt<=%f", min, max));
+
+    TCut sbinSSaIsoInclusive;
+    if(diTauCharge<0) 
+      sbinSSaIsoInclusive         = lpt && tpt_i && tiso && laiso&& lveto && SS && pZ  && hltevent && hltmatch;
+    else
+      sbinSSaIsoInclusive         = lpt && tpt_i && tiso && laiso&& lveto && OS && pZ  && hltevent && hltmatch;
+    
+    TCut sbinSSaIsoaIdInclusive;
+     if(diTauCharge<0) 
+       sbinSSaIsoaIdInclusive      = lpt && tpt_i && taiso&& laiso&& lveto && SS && pZ  && hltevent && hltmatch;
+     else
+       sbinSSaIsoaIdInclusive      = lpt && tpt_i && taiso&& laiso&& lveto && OS && pZ  && hltevent && hltmatch;
+     
+    TCut sbinPZetaRelSSInclusive;
+    if(diTauCharge<0) 
+      sbinPZetaRelSSInclusive     = lpt && tpt_i && tiso && liso && lveto && SS        && hltevent && hltmatch;
+    else
+      sbinPZetaRelSSInclusive     = lpt && tpt_i && tiso && liso && lveto && OS        && hltevent && hltmatch;
+    TCut sbinPZetaRelaIdSSInclusive;
+    if(diTauCharge<0) 
+      sbinPZetaRelaIdSSInclusive  = lpt && tpt_i && taiso&& liso && lveto && SS        && hltevent && hltmatch;
+    else
+      sbinPZetaRelaIdSSInclusive  = lpt && tpt_i && taiso&& liso && lveto && OS        && hltevent && hltmatch;
+    
+
+    hExtrap->Reset();
+    data->Draw("etaL1>>hExtrap", sbinSSaIsoInclusive);
+    float SSeventsAiso = hExtrap->GetEntries();
+
+    hExtrap->Reset();
+    data->Draw("etaL1>>hExtrap", sbinSSaIsoaIdInclusive);
+    float SSeventsAisoAid = hExtrap->GetEntries();
+
+
+    hExtrap->Reset();
+    data->Draw("etaL1>>hExtrap", sbinPZetaRelSSInclusive&&apZ);
+    float SSeventsApZ = hExtrap->GetEntries();
+
+    hExtrap->Reset();
+    data->Draw("etaL1>>hExtrap", sbinPZetaRelaIdSSInclusive&&apZ);
+    float SSeventsAidApZ = hExtrap->GetEntries();
+
+
+    float ratioQCD = SSeventsAisoAid>0 ? SSeventsAiso/SSeventsAisoAid : 0;
+    float errorQCD = SSeventsAisoAid>0 ? TMath::Sqrt(ratioQCD*(1-ratioQCD)/SSeventsAisoAid) : 1.0;
+    if( errorQCD == 0 ) errorQCD = 0.1;
+
+    float ratioW = SSeventsAidApZ>0 ? SSeventsApZ/SSeventsAidApZ : 0;
+    float errorW = SSeventsAidApZ>0 ? TMath::Sqrt(ratioW*(1-ratioW)/SSeventsAidApZ) : 1.0;
+    if( errorW == 0 ) errorW = 0.1;
+
+    cout << "QCD: Bin " <<  min << "," << max << " ==> " << ratioQCD << " +/- " << errorQCD << endl;
+    cout << "W: Bin "   <<  min << "," << max << " ==> " << ratioW   << " +/- " << errorW   << endl;
+
+    hFakeRateQCD->SetBinContent(i+1, ratioQCD );
+    hFakeRateQCD->SetBinError(i+1,   errorQCD );
+
+    hFakeRateW->SetBinContent(i+1, ratioW );
+    hFakeRateW->SetBinError(i+1,   errorW );
+
+    cout << "************** END extrapolation *******************" << endl;
+
+  }
+
+
+  //return;
+
+  TF1* fitQCD = new TF1(("fitQCD_"+name_).c_str(),"[0]*TMath::Exp([1]*x)+[2]",20, bins[bins.size()-1]);
+  fitQCD->SetLineColor(kRed);
+  fitQCD->SetParLimits(0,0,20);
+  fitQCD->SetParLimits(1,-5,0);
+  fitQCD->SetParLimits(2,0,1);
+
+  hFakeRateQCD->Fit(("fitQCD_"+name_).c_str(), "", "", 20, 100);
+
+  TF1* fitW = new TF1(("fitW_"+name_).c_str(),"[0]*TMath::Exp([1]*x)+[2]",20, bins[bins.size()-1]);
+  fitW->SetLineColor(kBlue);
+  fitW->SetParLimits(0,0,20);
+  fitW->SetParLimits(1,-5,0);
+  fitW->SetParLimits(2,0,1);
+
+  hFakeRateW->Fit(("fitW_"+name_).c_str(), "", "", 20, 100);
+
+  for(int i = 0; i <  bins.size()-1 ; i++){
+
+    float min = bins[i];
+    float max = bins[i+1];
+    double binWidth  = max-min;
+
+
+    double integEQCD    = fitQCD->IntegralError(min,max );
+    double integQCD     = fitQCD->Integral(min,max);
+    cout << "QCD: bin " << min << "," << max << " ==> " << integQCD/binWidth << endl;
+    hFakeRateQCDErrUp->SetBinContent( i+1,   (integQCD + integEQCD)/binWidth );
+    hFakeRateQCDErrDown->SetBinContent( i+1, (integQCD - integEQCD)/binWidth );
+
+    double integEW    = fitW->IntegralError(min,max );
+    double integW     = fitW->Integral(min,max);
+    cout << "W: bin " << min << "," << max << " ==> " << integW/binWidth << endl;
+    hFakeRateWErrUp->SetBinContent( i+1,   (integW + integEW)/binWidth );
+    hFakeRateWErrDown->SetBinContent( i+1, (integW - integEW)/binWidth );
+
+  }
+
+  hFakeRateQCDErrDown->SetLineColor(kRed);
+  hFakeRateQCDErrDown->SetLineStyle(kDashed);
+  hFakeRateQCDErrUp->SetLineColor(kRed);
+  hFakeRateQCDErrUp->SetLineStyle(kDotted);
+
+  hFakeRateWErrDown->SetLineColor(kBlue);
+  hFakeRateWErrDown->SetLineStyle(kDashed);
+  hFakeRateWErrUp->SetLineColor(kBlue);
+  hFakeRateWErrUp->SetLineStyle(kDotted);
+
+
+  string scaleFactQCD = "( ";
+  string scaleFactQCDErrUp   = "( ";
+  string scaleFactQCDErrDown = "( ";
+
+  string scaleFactW = "( ";
+  string scaleFactWErrUp   = "( ";
+  string scaleFactWErrDown = "( ";
+
+
+  for(int i = 0; i < bins.size()-1; i++){
+    
+    float min = bins[i];
+    float max = bins[i+1];
+
+    cout << min << "," << max << endl;
+    float bin = hFakeRateQCD->FindBin((max+min)/2.);
+
+    cout << bin << endl;
+    float weightBinQCD_i        =  fitQCD->Eval( (max+min)/2.);
+    float weightBinQCD_iErrUp   =  hFakeRateQCDErrUp->GetBinContent( bin );
+    float weightBinQCD_iErrDown =  hFakeRateQCDErrDown->GetBinContent( bin );
+    
+    scaleFactQCD        += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinQCD_i ) );
+    scaleFactQCDErrUp   += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinQCD_iErrUp   ) );
+    scaleFactQCDErrDown += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinQCD_iErrDown ) );
+
+    float weightBinW_i        =  fitW->Eval( (max+min)/2.);
+    float weightBinW_iErrUp   =  hFakeRateWErrUp->GetBinContent( bin );
+    float weightBinW_iErrDown =  hFakeRateWErrDown->GetBinContent( bin );
+    
+    scaleFactW        += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinW_i ) );
+    scaleFactWErrUp   += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinW_iErrUp   ) );
+    scaleFactWErrDown += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinW_iErrDown ) );
+
+    if(i < bins.size() - 2 ){
+      scaleFactQCD += " + ";
+      scaleFactQCDErrUp   += " + ";
+      scaleFactQCDErrDown += " + ";
+      scaleFactW += " + ";
+      scaleFactWErrUp   += " + ";
+      scaleFactWErrDown += " + ";
+    }
+  }
+  scaleFactQCD += " )";
+  scaleFactQCDErrUp   += " )";
+  scaleFactQCDErrDown += " )";
+  
+  scaleFactW += " )";
+  scaleFactWErrUp   += " )";
+  scaleFactWErrDown += " )";
+
+  cout << scaleFactQCD << endl;
+  cout << scaleFactW << endl;
+  
+  c1->cd();
+
+  data->Draw(("diTauNSVfitMass>>hSVfitAIso"+name_).c_str(), sbinSSaIsoInclusiveAllPt);
+
+  data->Draw(("diTauNSVfitMass>>hSVfitFake"+name_).c_str(),        (TCut(scaleFactQCD.c_str()))*sbinSSaIsoAIdInclusiveAllPt);
+  data->Draw(("diTauNSVfitMass>>hSVfitFakeErrUp"+name_).c_str(),   (TCut(scaleFactQCDErrUp.c_str()))*sbinSSaIsoAIdInclusiveAllPt);
+  data->Draw(("diTauNSVfitMass>>hSVfitFakeErrDown"+name_).c_str(), (TCut(scaleFactQCDErrDown.c_str()))*sbinSSaIsoAIdInclusiveAllPt);
+
+  hSVfitFake->SetMarkerStyle(kOpenCircle);
+  hSVfitFake->SetMarkerSize(1.2);
+  hSVfitFake->SetMarkerColor(kRed);
+  hSVfitAIso->SetLineColor(kMagenta);
+
+  cout << "Fake " << hSVfitFake->Integral() << endl;
+  cout << "AIso " << hSVfitAIso->Integral() << endl;
+
+  hSVfitFake->Draw("P");
+  hSVfitAIso->Draw("SAME");
+
+  out->cd();
+  c1->Draw();
+  c1->Write();
+
+
+  TCanvas *c2 = new TCanvas(("c2"+name_).c_str(),"",5,30,650,600);
+  c2->SetGrid(0,0);
+  c2->SetFillStyle(4000);
+  c2->SetFillColor(10);
+  c2->SetTicky();
+  c2->SetObjectStat(0);
+
+  hFakeRateQCD->SetLineColor(kRed);
+  hFakeRateQCD->Draw("E");
+
+  hFakeRateQCDErrDown->Draw("SAME");
+  hFakeRateQCDErrUp->Draw("SAME");
+
+  hFakeRateW->SetLineColor(kBlue);
+  hFakeRateW->Draw("ESAME");
+
+  hFakeRateWErrDown->Draw("SAME");
+  hFakeRateWErrUp->Draw("SAME");
+
+  out->cd();
+  c2->Draw();
+  c2->Write();
+  fitQCD->Write();
+  fitW->Write();
+
+  hFakeRateQCD->Write();
+  hFakeRateQCDErrUp->Write();
+  hFakeRateQCDErrDown->Write();
+
+  hFakeRateW->Write();
+  hFakeRateWErrUp->Write();
+  hFakeRateWErrDown->Write();
+
+
+  TCanvas *c3 = new TCanvas("c3","",5,30,650,600);
+  c3->SetGrid(0,0);
+  c3->SetFillStyle(4000);
+  c3->SetFillColor(10);
+  c3->SetTicky();
+  c3->SetObjectStat(0);
+
+  for( int m = 1 ; m <= hSVfitRatio->GetNbinsX() ; m++ ){
+    if(hSVfitFake->GetBinContent(m)>0 && hSVfitFakeErrUp->GetBinContent(m)>0){
+      hSVfitRatio->SetBinContent( m, hSVfitAIso->GetBinContent(m)/hSVfitFake->GetBinContent(m) ) ;
+      hSVfitRatio->SetBinError(   m, TMath::Abs(hSVfitAIso->GetBinContent(m)/hSVfitFake->GetBinContent(m) - 
+						hSVfitAIso->GetBinContent(m)/hSVfitFakeErrUp->GetBinContent(m))) ;
+    }
+    else {
+      hSVfitRatio->SetBinContent( m, 1.0) ;
+      hSVfitRatio->SetBinError(   m, 1.0) ;
+    }
+   
+  }
+
+  hSVfitRatio->Draw("EHIST");
+
+  out->Write();
+  out->Close();
+
+}
+
+
+void makeAll(){
+
+  fakeRateElec("ElecTau_Elec_ptL1_incl",0);
+  fakeRateElec("ElecTau_Elec_ptL1_1jet",1);
+  fakeRateElec("ElecTau_Elec_ptL1_2jet",2);
+
+  fakeRateTau("ElecTau_Tau_pfJetPt_QCDSS03_WSS60_incl", 0, 0.30, 60, -1);
+  fakeRateTau("ElecTau_Tau_pfJetPt_QCDSS02_WSS60_incl", 0, 0.20, 60, -1);
+  fakeRateTau("ElecTau_Tau_pfJetPt_QCDSS00_WSS60_incl", 0, 0.00, 60, -1);
+
+  fakeRateTau("ElecTau_Tau_pfJetPt_QCDOS02_WOS70_incl", 0, 0.20, 70, +1);
+  fakeRateTau("ElecTau_Tau_pfJetPt_QCDOS02_WOS60_incl", 0, 0.20, 60, +1);
+
+  fakeRateTau("ElecTau_Tau_pfJetPt_QCDOS03_WOS60_1jet", 1, 0.30, 60, +1);
+  fakeRateTau("ElecTau_Tau_pfJetPt_QCDOS03_WOS60_2jet", 2, 0.30, 60, +1);
+
+  fakeRateTau("ElecTau_Tau_pfJetPt_QCDSS03_WSS60_1jet", 1, 0.30, 60, -1);
+  fakeRateTau("ElecTau_Tau_pfJetPt_QCDSS03_WSS60_2jet", 2, 0.30, 60, -1);
 
 }
