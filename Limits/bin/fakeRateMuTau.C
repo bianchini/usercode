@@ -47,18 +47,18 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
 
 
   TFile *fData              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval/nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval/nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
 
   TFile *fBackgroundWJets   
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval/nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval/nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundDY
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval/nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval/nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundTTbar  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval/nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval/nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundOthers  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval/nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval/nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
   
-  TString tree         = "outTreePtOrd";
+  TString tree         = "outTreePtOrdRaw";
 
   TTree *data          = (TTree*)fData->Get(tree);
 
@@ -175,22 +175,22 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
     cout << "******** Extrapolation factors for QCD normalization: " << " bin " << min << "," << max << " " << "********" << endl;
 
     hExtrap->Reset();
-    backgroundWJets->Draw("etaL1>>hExtrap","(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*(sbinPZetaRelSSInclusive&&pZ));
+    backgroundWJets->Draw("etaL1>>hExtrap","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*(sbinPZetaRelSSInclusive&&pZ));
     float ExtrapSSWinSignalRegionMC   = hExtrap->Integral();
     hExtrap->Reset();
-    backgroundWJets->Draw("etaL1>>hExtrap","(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*(sbinPZetaRelSSInclusive&&apZ));
+    backgroundWJets->Draw("etaL1>>hExtrap","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*(sbinPZetaRelSSInclusive&&apZ));
     float ExtrapSSWinSidebandRegionMC = hExtrap->Integral();
     float ExtrapscaleFactorSS         = ExtrapSSWinSignalRegionMC>0 ? ExtrapSSWinSidebandRegionMC/ExtrapSSWinSignalRegionMC : 1.0;
     cout << " Extrapolation factor W SS (inclusive) " << ExtrapscaleFactorSS << endl;
     
     hExtrap->Reset();
-    backgroundTTbar->Draw("etaL1>>hExtrap","(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*(sbinPZetaRelSSInclusive&&apZ));
+    backgroundTTbar->Draw("etaL1>>hExtrap","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*(sbinPZetaRelSSInclusive&&apZ));
     float ExtrapttbarExtrSS    = hExtrap->Integral()*Lumi/1000;
     hExtrap->Reset();
-    backgroundOthers->Draw("etaL1>>hExtrap","(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*(sbinPZetaRelSSInclusive&&apZ));
+    backgroundOthers->Draw("etaL1>>hExtrap","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*(sbinPZetaRelSSInclusive&&apZ));
     float ExtrapothersExtrSS   = hExtrap->Integral()*Lumi/1000;
     hExtrap->Reset();
-    backgroundDYJtoTau->Draw("etaL1>>hExtrap","(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*(sbinPZetaRelSSInclusive&&apZ));
+    backgroundDYJtoTau->Draw("etaL1>>hExtrap","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*(sbinPZetaRelSSInclusive&&apZ));
     float ExtrapdyjtotauExtrSS = hExtrap->Integral()*Lumi/1000;
 
 
@@ -231,14 +231,14 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
     totalBkg        += ExtrapSSWinSignalRegionDATA;
 
     hSVfitHelp->Reset();
-    backgroundWJets->Draw("diTauNSVfitMass>>hSVfitHelp", "(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSInclusive);
+    backgroundWJets->Draw("diTauNSVfitMass>>hSVfitHelp", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSInclusive);
     if(hSVfitHelp->Integral()>0) hSVfitHelp->Scale(ExtrapSSWinSignalRegionDATA/hSVfitHelp->Integral());
     hSVfit->Add(hSVfitHelp,-1);
     hSVfitHelp->Reset();
 
     hExtrap->Reset();
-    backgroundTTbar->Draw("etaL1>>hExtrap", "(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSInclusive);
-    backgroundTTbar->Draw("diTauNSVfitMass>>hSVfitHelp", "(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSInclusive);
+    backgroundTTbar->Draw("etaL1>>hExtrap", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSInclusive);
+    backgroundTTbar->Draw("diTauNSVfitMass>>hSVfitHelp", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSInclusive);
     SSeventsExtrap  -= hExtrap->Integral()*Lumi/1000;
     totalBkg        += hExtrap->Integral()*Lumi/1000;
     hSVfitHelp->Scale(Lumi/1000);
@@ -246,8 +246,8 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
     hSVfitHelp->Reset();
 
     hExtrap->Reset();
-    backgroundDYEtoTau->Draw("etaL1>>hExtrap", "(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSInclusive);
-    backgroundDYEtoTau->Draw("diTauNSVfitMass>>hSVfitHelp", "(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSInclusive);
+    backgroundDYEtoTau->Draw("etaL1>>hExtrap", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSInclusive);
+    backgroundDYEtoTau->Draw("diTauNSVfitMass>>hSVfitHelp", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSInclusive);
     SSeventsExtrap  -= hExtrap->Integral()*Lumi/1000;
     totalBkg        += hExtrap->Integral()*Lumi/1000;
     hSVfitHelp->Scale(Lumi/1000);
@@ -255,8 +255,8 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
     hSVfitHelp->Reset();
 
     hExtrap->Reset();
-    backgroundDYJtoTau->Draw("etaL1>>hExtrap", "(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSInclusive);
-    backgroundDYJtoTau->Draw("diTauNSVfitMass>>hSVfitHelp", "(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSInclusive);
+    backgroundDYJtoTau->Draw("etaL1>>hExtrap", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSInclusive);
+    backgroundDYJtoTau->Draw("diTauNSVfitMass>>hSVfitHelp", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSInclusive);
     SSeventsExtrap  -= hExtrap->Integral()*Lumi/1000;
     totalBkg        += hExtrap->Integral()*Lumi/1000;
     hExtrap->Reset();
@@ -267,7 +267,7 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
     data->Draw("etaL1>>hExtrap", sbinSSaIsoInclusive);
     float SSeventsExtrapAiso = hExtrap->GetEntries();
 
-    backgroundWJets->Draw("etaL1>>hExtrap", "(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSaIsoInclusive);
+    backgroundWJets->Draw("etaL1>>hExtrap", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSSaIsoInclusive);
     hExtrap->Scale(Lumi/1000);
     hPurityAIs->SetBinContent(i+1, hExtrap->Integral()/SSeventsExtrapAiso );
     hExtrap->Reset();
@@ -521,18 +521,18 @@ void fakeRateTau( string name_ = "MuTau_Tau_pfJetPt",
 
 
   TFile *fData              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval/nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval/nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
 
   TFile *fBackgroundWJets   
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval/nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval/nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundDY
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval/nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval/nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundTTbar  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval/nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval/nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundOthers  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval/nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval/nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
   
-  TString tree         = "outTreePtOrd";
+  TString tree         = "outTreePtOrdRaw";
 
   TTree *data          = (TTree*)fData->Get(tree);
 
@@ -560,8 +560,8 @@ void fakeRateTau( string name_ = "MuTau_Tau_pfJetPt",
   TCut lID("isPFMuon && isTightMuon");
   tpt = tpt&&lID;
 
-  TCut tiso("tightestHPSMVAWP>1"); 
-  TCut taiso("tightestHPSMVAWP>=0"); 
+  TCut tiso("tightestHPSMVAWP>=0"); 
+  TCut taiso("tightestHPSMVAWP>-999"); 
 
   TCut liso("combRelIsoLeg1DBeta<0.10");
   TCut laiso(Form("combRelIsoLeg1DBetav2>=%f && combRelIsoLeg1DBetav2<0.50",isoCut));
@@ -592,6 +592,7 @@ void fakeRateTau( string name_ = "MuTau_Tau_pfJetPt",
   bins.push_back(60); 
   bins.push_back(80); 
   bins.push_back(100); 
+  bins.push_back(1000); 
 
   int nBins =  bins.size() ;
   TArrayF binsT(nBins);
@@ -626,7 +627,7 @@ void fakeRateTau( string name_ = "MuTau_Tau_pfJetPt",
     float min = bins[i];
     float max = bins[i+1]  ;
 
-    TCut tpt_i = tpt && TCut(Form("pfJetPt>%f && pfJetPt<=%f", min, max));
+    TCut tpt_i = tpt && TCut(Form("ptL2>%f && ptL2<=%f", min, max));
 
     TCut sbinSSaIsoInclusive;
     if(diTauCharge<0) 
@@ -665,7 +666,7 @@ void fakeRateTau( string name_ = "MuTau_Tau_pfJetPt",
     data->Draw("etaL1>>hExtrap", sbinPZetaRelSSInclusive&&apZ);
     float SSeventsApZ = hExtrap->GetEntries();
     hExtrap->Reset();
-    backgroundTTbar->Draw("etaL1>>hExtrap","(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*(sbinPZetaRelSSInclusive&&apZ));
+    backgroundTTbar->Draw("etaL1>>hExtrap","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*(sbinPZetaRelSSInclusive&&apZ));
     float ExtrapttbarExtrSS1    = hExtrap->Integral()*Lumi/1000;
     SSeventsApZ -= ExtrapttbarExtrSS1;
 
@@ -673,7 +674,7 @@ void fakeRateTau( string name_ = "MuTau_Tau_pfJetPt",
     data->Draw("etaL1>>hExtrap", sbinPZetaRelaIdSSInclusive&&apZ);
     float SSeventsAidApZ = hExtrap->GetEntries();
     hExtrap->Reset();
-    backgroundTTbar->Draw("etaL1>>hExtrap","(sampleWeight*puWeight*HLTweightTau*HLTweightMu*SFTau*SFMu)"*(sbinPZetaRelSSInclusive&&apZ));
+    backgroundTTbar->Draw("etaL1>>hExtrap","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*(sbinPZetaRelSSInclusive&&apZ));
     float ExtrapttbarExtrSS2    = hExtrap->Integral()*Lumi/1000;
     SSeventsAidApZ -= ExtrapttbarExtrSS2;
 
@@ -707,7 +708,7 @@ void fakeRateTau( string name_ = "MuTau_Tau_pfJetPt",
   fitQCD->SetParLimits(1,-5,0);
   fitQCD->SetParLimits(2,0,1);
 
-  hFakeRateQCD->Fit(("fitQCD_"+name_).c_str(), "", "", 20, 100);
+  hFakeRateQCD->Fit(("fitQCD_"+name_).c_str(), "", "", 20, 1000);
 
   TF1* fitW = new TF1(("fitW_"+name_).c_str(),"[0]*TMath::Exp([1]*x)+[2]",20, bins[bins.size()-1]);
   fitW->SetLineColor(kBlue);
@@ -715,7 +716,7 @@ void fakeRateTau( string name_ = "MuTau_Tau_pfJetPt",
   fitW->SetParLimits(1,-5,0);
   fitW->SetParLimits(2,0,1);
 
-  hFakeRateW->Fit(("fitW_"+name_).c_str(), "", "", 20, 100);
+  hFakeRateW->Fit(("fitW_"+name_).c_str(), "", "", 20, 1000);
 
   for(int i = 0; i <  bins.size()-1 ; i++){
 
@@ -767,21 +768,21 @@ void fakeRateTau( string name_ = "MuTau_Tau_pfJetPt",
     float bin = hFakeRateQCD->FindBin((max+min)/2.);
 
     cout << bin << endl;
-    float weightBinQCD_i        =  fitQCD->Eval( (max+min)/2.);
+    float weightBinQCD_i        =  fitQCD->Eval( (max+min)/2.);//hFakeRateQCD->GetBinContent( bin );//
     float weightBinQCD_iErrUp   =  hFakeRateQCDErrUp->GetBinContent( bin );
     float weightBinQCD_iErrDown =  hFakeRateQCDErrDown->GetBinContent( bin );
     
-    scaleFactQCD        += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinQCD_i ) );
-    scaleFactQCDErrUp   += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinQCD_iErrUp   ) );
-    scaleFactQCDErrDown += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinQCD_iErrDown ) );
+    scaleFactQCD        += string( Form("(ptL2>=%f && ptL2<%f)*%f", min , max, weightBinQCD_i ) );
+    scaleFactQCDErrUp   += string( Form("(ptL2>=%f && ptL2<%f)*%f", min , max, weightBinQCD_iErrUp   ) );
+    scaleFactQCDErrDown += string( Form("(ptL2>=%f && ptL2<%f)*%f", min , max, weightBinQCD_iErrDown ) );
 
     float weightBinW_i        =  fitW->Eval( (max+min)/2.);
     float weightBinW_iErrUp   =  hFakeRateWErrUp->GetBinContent( bin );
     float weightBinW_iErrDown =  hFakeRateWErrDown->GetBinContent( bin );
     
-    scaleFactW        += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinW_i ) );
-    scaleFactWErrUp   += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinW_iErrUp   ) );
-    scaleFactWErrDown += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinW_iErrDown ) );
+    scaleFactW        += string( Form("(ptL2>=%f && ptL2<%f)*%f", min , max, weightBinW_i ) );
+    scaleFactWErrUp   += string( Form("(ptL2>=%f && ptL2<%f)*%f", min , max, weightBinW_iErrUp   ) );
+    scaleFactWErrDown += string( Form("(ptL2>=%f && ptL2<%f)*%f", min , max, weightBinW_iErrDown ) );
 
     if(i < bins.size() - 2 ){
       scaleFactQCD += " + ";
@@ -891,21 +892,28 @@ void fakeRateTau( string name_ = "MuTau_Tau_pfJetPt",
 
 void makeAll(){
 
+  
   fakeRateMu("MuTau_Mu_ptL1_incl",0);
-  fakeRateMu("MuTau_Mu_ptL1_1jet",1);
-  fakeRateMu("MuTau_Mu_ptL1_2jet",2);
 
-  fakeRateTau("MuTau_Tau_pfJetPt_QCDSS03_WSS60_incl", 0, 0.30, 60, -1);
-  fakeRateTau("MuTau_Tau_pfJetPt_QCDSS02_WSS60_incl", 0, 0.20, 60, -1);
-  fakeRateTau("MuTau_Tau_pfJetPt_QCDSS00_WSS60_incl", 0, 0.00, 60, -1);
 
-  fakeRateTau("MuTau_Tau_pfJetPt_QCDOS02_WOS70_incl", 0, 0.20, 70, +1);
-  fakeRateTau("MuTau_Tau_pfJetPt_QCDOS02_WOS60_incl", 0, 0.20, 60, +1);
+  //fakeRateMu("MuTau_Mu_ptL1_1jet",1);
+  //fakeRateMu("MuTau_Mu_ptL1_2jet",2);
+  //fakeRateTau("MuTau_Tau_pfJetPt_QCDSS03_WSS60_incl", 0, 0.30, 60, -1);
 
-  fakeRateTau("MuTau_Tau_pfJetPt_QCDOS03_WOS60_1jet", 1, 0.30, 60, +1);
-  fakeRateTau("MuTau_Tau_pfJetPt_QCDOS03_WOS60_2jet", 2, 0.30, 60, +1);
 
-  fakeRateTau("MuTau_Tau_pfJetPt_QCDSS03_WSS60_1jet", 1, 0.30, 60, -1);
-  fakeRateTau("MuTau_Tau_pfJetPt_QCDSS03_WSS60_2jet", 2, 0.30, 60, -1);
+  fakeRateTau("MuTau_Tau_ptL2_QCDSS02_WSS60_incl", 0, 0.20, 60, -1);
+
+
+  //fakeRateTau("MuTau_Tau_pfJetPt_QCDSS00_WSS60_incl", 0, 0.00, 60, -1);
+  //fakeRateTau("MuTau_Tau_pfJetPt_QCDOS02_WOS70_incl", 0, 0.20, 70, +1);
+
+
+  fakeRateTau("MuTau_Tau_ptL2_QCDOS02_WOS60_incl", 0, 0.20, 60, +1);
+
+
+  //fakeRateTau("MuTau_Tau_pfJetPt_QCDOS03_WOS60_1jet", 1, 0.30, 60, +1);
+  //fakeRateTau("MuTau_Tau_pfJetPt_QCDOS03_WOS60_2jet", 2, 0.30, 60, +1);
+  //fakeRateTau("MuTau_Tau_pfJetPt_QCDSS03_WSS60_1jet", 1, 0.30, 60, -1);
+  //fakeRateTau("MuTau_Tau_pfJetPt_QCDSS03_WSS60_2jet", 2, 0.30, 60, -1);
 
 }
