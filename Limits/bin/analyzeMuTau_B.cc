@@ -172,14 +172,13 @@ void plotMuTau( Int_t mH_           = 120,
   //////////////////////////////////////////////////////////////
 
   bool useMt      = true;
-  string antiWcut = useMt ? "MtLeg1" : "-(pZeta-1.5*pZetaVis)" ; //<------------------
-  //string antiWcut = useMt ? "MtLeg1" : "-(pZeta-1.5*pZetaVis)" ;
+  string antiWcut = useMt ? "MtLeg1Corr" : "-(pZetaCorr-1.5*pZetaVisCorr)" ;
   float antiWsgn  = useMt ? 40. :  20. ; 
   float antiWsdb  = useMt ? 70. :  40. ; 
 
   bool use2Dcut   = false;
   if( use2Dcut ){
-    antiWcut = "!(MtLeg1<40 && (pZeta-1.5*pZetaVis)>-20)";
+    antiWcut = "!(MtLeg1Corr<40 && (pZetaCorr-1.5*pZetaVisCorr)>-20)";
     antiWsgn = 0.5;
     antiWsdb = 0.5;
   }
@@ -1213,6 +1212,8 @@ void plotMuTau( Int_t mH_           = 120,
       float sFWSS = ( selection_.find("novbf") !=string::npos || 
 		      selection_.find("bTag")  !=string::npos || 
 		      selection_.find("boost") !=string::npos || 
+		      selection_.find("oneJet") !=string::npos || 
+		      selection_.find("twoJets") !=string::npos || 
 		      selection_.find("inclusive")!=string::npos) ? 
 	SSWinSignalRegionDATA/SSWinSignalRegionMC : WcorrectionFactorSS; // from the extrapolation factor DATA/MC
 
@@ -1277,7 +1278,6 @@ void plotMuTau( Int_t mH_           = 120,
       hParameters->SetBinContent(9,ErrorExtrapolationFactorZ);
       hParameters->SetBinContent(10,ExtrapolationFactorZDataMC);
       hParameters->SetBinContent(11,SSIsoToSSAIsoRatioQCD);
-      hParameters->SetBinContent(12,embeddedMEtCutEff/madgraphMEtCutEff);
 
 
     }
@@ -1610,6 +1610,8 @@ void plotMuTau( Int_t mH_           = 120,
       float sFWOS = ( selection_.find("novbf")!=string::npos  || 
 		      selection_.find("boost")!=string::npos  || 
 		      selection_.find("bTag")!=string::npos   || 
+		      selection_.find("oneJet") !=string::npos || 
+		      selection_.find("twoJets") !=string::npos || 
 		      selection_.find("inclusive")!=string::npos) ? 
 	OSWinSignalRegionDATA/OSWinSignalRegionMC : WcorrectionFactorOS;
       if((it->first).find("WJets")!=string::npos){
@@ -1729,6 +1731,9 @@ void plotMuTau( Int_t mH_           = 120,
     }
     if( (it->first).find("Embedded")!=string::npos ) {
       //if(hZtt->Integral()>0) h1->Scale(hZtt->Integral()/h1->Integral());
+
+      hParameters->SetBinContent(12,embeddedMEtCutEff/madgraphMEtCutEff);
+
       h1->Scale( (ExtrapolationFactorZ*ExtrapDYInclusive)/h1->Integral());
       h1->Scale(embeddedMEtCutEff/madgraphMEtCutEff);
 
@@ -2346,27 +2351,44 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "June2012/Approval
   //mH.push_back(145);
   //mH.push_back(160);
 
+  //plotMuTau(120,1,"twoJets",""   ,"MtLeg1Corr","M_{T}","GeV" ,                    outputDir,20,0,160,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"oneJet",""   ,"MtLeg1Corr","M_{T}","GeV" ,                    outputDir,20,0,160,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"inclusive",""   ,"MtLeg1Corr","M_{T}","GeV" ,                    outputDir,40,0,160,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"inclusive",""   ,"MEtCorr","MET","GeV"                        ,outputDir,40,0,100,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"inclusive",""   ,"MEtCorrPhi","MVA #phi","units"              ,outputDir,32,-3.2,3.2,   5.0,1.0,0,1.5);
+
+  //plotMuTau(120,1,"twoJets",""    ,"ptVeto","veto jet p_{T}","GeV"                 ,outputDir,17,30, 200,5.0,1.0,1,200);
+  //plotMuTau(120,1,"inclusive",""  ,"MEt","MET","GeV"                               ,outputDir,40, 0, 100,5.0,1.0,0,1.2);  
+  //plotMuTau(120,1,"bTag",""       ,"ptB1", "leading b-tagged jet p_{T}","GeV"      ,outputDir,50,30, 330,5.0,1.0,1,100);
+  //plotMuTau(120,1,"bTag",""       ,"etaB1","leading b-tagged jet #eta","units"     ,outputDir,21,-5,   5,5.0,1.0,0,2.);
+  //plotMuTau(120,1,"twoJets",""    ,"dPhiHjet","(diJet - H) #phi","units"           ,outputDir,20, 0,   10,5.0,1.0,0,1.5);
+
+  //return;
+
   //plotMuTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);
   //plotMuTau(120,1,"vbf",""         ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);
   //return;
 
-  plotMuTau(120,1,"inclusive",""   ,"hpsMVA","#tau MVA","units"              ,outputDir,50,0.75,1.0, 5.0,1.0,0,1.8);
-  plotMuTau(120,1,"inclusive",""   ,"jetsBtagCSV1","leading jet CSV","units" ,outputDir,50,0,1      ,5.0,1.0,0,2);
-  plotMuTau(120,1,"inclusive",""   ,"MEt","MVA","GeV"                        ,outputDir,40,0,100,5.0,1.0,0,1.2);
-  plotMuTau(120,1,"inclusive",""   ,"MEtPhi","MVA #phi","units"              ,outputDir,32,-3.2,3.2,   5.0,1.0,0,1.5);
-  plotMuTau(120,1,"inclusive",""   ,"MtLeg1","M_{T}","GeV" ,                  outputDir,40,0,160,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"inclusive",""   ,"hpsMVA","#tau MVA","units"              ,outputDir,50,0.75,1.0, 5.0,1.0,0,1.8);
+  //plotMuTau(120,1,"inclusive",""   ,"jetsBtagCSV1","leading jet CSV","units" ,outputDir,50,0,1      ,5.0,1.0,0,2);
+  //plotMuTau(120,1,"inclusive",""   ,"MEtCorr","MET","GeV"                        ,outputDir,40,0,100,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"inclusive",""   ,"MEtCorrPhi","MVA #phi","units"              ,outputDir,32,-3.2,3.2,   5.0,1.0,0,1.5);
+  //plotMuTau(120,1,"inclusive",""   ,"MtLeg1Corr","M_{T}","GeV" ,             outputDir,40,0,160,5.0,1.0,0,1.2);
 
-  plotMuTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);
-  plotMuTau(120,1,"inclusive",""   ,"diTauNSVfitMass","SVfit mass","GeV"     ,outputDir,60,0,300,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"inclusive",""   ,"diTauNSVfitMass","SVfit mass","GeV"     ,outputDir,60,0,300,5.0,1.0,0,1.2);
 
-  plotMuTau(120,1,"inclusive",""   ,"ptL2","#tau p_{T}","GeV"           ,outputDir,27,11, 92,5.0,1.0,0,1.2);
-  plotMuTau(120,1,"inclusive",""   ,"ptL1","#mu p_{T}", "GeV"           ,outputDir,27,11, 92,5.0,1.0,0,1.2);
-  plotMuTau(120,0,"inclusive",""   ,"etaL1","#mu #eta", "units"         ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
-  plotMuTau(120,0,"inclusive",""   ,"etaL2","#tau #eta","units"         ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
+  //plotMuTau(120,1,"inclusive",""   ,"ptL2","#tau p_{T}","GeV"           ,outputDir,27,11, 92,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"inclusive",""   ,"ptL1","#mu p_{T}", "GeV"           ,outputDir,27,11, 92,5.0,1.0,0,1.2);
+  //plotMuTau(120,0,"inclusive",""   ,"etaL1","#mu #eta", "units"         ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
+  //plotMuTau(120,0,"inclusive",""   ,"etaL2","#tau #eta","units"         ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
 
-  plotMuTau(120,0,"inclusive",""   ,"numPV","reconstructed vertexes","units" ,outputDir,30,0,30,5.0,1.0,0,1.5);
-  plotMuTau(120,1,"inclusive",""   ,"nJets30","jet multiplicity","units"                 ,outputDir,10,0, 10,5.0,1.0,1,10);
-  plotMuTau(120,1,"inclusive",""   ,"nJets20BTagged","b-tagged jet multiplicity","units" ,outputDir,5,0, 5,5.0,1.0,1,10);
+  //plotMuTau(120,0,"inclusive",""   ,"numPV","reconstructed vertexes","units"             ,outputDir,30,0,30,5.0,1.0,0,1.5);
+  //plotMuTau(120,1,"inclusive",""   ,"nJets30","jet multiplicity","units"                 ,outputDir,10,0, 10,5.0,1.0,1,10);
+  //plotMuTau(120,1,"inclusive",""   ,"nJets20BTagged","b-tagged jet multiplicity","units" ,outputDir,5,0, 5,5.0,1.0,1,10);
+
+  //plotMuTau(120,1,"bTag",""        ,"ptB1", "leading b-tagged jet p_{T}","GeV"       ,outputDir,50,30, 330,5.0,1.0,1,100);
+  //plotMuTau(120,1,"bTag",""        ,"etaB1","leading b-tagged jet #eta","units"      ,outputDir,21,-5, 5,5.0,1.0,0,2.);
 
   plotMuTau(120,1,"oneJet",""      ,"pt1","leading jet p_{T}","GeV"       ,outputDir,50,30, 330,5.0,1.0,1,100);
   plotMuTau(120,1,"oneJet",""      ,"eta1","leading jet #eta","units"     ,outputDir,21,-5, 5,5.0,1.0,0,2.);
