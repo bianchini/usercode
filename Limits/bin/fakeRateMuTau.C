@@ -42,7 +42,7 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
   float lumiCorrFactor = (1-0.056);
   Lumi *= lumiCorrFactor;
 
-  TFile* out = new TFile("FakeRate.root","UPDATE");
+  TFile* out = new TFile("FakeRate2.root","UPDATE");
 
 
 
@@ -76,9 +76,9 @@ void fakeRateMu( string name_ = "MuTau_Mu_ptL1",
 
 
   bool useMt      = true;
-  string antiWcut = useMt ? "MtLeg1MVA" : "-(pZetaMVA-1.5*pZetaVisMVA)" ;
+  string antiWcut = useMt ? "MtLeg1" : "-(pZeta-1.5*pZetaVis)" ;
   float antiWsgn  = useMt ? 40. :  20. ; 
-  float antiWsdb  = useMt ? 60. :  40. ; 
+  float antiWsdb  = useMt ? 70. :  40. ; 
 
   TCut lpt(Form("ptL1>17 && TMath::Abs(etaL1)<2.1 && nJets30>=%f",nJets30));
   TCut tpt("ptL2>20 && TMath::Abs(etaL2)<2.3");
@@ -550,7 +550,7 @@ void fakeRateTau( string name_ = "MuTau_Tau_pfJetPt",
 
 
   bool useMt      = true;
-  string antiWcut = useMt ? "MtLeg1MVA" : "-(pZetaMVA-1.5*pZetaVisMVA)" ;
+  string antiWcut = useMt ? "MtLeg1" : "-(pZeta-1.5*pZetaVis)" ;
   float antiWsgn  = useMt ? 40.   :  20. ; 
   float antiWsdb  = useMt ? MtCut :  40. ; 
 
@@ -895,6 +895,7 @@ void makeAll(){
   
   fakeRateMu("MuTau_Mu_ptL1_incl",0);
 
+  return;
 
   //fakeRateMu("MuTau_Mu_ptL1_1jet",1);
   //fakeRateMu("MuTau_Mu_ptL1_2jet",2);

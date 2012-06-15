@@ -47,18 +47,18 @@ void fakeRateElec( string name_ = "ElecTau_Elec_ptL1",
 
 
   TFile *fData              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_PreApproval/nTupleRun2011-ElecTau-All_run_Open_ElecTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_Approval/nTupleRun2011-ElecTau-All_run_Open_ElecTauStream.root", "READ");  
 
   TFile *fBackgroundWJets   
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_PreApproval/nTupleWJets-ElecTau-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_Approval/nTupleWJets-ElecTau-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
   TFile *fBackgroundDY
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_PreApproval/nTupleDYJets-ElecTau-50-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_Approval/nTupleDYJets-ElecTau-50-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
   TFile *fBackgroundTTbar  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_PreApproval/nTupleTTJets-ElecTau-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_Approval/nTupleTTJets-ElecTau-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
   TFile *fBackgroundOthers  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_PreApproval/nTupleOthers-ElecTau-PUS6_run_Open_ElecTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_Approval/nTupleOthers-ElecTau-PUS6_run_Open_ElecTauStream.root","READ"); 
   
-  TString tree         = "outTreePtOrd";
+  TString tree         = "outTreePtOrdRaw";
 
   TTree *data          = (TTree*)fData->Get(tree);
 
@@ -76,7 +76,7 @@ void fakeRateElec( string name_ = "ElecTau_Elec_ptL1",
 
 
   bool useMt      = true;
-  string antiWcut = useMt ? "MtLeg1MVA" : "-(pZetaMVA-1.5*pZetaVisMVA)" ;
+  string antiWcut = useMt ? "MtLeg1Corr" : "-(pZetaCorr-1.5*pZetaVisCorr)" ;
   float antiWsgn  = useMt ? 40. :  20. ; 
   float antiWsdb  = useMt ? 60. :  40. ; 
 
@@ -116,6 +116,7 @@ void fakeRateElec( string name_ = "ElecTau_Elec_ptL1",
   bins.push_back(60); 
   bins.push_back(80); 
   bins.push_back(100); 
+  bins.push_back(1000); 
 
   int nBins =  bins.size() ;
   TArrayF binsT(nBins);
@@ -160,13 +161,13 @@ void fakeRateElec( string name_ = "ElecTau_Elec_ptL1",
     TCut lpt_i = lpt && TCut(Form("ptL1>%f && ptL1<=%f", min, max));
 
     TCut sbinInclusive;
-    sbinInclusive            = lpt_i && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch;
+    sbinInclusive            = tiso && lpt_i && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch;
     TCut sbinPZetaRelSSInclusive;
-    sbinPZetaRelSSInclusive  = lpt_i && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch;
+    sbinPZetaRelSSInclusive  = tiso && lpt_i && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch;
     TCut sbinSSInclusive;
-    sbinSSInclusive          = lpt_i && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch;
+    sbinSSInclusive          = tiso && lpt_i && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch;
     TCut sbinSSaIsoInclusive;
-    sbinSSaIsoInclusive      = lpt_i && tpt && tiso && laiso&& lveto && SS && pZ  && hltevent && hltmatch;
+    sbinSSaIsoInclusive      = tiso && lpt_i && tpt && tiso && laiso&& lveto && SS && pZ  && hltevent && hltmatch;
 
 
     cout << "******** Extrapolation factors for QCD normalization: " << " bin " << min << "," << max << " " << "********" << endl;
@@ -298,7 +299,7 @@ void fakeRateElec( string name_ = "ElecTau_Elec_ptL1",
 
   //return;
 
-  TF1* fit = new TF1(("fit"+name_).c_str(),"[0]*TMath::Exp([1]*x)+[2]",20, bins[bins.size()-1]);
+  TF1* fit = new TF1(("fit_"+name_).c_str(),"[0]*TMath::Exp([1]*x)+[2]",20, bins[bins.size()-1]);
   fit->SetLineColor(kRed);
   fit->SetParLimits(0,0,20);
   fit->SetParLimits(1,-5,0);
@@ -319,7 +320,7 @@ void fakeRateElec( string name_ = "ElecTau_Elec_ptL1",
   //fit->SetParLimits(3,-100,1);
 
 
-  hFakeRate->Fit(("fit"+name_).c_str(), "", "", 20, 100);
+  hFakeRate->Fit(("fit"+name_).c_str(), "", "", 20, 1000);
 
   float par0 = fit->GetParameter(0);
   float par1 = fit->GetParameter(1);
@@ -516,18 +517,18 @@ void fakeRateTau( string name_ = "ElecTau_Tau_pfJetPt",
 
 
   TFile *fData              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_PreApproval/nTupleRun2011-ElecTau-All_run_Open_ElecTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_Approval/nTupleRun2011-ElecTau-All_run_Open_ElecTauStream.root", "READ");  
 
   TFile *fBackgroundWJets   
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_PreApproval/nTupleWJets-ElecTau-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_Approval/nTupleWJets-ElecTau-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
   TFile *fBackgroundDY
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_PreApproval/nTupleDYJets-ElecTau-50-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_Approval/nTupleDYJets-ElecTau-50-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
   TFile *fBackgroundTTbar  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_PreApproval/nTupleTTJets-ElecTau-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_Approval/nTupleTTJets-ElecTau-madgraph-PUS6_run_Open_ElecTauStream.root","READ"); 
   TFile *fBackgroundOthers  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_PreApproval/nTupleOthers-ElecTau-PUS6_run_Open_ElecTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/ElecTauStreamFall11_04May2012_Approval/nTupleOthers-ElecTau-PUS6_run_Open_ElecTauStream.root","READ"); 
   
-  TString tree         = "outTreePtOrd";
+  TString tree         = "outTreePtOrdRaw";
 
   TTree *data          = (TTree*)fData->Get(tree);
 
@@ -545,7 +546,7 @@ void fakeRateTau( string name_ = "ElecTau_Tau_pfJetPt",
 
 
   bool useMt      = true;
-  string antiWcut = useMt ? "MtLeg1MVA" : "-(pZetaMVA-1.5*pZetaVisMVA)" ;
+  string antiWcut = useMt ? "MtLeg1Corr" : "-(pZetaCorr-1.5*pZetaVisCorr)" ;
   float antiWsgn  = useMt ? 40.   :  20. ; 
   float antiWsdb  = useMt ? MtCut :  40. ; 
 
@@ -555,8 +556,8 @@ void fakeRateTau( string name_ = "ElecTau_Tau_pfJetPt",
   TCut lID("((TMath::Abs(etaL1)<0.925 && mvaPOGNonTrig>0.85) || (TMath::Abs(etaL1)<1.479 && TMath::Abs(etaL1)>0.80 && mvaPOGNonTrig>0.975) || (TMath::Abs(etaL1)>1.479 && mvaPOGNonTrig>0.985))");
   tpt = tpt&&lID;
 
-  TCut tiso("tightestHPSMVAWP>1   && tightestAntiECutWP>1"); 
-  TCut taiso("tightestHPSMVAWP>=0 && tightestAntiECutWP>1"); 
+  TCut tiso("tightestHPSMVAWP>=0   && tightestAntiECutWP>1"); 
+  TCut taiso("tightestHPSMVAWP>-99 && tightestAntiECutWP>1"); 
 
   TCut liso("combRelIsoLeg1DBeta<0.10");
   TCut laiso(Form("combRelIsoLeg1DBetav2>=%f && combRelIsoLeg1DBetav2<0.50",isoCut));
@@ -621,7 +622,7 @@ void fakeRateTau( string name_ = "ElecTau_Tau_pfJetPt",
     float min = bins[i];
     float max = bins[i+1]  ;
 
-    TCut tpt_i = tpt && TCut(Form("pfJetPt>%f && pfJetPt<=%f", min, max));
+    TCut tpt_i = tpt && TCut(Form("ptL2>%f && ptL2<=%f", min, max));
 
     TCut sbinSSaIsoInclusive;
     if(diTauCharge<0) 
@@ -695,7 +696,7 @@ void fakeRateTau( string name_ = "ElecTau_Tau_pfJetPt",
   fitQCD->SetParLimits(1,-5,0);
   fitQCD->SetParLimits(2,0,1);
 
-  hFakeRateQCD->Fit(("fitQCD_"+name_).c_str(), "", "", 20, 100);
+  hFakeRateQCD->Fit(("fitQCD_"+name_).c_str(), "", "", 20, 1000);
 
   TF1* fitW = new TF1(("fitW_"+name_).c_str(),"[0]*TMath::Exp([1]*x)+[2]",20, bins[bins.size()-1]);
   fitW->SetLineColor(kBlue);
@@ -703,7 +704,7 @@ void fakeRateTau( string name_ = "ElecTau_Tau_pfJetPt",
   fitW->SetParLimits(1,-5,0);
   fitW->SetParLimits(2,0,1);
 
-  hFakeRateW->Fit(("fitW_"+name_).c_str(), "", "", 20, 100);
+  hFakeRateW->Fit(("fitW_"+name_).c_str(), "", "", 20, 1000);
 
   for(int i = 0; i <  bins.size()-1 ; i++){
 
@@ -759,17 +760,17 @@ void fakeRateTau( string name_ = "ElecTau_Tau_pfJetPt",
     float weightBinQCD_iErrUp   =  hFakeRateQCDErrUp->GetBinContent( bin );
     float weightBinQCD_iErrDown =  hFakeRateQCDErrDown->GetBinContent( bin );
     
-    scaleFactQCD        += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinQCD_i ) );
-    scaleFactQCDErrUp   += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinQCD_iErrUp   ) );
-    scaleFactQCDErrDown += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinQCD_iErrDown ) );
+    scaleFactQCD        += string( Form("(ptL2>=%f && ptL2<%f)*%f", min , max, weightBinQCD_i ) );
+    scaleFactQCDErrUp   += string( Form("(ptL2>=%f && ptL2<%f)*%f", min , max, weightBinQCD_iErrUp   ) );
+    scaleFactQCDErrDown += string( Form("(ptL2>=%f && ptL2<%f)*%f", min , max, weightBinQCD_iErrDown ) );
 
     float weightBinW_i        =  fitW->Eval( (max+min)/2.);
     float weightBinW_iErrUp   =  hFakeRateWErrUp->GetBinContent( bin );
     float weightBinW_iErrDown =  hFakeRateWErrDown->GetBinContent( bin );
     
-    scaleFactW        += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinW_i ) );
-    scaleFactWErrUp   += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinW_iErrUp   ) );
-    scaleFactWErrDown += string( Form("(pfJetPt>=%f && pfJetPt<%f)*%f", min , max, weightBinW_iErrDown ) );
+    scaleFactW        += string( Form("(ptL2>=%f && ptL2<%f)*%f", min , max, weightBinW_i ) );
+    scaleFactWErrUp   += string( Form("(ptL2>=%f && ptL2<%f)*%f", min , max, weightBinW_iErrUp   ) );
+    scaleFactWErrDown += string( Form("(ptL2>=%f && ptL2<%f)*%f", min , max, weightBinW_iErrDown ) );
 
     if(i < bins.size() - 2 ){
       scaleFactQCD += " + ";
@@ -879,21 +880,21 @@ void fakeRateTau( string name_ = "ElecTau_Tau_pfJetPt",
 
 void makeAll(){
 
-  fakeRateElec("ElecTau_Elec_ptL1_incl",0);
-  fakeRateElec("ElecTau_Elec_ptL1_1jet",1);
-  fakeRateElec("ElecTau_Elec_ptL1_2jet",2);
+  //fakeRateElec("ElecTau_Elec_ptL1_incl",0);
+  //fakeRateElec("ElecTau_Elec_ptL1_1jet",1);
+  //fakeRateElec("ElecTau_Elec_ptL1_2jet",2);
 
-  fakeRateTau("ElecTau_Tau_pfJetPt_QCDSS03_WSS60_incl", 0, 0.30, 60, -1);
-  fakeRateTau("ElecTau_Tau_pfJetPt_QCDSS02_WSS60_incl", 0, 0.20, 60, -1);
-  fakeRateTau("ElecTau_Tau_pfJetPt_QCDSS00_WSS60_incl", 0, 0.00, 60, -1);
+  //fakeRateTau("ElecTau_Tau_ptL2_QCDSS03_WSS60_incl", 0, 0.30, 60, -1);
+  fakeRateTau("ElecTau_Tau_ptL2_QCDSS02_WSS60_incl", 0, 0.20, 60, -1);
+  //fakeRateTau("ElecTau_Tau_ptL2_QCDSS00_WSS60_incl", 0, 0.00, 60, -1);
 
-  fakeRateTau("ElecTau_Tau_pfJetPt_QCDOS02_WOS70_incl", 0, 0.20, 70, +1);
-  fakeRateTau("ElecTau_Tau_pfJetPt_QCDOS02_WOS60_incl", 0, 0.20, 60, +1);
+  //fakeRateTau("ElecTau_Tau_ptL2_QCDOS02_WOS70_incl", 0, 0.20, 70, +1);
+  fakeRateTau("ElecTau_Tau_ptL2_QCDOS02_WOS60_incl", 0, 0.20, 60, +1);
 
-  fakeRateTau("ElecTau_Tau_pfJetPt_QCDOS03_WOS60_1jet", 1, 0.30, 60, +1);
-  fakeRateTau("ElecTau_Tau_pfJetPt_QCDOS03_WOS60_2jet", 2, 0.30, 60, +1);
+  //fakeRateTau("ElecTau_Tau_ptL2_QCDOS03_WOS60_1jet", 1, 0.30, 60, +1);
+  //fakeRateTau("ElecTau_Tau_ptL2_QCDOS03_WOS60_2jet", 2, 0.30, 60, +1);
 
-  fakeRateTau("ElecTau_Tau_pfJetPt_QCDSS03_WSS60_1jet", 1, 0.30, 60, -1);
-  fakeRateTau("ElecTau_Tau_pfJetPt_QCDSS03_WSS60_2jet", 2, 0.30, 60, -1);
+  //fakeRateTau("ElecTau_Tau_ptL2_QCDSS03_WSS60_1jet", 1, 0.30, 60, -1);
+  //fakeRateTau("ElecTau_Tau_ptL2_QCDSS03_WSS60_2jet", 2, 0.30, 60, -1);
 
 }
