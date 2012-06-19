@@ -257,9 +257,9 @@ void produce(
       TH1F* hLooseIso    = (TH1F*)fin->Get("hLooseIso") ;
 
       if( bin_.find("Low")!=string::npos ){
-	//hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
-	hLooseIso->Scale(hQCD->Integral()/hLooseIso->Integral());
-	hLooseIso->Write(Form("QCD%s"    ,suffix.c_str()));
+	hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
+	//hLooseIso->Scale(hQCD->Integral()/hLooseIso->Integral());
+	//hLooseIso->Write(Form("QCD%s"    ,suffix.c_str()));
       }
       else{
 	hLooseIso->Scale(hQCD->Integral()/hLooseIso->Integral());
@@ -392,17 +392,19 @@ void produce(
 
 
       // ZLL: keys pdf from MC
-      TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmjKeys");
-      TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmmKeys");
-      TH1F* hZmj        = (TH1F*)fin->Get("hZmjLoose");
-      TH1F* hZmm        = (TH1F*)fin->Get("hZmmLoose");
-      TH1F* hZfakesKeys = (TH1F*)hZmjKeys->Clone("hZfakesKeys");
-      hZfakesKeys->Reset();
-      //if(hZmjKeys->Integral()>0) hZfakesKeys->Add(hZmjKeys,1.0);
-      hZfakesKeys->Add(hZmj,1.0);
-      //if(hZmmKeys->Integral()>0) hZfakesKeys->Add(hZmmKeys,1.0);  
-      hZfakesKeys->Add(hZmm,1.0);
-      hZfakesKeys->Write(Form("ZLL%s"        ,suffix.c_str()));
+      TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmjLoose");
+      TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmmLoose");
+      TH1F* hZmj        = (TH1F*)fin->Get("hZmj");
+      TH1F* hZmm        = (TH1F*)fin->Get("hZmm");
+      TH1F* hZfakes     = (TH1F*)fin->Get("hZfakes");
+
+      float scaleFactFakes = 0.37 ; // from Z->ee
+      hZfakes->Reset();
+      hZfakes->Add(hZmjKeys);
+      hZfakes->Add(hZmmKeys);
+      hZfakes->Scale(scaleFactFakes);
+      hZfakes->Write(Form("ZLL%s"        ,suffix.c_str()));
+
 
       // TT: MV
       ((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
@@ -562,9 +564,9 @@ void produce(
 	TH1F* hLooseIso    = (TH1F*)fin->Get("hLooseIso") ;
 	
 	if( bin_.find("Low")!=string::npos ){
-	  //hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
-	  hLooseIso->Scale(hQCD->Integral()/hLooseIso->Integral());
-	  hLooseIso->Write(Form("QCD%s"    ,suffix.c_str()));
+	  hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
+	  //hLooseIso->Scale(hQCD->Integral()/hLooseIso->Integral());
+	  //hLooseIso->Write(Form("QCD%s"    ,suffix.c_str()));
 	}
 	else{
 	  hLooseIso->Scale(hQCD->Integral()/hLooseIso->Integral());
@@ -728,17 +730,19 @@ void produce(
 	((TH1F*)fin->Get("hZmm"))->Write(Form("ZL%s"        ,suffix.c_str()));
       if(dir->FindObjectAny(Form("ZLL%s"       ,suffix.c_str()))==0 ){
 
-	TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmjKeys");
-	TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmmKeys");
-	TH1F* hZmj        = (TH1F*)fin->Get("hZmjLoose");
-	TH1F* hZmm        = (TH1F*)fin->Get("hZmmLoose");
-	TH1F* hZfakesKeys = (TH1F*)hZmjKeys->Clone("hZfakesKeys");
-	hZfakesKeys->Reset();
-	//if(hZmjKeys->Integral()>0) hZfakesKeys->Add(hZmjKeys,1.0);
-	hZfakesKeys->Add(hZmj,1.0);
-	//if(hZmmKeys->Integral()>0) hZfakesKeys->Add(hZmmKeys,1.0);  
-	hZfakesKeys->Add(hZmm,1.0);
-	hZfakesKeys->Write(Form("ZLL%s"        ,suffix.c_str()));
+	TH1F* hZmjKeys    = (TH1F*)fin->Get("hZmjLoose");
+	TH1F* hZmmKeys    = (TH1F*)fin->Get("hZmmLoose");
+	TH1F* hZmj        = (TH1F*)fin->Get("hZmj");
+	TH1F* hZmm        = (TH1F*)fin->Get("hZmm");
+	TH1F* hZfakes     = (TH1F*)fin->Get("hZfakes");
+	
+	float scaleFactFakes = 0.37 ; // from Z->ee
+	hZfakes->Reset();
+	hZfakes->Add(hZmjKeys);
+	hZfakes->Add(hZmmKeys);
+	hZfakes->Scale(scaleFactFakes);
+	hZfakes->Write(Form("ZLL%s"        ,suffix.c_str()));
+
       }  
       if(dir->FindObjectAny(Form("TT%s"       ,suffix.c_str()))==0 )
 	((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
@@ -951,13 +955,14 @@ void produce(
 	  if(binNameSpace.find("0jet_")!=string::npos || binNameSpace.find("boost")!=string::npos){
 	    out << space << ((TH1F*)fin->Get("hZmj"))->Integral()
 		<< space << ((TH1F*)fin->Get("hZmm"))->Integral();
-	      }
+	  }
 	  else{
+	    float scaleFactFakes = 0.37 ; // from Z->ee
 	    TH1F* hZmj        = (TH1F*)fin->Get("hZmjLoose");
 	    TH1F* hZmm        = (TH1F*)fin->Get("hZmmLoose");
 	    float ZFakesyield = hZmj->Integral();
 	    ZFakesyield += hZmm->Integral();
-	    out << space << ZFakesyield;
+	    out << space << ZFakesyield*scaleFactFakes;
 	  }
 	  out << space << ((TH1F*)fin->Get("hTTb"))->Integral()
 	      << space << ((TH1F*)fin->Get("hVV"))->Integral()
@@ -1156,13 +1161,13 @@ void produce(
 
 
 
-void produceAll(  TString outputDir = "June2012/Approval" ){
+void produceAll(  TString outputDir = "June2012/Approval_checks" ){
 
   vector<string> variables;
   vector<int> mH;
 
-  //variables.push_back("diTauVisMass");
-  variables.push_back("diTauNSVfitMass");
+  variables.push_back("diTauVisMass");
+  //variables.push_back("diTauNSVfitMass");
   //variables.push_back("diTauSVFitMassCal0");
   //variables.push_back("diTauSVFitMassCal1");
   //variables.push_back("diTauSVFitMassCal2");
@@ -1196,47 +1201,47 @@ void produceAll(  TString outputDir = "June2012/Approval" ){
   for(unsigned int i = 0 ; i < variables.size(); i++){
     for(unsigned j = 0; j < mH.size(); j++){
 
-       produce(mH[j],variables[i], ""        , "novbfLow", outputDir);
-       produce(mH[j],variables[i], "TauUp"   , "novbfLow", outputDir);
-       produce(mH[j],variables[i], "TauDown" , "novbfLow", outputDir);
-       produce(mH[j],variables[i], "JetUp"   , "novbfLow", outputDir);
-       produce(mH[j],variables[i], "JetDown" , "novbfLow", outputDir);
+      produce(mH[j],variables[i], ""        , "novbfLow", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "novbfLow", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "novbfLow", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "novbfLow", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "novbfLow", outputDir);
       
-       produce(mH[j],variables[i], ""        , "novbfHigh", outputDir);
-       produce(mH[j],variables[i], "TauUp"   , "novbfHigh", outputDir);
-       produce(mH[j],variables[i], "TauDown" , "novbfHigh", outputDir);
-       produce(mH[j],variables[i], "JetUp"   , "novbfHigh", outputDir);
-       produce(mH[j],variables[i], "JetDown" , "novbfHigh", outputDir);
+      produce(mH[j],variables[i], ""        , "novbfHigh", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "novbfHigh", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "novbfHigh", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "novbfHigh", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "novbfHigh", outputDir);
       
-       produce(mH[j],variables[i], ""        , "boostLow", outputDir);
-       produce(mH[j],variables[i], "TauUp"   , "boostLow", outputDir);
-       produce(mH[j],variables[i], "TauDown" , "boostLow", outputDir);
-       produce(mH[j],variables[i], "JetUp"   , "boostLow", outputDir);
-       produce(mH[j],variables[i], "JetDown" , "boostLow", outputDir);
+      produce(mH[j],variables[i], ""        , "boostLow", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "boostLow", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "boostLow", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "boostLow", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "boostLow", outputDir);
       
-       produce(mH[j],variables[i], ""        , "boostHigh", outputDir);
-       produce(mH[j],variables[i], "TauUp"   , "boostHigh", outputDir);
-       produce(mH[j],variables[i], "TauDown" , "boostHigh", outputDir);
-       produce(mH[j],variables[i], "JetUp"   , "boostHigh", outputDir);
-       produce(mH[j],variables[i], "JetDown" , "boostHigh", outputDir);
+      produce(mH[j],variables[i], ""        , "boostHigh", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "boostHigh", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "boostHigh", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "boostHigh", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "boostHigh", outputDir);
        
-       produce(mH[j],variables[i], ""        , "bTagLow", outputDir);
-       produce(mH[j],variables[i], "TauUp"   , "bTagLow", outputDir);
-       produce(mH[j],variables[i], "TauDown" , "bTagLow", outputDir);
-       produce(mH[j],variables[i], "JetUp"   , "bTagLow", outputDir);
-       produce(mH[j],variables[i], "JetDown" , "bTagLow", outputDir);
-
-       produce(mH[j],variables[i], ""        , "bTagHigh", outputDir);
-       produce(mH[j],variables[i], "TauUp"   , "bTagHigh", outputDir);
-       produce(mH[j],variables[i], "TauDown" , "bTagHigh", outputDir);
-       produce(mH[j],variables[i], "JetUp"   , "bTagHigh", outputDir);
-       produce(mH[j],variables[i], "JetDown" , "bTagHigh", outputDir);
-
-       produce(mH[j],variables[i], ""        , "vbf", outputDir);
-       produce(mH[j],variables[i], "TauUp"   , "vbf", outputDir);
-       produce(mH[j],variables[i], "TauDown" , "vbf", outputDir);
-       produce(mH[j],variables[i], "JetUp"   , "vbf", outputDir);
-       produce(mH[j],variables[i], "JetDown" , "vbf", outputDir);
+      produce(mH[j],variables[i], ""        , "bTagLow", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "bTagLow", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "bTagLow", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "bTagLow", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "bTagLow", outputDir);
+      
+      produce(mH[j],variables[i], ""        , "bTagHigh", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "bTagHigh", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "bTagHigh", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "bTagHigh", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "bTagHigh", outputDir);
+      
+      produce(mH[j],variables[i], ""        , "vbf", outputDir);
+      produce(mH[j],variables[i], "TauUp"   , "vbf", outputDir);
+      produce(mH[j],variables[i], "TauDown" , "vbf", outputDir);
+      produce(mH[j],variables[i], "JetUp"   , "vbf", outputDir);
+      produce(mH[j],variables[i], "JetDown" , "vbf", outputDir);
 
     //   produce(mH[j],variables[i], ""        , "vh", outputDir);
 //       produce(mH[j],variables[i], "TauUp"   , "vh", outputDir);

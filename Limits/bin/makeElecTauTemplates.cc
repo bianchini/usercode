@@ -1101,7 +1101,7 @@ void produce(
 
 
 
-void produceAll(  TString outputDir = "June2012/Approval" ){
+void produceAll(  TString outputDir = "June2012/Approval_checks" ){
 
   vector<string> variables;
   vector<int> mH;
@@ -1141,41 +1141,41 @@ void produceAll(  TString outputDir = "June2012/Approval" ){
   for(unsigned int i = 0 ; i < variables.size(); i++){
     for(unsigned j = 0; j < mH.size(); j++){
 
-      produce(mH[j],variables[i], ""        , "novbfLow", outputDir);
-      produce(mH[j],variables[i], "TauUp"   , "novbfLow", outputDir);
-      produce(mH[j],variables[i], "TauDown" , "novbfLow", outputDir);
-      produce(mH[j],variables[i], "JetUp"   , "novbfLow", outputDir);
-      produce(mH[j],variables[i], "JetDown" , "novbfLow", outputDir);
+//       produce(mH[j],variables[i], ""        , "novbfLow", outputDir);
+//       produce(mH[j],variables[i], "TauUp"   , "novbfLow", outputDir);
+//       produce(mH[j],variables[i], "TauDown" , "novbfLow", outputDir);
+//       produce(mH[j],variables[i], "JetUp"   , "novbfLow", outputDir);
+//       produce(mH[j],variables[i], "JetDown" , "novbfLow", outputDir);
       
-      produce(mH[j],variables[i], ""        , "novbfHigh", outputDir);
-      produce(mH[j],variables[i], "TauUp"   , "novbfHigh", outputDir);
-      produce(mH[j],variables[i], "TauDown" , "novbfHigh", outputDir);
-      produce(mH[j],variables[i], "JetUp"   , "novbfHigh", outputDir);
-      produce(mH[j],variables[i], "JetDown" , "novbfHigh", outputDir);
+//       produce(mH[j],variables[i], ""        , "novbfHigh", outputDir);
+//       produce(mH[j],variables[i], "TauUp"   , "novbfHigh", outputDir);
+//       produce(mH[j],variables[i], "TauDown" , "novbfHigh", outputDir);
+//       produce(mH[j],variables[i], "JetUp"   , "novbfHigh", outputDir);
+//       produce(mH[j],variables[i], "JetDown" , "novbfHigh", outputDir);
       
-      produce(mH[j],variables[i], ""        , "boostLow", outputDir);
-      produce(mH[j],variables[i], "TauUp"   , "boostLow", outputDir);
-      produce(mH[j],variables[i], "TauDown" , "boostLow", outputDir);
-      produce(mH[j],variables[i], "JetUp"   , "boostLow", outputDir);
-      produce(mH[j],variables[i], "JetDown" , "boostLow", outputDir);
+//       produce(mH[j],variables[i], ""        , "boostLow", outputDir);
+//       produce(mH[j],variables[i], "TauUp"   , "boostLow", outputDir);
+//       produce(mH[j],variables[i], "TauDown" , "boostLow", outputDir);
+//       produce(mH[j],variables[i], "JetUp"   , "boostLow", outputDir);
+//       produce(mH[j],variables[i], "JetDown" , "boostLow", outputDir);
       
-      produce(mH[j],variables[i], ""        , "boostHigh", outputDir);
-      produce(mH[j],variables[i], "TauUp"   , "boostHigh", outputDir);
-      produce(mH[j],variables[i], "TauDown" , "boostHigh", outputDir);
-      produce(mH[j],variables[i], "JetUp"   , "boostHigh", outputDir);
-      produce(mH[j],variables[i], "JetDown" , "boostHigh", outputDir);
+//       produce(mH[j],variables[i], ""        , "boostHigh", outputDir);
+//       produce(mH[j],variables[i], "TauUp"   , "boostHigh", outputDir);
+//       produce(mH[j],variables[i], "TauDown" , "boostHigh", outputDir);
+//       produce(mH[j],variables[i], "JetUp"   , "boostHigh", outputDir);
+//       produce(mH[j],variables[i], "JetDown" , "boostHigh", outputDir);
       
-      //produce(mH[j],variables[i], ""        , "bTagLow", outputDir);
-      //produce(mH[j],variables[i], "TauUp"   , "bTagLow", outputDir);
-      //produce(mH[j],variables[i], "TauDown" , "bTagLow", outputDir);
-      //produce(mH[j],variables[i], "JetUp"   , "bTagLow", outputDir);
-      //produce(mH[j],variables[i], "JetDown" , "bTagLow", outputDir);
+//       produce(mH[j],variables[i], ""        , "bTagLow", outputDir);
+//       produce(mH[j],variables[i], "TauUp"   , "bTagLow", outputDir);
+//       produce(mH[j],variables[i], "TauDown" , "bTagLow", outputDir);
+//       produce(mH[j],variables[i], "JetUp"   , "bTagLow", outputDir);
+//       produce(mH[j],variables[i], "JetDown" , "bTagLow", outputDir);
 
-      //produce(mH[j],variables[i], ""        , "bTagHigh", outputDir);
-      //produce(mH[j],variables[i], "TauUp"   , "bTagHigh", outputDir);
-      //produce(mH[j],variables[i], "TauDown" , "bTagHigh", outputDir);
-      //produce(mH[j],variables[i], "JetUp"   , "bTagHigh", outputDir);
-      //produce(mH[j],variables[i], "JetDown" , "bTagHigh", outputDir);
+//       produce(mH[j],variables[i], ""        , "bTagHigh", outputDir);
+//       produce(mH[j],variables[i], "TauUp"   , "bTagHigh", outputDir);
+//       produce(mH[j],variables[i], "TauDown" , "bTagHigh", outputDir);
+//       produce(mH[j],variables[i], "JetUp"   , "bTagHigh", outputDir);
+//       produce(mH[j],variables[i], "JetDown" , "bTagHigh", outputDir);
 
       produce(mH[j],variables[i], ""        , "vbf", outputDir);
       produce(mH[j],variables[i], "TauUp"   , "vbf", outputDir);
