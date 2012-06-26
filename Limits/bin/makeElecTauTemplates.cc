@@ -14,7 +14,7 @@
 #include <string>
 
 
-#define RESCALETO1PB true
+#define RESCALETO1PB false
 #define DOSUSY false
 
 
@@ -72,7 +72,12 @@ void produce(
 
 
   cout << "Now doing mass mH=" << mH_ << ", for variable " << variable_ << " analysis " << analysis_ << " and bin " << bin_ << endl;
-  TFile* fin = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/eTau_mH%d_%s_%s_%s.root", outputDir.Data(), 120, bin_.c_str() , analysis_.c_str(), variable_.c_str()), "READ");
+  TFile* fin = 0;
+  string analysisFile = analysis_;
+  if(analysis_.find("FakeUp")!=string::npos)   analysisFile = "TauUp";
+  if(analysis_.find("FakeDown")!=string::npos) analysisFile = "TauDown";
+
+  fin = new TFile(Form("/home/llr/cms/lbianchini/CMSSW_4_2_8_patch7_reload/src/Bianchi/Limits/htautau/histograms/%s/eTau_mH%d_%s_%s_%s.root", outputDir.Data(), 120, bin_.c_str() , analysisFile.c_str(), variable_.c_str()), "READ");
 
 
   ///////////////////////////////////////////////
@@ -153,6 +158,11 @@ void produce(
     suffix = "_CMS_scale_jUp";
   else if(analysis_.find("JetDown")!=string::npos)
     suffix = "_CMS_scale_jDown";
+  else if(analysis_.find("FakeUp")!=string::npos)
+    suffix = "_CMS_scale_fakeUp";
+  else if(analysis_.find("FakeDown")!=string::npos)
+    suffix = "_CMS_scale_fakeDown";
+
   
   cout << "Adding histos with suffix " << suffix << endl;
   TString dirName( Form("eTau_%s",binNameSpace.c_str()) );
@@ -349,6 +359,7 @@ void produce(
       hDataAntiIsoLooseTauIso->Scale(QCDfromSS/hDataAntiIsoLooseTauIso->Integral());
       hDataAntiIsoLooseTauIso->Write(Form("QCD%s"    ,suffix.c_str()));
 
+
       // ---- old ----  
       //((TH1F*)fin->Get("hAntiIsoKeys"))->Write(Form("QCD%s"    ,suffix.c_str()));
       //TH1F* hAntiIsoKeys  = (TH1F*)fin->Get("hAntiIsoKeys");
@@ -360,13 +371,13 @@ void produce(
       // W+jets: shape from W3jets loose tau-ID; norm from sdb
       // W+jets: shape from W3jets loose tau-ID; norm from sdb2
       TH1F* hW3JetsLooseTauIso  = (TH1F*)fin->Get("hW3JetsLooseTauIso");
-      TH1F* hParameters =  (TH1F*)fin->Get("hParameters");
-      float ExtrapFact  =  hParameters->GetBinContent(23);
-      float DataSdb2    =  hParameters->GetBinContent(24);
-      float TTbarSdb2   =  hParameters->GetBinContent(25);
-      float QCDSdb2     =  hParameters->GetBinContent(26);
-      float Wyield      = (DataSdb2-TTbarSdb2-QCDSdb2)/ExtrapFact;
-      hW3JetsLooseTauIso->Scale(Wyield/hW3JetsLooseTauIso->Integral());
+      //TH1F* hParameters =  (TH1F*)fin->Get("hParameters");
+      //float ExtrapFact  =  hParameters->GetBinContent(23);
+      //float DataSdb2    =  hParameters->GetBinContent(24);
+      //float TTbarSdb2   =  hParameters->GetBinContent(25);
+      //float QCDSdb2     =  hParameters->GetBinContent(26);
+      //float Wyield      = (DataSdb2-TTbarSdb2-QCDSdb2)/ExtrapFact;
+      //hW3JetsLooseTauIso->Scale(Wyield/hW3JetsLooseTauIso->Integral());
       hW3JetsLooseTauIso->Write(Form("W%s"           ,suffix.c_str()));
 
       // ---- old ----  
@@ -670,13 +681,13 @@ void produce(
       if(dir->FindObjectAny(Form("W%s"       ,suffix.c_str()))==0 ){
 
 	TH1F* hW3JetsLooseTauIso  = (TH1F*)fin->Get("hW3JetsLooseTauIso");
-        TH1F* hParameters =  (TH1F*)fin->Get("hParameters");
-        float ExtrapFact  =  hParameters->GetBinContent(23);
-        float DataSdb2    =  hParameters->GetBinContent(24);
-        float TTbarSdb2   =  hParameters->GetBinContent(25);
-        float QCDSdb2     =  hParameters->GetBinContent(26);
-        float Wyield      = (DataSdb2-TTbarSdb2-QCDSdb2)/ExtrapFact;
-        hW3JetsLooseTauIso->Scale(Wyield/hW3JetsLooseTauIso->Integral());
+        //TH1F* hParameters =  (TH1F*)fin->Get("hParameters");
+        //float ExtrapFact  =  hParameters->GetBinContent(23);
+        //float DataSdb2    =  hParameters->GetBinContent(24);
+        //float TTbarSdb2   =  hParameters->GetBinContent(25);
+        //float QCDSdb2     =  hParameters->GetBinContent(26);
+        //float Wyield      = (DataSdb2-TTbarSdb2-QCDSdb2)/ExtrapFact;
+        //hW3JetsLooseTauIso->Scale(Wyield/hW3JetsLooseTauIso->Integral());
         hW3JetsLooseTauIso->Write(Form("W%s"           ,suffix.c_str()));
 
 	// ---- old ---- 
@@ -875,13 +886,13 @@ void produce(
 
 	  if(bin_.find("vbf")!=string::npos && bin_.find("novbf")==string::npos){
 
-	    TH1F* hParameters =  (TH1F*)fin->Get("hParameters");
-            float ExtrapFact  =  hParameters->GetBinContent(23);
-            float DataSdb2    =  hParameters->GetBinContent(24);
-            float TTbarSdb2   =  hParameters->GetBinContent(25);
-            float QCDSdb2     =  hParameters->GetBinContent(26);
-            Wyield      = (DataSdb2-TTbarSdb2-QCDSdb2)/ExtrapFact;
-            //Wyield = ((TH1F*)fin->Get("hW3JetsLooseTauIso"))->Integral()
+	    //TH1F* hParameters =  (TH1F*)fin->Get("hParameters");
+            //float ExtrapFact  =  hParameters->GetBinContent(23);
+            //float DataSdb2    =  hParameters->GetBinContent(24);
+            //float TTbarSdb2   =  hParameters->GetBinContent(25);
+            //float QCDSdb2     =  hParameters->GetBinContent(26);
+            //Wyield      = (DataSdb2-TTbarSdb2-QCDSdb2)/ExtrapFact;
+            Wyield = ((TH1F*)fin->Get("hW3JetsLooseTauIso"))->Integral();
 
 	  }
 	  else{
@@ -1101,7 +1112,7 @@ void produce(
 
 
 
-void produceAll(  TString outputDir = "June2012/Approval_checks" ){
+void produceAll(  TString outputDir = "June2012/Approval_checks2" ){
 
   vector<string> variables;
   vector<int> mH;
@@ -1141,47 +1152,49 @@ void produceAll(  TString outputDir = "June2012/Approval_checks" ){
   for(unsigned int i = 0 ; i < variables.size(); i++){
     for(unsigned j = 0; j < mH.size(); j++){
 
-//       produce(mH[j],variables[i], ""        , "novbfLow", outputDir);
-//       produce(mH[j],variables[i], "TauUp"   , "novbfLow", outputDir);
-//       produce(mH[j],variables[i], "TauDown" , "novbfLow", outputDir);
-//       produce(mH[j],variables[i], "JetUp"   , "novbfLow", outputDir);
-//       produce(mH[j],variables[i], "JetDown" , "novbfLow", outputDir);
+//        produce(mH[j],variables[i], ""        , "novbfLow", outputDir);
+//        produce(mH[j],variables[i], "TauUp"   , "novbfLow", outputDir);
+//        produce(mH[j],variables[i], "TauDown" , "novbfLow", outputDir);
+//        produce(mH[j],variables[i], "JetUp"   , "novbfLow", outputDir);
+//        produce(mH[j],variables[i], "JetDown" , "novbfLow", outputDir);
       
-//       produce(mH[j],variables[i], ""        , "novbfHigh", outputDir);
-//       produce(mH[j],variables[i], "TauUp"   , "novbfHigh", outputDir);
-//       produce(mH[j],variables[i], "TauDown" , "novbfHigh", outputDir);
-//       produce(mH[j],variables[i], "JetUp"   , "novbfHigh", outputDir);
-//       produce(mH[j],variables[i], "JetDown" , "novbfHigh", outputDir);
+//        produce(mH[j],variables[i], ""        , "novbfHigh", outputDir);
+//        produce(mH[j],variables[i], "TauUp"   , "novbfHigh", outputDir);
+//        produce(mH[j],variables[i], "TauDown" , "novbfHigh", outputDir);
+//        produce(mH[j],variables[i], "JetUp"   , "novbfHigh", outputDir);
+//        produce(mH[j],variables[i], "JetDown" , "novbfHigh", outputDir);
       
-//       produce(mH[j],variables[i], ""        , "boostLow", outputDir);
-//       produce(mH[j],variables[i], "TauUp"   , "boostLow", outputDir);
-//       produce(mH[j],variables[i], "TauDown" , "boostLow", outputDir);
-//       produce(mH[j],variables[i], "JetUp"   , "boostLow", outputDir);
-//       produce(mH[j],variables[i], "JetDown" , "boostLow", outputDir);
+//        produce(mH[j],variables[i], ""        , "boostLow", outputDir);
+//        produce(mH[j],variables[i], "TauUp"   , "boostLow", outputDir);
+//        produce(mH[j],variables[i], "TauDown" , "boostLow", outputDir);
+//        produce(mH[j],variables[i], "JetUp"   , "boostLow", outputDir);
+//        produce(mH[j],variables[i], "JetDown" , "boostLow", outputDir);
       
-//       produce(mH[j],variables[i], ""        , "boostHigh", outputDir);
-//       produce(mH[j],variables[i], "TauUp"   , "boostHigh", outputDir);
-//       produce(mH[j],variables[i], "TauDown" , "boostHigh", outputDir);
-//       produce(mH[j],variables[i], "JetUp"   , "boostHigh", outputDir);
-//       produce(mH[j],variables[i], "JetDown" , "boostHigh", outputDir);
+//        produce(mH[j],variables[i], ""        , "boostHigh", outputDir);
+//        produce(mH[j],variables[i], "TauUp"   , "boostHigh", outputDir);
+//        produce(mH[j],variables[i], "TauDown" , "boostHigh", outputDir);
+//        produce(mH[j],variables[i], "JetUp"   , "boostHigh", outputDir);
+//        produce(mH[j],variables[i], "JetDown" , "boostHigh", outputDir);
       
-//       produce(mH[j],variables[i], ""        , "bTagLow", outputDir);
-//       produce(mH[j],variables[i], "TauUp"   , "bTagLow", outputDir);
-//       produce(mH[j],variables[i], "TauDown" , "bTagLow", outputDir);
-//       produce(mH[j],variables[i], "JetUp"   , "bTagLow", outputDir);
-//       produce(mH[j],variables[i], "JetDown" , "bTagLow", outputDir);
-
-//       produce(mH[j],variables[i], ""        , "bTagHigh", outputDir);
-//       produce(mH[j],variables[i], "TauUp"   , "bTagHigh", outputDir);
-//       produce(mH[j],variables[i], "TauDown" , "bTagHigh", outputDir);
-//       produce(mH[j],variables[i], "JetUp"   , "bTagHigh", outputDir);
-//       produce(mH[j],variables[i], "JetDown" , "bTagHigh", outputDir);
-
-      produce(mH[j],variables[i], ""        , "vbf", outputDir);
-      produce(mH[j],variables[i], "TauUp"   , "vbf", outputDir);
-      produce(mH[j],variables[i], "TauDown" , "vbf", outputDir);
-      produce(mH[j],variables[i], "JetUp"   , "vbf", outputDir);
-      produce(mH[j],variables[i], "JetDown" , "vbf", outputDir);
+//        produce(mH[j],variables[i], ""        , "bTagLow", outputDir);
+//        produce(mH[j],variables[i], "TauUp"   , "bTagLow", outputDir);
+//        produce(mH[j],variables[i], "TauDown" , "bTagLow", outputDir);
+//        produce(mH[j],variables[i], "JetUp"   , "bTagLow", outputDir);
+//        produce(mH[j],variables[i], "JetDown" , "bTagLow", outputDir);
+      
+//        produce(mH[j],variables[i], ""        , "bTagHigh", outputDir);
+//        produce(mH[j],variables[i], "TauUp"   , "bTagHigh", outputDir);
+//        produce(mH[j],variables[i], "TauDown" , "bTagHigh", outputDir);
+//        produce(mH[j],variables[i], "JetUp"   , "bTagHigh", outputDir);
+//        produce(mH[j],variables[i], "JetDown" , "bTagHigh", outputDir);
+      
+       produce(mH[j],variables[i], ""        , "vbf", outputDir);
+       produce(mH[j],variables[i], "TauUp"   , "vbf", outputDir);
+       produce(mH[j],variables[i], "TauDown" , "vbf", outputDir);
+       produce(mH[j],variables[i], "JetUp"   , "vbf", outputDir);
+       produce(mH[j],variables[i], "JetDown" , "vbf", outputDir);
+       produce(mH[j],variables[i], "FakeUp"   , "vbf", outputDir);
+       produce(mH[j],variables[i], "FakeDown" , "vbf", outputDir);
 
 //       produce(mH[j],variables[i], ""        , "vh", outputDir);
 //       produce(mH[j],variables[i], "TauUp"   , "vh", outputDir);
