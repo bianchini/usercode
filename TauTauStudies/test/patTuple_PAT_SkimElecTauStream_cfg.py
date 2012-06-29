@@ -251,11 +251,12 @@ if runOnMC:
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 
 from PhysicsTools.PatAlgos.tools.tauTools import *
-switchToPFTauHPS(process, 
-                 pfTauLabelOld = 'shrinkingConePFTauProducer',
-                 pfTauLabelNew = 'hpsPFTauProducer'
-                 )
-
+#switchToPFTauHPS(process, 
+#                 pfTauLabelOld = 'shrinkingConePFTauProducer',
+#                 pfTauLabelNew = 'hpsPFTauProducer'
+#                 )
+switchToPFTauHPS(process)
+                 
 getattr(process,"patTaus").embedIsolationTracks             = cms.bool(True)
 getattr(process,"patTaus").embedSignalTracks                = cms.bool(True)
 getattr(process,"patTaus").embedGenMatch                    = cms.bool(True)
