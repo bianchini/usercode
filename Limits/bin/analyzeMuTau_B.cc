@@ -488,27 +488,27 @@ void plotMuTau( Int_t mH_           = 120,
 
   // Open the files
   TFile *fData              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
   TFile *fDataLooseIso  ///////////////////            
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
   TFile *fDataEmbedded              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleRun2011-MuTau-Embedded-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleRun2011-MuTau-Embedded-All_run_Open_MuTauStream.root", "READ");  
   TFile *fSignalVBF         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_) ,"READ");  
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_) ,"READ");  
   TFile *fSignalGGH         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_),"READ"); 
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",mH_),"READ"); 
   TFile *fSignalVH         
-    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",mH_),"READ");  
+    = new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",mH_),"READ");  
   TFile *fBackgroundDY
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundWJets   
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundW3Jets   
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleW3Jets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleW3Jets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundTTbar  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundOthers  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
 
   vector<int> hMasses;
   hMasses.push_back(110);
@@ -522,59 +522,59 @@ void plotMuTau( Int_t mH_           = 120,
 
 
   TFile *fSignalggH110 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",110) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",110) ,"READ");  
   TFile *fSignalggH115 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",115) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",115) ,"READ");  
   TFile *fSignalggH120 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",120) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",120) ,"READ");  
   TFile *fSignalggH125 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",125) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",125) ,"READ");  
   TFile *fSignalggH130 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",130) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",130) ,"READ");  
   TFile *fSignalggH135 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",135) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",135) ,"READ");  
   TFile *fSignalggH140 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",140) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",140) ,"READ");  
   TFile *fSignalggH145 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",145) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",145) ,"READ");  
 
   TFile *fSignalqqH110 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",110) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",110) ,"READ");  
   TFile *fSignalqqH115 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",115) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",115) ,"READ");  
   TFile *fSignalqqH120 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",120) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",120) ,"READ");  
   TFile *fSignalqqH125 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",125) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",125) ,"READ");  
   TFile *fSignalqqH130 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",130) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",130) ,"READ");  
   TFile *fSignalqqH135 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",135) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",135) ,"READ");  
   TFile *fSignalqqH140 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",140) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",140) ,"READ");  
   TFile *fSignalqqH145 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",145) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",145) ,"READ");  
  
   TFile *fSignalVH110 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",110) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",110) ,"READ");  
   TFile *fSignalVH115 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",115) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",115) ,"READ");  
   TFile *fSignalVH120 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",120) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",120) ,"READ");  
   TFile *fSignalVH125 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",125) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",125) ,"READ");  
   TFile *fSignalVH130 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",130) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",130) ,"READ");  
   TFile *fSignalVH135 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",135) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",135) ,"READ");  
   TFile *fSignalVH140 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",140) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",140) ,"READ");  
   TFile *fSignalVH145 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",145) ,"READ");  
+    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",145) ,"READ");  
  
   std::map<string,TFile*> mapSUSYfiles;
   for(unsigned int i = 0; i < SUSYhistos.size() ; i++){
-    mapSUSYfiles.insert( make_pair(SUSYhistos[i], new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval//nTuple%s-MuTau-powheg-PUS6_run_Open_MuTauStream.root",SUSYhistos[i].c_str()) ,"READ")  )  );
+    mapSUSYfiles.insert( make_pair(SUSYhistos[i], new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval_thesis//nTuple%s-MuTau-powheg-PUS6_run_Open_MuTauStream.root",SUSYhistos[i].c_str()) ,"READ")  )  );
   }
   
 
@@ -672,7 +672,7 @@ void plotMuTau( Int_t mH_           = 120,
     tpt = tpt&&TCut("ptL2<40");
 
   ////// TAU ISO //////
-  TCut tiso("tightestHPSMVAWP>=0");  //<--------------------------%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  TCut tiso("tightestHPSMVAWP>=0"); 
   TCut ltiso("tightestHPSMVAWP>-99");
   TCut mtiso("hpsMVA>0.0");
 
@@ -1560,12 +1560,24 @@ void plotMuTau( Int_t mH_           = 120,
 	    float ratiobTagToAny = TTbarVBFSdbBtag/TTbarVBFSdbAnyBtag;
 	    cout << "The ratio between events with >0 bTagged jets to any in TTJets MC is " << ratiobTagToAny << endl;
 	    hHelp->Reset();
+
 	    data->Draw(variable+">>hHelp",sbinPZetaRelInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0"));
 	    float DataVBFSdbBtag = hHelp->Integral();
 	    cout << "In data, I measure " << DataVBFSdbBtag << " events b-tagged" << endl;
-	    scaleFactorTTinVBF = DataVBFSdbBtag/TTbarVBFSdbBtag;
+
+	    hHelp->Reset();
+	    backgroundWJets->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0")));
+	    float WJetsVBFSdbBtag = hHelp->Integral()*Lumi/1000*hltEff_;
+	    hHelp->Reset();
+	    backgroundOthers->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0")));
+	    float OthersVBFSdbBtag = hHelp->Integral()*Lumi/1000*hltEff_;
+	    data->Draw(variable+">>hHelp",(TCut(scaleFactMu.c_str()))*(sbinPZetaRelSSaIsoInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0")));
+	    float QCDVBFSdbBtag = hHelp->Integral()*OStoSSRatioQCD;
+	    cout << "I subtract " << WJetsVBFSdbBtag << " and " << OthersVBFSdbBtag << " and " << QCDVBFSdbBtag << " events from W=jets and others" << endl;
+
+	    scaleFactorTTinVBF = (DataVBFSdbBtag-WJetsVBFSdbBtag-OthersVBFSdbBtag-QCDVBFSdbBtag)/TTbarVBFSdbBtag;
 	    cout << "The SF Data/MC ratio is therefore " << scaleFactorTTinVBF << endl;
-	    cout << " ==> TTbar prediction in sideband goes from " << TTbarVBFSdbAnyBtag << " to " <<  DataVBFSdbBtag/ratiobTagToAny << endl;
+	    cout << " ==> TTbar prediction in sideband goes from " << TTbarVBFSdbAnyBtag << " to " <<  (DataVBFSdbBtag-WJetsVBFSdbBtag-OthersVBFSdbBtag-QCDVBFSdbBtag)/ratiobTagToAny << endl;
 
 	    hHelp->Reset();
             backgroundTTbar->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbfLoose));
@@ -1581,13 +1593,15 @@ void plotMuTau( Int_t mH_           = 120,
             cout << " ==> ratio sdb2/sgn = " <<  ExtrapFactorTTJets2 << endl;
 
 	    ///////////////////////////////////////////////////////////////////////////////////////
-
+	    hHelp->Reset();
 	    data->Draw(variable+">>hHelp",(TCut(scaleFactMu.c_str()))*(sbinPZetaRelSSaIsoInclusive&&apZ2&&vbf));
+
 	    float QCDVBFSdb = hHelp->Integral()*OStoSSRatioQCD;
 	    cout << "In VBF region, I measure " << QCDVBFSdb << " events in the high Mt sdb from anti-isolated events" << endl;
+
 	    cout << "Subtracting the backgrounds from the sideband..." << endl;
 	    //DataVBFSdb -= TTbarVBFSdb;
-	    DataVBFSdb -= (DataVBFSdbBtag/ratiobTagToAny);
+	    DataVBFSdb -= (DataVBFSdbBtag-WJetsVBFSdbBtag-OthersVBFSdbBtag/ratiobTagToAny);
 	    DataVBFSdb -= QCDVBFSdb;
 	    DataVBFSdb -= dytotauVBFSdb;
 	    DataVBFSdb -= dymutotauVBFSdb;
@@ -1677,20 +1691,60 @@ void plotMuTau( Int_t mH_           = 120,
 	    data->Draw(variable+">>hHelp",sbinPZetaRelSSInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0"));
 	    float DataVBFSdbSSBtag = hHelp->Integral();
 	    cout << "In data, I measure " << DataVBFSdbSSBtag << " SS events b-tagged" << endl;
-	    cout << "The SF Data/MC ratio is therefore " << DataVBFSdbSSBtag/TTbarVBFSdbSSBtag << endl;
-	    cout << " ==> TTbar prediction in sideband SS goes from " << TTbarVBFSdbSSAnyBtag << " to " <<  DataVBFSdbSSBtag/ratiobTagToAnySS << endl;
+
+	    hHelp->Reset();
+	    backgroundWJets->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0")));
+	    float WJetsVBFSdbSSBtag = hHelp->Integral()*Lumi/1000*hltEff_;
+	    hHelp->Reset();
+	    backgroundOthers->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0")));
+	    float OthersVBFSdbSSBtag = hHelp->Integral()*Lumi/1000*hltEff_;
+	    data->Draw(variable+">>hHelp",(TCut(scaleFactMu.c_str()))*(sbinPZetaRelSSaIsoInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0")));
+	    float QCDVBFSdbSSBtag = hHelp->Integral();
+	    cout << "I subtract " << WJetsVBFSdbSSBtag << " and " << OthersVBFSdbSSBtag << " and " << QCDVBFSdbSSBtag << " events from W=jets and others" << endl;
+
+	    cout << "The SF Data/MC ratio is therefore " << (DataVBFSdbSSBtag-WJetsVBFSdbSSBtag-OthersVBFSdbSSBtag-QCDVBFSdbSSBtag)/TTbarVBFSdbSSBtag << endl;
+	    cout << " ==> TTbar prediction in sideband SS goes from " << TTbarVBFSdbSSAnyBtag << " to " <<  (DataVBFSdbSSBtag-WJetsVBFSdbSSBtag-OthersVBFSdbSSBtag-QCDVBFSdbSSBtag)/ratiobTagToAnySS << endl;
 
 	    ///////////////////////////////////////////////////////////////////////////////////////
 
             data->Draw(variable+">>hHelp",(TCut(scaleFactMu.c_str()))*(sbinPZetaRelSSaIsoInclusive&&apZ2&&vbf));
             float QCDVBFSdbSS = hHelp->Integral();
             cout << "In VBF SS region, I measure " << QCDVBFSdbSS << " events in the high Mt sdb from anti-isolated events" << endl;
+
+	    cout << "Now subtracting the expected bkg from the SS signal region" << endl;
 	    hHelp->Reset();
             data->Draw(variable+">>hHelp",sbinPZetaRelSSInclusive&&pZ&&vbf);
             float DataVBFSgnSS = hHelp->Integral();
-            float QCDSgnSS = DataVBFSgnSS - (DataVBFSdbSS - DataVBFSdbSSBtag/ratiobTagToAnySS /*TTbarVBFSdbSS*/-QCDVBFSdbSS)/ExtrapFactorW3JetsSS ;
+
+	    hHelp->Reset();
+	    backgroundDYMutoTau->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&pZ&&vbf));
+	    float dymutotauVBFSgnSS = hHelp->Integral()*Lumi/1000.*hltEff_;
+	    cout << "In VBF region, I expect " << dymutotauVBFSgnSS << " events in the sgn SS from DYmutotau" << endl;
+	    hHelp->Reset();
+
+	    hHelp->Reset();
+	    backgroundDYJtoTau->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&pZ&&vbf));
+	    float dyjtotauVBFSgnSS = hHelp->Integral()*Lumi/1000.*hltEff_;
+	    cout << "In VBF region, I expect " << dyjtotauVBFSgnSS << " events in the sgn SS from DYjtotau" << endl;
+	    hHelp->Reset();
+
+	    hHelp->Reset();
+	    backgroundOthers->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&pZ&&vbf));
+	    float othersVBFSgnSS = hHelp->Integral()*Lumi/1000.*hltEff_;
+	    cout << "In VBF region, I expect " << othersVBFSgnSS << " events in the sgn SS from others" << endl;
+	    hHelp->Reset();
+
+            hHelp->Reset();
+            backgroundTTbar->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&pZ&&vbf));
+            float TTbarVBFSgnSS = hHelp->Integral()*Lumi/1000*hltEff_*TTxsectionRatio*(DataVBFSdbSSBtag-WJetsVBFSdbSSBtag-OthersVBFSdbSSBtag)/TTbarVBFSdbSSBtag;
+            cout << "In VBF SS region, I expect " << TTbarVBFSgnSS << " events in the sgn from TTbar" << endl;
+            hHelp->Reset();
+
+	    float nonWbackgroundSS = TTbarVBFSgnSS + othersVBFSgnSS + dyjtotauVBFSgnSS + dymutotauVBFSgnSS ;
+	    float WbackgroundSS    = (DataVBFSdbSS - (DataVBFSdbSSBtag-WJetsVBFSdbSSBtag-OthersVBFSdbSSBtag-QCDVBFSdbSSBtag)/ratiobTagToAnySS /*TTbarVBFSdbSS*/-QCDVBFSdbSS-dymutotauVBFSdbSS-dyjtotauVBFSdbSS-othersVBFSdbSS)/ExtrapFactorW3JetsSS;
+            float QCDSgnSS         = DataVBFSgnSS - nonWbackgroundSS - WbackgroundSS;
             cout << "In VBF SS region, I measure " << DataVBFSgnSS << endl;
-            cout << "The bkg estimation for QCD is therefore: " << DataVBFSgnSS << " - " << (DataVBFSdbSS-TTbarVBFSdbSS-QCDVBFSdbSS)/ExtrapFactorW3JetsSS << " = "
+            cout << "The bkg estimation for QCD is therefore: " << DataVBFSgnSS << " - " << nonWbackgroundSS << " - " << WbackgroundSS << " = "
                  << QCDSgnSS << endl;
 
 	    hParameters->SetBinContent(13, ExtrapFactorW3Jets);
@@ -2361,8 +2415,6 @@ void plotMuTau( Int_t mH_           = 120,
   hSgn->SetLineStyle(kDashed);
 
   // adding alltogether
-  hSiml->Add(hQCD,1.0);
-  hSiml->Add(hEWK,1.0);
   hSiml->Add(hTTb,1.0);
   if(useEmbedding_)
     hSiml->Add(hDataEmb,1.0);
@@ -2371,22 +2423,34 @@ void plotMuTau( Int_t mH_           = 120,
 
 
   //Adding to the stack
-  if(selection_.find("vbf")!=string::npos || selection_.find("twoJets")!=string::npos ){
-    hDataAntiIsoFR->SetFillColor(kMagenta-10);
-    aStack->Add(hDataAntiIsoFR);
+  if((selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || selection_.find("twoJets")!=string::npos ){
+    //hDataAntiIsoFR->SetFillColor(kMagenta-10);
+    //aStack->Add(hDataAntiIsoFR);
+    float QCDfromSS = hParameters->GetBinContent(22);
+    QCDfromSS *= OStoSSRatioQCD;
+    hDataAntiIsoLooseTauIso->Scale(QCDfromSS/hDataAntiIsoLooseTauIso->Integral());
+    hDataAntiIsoLooseTauIso->SetFillColor(kMagenta-10);    
+    aStack->Add(hDataAntiIsoLooseTauIso);
+    hSiml->Add(hDataAntiIsoLooseTauIso,1.0);
   }
-  else
+  else{
+    hSiml->Add(hQCD,1.0);
     aStack->Add(hQCD);
+  }
 
-  if(selection_.find("vbf")!=string::npos || selection_.find("twoJets")!=string::npos ){
+  if((selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || selection_.find("twoJets")!=string::npos ){
     hZfakes->SetFillColor(kRed+2);
     hW3JetsLooseTauIso->SetFillColor(kRed+2);
     hW3JetsLooseTauIso->SetLineColor(kRed+2);
     aStack->Add(hW3JetsLooseTauIso);
     aStack->Add(hZfakes);
+    hSiml->Add(hW3JetsLooseTauIso,1.0);
+    hSiml->Add(hZfakes,1.0);
   }
-  else
+  else{
     aStack->Add(hEWK);
+    hSiml->Add(hEWK,1.0);
+  }
 
   aStack->Add(hTTb);
   if(useEmbedding_)
@@ -2465,22 +2529,26 @@ void plotMuTau( Int_t mH_           = 120,
   hError->SetMarkerStyle(kDot);
 
   float uncertZtt = 0;
-  if(selection_.find("novbf")!=string::npos  || selection_.find("inclusive")!=string::npos ||
-     selection_.find("oneJet")!=string::npos || selection_.find("twoJets")!=string::npos){
-    uncertZtt += (0.06  * 0.06) ; // Tau-ID 
-    uncertZtt += (0.035 * 0.035); // Lumi 
+  if(selection_.find("novbf")!=string::npos  || selection_.find("inclusive")!=string::npos ){
+    uncertZtt += (0.07  * 0.07) ; // Tau-ID 
+    uncertZtt += (0.03  * 0.03);  // Tau-ES
+  }
+  if(selection_.find("oneJet")!=string::npos || selection_.find("twoJets")!=string::npos){
+    uncertZtt += (0.07  * 0.07) ; // Tau-ID 
+    uncertZtt += (0.03 * 0.03);   // Tau-ES 
   }
   else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-    uncertZtt += (0.06  * 0.06) ; // Tau-ID 
-    uncertZtt += (0.035 * 0.035); // Lumi 
-    uncertZtt += (0.10  * 0.10);  // Extrap. factor 
+    uncertZtt += (0.07  * 0.07) ; // Tau-ID 
+    uncertZtt += (0.03 * 0.03);   // Tau-ES 
+    uncertZtt += (0.06 * 0.06);   // Extrap. factor 
   }
   else if(selection_.find("boost")!=string::npos){
-    uncertZtt += (0.06  * 0.06) ; // Tau-ID 
-    uncertZtt += (0.035 * 0.035); // Lumi 
-    uncertZtt += (0.10  * 0.10);  // Extrap. factor 
+    uncertZtt += (0.07  * 0.07) ; // Tau-ID 
+    uncertZtt += (0.03  * 0.03);  // Tau-ES 
   }
   uncertZtt = TMath::Sqrt(uncertZtt);
+
+
   float uncertTTb = 0;
   if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos||
      selection_.find("oneJet")!=string::npos || selection_.find("twoJets")!=string::npos){
@@ -2493,6 +2561,7 @@ void plotMuTau( Int_t mH_           = 120,
     uncertTTb += (0.075 * 0.075) ; // xsection 
   }
   uncertTTb = TMath::Sqrt(uncertTTb);
+
   float uncertEWK = 0;
   if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos ||
      selection_.find("oneJet")!=string::npos || selection_.find("twoJets")!=string::npos){
@@ -2500,25 +2569,26 @@ void plotMuTau( Int_t mH_           = 120,
   }
   else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
     uncertEWK += (0.07 * 0.07) ; // extrapolation 
-    uncertEWK += (0.10 * 0.10) ; // extrapolation 
+    uncertEWK += (0.20 * 0.20) ; // extrapolation 
   }
   else if(selection_.find("boost")!=string::npos){
     uncertEWK += (0.07 * 0.07) ; // extrapolation 
-    uncertEWK += (0.10 * 0.10) ; // extrapolation  
+    uncertEWK += (0.20 * 0.20) ; // extrapolation  
   }
   uncertEWK = TMath::Sqrt(uncertEWK);
+
   float uncertQCD = 0;
   if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos ||
      selection_.find("oneJet")!=string::npos || selection_.find("twoJets")!=string::npos){
-    uncertQCD += (0.02 * 0.02) ; // extrapolation 
-  }
-  else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-    uncertQCD += (0.02 * 0.02) ; // extrapolation 
     uncertQCD += (0.10 * 0.10) ; // extrapolation 
   }
+  else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
+    uncertQCD += (0.10 * 0.10) ; // extrapolation 
+    uncertQCD += (0.20 * 0.20) ; // extrapolation 
+  }
   else if(selection_.find("boost")!=string::npos){
-    uncertQCD += (0.02 * 0.02) ; // extrapolation 
-    uncertQCD += (0.10 * 0.10) ; // extrapolation  
+    uncertQCD += (0.10 * 0.10) ; // extrapolation 
+    uncertQCD += (0.20 * 0.20) ; // extrapolation  
   }
   uncertQCD = TMath::Sqrt(uncertQCD);
 
@@ -2747,7 +2817,7 @@ void plotMuTau( Int_t mH_           = 120,
 
 
 
-void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "June2012/Approval_checks2"){
+void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "July2012/Thesis"){
 
   vector<string> variables;
   vector<int> mH;
@@ -2766,20 +2836,36 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "June2012/Approval
   //mH.push_back(145);
   //mH.push_back(160);
 
-  //plotMuTau(120,1,"bTag",""       ,"ptB1", "leading b-tagged jet p_{T}","GeV"      ,outputDir,20,30, 230,5.0,1.0,1,10);
-  //plotMuTau(120,1,"bTag",""       ,"etaB1","leading b-tagged jet #eta","units"     ,outputDir,21,-5,   5,5.0,1.0,0,2.);
+ 
   
-  //plotMuTau(120,1,"boostLow",""   ,"combRelIsoLeg1DBetav2","relIso","GeV" ,            outputDir,50,0,0.5,5.0,1.0,0,1.1);
-  //plotMuTau(120,1,"boostLow",""   ,"ptL2","#tau p_{T}","GeV"           ,outputDir,27,11, 92,5.0,1.0,0,1.2);
-  //plotMuTau(120,0,"boostLow",""   ,"pfMuons","pfMuons", ""    ,outputDir,10,0, 10,5.0,1.0,0,1.2);
-  //plotMuTau(120,1,"vbf",""   ,"visibleTauMass","mass", ""    ,outputDir,20,0, 2,5.0,1.0,0,1.2);
-  //plotMuTau(120,1,"vbf",""   ,"decayMode","decay mode", ""    ,outputDir,3,0, 3,5.0,1.0,0,1.2);
-  //plotMuTau(120,0,"boostLow",""   ,"diTauVisMass","visible mass","GeV" ,outputDir,100,0,200,5.0,1.0,0,1.2);
+//   plotMuTau(120,1,"inclusive",""   ,"hpsMVA",        "#tau MVA","units"              ,outputDir,50,0.75,1.0, 5.0,1.0,0,1.8);
+//   plotMuTau(120,1,"inclusive",""   ,"decayMode",     "#tau_{h} decay mode","units"   ,outputDir,3,0,3, 5.0,1.0,0,1.4);
+//   plotMuTau(120,1,"inclusive",""   ,"visibleTauMass","visible #tau_{h} mass","GeV"   ,outputDir,40,0,2,5.0,1.0,0,1.2);  
 
-//   plotMuTau(120,0,"boostLow",""   ,"etaL1","#mu #eta", "units"         ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
-//   plotMuTau(120,0,"boostLow",""   ,"etaL2","#tau #eta","units"         ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
+  //plotMuTau(120,1,"inclusive",""   ,"MEtCorr","MET","GeV"                        ,outputDir,40,0,100,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"inclusive",""   ,"MEtCorrPhi","MET #phi","units"              ,outputDir,32,-3.2,3.2,   5.0,1.0,0,1.5);
+  //plotMuTau(120,1,"inclusive",""   ,"MtLeg1Corr","M_{T}(#mu#nu)","GeV" ,                  outputDir,40,0,160,5.0,1.0,0,1.2);
 
-  //return;
+//   plotMuTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
+//   plotMuTau(120,1,"inclusive",""   ,"diTauNSVfitMass","SVfit mass","GeV"     ,outputDir,60,0,300,5.0,1.0,0,1.2);
+//   plotMuTau(120,1,"inclusive",""   ,"etaL1","#mu #eta", "units"              ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
+//   plotMuTau(120,1,"inclusive",""   ,"ptL1","#mu p_{T}", "GeV"                ,outputDir,27,11, 92,5.0,1.0,0,1.2);
+
+//   plotMuTau(120,1,"inclusive",""   ,"ptL2","#tau p_{T}","GeV"           ,outputDir,27,11, 92,5.0,1.0,0,1.2);
+//   plotMuTau(120,1,"inclusive",""   ,"ptL1","#mu p_{T}", "GeV"           ,outputDir,27,11, 92,5.0,1.0,0,1.2);
+//   plotMuTau(120,0,"inclusive",""   ,"etaL1","#mu #eta", "units"         ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
+//   plotMuTau(120,0,"inclusive",""   ,"etaL2","#tau #eta","units"         ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
+
+//   plotMuTau(120,0,"inclusive",""   ,"numPV","reconstructed vertexes","units"             ,outputDir,30,0,30,5.0,1.0,0,1.5);
+//   plotMuTau(120,1,"inclusive",""   ,"nJets30","jet multiplicity","units"                 ,outputDir,10,0, 10,5.0,1.0,1,10);
+//   plotMuTau(120,1,"inclusive",""   ,"nJets20BTagged","b-tagged jet multiplicity","units" ,outputDir,5,0, 5,5.0,1.0,1,10);
+
+//   //plotMuTau(120,1,"bTag",""        ,"ptB1", "leading b-tagged jet p_{T}","GeV"       ,outputDir,50,30, 330,5.0,1.0,1,100);
+//   //plotMuTau(120,1,"bTag",""        ,"etaB1","leading b-tagged jet #eta","units"      ,outputDir,21,-5, 5,5.0,1.0,0,2.);
+
+//   plotMuTau(120,1,"oneJet",""      ,"eta1","leading jet #eta","units"     ,outputDir,21,-5, 5,5.0,1.0,0,2.);
+//   plotMuTau(120,1,"oneJet",""     , "pt1","leading jet p_{T}","GeV"       ,outputDir,50,30, 330,5.0,1.0,1,200);
+  
 
   //plotMuTau(120,1,"twoJets",""     ,"pt1","leading jet p_{T}","GeV"       ,outputDir,50,30, 330,5.0,1.0,1,200);
   //plotMuTau(120,1,"twoJets",""     ,"pt2","trailing jet p_{T}","GeV"      ,outputDir,50,30, 330,5.0,1.0,1,100);
@@ -2794,66 +2880,9 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "June2012/Approval
   //plotMuTau(120,1,"twoJets",""     ,"dPhiHjet","(di-jet - H) #phi","units",outputDir,32,0, 3.2,5.0,1.0,0,1.5);
   //plotMuTau(120,1,"twoJets",""     ,"c2","di-tau vis p_{T}","GeV"         ,outputDir,20,0, 100,5.0,1.0,0,1.5);
   //plotMuTau(120,1,"twoJets",""     ,"c1","min#Delta#eta j-H","units"     ,outputDir,20,0,10,5.0,1.0,0,1.5);
-  //return;
 
-
-  //plotMuTau(120,1,"oneJet",""   ,"MtLeg1Corr","M_{T}","GeV" ,                    outputDir,20,0,160,5.0,1.0,0,1.2);
-  //plotMuTau(120,1,"inclusive",""   ,"MtLeg1Corr","M_{T}","GeV" ,                    outputDir,40,0,160,5.0,1.0,0,1.2);
-  //plotMuTau(120,1,"inclusive",""   ,"MEtCorr","MET","GeV"                        ,outputDir,40,0,100,5.0,1.0,0,1.2);
-  //plotMuTau(120,1,"inclusive",""   ,"MEtCorrPhi","MET #phi","units"              ,outputDir,32,-3.2,3.2,   5.0,1.0,0,1.5);
-
-  //plotMuTau(120,1,"twoJets",""    ,"ptVeto","veto jet p_{T}","GeV"                 ,outputDir,17,30, 200,5.0,1.0,1,200);
-  //plotMuTau(120,1,"inclusive",""  ,"MEt","MET","GeV"                               ,outputDir,40, 0, 100,5.0,1.0,0,1.2);  
-  //plotMuTau(120,1,"bTag",""       ,"ptB1", "leading b-tagged jet p_{T}","GeV"      ,outputDir,50,30, 330,5.0,1.0,1,100);
-  //plotMuTau(120,1,"bTag",""       ,"etaB1","leading b-tagged jet #eta","units"     ,outputDir,21,-5,   5,5.0,1.0,0,2.);
-  //plotMuTau(120,1,"twoJets",""    ,"dPhiHjet","(diJet - H) #phi","units"           ,outputDir,20, 0,   10,5.0,1.0,0,1.5);
-
-  //return;
-
-  //plotMuTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);
-  //plotMuTau(120,1,"vbf",""         ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);
-  //return;
-
-  //plotMuTau(120,1,"inclusive",""   ,"hpsMVA","#tau MVA","units"              ,outputDir,50,0.75,1.0, 5.0,1.0,0,1.8);
-  //plotMuTau(120,1,"inclusive",""   ,"jetsBtagCSV1","leading jet CSV","units" ,outputDir,50,0,1      ,5.0,1.0,0,2);
-  //plotMuTau(120,1,"inclusive",""   ,"MEtCorr","MET","GeV"                        ,outputDir,40,0,100,5.0,1.0,0,1.2);
-  //plotMuTau(120,1,"inclusive",""   ,"MEtCorrPhi","MVA #phi","units"              ,outputDir,32,-3.2,3.2,   5.0,1.0,0,1.5);
-  //plotMuTau(120,1,"inclusive",""   ,"MtLeg1Corr","M_{T}","GeV" ,             outputDir,40,0,160,5.0,1.0,0,1.2);
-
-  //plotMuTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);
-  //plotMuTau(120,1,"inclusive",""   ,"diTauNSVfitMass","SVfit mass","GeV"     ,outputDir,60,0,300,5.0,1.0,0,1.2);
-
-  //plotMuTau(120,1,"inclusive",""   ,"ptL2","#tau p_{T}","GeV"           ,outputDir,27,11, 92,5.0,1.0,0,1.2);
-  //plotMuTau(120,1,"inclusive",""   ,"ptL1","#mu p_{T}", "GeV"           ,outputDir,27,11, 92,5.0,1.0,0,1.2);
-  //plotMuTau(120,0,"inclusive",""   ,"etaL1","#mu #eta", "units"         ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
-  //plotMuTau(120,0,"inclusive",""   ,"etaL2","#tau #eta","units"         ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
-
-  //plotMuTau(120,0,"inclusive",""   ,"numPV","reconstructed vertexes","units"             ,outputDir,30,0,30,5.0,1.0,0,1.5);
-  //plotMuTau(120,1,"inclusive",""   ,"nJets30","jet multiplicity","units"                 ,outputDir,10,0, 10,5.0,1.0,1,10);
-  //plotMuTau(120,1,"inclusive",""   ,"nJets20BTagged","b-tagged jet multiplicity","units" ,outputDir,5,0, 5,5.0,1.0,1,10);
-
-  //plotMuTau(120,1,"bTag",""        ,"ptB1", "leading b-tagged jet p_{T}","GeV"       ,outputDir,50,30, 330,5.0,1.0,1,100);
-  //plotMuTau(120,1,"bTag",""        ,"etaB1","leading b-tagged jet #eta","units"      ,outputDir,21,-5, 5,5.0,1.0,0,2.);
-
-  //plotMuTau(120,1,"oneJetLow",""      ,"pt1","leading jet p_{T}","GeV"       ,outputDir,50,30, 330,5.0,1.0,0,1.1);
-  //return;
-
-//   plotMuTau(120,1,"oneJet",""      ,"eta1","leading jet #eta","units"     ,outputDir,21,-5, 5,5.0,1.0,0,2.);
-//   plotMuTau(120,1,"twoJets",""     ,"pt1","leading jet p_{T}","GeV"       ,outputDir,50,30, 330,5.0,1.0,1,200);
-//   plotMuTau(120,1,"twoJets",""     ,"pt2","trailing jet p_{T}","GeV"      ,outputDir,50,30, 330,5.0,1.0,1,100);
-//   plotMuTau(120,1,"twoJets",""     ,"eta1","leading jet #eta","units"     ,outputDir,21,-5, 5,5.0,1.0,0,2.);
-//   plotMuTau(120,1,"twoJets",""     ,"eta2","trailing jet #eta","units"    ,outputDir,21,-5, 5,5.0,1.0,0,2.);
-//   plotMuTau(120,1,"twoJets",""     ,"Deta","|#Delta#eta|_{jj}","units"    ,outputDir,20,0, 8,   5.0,1.0,0,1.5);
-//   plotMuTau(120,1,"twoJets",""     ,"Mjj","M_{jj}","GeV"                  ,outputDir,20,0, 1000,5.0,1.0,1,100);
-//   plotMuTau(120,1,"twoJets",""     ,"MVAvbf","BDT output","units"         ,outputDir,10,-1, 1,5.0,1.0,1,100);
-  
-//   plotMuTau(120,1,"twoJets",""     ,"ptVeto","veto jet p_{T}","GeV"       ,outputDir,50,30, 330,5.0,1.0,1,200);
-//   plotMuTau(120,1,"twoJets",""     ,"etaVeto","veto jet #eta","units"     ,outputDir,21,-5, 5,5.0,1.0,0,2.);
-
-//   plotMuTau(120,1,"twoJets",""     ,"diJetPt","di-jet p_{T}","GeV"           ,outputDir,30,0, 300,5.0,1.0,0,1.5);
-//   plotMuTau(120,1,"twoJets",""     ,"dPhiHjet","(di-jet - H) #phi","units",outputDir,32,0, 3.2,5.0,1.0,0,1.5);
-  //plotMuTau(120,1,"twoJets",""     ,"c2","di-tau vis p_{T}","GeV"         ,outputDir,20,0, 100,5.0,1.0,0,1.5);
-  //plotMuTau(120,1,"twoJets",""     ,"c1","min#Delta#eta j-H","units"     ,outputDir,20,0,10,5.0,1.0,0,1.5);
+  //plotMuTau(120,1,"twoJets",""     ,"diTauRecoPt","(di-tau+MET) p_{T}","GeV"         ,outputDir,40,0, 400,5.0,1.0,0,1.5);
+  //plotMuTau(120,1,"twoJets",""     ,"Dphi","#Delta#phi_{jj}","units"        ,outputDir,32,0, 3.2,5.0,1.0,0,1.5);
 
   //return;
 
