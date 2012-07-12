@@ -162,8 +162,8 @@ void plotElecTau( Int_t mH_           = 120,
   //float VbfExtrapolationFactorZ   = 1.23;
   //float BoostExtrapolationFactorZ = 1.11;
 
-  float VbfExtrapolationFactorW   = 1.23;
-  float BoostExtrapolationFactorW = 1.11;
+  float VbfExtrapolationFactorW   = 1.0;
+  float BoostExtrapolationFactorW = 1.0;
   float scaleFactorTTinVBF        = 1.00;
   float scaleFactorTTOS           = 1.0;
 
@@ -1400,7 +1400,7 @@ void plotElecTau( Int_t mH_           = 120,
       TH1F* hHelp = (TH1F*)h1->Clone("hHelp");
       hHelp->Reset();
       currentTree->Draw(variable+">>hHelp", sbinSS);
-      int SSevents = hHelp->GetEntries();
+      int SSevents = hHelp->GetEntries(); // <----------------------------------  SHOULD BE Integral()
       cout << "Selected SS events in data " << hHelp->GetEntries() << endl;
       h1->Add(hHelp,1);
 
