@@ -12,7 +12,7 @@ process.load("Configuration.StandardSequences.MagneticField_cff")
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
-runOnMC     = True
+runOnMC     = False
 doSVFitReco = True
 usePFMEtMVA = True
 
@@ -23,7 +23,9 @@ else:
 
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START52_V7::All')
+    process.GlobalTag.globaltag = cms.string('START52_V9B::All')
+##     process.GlobalTag.globaltag = cms.string('START52_V9::All')
+##     process.GlobalTag.globaltag = cms.string('START52_V7::All')
 else:
     process.GlobalTag.globaltag = cms.string('GR_R_52_V7::All')
     
@@ -36,9 +38,16 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
+    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/inaranjo/DoubleMu/ElecTauStream-02Jul2012_DoubleMuRun2012A-ElecTau-PromptReco-v1-part0_skim/2fa3e1a535df63ec54d358bdfe246fb1/patTuples_ElecTauStream_9_2_eUW.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/inaranjo/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-02Jul2012_DYJetsToLL-ElecTau-madgraph-tarball_skim/d88aab9cc9a21808e3c7160ca6ca9f99/patTuples_ElecTauStream_273_2_RB1.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/inaranjo/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-May24_DYJetsToLL-ElecTau-madgraph-tarball-AntiEMVA2v6_skim/7adcf6077962cea206f44259206cfcfc/patTuples_ElecTauStream_9_2_GZK.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/inaranjo/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/ElecTauStream-May24_DYJetsToLL-ElecTau-madgraph-tarball-iter1_skim/62405863519c5f1554bb50de4af07b56/patTuples_ElecTauStream_9_1_zon.root'
+##     'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/inaranjo/GluGluToHToTauTau_M-110_8TeV-powheg-pythia6/ElecTauStream-May24_GGH110-ElecTau-powheg-pythia6_skim/4bf26eaf3a21e1362fbafb50a0987e2f/patTuples_ElecTauStream_1_1_A6a.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/inaranjo/TauPlusX/ElecTauStream-May24_Run2012A-ElecTau-PromptReco-v1_skim/b02fa4cb69a7cbc580afea28e892eac9/patTuples_ElecTauStream_96_2_D8I.root'
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/inaranjo/TauPlusX/ElecTauStream-May24_Run2012A-ElecTau-PromptReco-v1_skim/b02fa4cb69a7cbc580afea28e892eac9/patTuples_ElecTauStream_26_2_kR4.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/ElecTauStream-04May2012-Reload_DYJets-ElecTau-50-madgraph-PUS6_skim/4badcc5695438d7f3df80162f5ad7ed7/patTuples_ElecTauStream_9_1_Ug5.root'
     #'file:./root/patTuples_ElecTauStream_VBFH125.root'
-    'file:./patTuples_ElecTauStream.root'
+    #'file:./patTuples_ElecTauStream.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-04May2012-Reload-05AugReReco/396c4fb61647929194f9a223b98504bc/patTuples_ElecTauStream_9_1_kgg.root'
     )
     )
@@ -1077,5 +1086,5 @@ process.TFileService = cms.Service(
 
 process.outpath = cms.EndPath()
 
-processDumpFile = open('runElecTauStreamAnalyzerFullAnalysis_Recoil.dump', 'w')
-print >> processDumpFile, process.dumpPython()
+## processDumpFile = open('runElecTauStreamAnalyzerFullAnalysis_Recoil.dump', 'w')
+## print >> processDumpFile, process.dumpPython()
