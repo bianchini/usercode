@@ -737,6 +737,20 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       << "No Trigger Objects label available \n";
   const pat::TriggerObjectStandAloneCollection* triggerObjs = triggerObjsHandle.product();
     
+  if(verbose_){
+    cout << "List of triggers " << endl;
+    for(pat::TriggerObjectStandAloneCollection::const_iterator it = triggerObjs->begin() ; it !=triggerObjs->end() ; it++){
+      pat::TriggerObjectStandAlone *aObj = const_cast<pat::TriggerObjectStandAlone*>(&(*it));
+      for(unsigned int k =0; k < (aObj->filterLabels()).size() ; k++){
+	cout << "Object passing filter " << (aObj->filterLabels())[k]<<endl;
+      }
+      for(unsigned int k =0; k < (aObj->pathNames()).size() ; k++){
+	    cout << "Object passing path " << (aObj->pathNames())[k]<<endl;
+      }
+    }
+  }
+  
+  
   genDecay_ = -99;
   edm::Handle<reco::GenParticleCollection> genHandle;
   const reco::GenParticleCollection* genParticles = 0;
@@ -919,19 +933,19 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 
       if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
 	  && (*electronsRel)[i].charge()*(*electrons)[j].charge()<0
-	  && (*electrons)[j].userFloat("PFRelIsoDB04")<0.30 && mvaPreselectionNoIsoElecI
-	  && (*electronsRel)[i].userFloat("PFRelIsoDB04")<0.30 ){
+	  && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.30 && mvaPreselectionNoIsoElecI
+	  && (*electronsRel)[i].userFloat("PFRelIsoDB04v2")<0.30 ){
 	elecFlag_       = 1;
-	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04");
+	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04v2");
 	if(verbose_) cout<< "Two electrons failing diElec veto: flag= " << elecFlag_ << endl;
 	found=true;
       }
       else if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
 	       && (*electronsRel)[i].charge()*(*electrons)[j].charge()>0
-	       && (*electrons)[j].userFloat("PFRelIsoDB04")<0.30 && mvaPreselectionNoIsoElecI
-	       && (*electronsRel)[i].userFloat("PFRelIsoDB04")<0.30 ){
+	       && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.30 && mvaPreselectionNoIsoElecI
+	       && (*electronsRel)[i].userFloat("PFRelIsoDB04v2")<0.30 ){
 	elecFlag_       = 2;
-	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04");
+	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04v2");
 	if(verbose_) cout<< "Two electrons with SS: flag= " << elecFlag_ << endl;
 	found=true;
       }
@@ -950,26 +964,45 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     XtriggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
 
     // for Summer11
-    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v1");
-    triggerPaths.push_back("");
+//     triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v1");
+
+    //for Summer12
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v4");
 
     HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilterL1IsoEG18OrEG20");
     HLTfiltersElec.push_back("hltOverlapFilterIsoEle20LooseIsoPFTau20");
     HLTfiltersTau.push_back("hltOverlapFilterIsoEle20LooseIsoPFTau20");
   }
-  else{
+  else{//data
     
+//     // X-triggers
+//     XtriggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
+
+//     // Single Electron triggers + X-triggers
+//     triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v4");
+//     triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v5");
+                              
+//     HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilterL1IsoEG18OrEG20");
+//     HLTfiltersElec.push_back("hltOverlapFilterIsoEle20LooseIsoPFTau20");
+//     HLTfiltersTau.push_back("hltOverlapFilterIsoEle20LooseIsoPFTau20");
+
     // X-triggers
     XtriggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*");
 
+    //HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v4
+    //HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v6
     // Single Electron triggers + X-triggers
     triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v4");
     triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v5");
+    triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v6");
                               
+    //hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilterL1IsoEG18OrEG20
+    //hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilterL1IsoEG18OrEG20
+    //hltOverlapFilterIsoEle20LooseIsoPFTau20
+    //hltOverlapFilterIsoEle20LooseIsoPFTau20
     HLTfiltersElec.push_back("hltEle20CaloIdVTCaloIsoTTrkIdTTrkIsoTTrackIsoFilterL1IsoEG18OrEG20");
     HLTfiltersElec.push_back("hltOverlapFilterIsoEle20LooseIsoPFTau20");
     HLTfiltersTau.push_back("hltOverlapFilterIsoEle20LooseIsoPFTau20");
-
   }
 
   for(unsigned int i=0;i<triggerPaths.size();i++){
@@ -1232,7 +1265,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 	if(verbose_){
 	  for(unsigned int l = 0; l < leg1->genParticlesSize() ; l++){
 	    if((leg1->genParticleRefs())[l]->pt() < 0.5 ) continue;
-	    cout << "Elec leg matchged to particle " << (leg1->genParticleRefs())[l]->pdgId() 
+	    cout << "Elec leg matched to particle " << (leg1->genParticleRefs())[l]->pdgId() 
 		 << " with pt " << (leg1->genParticleRefs())[l]->pt()
 		 << endl;
 	  }
@@ -1424,7 +1457,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 				    *pfCandidates, rhoFastJet_, 
 				    ElectronEffectiveArea::kEleEAData2011, 
 				    dummyGsfColl, dummyRecoMuon) ;
-      cout << "Electron Iso MVA = " << isoLeg1MVA_ << endl;
+      if ( verbose_ )cout << "Electron Iso MVA = " << isoLeg1MVA_ << endl;
     }
     
 
@@ -1452,6 +1485,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     //vetos2011NeutralLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
     //vetos2011PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
     //vetos2011PhotonLeg1.push_back( new isodeposit::ThresholdVeto(0.5));
+
+    vetos2011EBChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.010));
+    vetos2011EBPhotonLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
 
     vetos2011EEChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.015));
     //vetos2011EEChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
@@ -1639,38 +1675,17 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     if( leg2->tauID("againstElectronTight")<0.5 && leg2->tauID("againstElectronMVA")>0.5) tightestAntiEWP_ = 2;
     if( leg2->tauID("againstElectronTight")>0.5 && leg2->tauID("againstElectronMVA")>0.5) tightestAntiEWP_ = 3;
 
-    cout << leg2->tauID("againstElectronLooseMVA2") << endl;
+//     cout << leg2->tauID("againstElectronLooseMVA2") << endl;
 
     tightestAntiEMVAWP_ = 0;
-    if( leg2->tauID("againstElectronLooseMVA2")  >0.5 && 
-	leg2->tauID("againstElectronMediumMVA2") <0.5 &&
-	leg2->tauID("againstElectronTightMVA2")  <0.5) tightestAntiEMVAWP_ = 1;
-
-    if( leg2->tauID("againstElectronLooseMVA2")  <0.5 && 
-	leg2->tauID("againstElectronMediumMVA2") >0.5 &&
-	leg2->tauID("againstElectronTightMVA2")  <0.5) tightestAntiEMVAWP_ = 2;
-
-    if( leg2->tauID("againstElectronLooseMVA2")  <0.5 && 
-	leg2->tauID("againstElectronMediumMVA2") <0.5 &&
-	leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 3;
-
-    if( leg2->tauID("againstElectronLooseMVA2")  >0.5 && 
-	leg2->tauID("againstElectronMediumMVA2") >0.5 &&
-	leg2->tauID("againstElectronTightMVA2")  <0.5) tightestAntiEMVAWP_ = 4;
-
-    if( leg2->tauID("againstElectronLooseMVA2")  <0.5 && 
-	leg2->tauID("againstElectronMediumMVA2") >0.5 &&
-	leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 5;
-
-    if( leg2->tauID("againstElectronLooseMVA2")  >0.5 && 
-	leg2->tauID("againstElectronMediumMVA2") <0.5 &&
-	leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 6;
-
-    if( leg2->tauID("againstElectronLooseMVA2")  >0.5 && 
-	leg2->tauID("againstElectronMediumMVA2") >0.5 &&
-	leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 7;
-
-
+    if( leg2->tauID("againstElectronLoose1MVA2")>0.5)  tightestAntiEMVAWP_ = 1;
+    if( leg2->tauID("againstElectronLoose2MVA2")>0.5)  tightestAntiEMVAWP_ = 2;
+    if( leg2->tauID("againstElectronMedium1MVA2")>0.5) tightestAntiEMVAWP_ = 3;
+    if( leg2->tauID("againstElectronMedium2MVA2")>0.5) tightestAntiEMVAWP_ = 4;
+    if( leg2->tauID("againstElectronTight1MVA2")>0.5)  tightestAntiEMVAWP_ = 5;
+    if( leg2->tauID("againstElectronTight2MVA2")>0.5)  tightestAntiEMVAWP_ = 6;
+    if( leg2->tauID("againstElectronVTight1MVA2")>0.5) tightestAntiEMVAWP_ = 7;
+    if( leg2->tauID("againstElectronVTight2MVA2")>0.5) tightestAntiEMVAWP_ = 8;
     
     diTauVisP4_->push_back( theDiTau->p4Vis() );
     diTauCAP4_->push_back(  theDiTau->p4CollinearApprox() );
