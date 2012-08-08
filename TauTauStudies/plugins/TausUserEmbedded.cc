@@ -72,18 +72,17 @@ void TausUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSet
       bool ElectronPassCutsVeto = false;
 
 
-
-      if((nHits<=999) &&
-	 ((fabs(aElectron.eta())<1.5) &&
-	  (sihih < 0.010) &&
-	  (dPhi < 0.80) &&
-	  (dEta < 0.007) &&
-	  (HoE < 0.15)) ||
-	 ((fabs(aElectron.eta())>1.5) && (fabs(aElectron.eta())<2.3) &&
-	  (sihih < 0.030) &&
-	  (dPhi < 0.70) &&
-	  (dEta < 0.010) &&
-	  (HoE < 999))
+      if(nHits<=999 &&
+	 ( ( aElectron.isEB() &&
+	     sihih < 0.010 &&
+	     dPhi < 0.80 &&
+	     dEta < 0.007 &&
+	     HoE < 0.15 ) ||
+	   ( !aElectron.isEB() &&
+	     sihih < 0.030 &&
+	     dPhi < 0.70 &&
+	     dEta < 0.010 &&
+	     HoE < 999) )
 	 ) ElectronPassCutsVeto = true ;
       if(DEBUG)std::cout<<"GsfElectron Pass cuts: "<<ElectronPassCutsVeto<<std::endl;
       if (Geom::deltaR(aElectron.p4(),aTau.p4())<0.3 && ElectronPassCutsVeto){
