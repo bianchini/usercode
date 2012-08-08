@@ -103,9 +103,6 @@ void TausUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSet
       fabs( aTau.vertex().z() - (*vertexes)[0].position().z() ) : -99; 
     aTau.addUserFloat("dzWrtPV", dZPV );
 
-    float TauCat = aTau.tauID("againstElectronMVA2category");
-    aTau.addUserFloat("againstElectronMVA2category", TauCat );
-
     tausUserEmbeddedColl->push_back(aTau);
 
   }
