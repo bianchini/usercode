@@ -12,6 +12,7 @@
 #include "TSystem.h"
 #include "TLorentzVector.h"
 #include "TROOT.h"
+#include "TH1F.h"
 
 //Preselection 
 //
@@ -71,10 +72,10 @@
 //    && abs(d0wWrtPV)<0.045 && abs(dzWrtPV)<0.2 
 //
 
-void synchNtuple(string sample = "GGFH125", string stream = "MuTau") {
+void synchNtuple(string sample = "VBFH120", string stream = "ElecTau") {
 
   TFile *lOFile = new TFile(("Output"+stream+"_"+sample+".root").c_str(),"RECREATE");
-   TTree *lOTree = new TTree("TauCheck","TauCheck");
+  TTree *lOTree = new TTree("TauCheck","TauCheck");
 
    //Bookeeping
    int   lRun         = 0; lOTree->Branch("run"        ,&lRun           ,"lRun/I"     );//Run
@@ -91,7 +92,14 @@ void synchNtuple(string sample = "GGFH125", string stream = "MuTau") {
    float lPUWeight    = 0; lOTree->Branch("puweight"   ,&lPUWeight      ,"lPUWeight/F");//Pielup Weight
    float lEffWeight   = 0; lOTree->Branch("effweight"  ,&lEffWeight     ,"lEffWeight/F");//Effieiency Scale factor (all components multiplied in)
    float lWeight      = 0; lOTree->Branch("weight"     ,&lWeight        ,"lWeight/F"  );//mcweight*puweight*effweight
-   
+
+   float lTrigweight_1 = 0; lOTree->Branch("trigweight_1"     ,&lTrigweight_1        ,"lTrigweight_1/F"  );
+   float lIdweight_1 = 0; lOTree->Branch("idweight_1"     ,&lIdweight_1        ,"lIdweight_1/F"  );
+   float lIsoweight_1 = 0; lOTree->Branch("isoweight_1"     ,&lIsoweight_1        ,"lIsoweight_1/F"  );
+   float lTrigweight_2 = 0; lOTree->Branch("trigweight_2"     ,&lTrigweight_2        ,"lTrigweight_2/F"  ); 
+   float lIdweight_2 = 0; lOTree->Branch("idweight_2"     ,&lIdweight_2        ,"lIdweight_2/F"  ); 
+   float lIsoweight_2 = 0; lOTree->Branch("isoweight_2"     ,&lIsoweight_2        ,"lIsoweight_2/F"  );
+
    //SV Fit variables
    float lMSV         = 0; lOTree->Branch("m_sv"       ,&lMSV           ,"lMSV/F"     );//SV Fit using integration method
    float lMSVUp       = 0; lOTree->Branch("m_sv_Up"    ,&lMSVUp         ,"lMSVUp/F"   );//High Energy scale shape
@@ -191,13 +199,23 @@ void synchNtuple(string sample = "GGFH125", string stream = "MuTau") {
    int   lPairIndex   = 0; lOTree->Branch("pairIndex"   ,&lPairIndex      ,"pairIndex/I");
    int   lHLTx        = 0; lOTree->Branch("HLTx"        ,&lHLTx ,        "HLTx/I");
    int   lHLTmatch    = 0; lOTree->Branch("HLTmatch"    ,&lHLTmatch ,     "HLTmatch/I");
+   float ldiTauCharge = 0; lOTree->Branch("diTauCharge"      ,&ldiTauCharge, "diTauCharge/F");
 
+
+   float   luPerp    = 0; lOTree->Branch("uPerp"        ,&luPerp,        "uPerp/F");
+   float   luParl    = 0; lOTree->Branch("uParl"        ,&luParl,        "uParl/F");
+   float   lmetParl    = 0; lOTree->Branch("metParl"        ,&lmetParl,        "metParl/F");
+   float   lmetPerp    = 0; lOTree->Branch("metPerp"        ,&lmetPerp,        "metPerp/F");
+   float   lmetSigmaParl    = 0; lOTree->Branch("metSigmaParl"        ,&lmetSigmaParl,        "metSigmaParl/F");
+   float   lmetSigmaPerp    = 0; lOTree->Branch("metSigmaPerp"        ,&lmetSigmaPerp,        "metSigmaPerp/F");
+   float   lmetPullParl    = 0; lOTree->Branch("metPullParl"        ,&lmetPullParl,        "metPullParl/F"); 
+   float   lmetPullPerp    = 0; lOTree->Branch("metPullPerp"        ,&lmetPullPerp,        "metPullPerp/F");
 
    /////////////////////////////////////////////////////////////////////////////////////////////////////
    /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-   TFile *file = new TFile(("./batch/nTuple"+sample+"_Open_"+stream+"Stream.root").c_str(),"READ");
+   TFile *file = new TFile(("./nTuple"+sample+"_Open_"+stream+"Stream.root").c_str(),"READ");
    TTree *tree = (TTree*)file->Get("outTreePtOrd");
 
 
@@ -207,13 +225,24 @@ void synchNtuple(string sample = "GGFH125", string stream = "MuTau") {
    else
      tree->SetBranchAddress("elecFlag"        ,&iMuFlag   );
 
-
-   TCut vbf("jpt_1>30 && jpt_2 > 30 && njetingap<1 && mva>0.80");
+   TCut pZ("mt_1<40");
+   TCut pZeta("(pzetamiss-1.5*pzetavis) > -20"); 
+   TCut OS("diTauCharge==0");
+   TCut vbf("jpt_1>30 && jpt_2 > 30 && njetingap<1 && mva>0.50");
    TCut vh("jpt_1>30 && jpt_2 > 30 && mjj>70 && mjj<120 && dijetpt>150 && mva<0.80 && nbtag<1");
-   TCut onejet("pt_1>30 && nbtag<1");
-   onejet = onejet && !vbf && !vh;
+   TCut onejet("jpt_1>30 && nbtag<1");
+   onejet = onejet && !vbf;
+   TCut onejetLow = onejet && TCut("pt_2<40"); 
+   TCut onejetHigh = onejet && TCut("pt_2>40");
    TCut bjet("nbtag>0 && njets<2");
-   TCut zerojet = !vbf && !vh && !onejet && !bjet;
+   TCut bjetLow = bjet && TCut("pt_2<40");
+   TCut bjetHigh = bjet && TCut("pt_2>40");
+   TCut zerojet = !vbf && !onejet && !bjet;
+   TCut zerojetLow = zerojet && TCut("pt_2<40");
+   TCut zerojetHigh = zerojet && TCut("pt_2>40");
+   TCut massCat = zerojetLow && TCut("m_sv<80"); 
+   TCut massCatUp = zerojetLow && TCut("m_sv_Up<80");
+   TCut massCatDown = zerojetLow && TCut("m_sv_Down<80");
 
    int iPairIndex      ; tree->SetBranchAddress("pairIndex"     ,&iPairIndex);
 
@@ -234,13 +263,33 @@ void synchNtuple(string sample = "GGFH125", string stream = "MuTau") {
    float iMCWeight1    ; tree->SetBranchAddress("sampleWeight"   ,&iMCWeight1    );//MC Weight (xs/nevents * additional wieght (ie pt weight for gghiggs))
    float iMCWeight2    ; tree->SetBranchAddress("HqTWeight"      ,&iMCWeight2    );//MC Weight (xs/nevents * additional wieght (ie pt weight for gghiggs))
    float iPUWeight    ; tree->SetBranchAddress("puWeight"        ,&iPUWeight    );//Pielup Weight
+   //float iPUWeight    ; tree->SetBranchAddress("puWeight2"        ,&iPUWeight    );//Pielup Weight
    //float iEffWeight   ; tree->SetBranchAddress("effweight"  ,&iEffWeight   );//Effieiency Scale factor (all components multiplied in)
    //float iWeight      ; tree->SetBranchAddress("weight"     ,&iWeight      );//mcweight*puweight*effweight
-   
+
+   float iHLTweightTau ; tree->SetBranchAddress("HLTweightTau", &iHLTweightTau);
+   float iSFTau   ; tree->SetBranchAddress("SFTau", &iSFTau);
+   float iHLTweightMu, iSFMu, iSFMuID, iSFMuIso;
+   if(stream.find("MuTau")!=string::npos ) {
+     tree->SetBranchAddress("HLTweightMu", &iHLTweightMu); 
+     tree->SetBranchAddress("SFMu", &iSFMu);
+     tree->SetBranchAddress("SFMuID", &iSFMuID);
+     tree->SetBranchAddress("SFMuIso", &iSFMuIso);
+   }
+   else{ iHLTweightMu  = 0; iSFMu = 0; iSFMuID = 0; iSFMuIso = 0;}
+   float iHLTweightElec, iSFElec, iSFElecID, iSFElecIso; 
+   if(stream.find("ElecTau")!=string::npos ) { 
+     tree->SetBranchAddress("HLTweightElec", &iHLTweightElec);  
+     tree->SetBranchAddress("SFElec", &iSFElec); 
+     tree->SetBranchAddress("SFElecID", &iSFElecID);
+     tree->SetBranchAddress("SFElecIso", &iSFElecIso);
+   } 
+   else{ iHLTweightElec  = 0; iSFElec = 0; iSFElecID = 0; iSFElecIso = 0;}
+
    //SV Fit variables
    float iMSV         ; tree->SetBranchAddress("diTauNSVfitMass"       ,&iMSV            );//SV Fit using integration method
-   //float iMSVUp       ; tree->SetBranchAddress("m_sv_Up"    ,&iMSVUp         );//High Energy scale shape
-   //float iMSVDown     ; tree->SetBranchAddress("m_sv_Down"  ,&iMSVDown       );//Low Energy Scale Shape
+   float iMSVUp       ; tree->SetBranchAddress("diTauNSVfitMassErrUp"    ,&iMSVUp         );//High Energy scale shape
+   float iMSVDown     ; tree->SetBranchAddress("diTauNSVfitMassErrDown"  ,&iMSVDown       );//Low Energy Scale Shape
  
    ///First lepton :  muon for mu Tau, electron for e Tau, electron for e mu, Leading (in pT) Tau for Tau Tau
    float iPt1         ; tree->SetBranchAddress("ptL1"       ,&iPt1            ); //pT 
@@ -248,8 +297,10 @@ void synchNtuple(string sample = "GGFH125", string stream = "MuTau") {
    float iEta1        ; tree->SetBranchAddress("etaL1"      ,&iEta1           ); //Eta 
    //float iM1          ; tree->SetBranchAddress(""        ,&iM1                ); //Mass 
    float iIso1        ; tree->SetBranchAddress("combRelIsoLeg1DBetav2"      ,&iIso1            ); //Delta Beta iso value 
-
-
+   float iscEta1;
+   if(stream.find("ElecTau")!=string::npos )
+     tree->SetBranchAddress("scEtaL1"      ,&iscEta1           ); //supercluster Eta
+   
    float iMVA1        ; 
    // if(stream.find("MuTau")!=string::npos )
    tree->SetBranchAddress("isoLeg1MVA"      ,&iMVA1            );//MVA id (when using electron) 0 otherwise
@@ -333,6 +384,7 @@ void synchNtuple(string sample = "GGFH125", string stream = "MuTau") {
    float iMJJ        ; tree->SetBranchAddress("Mjj"           ,&iMJJ               );//Mass Di Jet system  
    float iJDEta      ; tree->SetBranchAddress("Deta"          ,&iJDEta            );//|jeta_1-jeta_2| 
    int   iNJetInGap  ; tree->SetBranchAddress("isVetoInJets"  ,&iNJetInGap    );//# of Jets between two jets
+   float iptVeto     ; tree->SetBranchAddress("ptVeto"        ,&iptVeto       ); //pt of veto jets
    float iMVA        ; tree->SetBranchAddress("MVAvbf"        ,&iMVA               );//VBF MVA value
    
    //Variables that go into the VBF MVA
@@ -349,22 +401,33 @@ void synchNtuple(string sample = "GGFH125", string stream = "MuTau") {
    //number of jets passing jet id ( pt > 30 )
    int   iNJets      ; tree->SetBranchAddress("nJets30"      ,&iNJets         );
   
-
-
-
+   float iDiTauCharge; tree->SetBranchAddress("diTauCharge"      ,&iDiTauCharge         );
+   
+   float   iuPerp    ; tree->SetBranchAddress("uPerp"        ,&iuPerp); 
+   float   iuParl    ; tree->SetBranchAddress("uParl"        ,&iuParl); 
+   float   imetParl    ; tree->SetBranchAddress("metParl"        ,&imetParl); 
+   float   imetPerp    ; tree->SetBranchAddress("metPerp"        ,&imetPerp); 
+   float   imetSigmaParl    ; tree->SetBranchAddress("metSigmaParl"        ,&imetSigmaParl); 
+   float   imetSigmaPerp    ; tree->SetBranchAddress("metSigmaPerp"        ,&imetSigmaPerp); 
 
    for (Long64_t i0=0; i0<tree->GetEntries();i0++) {
-     if (i0 % 1000 == 0) std::cout << "--- ... Processing event: " << double(i0)/10. << std::endl;
+     //if (i0 % 1000 == 0) std::cout << "--- ... Processing event: " << double(i0)/10. << std::endl;
 
      tree->GetEntry(i0);
 
+     //cout<<iRun<<"  "<<iLumi<<"  "<<iEvt<<"  "<<iMVAMet<<endl;
+     //if(iEvt!=154667 && iEvt!=256822 && iEvt!=300707 && iEvt!=369805 && iEvt!=405653 && iEvt!=738289 && iEvt!=805741 ) continue;
+          
      // && iEvt!=190929 && iEvt!=158543 && iEvt!=47713
-
-     if( stream.find("MuTau")!=string::npos   &&   !(iHLTx>0.5 && iHLTmatch>0.5 && iPt1>17 && iPt2>20 && iPassId1L && iPassId1T      && iIso1<0.1 && iPassId2>=0 && iMuFlag==0 && iPairIndex<1))
+     
+     if( stream.find("MuTau")!=string::npos   &&   !(iHLTx>0.5 && iHLTmatch>0.5 && iPt1>20 && iPt2>20 && iPassId1L && iPassId1T      && iIso1<0.1 && iPassId2>=0 && iMuFlag!=1 && iPairIndex<1))
        continue;
-     if( stream.find("ElecTau")!=string::npos &&  !(iHLTx>0.5 && iHLTmatch>0.5 && iPt1>20 && iPt2>20 && iPassId1L && iPassId1T_F>-99 && iIso1<0.1 && iPassId2>=0 && iMuFlag==0 && iPairIndex<1 && iMVA2>1))
+     //if( stream.find("ElecTau")!=string::npos &&  !(iHLTx>0.5 && iHLTmatch>0.5 && iPt1>24 && iPt2>20 && iPassId1L && iPassId1T_F>-99 && iIso1<0.1 && iPassId2>=0 && iMuFlag==0 && iPairIndex<1 && iMVA2>1 && iDiTauCharge==0))
+     if( stream.find("ElecTau")!=string::npos &&  !(iHLTx>0.5 && iHLTmatch>0.5 && iPt1>24 && iPt2>20 && iPassId1L && 
+         ((TMath::Abs(iscEta1)<0.80 && iPassId1T_F>0.925) || (TMath::Abs(iscEta1)<1.479 && TMath::Abs(iscEta1)>0.80 && iPassId1T_F>0.975) || (TMath::Abs(iscEta1)>1.479 && iPassId1T_F>0.985)) && iIso1<0.1 && iPassId2>=0 && iMuFlag!=1 && iPairIndex<1 && iMVA2>1))
        continue;
 
+     cout<<iRun<<"  "<<iLumi<<"  "<<iEvt<<endl;
      //cout << iMVA2 << endl;
 
      lPairIndex  = iPairIndex;
@@ -386,13 +449,23 @@ void synchNtuple(string sample = "GGFH125", string stream = "MuTau") {
      //Event Weights
      lMCWeight    = iMCWeight1*iMCWeight2 ;
      lPUWeight    = iPUWeight;
-     lEffWeight   = -99;
-     lWeight      = -99;
-   
+     lEffWeight   = stream.find("MuTau")!=string::npos ? iHLTweightTau*iHLTweightMu*iSFTau*iSFMu : iHLTweightTau*iHLTweightElec*iSFTau*iSFElec;
+     lWeight      = lMCWeight*lPUWeight*lEffWeight;
+     lTrigweight_1 = stream.find("MuTau")!=string::npos ? iHLTweightMu : iHLTweightElec;
+     lTrigweight_2 = iHLTweightTau;
+     lIdweight_1  = stream.find("MuTau")!=string::npos ? iSFMuID : iSFElecID;
+     lIsoweight_1  = stream.find("MuTau")!=string::npos ? iSFMuIso : iSFElecIso;
+     lIdweight_2  = iSFTau;
+     lIsoweight_2 = iSFTau;
+     /*
+     if(lEffWeight > 0.94 && lEffWeight < 0.96){
+       cout<<iEvt<<" * "<<iPt1<<" * "<<iPt2<<" * "<<iEta1<<" * "<<iEta2<<" * "<<iHLTweightElec<<" * "<<iSFElecID<<" * "<<iSFElecIso<<" * "<<iHLTweightTau<<endl;
+     }
+     */
      //SV Fit variables
      lMSV         = iMSV;
-     lMSVUp       = -99;
-     lMSVDown     = -99;
+     lMSVUp       = iMSVUp;
+     lMSVDown     = iMSVDown;
  
      ///First lepton :  muon for mu Tau, electron for e Tau, electron for e mu, Leading (in pT) Tau for Tau Tau
      lPt1         = iPt1;
@@ -403,7 +476,7 @@ void synchNtuple(string sample = "GGFH125", string stream = "MuTau") {
      lMVA1        = iPassId1T_F;//iMVA1;
      lD01         = iD01;
      lDZ1         = iDZ1;
-     lPassId1     = stream.find("MuTau")!=string::npos ? (iPassId1L && iPassId1T) : (iPassId1L && iPassId1T_F>-99);
+     lPassId1     = stream.find("MuTau")!=string::npos ? (iPassId1L && iPassId1T) : (iPassId1L && ((TMath::Abs(iEta1)<0.80 && iPassId1T_F>0.925) || (TMath::Abs(iEta1)<1.479 && TMath::Abs(iEta1)>0.80 && iPassId1T_F>0.975) || (TMath::Abs(iEta1)>1.479 && iPassId1T_F>0.985)));
      lPassIso1    = iIso1<0.1;
      lMt1         = iMt1;
 
@@ -413,11 +486,12 @@ void synchNtuple(string sample = "GGFH125", string stream = "MuTau") {
      lEta2        = iEta2;
      lM2          = iM2;
      lIso2        = iIso2;
-     lMVA2        = -99;
+     lMVA2        = iMVA2;
      lPassId2     = iPassId2>=0;
      lPassIso2    = iPassId2>=0;
      lMt2         = iMt2;
    
+     ldiTauCharge = iDiTauCharge;
      //Met related variables
      lMet         = iMet;
      lMetPhi      = iMetPhi;
@@ -463,7 +537,7 @@ void synchNtuple(string sample = "GGFH125", string stream = "MuTau") {
      //Di Jet kinematic variables for VBF selection ==> Two leading pT Jets 
      lMJJ        = iMJJ;
      lJDEta      = iJDEta;
-     lNJetInGap  = iNJetInGap;
+     lNJetInGap  = (iptVeto > 30) ? iNJetInGap : 0;
      lMVA        = iMVA;
    
      //Variables that go o the VBF MVA
@@ -481,14 +555,65 @@ void synchNtuple(string sample = "GGFH125", string stream = "MuTau") {
      lNJets      = iNJets;
   
 
+     luPerp    = iuPerp;
+     luParl    = iuParl;
+     lmetParl    = imetParl;
+     lmetPerp    = imetPerp;
+     lmetSigmaParl    = imetSigmaParl;
+     lmetSigmaPerp    = imetSigmaPerp;
+     lmetPullParl    = (imetSigmaParl > 0) ? imetParl/imetSigmaParl : -999.; 
+     lmetPullPerp    = (imetSigmaPerp > 0) ? imetPerp/imetSigmaPerp : -999.; 
+
      lOTree->Fill();
    }  
 
+   //get yields 
+   TH1F* hm = new TH1F("hm","", 20, 0., 400.); 
+   cout<<" 0jet low "<<endl;
+   hm->Reset(); 
+   lOTree->Draw("m_sv>>hm", (zerojetLow&&pZ&&OS)); 
+   cout<<"entries "<<hm->GetEntries()<<" Integral "<<hm->Integral()<<endl; 
+   cout<<" 0jet high "<<endl; 
+   hm->Reset();  
+   lOTree->Draw("m_sv>>hm", (zerojetHigh&&pZ&&OS));  
+   cout<<"entries "<<hm->GetEntries()<<" Integral "<<hm->Integral()<<endl;
+   cout<<" 1jet low "<<endl;  
+   hm->Reset();   
+   lOTree->Draw("m_sv>>hm", (onejetLow&&pZ&&OS));   
+   cout<<"entries "<<hm->GetEntries()<<" Integral "<<hm->Integral()<<endl;
+   cout<<" 1jet high "<<endl;  
+   hm->Reset();   
+   lOTree->Draw("m_sv>>hm", (onejetHigh&&pZ&&OS));   
+   cout<<"entries "<<hm->GetEntries()<<" Integral "<<hm->Integral()<<endl;
+   cout<<" VBF "<<endl;  
+   hm->Reset();   
+   lOTree->Draw("m_sv>>hm", (vbf&&pZ&&OS));   
+   cout<<"entries "<<hm->GetEntries()<<" Integral "<<hm->Integral()<<endl;
+   cout<<" bTag low "<<endl;   
+   hm->Reset();    
+   lOTree->Draw("m_sv>>hm", (bjetLow&&pZeta&&OS));    
+   cout<<"entries "<<hm->GetEntries()<<" Integral "<<hm->Integral()<<endl; 
+   cout<<" bTag High "<<endl;    
+   hm->Reset();     
+   lOTree->Draw("m_sv>>hm", (bjetHigh&&pZeta&&OS));     
+   cout<<"entries "<<hm->GetEntries()<<" Integral "<<hm->Integral()<<endl;
+   cout<<" mass cat "<<endl;    
+   hm->Reset();     
+   lOTree->Draw("m_sv>>hm", (massCat&&pZ&&OS));     
+   cout<<"entries "<<hm->GetEntries()<<" Integral "<<hm->Integral()<<endl;
+   cout<<" mass cat Up"<<endl;     
+   hm->Reset();      
+   lOTree->Draw("m_sv>>hm", (massCatUp&&pZ&&OS));      
+   cout<<"entries "<<hm->GetEntries()<<" Integral "<<hm->Integral()<<endl;
+   cout<<" mass cat Down"<<endl;     
+   hm->Reset();      
+   lOTree->Draw("m_sv>>hm", (massCatDown&&pZ&&OS));      
+   cout<<"entries "<<hm->GetEntries()<<" Integral "<<hm->Integral()<<endl;
+   
    lOFile->cd();
    lOTree->Write();
    lOFile->Close();
 
    file->Close();
-
 
 }

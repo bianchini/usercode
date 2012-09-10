@@ -25,6 +25,7 @@
 #include "TROOT.h"
 #include "Bianchi/Utilities/interface/RecoilCorrector.hh"
 //#include "Bianchi/Utilities/interface/Lumi3DReWeightingForLorenzo.h"
+#include "PhysicsTools/Utilities/interface/LumiReweightingStandAlone.h"
 #include "TauAnalysis/CandidateTools/interface/NSVfitStandaloneAlgorithm.h"
 //#include "TauAnalysis/SVFitStandAlone/interface/NSVfitStandaloneAlgorithm.h"
 #include "PhysicsTools/FWLite/interface/TFileService.h"
@@ -187,184 +188,89 @@ void createReWeighting3D(){
 float pileupWeight( int intimepileup_ ){
 
   
-  // Fall11: intime
-  //Twiki
-  std::vector< float > Fall11Lumi ;
-  Double_t Fall11Lumi_f[50] = {
-    0.014583699,
-    0.025682975,
-    0.038460562,
-    0.049414536,
-    0.056931087,
-    0.061182816,
-    0.062534625,
-    0.061476918,
-    0.058677499,
-    0.055449877,
-    0.051549051,
-    0.047621024,
-    0.043923799,
-    0.040569076,
-    0.037414654,
-    0.034227033,
-    0.031437714,
-    0.028825596,
-    0.026218978,
-    0.023727061,
-    0.021365645,
-    0.01918743,
-    0.016972815,
-    0.014920601,
-    0.013038989,
-    0.011293777,
-    0.009612465,
-    0.008193556,
-    0.006888047,
-    0.005715239,
-    0.004711232,
-    0.003869926,
-    0.003154521,
-    0.002547417,
-    0.002024714,
-    0.001574411,
-    0.001245808,
-    0.000955206,
-    0.000735305,
-    0.000557304,
-    0.000412503,
-    0.000305502,
-    0.000231002,
-    0.000165701,
-    0.000121201,
-    9.30006E-05,
-    6.40004E-05,
-    4.22003E-05,
-    2.85002E-05,
-    1.96001E-05
-  };
+  // Summer12: truth (from twiki) 
+  std::vector< float > Summer12Lumi; 
+  Double_t Summer12Lumi_f[60] = { 
+    2.344E-05, 
+    2.344E-05, 
+    2.344E-05, 
+    2.344E-05, 
+    4.687E-04, 
+    4.687E-04, 
+    7.032E-04, 
+    9.414E-04, 
+    1.234E-03, 
+    1.603E-03, 
+    2.464E-03, 
+    3.250E-03, 
+    5.021E-03, 
+    6.644E-03, 
+    8.502E-03, 
+    1.121E-02, 
+    1.518E-02, 
+    2.033E-02, 
+    2.608E-02, 
+    3.171E-02, 
+    3.667E-02, 
+    4.060E-02, 
+    4.338E-02, 
+    4.520E-02, 
+    4.641E-02, 
+    4.735E-02, 
+    4.816E-02, 
+    4.881E-02, 
+    4.917E-02, 
+    4.909E-02, 
+    4.842E-02, 
+    4.707E-02, 
+    4.501E-02, 
+    4.228E-02, 
+    3.896E-02, 
+    3.521E-02, 
+    3.118E-02, 
+    2.702E-02, 
+    2.287E-02, 
+    1.885E-02, 
+    1.508E-02, 
+    1.166E-02, 
+    8.673E-03, 
+    6.190E-03, 
+    4.222E-03, 
+    2.746E-03, 
+    1.698E-03, 
+    9.971E-04, 
+    5.549E-04, 
+    2.924E-04, 
+    1.457E-04, 
+    6.864E-05, 
+    3.054E-05, 
+    1.282E-05, 
+    5.081E-06, 
+    1.898E-06, 
+    6.688E-07, 
+    2.221E-07, 
+    6.947E-08, 
+    2.047E-08 
+  };   
 
-  /*
-  // Fall11: truth
-  std::vector< float > Fall11Lumi ;
-  Double_t Fall11Lumi_f[50] = {
-   0.003388501,
-   0.010357558,
-   0.024724258,
-   0.042348605,
-   0.058279812,
-   0.068851751,
-   0.072914824,
-   0.071579609,
-   0.066811668,
-   0.060672356,
-   0.054528356,
-   0.04919354,
-   0.044886042,
-   0.041341896,
-   0.0384679,
-   0.035871463,
-   0.03341952,
-   0.030915649,
-   0.028395374,
-   0.025798107,
-   0.023237445,
-   0.020602754,
-   0.0180688,
-   0.015559693,
-   0.013211063,
-   0.010964293,
-   0.008920993,
-   0.007080504,
-   0.005499239,
-   0.004187022,
-   0.003096474,
-   0.002237361,
-   0.001566428,
-   0.001074149,
-   0.000721755,
-   0.000470838,
-   0.00030268,
-   0.000184665,
-   0.000112883,
-   6.74043E-05,
-   3.82178E-05,
-   2.22847E-05,
-   1.20933E-05,
-   6.96173E-06,
-   3.4689E-06,
-   1.96172E-06,
-   8.49283E-07,
-   5.02393E-07,
-   2.15311E-07,
-   9.56938E-08
-   };
-  */
   
-  // sigma 68 pb
-  std::vector< float > Data2011LumiExt;
-  Double_t Data2011LumiExt_f[50] = {
-    0.00290212,
-    0.0123985,
-    0.0294783,
-    0.0504491,
-    0.0698525,
-    0.0836611,
-    0.0905799,
-    0.0914388,
-    0.0879379,
-    0.0817086,
-    0.073937,
-    0.0653785,
-    0.0565162,
-    0.047707,
-    0.0392591,
-    0.0314457,
-    0.0244864,
-    0.018523,
-    0.013608,
-    0.00970977,
-    0.00673162,
-    0.00453714,
-    0.00297524,
-    0.00189981,
-    0.00118234,
-    0.000717854,
-    0.00042561,
-    0.000246653,
-    0.000139853,
-    7.76535E-05,
-    4.22607E-05,
-    2.25608E-05,
-    1.18236E-05,
-    6.0874E-06,
-    6.04852E-06,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0
-  };
+  // sigma 69.4 pb 
+  std::vector< float > Data2012LumiExt; 
+  Double_t Data2012LumiExt_f[60] = { 
+    1.76427e-06, 2.84466e-06, 1.88915e-05, 0.000796165, 0.00110891, 0.000439459, 0.00216878, 0.00562928, 0.0114731, 0.0199515, 0.0317062, 0.0457626, 0.0587994, 0.0700723, 0.0799624, 0.0850344, 0.0802347, 0.0690109, 0.0585324, 0.051109, 0.0457747, 0.0413901, 0.0373793, 0.0335591, 0.0298473, 0.0262066, 0.0226609, 0.0192698, 0.0160998, 0.0132078, 0.0106338, 0.00839923,  0.00650684, 0.00494315, 0.00368197, 0.00268875, 0.00192473, 0.00135048, 0.000928655, 0.000625768, 0.000413144, 0.00026721, 0.000169276, 0.000105016, 6.37928e-05, 3.79375e-05, 2.20845e-05, 1.25825e-05, 7.0155e-06, 3.8275e-06, 2.04314e-06, 1.06702e-06, 5.45147e-07, 2.72455e-07, 1.33199e-07, 6.36963e-08, 2.97937e-08, 1.36308e-08, 6.09958e-09, 2.66964e-09 
+  }; 
   
-
-  for( int i=0; i<50; i++) {
-    Data2011LumiExt.push_back(Data2011LumiExt_f[i]);
-    Fall11Lumi.push_back(Fall11Lumi_f[i]);
-  }
+  for( int i=0; i<60; i++) { 
+    Data2012LumiExt.push_back(Data2012LumiExt_f[i]); 
+    Summer12Lumi.push_back(Summer12Lumi_f[i]); 
+  } 
   
-  int intimepileup = intimepileup_>49 ? 49 : intimepileup_;
-
-  return Data2011LumiExt[intimepileup]/Fall11Lumi[intimepileup];
-
+  int intimepileup = intimepileup_>59 ? 59 : intimepileup_; 
+  
+  reweight::LumiReWeighting LumiWeights_(Summer12Lumi, Data2012LumiExt); 
+  
+  return LumiWeights_.ITweight(intimepileup); 
+  
 }
 
 
@@ -500,22 +406,22 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   TF1 *ratioElecIDEC      = (TF1*)corrections.Get("ratioElecIDEC");
   TF1 *ratioElecIsoEC     = (TF1*)corrections.Get("ratioElecIsoEC");
 
-  TF1 *ratioElecIDIsoBL   = (TF1*)corrections.Get("ratioElecIDIsoBL");
-  TF1 *ratioElecIDIsoEC   = (TF1*)corrections.Get("ratioElecIDIsoEC");
+  //TF1 *ratioElecIDIsoBL   = (TF1*)corrections.Get("ratioElecIDIsoBL");
+  //TF1 *ratioElecIDIsoEC   = (TF1*)corrections.Get("ratioElecIDIsoEC");
 
   TF1 *ratioTauElecTauAll = (TF1*)corrections.Get("ratioTauElecTauAll");
-  TF1 *ratioTauElecTauAllBL = (TF1*)corrections.Get("ratioTauElecTauAllBL");
-  TF1 *ratioTauElecTauAllEC = (TF1*)corrections.Get("ratioTauElecTauAllEC");
+  //TF1 *ratioTauElecTauAllBL = (TF1*)corrections.Get("ratioTauElecTauAllBL");
+  //TF1 *ratioTauElecTauAllEC = (TF1*)corrections.Get("ratioTauElecTauAllEC");
   TF1 *ratioElecAllBL     = (TF1*)corrections.Get("ratioElecAllBL");
   TF1 *ratioElecAllEC     = (TF1*)corrections.Get("ratioElecAllEC");
   TF1 *turnOnTauElecTauAll= (TF1*)corrections.Get("turnOnTauElecTauAll");
-  TF1 *turnOnTauElecTauAllBL = (TF1*)corrections.Get("turnOnTauElecTauAllBL");
-  TF1 *turnOnTauElecTauAllEC = (TF1*)corrections.Get("turnOnTauElecTauAllEC");
+  //TF1 *turnOnTauElecTauAllBL = (TF1*)corrections.Get("turnOnTauElecTauAllBL");
+  //TF1 *turnOnTauElecTauAllEC = (TF1*)corrections.Get("turnOnTauElecTauAllEC");
   TF1 *turnOnElecAllBL    = (TF1*)corrections.Get("turnOnElecAllBL");
   TF1 *turnOnElecAllEC    = (TF1*)corrections.Get("turnOnElecAllEC");
 
-  if(!ratioElecIDIsoBL)   cout << "Missing corrections for ElecID+Iso (BL)" << endl;
-  if(!ratioElecIDIsoEC)   cout << "Missing corrections for ElecID+Iso (EC)" << endl;
+  //if(!ratioElecIDIsoBL)   cout << "Missing corrections for ElecID+Iso (BL)" << endl;
+  //if(!ratioElecIDIsoEC)   cout << "Missing corrections for ElecID+Iso (EC)" << endl;
   if(!ratioElecIDBL)      cout << "Missing corrections for ElecID (BL)" << endl;
   if(!ratioElecIDEC)      cout << "Missing corrections for ElecID (EC)" << endl;
   if(!ratioElecIsoBL)     cout << "Missing corrections for ElecIso (BL)" << endl;
@@ -523,8 +429,8 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   if(!ratioElecAllBL)     cout << "Missing corrections for Elec HLT (BL)" << endl;
   if(!ratioElecAllEC)     cout << "Missing corrections for Elec HLT (EC)" << endl;
   if(!ratioTauElecTauAll) cout << "Missing corrections for tau HLT" << endl;
-  if(!ratioTauElecTauAllBL) cout << "Missing corrections for tau HLT (BL)" << endl;
-  if(!ratioTauElecTauAllEC) cout << "Missing corrections for tau HLT (EC)" << endl;
+  //if(!ratioTauElecTauAllBL) cout << "Missing corrections for tau HLT (BL)" << endl;
+  //if(!ratioTauElecTauAllEC) cout << "Missing corrections for tau HLT (EC)" << endl;
   if(!turnOnElecAllBL)    cout << "Missing turnOn for mu (BL)" << endl;
   if(!turnOnElecAllEC)    cout << "Missing turnOn for mu (EC)" << endl;
   if(!turnOnTauElecTauAll)cout << "Missing turnOn for tau" << endl;
@@ -630,7 +536,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   float etaTau1Fit, etaTau2Fit, phiTau1Fit, phiTau2Fit, ptTau1Fit, ptTau2Fit;
 
   // taus/MET related variables
-  float ptL1,ptL2,etaL1,etaL2,phiL1,phiL2,dPhiL1L2,dxy1_, dz1_;
+  float ptL1,ptL2,etaL1,etaL2,phiL1,phiL2,dPhiL1L2,dxy1_, dz1_, scEtaL1;
   float diTauCharge_,
     MtLeg1_,MtLeg1Corr_,MtLeg1MVA_,
     MtLeg2_,MtLeg2Corr_,MtLeg2MVA_,
@@ -655,6 +561,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
   // electron related variables
   int tightestCutBasedWP_, tightestMVAWP_;
+  int tightestMVAPOGNonTrigWP_;
   float mvaPOGTrig_, mvaPOGNonTrig_, mitMVA_;
   int isTriggerElectron_;
 
@@ -667,6 +574,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
   // object-related weights and triggers
   float HLTx,HLTmatch,HLTweightElec,HLTweightTau, SFElec, SFTau, HLTElec, HLTTau, SFEtoTau;
+  float SFElecID, SFElecIso;
   int isTauLegMatched_,isElecLegMatched_,elecFlag_,genDecay_, leptFakeTau;
 
   // event id
@@ -766,6 +674,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   outTreePtOrd->Branch("phiL1",   &phiL1,"phiL1/F");
   outTreePtOrd->Branch("phiL2",   &phiL2,"phiL2/F");
   outTreePtOrd->Branch("dPhiL1L2",&dPhiL1L2,"dPhiL1L2/F");
+  outTreePtOrd->Branch("scEtaL1",   &scEtaL1,"scEtaL1/F");
 
   outTreePtOrd->Branch("visibleTauMass",          &visibleTauMass_,"visibleTauMass/F");
   outTreePtOrd->Branch("HoP",                     &HoP,"HoP/F");
@@ -823,6 +732,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
   outTreePtOrd->Branch("tightestCutBasedWP", &tightestCutBasedWP_,"tightestCutBasedWP/I");
   outTreePtOrd->Branch("tightestMVAWP",      &tightestMVAWP_,"tightestMVAWP/I");
+  outTreePtOrd->Branch("tightestMVAPOGNonTrigWP", &tightestMVAPOGNonTrigWP_,"tightestMVAPOGNonTrigWP/I");
   outTreePtOrd->Branch("mvaPOGTrig",         &mvaPOGTrig_,   "mvaPOGTrig/F");
   outTreePtOrd->Branch("mvaPOGNonTrig",      &mvaPOGNonTrig_,"mvaPOGNonTrig/F");
   outTreePtOrd->Branch("mitMVA",             &mitMVA_,"mitMVA/F");
@@ -861,6 +771,8 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   outTreePtOrd->Branch("SFTau",        &SFTau,"SFTau/F");
   outTreePtOrd->Branch("SFElec",       &SFElec,"SFElec/F");
   outTreePtOrd->Branch("SFEtoTau",     &SFEtoTau,"SFEtoTau/F");
+  outTreePtOrd->Branch("SFElecID",     &SFElecID,"SFElecID/F");
+  outTreePtOrd->Branch("SFElecIso",    &SFElecIso,"SFElecIso/F");
 
   outTreePtOrd->Branch("isTauLegMatched", &isTauLegMatched_,"isTauLegMatched/I");
   outTreePtOrd->Branch("isElecLegMatched",&isElecLegMatched_,"isElecLegMatched/I");
@@ -875,7 +787,10 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   outTreePtOrd->Branch("pairIndex", &pairIndex_, "pairIndex/I");
 
 
-  string currentInName = "/data_CMS/cms/lbianchini/"+inputDir_+"//treeElecTauStream_"+sample_+".root" ;
+  //string currentInName = "/data_CMS/cms/lbianchini/"+inputDir_+"//treeElecTauStream_"+sample_+".root" ;
+//   string currentInName = "/data_CMS/cms/anayak/"+inputDir_+"//treeElecTauStream_"+sample_+".root" ;
+  string currentInName = "../../TauTauStudies/test/treeElecTauStream.root" ;
+  //string currentInName = "/home/llr/cms/veelken/ArunAnalysis/CMSSW_5_2_6_July12/src/Bianchi/TauTauStudies/test//treeElecTauStream-debug.root" ;
 
   TString inName(currentInName.c_str());
   TFile* file   = new TFile(inName,"READ");
@@ -958,6 +873,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   currentTree->SetBranchStatus("dxy2"                  ,0);
   currentTree->SetBranchStatus("dz1"                   ,0);
   currentTree->SetBranchStatus("dz2"                   ,0);
+  currentTree->SetBranchStatus("scEta1"                ,1);
   currentTree->SetBranchStatus("decayMode"             ,1);
   currentTree->SetBranchStatus("tightestHPSWP"         ,0);
   currentTree->SetBranchStatus("tightestHPSDBWP"       ,1);
@@ -1002,6 +918,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   currentTree->SetBranchStatus("tightestCutBasedWP"    ,1);
   currentTree->SetBranchStatus("tightestCiCWP"         ,0);
   currentTree->SetBranchStatus("tightestMVAWP"         ,1);
+  currentTree->SetBranchStatus("tightestMVAPOGNonTrigWP", 1);
   currentTree->SetBranchStatus("mvaPOGTrig"            ,1);
   currentTree->SetBranchStatus("mvaPOGNonTrig"         ,1);
   currentTree->SetBranchStatus("mitMVA"                ,1);
@@ -1131,6 +1048,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   int tightestAntiEMVAWP, tightestAntiECutWP;
   float hpsMVA;
   int tightestCutBasedWP, tightestMVAWP;
+  int tightestMVAPOGNonTrigWP;
   float mvaPOGTrig, mvaPOGNonTrig, mitMVA;
   int isTriggerElectron;
   float sihih, dEta, dPhi, HoE;
@@ -1145,7 +1063,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   int signalPFChargedHadrCands, signalPFGammaCands;
   float rhoFastJet,rhoNeutralFastJet;
   float visibleTauMass;
-  float dxy1, dxy2, dz1;
+  float dxy1, dxy2, dz1, scEta1;
   float pZetaSig;
   float chIsoLeg2, phIsoLeg2;
   float chIsoLeg1,nhIsoLeg1,phIsoLeg1; 
@@ -1175,6 +1093,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
   currentTree->SetBranchAddress("tightestCutBasedWP",   &tightestCutBasedWP);
   currentTree->SetBranchAddress("tightestMVAWP",        &tightestMVAWP);
+  currentTree->SetBranchAddress("tightestMVAPOGNonTrigWP", &tightestMVAPOGNonTrigWP);
   currentTree->SetBranchAddress("mvaPOGTrig",           &mvaPOGTrig);
   currentTree->SetBranchAddress("mvaPOGNonTrig",        &mvaPOGNonTrig);
   currentTree->SetBranchAddress("isTriggerElectron",    &isTriggerElectron);
@@ -1185,7 +1104,8 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   currentTree->SetBranchAddress("dxy1",                 &dxy1);
   currentTree->SetBranchAddress("dz1",                  &dz1);
   currentTree->SetBranchAddress("dxy2",                 &dxy2);
- 
+  currentTree->SetBranchAddress("scEta1",               &scEta1);
+  
   currentTree->SetBranchAddress("sihih",                &sihih);
   currentTree->SetBranchAddress("dEta",                 &dEta);
   currentTree->SetBranchAddress("dPhi",                 &dPhi);
@@ -1443,6 +1363,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
     dxy1_    = dxy1;
     dz1_     = dz1;
+    scEtaL1 = scEta1;
 
     visibleTauMass_ = visibleTauMass;
     diTauCharge_    = diTauCharge;
@@ -1573,6 +1494,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
     tightestCutBasedWP_ = tightestCutBasedWP;
     tightestMVAWP_      = tightestMVAWP;
+    tightestMVAPOGNonTrigWP_ = tightestMVAPOGNonTrigWP;
     mvaPOGTrig_         = mvaPOGTrig;
     mvaPOGNonTrig_      = mvaPOGNonTrig;
     mitMVA_             = mitMVA;
@@ -1634,10 +1556,10 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     decayMode_          = decayMode;
     numPV_              = numPV;
     sampleWeight        = scaleFactor; 
-    puWeight            = (std::string(sample.Data())).find("Run2011")!=string::npos ? 1.0 : pileupWeight(nPUVertices);
-    puWeight2           = (std::string(sample.Data())).find("Run2011")!=string::npos ? 1.0 : pileupWeight2(nPUVertices);   
+    puWeight            = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : pileupWeight(nPUVertices);
+    puWeight2           = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : pileupWeight2(nPUVertices);   
     puWeight3D          = -99;
-
+    nPUVertices_        = nPUVertices;
     embeddingWeight_    = embeddingWeight;
 
     if((std::string(sample.Data())).find("Embed")!=string::npos && UnfoldDen1 && genTausP4->size()>1){
@@ -1651,7 +1573,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
     numOfLooseIsoDiTaus_= numOfLooseIsoDiTaus;
 
-    if((std::string(sample.Data())).find("Run2011")!=string::npos){
+    if((std::string(sample.Data())).find("Run2012")!=string::npos){
 
       if(run>=160404 && run<=161176)
 	HLTx = 	float((*triggerBits)[0]); //HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v1
@@ -1706,22 +1628,30 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
       HLTweightElec = 1.0;
       if( (std::string(sample.Data())).find("Embed")!=string::npos ){
 
-	HLTElec = ((*diTauLegsP4)[0].Eta()<1.5) ? 
+	HLTElec = TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?
 	  turnOnElecAllBL->Eval((*diTauLegsP4)[0].Pt()) : 
 	  turnOnElecAllEC->Eval((*diTauLegsP4)[0].Pt());
 
-	HLTTau  = ((*diTauLegsP4)[1].Eta()<1.5) ? 
-	  turnOnTauElecTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) :
-	  turnOnTauElecTauAllEC->Eval( (*diTauLegsP4)[1].Pt() ) ;
+	HLTTau  =  turnOnTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() ) ; 
+	//((*diTauLegsP4)[1].Eta()<1.5) ? 
+	//  turnOnTauElecTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) :
+	//  turnOnTauElecTauAllEC->Eval( (*diTauLegsP4)[1].Pt() ) ;
 
 	SFTau         = 1.0;
-	SFElec        =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.5 ? 
-	  ratioElecIDIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) :
-	  ratioElecIDIsoEC->Eval( (*diTauLegsP4)[0].Pt() ) ;
+	SFElec        =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ? 
+	  //ratioElecIDIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) :
+	  //ratioElecIDIsoEC->Eval( (*diTauLegsP4)[0].Pt() ) ;
+	  ratioElecIDBL->Eval( (*diTauLegsP4)[0].Pt() )*ratioElecIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) : 
+	  ratioElecIDEC->Eval( (*diTauLegsP4)[0].Pt() )*ratioElecIsoEC->Eval( (*diTauLegsP4)[0].Pt() ) ;
 
-	  //ratioElecIDBL->Eval( (*diTauLegsP4)[0].Pt() )*ratioElecIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) : 
-	  //ratioElecIDEC->Eval( (*diTauLegsP4)[0].Pt() )*ratioElecIsoEC->Eval( (*diTauLegsP4)[0].Pt() ) ;
-
+	SFElecID =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?  
+	  ratioElecIDBL->Eval( (*diTauLegsP4)[0].Pt() ) :   
+	  ratioElecIDEC->Eval( (*diTauLegsP4)[0].Pt() );  
+ 
+	SFElecIso =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?  
+	  ratioElecIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) :   
+	  ratioElecIsoEC->Eval( (*diTauLegsP4)[0].Pt() ); 
+	
 	SFEtoTau      = 1.0;
 
       }
@@ -1739,35 +1669,57 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
       HLTx     = float((*triggerBits)[0]);
       //HLTmatch = ((*tauXTriggers)[0] && (*tauXTriggers)[2]) ? 1.0 : 0.0;
-      HLTmatch = ((*tauXTriggers)[2] && (*tauXTriggers)[3]) ? 1.0 : 0.0;
-
-      //HLTweightTau  = ratioTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() );
-      HLTweightTau  = ((*diTauLegsP4)[1].Eta()<1.5) ? 
-	ratioTauElecTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) :
-	ratioTauElecTauAllEC->Eval( (*diTauLegsP4)[1].Pt() ) ;
-     
-      if((*diTauLegsP4)[0].Pt()>18){
-	HLTweightElec = ((*diTauLegsP4)[0].Eta()<1.5) ? 
+      HLTmatch = ((*tauXTriggers)[1] && (*tauXTriggers)[2]) ? 1.0 : 0.0;
+      
+      HLTweightTau  = ratioTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() );
+      //HLTweightTau  = ((*diTauLegsP4)[1].Eta()<1.5) ? 
+      //ratioTauElecTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) :
+      //ratioTauElecTauAllEC->Eval( (*diTauLegsP4)[1].Pt() ) ;
+      
+      if((*diTauLegsP4)[0].Pt()>24){
+	HLTweightElec = TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?
 	  ratioElecAllBL->Eval((*diTauLegsP4)[0].Pt()) : 
 	  ratioElecAllEC->Eval((*diTauLegsP4)[0].Pt());
       }
       else HLTweightElec = 1.0;
 
-      //HLTTau  = turnOnTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() );
-      HLTTau  = ((*diTauLegsP4)[1].Eta()<1.5) ? 
-	turnOnTauElecTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) :
-	turnOnTauElecTauAllEC->Eval( (*diTauLegsP4)[1].Pt() ) ;
+      HLTTau  = turnOnTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() );
+      //HLTTau  = ((*diTauLegsP4)[1].Eta()<1.5) ? 
+      //  turnOnTauElecTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) :
+      //  turnOnTauElecTauAllEC->Eval( (*diTauLegsP4)[1].Pt() ) ;
 
-      HLTElec = TMath::Abs((*diTauLegsP4)[0].Eta()<1.5) ? 
+      HLTElec = TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ? 
 	turnOnElecAllBL->Eval((*diTauLegsP4)[0].Pt()) : 
 	turnOnElecAllEC->Eval((*diTauLegsP4)[0].Pt());
 
       SFTau  = 1.0;
-      SFElec =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.5 ?
-	ratioElecIDIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) :
-	ratioElecIDIsoEC->Eval( (*diTauLegsP4)[0].Pt() ) ;
-      //ratioElecIDBL->Eval( (*diTauLegsP4)[0].Pt() )*ratioElecIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) : 
-      //ratioElecIDEC->Eval( (*diTauLegsP4)[0].Pt() )*ratioElecIsoEC->Eval( (*diTauLegsP4)[0].Pt() );
+      SFElec =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?
+	//ratioElecIDIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) :
+	//ratioElecIDIsoEC->Eval( (*diTauLegsP4)[0].Pt() ) ;
+	ratioElecIDBL->Eval( (*diTauLegsP4)[0].Pt() )*ratioElecIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) : 
+	ratioElecIDEC->Eval( (*diTauLegsP4)[0].Pt() )*ratioElecIsoEC->Eval( (*diTauLegsP4)[0].Pt() );
+
+      SFElecID =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ? 
+        ratioElecIDBL->Eval( (*diTauLegsP4)[0].Pt() ) :  
+        ratioElecIDEC->Eval( (*diTauLegsP4)[0].Pt() ); 
+
+      SFElecIso =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ? 
+        ratioElecIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) :  
+        ratioElecIsoEC->Eval( (*diTauLegsP4)[0].Pt() );
+
+      if((*diTauLegsP4)[0].Pt() >= 30.0 && (*diTauLegsP4)[0].Pt() < 31.0){
+	SFElec =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ? 
+	  ratioElecIDBL->Eval( 31.5 )*ratioElecIsoBL->Eval( 31.5 ) :  
+	  ratioElecIDEC->Eval( 31.5 )*ratioElecIsoEC->Eval( 31.5 ); 
+ 
+	SFElecID =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?  
+	  ratioElecIDBL->Eval( 31.5 ) :   
+	  ratioElecIDEC->Eval( 31.5 );  
+ 
+	SFElecIso =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?  
+	  ratioElecIsoBL->Eval( 31.5 ) :   
+	  ratioElecIsoEC->Eval( 31.5 ); 
+      }
 
       SFEtoTau = 1.0;
 
@@ -1776,7 +1728,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
      isTauLegMatched_ = isTauLegMatched;
      isElecLegMatched_ = isElecLegMatched;
 
-    if((std::string(sample.Data())).find("Run2011")==string::npos)
+    if((std::string(sample.Data())).find("Run2012")==string::npos)
       leptFakeTau      = (isTauLegMatched==0 && (*genDiTauLegsP4)[1].E()>0) ? 1 : 0;
     else 
       leptFakeTau = -99;
@@ -1873,50 +1825,52 @@ void doAllSamplesElec(string inputDir_ = "ElecTauStreamFall11_04May2012"){
 
   ////////////// samples & x-sections & skim1 & skim2 /////////////
 
-  samples.push_back("Run2011-ElecTau-All_run");             crossSec.push_back( 0  );      
-  //samples.push_back("Run2011-ElecTau-LooseIso-All_run");    crossSec.push_back( 0  );                          
-  samples.push_back("Run2011-ElecTau-Embedded-All_run");    crossSec.push_back( 0  );                          
-  samples.push_back("DYJets-ElecTau-50-madgraph-PUS6_run"); crossSec.push_back( 3048           * 0.0537207         * 0.2718375); 
-  samples.push_back("TTJets-ElecTau-madgraph-PUS6_run");    crossSec.push_back( 157.5          * 0.0149329         * 0.7827282);  
-  samples.push_back("WJets-ElecTau-madgraph-PUS6_run");     crossSec.push_back(31314.0         * 0.0011910         * 0.5374372);   
-  samples.push_back("W3Jets-ElecTau-madgraph-PUS6_run");    crossSec.push_back( 304.0          * 1.0               * 0.1175129);   
-  samples.push_back("WZ-ElecTau-pythia-PUS6_run");          crossSec.push_back( 18.2           * 0.0111572         * 0.5470729);         
-  samples.push_back("ZZ-ElecTau-pythia-PUS6_run");          crossSec.push_back(  5.9           * 0.0160517         * 0.5203837);    
-  samples.push_back("WW-ElecTau-pythia-PUS6_run");          crossSec.push_back( 43.0           * 0.0092734         * 0.5797184);        
-  samples.push_back("VBFH100-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.36e-02*1.546 * 0.0499282         * 0.7341110); 
-  samples.push_back("GGFH100-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.36e-02*24.02 * 1.0               * 0.0593094); 
-  samples.push_back("VBFH105-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.25e-02*1.472 * 1.0               * 0.1153245); 
-  samples.push_back("GGFH105-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.25e-02*21.78 * 1.0               * 0.0645510); 
-  samples.push_back("VBFH110-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.02e-02*1.398 * 0.0558070         * 0.7335979);
-  samples.push_back("GGFH110-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.02e-02*19.84 * 0.0441026         * 0.6997732);    
-  samples.push_back("VBFH115-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.65e-02*1.332 * 0.0586927         * 0.7382737);
-  samples.push_back("GGFH115-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.65e-02*18.13 * 0.0463465         * 0.7136729);  
-  samples.push_back("VBFH120-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.10e-02*1.269 * 1.0               * 0.1274666);   
-  samples.push_back("GGFH120-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.10e-02*16.63 * 1.0         * 0.0781068);  
-  samples.push_back("VBFH125-ElecTau-powheg-PUS6_run");     crossSec.push_back( 6.37e-02*1.211 * 1.0         * 0.1309841);   
-  samples.push_back("GGFH125-ElecTau-powheg-PUS6_run");     crossSec.push_back( 6.37e-02*15.31 * 1.0         * 0.0822008); 
-  samples.push_back("VBFH130-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.48e-02*1.154 * 1.0         * 0.1345095); 
-  samples.push_back("GGFH130-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.48e-02*14.12 * 1.0         * 0.0853114);
-  samples.push_back("VBFH135-ElecTau-powheg-PUS6_run");     crossSec.push_back( 4.52e-02*1.100 * 1.0         * 0.1395949); 
-  samples.push_back("GGFH135-ElecTau-powheg-PUS6_run");     crossSec.push_back( 4.52e-02*13.08 * 0.0573246   * 0.7114996);    
-  samples.push_back("VBFH140-ElecTau-powheg-PUS6_run");     crossSec.push_back( 3.54e-02*1.052 * 1.0         * 0.1416138);  
-  samples.push_back("GGFH140-ElecTau-powheg-PUS6_run");     crossSec.push_back( 3.54e-02*12.13 * 1.0         * 0.0951278);  
-  samples.push_back("VBFH145-ElecTau-powheg-PUS6_run");     crossSec.push_back( 2.61e-02*1.004 * 1.0         * 0.1451686);  
-  samples.push_back("GGFH145-ElecTau-powheg-PUS6_run");     crossSec.push_back( 2.61e-02*11.27 * 1.0         * 0.0983843);  
-  samples.push_back("VBFH160-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.32e-04*0.8787* 1.0         * 0.1537070);  
-  samples.push_back("GGFH160-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.32e-04*9.080 * 1.0         * 0.1087073);  
-  samples.push_back("VH100-ElecTau-pythia-PUS6_run");  crossSec.push_back( 2.61e-02*(1.186+ 0.6313+0.1638  ) * 1.0 * 0.1490132);  
-  samples.push_back("VH110-ElecTau-pythia-PUS6_run");  crossSec.push_back( 8.02e-02*(0.8754+0.4721+0.1257  ) * 0.084386 * 0.76245288);
-  samples.push_back("VH115-ElecTau-pythia-PUS6_run");  crossSec.push_back( 7.65e-02*(0.7546+0.4107+0.1106  ) * 1.0 * 0.1668136);
-  samples.push_back("VH120-ElecTau-pythia-PUS6_run");  crossSec.push_back( 7.10e-02*(0.6561+0.3598+0.09756 ) * 1.0 * 0.1732820);   
-  samples.push_back("VH125-ElecTau-pythia-PUS6_run");  crossSec.push_back( 6.37e-02*(0.5729+0.3158+0.08634 ) * 1.0 * 0.1787773);
-  samples.push_back("VH130-ElecTau-pythia-PUS6_run");  crossSec.push_back( 5.48e-02*(0.4942+0.2778+0.07658 ) * 0.10051 * 0.7730161);
-  samples.push_back("VH135-ElecTau-pythia-PUS6_run");  crossSec.push_back( 4.52e-02*(0.4390+0.2453+0.06810 ) * 0.10133 * 0.7768092);
-  samples.push_back("VH140-ElecTau-pythia-PUS6_run");  crossSec.push_back( 3.54e-02*(0.3857+0.2172+0.06072 ) * 1.0 * 0.1919186);  
-  samples.push_back("VH145-ElecTau-pythia-PUS6_run");  crossSec.push_back( 2.61e-02*(0.3406+0.1930+0.05435 ) * 0.10708 * 0.774027);  
-  samples.push_back("VH160-ElecTau-pythia-PUS6_run");  crossSec.push_back( 5.32e-04*(0.2291+0.1334+0.03942 ) * 1.0 * 0.2120560);  
+//   samples.push_back("Run2011-ElecTau-All_run");             crossSec.push_back( 0  );      
+//   //samples.push_back("Run2011-ElecTau-LooseIso-All_run");    crossSec.push_back( 0  );                          
+//   samples.push_back("Run2011-ElecTau-Embedded-All_run");    crossSec.push_back( 0  );                          
+//   samples.push_back("DYJets-ElecTau-50-madgraph-PUS6_run"); crossSec.push_back( 3048           * 0.0537207         * 0.2718375); 
+//   samples.push_back("TTJets-ElecTau-madgraph-PUS6_run");    crossSec.push_back( 157.5          * 0.0149329         * 0.7827282);  
+//   samples.push_back("WJets-ElecTau-madgraph-PUS6_run");     crossSec.push_back(31314.0         * 0.0011910         * 0.5374372);   
+//   samples.push_back("W3Jets-ElecTau-madgraph-PUS6_run");    crossSec.push_back( 304.0          * 1.0               * 0.1175129);   
+//   samples.push_back("WZ-ElecTau-pythia-PUS6_run");          crossSec.push_back( 18.2           * 0.0111572         * 0.5470729);         
+//   samples.push_back("ZZ-ElecTau-pythia-PUS6_run");          crossSec.push_back(  5.9           * 0.0160517         * 0.5203837);    
+//   samples.push_back("WW-ElecTau-pythia-PUS6_run");          crossSec.push_back( 43.0           * 0.0092734         * 0.5797184);        
+//   samples.push_back("VBFH100-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.36e-02*1.546 * 0.0499282         * 0.7341110); 
+//   samples.push_back("GGFH100-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.36e-02*24.02 * 1.0               * 0.0593094); 
+//   samples.push_back("VBFH105-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.25e-02*1.472 * 1.0               * 0.1153245); 
+//   samples.push_back("GGFH105-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.25e-02*21.78 * 1.0               * 0.0645510); 
+//   samples.push_back("VBFH110-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.02e-02*1.398 * 0.0558070         * 0.7335979);
+//   samples.push_back("GGFH110-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.02e-02*19.84 * 0.0441026         * 0.6997732);    
+//   samples.push_back("VBFH115-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.65e-02*1.332 * 0.0586927         * 0.7382737);
+//   samples.push_back("GGFH115-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.65e-02*18.13 * 0.0463465         * 0.7136729);  
+//   samples.push_back("VBFH120-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.10e-02*1.269 * 1.0               * 0.1274666);   
+//   samples.push_back("GGFH120-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.10e-02*16.63 * 1.0         * 0.0781068);  
+//   samples.push_back("VBFH125-ElecTau-powheg-PUS6_run");     crossSec.push_back( 6.37e-02*1.211 * 1.0         * 0.1309841);   
+//   samples.push_back("GGFH125-ElecTau-powheg-PUS6_run");     crossSec.push_back( 6.37e-02*15.31 * 1.0         * 0.0822008); 
+//   samples.push_back("VBFH130-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.48e-02*1.154 * 1.0         * 0.1345095); 
+//   samples.push_back("GGFH130-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.48e-02*14.12 * 1.0         * 0.0853114);
+//   samples.push_back("VBFH135-ElecTau-powheg-PUS6_run");     crossSec.push_back( 4.52e-02*1.100 * 1.0         * 0.1395949); 
+//   samples.push_back("GGFH135-ElecTau-powheg-PUS6_run");     crossSec.push_back( 4.52e-02*13.08 * 0.0573246   * 0.7114996);    
+//   samples.push_back("VBFH140-ElecTau-powheg-PUS6_run");     crossSec.push_back( 3.54e-02*1.052 * 1.0         * 0.1416138);  
+//   samples.push_back("GGFH140-ElecTau-powheg-PUS6_run");     crossSec.push_back( 3.54e-02*12.13 * 1.0         * 0.0951278);  
+//   samples.push_back("VBFH145-ElecTau-powheg-PUS6_run");     crossSec.push_back( 2.61e-02*1.004 * 1.0         * 0.1451686);  
+//   samples.push_back("GGFH145-ElecTau-powheg-PUS6_run");     crossSec.push_back( 2.61e-02*11.27 * 1.0         * 0.0983843);  
+//   samples.push_back("VBFH160-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.32e-04*0.8787* 1.0         * 0.1537070);  
+//   samples.push_back("GGFH160-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.32e-04*9.080 * 1.0         * 0.1087073);  
+//   samples.push_back("VH100-ElecTau-pythia-PUS6_run");  crossSec.push_back( 2.61e-02*(1.186+ 0.6313+0.1638  ) * 1.0 * 0.1490132);  
+//   samples.push_back("VH110-ElecTau-pythia-PUS6_run");  crossSec.push_back( 8.02e-02*(0.8754+0.4721+0.1257  ) * 0.084386 * 0.76245288);
+//   samples.push_back("VH115-ElecTau-pythia-PUS6_run");  crossSec.push_back( 7.65e-02*(0.7546+0.4107+0.1106  ) * 1.0 * 0.1668136);
+//   samples.push_back("VH120-ElecTau-pythia-PUS6_run");  crossSec.push_back( 7.10e-02*(0.6561+0.3598+0.09756 ) * 1.0 * 0.1732820);   
+//   samples.push_back("VH125-ElecTau-pythia-PUS6_run");  crossSec.push_back( 6.37e-02*(0.5729+0.3158+0.08634 ) * 1.0 * 0.1787773);
+//   samples.push_back("VH130-ElecTau-pythia-PUS6_run");  crossSec.push_back( 5.48e-02*(0.4942+0.2778+0.07658 ) * 0.10051 * 0.7730161);
+//   samples.push_back("VH135-ElecTau-pythia-PUS6_run");  crossSec.push_back( 4.52e-02*(0.4390+0.2453+0.06810 ) * 0.10133 * 0.7768092);
+//   samples.push_back("VH140-ElecTau-pythia-PUS6_run");  crossSec.push_back( 3.54e-02*(0.3857+0.2172+0.06072 ) * 1.0 * 0.1919186);  
+//   samples.push_back("VH145-ElecTau-pythia-PUS6_run");  crossSec.push_back( 2.61e-02*(0.3406+0.1930+0.05435 ) * 0.10708 * 0.774027);  
+//   samples.push_back("VH160-ElecTau-pythia-PUS6_run");  crossSec.push_back( 5.32e-04*(0.2291+0.1334+0.03942 ) * 1.0 * 0.2120560);  
   
-  makeTrees_ElecTauStream("",             samples[2], crossSec[2], inputDir_);
+  samples.push_back("VBFH120");     crossSec.push_back( 7.10e-02*1.269 * 1.0               * 0.1274666);   
+
+  makeTrees_ElecTauStream("",             samples[0], crossSec[0], inputDir_);
 
   return;
 
@@ -1953,18 +1907,21 @@ int main(int argc, const char* argv[])
   gSystem->Load("libFWCoreFWLite");
   AutoLibraryLoader::enable();
   
-  if ( argc < 3 ) {
-    std::cout << "Usage: " << argv[0] << " fileName xsection" << std::endl;
-    return 0;
-  }
+//   if ( argc < 3 ) {
+//     std::cout << "Usage: " << argv[0] << " fileName xsection" << std::endl;
+//     return 0;
+//   }
   
-  //doAllSamplesElec( "ElecTauStreamFall11_04May2012");
-  //return 1;  
+  doAllSamplesElec( "");
+  return 1;  
 
-  string inputDir = "ElecTauStreamFall11_04May2012_PreApproval";
+  //string inputDir = "ElecTauStreamFall11_04May2012_PreApproval";
+//   string inputDir = "HTauTauSynchronization/FullSample/8TeV";
+  string inputDir = "";
 
   makeTrees_ElecTauStream("",           argv[1], atof(argv[2]), inputDir);
   //makeTrees_ElecTauStream("Raw",        argv[1], atof(argv[2]), inputDir);
+  //return 0;
 
   if( string(argv[1]).find("Run2011-ElecTau-All")!=string::npos )
     return 0;
