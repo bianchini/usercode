@@ -137,6 +137,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   float dz1_,dz2_;
   float dxyE1_,dxyE2_;
   float dzE1_,dzE2_;
+  float scEta1_;
   float pfJetPt_;
   float MtLeg1_;
   float pZeta_;
@@ -178,6 +179,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   int tightestMVAWP_;
   float mvaPOGTrig_;
   float mvaPOGNonTrig_;
+  int tightestMVAPOGNonTrigWP_;
   float mitMVA_;
   int antiConv_;
   int isTriggerElectron_;
