@@ -803,12 +803,14 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
 	//cout << "Bunc crossing " << it->getBunchCrossing() << endl;
 	if(it->getBunchCrossing() == 0 ) 
-	  nPUVertices_  = it->getPU_NumInteractions();
+	  //nPUVertices_  = it->getPU_NumInteractions();  /old ICHEP
+	  nPUVertices_  = it->getTrueNumInteractions();
 	else if(it->getBunchCrossing() == -1)  
-	  nPUVerticesM1_= it->getPU_NumInteractions();
+	  //nPUVerticesM1_= it->getPU_NumInteractions();  
+	  nPUVerticesM1_= it->getTrueNumInteractions();
 	else if(it->getBunchCrossing() == +1)  
-	  nPUVerticesP1_= it->getPU_NumInteractions();
-
+	  //nPUVerticesP1_= it->getPU_NumInteractions();
+	  nPUVerticesP1_= it->getTrueNumInteractions();
 	//nPUtruth_ = it->getTrueNumInteractions();	
       }
     }
@@ -877,27 +879,27 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
   bool found = false;
   for(unsigned int i=0; i<muonsRel->size(); i++){
-    for(unsigned int j=0; j<muons->size(); j++){
+    for(unsigned int j=i+1; j<muonsRel->size(); j++){
       
       if(found) continue;
       
-      if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3
-	  && (*muonsRel)[i].charge()*(*muons)[j].charge()<0
-	  && (*muons)[j].userFloat("PFRelIsoDB04")<0.3 
-	  && (*muonsRel)[i].userFloat("PFRelIsoDB04")<0.3 ){
+      if( Geom::deltaR( (*muonsRel)[i].p4(),(*muonsRel)[j].p4())>0.3
+	  && (*muonsRel)[i].charge()*(*muonsRel)[j].charge()<0
+	  && (*muonsRel)[j].userFloat("PFRelIsoDB04v2")<0.3 
+	  && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
 	muFlag_       = 1;
-	muVetoRelIso_ = (*muonsRel)[i].userFloat("PFRelIsoDB04");
+	muVetoRelIso_ = (*muonsRel)[i].userFloat("PFRelIsoDB04v2");
 	if(verbose_) cout<< "Two muons failing diMu veto: flag= " << muFlag_ << endl;
 	found=true;
       }
-      else if( Geom::deltaR( (*muonsRel)[i].p4(),(*muons)[j].p4())>0.3
-	       && (*muonsRel)[i].charge()*(*muons)[j].charge()>0
-	       && (*muons)[j].userFloat("PFRelIsoDB04")<0.3 
-	       && (*muonsRel)[i].userFloat("PFRelIsoDB04")<0.3 ){
+      else if( Geom::deltaR( (*muonsRel)[i].p4(),(*muonsRel)[j].p4())>0.3
+	       && (*muonsRel)[i].charge()*(*muonsRel)[j].charge()>0
+	       && (*muonsRel)[j].userFloat("PFRelIsoDB04v2")<0.3 
+	       && (*muonsRel)[i].userFloat("PFRelIsoDB04v2")<0.3 ){
 	muFlag_       = 2;
-	muVetoRelIso_ = (*muonsRel)[i].userFloat("PFRelIsoDB04");
+	muVetoRelIso_ = (*muonsRel)[i].userFloat("PFRelIsoDB04v2");
 	if(verbose_) cout<< "Two muons with SS: flag= " << muFlag_ << endl;
-	found=true;
+	//found=true;
       }
     }
   }
@@ -913,14 +915,16 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     // X-triggers 
     XtriggerPaths.push_back("HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v*");
 
-    // for Summer11
-    triggerPaths.push_back("HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v1");
-    triggerPaths.push_back("HLT_Mu18_eta2p1_LooseIsoPFTau20_v1");
-    triggerPaths.push_back("HLT_IsoMu20_eta2p1_v1");
+    // for Summer12
+    //HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v4
+    //HLTBeginSequence + hltL1sMu16Eta2p1 + hltPreIsoMu18eta2p1LooseIsoPFTau20 + hltL1fL1sMu16Eta2p1L1Filtered0 + HLTL2muonrecoSequence + hltL2fL1sMu16Eta2p1L1f0L2Filtered16Q + HLTL3muonrecoSequence + hltL3fL1sMu16Eta2p1L1f0L2f16QL3Filtered18Q + HLTL3muoncaloisorecoSequenceNoBools + HLTL3muonisorecoSequence + hltL3crIsoL1sMu16Eta2p1L1f0L2f16QL3f18QL3crIsoFiltered10 + HLTRecoJetSequencePrePF + hltTauJet5 + HLTPFJetTriggerSequenceMuTau + hltPFJet20 + HLTLooseIsoPFTauSequence + hltPFTau20 + hltPFTau20Track + hltPFTau20TrackLooseIso + hltIsoMuPFTauVertexFinder + hltPFTau20IsoMuVertex + hltOverlapFilterIsoMu18LooseIsoPFTau20 + HLTEndSequence
+    triggerPaths.push_back("HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v4");
+    //triggerPaths.push_back("HLT_Mu18_eta2p1_LooseIsoPFTau20_v4");
+    //triggerPaths.push_back("HLT_IsoMu20_eta2p1_v4");
 
-    HLTfiltersMu.push_back("hltSingleMuIsoL1s14L3IsoFiltered15eta2p1");
+    HLTfiltersMu.push_back("hltL1sMu16Eta2p1");
     HLTfiltersMu.push_back("hltL3crIsoL1sMu16Eta2p1L1f0L2f16QL3f18QL3crIsoFiltered10");
-    HLTfiltersMu.push_back("hltOverlapFilterIsoMu15IsoPFTau20");
+    HLTfiltersMu.push_back("hltOverlapFilterIsoMu18LooseIsoPFTau20");
     HLTfiltersTau.push_back("hltOverlapFilterIsoMu18LooseIsoPFTau20");
 
   }
@@ -1416,7 +1420,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
      
     vetos2011ChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.0001));
     vetos2011ChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
-    vetos2011AllChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
+    vetos2011AllChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.0001));
     vetos2011AllChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
     vetos2011NeutralLeg1.push_back(new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
     vetos2011NeutralLeg1.push_back(new isodeposit::ThresholdVeto(0.5));
