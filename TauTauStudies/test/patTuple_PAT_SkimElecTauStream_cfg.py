@@ -13,15 +13,13 @@ runOnEmbed  = False
 #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START52_V9::All')
-##     process.GlobalTag.globaltag = cms.string('START52_V7::All')
-
+    process.GlobalTag.globaltag = cms.string('START52_V10::All')
 else:
-    process.GlobalTag.globaltag = cms.string('GR_R_52_V7::All')
-
+    process.GlobalTag.globaltag = cms.string('GR_R_52_V8::All')
+    
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 1
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -36,6 +34,7 @@ process.source.fileNames = cms.untracked.vstring(
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/embeddedTest/embedded_1_1_Zo4.root'
     #'file:pickevents.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011A_PR_v6_embedded_trans1_tau115_ptelec1_17had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011A_PR_v6_embedded_trans1_tau115_ptelec1_17had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/F8AFEED6-5FFA-E011-A8F8-0023AEFDEEE0.root'
+    #'file:/data_CMS/cms/anayak/HTauTauSynchronization/8TeV/VBF_HToTauTau_M-120_8TeV-powheg-pythia6-tauola_FED5F7FE-0597-E111-BE71-485B39800BB5.root'
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -139,13 +138,14 @@ process.puJetId.algos.label = 'full_5x'
 
 ################### met ################################
 
-process.load("RecoMET.METProducers.mvaPFMET_cff")
+#process.load("RecoMET.METProducers.mvaPFMET_cff")
+process.load("RecoMET.METProducers.mvaPFMET_cff_leptons")
 if runOnMC:
     process.calibratedAK5PFJetsForPFMEtMVA.correctors = cms.vstring("ak5PFL1FastL2L3")
 else:
     process.calibratedAK5PFJetsForPFMEtMVA.correctors = cms.vstring("ak5PFL1FastL2L3Residual") 
 
-process.pfMEtMVA.srcLeptons = cms.VInputTag( cms.InputTag('elecPtEtaRelIDRelIso'), cms.InputTag('muPtEtaRelIDRelIso'), cms.InputTag('tauPtEtaIDAgMuAgElecRelIso') )
+#process.pfMEtMVA.srcLeptons = cms.VInputTag( cms.InputTag('elecPtEtaRelIDRelIso'), cms.InputTag('tauPtEtaIDAgMuAgElecRelIso') )
 
 process.patPFMetByMVA = process.patMETs.clone(
     metSource = cms.InputTag('pfMEtMVA'),
@@ -571,9 +571,9 @@ process.elecPtEtaID = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("selectedPatElectronsUserEmbedded"),
     cut = cms.string(process.elecPtEta.cut.value()+
-                     " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"+
-                     " && dr03TkSumPt/pt<0.30 &&"+
-                     simpleCutsVeto
+                     " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"#+
+                     #" && dr03TkSumPt/pt<0.30 &&"+
+                     #simpleCutsVeto
                      #" && userInt('isTriggerElectron')>0.5"
                      #+"("+simpleCutsWP80+" || "+CiCTight+" || "+MVA+")"),
                      ),
@@ -593,7 +593,8 @@ process.elecPtEtaRelID = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("selectedPatElectronsUserEmbedded"),
     cut = cms.string("pt>14 && abs(eta)<2.5 &&"+
-                     "abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2 &&"+
+                     #"abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2 &&"+
+                     "abs(userFloat('dzWrtPV'))<0.2 &&"+
                      simpleCutsVeto
                      ),
     filter = cms.bool(False)
