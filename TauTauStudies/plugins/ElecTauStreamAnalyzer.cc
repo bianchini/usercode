@@ -936,43 +936,23 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       //  && (*electrons)[j].userFloat("HoE") < 0.10
       //  ));
 
-<<<<<<< ElecTauStreamAnalyzer.cc
       if( Geom::deltaR( (*electronsRel)[i].p4(),(*electronsRel)[j].p4())>0.3
 	  && (*electronsRel)[i].charge()*(*electronsRel)[j].charge()<0
 	  && (*electronsRel)[j].userFloat("PFRelIsoDB04v3")<0.30 //&& mvaPreselectionNoIsoElecI
 	  && (*electronsRel)[i].userFloat("PFRelIsoDB04v3")<0.30 ){
-=======
-      if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
-	  && (*electronsRel)[i].charge()*(*electrons)[j].charge()<0
-	  && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.30 && mvaPreselectionNoIsoElecI
-	  && (*electronsRel)[i].userFloat("PFRelIsoDB04v2")<0.30 ){
->>>>>>> 1.32.2.5
 	elecFlag_       = 1;
-<<<<<<< ElecTauStreamAnalyzer.cc
 	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04v3");
-=======
-	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04v2");
->>>>>>> 1.32.2.5
+
 	if(verbose_) cout<< "Two electrons failing diElec veto: flag= " << elecFlag_ << endl;
 	found=true;
       }
-<<<<<<< ElecTauStreamAnalyzer.cc
       else if( Geom::deltaR( (*electronsRel)[i].p4(),(*electronsRel)[j].p4())>0.3
 	       && (*electronsRel)[i].charge()*(*electronsRel)[j].charge()>0
 	       && (*electronsRel)[j].userFloat("PFRelIsoDB04v3")<0.30 //&& mvaPreselectionNoIsoElecI
 	       && (*electronsRel)[i].userFloat("PFRelIsoDB04v3")<0.30 ){
-=======
-      else if( Geom::deltaR( (*electronsRel)[i].p4(),(*electrons)[j].p4())>0.3
-	       && (*electronsRel)[i].charge()*(*electrons)[j].charge()>0
-	       && (*electrons)[j].userFloat("PFRelIsoDB04v2")<0.30 && mvaPreselectionNoIsoElecI
-	       && (*electronsRel)[i].userFloat("PFRelIsoDB04v2")<0.30 ){
->>>>>>> 1.32.2.5
 	elecFlag_       = 2;
-<<<<<<< ElecTauStreamAnalyzer.cc
 	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04v3");
-=======
-	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04v2");
->>>>>>> 1.32.2.5
+
 	if(verbose_) cout<< "Two electrons with SS: flag= " << elecFlag_ << endl;
 	//found=true;
       }
@@ -1513,15 +1493,10 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     //vetos2011PhotonLeg1.push_back( new isodeposit::ConeVeto(isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
     //vetos2011PhotonLeg1.push_back( new isodeposit::ThresholdVeto(0.5));
 
-<<<<<<< ElecTauStreamAnalyzer.cc
     vetos2011EBChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.010));
     vetos2011EBPhotonLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
     vetos2011EBPhotonLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
-=======
-    vetos2011EBChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.010));
-    vetos2011EBPhotonLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
 
->>>>>>> 1.32.2.5
     vetos2011EEChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.015));
     vetos2011EEChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
     //vetos2011EENeutralLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
@@ -1720,36 +1695,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 //     cout << leg2->tauID("againstElectronLooseMVA2") << endl;
 
     tightestAntiEMVAWP_ = 0;
-<<<<<<< ElecTauStreamAnalyzer.cc
-    if( leg2->tauID("againstElectronLooseMVA2")  >0.5 &&  
-        leg2->tauID("againstElectronMediumMVA2") <0.5 && 
-        leg2->tauID("againstElectronTightMVA2")  <0.5) tightestAntiEMVAWP_ = 1; 
- 
-    if( leg2->tauID("againstElectronLooseMVA2")  <0.5 &&  
-        leg2->tauID("againstElectronMediumMVA2") >0.5 && 
-        leg2->tauID("againstElectronTightMVA2")  <0.5) tightestAntiEMVAWP_ = 2; 
- 
-    if( leg2->tauID("againstElectronLooseMVA2")  <0.5 &&  
-        leg2->tauID("againstElectronMediumMVA2") <0.5 && 
-        leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 3; 
- 
-    if( leg2->tauID("againstElectronLooseMVA2")  >0.5 &&  
-        leg2->tauID("againstElectronMediumMVA2") >0.5 && 
-        leg2->tauID("againstElectronTightMVA2")  <0.5) tightestAntiEMVAWP_ = 4; 
- 
-    if( leg2->tauID("againstElectronLooseMVA2")  <0.5 &&  
-        leg2->tauID("againstElectronMediumMVA2") >0.5 && 
-        leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 5; 
- 
-    if( leg2->tauID("againstElectronLooseMVA2")  >0.5 &&  
-        leg2->tauID("againstElectronMediumMVA2") <0.5 && 
-        leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 6; 
- 
-    if( leg2->tauID("againstElectronLooseMVA2")  >0.5 &&  
-        leg2->tauID("againstElectronMediumMVA2") >0.5 && 
-        leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 7; 
 
-=======
     if( leg2->tauID("againstElectronLoose1MVA2")>0.5)  tightestAntiEMVAWP_ = 1;
     if( leg2->tauID("againstElectronLoose2MVA2")>0.5)  tightestAntiEMVAWP_ = 2;
     if( leg2->tauID("againstElectronMedium1MVA2")>0.5) tightestAntiEMVAWP_ = 3;
@@ -1758,7 +1704,6 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     if( leg2->tauID("againstElectronTight2MVA2")>0.5)  tightestAntiEMVAWP_ = 6;
     if( leg2->tauID("againstElectronVTight1MVA2")>0.5) tightestAntiEMVAWP_ = 7;
     if( leg2->tauID("againstElectronVTight2MVA2")>0.5) tightestAntiEMVAWP_ = 8;
->>>>>>> 1.32.2.5
     
     diTauVisP4_->push_back( theDiTau->p4Vis() );
     diTauCAP4_->push_back(  theDiTau->p4CollinearApprox() );
