@@ -279,12 +279,15 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
       aMuon.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2011Neutral).first;
     float phIsoPU04 = 
       aMuon.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2011Photons).first;
-
+    float allChIso04 =  
+      aMuon.isoDeposit(pat::User1Iso)->depositAndCountWithin(0.4, vetos2011Charged).first;
+    
     aMuon.addUserFloat("PFRelIso04",(chIso04+nhIso04+phIso04)/aMuon.pt());
     aMuon.addUserFloat("PFRelIso03",(chIso03+nhIso03+phIso03)/aMuon.pt());
     aMuon.addUserFloat("PFRelIsoDB04",(chIso04+std::max(nhIso04+phIso04-0.5*(nhIsoPU04),0.0))/aMuon.pt());
     aMuon.addUserFloat("PFRelIsoDB03",(chIso03+std::max(nhIso03+phIso03-0.5*(nhIsoPU03),0.0))/aMuon.pt());
-
+    aMuon.addUserFloat("PFRelIsoDB04v2",(allChIso04+std::max(nhIso04+phIso04-0.5*(nhIsoPU04),0.0))/aMuon.pt());
+    
     //std::cout << aMuon.pt() << " => "
     //      << chIso04v2 << ", "
     //      << nhIso04v2 << ", "
