@@ -13,10 +13,10 @@ runOnEmbed  = False
 #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START52_V7::All')
+    process.GlobalTag.globaltag = cms.string('START52_V10::All')
 
 else:
-    process.GlobalTag.globaltag = cms.string('GR_R_52_V7::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_52_V8::All')
 
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
@@ -26,9 +26,10 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source.fileNames = cms.untracked.vstring(
     #'rfio:/dpm/datagrid.cea.fr/home/cms/trivcat/store/user/rbonieck/VBF_HToTauTau_M-155_8TeV-powheg-pythia6/523_mutau_skim_v2/fa99245d21209c8cd29afdb5fab22d7f/tautauSkimmAOD_9_1_X4A.root'
-    'root://node12.datagrid.cea.fr//dpm/datagrid.cea.fr/home/cms/trivcat/store/user/rbonieck/VBF_HToTauTau_M-155_8TeV-powheg-pythia6/523_mutau_skim_v2/fa99245d21209c8cd29afdb5fab22d7f/tautauSkimmAOD_9_1_X4A.root'
+    #'root://node12.datagrid.cea.fr//dpm/datagrid.cea.fr/home/cms/trivcat/store/user/rbonieck/VBF_HToTauTau_M-155_8TeV-powheg-pythia6/523_mutau_skim_v2/fa99245d21209c8cd29afdb5fab22d7f/tautauSkimmAOD_9_1_X4A.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/Test_52X/439eae0c5ab5b9ee314b9645ffd1dade/DYJets_5_1_stC.root'
     #'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/Test_52X/439eae0c5ab5b9ee314b9645ffd1dade/DYJets_5_1_stC.root'
+    'file:/data_CMS/cms/anayak/HTauTauSynchronization/8TeV/VBF_HToTauTau_M-120_8TeV-powheg-pythia6-tauola_FED5F7FE-0597-E111-BE71-485B39800BB5.root'
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -137,13 +138,14 @@ process.puJetId.algos.label = 'full_5x'
 
 ################### met ################################
 
-process.load("RecoMET.METProducers.mvaPFMET_cff")
+#process.load("RecoMET.METProducers.mvaPFMET_cff")
+process.load("RecoMET.METProducers.mvaPFMET_cff_leptons")
 if runOnMC:
     process.calibratedAK5PFJetsForPFMEtMVA.correctors = cms.vstring("ak5PFL1FastL2L3")
 else:
     process.calibratedAK5PFJetsForPFMEtMVA.correctors = cms.vstring("ak5PFL1FastL2L3Residual") 
 
-process.pfMEtMVA.srcLeptons = cms.VInputTag( cms.InputTag('elecPtEtaRelIDRelIso'), cms.InputTag('muPtEtaRelIDRelIso'), cms.InputTag('tauPtEtaIDAgMuAgElecRelIso') )
+#process.pfMEtMVA.srcLeptons = cms.VInputTag(cms.InputTag('muPtEtaRelIDRelIso'), cms.InputTag('tauPtEtaIDAgMuAgElecRelIso') )
 
 process.patPFMetByMVA = process.patMETs.clone(
     metSource = cms.InputTag('pfMEtMVA'),
@@ -152,7 +154,7 @@ process.patPFMetByMVA = process.patMETs.clone(
     )
 
 process.patPFMetByMVA.addGenMET = cms.bool(runOnMC)
-
+process.pfMEtMVA.srcVertices = cms.InputTag("offlinePrimaryVertices")
 
 ################### bTag ##############################
 
@@ -473,8 +475,9 @@ process.muPtEtaCounter = cms.EDFilter(
 process.muPtEtaRelID = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsUserEmbedded"),
-    cut = cms.string("pt>14 && abs(eta)<2.4 && isGlobalMuon"+
-                     "&& abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"
+    cut = cms.string("pt>14 && abs(eta)<2.4 && isGlobalMuon && isPFMuon && isTrackerMuon"+
+                     #"&& abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"
+                     "&& abs(userFloat('dzWrtPV'))<0.2"
                      ),
     filter = cms.bool(False)
     )
@@ -493,14 +496,14 @@ process.muPtEtaID = cms.EDFilter(
     cut = cms.string(process.muPtEta.cut.value()+
                      " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"+
                      " && ("+
-                     "(   isGlobalMuon"+
+                     "(   isGlobalMuon && isPFMuon"+
                      " && globalTrack.isNonnull "+
                      " && globalTrack.normalizedChi2<10"+
                      " && globalTrack.hitPattern.numberOfValidMuonHits>0"+                     
                      " && numberOfMatchedStations>1"+                     
                      " && innerTrack.hitPattern.numberOfValidPixelHits>0"+
                      " && track.hitPattern.trackerLayersWithMeasurement > 5)"+
-                     " || userInt('isPFMuon')>0.5)"
+                     " && userInt('isPFMuon')>0.5)"
                      ),
     filter = cms.bool(False)
     )
