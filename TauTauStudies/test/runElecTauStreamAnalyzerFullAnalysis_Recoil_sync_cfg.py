@@ -579,6 +579,7 @@ process.elecTauStreamAnalyzer = cms.EDAnalyzer(
     met                = cms.InputTag("metRecoilCorrector",  "N"),
     rawMet             = cms.InputTag("patMETsPFlow"),
     mvaMet             = cms.InputTag("patPFMetByMVA"),
+    metCov             = cms.InputTag("pfMEtMVACov"),
     electrons          = cms.InputTag("elecPtEtaID"),
     electronsRel       = cms.InputTag("elecPtEtaRelID"),
     vertices           = cms.InputTag("selectedPrimaryVertices"),

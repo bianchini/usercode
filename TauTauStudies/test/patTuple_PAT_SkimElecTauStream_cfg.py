@@ -6,7 +6,7 @@ process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 process.load("JetMETCorrections.Configuration.JetCorrectionServices_cff")
 
 postfix     = "PFlow"
-runOnMC     = False
+runOnMC     = True
 runOnEmbed  = False
 
 #from Configuration.PyReleaseValidation.autoCond import autoCond
@@ -14,27 +14,27 @@ runOnEmbed  = False
 
 if runOnMC:
     process.GlobalTag.globaltag = cms.string('START52_V10::All')
+
 else:
     process.GlobalTag.globaltag = cms.string('GR_R_52_V8::All')
     
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
-process.MessageLogger.cerr.FwkReport.reportEvery = 10
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source.fileNames = cms.untracked.vstring(
-    #'file:/data_CMS/cms/ivo/RootFiles/aburgmei-DoubleMu_2012A_PromptReco_v1_embedded/ElecTau/pfembTauTau_data_DoubleMu_2012A_PromptReco_v1_1_115_pt_elec1_17had1_17_990_embedded.root'
-    'file:/data_CMS/cms/ivo/RootFiles/VBF_HToTauTau_M-125_8TeV-powheg-pythia6/tautauSkimmAOD_9_1_N0n.root',
-    #'file:/data_CMS/cms/ivo/RootFiles/VBF_HToTauTau_M-125_8TeV-powheg-pythia6/tautauSkimmAOD_99_1_sTF.root'
+    #'root://node12.datagrid.cea.fr//dpm/datagrid.cea.fr/home/cms/trivcat/store/user/rbonieck/VBF_HToTauTau_M-155_8TeV-powheg-pythia6/523_eletau_skim_v2/9e3b6ed4c9ca67264aaf9205c313d94b/tautauSkimmAOD_9_1_Zsv.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/Test_52X/439eae0c5ab5b9ee314b9645ffd1dade/DYJets_5_1_stC.root'
+    #'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/Test_52X/439eae0c5ab5b9ee314b9645ffd1dade/DYJets_5_1_stC.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat//store/mc/Summer11/VBF_HToTauTau_M-120_7TeV-powheg-pythia6-tauola/AODSIM/PU_S4_START42_V11-v1/0000/0E47FBF8-0295-E011-818F-0030487E3026.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011A_Aug05thRR_v1_embedded_trans1_tau115_ptelec1_17had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011A_Aug05thRR_v1_embedded_trans1_tau115_ptelec1_17had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/82A9FCE3-A8F9-E011-8974-00266CFCC618.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau115_ptelec1_17had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011B_PR_v1_embedded_trans1_tau115_ptelec1_17had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/0011BCB7-8800-E111-85F3-0023AEFDE9AC.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/embeddedTest/embedded_1_1_Zo4.root'
     #'file:pickevents.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/results/higgs/DoubleMu/StoreResults-DoubleMu_2011A_PR_v6_embedded_trans1_tau115_ptelec1_17had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/DoubleMu/USER/StoreResults-DoubleMu_2011A_PR_v6_embedded_trans1_tau115_ptelec1_17had1_17_v1-f456bdbb960236e5c696adfe9b04eaae/0000/F8AFEED6-5FFA-E011-A8F8-0023AEFDEEE0.root'
-    #'file:/data_CMS/cms/anayak/HTauTauSynchronization/8TeV/VBF_HToTauTau_M-120_8TeV-powheg-pythia6-tauola_FED5F7FE-0597-E111-BE71-485B39800BB5.root'
+    'file:/data_CMS/cms/anayak/HTauTauSynchronization/8TeV/VBF_HToTauTau_M-120_8TeV-powheg-pythia6-tauola_FED5F7FE-0597-E111-BE71-485B39800BB5.root'
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
@@ -79,8 +79,7 @@ process.tauPtEtaIDAgMuAgElecFilter = cms.EDFilter(
 process.HLTFilter = cms.EDFilter(
     "HLTHighLevel",
     TriggerResultsTag  = cms.InputTag("TriggerResults","","HLT"),
-    HLTPaths           = cms.vstring('HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*',#5e33
-                                     'HLT_Ele22_eta2p1_WP90Rho_LooseIsoPFTau20_v*' ),#7e33                                     
+    HLTPaths           = cms.vstring("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v4"),                                     
     eventSetupPathsKey = cms.string(''),
     andOr              = cms.bool(True),
     throw              = cms.bool(False)
@@ -256,11 +255,12 @@ if runOnMC:
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 
 from PhysicsTools.PatAlgos.tools.tauTools import *
-switchToPFTauHPS(process, 
-                 pfTauLabelOld = 'shrinkingConePFTauProducer',
-                 pfTauLabelNew = 'hpsPFTauProducer'
-                 )
-
+#switchToPFTauHPS(process, 
+#                 pfTauLabelOld = 'shrinkingConePFTauProducer',
+#                 pfTauLabelNew = 'hpsPFTauProducer'
+#                 )
+switchToPFTauHPS(process)
+                 
 getattr(process,"patTaus").embedIsolationTracks             = cms.bool(True)
 getattr(process,"patTaus").embedSignalTracks                = cms.bool(True)
 getattr(process,"patTaus").embedGenMatch                    = cms.bool(True)
@@ -512,18 +512,18 @@ process.selectedPatElectronsUserEmbedded = cms.EDProducer(
     inputFileName3 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet0HighPt_NoIPInfo_BDTG.weights.xml'),
     inputFileName4 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet1HighPt_NoIPInfo_BDTG.weights.xml'),
     inputFileName5 = cms.FileInPath('UserCode/MitPhysics/data/ElectronMVAWeights/Subdet2HighPt_NoIPInfo_BDTG.weights.xml'),
-    inputFileName0v2 = cms.FileInPath('EGamma/EGammaAnalysisTools/data/Electrons_BDTG_TrigV0_Cat1.weights.xml'),
-    inputFileName1v2 = cms.FileInPath('EGamma/EGammaAnalysisTools/data/Electrons_BDTG_TrigV0_Cat2.weights.xml'),
-    inputFileName2v2 = cms.FileInPath('EGamma/EGammaAnalysisTools/data/Electrons_BDTG_TrigV0_Cat3.weights.xml'),
-    inputFileName3v2 = cms.FileInPath('EGamma/EGammaAnalysisTools/data/Electrons_BDTG_TrigV0_Cat4.weights.xml'),
-    inputFileName4v2 = cms.FileInPath('EGamma/EGammaAnalysisTools/data/Electrons_BDTG_TrigV0_Cat5.weights.xml'),
-    inputFileName5v2 = cms.FileInPath('EGamma/EGammaAnalysisTools/data/Electrons_BDTG_TrigV0_Cat6.weights.xml'),
-    inputFileName0v3 = cms.FileInPath('EGamma/EGammaAnalysisTools/data/Electrons_BDTG_NonTrigV0_Cat1.weights.xml'),
-    inputFileName1v3 = cms.FileInPath('EGamma/EGammaAnalysisTools/data/Electrons_BDTG_NonTrigV0_Cat2.weights.xml'),
-    inputFileName2v3 = cms.FileInPath('EGamma/EGammaAnalysisTools/data/Electrons_BDTG_NonTrigV0_Cat3.weights.xml'),
-    inputFileName3v3 = cms.FileInPath('EGamma/EGammaAnalysisTools/data/Electrons_BDTG_NonTrigV0_Cat4.weights.xml'),
-    inputFileName4v3 = cms.FileInPath('EGamma/EGammaAnalysisTools/data/Electrons_BDTG_NonTrigV0_Cat5.weights.xml'),
-    inputFileName5v3 = cms.FileInPath('EGamma/EGammaAnalysisTools/data/Electrons_BDTG_NonTrigV0_Cat6.weights.xml'),
+    inputFileName0v2 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_TrigV0_Cat1.weights.xml'),
+    inputFileName1v2 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_TrigV0_Cat2.weights.xml'),
+    inputFileName2v2 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_TrigV0_Cat3.weights.xml'),
+    inputFileName3v2 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_TrigV0_Cat4.weights.xml'),
+    inputFileName4v2 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_TrigV0_Cat5.weights.xml'),
+    inputFileName5v2 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_TrigV0_Cat6.weights.xml'),
+    inputFileName0v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat1.weights.xml'),
+    inputFileName1v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat2.weights.xml'),
+    inputFileName2v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat3.weights.xml'),
+    inputFileName3v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat4.weights.xml'),
+    inputFileName4v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat5.weights.xml'),
+    inputFileName5v3 = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/Electrons_BDTG_NonTrigV0_Cat6.weights.xml'),
     #inputFileNameMVADaniele = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/TMVA_BDTSimpleCat.weights.xml')
     )
 
@@ -794,12 +794,9 @@ process.selectedPrimaryVertices.src = cms.InputTag('offlinePrimaryVertices')
 
 if not runOnMC:
     process.skim.remove(process.printTree1)
-    #process.skim.remove(process.HLTFilter)
 if not runOnEmbed:
      process.skim.remove(process.ak5JetTracksAssociatorAtVertex)
      process.skim.remove(process.btagging)
-if runOnEmbed:
-     process.skim.remove(process.HLTFilter)
      
 process.p = cms.Path(process.skim)
 

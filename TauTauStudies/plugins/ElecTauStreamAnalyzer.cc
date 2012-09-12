@@ -68,6 +68,8 @@
 
 #include "CMGTools/External/interface/PileupJetIdentifier.h"
 
+///METCovMatrix/////
+#include "AnalysisDataFormats/TauAnalysis/interface/PFMEtSignCovMatrix.h"
 
 #include <vector>
 #include <utility>
@@ -88,6 +90,7 @@ ElecTauStreamAnalyzer::ElecTauStreamAnalyzer(const edm::ParameterSet & iConfig){
   metTag_            = iConfig.getParameter<edm::InputTag>("met");
   rawMetTag_         = iConfig.getParameter<edm::InputTag>("rawMet");
   mvaMetTag_         = iConfig.getParameter<edm::InputTag>("mvaMet");
+  metCovTag_         = iConfig.getParameter<edm::InputTag>("metCov");
   electronsTag_      = iConfig.getParameter<edm::InputTag>("electrons");
   electronsRelTag_   = iConfig.getParameter<edm::InputTag>("electronsRel");
   verticesTag_       = iConfig.getParameter<edm::InputTag>("vertices");
@@ -725,6 +728,13 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       << "No mva MET label available \n";
   const pat::METCollection* mvaMet = mvaMetHandle.product();
 
+  edm::Handle<PFMEtSignCovMatrix>metCovHandle;
+  iEvent.getByLabel( metCovTag_, metCovHandle);
+  if( !metCovHandle.isValid() )
+    edm::LogError("DataNotAvailable")
+      << "No met Cov label available \n";
+  //const PFMEtSignCovMatrix* metCov = metCovHandle.product();
+
   edm::Handle<pat::TriggerEvent> triggerHandle;
   iEvent.getByLabel(triggerResultsTag_, triggerHandle);
   if( !triggerHandle.isValid() )  
@@ -942,7 +952,6 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 	  && (*electronsRel)[i].userFloat("PFRelIsoDB04v3")<0.30 ){
 	elecFlag_       = 1;
 	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04v3");
-
 	if(verbose_) cout<< "Two electrons failing diElec veto: flag= " << elecFlag_ << endl;
 	found=true;
       }
@@ -952,7 +961,6 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 	       && (*electronsRel)[i].userFloat("PFRelIsoDB04v3")<0.30 ){
 	elecFlag_       = 2;
 	elecVetoRelIso_ = (*electronsRel)[i].userFloat("PFRelIsoDB04v3");
-
 	if(verbose_) cout<< "Two electrons with SS: flag= " << elecFlag_ << endl;
 	//found=true;
       }
@@ -1123,7 +1131,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     pZetaVis_    =  theDiTau->pZetaVis();
     pZetaSig_    =  theDiTau->pZetaSig();
     mTauTauMin_  =  theDiTau->mTauTauMin();
-    if(theDiTau->hasMEtSignMatrix()){
+    /*if(theDiTau->hasMEtSignMatrix()){
       const TMatrixD cov = theDiTau->metSignMatrix();
       const double* elements; 
       elements = cov.GetMatrixArray();
@@ -1131,6 +1139,16 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       metSgnMatrix_->push_back( elements[1] );    
       metSgnMatrix_->push_back( elements[3] );    
     }
+    */
+    if(metCovHandle.isValid()){
+      const TMatrixD cov = (*metCovHandle);
+      const double* elements;
+      elements = cov.GetMatrixArray();
+      metSgnMatrix_->push_back( elements[0] ); //sigma_E
+      metSgnMatrix_->push_back( elements[1] ); //sigma_Ephi
+      metSgnMatrix_->push_back( elements[3] ); //sigma_phi
+    }
+
     METP4_->push_back((*rawMet)[0].p4()); 
     METP4_->push_back((*met)[0].p4());
     METP4_->push_back(theDiTau->met()->p4());
@@ -1496,7 +1514,6 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     vetos2011EBChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.010));
     vetos2011EBPhotonLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.08));
     vetos2011EBPhotonLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
-
     vetos2011EEChargedLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.015));
     vetos2011EEChargedLeg1.push_back(new isodeposit::ThresholdVeto(0.0));
     //vetos2011EENeutralLeg1.push_back(new isodeposit::ConeVeto(reco::isodeposit::Direction(leg1->eta(),leg1->phi()),0.01));
@@ -1695,15 +1712,34 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 //     cout << leg2->tauID("againstElectronLooseMVA2") << endl;
 
     tightestAntiEMVAWP_ = 0;
+    if( leg2->tauID("againstElectronLooseMVA2")  >0.5 &&  
+        leg2->tauID("againstElectronMediumMVA2") <0.5 && 
+        leg2->tauID("againstElectronTightMVA2")  <0.5) tightestAntiEMVAWP_ = 1; 
+ 
+    if( leg2->tauID("againstElectronLooseMVA2")  <0.5 &&  
+        leg2->tauID("againstElectronMediumMVA2") >0.5 && 
+        leg2->tauID("againstElectronTightMVA2")  <0.5) tightestAntiEMVAWP_ = 2; 
+ 
+    if( leg2->tauID("againstElectronLooseMVA2")  <0.5 &&  
+        leg2->tauID("againstElectronMediumMVA2") <0.5 && 
+        leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 3; 
+ 
+    if( leg2->tauID("againstElectronLooseMVA2")  >0.5 &&  
+        leg2->tauID("againstElectronMediumMVA2") >0.5 && 
+        leg2->tauID("againstElectronTightMVA2")  <0.5) tightestAntiEMVAWP_ = 4; 
+ 
+    if( leg2->tauID("againstElectronLooseMVA2")  <0.5 &&  
+        leg2->tauID("againstElectronMediumMVA2") >0.5 && 
+        leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 5; 
+ 
+    if( leg2->tauID("againstElectronLooseMVA2")  >0.5 &&  
+        leg2->tauID("againstElectronMediumMVA2") <0.5 && 
+        leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 6; 
+ 
+    if( leg2->tauID("againstElectronLooseMVA2")  >0.5 &&  
+        leg2->tauID("againstElectronMediumMVA2") >0.5 && 
+        leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 7; 
 
-    if( leg2->tauID("againstElectronLoose1MVA2")>0.5)  tightestAntiEMVAWP_ = 1;
-    if( leg2->tauID("againstElectronLoose2MVA2")>0.5)  tightestAntiEMVAWP_ = 2;
-    if( leg2->tauID("againstElectronMedium1MVA2")>0.5) tightestAntiEMVAWP_ = 3;
-    if( leg2->tauID("againstElectronMedium2MVA2")>0.5) tightestAntiEMVAWP_ = 4;
-    if( leg2->tauID("againstElectronTight1MVA2")>0.5)  tightestAntiEMVAWP_ = 5;
-    if( leg2->tauID("againstElectronTight2MVA2")>0.5)  tightestAntiEMVAWP_ = 6;
-    if( leg2->tauID("againstElectronVTight1MVA2")>0.5) tightestAntiEMVAWP_ = 7;
-    if( leg2->tauID("againstElectronVTight2MVA2")>0.5) tightestAntiEMVAWP_ = 8;
     
     diTauVisP4_->push_back( theDiTau->p4Vis() );
     diTauCAP4_->push_back(  theDiTau->p4CollinearApprox() );
