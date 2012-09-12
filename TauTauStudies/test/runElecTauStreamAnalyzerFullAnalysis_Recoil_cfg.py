@@ -463,7 +463,7 @@ process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
     cut = cms.string("pt>20 && abs(eta)<2.3"+
-                     " && tauID('byLooseIsolationMVA')>0.5"+
+                     " && tauID('byLooseIsolationMVA')>-0.5"+
                      #" && (tauID('againstElectronTight')>0.5 || tauID('againstElectronMVA')>0.5)"
                      " && tauID('againstElectronMVA')>0.5"
                      ),
@@ -473,7 +473,7 @@ process.tauPtEtaIDAgMuAgElecIsoPtRel  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
     cut = cms.string("pt>19 && abs(eta)<2.3"+
-                     " && tauID('byLooseIsolationMVA')>0.5"+
+                     " && tauID('byLooseIsolationMVA')>-0.5"+
                      #" && (tauID('againstElectronTight')>0.5 || tauID('againstElectronMVA')>0.5 )"
                      " && tauID('againstElectronMVA')>0.5"
                      ),
