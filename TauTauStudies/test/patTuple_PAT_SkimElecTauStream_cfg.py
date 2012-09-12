@@ -79,7 +79,10 @@ process.tauPtEtaIDAgMuAgElecFilter = cms.EDFilter(
 process.HLTFilter = cms.EDFilter(
     "HLTHighLevel",
     TriggerResultsTag  = cms.InputTag("TriggerResults","","HLT"),
-    HLTPaths           = cms.vstring("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v4"),                                     
+    HLTPaths           = cms.vstring('HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*',#5e33
+                                     'HLT_Ele22_eta2p1_WP90Rho_LooseIsoPFTau20_v*',#7e33
+                                     'HLT_Ele20_CaloIdVT_TrkIdT_LooseIsoPFTau20_v*',#5e33 for QCD estimation
+                                     'HLT_Ele22_eta2p1_WP90NoIso_LooseIsoPFTau20_v*'),#7e33 for QCD estimation
     eventSetupPathsKey = cms.string(''),
     andOr              = cms.bool(True),
     throw              = cms.bool(False)
@@ -797,7 +800,9 @@ if not runOnMC:
 if not runOnEmbed:
      process.skim.remove(process.ak5JetTracksAssociatorAtVertex)
      process.skim.remove(process.btagging)
-     
+if runOnEmbed:
+     process.skim.remove(process.HLTFilter)
+      
 process.p = cms.Path(process.skim)
 
 
