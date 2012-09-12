@@ -64,6 +64,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   edm::InputTag metTag_;
   edm::InputTag rawMetTag_;
   edm::InputTag mvaMetTag_;
+  edm::InputTag metCovTag_;
   edm::InputTag electronsTag_;
   edm::InputTag electronsRelTag_;
   edm::InputTag verticesTag_;
