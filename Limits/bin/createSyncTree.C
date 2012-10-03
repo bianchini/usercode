@@ -72,7 +72,7 @@
 //    && abs(d0wWrtPV)<0.045 && abs(dzWrtPV)<0.2 
 //
 
-void synchNtuple(string sample = "VBFH120", string stream = "ElecTau") {
+void synchNtuple(string sample = "GGFH125", string stream = "MuTau") {
 
   TFile *lOFile = new TFile(("Output"+stream+"_"+sample+".root").c_str(),"RECREATE");
   TTree *lOTree = new TTree("TauCheck","TauCheck");
@@ -215,7 +215,8 @@ void synchNtuple(string sample = "VBFH120", string stream = "ElecTau") {
    /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-   TFile *file = new TFile(("./nTuple"+sample+"_Open_"+stream+"Stream.root").c_str(),"READ");
+   TFile *file = new TFile(("./batch/nTuple"+sample+"_Open_"+stream+"Stream.root").c_str(),"READ");
+   //TFile *file = new TFile(("/data_CMS/cms/anayak/HTauTauSynchronization/SyncDataCard-v1/OpenNtuples/nTuple"+sample+"_Open_"+stream+"Stream.root").c_str(),"READ");
    TTree *tree = (TTree*)file->Get("outTreePtOrd");
 
 
@@ -343,8 +344,8 @@ void synchNtuple(string sample = "VBFH120", string stream = "ElecTau") {
    float iMetPhi      ; tree->SetBranchAddress("MEtPhi"     ,&iMetPhi          ); //pfmet Phi
    float iMVAMet      ; tree->SetBranchAddress("MEtMVA"     ,&iMVAMet              ); //mvamet
    float iMVAMetPhi   ; tree->SetBranchAddress("MEtMVAPhi"  ,&iMVAMetPhi      ); //mvamet Phi
-   float iPZetaVis    ; tree->SetBranchAddress("pZetaVis"   ,&iPZetaVis       ); //pZeta Visible
-   float iPZetaMiss   ; tree->SetBranchAddress("pZeta"  ,   &iPZetaMiss    ); //pZeta Missing
+   float iPZetaVis    ; tree->SetBranchAddress("pZetaVisMVA"   ,&iPZetaVis       ); //pZeta Visible
+   float iPZetaMiss   ; tree->SetBranchAddress("pZetaMVA"  ,   &iPZetaMiss    ); //pZeta Missing
 
    //MET covariance matrices
    float iMetCov00    ; tree->SetBranchAddress("MEtCov00"   ,&iMetCov00     ); //pf met covariance matrix 00 
@@ -417,7 +418,8 @@ void synchNtuple(string sample = "VBFH120", string stream = "ElecTau") {
 
      //cout<<iRun<<"  "<<iLumi<<"  "<<iEvt<<"  "<<iMVAMet<<endl;
      //if(iEvt!=154667 && iEvt!=256822 && iEvt!=300707 && iEvt!=369805 && iEvt!=405653 && iEvt!=738289 && iEvt!=805741 ) continue;
-          
+     //if(iEvt!=172763 && iEvt!=172275 && iEvt!=172719 && iEvt!=172686 && iEvt!=172580 && iEvt!=172556 && iEvt!=172370 && iEvt!=172366 && iEvt!=103355 && iEvt!=103356 && iEvt!=103389 && iEvt!=103790 && iEvt!=102711 && iEvt!=102825) continue;
+
      // && iEvt!=190929 && iEvt!=158543 && iEvt!=47713
      
      if( stream.find("MuTau")!=string::npos   &&   !(iHLTx>0.5 && iHLTmatch>0.5 && iPt1>20 && iPt2>20 && iPassId1L && iPassId1T      && iIso1<0.1 && iPassId2>=0 && iMuFlag!=1 && iPairIndex<1))
@@ -427,7 +429,7 @@ void synchNtuple(string sample = "VBFH120", string stream = "ElecTau") {
          ((TMath::Abs(iscEta1)<0.80 && iPassId1T_F>0.925) || (TMath::Abs(iscEta1)<1.479 && TMath::Abs(iscEta1)>0.80 && iPassId1T_F>0.975) || (TMath::Abs(iscEta1)>1.479 && iPassId1T_F>0.985)) && iIso1<0.1 && iPassId2>=0 && iMuFlag!=1 && iPairIndex<1 && iMVA2>1))
        continue;
 
-     cout<<iRun<<"  "<<iLumi<<"  "<<iEvt<<endl;
+     //cout<<iRun<<"  "<<iLumi<<"  "<<iEvt<<endl;
      //cout << iMVA2 << endl;
 
      lPairIndex  = iPairIndex;
