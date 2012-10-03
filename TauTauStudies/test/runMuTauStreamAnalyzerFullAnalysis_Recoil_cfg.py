@@ -7,42 +7,41 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load("Configuration.StandardSequences.Geometry_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 
-from Configuration.PyReleaseValidation.autoCond import autoCond
-process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
+#from Configuration.PyReleaseValidation.autoCond import autoCond
+#process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 
 runOnMC     = True
 doSVFitReco = True
-usePFMEtMVA = False
+usePFMEtMVA = True
 
 if runOnMC:
     print "Running on MC"
 else:
     print "Running on Data"
         
-
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START42_V17::All')
+    process.GlobalTag.globaltag = cms.string('START52_V7::All')
 else:
-    process.GlobalTag.globaltag = cms.string('GR_R_42_V23::All')
+    process.GlobalTag.globaltag = cms.string('GR_R_52_V7::All')
+                
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
+process.MessageLogger.cerr.FwkReport.reportEvery = 10
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-    #'file:./root/patTuples_MuTauStream_VBFH125.root'
-    #'file:./patTuples_MuTauStream.root'
+    'file:./patTuples_MuTauStream.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-04May2012-Reload_DYJets-MuTau-50-madgraph-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_9_1_CS7.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/MuTauStream-04May2012-Reload-05AugReReco/d7ab9a49aa7555b45f2fd6a9510b15e8/patTuples_MuTauStream_9_2_bFX.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DoubleMu/MuTauStream-04May2012-Reload-RunBPromptReco-v1-Embedded/f5416ddeffc52a24fc875c17bf3889c0/patTuples_MuTauStream_8_3_C7R.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_1_1_QFt.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_2_1_QDr.root',
-    'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_3_1_IXG.root',
+    #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_3_1_IXG.root',
     )
     )
 
@@ -446,7 +445,7 @@ process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
     cut = cms.string("pt>20 && abs(eta)<2.3"+
-                     " && tauID('byLooseIsolationMVA')>-0.5"
+                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"
                      ),
     filter = cms.bool(False)
     )
@@ -454,7 +453,7 @@ process.tauPtEtaIDAgMuAgElecIsoPtRel  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
     cut = cms.string("pt>19 && abs(eta)<2.3"+
-                     " && tauID('byLooseIsolationMVA')>-0.5"
+                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"
                      ),
     filter = cms.bool(False)
     )
@@ -988,7 +987,7 @@ process.seqRawTauDown = cms.Sequence(
 #######################################################################
 
 if runOnMC:
-    #process.pNominal            = cms.Path( process.seqNominal )
+    process.pNominal            = cms.Path( process.seqNominal )
     #process.pJetUp                 = cms.Path( process.seqJetUp   )
     #process.pJetDown               = cms.Path( process.seqJetDown )
     #process.pMEtResolutionUp       = cms.Path( process.seqMEtResolutionUp )
@@ -999,7 +998,7 @@ if runOnMC:
     #process.pMuDown                = cms.Path( process.seqMuDown)
     #process.pTauUp              = cms.Path( process.seqTauUp)
     #process.pTauDown            = cms.Path( process.seqTauDown )
-    process.pRawNominal         = cms.Path( process.seqRawNominal )
+    #process.pRawNominal         = cms.Path( process.seqRawNominal )
     #process.pRawJetUp              = cms.Path( process.seqRawJetUp   )
     #process.pRawJetDown            = cms.Path( process.seqRawJetDown )
     #process.pRawMEtResolutionUp    = cms.Path( process.seqRawMEtResolutionUp )
@@ -1008,16 +1007,16 @@ if runOnMC:
     #process.pRawMEtResponseDown    = cms.Path( process.seqRawMEtResponseDown)
     #process.pRawMuUp               = cms.Path( process.seqRawMuUp)
     #process.pRawMuDown             = cms.Path( process.seqRawMuDown)
-    process.pRawTauUp           = cms.Path( process.seqRawTauUp )
-    process.pRawTauDown         = cms.Path( process.seqRawTauDown )
+    #process.pRawTauUp           = cms.Path( process.seqRawTauUp )
+    #process.pRawTauDown         = cms.Path( process.seqRawTauDown )
 
 else:
-    #process.pNominal            = cms.Path( process.seqNominal )
+    process.pNominal            = cms.Path( process.seqNominal )
     #process.pTauUp              = cms.Path( process.seqTauUp)
     #process.pTauDown            = cms.Path( process.seqTauDown )
     process.pRawNominal         = cms.Path( process.seqRawNominal )
-    process.pRawTauUp           = cms.Path( process.seqRawTauUp )
-    process.pRawTauDown         = cms.Path( process.seqRawTauDown )
+    #process.pRawTauUp           = cms.Path( process.seqRawTauUp )
+    #process.pRawTauDown         = cms.Path( process.seqRawTauDown )
 
 
 #from PhysicsTools.PatAlgos.tools.helpers import massSearchReplaceAnyInputTag

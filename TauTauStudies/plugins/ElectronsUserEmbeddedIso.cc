@@ -116,6 +116,8 @@ void ElectronsUserEmbeddedIso::produce(edm::Event & iEvent, const edm::EventSetu
       aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2012EBPFIdNeutral).first;
     float phIsoPU04EBPFId = 
       aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2012EBPFIdPhotons).first;
+    float allChIso04EBPFId =  
+      aElectron.isoDeposit(pat::User1Iso)->depositAndCountWithin(0.4, vetos2012EBPFIdCharged).first;
 
     float chIso04EEPFId = 
       aElectron.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4, vetos2012EEPFIdCharged).first;
@@ -127,7 +129,8 @@ void ElectronsUserEmbeddedIso::produce(edm::Event & iEvent, const edm::EventSetu
       aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2012EEPFIdNeutral).first;
     float phIsoPU04EEPFId = 
       aElectron.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2012EEPFIdPhotons).first;
-
+    float allChIso04EEPFId =  
+      aElectron.isoDeposit(pat::User1Iso)->depositAndCountWithin(0.4, vetos2012EEPFIdCharged).first;
 
     float chIso04EBNoPFId = 
       aElectron.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(0.4, vetos2012EBNoPFIdCharged).first;
@@ -171,6 +174,8 @@ void ElectronsUserEmbeddedIso::produce(edm::Event & iEvent, const edm::EventSetu
       (aElectron.isEB())*phIso04EBPFId + (aElectron.isEE())*phIso04EEPFId ;
     float nhIsoPU04PFId = 
       (aElectron.isEB())*nhIsoPU04EBPFId + (aElectron.isEE())*nhIsoPU04EEPFId ;
+    float allChIso04PFId =  
+      (aElectron.isEB())*allChIso04EBPFId + (aElectron.isEE())*allChIso04EEPFId ;
 
     float chIso03NoPFId =
       (aElectron.isEB())*chIso03EBNoPFId + (aElectron.isEE())*chIso03EENoPFId ;
@@ -192,9 +197,12 @@ void ElectronsUserEmbeddedIso::produce(edm::Event & iEvent, const edm::EventSetu
 
 
     //cout << "@@@@@@@" << endl;
-    //cout << "chIso04 = " << chIso04 << endl;
-    //cout << "nhIso04 = " << nhIso04 << endl;
-    //cout << "phIso04 = " << phIso04 << endl;
+    //cout << "chIso04PFId = " << chIso04PFId << endl;
+    //cout << "nhIso04PFId = " << nhIso04PFId << endl;
+    //cout << "phIso04PFId = " << phIso04PFId << endl;
+    //cout << "chIso04PFId = " << chIso04NoPFId << endl;
+    //cout << "nhIso04PFId = " << nhIso04NoPFId << endl;
+    //cout << "phIso04PFId = " << phIso04NoPFId << endl;
     //cout << "@@@@@@@" << endl;
 
 
@@ -208,7 +216,11 @@ void ElectronsUserEmbeddedIso::produce(edm::Event & iEvent, const edm::EventSetu
     aElectron.addUserFloat("PFRelIsoDB04v2",
 			   (chIso04PFId+std::max(nhIso04PFId+phIso04PFId-0.5*(nhIsoPU04PFId),0.0))/aElectron.pt());
    
- 
+    aElectron.addUserFloat("PFRelIso04v3", 
+                           (allChIso04PFId+nhIso04PFId+phIso04PFId)/aElectron.pt()); 
+    aElectron.addUserFloat("PFRelIsoDB04v3", 
+                           (allChIso04PFId+std::max(nhIso04PFId+phIso04PFId-0.5*(nhIsoPU04PFId),0.0))/aElectron.pt());
+
     // cleaning
     for(unsigned int i = 0; i <vetos2012EBPFIdCharged.size(); i++){
       delete vetos2012EBPFIdCharged[i];

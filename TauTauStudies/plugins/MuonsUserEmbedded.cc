@@ -118,23 +118,15 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
     double ip3dPVub    =  -99.;
     double ip3dPVubErr =  -99.;
 
-
-    //std::cout << "Muon Pt " << aMuon.pt() << std::endl;
     if(vertexes->size()!=0 && aMuon.isGlobalMuon()){
       dxyWrtPV = (aMuon.globalTrack())->dxy( (*vertexes)[0].position() ) ;
       dzWrtPV  = (aMuon.globalTrack())->dz( (*vertexes)[0].position() ) ;
-      //std::cout << "Is global " << dxyWrtPV << ", " << dzWrtPV << std::endl;
     }
     // if it is at least tracker, than use the inner track
     if (vertexes->size()!=0 && aMuon.isTrackerMuon()){
       dxyWrtPV = (aMuon.innerTrack())->dxy( (*vertexes)[0].position() ) ;
       dzWrtPV  = (aMuon.innerTrack())->dz( (*vertexes)[0].position() ) ;
-      //std::cout << "Is tracker " << dxyWrtPV << ", " << dzWrtPV << std::endl;
     }
-
-
-    //for(unsigned int k = 0 ; k < vertexes->size() ; k++)
-    //std::cout << "Vertex " << k << " => z= " << ((*vertexes)[k].position()).z() <<  std::endl;
 
     aMuon.addUserFloat("dxyWrtPV",dxyWrtPV);
     aMuon.addUserFloat("dzWrtPV",dzWrtPV);
@@ -287,12 +279,15 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
       aMuon.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2011Neutral).first;
     float phIsoPU04 = 
       aMuon.isoDeposit(pat::PfAllParticleIso)->depositAndCountWithin(0.4, vetos2011Photons).first;
-
+    float allChIso04 =  
+      aMuon.isoDeposit(pat::User1Iso)->depositAndCountWithin(0.4, vetos2011Charged).first;
+    
     aMuon.addUserFloat("PFRelIso04",(chIso04+nhIso04+phIso04)/aMuon.pt());
     aMuon.addUserFloat("PFRelIso03",(chIso03+nhIso03+phIso03)/aMuon.pt());
     aMuon.addUserFloat("PFRelIsoDB04",(chIso04+std::max(nhIso04+phIso04-0.5*(nhIsoPU04),0.0))/aMuon.pt());
     aMuon.addUserFloat("PFRelIsoDB03",(chIso03+std::max(nhIso03+phIso03-0.5*(nhIsoPU03),0.0))/aMuon.pt());
-
+    aMuon.addUserFloat("PFRelIsoDB04v2",(allChIso04+std::max(nhIso04+phIso04-0.5*(nhIsoPU04),0.0))/aMuon.pt());
+    
     //std::cout << aMuon.pt() << " => "
     //      << chIso04v2 << ", "
     //      << nhIso04v2 << ", "
