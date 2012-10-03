@@ -21,7 +21,7 @@ else:
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source.fileNames = cms.untracked.vstring(
     #'root://node12.datagrid.cea.fr//dpm/datagrid.cea.fr/home/cms/trivcat/store/user/rbonieck/VBF_HToTauTau_M-155_8TeV-powheg-pythia6/523_eletau_skim_v2/9e3b6ed4c9ca67264aaf9205c313d94b/tautauSkimmAOD_9_1_Zsv.root'
