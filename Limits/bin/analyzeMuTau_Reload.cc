@@ -145,8 +145,7 @@ void drawHistogramMC(TTree* tree = 0,
     tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*cut);
     normalization      = h->Integral()*scaleFactor;
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
-    //cout << normalization << " - -- " << h->Integral() << endl;
-    h->Reset();
+    if(verbose==0) h->Reset();
     if(verbose){
       cout << "Tree " << tree->GetTitle() << ":" << endl;
       cout << "Cut " << cut.GetTitle() << endl;
@@ -172,7 +171,7 @@ void drawHistogramEmbed(TTree* tree = 0,
     tree->Draw(variable+">>"+TString(h->GetName()),"(HLTTau*HLTMu*embeddingWeight)"*cut);
     normalization      = h->Integral()*scaleFactor;
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
-    h->Reset();
+     if(verbose==0) h->Reset();
     if(verbose){
       cout << "Tree " << tree->GetTitle() << ":" << endl;
       cout << "Cut " << cut.GetTitle() << endl;
@@ -198,7 +197,7 @@ void drawHistogramData(TTree* tree = 0,
     tree->Draw(variable+">>"+TString(h->GetName()),cut);
     normalization      = h->Integral()*scaleFactor;
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
-    h->Reset();
+     if(verbose==0) h->Reset();
     if(verbose){
       cout << "Tree " << tree->GetTitle() << ":" << endl;
       cout << "Cut " << cut.GetTitle() << endl;
@@ -225,7 +224,7 @@ void drawHistogramDataFakeRate(TTree* tree = 0,
     tree->Draw(variable+">>"+TString(h->GetName()),TCut(scaleFact.c_str())*cut);
     normalization      = h->Integral()*scaleFactor;
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
-    h->Reset();
+     if(verbose==0) h->Reset();
     if(verbose){
       cout << "Tree " << tree->GetTitle() << ":" << endl;
       cout << "Cut " << cut.GetTitle() << endl;
@@ -406,7 +405,7 @@ void evaluateWextrapolation(string sign = "OS", string selection_ = "",
 
 }
 
-void evaluateQCD(string sign = "SS", string selection_ = "", 
+void evaluateQCD(bool evaluateWSS = true, string sign = "SS", string selection_ = "", 
 		 float& SSQCDinSignalRegionDATAIncl_ = *(new float()), float& SSIsoToSSAIsoRatioQCD = *(new float()), float& scaleFactorTTSSIncl = *(new float()),
 		 float& extrapFactorWSSIncl = *(new float()), float& SSWinSignalRegionDATAIncl = *(new float()), float& SSWinSignalRegionMCIncl = *(new float()),
 		 TH1F* hExtrap=0, TString variable = "",
@@ -422,21 +421,21 @@ void evaluateQCD(string sign = "SS", string selection_ = "",
 		 TCut sbinPZetaRel ="", TCut pZ="", TCut apZ="", TCut sbinPZetaRelInclusive="", 
 		 TCut sbinPZetaRelaIsoInclusive="", TCut sbinPZetaRelaIso="", TCut vbf="", TCut boost=""){
 
-
-  evaluateWextrapolation(sign, selection_ , 
-			 extrapFactorWSSIncl, SSWinSignalRegionDATAIncl, SSWinSignalRegionMCIncl,
-			 scaleFactorTTSSIncl,
-			 hExtrap, variable,
-			 backgroundWJets, backgroundTTbar, backgroundOthers, 
-			 backgroundDYTauTau, backgroundDYJtoTau, backgroundDYMutoTau, data,
-			 scaleFactor, TTxsectionRatio,lumiCorrFactor,
-			 ExtrapolationFactorSidebandZDataMC,ExtrapolationFactorZDataMC, 
-			 MutoTauCorrectionFactor, JtoTauCorrectionFactor,
-			 antiWsdb, antiWsgn, useMt,
-			 scaleFactMu,
-			 sbinPZetaRel, pZ, apZ, sbinPZetaRelInclusive, 
-			 sbinPZetaRelaIsoInclusive, sbinPZetaRelaIso, vbf, boost);
-
+  if(evaluateWSS)
+    evaluateWextrapolation(sign, selection_ , 
+			   extrapFactorWSSIncl, SSWinSignalRegionDATAIncl, SSWinSignalRegionMCIncl,
+			   scaleFactorTTSSIncl,
+			   hExtrap, variable,
+			   backgroundWJets, backgroundTTbar, backgroundOthers, 
+			   backgroundDYTauTau, backgroundDYJtoTau, backgroundDYMutoTau, data,
+			   scaleFactor, TTxsectionRatio,lumiCorrFactor,
+			   ExtrapolationFactorSidebandZDataMC,ExtrapolationFactorZDataMC, 
+			   MutoTauCorrectionFactor, JtoTauCorrectionFactor,
+			   antiWsdb, antiWsgn, useMt,
+			   scaleFactMu,
+			   sbinPZetaRel, pZ, apZ, sbinPZetaRelInclusive, 
+			   sbinPZetaRelaIsoInclusive, sbinPZetaRelaIso, vbf, boost);
+  
   float Error = 0.;
   float SSQCDinSignalRegionDATAIncl = 0.;
   drawHistogramData(data, variable,              SSQCDinSignalRegionDATAIncl,        Error, 1.0, hExtrap, sbin);
@@ -1104,7 +1103,8 @@ void plotMuTau( Int_t mH_           = 120,
   ExtrapolationFactorSidebandZDataMC = sidebandRatioEmbedded/sidebandRatioMadgraph ;
 
   cout << " ==> data/MC (signal region) = " << ExtrapolationFactorZDataMC << " +/- " 
-       << ExtrapolationFactorZDataMC*(ErrorExtrapolationFactorMadGraph/ExtrapolationFactorMadGraph + ErrorExtrapolationFactorZ/ExtrapolationFactorZ) 
+       << ExtrapolationFactorZDataMC*(ErrorExtrapolationFactorMadGraph/ExtrapolationFactorMadGraph + 
+				      ErrorExtrapolationFactorZ/ExtrapolationFactorZ) 
        << endl;
   cout << " ==> data/MC (seideband-to-signal) = " << ExtrapolationFactorSidebandZDataMC << endl;
 
@@ -1118,7 +1118,7 @@ void plotMuTau( Int_t mH_           = 120,
   float SSWinSignalRegionDATAIncl = 0.;
   float SSWinSignalRegionMCIncl = 0.;
 
-  evaluateQCD("SS", "inclusive", 
+  evaluateQCD(true, "SS", "inclusive", 
 	      SSQCDinSignalRegionDATAIncl , SSIsoToSSAIsoRatioQCD, scaleFactorTTSSIncl,
 	      extrapFactorWSSIncl, SSWinSignalRegionDATAIncl, SSWinSignalRegionMCIncl,
  	      hExtrap, variable,
@@ -1286,6 +1286,33 @@ void plotMuTau( Int_t mH_           = 120,
 
       float error2OnQCD = 0.0;
       
+
+  float SSQCDinSignalRegionDATA = 0.; 
+  float extrapFactorWSS = 0.;
+  float SSWinSignalRegionDATA = 0.;
+  float SSWinSignalRegionMC = 0.;
+  float dummy1 = 0.;
+
+  evaluateQCD(false, "SS", selection_, 
+	      SSQCDinSignalRegionDATA , dummy , scaleFactorTTSS,
+	      extrapFactorWSS, SSWinSignalRegionDATA, SSWinSignalRegionMC,
+ 	      h1, variable,
+ 	      backgroundWJets, backgroundTTbar, backgroundOthers, 
+ 	      backgroundDYTauTau, backgroundDYJtoTau, backgroundDYMutoTau, data,
+ 	      Lumi/1000*hltEff_,  TTxsectionRatio, lumiCorrFactor,
+	      ExtrapolationFactorSidebandZDataMC, ExtrapolationFactorZDataMC,
+ 	      MutoTauCorrectionFactor, JtoTauCorrectionFactor, 
+	      OStoSSRatioQCD,
+ 	      antiWsdb, antiWsgn, useMt,
+ 	      scaleFactMu,
+	      sbinSSInclusive,
+ 	      sbinPZetaRelSSInclusive, pZ, apZ, sbinPZetaRelSSInclusive, 
+ 	      sbinPZetaRelSSaIsoInclusive, sbinPZetaRelSSaIsoInclusive, vbf, boost);
+ 
+
+
+
+
       TH1F* hHelp = (TH1F*)h1->Clone("hHelp");
       hHelp->Reset();
       currentTree->Draw(variable+">>hHelp", sbinSS);
