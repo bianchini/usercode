@@ -201,7 +201,8 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
     aElectron.addUserFloat("HoE",HoE);
 
     int passconversionveto = 
-      int(!ConversionTools::hasMatchedConversion(*aGsf,hConversions,thebs.position(),true,2.0,1e-06,0));
+      //int(!ConversionTools::hasMatchedConversion(*aGsf,hConversions,thebs.position(),true,2.0,1e-06,0));
+      int(!ConversionTools::hasMatchedConversion(dynamic_cast<reco::GsfElectron const&>(*(aElectron.originalObjectRef())),hConversions,thebs.position(),true,2.0,1e-06,0));
     aElectron.addUserInt("antiConv",passconversionveto);
   
     double dxyWrtPV =  -99.;

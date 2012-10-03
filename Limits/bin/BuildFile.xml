@@ -1,89 +1,3 @@
-<bin   file="analyzeMuTau_B.cc" name="analyzeMuTau_B">
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="HiggsAnalysis/CombinedLimit"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="roofit"/>
-  <use   name="root"/>
-  <use   name="rootgraphics"/>
-</bin>
-
-<bin   file="analyzeElecTau_B.cc" name="analyzeElecTau_B">
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="HiggsAnalysis/CombinedLimit"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="roofit"/>
-  <use   name="root"/>
-  <use   name="rootgraphics"/>
-</bin>
-
-<bin   file="makeMuTauTemplates.cc" name="makeMuTauTemplates">
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="HiggsAnalysis/CombinedLimit"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="roofit"/>
-  <use   name="root"/>
-  <use   name="rootgraphics"/>
-</bin>
-
-<bin   file="makeElecTauTemplates.cc" name="makeElecTauTemplates">
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="HiggsAnalysis/CombinedLimit"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="roofit"/>
-  <use   name="root"/>
-  <use   name="rootgraphics"/>
-</bin>
-
-<bin   file="makeTables.cc" name="makeTables">
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="HiggsAnalysis/CombinedLimit"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="roofit"/>
-  <use   name="root"/>
-  <use   name="rootgraphics"/>
-</bin>
-
-<bin   file="systematics.cc" name="systematics">
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="HiggsAnalysis/CombinedLimit"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="roofit"/>
-  <use   name="root"/>
-  <use   name="rootgraphics"/>
-</bin>
-
-<bin   file="treeSkimmerMuTau.cc" name="treeSkimmerMuTau">
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="HiggsAnalysis/CombinedLimit"/>
-  <use   name="Bianchi/Utilities"/>
-  <use   name="TauAnalysis/SVFitStandAlone"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="roofit"/>
-  <use   name="root"/>
-  <use   name="rootgraphics"/>
-</bin>
-
 <bin   file="treeSkimmerMuTau_MVA.cc" name="treeSkimmerMuTau_MVA">
   <use   name="DataFormats/FWLite"/>
   <use   name="FWCore/FWLite"/>
@@ -94,20 +8,7 @@
   <use   name="TauAnalysis/SVFitStandAlone"/>
   <use   name="TauAnalysis/CandidateTools"/>
   <use   name="PhysicsTools/FWLite"/>
-  <use   name="roofit"/>
-  <use   name="root"/>
-  <use   name="rootgraphics"/>
-</bin>
-
-
-<bin   file="treeSkimmerElecTau.cc" name="treeSkimmerElecTau">
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="HiggsAnalysis/CombinedLimit"/>
-  <use   name="Bianchi/Utilities"/>
-  <use   name="PhysicsTools/FWLite"/>
+  <use   name="PhysicsTools/Utilities"/>
   <use   name="roofit"/>
   <use   name="root"/>
   <use   name="rootgraphics"/>
@@ -123,60 +24,7 @@
   <use   name="TauAnalysis/SVFitStandAlone"/>
   <use   name="TauAnalysis/CandidateTools"/>
   <use   name="PhysicsTools/FWLite"/>
-  <use   name="roofit"/>
-  <use   name="root"/>
-  <use   name="rootgraphics"/>
-</bin>
-
-
-#<bin   file="lineShape.cc" name="lineShape">
-#  <use   name="DataFormats/FWLite"/>
-#  <use   name="FWCore/FWLite"/>
-#  <use   name="FWCore/ParameterSet"/>
-#  <use   name="FWCore/PythonParameterSet"/>
-#  <use   name="Bianchi/Utilities"/>
-#  <use   name="PhysicsTools/FWLite"/>
-#  <use   name="TauAnalysis/CandidateTools"/>
-#  <use   name="roofit"/>
-#  <use   name="root"/>
-#  <use   name="rootgraphics"/>
-#</bin>
-
-#<bin   file="integrator.cc" name="integrator">
-#  <use   name="DataFormats/FWLite"/>
-#  <use   name="FWCore/FWLite"/>
-#  <use   name="FWCore/ParameterSet"/>
-#  <use   name="FWCore/PythonParameterSet"/>
-#  <use   name="Bianchi/Utilities"/>
-#  <use   name="PhysicsTools/FWLite"/>
-#  <use   name="TauAnalysis/CandidateTools"/>
-#  <use   name="roofit"/>
-#  <use   name="root"/>
-#  <use   name="rootgraphics"/>
-#</bin>
-
-#<bin   file="integrator2.cc" name="integrator2">
-#  <use   name="DataFormats/FWLite"/>
-#  <use   name="FWCore/FWLite"/>
-#  <use   name="FWCore/ParameterSet"/>
-#  <use   name="FWCore/PythonParameterSet"/>
-#  <use   name="Bianchi/Utilities"/>
-#  <use   name="PhysicsTools/FWLite"/>
-#  <use   name="TauAnalysis/CandidateTools"/>
-#  <use   name="roofit"/>
-#  <use   name="root"/>
-#  <use   name="rootgraphics"/>
-#</bin>
-
-
-<bin   file="computeCalibration.cc" name="computeCalibration">
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="Bianchi/Utilities"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="TauAnalysis/CandidateTools"/>
+  <use   name="PhysicsTools/Utilities"/>
   <use   name="roofit"/>
   <use   name="root"/>
   <use   name="rootgraphics"/>

@@ -26,8 +26,9 @@
 #include "TRandom3.h"
 #include "TROOT.h"
 #include "Bianchi/Utilities/interface/RecoilCorrector.hh"
-#include "Bianchi/Utilities/interface/Lumi3DReWeightingForLorenzo.h"
-#include "PhysicsTools/Utilities/interface/LumiReweightingStandAlone.h"
+//#include "Bianchi/Utilities/interface/Lumi3DReWeightingForLorenzo.h"
+//#include "PhysicsTools/Utilities/interface/LumiReweightingStandAlone.h"
+#include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
 #include "TauAnalysis/CandidateTools/interface/NSVfitStandaloneAlgorithm.h"
 #include "PhysicsTools/FWLite/interface/TFileService.h"
 #include "TauAnalysis/CandidateTools/interface/candidateAuxFunctions.h"
@@ -48,7 +49,8 @@
 #define SAVE   true
 #define MINPt1 20.0 
 #define MINPt2 20.0
-#define PtVETO 20.0
+//#define PtVETO 20.0
+#define PtVETO 30.0
 #define MAXEta  5.0 
 #define MINJetID 0.5
 #define USERECOILALGO true
@@ -60,7 +62,11 @@ using namespace ROOT::Math;
 using namespace std;
 
 typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LV;
+//reweight::LumiReWeighting LumiWeights_("Data_Pileup_2012_HCP-600bins.root","MC_Summer12_PU_S10-600bins.root","pileup","pileup");
+edm::LumiReWeighting LumiWeights_("MC_Summer12_PU_S10-600bins.root","Data_Pileup_2012_HCP-600bins.root","pileup","pileup");
 
+bool FIRSTEVENT = true;
+enum BVariation{kNo = 1, kUp = 2, kDown = 3};
 
 float* computeZeta(LV leg1, LV leg2, LV MEt){
 
@@ -183,72 +189,19 @@ void createReWeighting3D(){
 
 }
 
-float pileupWeight( int intimepileup_ ){
+float pileupWeight( float intimepileup_ ){
 
-  
+  /*
   // Summer12: truth (from twiki)
   std::vector< float > Summer12Lumi;
   Double_t Summer12Lumi_f[60] = {
-    2.344E-05,
-    2.344E-05,
-    2.344E-05,
-    2.344E-05,
-    4.687E-04,
-    4.687E-04,
-    7.032E-04,
-    9.414E-04,
-    1.234E-03,
-    1.603E-03,
-    2.464E-03,
-    3.250E-03,
-    5.021E-03,
-    6.644E-03,
-    8.502E-03,
-    1.121E-02,
-    1.518E-02,
-    2.033E-02,
-    2.608E-02,
-    3.171E-02,
-    3.667E-02,
-    4.060E-02,
-    4.338E-02,
-    4.520E-02,
-    4.641E-02,
-    4.735E-02,
-    4.816E-02,
-    4.881E-02,
-    4.917E-02,
-    4.909E-02,
-    4.842E-02,
-    4.707E-02,
-    4.501E-02,
-    4.228E-02,
-    3.896E-02,
-    3.521E-02,
-    3.118E-02,
-    2.702E-02,
-    2.287E-02,
-    1.885E-02,
-    1.508E-02,
-    1.166E-02,
-    8.673E-03,
-    6.190E-03,
-    4.222E-03,
-    2.746E-03,
-    1.698E-03,
-    9.971E-04,
-    5.549E-04,
-    2.924E-04,
-    1.457E-04,
-    6.864E-05,
-    3.054E-05,
-    1.282E-05,
-    5.081E-06,
-    1.898E-06,
-    6.688E-07,
-    2.221E-07,
-    6.947E-08,
-    2.047E-08
+    2.344E-05, 2.344E-05, 2.344E-05, 2.344E-05, 4.687E-04, 4.687E-04, 7.032E-04, 9.414E-04, 1.234E-03,
+    1.603E-03, 2.464E-03, 3.250E-03, 5.021E-03, 6.644E-03, 8.502E-03, 1.121E-02, 1.518E-02, 2.033E-02,
+    2.608E-02, 3.171E-02, 3.667E-02, 4.060E-02, 4.338E-02, 4.520E-02, 4.641E-02, 4.735E-02, 4.816E-02,
+    4.881E-02, 4.917E-02, 4.909E-02, 4.842E-02, 4.707E-02, 4.501E-02, 4.228E-02, 3.896E-02, 3.521E-02,
+    3.118E-02, 2.702E-02, 2.287E-02, 1.885E-02, 1.508E-02, 1.166E-02, 8.673E-03, 6.190E-03, 4.222E-03,
+    2.746E-03, 1.698E-03, 9.971E-04, 5.549E-04, 2.924E-04, 1.457E-04, 6.864E-05, 3.054E-05, 1.282E-05,
+    5.081E-06, 1.898E-06, 6.688E-07, 2.221E-07, 6.947E-08, 2.047E-08
   };  
 
 
@@ -257,86 +210,163 @@ float pileupWeight( int intimepileup_ ){
   Double_t Data2012LumiExt_f[60] = {
     1.76427e-06, 2.84466e-06, 1.88915e-05, 0.000796165, 0.00110891, 0.000439459, 0.00216878, 0.00562928, 0.0114731, 0.0199515, 0.0317062, 0.0457626, 0.0587994, 0.0700723, 0.0799624, 0.0850344, 0.0802347, 0.0690109, 0.0585324, 0.051109, 0.0457747, 0.0413901, 0.0373793, 0.0335591, 0.0298473, 0.0262066, 0.0226609, 0.0192698, 0.0160998, 0.0132078, 0.0106338, 0.00839923, 0.00650684, 0.00494315, 0.00368197, 0.00268875, 0.00192473, 0.00135048, 0.000928655, 0.000625768, 0.000413144, 0.00026721, 0.000169276, 0.000105016, 6.37928e-05, 3.79375e-05, 2.20845e-05, 1.25825e-05, 7.0155e-06, 3.8275e-06, 2.04314e-06, 1.06702e-06, 5.45147e-07, 2.72455e-07, 1.33199e-07, 6.36963e-08, 2.97937e-08, 1.36308e-08, 6.09958e-09, 2.66964e-09
   };
-  
+  */
+  /*
+  //From Mike
+  std::vector< float > Summer12Lumi; 
+  Double_t Summer12Lumi_f[60] = { 
+    2.34402e-05, 2.34402e-05, 2.34402e-05, 2.34402e-05, 0.000468703, 0.000468703, 0.000703205, 
+    0.000941407, 0.00123401, 0.00160301, 0.00246402, 0.00325002, 0.00502104, 0.00664405,
+    0.00850206, 0.0112101, 0.0151801, 0.0203301, 0.0260802, 0.0317102, 0.0366703, 0.0406003,
+    0.0433803, 0.0452003, 0.0464103, 0.0473503, 0.0481603, 0.0488104, 0.0491704, 0.0490904, 
+    0.0484203, 0.0470703, 0.0450103, 0.0422803, 0.0389603, 0.0352103, 0.0311802, 0.0270202,
+    0.0228702, 0.0188501, 0.0150801, 0.0116601, 0.00867306, 0.00619004, 0.00422203, 0.00274602,
+    0.00169801, 0.000997107, 0.000554904, 0.000292402, 0.000145701, 6.86405e-05, 3.05402e-05,
+    1.28201e-05, 5.08104e-06, 1.89801e-06, 6.68805e-07, 2.22102e-07, 6.94705e-08, 2.04701e-08
+  };
+ 
+ 
+  // sigma 69.4 pb 
+  std::vector< float > Data2012LumiExt; 
+  Double_t Data2012LumiExt_f[60] = { 
+    1.76747e-06, 2.84912e-06, 6.88486e-06, 3.71826e-05, 9.81822e-05, 0.000424844, 0.00217272, 
+    0.00563951, 0.0114938, 0.0199867, 0.0317601, 0.0458397, 0.058902, 0.0701984, 0.0801076,
+    0.0851889, 0.0803805, 0.0691363, 0.0586388, 0.0512019, 0.0458578, 0.0414654, 0.0374472,
+    0.0336201, 0.0299015, 0.0262542, 0.0227021, 0.0193048, 0.0161291, 0.0132318, 0.0106532,
+    0.00841449, 0.00651866, 0.00495213, 0.00368866, 0.00269364, 0.00192822, 0.00135293,
+    0.000930343, 0.000626905, 0.000413895, 0.000267695, 0.000169583, 0.000105207, 6.39087e-05,
+    3.80064e-05, 2.21246e-05, 1.26054e-05, 7.02825e-06, 3.83445e-06, 2.04685e-06, 1.06896e-06,
+    5.46137e-07, 2.7295e-07, 1.33441e-07, 6.3812e-08, 2.98478e-08, 1.36556e-08, 6.11067e-09,
+    2.67449e-09
+  }; 
+
 
   for( int i=0; i<60; i++) {
     Data2012LumiExt.push_back(Data2012LumiExt_f[i]);
     Summer12Lumi.push_back(Summer12Lumi_f[i]);
   }
   
-  int intimepileup = intimepileup_>59 ? 59 : intimepileup_;
-
-  reweight::LumiReWeighting LumiWeights_(Summer12Lumi, Data2012LumiExt);
-
-  return LumiWeights_.ITweight(intimepileup);
+  //reweight::LumiReWeighting LumiWeights_(Summer12Lumi, Data2012LumiExt);
   
-  //return Data2011LumiExt[intimepileup]/Fall11Lumi[intimepileup];
+  if(FIRSTEVENT){
+    LumiWeights_ = reweight::LumiReWeighting(Summer12Lumi, Data2012LumiExt); 
+    //LumiWeights_ =  reweight::LumiReWeighting("MC_Summer12_PU_S7.root","Data_Pileup_2012.root","pileup","pileup");  //crashing due to some ROOT error
+    FIRSTEVENT = false;
+  } 
+  */
 
+  float intimepileup = intimepileup_; //>59 ? 59 : intimepileup_;
+
+  //return LumiWeights_.ITweight(intimepileup);
+  return LumiWeights_.weight(intimepileup);
+  
 }
 
 float pileupWeight2( int intimepileup_ ){
 
-  float weights[53];
-  weights[0]=1.0;
-  weights[1]=0.241725;
-  weights[2]=0.497953;
-  weights[3]=0.750906;
-  weights[4]=0.958778;
-  weights[5]=1.15292;
-  weights[6]=1.26729;
-  weights[7]=1.33763;
-  weights[8]=1.39117;
-  weights[9]=1.38692;
-  weights[10]=1.41177;
-  weights[11]=1.37077;
-  weights[12]=1.34191;
-  weights[13]=1.27619;
-  weights[14]=1.20034;
-  weights[15]=1.1264;
-  weights[16]=1.00513;
-  weights[17]=0.898563;
-  weights[18]=0.783283;
-  weights[19]=0.660026;
-  weights[20]=0.545681;
-  weights[21]=0.444979;
-  weights[22]=0.355539;
-  weights[23]=0.278989;
-  weights[24]=0.214793;
-  weights[25]=0.161305;
-  weights[26]=0.12141;
-  weights[27]=0.089384;
-  weights[28]=0.0655027;
-  weights[29]=0.0470954;
-  weights[30]=0.033824;
-  weights[31]=0.0241277;
-  weights[32]=0.0168523;
-  weights[33]=0.0118342;
-  weights[34]=0.00831188;
-  weights[35]=0.00574736;
-  weights[36]=0.00395389;
-  weights[37]=0.00270099;
-  weights[38]=0.00184071;
-  weights[39]=0.00126892;
-  weights[40]=0.000799038;
-  weights[41]=0.000568358;
-  weights[42]=0.000366065;
-  weights[43]=0.000241041;
-  weights[44]=0.000152796;
-  weights[45]=5.53181e-05;
-  weights[46]=5.53181e-05;
-  weights[47]=5.53181e-05;
-  weights[48]=5.53181e-05;
-  weights[49]=5.53181e-05;
-  weights[50]=5.53181e-05;
-  weights[51]=5.53181e-05;
-  weights[52]=5.53181e-05;
+  float weights[60];
+  weights[0]=0.0754036;
+  weights[1]=0.121549;
+  weights[2]=0.29372;
+  weights[3]=1.58628;
+  weights[4]=0.209476;
+  weights[5]=0.906423;
+  weights[6]=3.08973;
+  weights[7]=5.99051;
+  weights[8]=9.31421;
+  weights[9]=12.4682;
+  weights[10]=12.8895;
+  weights[11]=14.1044;
+  weights[12]=11.731;
+  weights[13]=10.5656;
+  weights[14]=9.42213;
+  weights[15]=7.59931;
+  weights[16]=5.29512;
+  weights[17]=3.40068;
+  weights[18]=2.2484;
+  weights[19]=1.61468;
+  weights[20]=1.25055;
+  weights[21]=1.02131;
+  weights[22]=0.86323;
+  weights[23]=0.743802;
+  weights[24]=0.644286;
+  weights[25]=0.554468;
+  weights[26]=0.471385;
+  weights[27]=0.395507;
+  weights[28]=0.328025;
+  weights[29]=0.26954;
+  weights[30]=0.220014;
+  weights[31]=0.178764;
+  weights[32]=0.144826;
+  weights[33]=0.117126;
+  weights[34]=0.0946775;
+  weights[35]=0.0765016;
+  weights[36]=0.0618413;
+  weights[37]=0.0500711;
+  weights[38]=0.0406793;
+  weights[39]=0.0332573;
+  weights[40]=0.0274464;
+  weights[41]=0.0229582;
+  weights[42]=0.0195529;
+  weights[43]=0.0169962;
+  weights[44]=0.015137;
+  weights[45]=0.0138406;
+  weights[46]=0.0130297;
+  weights[47]=0.0126419;
+  weights[48]=0.0126657;
+  weights[49]=0.0131136;
+  weights[50]=0.0140483;
+  weights[51]=0.0155733;
+  weights[52]=0.0178826;
+  weights[53]=0.0212908;
+  weights[54]=0.0262625;
+  weights[55]=0.0336204;
+  weights[56]=0.0446286;
+  weights[57]=0.0614835;
+  weights[58]=0.0879606;
+  weights[59]=0.130653;
 
-  if(intimepileup_<52)
-    return weights[intimepileup_+1];
-  else
-    return 5.53181e-05;
+  int intimepileup = intimepileup_>59 ? 59 : intimepileup_; 
+  return weights[intimepileup];
+  
 }
 
+Bool_t isbtagged(Bool_t isBQuark, Double_t btagCSV, Bool_t isdata, UInt_t btageff, UInt_t mistag)
+{
+  // btageff, mistag: flags, values can be  kNo = central, kUp = variation up, kDown = variation down
+
+  // new scale factors
+  // CSVM       btag eff: 0.97 \pm 0.04         mistag rate: 0.0152 \pm 0.0002          mistag scale factor: 1.10 \pm 0.11
+
+  Bool_t btagged;
+  Double_t demoteProb=0; // probability to demote from tagged
+  if(btageff==kNo)        demoteProb = 1-0.97; // SF = 0.97 -> 0.03 = (prob to demote from tagged status)
+  else if(btageff==kDown) demoteProb = fabs(1-0.97+0.04); // 0.07
+  else if(btageff==kUp)   demoteProb = fabs(1-0.97-0.04);  // 0.01
+  Double_t promoteProb=0; // probability to promote to tagged
+  if(mistag==kNo)         promoteProb = fabs(1.10-1)*0.0152/(1-0.0152);  // |(1-SF)|*mistag = (prob. to promote to tagged status)*(1-mistag)
+  else if(mistag==kDown)  promoteProb = fabs(1.10+0.11-1)*0.0152/(1-0.0152);
+  else if(mistag==kUp)    promoteProb = fabs(1.10-0.11-1)*0.0152/(1-0.0152);
+  
+  if(isdata) {
+    if(btagCSV>0.679) btagged = kTRUE;
+    else               btagged = kFALSE;
+  } else { // MC
+    //jetflavor = abs(jet->matchedId);
+    if(isBQuark) {
+      if(btagCSV>0.679) {
+        if(gRandom->Uniform()>demoteProb) btagged = kTRUE;  // leave it tagged
+        else                           btagged = kFALSE; // demote it
+      } else                           btagged = kFALSE; // leave it untagged
+    } else { // not bjet 
+      if(btagCSV>0.679)                    btagged = kTRUE;  // leave it tagged
+      else if(gRandom->Uniform()<promoteProb) btagged = kTRUE;  // promote to tagged
+      else                                 btagged = kFALSE; // leave it untagged
+    }
+  } 
+  
+  return btagged;
+}  
 
 void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xsec_ = 0., string inputDir_ = "./"){
   
@@ -514,7 +544,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
 
   // quality cuts of the first 2 jets
   float jetsBtagHE1,jetsBtagHE2,jetsBtagHP1,jetsBtagHP2, jetsBtagCSV1, jetsBtagCSV2;
-  int nJets20BTagged;
+  int nJets20BTagged, nJets20BTaggedBUp, nJets20BTaggedBDown, nJets20BTaggedLUp, nJets20BTaggedLDown;
   float chFracPV1, chFracPV2;
 
   // kinematical variables of the veto jet
@@ -539,7 +569,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     MtLeg1_,MtLeg1Corr_,MtLeg1MVA_,
     MtLeg2_,MtLeg2Corr_,MtLeg2MVA_,
     pZeta_,pZetaCorr_,pZetaMVA_,
-    pZetaVis_,pZetaVisCorr_,pZetaSig_;
+    pZetaVis_,pZetaVisCorr_,pZetaVisMVA_,pZetaSig_;
   float MEt,MEtPhi,MEtCorr,MEtCorrPhi, MEtMVA, MEtMVAPhi; 
   float MEtCov00,MEtCov01,MEtCov10,MEtCov11;
   float combRelIsoLeg1,combRelIsoLeg1Beta,combRelIsoLeg1DBeta,combRelIsoLeg1DBetav2,combRelIsoLeg1Rho, combIsoLeg2;
@@ -562,6 +592,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
  
   // object-related weights and triggers
   float HLTx,HLTmu,HLTmatch,HLTweightTau, HLTweightMu, SFMu, SFTau, HLTMu, HLTTau;
+  float HLTxQCD,HLTmatchQCD; //for QCD estimation
   float SFMuID, SFMuIso;
   int isTauLegMatched_,muFlag_,isPFMuon_,isTightMuon_,genDecay_,leptFakeTau;
 
@@ -622,7 +653,11 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   outTreePtOrd->Branch("nJets30",       &nJets30,  "nJets30/I");  
   outTreePtOrd->Branch("nJets20",       &nJets20,  "nJets20/I");  
   outTreePtOrd->Branch("nJets20BTagged",&nJets20BTagged,  "nJets20BTagged/I");  
- 
+  outTreePtOrd->Branch("nJets20BTaggedBUp",&nJets20BTaggedBUp,  "nJets20BTaggedBUp/I");
+  outTreePtOrd->Branch("nJets20BTaggedBDown",&nJets20BTaggedBDown,  "nJets20BTaggedBDown/I");
+  outTreePtOrd->Branch("nJets20BTaggedLUp",&nJets20BTaggedLUp,  "nJets20BTaggedLUp/I");
+  outTreePtOrd->Branch("nJets20BTaggedLDown",&nJets20BTaggedLDown,  "nJets20BTaggedLDown/I");
+  
   outTreePtOrd->Branch("ptVeto",  &ptVeto, "ptVeto/F");
   outTreePtOrd->Branch("phiVeto", &phiVeto,"phiVeto/F");
   outTreePtOrd->Branch("etaVeto", &etaVeto,"etaVeto/F");
@@ -705,6 +740,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   outTreePtOrd->Branch("pZetaMVA",    &pZetaMVA_,"pZetaMVA/F");
   outTreePtOrd->Branch("pZetaVis",    &pZetaVis_,"pZetaVis/F");
   outTreePtOrd->Branch("pZetaVisCorr",&pZetaVisCorr_,"pZetaVisCorr/F");
+  outTreePtOrd->Branch("pZetaVisMVA", &pZetaVisMVA_,"pZetaVisMVA/F");
   outTreePtOrd->Branch("pZetaSig",    &pZetaSig_,"pZetaSig/F");
 
   outTreePtOrd->Branch("MEt",         &MEt,        "MEt/F");
@@ -753,6 +789,8 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   outTreePtOrd->Branch("SFMu",         &SFMu,"SFMu/F");
   outTreePtOrd->Branch("SFMuID",       &SFMuID,"SFMuID/F");
   outTreePtOrd->Branch("SFMuIso",      &SFMuIso,"SFMuIso/F");
+  outTreePtOrd->Branch("HLTxQCD",      &HLTxQCD, "HLTxQCD/F"); 
+  outTreePtOrd->Branch("HLTmatchQCD",  &HLTmatchQCD,"HLTmatchQCD/F"); 
 
   outTreePtOrd->Branch("isTauLegMatched", &isTauLegMatched_,"isTauLegMatched/I");
   outTreePtOrd->Branch("muFlag",          &muFlag_,"muFlag/I"); 
@@ -989,10 +1027,10 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   currentTree->SetBranchAddress("jetsBtagHP",      &jetsBtagHP);
   std::vector< double >* jetsBtagCSV = new std::vector< double >();
   currentTree->SetBranchAddress("jetsBtagCSV",     &jetsBtagCSV);
-
+  
   std::vector< float >* jetsChNfraction =  new std::vector< float >();
   currentTree->SetBranchAddress("jetsChNfraction", &jetsChNfraction);
-
+  
   std::vector< float >* gammadEta =  new std::vector< float >();
   currentTree->SetBranchAddress("gammadEta", &gammadEta);
 
@@ -1019,7 +1057,8 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   float emFraction, hasGsf, leadPFChargedHadrHcalEnergy, leadPFChargedHadrEcalEnergy;
   int signalPFChargedHadrCands, signalPFGammaCands;
   float mcPUweight,embeddingWeight;
-  int isTauLegMatched,muFlag,isPFMuon,isTightMuon,genDecay, nPUVertices, nPUVerticesM1, nPUVerticesP1;
+  int isTauLegMatched,muFlag,isPFMuon,isTightMuon,genDecay;
+  float nPUVertices, nPUVerticesM1, nPUVerticesP1;
   float rhoFastJet,rhoNeutralFastJet;
   float visibleTauMass;
   float dxy1, dxy2, dz1;
@@ -1156,8 +1195,9 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     MVAvbf = -99;
 
     // define the relevant jet collection 
-    nJets20BTagged = 0;
-    nJets30        = 0;
+    nJets20BTagged = 0; nJets20BTaggedBUp = 0; nJets20BTaggedBDown = 0;
+    nJets20BTaggedLUp = 0; nJets20BTaggedLDown = 0;
+    nJets30        = 0; nJets20 = 0;
     int lead  = -99;
     int trail = -99;
     int veto  = -99;
@@ -1171,14 +1211,38 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     if(indexes.size()>1) trail = indexes[1];  
     if(indexes.size()>2) veto  = indexes[2];  
 
+    bool isData = ((std::string(sample.Data())).find("Run2012")!=string::npos) ? true : false;
+
     for(unsigned int v = 0 ; v < indexes.size() ; v++){
       if( (*jets)[indexes[v]].Pt() > 30 ) nJets30++;
       if( (*jets)[indexes[v]].Pt() > 20 ) nJets20++;
-      if( (*jets)[indexes[v]].Pt() > 20 && (*jetsBtagCSV)[indexes[v]] > 0.679 ){
+      if( (*jets)[indexes[v]].Pt() > 20 && TMath::Abs((*jets)[indexes[v]].Eta())<2.4 && (*jetsBtagCSV)[indexes[v]] > 0.679 ){
+      /*
+	if( (*jets)[indexes[v]].Pt() > 20){ 
+	bool isbQuark = 0;
+	//bool isbQuark = (currentSample.find("SUSY") != std::string::npos) ? (*bQuark)[indexes[v]] : 0; 
+        if((currentSample.find("TTJets") != std::string::npos) && (*jetsBtagCSV)[indexes[v]] > 0.679)isbQuark = 1;
+	else if((currentSample.find("SUSYBBH") != std::string::npos) && (*jetsBtagCSV)[indexes[v]] > 0.679)isbQuark = 1;
+        bool isBtag = isbtagged(isbQuark, (*jetsBtagCSV)[indexes[v]], isData, kNo, kNo); 
+	if(isBtag){
+      */
 	nJets20BTagged++;
-	ptB1  = (*jets)[indexes[v]].Pt();
-	phiB1 = (*jets)[indexes[v]].Phi();
-	etaB1 = (*jets)[indexes[v]].Eta();
+	if(nJets20BTagged<2){
+	  ptB1  = (*jets)[indexes[v]].Pt();
+	  phiB1 = (*jets)[indexes[v]].Phi();
+	  etaB1 = (*jets)[indexes[v]].Eta();
+	}
+	/*
+	}
+	bool isBtagUp = isbtagged(isbQuark, (*jetsBtagCSV)[indexes[v]], isData, kUp, kNo);
+        if(isBtagUp)nJets20BTaggedBUp++;
+        bool isBtagDown = isbtagged(isbQuark, (*jetsBtagCSV)[indexes[v]], isData, kDown, kNo);
+        if(isBtagDown)nJets20BTaggedBDown++;
+        bool isMistagUp = isbtagged(isbQuark, (*jetsBtagCSV)[indexes[v]], isData, kNo, kUp); 
+        if(isMistagUp)nJets20BTaggedLUp++;
+        bool isMistagDown = isbtagged(isbQuark, (*jetsBtagCSV)[indexes[v]], isData, kNo, kDown);
+        if(isMistagDown)nJets20BTaggedLDown++;
+	*/
       }
     }
 
@@ -1411,6 +1475,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     pZetaMVA_     = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[3]))[1];
     pZetaVis_     = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[0]))[0];
     pZetaVisCorr_ = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], recoilCorrecMET))[0];
+    pZetaVisMVA_  = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[3]))[0];
 
     pZetaSig_     = pZetaSig;
 
@@ -1433,23 +1498,22 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     (*metsig)[0][1] = (*metSgnMatrix)[1];  
     (*metsig)[1][0] = (*metSgnMatrix)[1];  
     (*metsig)[1][1] = (*metSgnMatrix)[2];  
-
-    //add additional variables to test MVA Met (from Christian)
-    int errorFlag = 0;
-    std::pair<double, double> uT = compMEtProjU((*genVP4)[0], (*METP4)[1].Px() - (*genMETP4)[0].px(), (*METP4)[1].py() - (*genMETP4)[0].py(), errorFlag);
-    if ( !errorFlag ) {
-      uParl = uT.first;
-      uPerp = uT.second;
-    }
-    reco::Candidate::LorentzVector met_rotated = compP4inZetaFrame((*METP4)[1] - (*genMETP4)[0], (*genVP4)[0].Phi());
-    metParl = met_rotated.px();
-    metPerp = met_rotated.py();
-    cout<<"metParl "<<metParl<<" metPerp "<<metPerp<<endl;
-    TMatrixD metCov_rotated = compCovMatrixInZetaFrame(*metsig, (*genVP4)[0].Phi());
-    metSigmaParl = TMath::Sqrt(TMath::Abs(metCov_rotated(0, 0)));
-    metSigmaPerp = TMath::Sqrt(TMath::Abs(metCov_rotated(1, 1)));
-    cout<<"metSigmaParl "<<metSigmaParl<<" metSigmaPerp "<<metSigmaPerp<<endl;
     
+    //add additional variables to test MVA Met (from Christian)
+    if((std::string(sample.Data())).find("Run2012")==string::npos && genVP4->size() > 0){
+      int errorFlag = 0;
+      std::pair<double, double> uT = compMEtProjU((*genVP4)[0], (*METP4)[1].Px() - (*genMETP4)[0].px(), (*METP4)[1].py() - (*genMETP4)[0].py(), errorFlag);
+      if ( !errorFlag ) {
+	uParl = uT.first;
+	uPerp = uT.second;
+      }
+      reco::Candidate::LorentzVector met_rotated = compP4inZetaFrame((*METP4)[1] - (*genMETP4)[0], (*genVP4)[0].Phi());
+      metParl = met_rotated.px();
+      metPerp = met_rotated.py();
+      TMatrixD metCov_rotated = compCovMatrixInZetaFrame(*metsig, (*genVP4)[0].Phi());
+      metSigmaParl = TMath::Sqrt(TMath::Abs(metCov_rotated(0, 0)));
+      metSigmaPerp = TMath::Sqrt(TMath::Abs(metCov_rotated(1, 1)));
+    }
     //==========================================
 
       /*
@@ -1516,7 +1580,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     sampleWeight     = scaleFactor; 
     //puWeight         = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : mcPUweight ;
     puWeight         = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : pileupWeight( nPUVertices);   
-    puWeight2        = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : pileupWeight2(nPUVertices);   
+    puWeight2        = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : pileupWeight2(int(nPUVertices));   
     //puWeight         = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : Lumi3DReWeighting->weight3D(nPUVerticesM1, nPUVertices, nPUVerticesP1) ;
     nPUVertices_     = nPUVertices;
     embeddingWeight_ = embeddingWeight;
@@ -1572,48 +1636,25 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     pfJetPt_                  = pfJetPt;
 
     if((std::string(sample.Data())).find("Run2012")!=string::npos){
-      //to be changed
-      if(run>=160404 && run<=161176)
-	HLTx = 	float((*triggerBits)[0]);  //HLT_IsoMu12_LooseIsoPFTau10_v1
-      else if(run>=161216 && run<=163261)
-	HLTx = 	float((*triggerBits)[1]);  //HLT_IsoMu12_LooseIsoPFTau10_v2
-      else if(run>=163269 && run<=163869)
-	HLTx = 	float((*triggerBits)[2]);  //HLT_IsoMu12_LooseIsoPFTau10_v4
-      else if(run>=165088 && run<=165633)
-	HLTx = 	float((*triggerBits)[3]);  //HLT_IsoMu15_LooseIsoPFTau15_v2
-      else if(run>=165970 && run<=167043 && run!=166346)
-	HLTx = 	float((*triggerBits)[4]);  //HLT_IsoMu15_LooseIsoPFTau15_v4
-      else if(run==166346)
-	HLTx =  float((*triggerBits)[5]);  //HLT_IsoMu15_LooseIsoPFTau15_v5      
-      else if(run>=167078 && run<=167913)
-	HLTx =  float((*triggerBits)[6]);  //HLT_IsoMu15_LooseIsoPFTau15_v6      
-      else if(run>=170249 && run<=173198)
-	HLTx =  float((*triggerBits)[7]);  //HLT_IsoMu15_LooseIsoPFTau15_v8
-      else if(run>=173236 && run<=173692)
-	HLTx =  float((*triggerBits)[8]);  //HLT_IsoMu15_LooseIsoPFTau15_v9
-      else if(run>=175860 && run<=178380)
-	//HLTx =  float((*triggerBits)[9] || (*triggerBits)[8]);  //HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v1
-	HLTx =  float((*triggerBits)[9]);  //HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v1
-      else if(run>=178420 && run<=179889)
-	HLTx =  float((*triggerBits)[10]); //HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v5
-      else if(run>=179959 && run<=180252)
-	HLTx =  float((*triggerBits)[11]); //HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v6
-     
+      HLTx = float((*triggerBits)[0] || (*triggerBits)[1] || 
+		   (*triggerBits)[2] || (*triggerBits)[3] ||
+		   (*triggerBits)[4]);  
+      //HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v4, HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v5, HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v6, HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v2, HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v3
+      HLTxQCD = float((*triggerBits)[5] || (*triggerBits)[6] ||  
+		      (*triggerBits)[7] || (*triggerBits)[8] || 
+		      (*triggerBits)[9]);
+      //HLT_Mu18_eta2p1_LooseIsoPFTau20_v4, HLT_Mu18_eta2p1_LooseIsoPFTau20_v5, HLT_Mu18_eta2p1_LooseIsoPFTau20_v6, HLT_Mu17_eta2p1_LooseIsoPFTau20_v2, HLT_Mu17_eta2p1_LooseIsoPFTau20_v3
 
-      if(run>=160404 && run<=163869){
-	bool isTriggMatched = (*tauXTriggers)[0]  && (*tauXTriggers)[3]  ; //hltSingleMuIsoL3IsoFiltered12 && hltOverlapFilterIsoMu12IsoPFTau10
-	HLTmatch = isTriggMatched ? 1.0 : 0.0 ;
-      }
-      else if(run>=165088 && run<=173692){
-	bool isTriggMatched = (*tauXTriggers)[1] && (*tauXTriggers)[4] ; //hltSingleMuIsoL3IsoFiltered15 && hltOverlapFilterIsoMu15IsoPFTau15
-	HLTmatch = isTriggMatched ? 1.0 : 0.0;
-      }
-      else if(run>=175860 && run<=180252){
-	//bool isTriggMatched = ((*tauXTriggers)[2] && (*tauXTriggers)[5]) ||
-	//((*tauXTriggers)[1] && (*tauXTriggers)[4]); //hltSingleMuIsoL3IsoFiltered15 && hltOverlapFilterIsoMu15IsoPFTau20
-	bool isTriggMatched =  ((*tauXTriggers)[2] && (*tauXTriggers)[5]);
-	HLTmatch = isTriggMatched ? 1.0 : 0.0;
-      }
+      
+      bool isTriggMatched = (((*tauXTriggers)[2]  && (*tauXTriggers)[6]) ||
+			     ((*tauXTriggers)[3]  && (*tauXTriggers)[7])); 
+      //hltOverlapFilterIsoMu18LooseIsoPFTau20 || hltOverlapFilterIsoMu17LooseIsoPFTau20
+      HLTmatch = isTriggMatched ? 1.0 : 0.0 ;
+      
+      bool isTriggMatchedQCD = (((*tauXTriggers)[4]  && (*tauXTriggers)[8]) || 
+				((*tauXTriggers)[5]  && (*tauXTriggers)[9]));  
+      //hltOverlapFilterMu18LooseIsoPFTau20 || hltOverlapFilterMu17LooseIsoPFTau20
+      HLTmatchQCD = isTriggMatchedQCD ? 1.0 : 0.0 ; 
 
       HLTweightTau = 1.0;
       HLTweightMu  = 1.0;
@@ -1655,11 +1696,12 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
       //HLTx  =  float((*triggerBits)[1]); // <----------------- HLT_IsoMu15_eta2p1_LooseIsoPFTau20_v1 used
       HLTmu =  triggerBits->size()>2 ? 
 	float((*triggerBits)[2]) : float(1.0); //HLT_IsoMu15_v14
-      //bool isTriggMatched = (*tauXTriggers)[0] && (*tauXTriggers)[2] ; //hltSingleMuIsoL3IsoFiltered15 && hltOverlapFilterIsoMu15IsoPFTau15
-      //bool isTriggMatched = (*tauXTriggers)[1] && (*tauXTriggers)[3] ; //hltSingleMuIsoL1s14L3IsoFiltered15eta2p1 &&
       bool isTriggMatched = (*tauXTriggers)[2] && (*tauXTriggers)[3] ; //hltOverlapFilterIsoMu15IsoPFTau20 && hltOverlapFilterIsoMu15IsoPFTau20
 
       HLTmatch = isTriggMatched ? 1.0 : 0.0;
+
+      HLTxQCD = 1.0;
+      HLTmatchQCD = 1.0;
 
       //HLTweightTau = ratioTauMuTauAll->Eval( (*diTauLegsP4)[1].Pt() );
       HLTweightTau  = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?  
@@ -1719,7 +1761,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
    
 
     int pairIndex = -1;
-    bool passQualityCuts = (ptL1>17 && ptL2>20 && tightestHPSMVAWP_>=0 && combRelIsoLeg1DBetav2<0.1 && HLTmatch);
+    bool passQualityCuts = (ptL1>20 && ptL2>20 && tightestHPSMVAWP_>=0 && combRelIsoLeg1DBetav2<0.1 && HLTmatch);
     if( !(run==lastRun && lumi==lastLumi && event==lastEvent) ){
 
       lastEvent = event;
@@ -1770,7 +1812,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
 }
 
 
-void doAllSamplesMu(string inputDir_ = "MuTauStreamFall11_04May2012")
+void doAllSamplesMu(string inputDir_ = "HTauTauSynchronization/SyncDataCard-53X-v1/MuTauStream/")
 {
 
 
@@ -1779,50 +1821,11 @@ void doAllSamplesMu(string inputDir_ = "MuTauStreamFall11_04May2012")
 
   ////////////// samples & x-sections & skim1 & skim2 /////////////
   
-  samples.push_back("Run2011-MuTau-All_run");             crossSec.push_back( 0  );                          
+  //samples.push_back("Run2011-MuTau-All_run");             crossSec.push_back( 0  );                          
   //samples.push_back("Run2011-MuTau-LooseIso-All_run");    crossSec.push_back( 0  );                          
-  samples.push_back("Run2011-MuTau-Embedded-All_run");    crossSec.push_back( 0  );                          
-  samples.push_back("DYJets-MuTau-50-madgraph-PUS6_run"); crossSec.push_back( 3048           * 0.009631    * 0.641987); 
-  samples.push_back("TTJets-MuTau-madgraph-PUS6_run");    crossSec.push_back( 157.5          * 0.020998    * 0.823613);  
-  samples.push_back("WJets-MuTau-madgraph-PUS6_run");     crossSec.push_back( 31314.0        * 0.001261    * 0.572776);   
-  samples.push_back("W3Jets-MuTau-madgraph-PUS6_run");    crossSec.push_back( 304.0          * 1.0         * 0.119569);   
-  samples.push_back("WZ-MuTau-pythia-PUS6_run");          crossSec.push_back( 18.2           * 0.0068962   * 0.740770);         
-  samples.push_back("ZZ-MuTau-pythia-PUS6_run");          crossSec.push_back(  5.9           * 0.0060357   * 0.753123);    
-  samples.push_back("WW-MuTau-pythia-PUS6_run");          crossSec.push_back( 43.0           * 1.0         * 0.065573);        
-  samples.push_back("VBFH100-MuTau-powheg-PUS6_run");     crossSec.push_back( 8.36e-02*1.546 * 0.04953     * 0.809326); 
-  samples.push_back("GGFH100-MuTau-powheg-PUS6_run");     crossSec.push_back( 8.36e-02*24.02 * 0.03816     * 0.818372); 
-  samples.push_back("VBFH105-MuTau-powheg-PUS6_run");     crossSec.push_back( 8.25e-02*1.472 * 0.05278     * 0.804249); 
-  samples.push_back("GGFH105-MuTau-powheg-PUS6_run");     crossSec.push_back( 8.25e-02*21.78 * 0.04137     * 0.814457); 
-  samples.push_back("VBFH110-MuTau-powheg-PUS6_run");     crossSec.push_back( 8.02e-02*1.398 * 1.0         * 0.110006);
-  samples.push_back("GGFH110-MuTau-powheg-PUS6_run");     crossSec.push_back( 8.02e-02*19.84 * 1.0         * 0.066984);    
-  samples.push_back("VBFH115-MuTau-powheg-PUS6_run");     crossSec.push_back( 7.65e-02*1.332 * 0.05825     * 0.808179);
-  samples.push_back("GGFH115-MuTau-powheg-PUS6_run");     crossSec.push_back( 7.65e-02*18.13 * 1.0         * 0.072958);  
-  samples.push_back("VBFH120-MuTau-powheg-PUS6_run");     crossSec.push_back( 7.10e-02*1.269 * 1.0         * 0.118150);   
-  samples.push_back("GGFH120-MuTau-powheg-PUS6_run");     crossSec.push_back( 7.10e-02*16.63 * 1.0         * 0.076531);  
-  samples.push_back("VBFH125-MuTau-powheg-PUS6_run");     crossSec.push_back( 6.37e-02*1.211 * 0.06337     * 0.813953);   
-  samples.push_back("GGFH125-MuTau-powheg-PUS6_run");     crossSec.push_back( 6.37e-02*15.31 * 1.0         * 0.079825); 
-  samples.push_back("VBFH130-MuTau-powheg-PUS6_run");     crossSec.push_back( 5.48e-02*1.154 * 0.06515     * 0.811363); 
-  samples.push_back("GGFH130-MuTau-powheg-PUS6_run");     crossSec.push_back( 5.48e-02*14.12 * 0.05479     * 0.828420);
-  samples.push_back("VBFH135-MuTau-powheg-PUS6_run");     crossSec.push_back( 4.52e-02*1.100 * 0.06740     * 0.816084); 
-  samples.push_back("GGFH135-MuTau-powheg-PUS6_run");     crossSec.push_back( 4.52e-02*13.08 * 1.0         * 0.088014);    
-  samples.push_back("VBFH140-MuTau-powheg-PUS6_run");     crossSec.push_back( 3.54e-02*1.052 * 1.0         * 0.128525);  
-  samples.push_back("GGFH140-MuTau-powheg-PUS6_run");     crossSec.push_back( 3.54e-02*12.13 * 0.05808     * 0.822400);  
-  samples.push_back("VBFH145-MuTau-powheg-PUS6_run");     crossSec.push_back( 2.61e-02*1.004 * 0.07349     * 0.817493);  
-  samples.push_back("GGFH145-MuTau-powheg-PUS6_run");     crossSec.push_back( 2.61e-02*11.27 * 1.0         * 0.095074); 
-  samples.push_back("VBFH160-MuTau-powheg-PUS6_run");     crossSec.push_back( 5.32e-04*0.8787* 1.0         * 0.137951);  
-  samples.push_back("GGFH160-MuTau-powheg-PUS6_run");     crossSec.push_back( 5.32e-04*9.080 * 1.0         * 0.104164);  
-  samples.push_back("VH100-MuTau-pythia-PUS6_run");       crossSec.push_back( 2.61e-02*(1.186+ 0.6313+0.1638  ) * 0.082128 * 0.834434);  
-  samples.push_back("VH110-MuTau-pythia-PUS6_run");       crossSec.push_back( 8.02e-02*(0.8754+0.4721+0.1257  ) * 0.088174 * 0.839732);
-  samples.push_back("VH115-MuTau-pythia-PUS6_run");       crossSec.push_back( 7.65e-02*(0.7546+0.4107+0.1106  ) * 0.092032 * 0.841206);
-  samples.push_back("VH120-MuTau-pythia-PUS6_run");       crossSec.push_back( 7.10e-02*(0.6561+0.3598+0.09756 ) * 1.0      * 0.1654);   
-  samples.push_back("VH125-MuTau-pythia-PUS6_run");       crossSec.push_back( 6.37e-02*(0.5729+0.3158+0.08634 ) * 0.09885  * 0.842507);
-  samples.push_back("VH130-MuTau-pythia-PUS6_run");       crossSec.push_back( 5.48e-02*(0.4942+0.2778+0.07658 ) * 1.0      * 0.177053);
-  samples.push_back("VH135-MuTau-pythia-PUS6_run");       crossSec.push_back( 4.52e-02*(0.4390+0.2453+0.06810 ) * 0.104662 * 0.841589);
-  samples.push_back("VH140-MuTau-pythia-PUS6_run");       crossSec.push_back( 3.54e-02*(0.3857+0.2172+0.06072 ) * 0.108278 * 0.842954);  
-  samples.push_back("VH145-MuTau-pythia-PUS6_run");       crossSec.push_back( 2.61e-02*(0.3406+0.1930+0.05435 ) * 1.0      * 0.191843);  
-  samples.push_back("VH160-MuTau-pythia-PUS6_run");       crossSec.push_back( 5.32e-04*(0.2291+0.1334+0.03942 ) * 1.0      * 0.203857);  
- 
-  makeTrees_MuTauStream("",             samples[2], crossSec[2], inputDir_);
+  samples.push_back("VBFH125-MuTau-8TeV-powheg-DR53X-PUS10_run"); crossSec.push_back(1.578 * 0.0632 * 1.0 * 0.0780138080726);
+
+  makeTrees_MuTauStream("",             samples[0], crossSec[0], inputDir_);
  
   return;
 
@@ -1830,7 +1833,7 @@ void doAllSamplesMu(string inputDir_ = "MuTauStreamFall11_04May2012")
     
     makeTrees_MuTauStream("",        samples[k], crossSec[k], inputDir_);
 
-    if( samples[k].find("Run2011-MuTau-All")!=string::npos )
+    if( samples[k].find("Run2012-MuTau-All")!=string::npos )
       continue;
     makeTrees_MuTauStream("TauUp",   samples[k], crossSec[k], inputDir_);
     makeTrees_MuTauStream("TauDown", samples[k], crossSec[k], inputDir_);
@@ -1863,15 +1866,15 @@ int main(int argc, const char* argv[])
   //return 1;
 
   //string inputDir = "MuTauStreamFall11_04May2012_PreApproval";
-  string inputDir = "HTauTauSynchronization/FullSample/8TeV/V2";
-  //string inputDir = "HTauTauSynchronization/8TeV/TestMET";
+  //string inputDir = "HTauTauSynchronization/FullSample/8TeV";
+  //string inputDir = "HTauTauSynchronization/8TeV";
+  string inputDir = "HTauTauSynchronization/SyncDataCard-53X-v1/MuTauStream/";
 
   makeTrees_MuTauStream("",           argv[1], atof(argv[2]), inputDir);
 
+  return 0;
 
-  //return 0;
-
-  if( string(argv[1]).find("Run2011-MuTau-All")!=string::npos )
+  if( string(argv[1]).find("Run2012-MuTau-All")!=string::npos )
     return 0;
   makeTrees_MuTauStream("TauUp",      argv[1], atof(argv[2]), inputDir);
   makeTrees_MuTauStream("TauDown",    argv[1], atof(argv[2]), inputDir);
