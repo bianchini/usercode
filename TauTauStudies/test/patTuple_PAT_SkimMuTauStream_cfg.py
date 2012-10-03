@@ -512,8 +512,17 @@ process.muPtEtaID = cms.EDFilter(
 process.muonsForVeto =  cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsUserEmbedded"),
-    cut = cms.string(process.muPtEtaID.cut.value()+
-                     " && pt>10 && userFloat('PFRelIsoDB04v2')<0.30"),
+    cut = cms.string("pt>10 && abs(eta)<2.4"+
+                     " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"+
+                     " && ("+
+                     " isGlobalMuon && isPFMuon"+
+                     " && globalTrack.isNonnull "+
+                     " && globalTrack.normalizedChi2<10"+
+                     " && globalTrack.hitPattern.numberOfValidMuonHits>0"+                     
+                     " && numberOfMatchedStations>1"+                     
+                     " && innerTrack.hitPattern.numberOfValidPixelHits>0"+
+                     " && track.hitPattern.trackerLayersWithMeasurement > 5)"+
+                     " && userFloat('PFRelIsoDB04v2')<0.30"),
     filter = cms.bool(False)
     )
 

@@ -610,6 +610,16 @@ process.elecPtEtaRelIDRelIso = cms.EDFilter(
     filter = cms.bool(False)
     )
 
+process.electronsForVeto = cms.EDFilter(
+    "PATElectronSelector",
+    src = cms.InputTag("selectedPatElectronsUserEmbedded"),
+    cut = cms.string("pt>10 && abs(eta)<2.4" +
+                     " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"+
+                     " && ( (abs(eta)<0.80 && userFloat('mvaPOGNonTrig')>0.925) || (abs(eta)<1.479 && abs(eta)>0.80 && userFloat('mvaPOGNonTrig')>0.975) || (abs(eta)>1.479 && userFloat('mvaPOGNonTrig')>0.985)  )"+
+                     " && userFloat('PFRelIsoDB04')<0.30"),
+    filter = cms.bool(False)
+    )
+
 process.tauPtEta  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("selectedPatTausUserEmbedded"),
@@ -635,6 +645,14 @@ process.tauPtEtaID  = cms.EDFilter(
                      " && abs(userFloat('dzWrtPV'))<0.2"),
     filter = cms.bool(False)
     )
+process.tausForVeto  = cms.EDFilter(
+    "PATTauSelector",
+    src = cms.InputTag("selectedPatTausUserEmbedded"),
+    cut = cms.string(process.tauPtEtaID.cut.value()+
+                     " && pt>20 && tauID('byLooseIsolationMVA')>0.5"),
+    filter = cms.bool(False)
+    )
+
 process.atLeastOneElecTautauPtEtaID = process.atLeastOneElecTau.clone(
     decay=cms.string("elecPtEtaID tauPtEtaID")
     )
@@ -699,7 +717,23 @@ process.muPtEtaRelIDRelIso = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsUserEmbedded"),
     cut = cms.string(process.muPtEtaRelID.cut.value()+
-                     " && userFloat('PFRelIsoDB04')<0.20"),
+                     " && userFloat('PFRelIsoDB04v2')<0.20"),
+    filter = cms.bool(False)
+    )
+process.muonsForVeto =  cms.EDFilter(
+    "PATMuonSelector",
+    src = cms.InputTag("selectedPatMuonsUserEmbedded"),
+    cut = cms.string("pt>10 && abs(eta)<2.4"+
+                     " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"+
+                     " && ("+
+                     " isGlobalMuon && isPFMuon"+
+                     " && globalTrack.isNonnull "+
+                     " && globalTrack.normalizedChi2<10"+
+                     " && globalTrack.hitPattern.numberOfValidMuonHits>0"+                     
+                     " && numberOfMatchedStations>1"+                     
+                     " && innerTrack.hitPattern.numberOfValidPixelHits>0"+
+                     " && track.hitPattern.trackerLayersWithMeasurement > 5)"+
+                     " && userFloat('PFRelIsoDB04v2')<0.30"),
     filter = cms.bool(False)
     )
 
@@ -718,14 +752,14 @@ process.alLeastOneElecTauSequence = cms.Sequence(
 process.elecLegSequence = cms.Sequence(
     (process.elecPtEta*process.atLeastOneElecTauelecPtEta*process.elecPtEtaCounter*process.elecPtEtaFilter) *
     (process.elecPtEtaID*process.atLeastOneElecTauelecPtEtaID*process.elecPtEtaIDCounter*process.elecPtEtaIDFilter) *
-    process.elecPtEtaRelID*process.elecPtEtaRelIDRelIso
+    process.elecPtEtaRelID*process.elecPtEtaRelIDRelIso*process.electronsForVeto
     )
 process.tauLegSequence = cms.Sequence(
     (process.tauPtEta*process.atLeastOneElecTautauPtEta*process.tauPtEtaCounter*process.tauPtEtaFilter) *
     (process.tauPtEtaID*process.atLeastOneElecTautauPtEtaID*process.tauPtEtaIDCounter*process.tauPtEtaIDFilter) *
     (process.tauPtEtaIDAgMu*process.atLeastOneElecTautauPtEtaIDAgMu*process.tauPtEtaIDAgMuCounter*process.tauPtEtaIDAgMuFilter)*
     (process.tauPtEtaIDAgMuAgElec*process.atLeastOneElecTautauPtEtaIDAgMuAgElec*process.tauPtEtaIDAgMuAgElecCounter*process.tauPtEtaIDAgMuAgElecFilter)*
-    process.tauPtEtaIDAgMuAgElecRelIso
+    process.tauPtEtaIDAgMuAgElecRelIso*process.tausForVeto
     )
 
 ####################### x-cleaning of jets #########################
@@ -776,7 +810,7 @@ process.skim = cms.Sequence(
     process.puJetIdSqeuence *
     ##process.kt6PFJetsNeutral*
     process.selectedPatMuonsUserEmbedded*
-    (process.muPtEtaRelID*process.muPtEtaRelIDRelIso)*
+    (process.muPtEtaRelID*process.muPtEtaRelIDRelIso*process.muonsForVeto)*
     process.selectedPatElectronsUserEmbedded*
     process.selectedPatTausUserEmbedded*
     process.alLeastOneElecTauSequence*
@@ -833,6 +867,9 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_kt6PFJetsForRhoComputationVoronoi_rho_*',
     'keep *_elecPtEtaID_*_*',
     'keep *_elecPtEtaRelID_*_*',
+    'keep *_electronsForVeto_*_*',
+    'keep *_muonsForVeto_*_*',
+    'keep *_tausForVeto_*_*',
     'keep *_muPtEtaRelID_*_*',
     'keep *_muons_*_*',
     'keep *_addPileupInfo_*_*',
