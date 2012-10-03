@@ -124,7 +124,9 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* genMETP4_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* genVP4_;
   int genDecay_;
+  int hepNUP_;
 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* leptonJets_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* extraMuons_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* pfMuons_; 
   
@@ -155,6 +157,11 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   int decayMode_;
   int genDecayMode_;
   int genPolarization_;
+  int parton_;
+  int genPartMult_;
+  int leadGenPartPdg_;
+  float leadGenPartPt_;
+
   float diTauNSVfitMass_;
   float diTauNSVfitMassErrUp_;
   float diTauNSVfitMassErrDown_;
@@ -187,6 +194,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   int isTauLegMatched_;
   int isMuLegMatched_;
   int muFlag_;
+  int vetoEvent_;
   int isPFMuon_;
   int isTightMuon_;
   float muVetoRelIso_;

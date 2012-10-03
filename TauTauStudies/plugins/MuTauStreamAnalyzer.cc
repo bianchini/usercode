@@ -45,6 +45,8 @@
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
 
+#include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
+
 #include "PhysicsTools/JetMCUtils/interface/JetMCTag.h"
 
 ////// for DCA ///////////////////////////////
@@ -168,6 +170,7 @@ void MuTauStreamAnalyzer::beginJob(){
   genMETP4_       = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genVP4_         = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
+  leptonJets_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   extraMuons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   pfMuons_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
@@ -308,7 +311,13 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("genMETP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genMETP4_);
   tree_->Branch("genVP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genVP4_);
   tree_->Branch("genDecay",&genDecay_,"genDecay/I");
+  tree_->Branch("parton",&parton_,"parton/I");
+  tree_->Branch("genPartMult",&genPartMult_,"genPartMult/I");
+  tree_->Branch("leadGenPartPdg",&leadGenPartPdg_,"leadGenPartPdg/I");
+  tree_->Branch("leadGenPartPt",&leadGenPartPt_,"leadGenPartPt/F");
+  tree_->Branch("hepNUP",&hepNUP_,"hepNUP/I");
 
+  tree_->Branch("leptonJets","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&leptonJets_);
   tree_->Branch("extraMuons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&extraMuons_);
   tree_->Branch("pfMuons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&pfMuons_);
 
@@ -390,6 +399,7 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("isTauLegMatched",&isTauLegMatched_,"isTauLegMatched/I");
   tree_->Branch("isMuLegMatched",&isMuLegMatched_,"isMuLegMatched/I");
   tree_->Branch("muFlag",&muFlag_,"muFlag/I");
+  tree_->Branch("vetoEvent",&vetoEvent_,"vetoEvent/I");
   tree_->Branch("isPFMuon",&isPFMuon_,"isPFMuon/I");
   tree_->Branch("isTightMuon",&isTightMuon_,"isTightMuon/I");
   tree_->Branch("muVetoRelIso",&muVetoRelIso_,"muVetoRelIso/F");
@@ -420,6 +430,7 @@ MuTauStreamAnalyzer::~MuTauStreamAnalyzer(){
   delete bQuark_;
   delete tauXTriggers_; delete triggerBits_; delete sigDCA_;
   delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_; delete extraMuons_; delete pfMuons_; delete jetsIDL1OffsetP4_;
+  delete leptonJets_;
   delete genTausP4_;
   delete jetsChNfraction_; delete jetsChEfraction_;delete jetMoments_;
   delete jetPUMVA_; delete jetPUWP_;
@@ -531,7 +542,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       << "No mva MET label available \n";
   const pat::METCollection* mvaMet = mvaMetHandle.product();
 
-  edm::Handle<PFMEtSignCovMatrix>metCovHandle;
+  edm::Handle<PFMEtSignCovMatrix> metCovHandle;
   iEvent.getByLabel( metCovTag_, metCovHandle);
   if( !metCovHandle.isValid() )
     edm::LogError("DataNotAvailable")
@@ -553,6 +564,8 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
 
   genDecay_ = -99;
+  hepNUP_   = -99;
+
   edm::Handle<reco::GenParticleCollection> genHandle;
   const reco::GenParticleCollection* genParticles = 0;
   iEvent.getByLabel(genParticlesTag_,genHandle); 
@@ -581,6 +594,17 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   }
 
   if(isMC_){
+
+    edm::Handle<LHEEventProduct > LHEHandle;
+    const LHEEventProduct* LHE = 0;
+    iEvent.getByLabel("source",LHEHandle);
+    if(LHEHandle.isValid()){
+      LHE = LHEHandle.product();
+      hepNUP_ = (LHE->hepeup()).NUP;
+      //cout << hepNUP_ << endl;
+    }
+    
+
     if( !genHandle.isValid() )  
       edm::LogError("DataNotAvailable")
 	<< "No gen particles label available \n";
@@ -620,6 +644,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       break;
     }
   }
+
 
   edm::Handle<reco::GenJetCollection> tauGenJetsHandle;
   edm::Handle<std::vector<PileupSummaryInfo> > puInfoH;
@@ -707,6 +732,34 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     cout << "WARNING: "<< muonsRel->size() << "  muonsRel found in the event !!! We will select only one" << endl;
   }
   
+
+  /////////////////////////
+  vetoEvent_ = 0;
+
+  edm::Handle<pat::MuonCollection> muonsForVetoHandle;
+  edm::Handle<pat::ElectronCollection> electronsForVetoHandle;
+  edm::Handle<pat::TauCollection> tausForVetoHandle;
+
+  iEvent.getByLabel( "muonsForVeto" ,     muonsForVetoHandle);
+  iEvent.getByLabel( "electronsForVeto" , electronsForVetoHandle);
+  iEvent.getByLabel( "tausForVeto" ,      tausForVetoHandle);
+
+  if( muonsForVetoHandle.isValid() && electronsForVetoHandle.isValid() && tausForVetoHandle.isValid()){
+    if( (muonsForVetoHandle.product())->size() + 
+	(electronsForVetoHandle.product())->size() +
+	(tausForVetoHandle.product())->size()   >= 3 ){
+      vetoEvent_ = 1;
+      cout << "Muons " << (muonsForVetoHandle.product())->size() << endl;
+      cout << "Electrons " << (electronsForVetoHandle.product())->size() << endl;
+      cout << "Taus " << (tausForVetoHandle.product())->size() << endl;
+    }
+    else
+      vetoEvent_ = 0;
+  }
+
+  /////////////////////////
+
+
   const PATMuTauPair *theDiTau = 0;
   if(diTaus->size()<1){
     cout << " No diTau !!! " << endl;
@@ -913,6 +966,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     sigDCA_->clear();
     tauXTriggers_->clear();
     extraMuons_->clear();
+    leptonJets_->clear();
     METP4_->clear();
     
     diTauCharge_ =  theDiTau->charge();
@@ -1066,6 +1120,10 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     
     genDecayMode_    = -99;
     genPolarization_ = -99;
+    parton_          = -99;
+    genPartMult_     = -99;
+    leadGenPartPdg_  = -99;
+    leadGenPartPt_   = -99;
 
     if(isMC_){
       if( (leg1->genParticleById(13,0,true)).isNonnull() ){
@@ -1420,6 +1478,33 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       if( Geom::deltaR(jet->p4(), leg1->p4())<deltaRLegJet_ || 
 	  Geom::deltaR(jet->p4(), leg2p4 )<deltaRLegJet_ ){
 	if(verbose_) cout << "The jet at (" <<jet->pt()<<","<<jet->eta()<<") is closer than "<<deltaRLegJet_ << " from one of the legs" << endl;  
+
+	if( Geom::deltaR(jet->p4(), leg2p4 )<deltaRLegJet_ ){
+	  parton_ = jet->partonFlavour();
+	  if(jet->genJet()!=0){
+	    genPartMult_    = (jet->genJet()->getGenConstituents()).size();
+	    leadGenPartPdg_ = (jet->genJet()->getGenConstituents()).size()>0 ?
+	      ((jet->genJet()->getGenConstituents())[0])->pdgId() : -99;
+	    leadGenPartPt_  = (jet->genJet()->getGenConstituents()).size()>0 ?
+	      ((jet->genJet()->getGenConstituents())[0])->pt() : -99;
+
+	    if(verbose_){
+	      cout << "parton flavor = " << jet->partonFlavour() << endl;
+	      for(unsigned int l = 0; l < (jet->genJet()->getGenConstituents()).size() ; l++){
+		cout << "Hadron " << l 
+		     << " pdg " << ((jet->genJet()->getGenConstituents())[l])->pdgId() << ", pt " << ((jet->genJet()->getGenConstituents())[l])->pt()
+		     << endl;
+	      }
+	    }
+	  }
+	}
+
+
+	if(isMC_) 
+	  leptonJets_->push_back( newJet->correctedJet("Uncorrected").p4() );
+	else
+	  leptonJets_->push_back( newJet->correctedJet("Uncorrected").p4() );
+	
 	continue;
       }
       

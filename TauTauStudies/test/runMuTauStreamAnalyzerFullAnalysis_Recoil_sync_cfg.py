@@ -4,7 +4,8 @@ process = cms.Process("MUTAUANA")
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.load("Configuration.StandardSequences.Geometry_cff")
+#process.load("Configuration.StandardSequences.Geometry_cff")
+process.load("Configuration.Geometry.GeometryIdeal_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 
 #from Configuration.PyReleaseValidation.autoCond import autoCond
@@ -35,14 +36,13 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-        #'file:./patTuples_MuTauStream.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/MuTauStream-04May2012-Reload_DYJets-MuTau-50-madgraph-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_9_1_CS7.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/MuTauStream-04May2012-Reload-05AugReReco/d7ab9a49aa7555b45f2fd6a9510b15e8/patTuples_MuTauStream_9_2_bFX.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DoubleMu/MuTauStream-04May2012-Reload-RunBPromptReco-v1-Embedded/f5416ddeffc52a24fc875c17bf3889c0/patTuples_MuTauStream_8_3_C7R.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_1_1_QFt.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_2_1_QDr.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_3_1_IXG.root',
-    'file:patTuples_MuTauStream.root'        
+    'file:./patTuples_MuTauStream.root'        
     )
     )
 #process.source.skipEvents = cms.untracked.uint32(90)

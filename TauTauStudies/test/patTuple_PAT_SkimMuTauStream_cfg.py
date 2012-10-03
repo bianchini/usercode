@@ -505,10 +505,19 @@ process.muPtEtaID = cms.EDFilter(
                      " && numberOfMatchedStations>1"+                     
                      " && innerTrack.hitPattern.numberOfValidPixelHits>0"+
                      " && track.hitPattern.trackerLayersWithMeasurement > 5)"
-                     #" && userInt('isPFMuon')>0.5)"
                      ),
     filter = cms.bool(False)
     )
+
+process.muonsForVeto =  cms.EDFilter(
+    "PATMuonSelector",
+    src = cms.InputTag("selectedPatMuonsUserEmbedded"),
+    cut = cms.string(process.muPtEtaID.cut.value()+
+                     " && pt>10 && userFloat('PFRelIsoDB04v2')<0.30"),
+    filter = cms.bool(False)
+    )
+
+
 process.atLeastOneMuTaumuPtEtaID = process.atLeastOneMuTau.clone(
     decay=cms.string("muPtEtaID selectedPatTausUserEmbedded")
     )
@@ -543,6 +552,14 @@ process.tauPtEtaID  = cms.EDFilter(
                      " && abs(userFloat('dzWrtPV'))<0.2"),
     filter = cms.bool(False)
     )
+process.tausForVeto  = cms.EDFilter(
+    "PATTauSelector",
+    src = cms.InputTag("selectedPatTausUserEmbedded"),
+    cut = cms.string(process.tauPtEtaID.cut.value()+
+                     " && pt>20 && tauID('byLooseIsolationMVA')>0.5"),
+    filter = cms.bool(False)
+    )
+
 process.atLeastOneMuTautauPtEtaID = process.atLeastOneMuTau.clone(
     decay=cms.string("muPtEtaID tauPtEtaID")
     )
@@ -569,7 +586,6 @@ process.tauPtEtaIDAgMuCounter = cms.EDFilter(
     minNumber = cms.uint32(1),
     maxNumber = cms.uint32(999),
     )
-
 process.tauPtEtaIDAgMuAgElec  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("selectedPatTausUserEmbedded"),
@@ -634,6 +650,16 @@ process.elecPtEtaRelIDRelIso = cms.EDFilter(
                      ),
     filter = cms.bool(False)
     )
+process.electronsForVeto = cms.EDFilter(
+    "PATElectronSelector",
+    src = cms.InputTag("selectedPatElectronsUserEmbedded"),
+    cut = cms.string("pt>10 && abs(eta)<2.4" +
+                     " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"+
+                     " && ( (abs(eta)<0.80 && userFloat('mvaPOGNonTrig')>0.925) || (abs(eta)<1.479 && abs(eta)>0.80 && userFloat('mvaPOGNonTrig')>0.975) || (abs(eta)>1.479 && userFloat('mvaPOGNonTrig')>0.985)  )"+
+                     " && userFloat('PFRelIsoDB04')<0.30"),
+    filter = cms.bool(False)
+    )
+
 
 ###################### final sequences ##############################
 
@@ -652,7 +678,7 @@ process.alLeastOneMuTauSequence = cms.Sequence(
 process.muLegSequence = cms.Sequence(
     (process.muPtEta*process.atLeastOneMuTaumuPtEta*process.muPtEtaCounter*process.muPtEtaFilter) *
     (process.muPtEtaID*process.atLeastOneMuTaumuPtEtaID*process.muPtEtaIDCounter*process.muPtEtaIDFilter) +
-    process.muPtEtaRelID*process.muPtEtaRelIDRelIso
+    process.muPtEtaRelID*process.muPtEtaRelIDRelIso*process.muonsForVeto
     )
 
 process.tauLegSequence = cms.Sequence(
@@ -660,7 +686,7 @@ process.tauLegSequence = cms.Sequence(
     (process.tauPtEtaID*process.atLeastOneMuTautauPtEtaID*process.tauPtEtaIDCounter*process.tauPtEtaIDFilter) *
     (process.tauPtEtaIDAgMu*process.atLeastOneMuTautauPtEtaIDAgMu*process.tauPtEtaIDAgMuCounter*process.tauPtEtaIDAgMuFilter)*
     (process.tauPtEtaIDAgMuAgElec*process.atLeastOneMuTautauPtEtaIDAgMuAgElec*process.tauPtEtaIDAgMuAgElecCounter*process.tauPtEtaIDAgMuAgElecFilter)*
-    process.tauPtEtaIDAgMuAgElecRelIso
+    process.tauPtEtaIDAgMuAgElecRelIso*process.tausForVeto 
     )
 
 ####################### x-cleaning of jets #########################
@@ -711,7 +737,7 @@ process.skim = cms.Sequence(
     ##process.kt6PFJetsNeutral*
     process.selectedPatMuonsUserEmbedded*
     process.selectedPatElectronsUserEmbedded*
-    (process.elecPtEtaRelID+process.elecPtEtaRelIDRelIso)*
+    (process.elecPtEtaRelID+process.elecPtEtaRelIDRelIso+process.electronsForVeto)*
     process.selectedPatTausUserEmbedded*
     process.alLeastOneMuTauSequence*
     process.muLegSequence*
@@ -772,6 +798,9 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_muPtEtaRelID_*_*',
     'keep *_muons_*_*',
     'keep *_elecPtEtaRelID_*_*',
+    'keep *_electronsForVeto_*_*',
+    'keep *_muonsForVeto_*_*',
+    'keep *_tausForVeto_*_*',
     'keep *_addPileupInfo_*_*',
     'keep *_generalTracks_*_*',
     'keep *_tmfTracks_*_*',
