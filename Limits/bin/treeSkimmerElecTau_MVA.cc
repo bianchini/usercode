@@ -25,9 +25,9 @@
 #include "TROOT.h"
 #include "Bianchi/Utilities/interface/RecoilCorrector.hh"
 //#include "Bianchi/Utilities/interface/Lumi3DReWeightingForLorenzo.h"
-#include "PhysicsTools/Utilities/interface/LumiReweightingStandAlone.h"
+//#include "PhysicsTools/Utilities/interface/LumiReweightingStandAlone.h"
+#include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
 #include "TauAnalysis/CandidateTools/interface/NSVfitStandaloneAlgorithm.h"
-//#include "TauAnalysis/SVFitStandAlone/interface/NSVfitStandaloneAlgorithm.h"
 #include "PhysicsTools/FWLite/interface/TFileService.h"
 
 #include "Math/Vector3D.h"
@@ -46,7 +46,8 @@
 
 #define MINPt1 20.0 
 #define MINPt2 20.0
-#define PtVETO 20.0
+//#define PtVETO 20.0
+#define PtVETO 30.0
 #define MAXEta  5.0 
 #define MINJetID 0.5
 #define ETOTAUEB 0.85
@@ -62,7 +63,9 @@ using namespace ROOT::Math;
 using namespace std;
 
 typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LV;
-
+//reweight::LumiReWeighting LumiWeights_;
+edm::LumiReWeighting LumiWeights_("MC_Summer12_PU_S10-600bins.root","Data_Pileup_2012_HCP-600bins.root","pileup","pileup");
+bool FIRSTEVENT = true;
 
 float* computeZeta(LV leg1, LV leg2, LV MEt){
 
@@ -185,91 +188,74 @@ void createReWeighting3D(){
 
 }
 
-float pileupWeight( int intimepileup_ ){
+float pileupWeight( float intimepileup_ ){
 
-  
+  /*
   // Summer12: truth (from twiki) 
   std::vector< float > Summer12Lumi; 
-  Double_t Summer12Lumi_f[60] = { 
-    2.344E-05, 
-    2.344E-05, 
-    2.344E-05, 
-    2.344E-05, 
-    4.687E-04, 
-    4.687E-04, 
-    7.032E-04, 
-    9.414E-04, 
-    1.234E-03, 
-    1.603E-03, 
-    2.464E-03, 
-    3.250E-03, 
-    5.021E-03, 
-    6.644E-03, 
-    8.502E-03, 
-    1.121E-02, 
-    1.518E-02, 
-    2.033E-02, 
-    2.608E-02, 
-    3.171E-02, 
-    3.667E-02, 
-    4.060E-02, 
-    4.338E-02, 
-    4.520E-02, 
-    4.641E-02, 
-    4.735E-02, 
-    4.816E-02, 
-    4.881E-02, 
-    4.917E-02, 
-    4.909E-02, 
-    4.842E-02, 
-    4.707E-02, 
-    4.501E-02, 
-    4.228E-02, 
-    3.896E-02, 
-    3.521E-02, 
-    3.118E-02, 
-    2.702E-02, 
-    2.287E-02, 
-    1.885E-02, 
-    1.508E-02, 
-    1.166E-02, 
-    8.673E-03, 
-    6.190E-03, 
-    4.222E-03, 
-    2.746E-03, 
-    1.698E-03, 
-    9.971E-04, 
-    5.549E-04, 
-    2.924E-04, 
-    1.457E-04, 
-    6.864E-05, 
-    3.054E-05, 
-    1.282E-05, 
-    5.081E-06, 
-    1.898E-06, 
-    6.688E-07, 
-    2.221E-07, 
-    6.947E-08, 
-    2.047E-08 
-  };   
-
+  Double_t Summer12Lumi_f[60] = {
+    2.344E-05, 2.344E-05, 2.344E-05, 2.344E-05, 4.687E-04, 4.687E-04, 7.032E-04, 9.414E-04, 1.234E-03,
+    1.603E-03, 2.464E-03, 3.250E-03, 5.021E-03, 6.644E-03, 8.502E-03, 1.121E-02, 1.518E-02, 2.033E-02,
+    2.608E-02, 3.171E-02, 3.667E-02, 4.060E-02, 4.338E-02, 4.520E-02, 4.641E-02, 4.735E-02, 4.816E-02,
+    4.881E-02, 4.917E-02, 4.909E-02, 4.842E-02, 4.707E-02, 4.501E-02, 4.228E-02, 3.896E-02, 3.521E-02,
+    3.118E-02, 2.702E-02, 2.287E-02, 1.885E-02, 1.508E-02, 1.166E-02, 8.673E-03, 6.190E-03, 4.222E-03,
+    2.746E-03, 1.698E-03, 9.971E-04, 5.549E-04, 2.924E-04, 1.457E-04, 6.864E-05, 3.054E-05, 1.282E-05,
+    5.081E-06, 1.898E-06, 6.688E-07, 2.221E-07, 6.947E-08, 2.047E-08
+  };  
+  
   
   // sigma 69.4 pb 
   std::vector< float > Data2012LumiExt; 
   Double_t Data2012LumiExt_f[60] = { 
     1.76427e-06, 2.84466e-06, 1.88915e-05, 0.000796165, 0.00110891, 0.000439459, 0.00216878, 0.00562928, 0.0114731, 0.0199515, 0.0317062, 0.0457626, 0.0587994, 0.0700723, 0.0799624, 0.0850344, 0.0802347, 0.0690109, 0.0585324, 0.051109, 0.0457747, 0.0413901, 0.0373793, 0.0335591, 0.0298473, 0.0262066, 0.0226609, 0.0192698, 0.0160998, 0.0132078, 0.0106338, 0.00839923,  0.00650684, 0.00494315, 0.00368197, 0.00268875, 0.00192473, 0.00135048, 0.000928655, 0.000625768, 0.000413144, 0.00026721, 0.000169276, 0.000105016, 6.37928e-05, 3.79375e-05, 2.20845e-05, 1.25825e-05, 7.0155e-06, 3.8275e-06, 2.04314e-06, 1.06702e-06, 5.45147e-07, 2.72455e-07, 1.33199e-07, 6.36963e-08, 2.97937e-08, 1.36308e-08, 6.09958e-09, 2.66964e-09 
   }; 
-  
+  */
+  /*
+  //From Mike
+  std::vector< float > Summer12Lumi; 
+  Double_t Summer12Lumi_f[60] = { 
+    2.34402e-05, 2.34402e-05, 2.34402e-05, 2.34402e-05, 0.000468703, 0.000468703, 0.000703205, 
+    0.000941407, 0.00123401, 0.00160301, 0.00246402, 0.00325002, 0.00502104, 0.00664405,
+    0.00850206, 0.0112101, 0.0151801, 0.0203301, 0.0260802, 0.0317102, 0.0366703, 0.0406003,
+    0.0433803, 0.0452003, 0.0464103, 0.0473503, 0.0481603, 0.0488104, 0.0491704, 0.0490904, 
+    0.0484203, 0.0470703, 0.0450103, 0.0422803, 0.0389603, 0.0352103, 0.0311802, 0.0270202,
+    0.0228702, 0.0188501, 0.0150801, 0.0116601, 0.00867306, 0.00619004, 0.00422203, 0.00274602,
+    0.00169801, 0.000997107, 0.000554904, 0.000292402, 0.000145701, 6.86405e-05, 3.05402e-05,
+    1.28201e-05, 5.08104e-06, 1.89801e-06, 6.68805e-07, 2.22102e-07, 6.94705e-08, 2.04701e-08
+  };
+ 
+ 
+  // sigma 69.4 pb 
+  std::vector< float > Data2012LumiExt; 
+  Double_t Data2012LumiExt_f[60] = { 
+    1.76747e-06, 2.84912e-06, 6.88486e-06, 3.71826e-05, 9.81822e-05, 0.000424844, 0.00217272, 
+    0.00563951, 0.0114938, 0.0199867, 0.0317601, 0.0458397, 0.058902, 0.0701984, 0.0801076,
+    0.0851889, 0.0803805, 0.0691363, 0.0586388, 0.0512019, 0.0458578, 0.0414654, 0.0374472,
+    0.0336201, 0.0299015, 0.0262542, 0.0227021, 0.0193048, 0.0161291, 0.0132318, 0.0106532,
+    0.00841449, 0.00651866, 0.00495213, 0.00368866, 0.00269364, 0.00192822, 0.00135293,
+    0.000930343, 0.000626905, 0.000413895, 0.000267695, 0.000169583, 0.000105207, 6.39087e-05,
+    3.80064e-05, 2.21246e-05, 1.26054e-05, 7.02825e-06, 3.83445e-06, 2.04685e-06, 1.06896e-06,
+    5.46137e-07, 2.7295e-07, 1.33441e-07, 6.3812e-08, 2.98478e-08, 1.36556e-08, 6.11067e-09,
+    2.67449e-09
+  }; 
+
   for( int i=0; i<60; i++) { 
     Data2012LumiExt.push_back(Data2012LumiExt_f[i]); 
     Summer12Lumi.push_back(Summer12Lumi_f[i]); 
   } 
+
+  //reweight::LumiReWeighting LumiWeights_(Summer12Lumi, Data2012LumiExt);
+  if(FIRSTEVENT){
+    LumiWeights_ = reweight::LumiReWeighting(Summer12Lumi, Data2012LumiExt); 
+    //LumiWeights_ =  reweight::LumiReWeighting("MC_Summer12_PU_S7.root","Data_Pileup_2012.root","pileup","pileup");  //crashing due to some ROOT error
+    FIRSTEVENT = false;
+  } 
+  */
+
+  float intimepileup = intimepileup_; //>59 ? 59 : intimepileup_; 
   
-  int intimepileup = intimepileup_>59 ? 59 : intimepileup_; 
-  
-  reweight::LumiReWeighting LumiWeights_(Summer12Lumi, Data2012LumiExt); 
-  
-  return LumiWeights_.ITweight(intimepileup); 
+  //return LumiWeights_.ITweight(intimepileup); 
+  return LumiWeights_.weight(intimepileup);
   
 }
 
@@ -541,7 +527,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     MtLeg1_,MtLeg1Corr_,MtLeg1MVA_,
     MtLeg2_,MtLeg2Corr_,MtLeg2MVA_,
     pZeta_,pZetaCorr_,pZetaMVA_,
-    pZetaVis_,pZetaVisCorr_,pZetaSig_;
+    pZetaVis_,pZetaVisCorr_,pZetaVisMVA_,pZetaSig_;
   float MEt,MEtPhi,MEtCorr,MEtCorrPhi, MEtMVA, MEtMVAPhi;
   float MEtCov00,MEtCov01,MEtCov10,MEtCov11;
   float combRelIsoLeg1,combRelIsoLeg1Beta,combRelIsoLeg1DBeta,combRelIsoLeg1DBetav2,
@@ -574,6 +560,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
   // object-related weights and triggers
   float HLTx,HLTmatch,HLTweightElec,HLTweightTau, SFElec, SFTau, HLTElec, HLTTau, SFEtoTau;
+  float HLTxQCD,HLTmatchQCD;
   float SFElecID, SFElecIso;
   int isTauLegMatched_,isElecLegMatched_,elecFlag_,genDecay_, leptFakeTau;
 
@@ -707,6 +694,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   outTreePtOrd->Branch("pZetaMVA",    &pZetaMVA_,"pZetaMVA/F");
   outTreePtOrd->Branch("pZetaVis",    &pZetaVis_,"pZetaVis/F");
   outTreePtOrd->Branch("pZetaVisCorr",&pZetaVisCorr_,"pZetaVisCorr/F");
+  outTreePtOrd->Branch("pZetaVisMVA", &pZetaVisMVA_,"pZetaVisMVA/F");
   outTreePtOrd->Branch("pZetaSig",    &pZetaSig_,"pZetaSig/F");
 
   outTreePtOrd->Branch("MEt",         &MEt,        "MEt/F");
@@ -773,7 +761,9 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   outTreePtOrd->Branch("SFEtoTau",     &SFEtoTau,"SFEtoTau/F");
   outTreePtOrd->Branch("SFElecID",     &SFElecID,"SFElecID/F");
   outTreePtOrd->Branch("SFElecIso",    &SFElecIso,"SFElecIso/F");
-
+  outTreePtOrd->Branch("HLTxQCD",      &HLTxQCD,"HLTxQCD/F"); 
+  outTreePtOrd->Branch("HLTmatchQCD",  &HLTmatchQCD,"HLTmatchQCD/F");
+  
   outTreePtOrd->Branch("isTauLegMatched", &isTauLegMatched_,"isTauLegMatched/I");
   outTreePtOrd->Branch("isElecLegMatched",&isElecLegMatched_,"isElecLegMatched/I");
   outTreePtOrd->Branch("elecFlag",        &elecFlag_,"elecFlag/I"); 
@@ -788,8 +778,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
 
   //string currentInName = "/data_CMS/cms/lbianchini/"+inputDir_+"//treeElecTauStream_"+sample_+".root" ;
-//   string currentInName = "/data_CMS/cms/anayak/"+inputDir_+"//treeElecTauStream_"+sample_+".root" ;
-  string currentInName = "../../TauTauStudies/test/treeElecTauStream.root" ;
+  string currentInName = "/data_CMS/cms/anayak/"+inputDir_+"//treeElecTauStream_"+sample_+".root" ;
   //string currentInName = "/home/llr/cms/veelken/ArunAnalysis/CMSSW_5_2_6_July12/src/Bianchi/TauTauStudies/test//treeElecTauStream-debug.root" ;
 
   TString inName(currentInName.c_str());
@@ -1055,7 +1044,8 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   float numPV;
   float mcPUweight,embeddingWeight;
   int numOfLooseIsoDiTaus;
-  int isTauLegMatched,isElecLegMatched,elecFlag,genDecay, nPUVertices, nPUVerticesM1,nPUVerticesP1;
+  int isTauLegMatched,isElecLegMatched,elecFlag,genDecay;
+  float nPUVertices, nPUVerticesM1,nPUVerticesP1;
   float leadPFChargedHadrCandP;
   float leadPFChargedHadrMva;
   float pfJetPt;
@@ -1211,7 +1201,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
     // define the relevant jet collection
     nJets20BTagged = 0;
-    nJets30        = 0;
+    nJets30        = 0; nJets20 = 0;
     int lead  = -99;
     int trail = -99;
     int veto  = -99;
@@ -1227,11 +1217,13 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     for(unsigned int v = 0 ; v < indexes.size() ; v++){
       if( (*jets)[indexes[v]].Pt() > 30 ) nJets30++;
       if( (*jets)[indexes[v]].Pt() > 20 ) nJets20++;
-      if( (*jets)[indexes[v]].Pt() > 20 && (*jetsBtagCSV)[indexes[v]] > 0.679 ){
+      if( (*jets)[indexes[v]].Pt() > 20 && TMath::Abs((*jets)[indexes[v]].Eta())<2.4 && (*jetsBtagCSV)[indexes[v]] > 0.679 ){
 	nJets20BTagged++;
-	ptB1  = (*jets)[indexes[v]].Pt();
-	phiB1 = (*jets)[indexes[v]].Phi();
-	etaB1 = (*jets)[indexes[v]].Eta();
+	if(nJets20BTagged<2){
+	  ptB1  = (*jets)[indexes[v]].Pt();
+	  phiB1 = (*jets)[indexes[v]].Phi();
+	  etaB1 = (*jets)[indexes[v]].Eta();
+	}
       }  
     }
 
@@ -1418,9 +1410,10 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
     pZeta_        = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[0]))[1];
     pZetaCorr_    = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], recoilCorrecMET))[1];
-    pZetaMVA_     = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[1]))[1];
+    pZetaMVA_     = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[3]))[1];
     pZetaVis_     = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[0]))[0];
     pZetaVisCorr_ = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], recoilCorrecMET))[0];
+    pZetaVisMVA_  = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[3]))[0];
 
     pZetaSig_     = pZetaSig;
 
@@ -1557,7 +1550,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     numPV_              = numPV;
     sampleWeight        = scaleFactor; 
     puWeight            = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : pileupWeight(nPUVertices);
-    puWeight2           = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : pileupWeight2(nPUVertices);   
+    puWeight2           = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : pileupWeight2(int(nPUVertices));   
     puWeight3D          = -99;
     nPUVertices_        = nPUVertices;
     embeddingWeight_    = embeddingWeight;
@@ -1575,54 +1568,21 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
     if((std::string(sample.Data())).find("Run2012")!=string::npos){
 
-      if(run>=160404 && run<=161176)
-	HLTx = 	float((*triggerBits)[0]); //HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v1
-      else if(run>=161216 && run<=163261)
-	HLTx = 	float((*triggerBits)[1]); //HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v2
-      else if(run>=163269 && run<=163869)
-	HLTx = 	float((*triggerBits)[2]); //HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau15_v4
-      else if(run>=165088 && run<=165633)
-	HLTx = float((*triggerBits)[3]);  //HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v6
-      else if(run>=165970 && run<=166967)
-	HLTx = 	float((*triggerBits)[4]); //HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v8
-      else if(run>=167039 && run<=167913)
-	HLTx = 	float((*triggerBits)[5]); //HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v9
-      else if(run>=170249 && run<=173198)
-	HLTx = 	float((*triggerBits)[6]); //HLT_Ele15_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_TightIsoPFTau20_v2
-      else if(run>=173236 && run<=178380)
-	HLTx = 	float((*triggerBits)[7] ||//HLT_Ele18_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1 ||
-		      (*triggerBits)[8]); //HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v1
-      else if(run>=178420 && run<=179889)
-	HLTx = 	float((*triggerBits)[9]); //HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v5
-      else if(run>=179959 && run<=180252)
-	HLTx = 	float((*triggerBits)[10]);//HLT_Ele20_CaloIdVT_CaloIsoT_TrkIdT_TrkIsoT_MediumIsoPFTau20_v6
+      HLTx =  float((*triggerBits)[0] || (*triggerBits)[1] ||
+		    (*triggerBits)[2] || (*triggerBits)[3]); 
+      //HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v4, HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v5, HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v6, HLT_Ele22_eta2p1_WP90Rho_LooseIsoPFTau20_v2
+      HLTxQCD =  float((*triggerBits)[4] || (*triggerBits)[5] || 
+		       (*triggerBits)[6] || (*triggerBits)[7]);
+      //HLT_Ele20_CaloIdVT_TrkIdT_LooseIsoPFTau20_v4, HLT_Ele20_CaloIdVT_TrkIdT_LooseIsoPFTau20_v5, HLT_Ele20_CaloIdVT_TrkIdT_LooseIsoPFTau20_v6, HLT_Ele22_eta2p1_WP90NoIso_LooseIsoPFTau20_v2
 
-      //hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle15IsoPFTau15
-      if(run>=160404 && run<=163869){
-	bool isTriggMatched = ((*tauXTriggers)[0] || (*tauXTriggers)[1])  && (*tauXTriggers)[5] ;
-	HLTmatch = isTriggMatched ? 1.0 : 0.0 ;
-      }
-      //hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle15IsoPFTau20
-      else if(run>=165088 && run<=167913){
-	bool isTriggMatched = ((*tauXTriggers)[0] || (*tauXTriggers)[1]) && (*tauXTriggers)[6] ; 
-	HLTmatch = isTriggMatched ? 1.0 : 0.0;
-      }
-      //hltEle15CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle15TightIsoPFTau20
-      else if(run>=170249 && run<=173198){
-	bool isTriggMatched = ((*tauXTriggers)[0] || (*tauXTriggers)[1]) && (*tauXTriggers)[7] ;
-	HLTmatch = isTriggMatched ? 1.0 : 0.0;
-      }
-      //hltEle18CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle18MediumIsoPFTau20
-      // attention: some runs get prescaled, then take 2020
-      else if(run>=173236 && run<=178380){
-	bool isTriggMatched = ((*tauXTriggers)[2] || (*tauXTriggers)[3] || (*tauXTriggers)[4]) && ((*tauXTriggers)[8] || (*tauXTriggers)[9]);
-	HLTmatch = isTriggMatched ? 1.0 : 0.0;
-      }
-      //hltEle20CaloIdVTTrkIdTCaloIsoTTrkIsoTTrackIsolFilter && hltOverlapFilterIsoEle20MediumIsoPFTau20
-      else if(run>=178420 && run<=180252){
-	bool isTriggMatched =  (*tauXTriggers)[4] && (*tauXTriggers)[9] ;
-	HLTmatch = isTriggMatched ? 1.0 : 0.0;
-      }
+      bool isTriggMatched = (((*tauXTriggers)[0] && (*tauXTriggers)[4])  ||
+			     ((*tauXTriggers)[1] && (*tauXTriggers)[5]));
+      HLTmatch = isTriggMatched ? 1.0 : 0.0 ;
+      //hltOverlapFilterIsoEle20LooseIsoPFTau20 || hltOverlapFilterIsoEle20WP90LooseIsoPFTau20
+      bool isTriggMatchedQCD = (((*tauXTriggers)[2] && (*tauXTriggers)[6])  || 
+				((*tauXTriggers)[3] && (*tauXTriggers)[7])); 
+      HLTmatchQCD = isTriggMatchedQCD ? 1.0 : 0.0 ;
+
 
       HLTweightTau  = 1.0;
       HLTweightElec = 1.0;
@@ -1670,7 +1630,10 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
       HLTx     = float((*triggerBits)[0]);
       //HLTmatch = ((*tauXTriggers)[0] && (*tauXTriggers)[2]) ? 1.0 : 0.0;
       HLTmatch = ((*tauXTriggers)[1] && (*tauXTriggers)[2]) ? 1.0 : 0.0;
-      
+
+      HLTxQCD = 1.0;
+      HLTmatchQCD = 1.0;
+
       HLTweightTau  = ratioTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() );
       //HLTweightTau  = ((*diTauLegsP4)[1].Eta()<1.5) ? 
       //ratioTauElecTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) :
@@ -1764,8 +1727,8 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
 
     int pairIndex = -1;
-    bool passQualityCuts = tightestHPSMVAWP>=0 && ptL1>20 && ptL2>20 && TMath::Abs(etaL1)<2.1 && combRelIsoLeg1DBetav2<0.1 && HLTmatch
-      && ((mvaPOGNonTrig>0.925 && TMath::Abs(etaL1)<0.8) || (mvaPOGNonTrig>0.975 && TMath::Abs(etaL1)>0.8 && TMath::Abs(etaL1)<1.497) ||  (mvaPOGNonTrig>0.985 &&  TMath::Abs(etaL1)>1.497) );
+    bool passQualityCuts = tightestHPSMVAWP>=0 && ptL1>24 && ptL2>20 && TMath::Abs(etaL1)<2.1 && combRelIsoLeg1DBetav2<0.1 && HLTmatch
+      && ((mvaPOGNonTrig>0.925 && TMath::Abs(etaL1)<0.8) || (mvaPOGNonTrig>0.975 && TMath::Abs(etaL1)>0.8 && TMath::Abs(etaL1)<1.479) ||  (mvaPOGNonTrig>0.985 &&  TMath::Abs(etaL1)>1.479) );
     if( !(run==lastRun && lumi==lastLumi && event==lastEvent) ){
 
       lastEvent = event;
@@ -1825,52 +1788,50 @@ void doAllSamplesElec(string inputDir_ = "ElecTauStreamFall11_04May2012"){
 
   ////////////// samples & x-sections & skim1 & skim2 /////////////
 
-//   samples.push_back("Run2011-ElecTau-All_run");             crossSec.push_back( 0  );      
-//   //samples.push_back("Run2011-ElecTau-LooseIso-All_run");    crossSec.push_back( 0  );                          
-//   samples.push_back("Run2011-ElecTau-Embedded-All_run");    crossSec.push_back( 0  );                          
-//   samples.push_back("DYJets-ElecTau-50-madgraph-PUS6_run"); crossSec.push_back( 3048           * 0.0537207         * 0.2718375); 
-//   samples.push_back("TTJets-ElecTau-madgraph-PUS6_run");    crossSec.push_back( 157.5          * 0.0149329         * 0.7827282);  
-//   samples.push_back("WJets-ElecTau-madgraph-PUS6_run");     crossSec.push_back(31314.0         * 0.0011910         * 0.5374372);   
-//   samples.push_back("W3Jets-ElecTau-madgraph-PUS6_run");    crossSec.push_back( 304.0          * 1.0               * 0.1175129);   
-//   samples.push_back("WZ-ElecTau-pythia-PUS6_run");          crossSec.push_back( 18.2           * 0.0111572         * 0.5470729);         
-//   samples.push_back("ZZ-ElecTau-pythia-PUS6_run");          crossSec.push_back(  5.9           * 0.0160517         * 0.5203837);    
-//   samples.push_back("WW-ElecTau-pythia-PUS6_run");          crossSec.push_back( 43.0           * 0.0092734         * 0.5797184);        
-//   samples.push_back("VBFH100-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.36e-02*1.546 * 0.0499282         * 0.7341110); 
-//   samples.push_back("GGFH100-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.36e-02*24.02 * 1.0               * 0.0593094); 
-//   samples.push_back("VBFH105-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.25e-02*1.472 * 1.0               * 0.1153245); 
-//   samples.push_back("GGFH105-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.25e-02*21.78 * 1.0               * 0.0645510); 
-//   samples.push_back("VBFH110-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.02e-02*1.398 * 0.0558070         * 0.7335979);
-//   samples.push_back("GGFH110-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.02e-02*19.84 * 0.0441026         * 0.6997732);    
-//   samples.push_back("VBFH115-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.65e-02*1.332 * 0.0586927         * 0.7382737);
-//   samples.push_back("GGFH115-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.65e-02*18.13 * 0.0463465         * 0.7136729);  
-//   samples.push_back("VBFH120-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.10e-02*1.269 * 1.0               * 0.1274666);   
-//   samples.push_back("GGFH120-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.10e-02*16.63 * 1.0         * 0.0781068);  
-//   samples.push_back("VBFH125-ElecTau-powheg-PUS6_run");     crossSec.push_back( 6.37e-02*1.211 * 1.0         * 0.1309841);   
-//   samples.push_back("GGFH125-ElecTau-powheg-PUS6_run");     crossSec.push_back( 6.37e-02*15.31 * 1.0         * 0.0822008); 
-//   samples.push_back("VBFH130-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.48e-02*1.154 * 1.0         * 0.1345095); 
-//   samples.push_back("GGFH130-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.48e-02*14.12 * 1.0         * 0.0853114);
-//   samples.push_back("VBFH135-ElecTau-powheg-PUS6_run");     crossSec.push_back( 4.52e-02*1.100 * 1.0         * 0.1395949); 
-//   samples.push_back("GGFH135-ElecTau-powheg-PUS6_run");     crossSec.push_back( 4.52e-02*13.08 * 0.0573246   * 0.7114996);    
-//   samples.push_back("VBFH140-ElecTau-powheg-PUS6_run");     crossSec.push_back( 3.54e-02*1.052 * 1.0         * 0.1416138);  
-//   samples.push_back("GGFH140-ElecTau-powheg-PUS6_run");     crossSec.push_back( 3.54e-02*12.13 * 1.0         * 0.0951278);  
-//   samples.push_back("VBFH145-ElecTau-powheg-PUS6_run");     crossSec.push_back( 2.61e-02*1.004 * 1.0         * 0.1451686);  
-//   samples.push_back("GGFH145-ElecTau-powheg-PUS6_run");     crossSec.push_back( 2.61e-02*11.27 * 1.0         * 0.0983843);  
-//   samples.push_back("VBFH160-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.32e-04*0.8787* 1.0         * 0.1537070);  
-//   samples.push_back("GGFH160-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.32e-04*9.080 * 1.0         * 0.1087073);  
-//   samples.push_back("VH100-ElecTau-pythia-PUS6_run");  crossSec.push_back( 2.61e-02*(1.186+ 0.6313+0.1638  ) * 1.0 * 0.1490132);  
-//   samples.push_back("VH110-ElecTau-pythia-PUS6_run");  crossSec.push_back( 8.02e-02*(0.8754+0.4721+0.1257  ) * 0.084386 * 0.76245288);
-//   samples.push_back("VH115-ElecTau-pythia-PUS6_run");  crossSec.push_back( 7.65e-02*(0.7546+0.4107+0.1106  ) * 1.0 * 0.1668136);
-//   samples.push_back("VH120-ElecTau-pythia-PUS6_run");  crossSec.push_back( 7.10e-02*(0.6561+0.3598+0.09756 ) * 1.0 * 0.1732820);   
-//   samples.push_back("VH125-ElecTau-pythia-PUS6_run");  crossSec.push_back( 6.37e-02*(0.5729+0.3158+0.08634 ) * 1.0 * 0.1787773);
-//   samples.push_back("VH130-ElecTau-pythia-PUS6_run");  crossSec.push_back( 5.48e-02*(0.4942+0.2778+0.07658 ) * 0.10051 * 0.7730161);
-//   samples.push_back("VH135-ElecTau-pythia-PUS6_run");  crossSec.push_back( 4.52e-02*(0.4390+0.2453+0.06810 ) * 0.10133 * 0.7768092);
-//   samples.push_back("VH140-ElecTau-pythia-PUS6_run");  crossSec.push_back( 3.54e-02*(0.3857+0.2172+0.06072 ) * 1.0 * 0.1919186);  
-//   samples.push_back("VH145-ElecTau-pythia-PUS6_run");  crossSec.push_back( 2.61e-02*(0.3406+0.1930+0.05435 ) * 0.10708 * 0.774027);  
-//   samples.push_back("VH160-ElecTau-pythia-PUS6_run");  crossSec.push_back( 5.32e-04*(0.2291+0.1334+0.03942 ) * 1.0 * 0.2120560);  
+  samples.push_back("Run2011-ElecTau-All_run");             crossSec.push_back( 0  );      
+  //samples.push_back("Run2011-ElecTau-LooseIso-All_run");    crossSec.push_back( 0  );                          
+  samples.push_back("Run2011-ElecTau-Embedded-All_run");    crossSec.push_back( 0  );                          
+  samples.push_back("DYJets-ElecTau-50-madgraph-PUS6_run"); crossSec.push_back( 3048           * 0.0537207         * 0.2718375); 
+  samples.push_back("TTJets-ElecTau-madgraph-PUS6_run");    crossSec.push_back( 157.5          * 0.0149329         * 0.7827282);  
+  samples.push_back("WJets-ElecTau-madgraph-PUS6_run");     crossSec.push_back(31314.0         * 0.0011910         * 0.5374372);   
+  samples.push_back("W3Jets-ElecTau-madgraph-PUS6_run");    crossSec.push_back( 304.0          * 1.0               * 0.1175129);   
+  samples.push_back("WZ-ElecTau-pythia-PUS6_run");          crossSec.push_back( 18.2           * 0.0111572         * 0.5470729);         
+  samples.push_back("ZZ-ElecTau-pythia-PUS6_run");          crossSec.push_back(  5.9           * 0.0160517         * 0.5203837);    
+  samples.push_back("WW-ElecTau-pythia-PUS6_run");          crossSec.push_back( 43.0           * 0.0092734         * 0.5797184);        
+  samples.push_back("VBFH100-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.36e-02*1.546 * 0.0499282         * 0.7341110); 
+  samples.push_back("GGFH100-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.36e-02*24.02 * 1.0               * 0.0593094); 
+  samples.push_back("VBFH105-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.25e-02*1.472 * 1.0               * 0.1153245); 
+  samples.push_back("GGFH105-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.25e-02*21.78 * 1.0               * 0.0645510); 
+  samples.push_back("VBFH110-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.02e-02*1.398 * 0.0558070         * 0.7335979);
+  samples.push_back("GGFH110-ElecTau-powheg-PUS6_run");     crossSec.push_back( 8.02e-02*19.84 * 0.0441026         * 0.6997732);    
+  samples.push_back("VBFH115-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.65e-02*1.332 * 0.0586927         * 0.7382737);
+  samples.push_back("GGFH115-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.65e-02*18.13 * 0.0463465         * 0.7136729);  
+  samples.push_back("VBFH120-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.10e-02*1.269 * 1.0               * 0.1274666);   
+  samples.push_back("GGFH120-ElecTau-powheg-PUS6_run");     crossSec.push_back( 7.10e-02*16.63 * 1.0         * 0.0781068);  
+  samples.push_back("VBFH125-ElecTau-powheg-PUS6_run");     crossSec.push_back( 6.37e-02*1.211 * 1.0         * 0.1309841);   
+  samples.push_back("GGFH125-ElecTau-powheg-PUS6_run");     crossSec.push_back( 6.37e-02*15.31 * 1.0         * 0.0822008); 
+  samples.push_back("VBFH130-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.48e-02*1.154 * 1.0         * 0.1345095); 
+  samples.push_back("GGFH130-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.48e-02*14.12 * 1.0         * 0.0853114);
+  samples.push_back("VBFH135-ElecTau-powheg-PUS6_run");     crossSec.push_back( 4.52e-02*1.100 * 1.0         * 0.1395949); 
+  samples.push_back("GGFH135-ElecTau-powheg-PUS6_run");     crossSec.push_back( 4.52e-02*13.08 * 0.0573246   * 0.7114996);    
+  samples.push_back("VBFH140-ElecTau-powheg-PUS6_run");     crossSec.push_back( 3.54e-02*1.052 * 1.0         * 0.1416138);  
+  samples.push_back("GGFH140-ElecTau-powheg-PUS6_run");     crossSec.push_back( 3.54e-02*12.13 * 1.0         * 0.0951278);  
+  samples.push_back("VBFH145-ElecTau-powheg-PUS6_run");     crossSec.push_back( 2.61e-02*1.004 * 1.0         * 0.1451686);  
+  samples.push_back("GGFH145-ElecTau-powheg-PUS6_run");     crossSec.push_back( 2.61e-02*11.27 * 1.0         * 0.0983843);  
+  samples.push_back("VBFH160-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.32e-04*0.8787* 1.0         * 0.1537070);  
+  samples.push_back("GGFH160-ElecTau-powheg-PUS6_run");     crossSec.push_back( 5.32e-04*9.080 * 1.0         * 0.1087073);  
+  samples.push_back("VH100-ElecTau-pythia-PUS6_run");  crossSec.push_back( 2.61e-02*(1.186+ 0.6313+0.1638  ) * 1.0 * 0.1490132);  
+  samples.push_back("VH110-ElecTau-pythia-PUS6_run");  crossSec.push_back( 8.02e-02*(0.8754+0.4721+0.1257  ) * 0.084386 * 0.76245288);
+  samples.push_back("VH115-ElecTau-pythia-PUS6_run");  crossSec.push_back( 7.65e-02*(0.7546+0.4107+0.1106  ) * 1.0 * 0.1668136);
+  samples.push_back("VH120-ElecTau-pythia-PUS6_run");  crossSec.push_back( 7.10e-02*(0.6561+0.3598+0.09756 ) * 1.0 * 0.1732820);   
+  samples.push_back("VH125-ElecTau-pythia-PUS6_run");  crossSec.push_back( 6.37e-02*(0.5729+0.3158+0.08634 ) * 1.0 * 0.1787773);
+  samples.push_back("VH130-ElecTau-pythia-PUS6_run");  crossSec.push_back( 5.48e-02*(0.4942+0.2778+0.07658 ) * 0.10051 * 0.7730161);
+  samples.push_back("VH135-ElecTau-pythia-PUS6_run");  crossSec.push_back( 4.52e-02*(0.4390+0.2453+0.06810 ) * 0.10133 * 0.7768092);
+  samples.push_back("VH140-ElecTau-pythia-PUS6_run");  crossSec.push_back( 3.54e-02*(0.3857+0.2172+0.06072 ) * 1.0 * 0.1919186);  
+  samples.push_back("VH145-ElecTau-pythia-PUS6_run");  crossSec.push_back( 2.61e-02*(0.3406+0.1930+0.05435 ) * 0.10708 * 0.774027);  
+  samples.push_back("VH160-ElecTau-pythia-PUS6_run");  crossSec.push_back( 5.32e-04*(0.2291+0.1334+0.03942 ) * 1.0 * 0.2120560);  
   
-  samples.push_back("VBFH120");     crossSec.push_back( 7.10e-02*1.269 * 1.0               * 0.1274666);   
-
-  makeTrees_ElecTauStream("",             samples[0], crossSec[0], inputDir_);
+  makeTrees_ElecTauStream("",             samples[2], crossSec[2], inputDir_);
 
   return;
 
@@ -1907,23 +1868,23 @@ int main(int argc, const char* argv[])
   gSystem->Load("libFWCoreFWLite");
   AutoLibraryLoader::enable();
   
-//   if ( argc < 3 ) {
-//     std::cout << "Usage: " << argv[0] << " fileName xsection" << std::endl;
-//     return 0;
-//   }
+  if ( argc < 3 ) {
+    std::cout << "Usage: " << argv[0] << " fileName xsection" << std::endl;
+    return 0;
+  }
   
-  doAllSamplesElec( "");
-  return 1;  
+  //doAllSamplesElec( "ElecTauStreamFall11_04May2012");
+  //return 1;  
 
-  //string inputDir = "ElecTauStreamFall11_04May2012_PreApproval";
-//   string inputDir = "HTauTauSynchronization/FullSample/8TeV";
-  string inputDir = "";
+  //string inputDir = "HTauTauSynchronization/FullSample/8TeV";
+  //string inputDir = "HTauTauSynchronization/8TeV";
+  string inputDir = "HTauTauSynchronization/SyncDataCard-53X-v1/ElecTauStream/";
 
   makeTrees_ElecTauStream("",           argv[1], atof(argv[2]), inputDir);
   //makeTrees_ElecTauStream("Raw",        argv[1], atof(argv[2]), inputDir);
-  //return 0;
+  return 0;
 
-  if( string(argv[1]).find("Run2011-ElecTau-All")!=string::npos )
+  if( string(argv[1]).find("Run2012-ElecTau-All")!=string::npos )
     return 0;
   makeTrees_ElecTauStream("TauUp",      argv[1], atof(argv[2]), inputDir);
   makeTrees_ElecTauStream("TauDown",    argv[1], atof(argv[2]), inputDir);

@@ -65,6 +65,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   edm::InputTag metTag_;
   edm::InputTag rawMetTag_;
   edm::InputTag mvaMetTag_;
+  edm::InputTag metCovTag_;
   edm::InputTag muonsTag_;
   edm::InputTag muonsRelTag_;
   edm::InputTag verticesTag_;
@@ -85,6 +86,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< double >* jetsBtagHE_;
   std::vector< double >* jetsBtagHP_;
   std::vector< double >* jetsBtagCSV_;
+  std::vector< double >* bQuark_;
   std::vector< float >* jetsChNfraction_;
   std::vector< float >* jetsChEfraction_;
   std::vector< float >* jetMoments_;
@@ -195,10 +197,10 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   float rhoFastJet_;
   float rhoNeutralFastJet_;
   float embeddingWeight_;
-  int nPUVertices_;
-  int nPUVerticesM1_;
-  int nPUVerticesP1_;
-  int nPUtruth_;
+  float nPUVertices_;
+  float nPUVerticesM1_;
+  float nPUVerticesP1_;
+  float nPUtruth_;
 
   float mcPUweight_;
 
