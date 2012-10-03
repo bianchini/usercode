@@ -65,7 +65,6 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   edm::InputTag metTag_;
   edm::InputTag rawMetTag_;
   edm::InputTag mvaMetTag_;
-  edm::InputTag metCovTag_;
   edm::InputTag muonsTag_;
   edm::InputTag muonsRelTag_;
   edm::InputTag verticesTag_;
@@ -125,6 +124,7 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* genVP4_;
   int genDecay_;
 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* leptonJets_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* extraMuons_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* pfMuons_; 
   
@@ -155,6 +155,11 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   int decayMode_;
   int genDecayMode_;
   int genPolarization_;
+  int parton_;
+  int genPartMult_;
+  int leadGenPartPdg_;
+  float leadGenPartPt_;
+
   float diTauNSVfitMass_;
   float diTauNSVfitMassErrUp_;
   float diTauNSVfitMassErrDown_;
@@ -197,10 +202,10 @@ class MuTauStreamAnalyzer : public edm::EDAnalyzer{
   float rhoFastJet_;
   float rhoNeutralFastJet_;
   float embeddingWeight_;
-  float nPUVertices_;
-  float nPUVerticesM1_;
-  float nPUVerticesP1_;
-  float nPUtruth_;
+  int nPUVertices_;
+  int nPUVerticesM1_;
+  int nPUVerticesP1_;
+  int nPUtruth_;
 
   float mcPUweight_;
 

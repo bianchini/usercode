@@ -64,7 +64,6 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   edm::InputTag metTag_;
   edm::InputTag rawMetTag_;
   edm::InputTag mvaMetTag_;
-  edm::InputTag metCovTag_;
   edm::InputTag electronsTag_;
   edm::InputTag electronsRelTag_;
   edm::InputTag verticesTag_;
@@ -121,6 +120,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* genVP4_;
   int genDecay_;
 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* leptonJets_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* extraElectrons_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* pfElectrons_; 
 
@@ -139,7 +139,6 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   float dz1_,dz2_;
   float dxyE1_,dxyE2_;
   float dzE1_,dzE2_;
-  float scEta1_;
   float pfJetPt_;
   float MtLeg1_;
   float pZeta_;
@@ -181,7 +180,6 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   int tightestMVAWP_;
   float mvaPOGTrig_;
   float mvaPOGNonTrig_;
-  int tightestMVAPOGNonTrigWP_;
   float mitMVA_;
   int antiConv_;
   int isTriggerElectron_;
@@ -217,11 +215,11 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   float rhoFastJet_;
   float rhoNeutralFastJet_;
   float embeddingWeight_;
-  float nPUVertices_;
-  float nPUaverage_;
-  float nPUVerticesM1_;
-  float nPUVerticesP1_;
-  float nPUtruth_;
+  int nPUVertices_;
+  int nPUaverage_;
+  int nPUVerticesM1_;
+  int nPUVerticesP1_;
+  int nPUtruth_;
 
   float mcPUweight_;
 
