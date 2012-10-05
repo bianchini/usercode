@@ -22,10 +22,10 @@ else:
     print "Running on Data"
         
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START52_V10::All')
+    process.GlobalTag.globaltag = cms.string('START53_V10::All')
 else:
-    process.GlobalTag.globaltag = cms.string('GR_R_52_V8::All')
-                
+    process.GlobalTag.globaltag = cms.string('GR_P_V41_AN1::All')
+    
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 10
@@ -42,9 +42,10 @@ process.source = cms.Source(
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_1_1_QFt.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_2_1_QDr.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_3_1_IXG.root',
-    'file:/data_CMS/cms/anayak/HTauTauSynchronization/8TeV/patTuples_MuTauStream.root'        
+    'file:patTuples_MuTauStream.root'        
     )
     )
+#process.source.skipEvents = cms.untracked.uint32(90)
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
 #    '1:69216'
@@ -57,7 +58,9 @@ process.allEventsFilter = cms.EDFilter(
 ###################################################################################
 
 #process.load("RecoMET.METProducers.mvaPFMET_cff")
-process.load("RecoMET.METProducers.mvaPFMET_cff_leptons")
+#process.load("RecoMET.METProducers.mvaPFMET_leptons_cff")
+process.load("JetMETCorrections.METPUSubtraction.mvaPFMET_leptons_cff")
+
 if runOnMC:
     process.calibratedAK5PFJetsForPFMEtMVA.correctors = cms.vstring("ak5PFL1FastL2L3")
 else:
@@ -448,7 +451,7 @@ process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
     cut = cms.string("pt>20 && abs(eta)<2.3"+
-                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"
+                     " && tauID('byLooseIsolationMVA')>-0.5"
                      ),
     filter = cms.bool(False)
     )
@@ -456,7 +459,7 @@ process.tauPtEtaIDAgMuAgElecIsoPtRel  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
     cut = cms.string("pt>19 && abs(eta)<2.3"+
-                     " && (tauID('byLooseCombinedIsolationDeltaBetaCorr')>0.5 || tauID('byLooseIsolationMVA')>0.5)"
+                     " && tauID('byLooseIsolationMVA')>-0.5"
                      ),
     filter = cms.bool(False)
     )
@@ -544,6 +547,7 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     met            = cms.InputTag("metRecoilCorrector",  "N"),
     rawMet         = cms.InputTag("patMETsPFlow"),
     mvaMet         = cms.InputTag("patPFMetByMVA"),
+    metCov         = cms.InputTag("pfMEtMVACov"),
     muons          = cms.InputTag("muPtEtaIDIso"),
     muonsRel       = cms.InputTag("muPtEtaRelID"),
     vertices       = cms.InputTag("selectedPrimaryVertices"),
@@ -1043,7 +1047,7 @@ process.out = cms.OutputModule(
 
 process.TFileService = cms.Service(
     "TFileService",
-    fileName = cms.string("/data_CMS/cms/anayak/HTauTauSynchronization/8TeV/treeMuTauStream.root")
+    fileName = cms.string("treeMuTauStream.root")
     )
 
 

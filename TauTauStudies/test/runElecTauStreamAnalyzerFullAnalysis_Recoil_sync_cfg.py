@@ -23,9 +23,9 @@ else:
 
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START52_V10::All')
+    process.GlobalTag.globaltag = cms.string('START53_V11::All')
 else:
-    process.GlobalTag.globaltag = cms.string('GR_R_52_V8::All')
+    process.GlobalTag.globaltag = cms.string('GR_P_V41_AN1::All')
     
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
@@ -38,14 +38,14 @@ process.source = cms.Source(
     fileNames = cms.untracked.vstring(
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/ElecTauStream-04May2012-Reload_DYJets-ElecTau-50-madgraph-PUS6_skim/4badcc5695438d7f3df80162f5ad7ed7/patTuples_ElecTauStream_9_1_Ug5.root'
     #'file:./root/patTuples_ElecTauStream_VBFH125.root'
-    'file:./patTuples_ElecTauStream.root'
+        #'file:./patTuples_ElecTauStream.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-04May2012-Reload-05AugReReco/396c4fb61647929194f9a223b98504bc/patTuples_ElecTauStream_9_1_kgg.root'
-    #'file:/data_CMS/cms/anayak/HTauTauSynchronization/8TeV/patTuples_ElecTauStream.root'     
+    'file:patTuples_ElecTauStream.root'     
     )
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
-#    '1:108429','1:157957','1:157990'
+#    '1:470223'
 #    )
 
 process.allEventsFilter = cms.EDFilter(
@@ -55,7 +55,8 @@ process.allEventsFilter = cms.EDFilter(
 ###################################################################################
 
 #process.load("RecoMET.METProducers.mvaPFMET_cff")
-process.load("RecoMET.METProducers.mvaPFMET_cff_leptons")
+#process.load("RecoMET.METProducers.mvaPFMET_cff_leptons")
+process.load("JetMETCorrections.METPUSubtraction.mvaPFMET_leptons_cff")
 if runOnMC:
     process.calibratedAK5PFJetsForPFMEtMVA.correctors = cms.vstring("ak5PFL1FastL2L3")
 else:
@@ -463,7 +464,7 @@ process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
     cut = cms.string("pt>20 && abs(eta)<2.3"+
-                     " && tauID('byLooseIsolationMVA')>0.5"+
+                     " && tauID('byLooseIsolationMVA')>-0.5"+
                      #" && (tauID('againstElectronTight')>0.5 || tauID('againstElectronMVA')>0.5)"
                      " && tauID('againstElectronMVA')>0.5"
                      ),
@@ -473,7 +474,7 @@ process.tauPtEtaIDAgMuAgElecIsoPtRel  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
     cut = cms.string("pt>19 && abs(eta)<2.3"+
-                     " && tauID('byLooseIsolationMVA')>0.5"+
+                     " && tauID('byLooseIsolationMVA')>-0.5"+
                      #" && (tauID('againstElectronTight')>0.5 || tauID('againstElectronMVA')>0.5 )"
                      " && tauID('againstElectronMVA')>0.5"
                      ),
@@ -1089,5 +1090,5 @@ process.TFileService = cms.Service(
 
 process.outpath = cms.EndPath()
 
-#processDumpFile = open('runElecTauStreamAnalyzerFullAnalysis_Recoil.dump', 'w')
-#print >> processDumpFile, process.dumpPython()
+processDumpFile = open('runElecTauStreamAnalyzerFullAnalysis_Recoil.dump', 'w')
+print >> processDumpFile, process.dumpPython()
