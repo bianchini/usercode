@@ -47,6 +47,8 @@
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
 
+#include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
+
 #include "PhysicsTools/JetMCUtils/interface/JetMCTag.h"
 
 ////// for DCA ////////////////////
@@ -106,20 +108,20 @@ ElecTauStreamAnalyzer::ElecTauStreamAnalyzer(const edm::ParameterSet & iConfig){
 
   doElecIsoMVA_      = iConfig.getParameter<bool>("doElecIsoMVA");
   if( doElecIsoMVA_ ){
-    fElectronIsoMVA_ = new EGammaMvaEleEstimator();
-    edm::FileInPath inputFileName0 = iConfig.getParameter<edm::FileInPath>("inputFileName0");
-    edm::FileInPath inputFileName1 = iConfig.getParameter<edm::FileInPath>("inputFileName1");
-    edm::FileInPath inputFileName2 = iConfig.getParameter<edm::FileInPath>("inputFileName2");
-    edm::FileInPath inputFileName3 = iConfig.getParameter<edm::FileInPath>("inputFileName3");
-    vector<string> eleiso_weightfiles;
-    eleiso_weightfiles.push_back(inputFileName0.fullPath().data());
-    eleiso_weightfiles.push_back(inputFileName1.fullPath().data());
-    eleiso_weightfiles.push_back(inputFileName2.fullPath().data());
-    eleiso_weightfiles.push_back(inputFileName3.fullPath().data());
-    fElectronIsoMVA_->initialize("EleIso_BDTG_IsoRings",
-				 EGammaMvaEleEstimator::kIsoRings,
-				 kTRUE,
-				 eleiso_weightfiles);
+//     fElectronIsoMVA_ = new EGammaMvaEleEstimator();
+//     edm::FileInPath inputFileName0 = iConfig.getParameter<edm::FileInPath>("inputFileName0");
+//     edm::FileInPath inputFileName1 = iConfig.getParameter<edm::FileInPath>("inputFileName1");
+//     edm::FileInPath inputFileName2 = iConfig.getParameter<edm::FileInPath>("inputFileName2");
+//     edm::FileInPath inputFileName3 = iConfig.getParameter<edm::FileInPath>("inputFileName3");
+//     vector<string> eleiso_weightfiles;
+//     eleiso_weightfiles.push_back(inputFileName0.fullPath().data());
+//     eleiso_weightfiles.push_back(inputFileName1.fullPath().data());
+//     eleiso_weightfiles.push_back(inputFileName2.fullPath().data());
+//     eleiso_weightfiles.push_back(inputFileName3.fullPath().data());
+//     fElectronIsoMVA_->initialize("EleIso_BDTG_IsoRings",
+// 				 EGammaMvaEleEstimator::kIsoRings,
+// 				 kTRUE,
+// 				 eleiso_weightfiles);
     //fElectronIsoMVA_->SetPrintMVADebug(kTRUE);
   }
   
@@ -173,7 +175,9 @@ void ElecTauStreamAnalyzer::beginJob(){
   genMETP4_       = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   genVP4_         = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   
+  leptonJets_       = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   extraElectrons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  vetoLeptonsP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   pfElectrons_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
   //antiE_  = new AntiElectronIDMVA();
@@ -317,8 +321,16 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("genMETP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genMETP4_);
   tree_->Branch("genVP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&genVP4_);
   tree_->Branch("genDecay",&genDecay_,"genDecay/I");
+  tree_->Branch("parton",&parton_,"parton/I");
+  tree_->Branch("genPartMult",&genPartMult_,"genPartMult/I");
+  tree_->Branch("leadGenPartPdg",&leadGenPartPdg_,"leadGenPartPdg/I");
+  tree_->Branch("leadGenPartPt",&leadGenPartPt_,"leadGenPartPt/F");
+  tree_->Branch("hepNUP",&hepNUP_,"hepNUP/I");
+
+  tree_->Branch("leptonJets","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&leptonJets_);
   tree_->Branch("extraElectrons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&extraElectrons_);
   tree_->Branch("pfElectrons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&pfElectrons_);
+  tree_->Branch("vetoLeptonsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&vetoLeptonsP4_);
 
   tree_->Branch("sumEt",&sumEt_,"sumEt/F");
   tree_->Branch("mTauTauMin",&mTauTauMin_,"mTauTauMin/F");
@@ -375,6 +387,7 @@ void ElecTauStreamAnalyzer::beginJob(){
   //tree_->Branch("isEleLikelihoodID",&isEleLikelihoodID_,"isEleLikelihoodID/I");
   //tree_->Branch("isEleCutBasedID",&isEleCutBasedID_,"isEleCutBasedID/I");
   tree_->Branch("elecFlag",&elecFlag_,"elecFlag/I");
+  tree_->Branch("vetoEvent",&vetoEvent_,"vetoEvent/I");
   tree_->Branch("elecVetoRelIso",&elecVetoRelIso_,"elecVetoRelIso/F");
   tree_->Branch("hasKft",&hasKft_,"hasKft/I");
 
@@ -452,14 +465,16 @@ ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete jetsBtagCSV_;
   delete bQuark_;
   delete tauXTriggers_; delete triggerBits_; delete sigDCA_;
-  delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;delete extraElectrons_; delete pfElectrons_;
+  delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;delete extraElectrons_; delete vetoLeptonsP4_;
+  delete pfElectrons_;
   delete genTausP4_;
   delete jetsChNfraction_; delete jetsChEfraction_; delete jetMoments_;
   delete jetPUMVA_; delete jetPUWP_;
   delete gammadR_ ; delete gammadPhi_; delete gammadEta_; delete gammaPt_;
+  delete leptonJets_;
   //delete antiE_;
   delete metSgnMatrix_;
-  if( doElecIsoMVA_ ) delete fElectronIsoMVA_;
+  if( doElecIsoMVA_ && fElectronIsoMVA_!=0) delete fElectronIsoMVA_;
   
 }
 
@@ -470,6 +485,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   genTausP4_->clear();
   pfElectrons_->clear();
   triggerBits_->clear();
+  vetoLeptonsP4_->clear();
 
   edm::ESHandle<TransientTrackBuilder> builder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",builder);
@@ -595,6 +611,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   
   
   genDecay_ = -99;
+  hepNUP_   = -99;
+
   edm::Handle<reco::GenParticleCollection> genHandle;
   const reco::GenParticleCollection* genParticles = 0;
   iEvent.getByLabel(genParticlesTag_,genHandle);
@@ -623,6 +641,15 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   }
 
   if(isMC_){
+
+    edm::Handle<LHEEventProduct > LHEHandle;
+    const LHEEventProduct* LHE = 0;
+    iEvent.getByLabel("source",LHEHandle);
+    if(LHEHandle.isValid()){
+      LHE = LHEHandle.product();
+      hepNUP_ = (LHE->hepeup()).NUP;
+    }
+    
     iEvent.getByLabel(edm::InputTag("genParticles"),genHandle);
     if( !genHandle.isValid() )  
       edm::LogError("DataNotAvailable")
@@ -749,6 +776,74 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     cout << "WARNING: "<< electronsRel->size() << "  electronsRel found in the event !!! We will select only one" << endl;
   }
   
+
+  /////////////////////////
+  vetoEvent_ = 0;
+  
+  edm::Handle<pat::MuonCollection> muonsForVetoHandle;
+  edm::Handle<pat::ElectronCollection> electronsForVetoHandle;
+  edm::Handle<pat::TauCollection> tausForVetoHandle;
+  
+  iEvent.getByLabel( "muonsForVeto" ,     muonsForVetoHandle);
+  iEvent.getByLabel( "electronsForVeto" , electronsForVetoHandle);
+  iEvent.getByLabel( "tausForVeto" ,      tausForVetoHandle);
+
+  if( muonsForVetoHandle.isValid() && electronsForVetoHandle.isValid() && tausForVetoHandle.isValid()){
+
+    const pat::MuonCollection* muonsForVeto         = muonsForVetoHandle.product();
+    const pat::ElectronCollection* electronsForVeto = electronsForVetoHandle.product();
+    const pat::TauCollection* tausForVeto           = tausForVetoHandle.product();
+
+    std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > > buffer;
+
+    int nMuonsForVeto = 0; int nElectronsForVeto = 0; int nTausForVeto = 0;
+    bool alreadyThere = false;
+
+    for(unsigned int l = 0; l < muonsForVeto->size() ; l++){
+      vetoLeptonsP4_->push_back((*muonsForVeto)[l].p4());
+      nMuonsForVeto++;
+    }
+    for( unsigned int l = 0; l < electronsForVeto->size() ; l++ ){
+      for(unsigned int m = 0; m < vetoLeptonsP4_->size() && !alreadyThere; m++){
+	if( Geom::deltaR( (*electronsForVeto)[l].p4(), (*vetoLeptonsP4_)[m] ) < 0.3 ) alreadyThere = true;
+      }
+      if(!alreadyThere){
+	//cout << "new electron eta " <<  (*electronsForVeto)[l].eta() << endl;
+	buffer.push_back((*electronsForVeto)[l].p4());
+	nElectronsForVeto++;
+      }
+    }
+    for(unsigned int m = 0; m < buffer.size() ; m++) vetoLeptonsP4_->push_back( buffer[m] );
+    buffer.clear();
+    alreadyThere = false;
+
+    for( unsigned int l = 0; l < tausForVeto->size() ; l++ ){
+      for(unsigned int m = 0; m < vetoLeptonsP4_->size() ; m++){
+	if( Geom::deltaR( (*tausForVeto)[l].p4(), (*vetoLeptonsP4_)[m] ) < 0.3 ) alreadyThere = true;
+      }
+      if(!alreadyThere){
+	//cout << "new taus eta " <<  (*tausForVeto)[l].eta() << endl;
+	buffer.push_back((*tausForVeto)[l].p4());
+	nTausForVeto++;
+      }
+    }
+    for(unsigned int m = 0; m < buffer.size() ; m++) vetoLeptonsP4_->push_back( buffer[m] );
+    buffer.clear();
+
+    if( nMuonsForVeto+nElectronsForVeto+nTausForVeto >= 3 ){
+      vetoEvent_ = 1;
+      //cout << "Muons " << nMuonsForVeto << endl;
+      //cout << "Electrons " << nElectronsForVeto << endl;
+      //cout << "Taus " <<  nTausForVeto << endl;
+    }
+    else
+      vetoEvent_ = 0;
+  }
+
+  /////////////////////////
+
+
+
   const PATElecTauPair *theDiTau = 0;
   if(diTaus->size()<1){
     cout << " No diTau !!! " << endl;
@@ -1111,6 +1206,10 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   
     genDecayMode_    = -99;
     genPolarization_ = -99;
+    parton_          = -99;
+    genPartMult_     = -99;
+    leadGenPartPdg_  = -99;
+    leadGenPartPt_   = -99;
 
     if(isMC_){
       if( (leg1->genParticleById(11,0,true)).isNonnull()  ){
@@ -1293,7 +1392,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     
     isoLeg1MVA_ = -99;
     // Elec-Iso MVA
-    if(doElecIsoMVA_ && vertexes->size()){
+    if(doElecIsoMVA_ && fElectronIsoMVA_!=0 && vertexes->size()){
 
       //cout << "Doing MVA " << endl;
       //EcalClusterLazyTools lazyTools(iEvent,iSetup,
@@ -1631,6 +1730,34 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       if( Geom::deltaR(jet->p4(), leg1->p4())<deltaRLegJet_ || 
 	  Geom::deltaR(jet->p4(), leg2p4 )<deltaRLegJet_ ){
 	if(verbose_) cout << "The jet at (" <<jet->pt()<<","<<jet->eta()<<") is closer than "<<deltaRLegJet_ << " from one of the legs" << endl;  
+	
+	if( Geom::deltaR(jet->p4(), leg2p4 )<deltaRLegJet_ ){
+	  parton_ = jet->partonFlavour();
+	  if(jet->genJet()!=0){
+	    genPartMult_    = (jet->genJet()->getGenConstituents()).size();
+	    leadGenPartPdg_ = (jet->genJet()->getGenConstituents()).size()>0 ?
+	      ((jet->genJet()->getGenConstituents())[0])->pdgId() : -99;
+	    leadGenPartPt_  = (jet->genJet()->getGenConstituents()).size()>0 ?
+	      ((jet->genJet()->getGenConstituents())[0])->pt() : -99;
+
+	    if(verbose_){
+	      cout << "parton flavor = " << jet->partonFlavour() << endl;
+	      for(unsigned int l = 0; l < (jet->genJet()->getGenConstituents()).size() ; l++){
+		cout << "Hadron " << l 
+		     << " pdg " << ((jet->genJet()->getGenConstituents())[l])->pdgId() << ", pt " << ((jet->genJet()->getGenConstituents())[l])->pt()
+		     << endl;
+	      }
+	    }
+	  }
+	}
+
+
+	if(isMC_) 
+	  leptonJets_->push_back( newJet->correctedJet("Uncorrected").p4() );
+	else
+	  leptonJets_->push_back( newJet->correctedJet("Uncorrected").p4() );
+
+
 	continue;
       }
     

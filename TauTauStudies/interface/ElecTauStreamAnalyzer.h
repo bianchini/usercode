@@ -120,8 +120,11 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* genMETP4_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >  >* genVP4_;
   int genDecay_;
+  int hepNUP_;
 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* leptonJets_; 
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* extraElectrons_; 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* vetoLeptonsP4_;
   std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >* pfElectrons_; 
 
   
@@ -152,6 +155,11 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   int decayMode_;
   int genDecayMode_;
   int genPolarization_;
+  int parton_;
+  int genPartMult_;
+  int leadGenPartPdg_;
+  float leadGenPartPt_;
+
   float diTauNSVfitMass_;
   float diTauNSVfitMassErrUp_;
   float diTauNSVfitMassErrDown_;
@@ -195,6 +203,7 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   int isTauLegMatched_;
   int isElecLegMatched_;
   int elecFlag_;
+  int vetoEvent_;
   float elecVetoRelIso_;
   int hasKft_;
 

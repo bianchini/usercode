@@ -102,24 +102,24 @@ MuTauStreamAnalyzer::MuTauStreamAnalyzer(const edm::ParameterSet & iConfig){
 
   doMuIsoMVA_        = iConfig.getParameter<bool>("doMuIsoMVA");
   if( doMuIsoMVA_ ){
-    fMuonIsoMVA_ = new MuonMVAEstimator();
-    edm::FileInPath inputFileName0 = iConfig.getParameter<edm::FileInPath>("inputFileName0");
-    edm::FileInPath inputFileName1 = iConfig.getParameter<edm::FileInPath>("inputFileName1");
-    edm::FileInPath inputFileName2 = iConfig.getParameter<edm::FileInPath>("inputFileName2");
-    edm::FileInPath inputFileName3 = iConfig.getParameter<edm::FileInPath>("inputFileName3");
-    edm::FileInPath inputFileName4 = iConfig.getParameter<edm::FileInPath>("inputFileName4");
-    edm::FileInPath inputFileName5 = iConfig.getParameter<edm::FileInPath>("inputFileName5");   
-    vector<string> muoniso_weightfiles;
-    muoniso_weightfiles.push_back(inputFileName0.fullPath().data());
-    muoniso_weightfiles.push_back(inputFileName1.fullPath().data());
-    muoniso_weightfiles.push_back(inputFileName2.fullPath().data());
-    muoniso_weightfiles.push_back(inputFileName3.fullPath().data());
-    muoniso_weightfiles.push_back(inputFileName4.fullPath().data());
-    muoniso_weightfiles.push_back(inputFileName5.fullPath().data());   
-    fMuonIsoMVA_->initialize("MuonIso_BDTG_IsoRings",
-			     MuonMVAEstimator::kIsoRings,
-			     kTRUE,
-			     muoniso_weightfiles);
+//     fMuonIsoMVA_ = new MuonMVAEstimator();
+//     edm::FileInPath inputFileName0 = iConfig.getParameter<edm::FileInPath>("inputFileName0");
+//     edm::FileInPath inputFileName1 = iConfig.getParameter<edm::FileInPath>("inputFileName1");
+//     edm::FileInPath inputFileName2 = iConfig.getParameter<edm::FileInPath>("inputFileName2");
+//     edm::FileInPath inputFileName3 = iConfig.getParameter<edm::FileInPath>("inputFileName3");
+//     edm::FileInPath inputFileName4 = iConfig.getParameter<edm::FileInPath>("inputFileName4");
+//     edm::FileInPath inputFileName5 = iConfig.getParameter<edm::FileInPath>("inputFileName5");   
+//     vector<string> muoniso_weightfiles;
+//     muoniso_weightfiles.push_back(inputFileName0.fullPath().data());
+//     muoniso_weightfiles.push_back(inputFileName1.fullPath().data());
+//     muoniso_weightfiles.push_back(inputFileName2.fullPath().data());
+//     muoniso_weightfiles.push_back(inputFileName3.fullPath().data());
+//     muoniso_weightfiles.push_back(inputFileName4.fullPath().data());
+//     muoniso_weightfiles.push_back(inputFileName5.fullPath().data());   
+//     fMuonIsoMVA_->initialize("MuonIso_BDTG_IsoRings",
+// 			     MuonMVAEstimator::kIsoRings,
+// 			     kTRUE,
+// 			     muoniso_weightfiles);
   }
   
 }
@@ -172,6 +172,7 @@ void MuTauStreamAnalyzer::beginJob(){
 
   leptonJets_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   extraMuons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  vetoLeptonsP4_= new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   pfMuons_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
   // Summer12: truth (from twiki)
@@ -320,6 +321,7 @@ void MuTauStreamAnalyzer::beginJob(){
   tree_->Branch("leptonJets","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&leptonJets_);
   tree_->Branch("extraMuons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&extraMuons_);
   tree_->Branch("pfMuons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&pfMuons_);
+  tree_->Branch("vetoLeptonsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&vetoLeptonsP4_);
 
   tree_->Branch("sumEt",&sumEt_,"sumEt/F");
   tree_->Branch("mTauTauMin",&mTauTauMin_,"mTauTauMin/F");
@@ -429,14 +431,15 @@ MuTauStreamAnalyzer::~MuTauStreamAnalyzer(){
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete jetsBtagCSV_;
   delete bQuark_;
   delete tauXTriggers_; delete triggerBits_; delete sigDCA_;
-  delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_; delete extraMuons_; delete pfMuons_; delete jetsIDL1OffsetP4_;
+  delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_; delete extraMuons_; delete vetoLeptonsP4_;
+  delete pfMuons_; delete jetsIDL1OffsetP4_;
   delete leptonJets_;
   delete genTausP4_;
   delete jetsChNfraction_; delete jetsChEfraction_;delete jetMoments_;
   delete jetPUMVA_; delete jetPUWP_;
   delete gammadR_ ; delete gammadPhi_; delete gammadEta_; delete gammaPt_;
   delete metSgnMatrix_;
-  if( doMuIsoMVA_ ) delete fMuonIsoMVA_;
+  if( doMuIsoMVA_ && fMuonIsoMVA_!=0) delete fMuonIsoMVA_;
 }
 
 void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
@@ -448,6 +451,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   genTausP4_->clear();
   pfMuons_->clear();
   triggerBits_->clear();
+  vetoLeptonsP4_->clear();
 
   edm::ESHandle<TransientTrackBuilder> builder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",builder);
@@ -745,13 +749,52 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   iEvent.getByLabel( "tausForVeto" ,      tausForVetoHandle);
 
   if( muonsForVetoHandle.isValid() && electronsForVetoHandle.isValid() && tausForVetoHandle.isValid()){
-    if( (muonsForVetoHandle.product())->size() + 
-	(electronsForVetoHandle.product())->size() +
-	(tausForVetoHandle.product())->size()   >= 3 ){
+
+    const pat::MuonCollection* muonsForVeto         = muonsForVetoHandle.product();
+    const pat::ElectronCollection* electronsForVeto = electronsForVetoHandle.product();
+    const pat::TauCollection* tausForVeto           = tausForVetoHandle.product();
+
+    std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > > buffer;
+
+    int nMuonsForVeto = 0; int nElectronsForVeto = 0; int nTausForVeto = 0;
+    bool alreadyThere = false;
+
+    for(unsigned int l = 0; l < muonsForVeto->size() ; l++){
+      vetoLeptonsP4_->push_back((*muonsForVeto)[l].p4());
+      nMuonsForVeto++;
+    }
+    for( unsigned int l = 0; l < electronsForVeto->size() ; l++ ){
+      for(unsigned int m = 0; m < vetoLeptonsP4_->size() && !alreadyThere; m++){
+	if( Geom::deltaR( (*electronsForVeto)[l].p4(), (*vetoLeptonsP4_)[m] ) < 0.3 ) alreadyThere = true;
+      }
+      if(!alreadyThere){
+	//cout << "new electron eta " <<  (*electronsForVeto)[l].eta() << endl;
+	buffer.push_back((*electronsForVeto)[l].p4());
+	nElectronsForVeto++;
+      }
+    }
+    for(unsigned int m = 0; m < buffer.size() ; m++) vetoLeptonsP4_->push_back( buffer[m] );
+    buffer.clear();
+    alreadyThere = false;
+
+    for( unsigned int l = 0; l < tausForVeto->size() ; l++ ){
+      for(unsigned int m = 0; m < vetoLeptonsP4_->size() ; m++){
+	if( Geom::deltaR( (*tausForVeto)[l].p4(), (*vetoLeptonsP4_)[m] ) < 0.3 ) alreadyThere = true;
+      }
+      if(!alreadyThere){
+	//cout << "new taus eta " <<  (*tausForVeto)[l].eta() << endl;
+	buffer.push_back((*tausForVeto)[l].p4());
+	nTausForVeto++;
+      }
+    }
+    for(unsigned int m = 0; m < buffer.size() ; m++) vetoLeptonsP4_->push_back( buffer[m] );
+    buffer.clear();
+
+    if( nMuonsForVeto+nElectronsForVeto+nTausForVeto >= 3 ){
       vetoEvent_ = 1;
-      cout << "Muons " << (muonsForVetoHandle.product())->size() << endl;
-      cout << "Electrons " << (electronsForVetoHandle.product())->size() << endl;
-      cout << "Taus " << (tausForVetoHandle.product())->size() << endl;
+      //cout << "Muons " << nMuonsForVeto << endl;
+      //cout << "Electrons " << nElectronsForVeto << endl;
+      //cout << "Taus " <<  nTausForVeto << endl;
     }
     else
       vetoEvent_ = 0;
@@ -1322,7 +1365,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 
     isPFMuon_   = leg1->userInt("isPFMuon");
     isoLeg1MVA_ = -99;
-    if(doMuIsoMVA_ && vertexes->size()){
+    if(doMuIsoMVA_ && fMuonIsoMVA_!=0 && vertexes->size()){
       
       const reco::GsfElectronCollection dummyGsfColl;
       const reco::MuonCollection dummyRecoMuon;
