@@ -4,7 +4,8 @@ process = cms.Process("ELECTAUANA")
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.load("Configuration.StandardSequences.Geometry_cff")
+#process.load("Configuration.StandardSequences.Geometry_cff")
+process.load("Configuration.Geometry.GeometryIdeal_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 
 #from Configuration.PyReleaseValidation.autoCond import autoCond
@@ -23,7 +24,7 @@ else:
 
 
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START53_V11::All')
+    process.GlobalTag.globaltag = cms.string('START53_V10::All')
 else:
     process.GlobalTag.globaltag = cms.string('GR_P_V41_AN1::All')
     
@@ -164,11 +165,11 @@ process.metRecoilCorrector = cms.EDProducer(
     electronTag         = cms.InputTag("elecPtEtaIDIso"),
     muonTag             = cms.InputTag(""),
     tauTag              = cms.InputTag("tauPtEtaIDAgMuAgElecIso"),
-    inputFileNamezmm42X = cms.FileInPath("Bianchi/Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root"),
-    inputFileNamedatamm = cms.FileInPath("Bianchi/Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root"),
-    inputFileNamewjets  = cms.FileInPath("Bianchi/Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_wjets_njet.root"),
-    inputFileNamezjets  = cms.FileInPath("Bianchi/Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zjets_ltau_njet.root"),
-    inputFileNamehiggs  = cms.FileInPath("Bianchi/Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_higgs_njet.root"),
+    inputFileNamezmm42X = cms.FileInPath("Bianchi/Utilities/data/recoilv5/RecoilCorrector_v5/recoilfits/recoilfit_zmm53X_20pv_njet.root"),
+    inputFileNamedatamm = cms.FileInPath("Bianchi/Utilities/data/recoilv5/RecoilCorrector_v5/recoilfits/recoilfit_datamm53X_20pv_njet.root"),
+    inputFileNamewjets  = cms.FileInPath("Bianchi/Utilities/data/recoilv5/RecoilCorrector_v5/recoilfits/recoilfit_wjets53X_20pv_njet.root"),
+    inputFileNamezjets  = cms.FileInPath("Bianchi/Utilities/data/recoilv5/RecoilCorrector_v5/recoilfits/recoilfit_zmm53X_20pv_njet.root"),
+    inputFileNamehiggs  = cms.FileInPath("Bianchi/Utilities/data/recoilv5/RecoilCorrector_v5/recoilfits/recoilfit_higgs53X_20pv_njet.root"),
     numOfSigmas         = cms.double(1.0),
     minJetPt            = cms.double(30.0),
     verbose             = cms.bool(False),
@@ -592,7 +593,7 @@ process.elecTauStreamAnalyzer = cms.EDAnalyzer(
     minCorrPt          = cms.untracked.double(15.),
     minJetID           = cms.untracked.double(0.5), # 1=loose,2=medium,3=tight
     verbose            = cms.untracked.bool( False ),
-    doElecIsoMVA       = cms.bool( True ),
+    doElecIsoMVA       = cms.bool( False ),
     inputFileName0     = cms.FileInPath("UserCode/sixie/EGamma/EGammaAnalysisTools/data/ElectronIso_BDTG_V0_BarrelPt5To10.weights.xml"),
     inputFileName1     = cms.FileInPath("UserCode/sixie/EGamma/EGammaAnalysisTools/data/ElectronIso_BDTG_V0_EndcapPt5To10.weights.xml"),
     inputFileName2     = cms.FileInPath("UserCode/sixie/EGamma/EGammaAnalysisTools/data/ElectronIso_BDTG_V0_BarrelPt10ToInf.weights.xml"),
