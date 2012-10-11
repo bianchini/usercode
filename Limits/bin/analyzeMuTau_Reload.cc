@@ -142,14 +142,15 @@ void drawHistogramMC(TTree* tree = 0,
 		     int verbose = 0 ){
   if(tree!=0 && h!=0){
     h->Reset();
-    tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*cut);
-    normalization      = h->Integral()*scaleFactor;
+    tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu*HqTWeight)"*cut);
+    h->Scale(scaleFactor);
+    normalization      = h->Integral();
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
     if(verbose==0) h->Reset();
     if(verbose){
-      cout << "Tree " << tree->GetTitle() << ":" << endl;
-      cout << "Cut " << cut.GetTitle() << endl;
-      cout << "====> N = " << normalization << " +/- " << normalizationError;
+      //cout << "Tree " << tree->GetTitle() << ":" << endl;
+      //cout << "Cut " << cut.GetTitle() << endl;
+      //cout << "====> N = " << normalization << " +/- " << normalizationError;
     }
   }
   else{
@@ -157,6 +158,8 @@ void drawHistogramMC(TTree* tree = 0,
     return;
   }
 }
+
+
 
 void drawHistogramEmbed(TTree* tree = 0, 
 			TString variable = "", 
@@ -169,13 +172,14 @@ void drawHistogramEmbed(TTree* tree = 0,
   if(tree!=0 && h!=0){
     h->Reset();
     tree->Draw(variable+">>"+TString(h->GetName()),"(HLTTau*HLTMu*embeddingWeight)"*cut);
-    normalization      = h->Integral()*scaleFactor;
+    h->Scale(scaleFactor);
+    normalization      = h->Integral();
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
-     if(verbose==0) h->Reset();
+    if(verbose==0) h->Reset();
     if(verbose){
-      cout << "Tree " << tree->GetTitle() << ":" << endl;
-      cout << "Cut " << cut.GetTitle() << endl;
-      cout << "====> N = " << normalization << " +/- " << normalizationError;
+      //cout << "Tree " << tree->GetTitle() << ":" << endl;
+      //cout << "Cut " << cut.GetTitle() << endl;
+      //cout << "====> N = " << normalization << " +/- " << normalizationError;
     }
   }
   else{
@@ -195,13 +199,14 @@ void drawHistogramData(TTree* tree = 0,
   if(tree!=0 && h!=0){
     h->Reset();
     tree->Draw(variable+">>"+TString(h->GetName()),cut);
-    normalization      = h->Integral()*scaleFactor;
+    h->Scale(scaleFactor);
+    normalization      = h->Integral();
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
-     if(verbose==0) h->Reset();
+    if(verbose==0) h->Reset();
     if(verbose){
-      cout << "Tree " << tree->GetTitle() << ":" << endl;
-      cout << "Cut " << cut.GetTitle() << endl;
-      cout << "====> N = " << normalization << " +/- " << normalizationError;
+      //cout << "Tree " << tree->GetTitle() << ":" << endl;
+      //cout << "Cut " << cut.GetTitle() << endl;
+      //cout << "====> N = " << normalization << " +/- " << normalizationError;
     }
   }
   else{
@@ -226,9 +231,9 @@ void drawHistogramDataFakeRate(TTree* tree = 0,
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
      if(verbose==0) h->Reset();
     if(verbose){
-      cout << "Tree " << tree->GetTitle() << ":" << endl;
-      cout << "Cut " << cut.GetTitle() << endl;
-      cout << "====> N = " << normalization << " +/- " << normalizationError;
+      //cout << "Tree " << tree->GetTitle() << ":" << endl;
+      //cout << "Cut " << cut.GetTitle() << endl;
+      //cout << "====> N = " << normalization << " +/- " << normalizationError;
     }
   }
   else{
@@ -311,13 +316,14 @@ void evaluateWextrapolation(string sign = "OS", string selection_ = "",
 			    float MutoTauCorrectionFactor = 0., float JtoTauCorrectionFactor = 0.,
 			    float antiWsdb = 0., float antiWsgn = 0., bool useMt = true,
 			    string scaleFactMu = "",
-			    TCut sbinPZetaRel = "", TCut pZ="", TCut apZ="", TCut sbinPZetaRelInclusive="",
-			    TCut sbinPZetaRelaIsoInclusive = "", TCut sbinPZetaRelaIso = "", TCut vbf="", TCut boost=""){
+			    TCut sbinPZetaRel = "",  TCut sbinRelPZetaRel = "",
+			    TCut pZ="", TCut apZ="", TCut sbinPZetaRelInclusive="",
+			    TCut sbinPZetaRelaIsoInclusive = "", TCut sbinPZetaRelaIso = "", TCut vbf="", TCut boost="", TCut zeroJet = ""){
   
   float Error = 0.; float ErrorW1 = 0.;   float ErrorW2 = 0.;
-  drawHistogramMC(backgroundWJets,variable, OSWinSignalRegionMC,   ErrorW1, scaleFactor, hWMt, sbinPZetaRel&&pZ);
+  drawHistogramMC(backgroundWJets,variable, OSWinSignalRegionMC,   ErrorW1, scaleFactor, hWMt, sbinRelPZetaRel&&pZ);
   float OSWinSidebandRegionMC = 0.;
-  drawHistogramMC(backgroundWJets,variable, OSWinSidebandRegionMC, ErrorW2, scaleFactor, hWMt, sbinPZetaRel&&apZ);
+  drawHistogramMC(backgroundWJets,variable, OSWinSidebandRegionMC, ErrorW2, scaleFactor, hWMt, sbinRelPZetaRel&&apZ);
   scaleFactorOS      = OSWinSignalRegionMC>0 ? OSWinSidebandRegionMC/OSWinSignalRegionMC : 1.0 ;
   float scaleFactorOSError = scaleFactorOS*(ErrorW1/OSWinSignalRegionMC + ErrorW2/OSWinSidebandRegionMC);
   if(useMt)
@@ -330,31 +336,39 @@ void evaluateWextrapolation(string sign = "OS", string selection_ = "",
 
   float OSTTbarinSidebandRegionBtagMC = 0.;
   if(selection_.find("novbf")!=string::npos)
-    drawHistogramMC(backgroundTTbar, variable, OSTTbarinSidebandRegionBtagMC, Error, scaleFactor*TTxsectionRatio , hWMt, sbinPZetaRelInclusive&&apZ&&TCut("nJets20BTagged>1")&&(!vbf)&&(!boost));
+    drawHistogramMC(backgroundTTbar, variable, OSTTbarinSidebandRegionBtagMC, Error, scaleFactor*TTxsectionRatio , hWMt, sbinPZetaRelInclusive&&apZ&&TCut("nJets20BTagged>1")&&zeroJet);
+  else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos)
+    drawHistogramMC(backgroundTTbar, variable, OSTTbarinSidebandRegionBtagMC, Error, scaleFactor*TTxsectionRatio , hWMt, sbinPZetaRel&&apZ&&TCut("nJets20BTagged>0"));
   else
     drawHistogramMC(backgroundTTbar, variable, OSTTbarinSidebandRegionBtagMC, Error, scaleFactor*TTxsectionRatio , hWMt, sbinPZetaRel&&apZ&&TCut("nJets20BTagged>1"));
 
   float OSWinSidebandRegionBtagMC = 0.;
   if(selection_.find("novbf")!=string::npos)
-    drawHistogramMC(backgroundWJets, variable, OSWinSidebandRegionBtagMC,     Error, scaleFactor                 , hWMt, sbinPZetaRelInclusive&&apZ&&TCut("nJets20BTagged>1")&&(!vbf)&&(!boost));
+    drawHistogramMC(backgroundWJets, variable, OSWinSidebandRegionBtagMC,     Error, scaleFactor                 , hWMt, sbinPZetaRelInclusive&&apZ&&TCut("nJets20BTagged>1")&&zeroJet);
+  else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos)
+    drawHistogramMC(backgroundWJets, variable, OSWinSidebandRegionBtagMC,     Error, scaleFactor                 , hWMt, sbinPZetaRel&&apZ&&TCut("nJets20BTagged>0"));
   else
     drawHistogramMC(backgroundWJets, variable, OSWinSidebandRegionBtagMC,     Error, scaleFactor                 , hWMt, sbinPZetaRel&&apZ&&TCut("nJets20BTagged>1"));
 
   float OSOthersinSidebandRegionBtagMC = 0.;
   if(selection_.find("novbf")!=string::npos)
-    drawHistogramMC(backgroundOthers, variable, OSOthersinSidebandRegionBtagMC,Error, scaleFactor                , hWMt, sbinPZetaRelInclusive&&apZ&&TCut("nJets20BTagged>1")&&(!vbf)&&(!boost));
+    drawHistogramMC(backgroundOthers, variable, OSOthersinSidebandRegionBtagMC,Error, scaleFactor                , hWMt, sbinPZetaRelInclusive&&apZ&&TCut("nJets20BTagged>1")&&zeroJet);
+  else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos)
+    drawHistogramMC(backgroundOthers, variable, OSOthersinSidebandRegionBtagMC,Error, scaleFactor                , hWMt, sbinPZetaRel&&apZ&&TCut("nJets20BTagged>0"));
   else
     drawHistogramMC(backgroundOthers, variable, OSOthersinSidebandRegionBtagMC,Error, scaleFactor                , hWMt, sbinPZetaRel&&apZ&&TCut("nJets20BTagged>1"));
 
   float OSQCDinSidebandRegionBtag = 0.;
   if(selection_.find("novbf")!=string::npos)
-    drawHistogramDataFakeRate(data, variable, OSQCDinSidebandRegionBtag,   Error, 1.0 , hWMt, sbinPZetaRelaIsoInclusive&&apZ&&TCut("nJets20BTagged>1")&&(!vbf)&&(!boost), scaleFactMu);
+    drawHistogramDataFakeRate(data, variable, OSQCDinSidebandRegionBtag,   Error, 1.0 , hWMt, sbinPZetaRelaIsoInclusive&&apZ&&TCut("nJets20BTagged>1")&&zeroJet, scaleFactMu);
+  else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos)
+    drawHistogramDataFakeRate(data, variable, OSQCDinSidebandRegionBtag,   Error, 1.0 , hWMt, sbinPZetaRelaIso&&apZ&&TCut("nJets20BTagged>0"), scaleFactMu);
   else
     drawHistogramDataFakeRate(data, variable, OSQCDinSidebandRegionBtag,   Error, 1.0 , hWMt, sbinPZetaRelaIso&&apZ&&TCut("nJets20BTagged>1"), scaleFactMu);
 
   float OSDatainSidebandRegionBtag = 0.;
   if(selection_.find("novbf")!=string::npos)
-    drawHistogramData(data, variable, OSDatainSidebandRegionBtag,  Error, 1.0 , hWMt, sbinPZetaRelInclusive&&apZ&&TCut("nJets20BTagged>1")&&(!vbf)&&(!boost));
+    drawHistogramData(data, variable, OSDatainSidebandRegionBtag,  Error, 1.0 , hWMt, sbinPZetaRelInclusive&&apZ&&TCut("nJets20BTagged>1")&&zeroJet);
   else
     drawHistogramData(data, variable, OSDatainSidebandRegionBtag,  Error, 1.0 , hWMt, sbinPZetaRel&&apZ&&TCut("nJets20BTagged>1"));
 
@@ -405,7 +419,7 @@ void evaluateWextrapolation(string sign = "OS", string selection_ = "",
 
 }
 
-void evaluateQCD(bool evaluateWSS = true, string sign = "SS", string selection_ = "", 
+void evaluateQCD(TH1F* qcdHisto = 0, bool evaluateWSS = true, string sign = "SS", string selection_ = "", 
 		 float& SSQCDinSignalRegionDATAIncl_ = *(new float()), float& SSIsoToSSAIsoRatioQCD = *(new float()), float& scaleFactorTTSSIncl = *(new float()),
 		 float& extrapFactorWSSIncl = *(new float()), float& SSWinSignalRegionDATAIncl = *(new float()), float& SSWinSignalRegionMCIncl = *(new float()),
 		 TH1F* hExtrap=0, TString variable = "",
@@ -419,7 +433,7 @@ void evaluateQCD(bool evaluateWSS = true, string sign = "SS", string selection_ 
 		 string scaleFactMu="",
 		 TCut sbin = "",
 		 TCut sbinPZetaRel ="", TCut pZ="", TCut apZ="", TCut sbinPZetaRelInclusive="", 
-		 TCut sbinPZetaRelaIsoInclusive="", TCut sbinPZetaRelaIso="", TCut vbf="", TCut boost=""){
+		 TCut sbinPZetaRelaIsoInclusive="", TCut sbinPZetaRelaIso="", TCut sbinPZetaRelaIsoSideband = "", TCut vbf="", TCut boost=""){
 
   if(evaluateWSS)
     evaluateWextrapolation(sign, selection_ , 
@@ -433,22 +447,39 @@ void evaluateQCD(bool evaluateWSS = true, string sign = "SS", string selection_ 
 			   MutoTauCorrectionFactor, JtoTauCorrectionFactor,
 			   antiWsdb, antiWsgn, useMt,
 			   scaleFactMu,
-			   sbinPZetaRel, pZ, apZ, sbinPZetaRelInclusive, 
-			   sbinPZetaRelaIsoInclusive, sbinPZetaRelaIso, vbf, boost);
+			   sbinPZetaRel, sbinPZetaRel,
+			   pZ, apZ, sbinPZetaRelInclusive, 
+			   sbinPZetaRelaIsoInclusive, sbinPZetaRelaIso, vbf, boost, zeroJet);
   
   float Error = 0.;
   float SSQCDinSignalRegionDATAIncl = 0.;
-  drawHistogramData(data, variable,              SSQCDinSignalRegionDATAIncl,        Error, 1.0, hExtrap, sbin);
+  drawHistogramData(data, variable,              SSQCDinSignalRegionDATAIncl,        Error, 1.0,         hExtrap, sbin, 1);
+  if(qcdHisto!=0) qcdHisto->Add(hExtrap,  1.0);
+
+  float SSWJetsinSidebandRegionMCIncl    = 0.;
+  drawHistogramMC(backgroundWJets,     variable, SSWJetsinSidebandRegionMCIncl,      Error, scaleFactor, hExtrap, sbin,1);
+  hExtrap->Scale(SSWinSignalRegionDATAIncl/hExtrap->Integral());
+  if(qcdHisto!=0) qcdHisto->Add(hExtrap, -1.0);
+
   float SSTTbarinSidebandRegionMCIncl    = 0.;
-  drawHistogramMC(backgroundTTbar,     variable, SSTTbarinSidebandRegionMCIncl,      Error, scaleFactor*TTxsectionRatio*scaleFactorTTSSIncl,       hExtrap, sbin);
+  drawHistogramMC(backgroundTTbar,     variable, SSTTbarinSidebandRegionMCIncl,      Error, scaleFactor*TTxsectionRatio*scaleFactorTTSSIncl,       hExtrap, sbin,1);
+  if(qcdHisto!=0) qcdHisto->Add(hExtrap, -1.0);
+
   float SSOthersinSidebandRegionMCIncl    = 0.;
-  drawHistogramMC(backgroundTTbar,     variable, SSOthersinSidebandRegionMCIncl,     Error, scaleFactor*TTxsectionRatio*scaleFactorTTSSIncl,       hExtrap, sbin);
+  drawHistogramMC(backgroundOthers,     variable, SSOthersinSidebandRegionMCIncl,     Error, scaleFactor,       hExtrap, sbin,1);
+  if(qcdHisto!=0) qcdHisto->Add(hExtrap, -1.0);
+
   float SSDYMutoTauinSidebandRegionMCIncl = 0.;
-  drawHistogramMC(backgroundDYMutoTau, variable, SSDYMutoTauinSidebandRegionMCIncl,  Error, lumiCorrFactor*scaleFactor*MutoTauCorrectionFactor,    hExtrap, sbin);
+  drawHistogramMC(backgroundDYMutoTau, variable, SSDYMutoTauinSidebandRegionMCIncl,  Error, lumiCorrFactor*scaleFactor*MutoTauCorrectionFactor,    hExtrap, sbin,1);
+  if(qcdHisto!=0) qcdHisto->Add(hExtrap, -1.0);
+
   float SSDYtoTauinSidebandRegionMCIncl = 0.;
-  drawHistogramMC(backgroundDYTauTau,  variable, SSDYtoTauinSidebandRegionMCIncl,    Error, lumiCorrFactor*scaleFactor*ExtrapolationFactorZDataMC, hExtrap, sbin);
+  drawHistogramMC(backgroundDYTauTau,  variable, SSDYtoTauinSidebandRegionMCIncl,    Error, lumiCorrFactor*scaleFactor*ExtrapolationFactorZDataMC, hExtrap, sbin,1);
+  if(qcdHisto!=0) qcdHisto->Add(hExtrap, -1.0);
+
   float SSDYJtoTauinSidebandRegionMCIncl = 0.;
-  drawHistogramMC(backgroundDYJtoTau,  variable, SSDYJtoTauinSidebandRegionMCIncl,  Error,  lumiCorrFactor*scaleFactor*JtoTauCorrectionFactor,     hExtrap, sbin);
+  drawHistogramMC(backgroundDYJtoTau,  variable, SSDYJtoTauinSidebandRegionMCIncl,   Error, lumiCorrFactor*scaleFactor*JtoTauCorrectionFactor,     hExtrap, sbin,1);
+  if(qcdHisto!=0) qcdHisto->Add(hExtrap, -1.0);
 
   cout << "Selected events in inclusive " << sign << " data " << SSQCDinSignalRegionDATAIncl << endl;
   SSQCDinSignalRegionDATAIncl  -= SSWinSignalRegionDATAIncl;
@@ -458,6 +489,9 @@ void evaluateQCD(bool evaluateWSS = true, string sign = "SS", string selection_ 
   SSQCDinSignalRegionDATAIncl  -= SSDYJtoTauinSidebandRegionMCIncl;
   SSQCDinSignalRegionDATAIncl  -= SSDYtoTauinSidebandRegionMCIncl;
   SSQCDinSignalRegionDATAIncl *= OStoSSRatioQCD;
+  if(qcdHisto!=0) qcdHisto->Scale(OStoSSRatioQCD);
+
+  cout << "- expected from WJets "  << SSWinSignalRegionDATAIncl << endl;
   cout << "- expected from TTbar "  << SSTTbarinSidebandRegionMCIncl << endl;
   cout << "- expected from Others " << SSOthersinSidebandRegionMCIncl << endl;
   cout << "- expected from DY->tautau " << SSDYtoTauinSidebandRegionMCIncl << endl;
@@ -468,25 +502,57 @@ void evaluateQCD(bool evaluateWSS = true, string sign = "SS", string selection_ 
   SSQCDinSignalRegionDATAIncl_ = SSQCDinSignalRegionDATAIncl;
 
   float SSQCDinSignalRegionDATAInclaIso = 0.;
-  drawHistogramData(data, variable, SSQCDinSignalRegionDATAInclaIso,    Error, 1.0, hExtrap, sbinPZetaRelaIso&&pZ);
+  drawHistogramData(data, variable, SSQCDinSignalRegionDATAInclaIso,    Error, 1.0, hExtrap, sbinPZetaRelaIsoSideband&&pZ);
   float SSWinSignalRegionMCInclaIso   = 0.;
-  drawHistogramMC(backgroundWJets, variable, SSWinSignalRegionMCInclaIso,       Error,   scaleFactor*(SSWinSignalRegionDATAIncl/SSWinSignalRegionMCIncl) , hExtrap, sbinPZetaRelaIso&&pZ);
+  drawHistogramMC(backgroundWJets, variable, SSWinSignalRegionMCInclaIso,       Error,   scaleFactor*(SSWinSignalRegionDATAIncl/SSWinSignalRegionMCIncl) , hExtrap, sbinPZetaRelaIsoSideband&&pZ);
   float SSTTbarinSignalRegionMCInclaIso   = 0.;
-  drawHistogramMC(backgroundTTbar, variable, SSTTbarinSignalRegionMCInclaIso,   Error,   scaleFactor*scaleFactorTTSSIncl , hExtrap, sbinPZetaRelaIso&&pZ);
+  drawHistogramMC(backgroundTTbar, variable, SSTTbarinSignalRegionMCInclaIso,   Error,   scaleFactor*scaleFactorTTSSIncl , hExtrap, sbinPZetaRelaIsoSideband&&pZ);
   cout << "Anti-isolated " << sign << " events inclusive = " << SSQCDinSignalRegionDATAInclaIso << ", of which we expect "
        << SSWinSignalRegionMCInclaIso << " from W+jets " << " and " << SSTTbarinSignalRegionMCInclaIso << " from TTbar" << endl;
 
-  SSIsoToSSAIsoRatioQCD = SSQCDinSignalRegionDATAIncl/SSQCDinSignalRegionDATAInclaIso ;
+  SSIsoToSSAIsoRatioQCD = (SSQCDinSignalRegionDATAIncl)/(SSQCDinSignalRegionDATAInclaIso-SSWinSignalRegionMCInclaIso-SSTTbarinSignalRegionMCInclaIso) ;
   cout << "The extrapolation factor Iso<0.1 / Iso>0.2 is " << SSIsoToSSAIsoRatioQCD << endl;
 
 }
 
 
+void cleanQCDHisto(TH1F* hCleaner = 0, TH1F* hLooseIso = 0, TString variable = "",
+		   TTree* backgroundWJets = 0, TTree* backgroundTTbar = 0, TTree* backgroundOthers = 0, 
+		   TTree* backgroundDYMutoTau=0, TTree* backgroundDYJtoTau=0, TTree* backgroundDYTauTau=0,
+		   float scaleFactor = 0., float WJetsCorrectionFactor=0., float TTbarCorrectionFactor=0.,
+		   float MutoTauCorrectionFactor=0., float JtoTauCorrectionFactor=0., float DYtoTauTauCorrectionFactor=0.,
+		   TCut sbinSSlIso1 = ""){
 
+  if(hLooseIso==0) return;
 
+  cout << "Cleaning QCD histo with relaxed isolation from backgrounds..." << endl;
 
+  float Error = 0.;
+  float totalEvents = hLooseIso->Integral();
 
+  float NormalizationWinLooseRegion = 0.;
+  drawHistogramMC(backgroundWJets,variable,      NormalizationWinLooseRegion,     Error, scaleFactor*WJetsCorrectionFactor, hCleaner, sbinSSlIso1 ,1);
+  hLooseIso->Add(hCleaner,-1.0);
+  float NormalizationTTbarinLooseRegion = 0.;
+  drawHistogramMC(backgroundTTbar, variable,     NormalizationTTbarinLooseRegion, Error, scaleFactor*TTbarCorrectionFactor, hCleaner, sbinSSlIso1,1);
+  hLooseIso->Add(hCleaner,-1.0);
+  float NormalizationOthersinLooseRegion = 0.;
+  drawHistogramMC(backgroundOthers, variable,    NormalizationOthersinLooseRegion,Error, scaleFactor, hCleaner, sbinSSlIso1,1);
+  hLooseIso->Add(hCleaner,-1.0);
+  float  NormalizationDYMutotauinLooseRegion= 0.;
+  drawHistogramMC(backgroundDYMutoTau, variable, NormalizationDYMutotauinLooseRegion,  Error,  scaleFactor*MutoTauCorrectionFactor,    hCleaner  , sbinSSlIso1,1);
+  hLooseIso->Add(hCleaner,-1.0);
+  float  NormalizationDYJtotauinLooseRegion= 0.;
+  drawHistogramMC(backgroundDYJtoTau, variable,  NormalizationDYJtotauinLooseRegion,   Error,  scaleFactor*JtoTauCorrectionFactor,     hCleaner  , sbinSSlIso1,1);
+  hLooseIso->Add(hCleaner,-1.0);
+  float NormalizationDYTauTauinLooseRegion = 0.;
+  drawHistogramMC(backgroundDYTauTau,  variable, NormalizationDYTauTauinLooseRegion,    Error, scaleFactor*DYtoTauTauCorrectionFactor, hCleaner  , sbinSSlIso1,1);
+  hLooseIso->Add(hCleaner,-1.0);
 
+  float totalRemoved = NormalizationWinLooseRegion+NormalizationTTbarinLooseRegion+NormalizationOthersinLooseRegion+
+    NormalizationDYMutotauinLooseRegion+NormalizationDYJtotauinLooseRegion+NormalizationDYTauTauinLooseRegion;
+  cout << " ==> removed " << totalRemoved << " events from a total of " << totalEvents << " (" << totalRemoved/totalEvents*100 << " %)" << endl;
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////7
@@ -516,42 +582,31 @@ void plotMuTau( Int_t mH_           = 120,
   int nBins = nBins_;
   TArrayF bins = createBins(nBins_, xMin_, xMax_, nBins, selection_, variable_);
 
-  // from lumiPixel
-  float Lumi           = (-47.4 + 215.6 + 955.3 + 389.9 + 706.719 + 2714);
-  float lumiCorrFactor = (1-0.056);
-
+  float Lumi                      = (-47.4 + 215.6 + 955.3 + 389.9 + 706.719 + 2714);
+  float lumiCorrFactor            = (1-0.056);
   float TTxsectionRatio           = lumiCorrFactor*(165.8/157.5) ;
 
   float OStoSSRatioQCD            = 1.11;
   float SSIsoToSSAIsoRatioQCD     = 1.00;
-
   float MutoTauCorrectionFactor   = 1.00;
   float JtoTauCorrectionFactor    = 1.00;
 
-  float embeddedMEtCutEff         = 1.00;
-  float madgraphMEtCutEff         = 1.00;
-
-  // Fall11_06Dec2011
-  float WcorrectionFactorOS        = 0.92;  
-  float WcorrectionFactorSS        = 1.08; 
-  float ExtrapolationFactorZ       = 1.0;
-  float ExtrapolationFactorZDataMC = 1.0;
+  float ExtrapolationFactorZ               = 1.0;
+  float ErrorExtrapolationFactorZ          = 1.0;
+  float ExtrapolationFactorZDataMC         = 1.0;
   float ExtrapolationFactorSidebandZDataMC = 1.0;
-  float ErrorExtrapolationFactorZ  = 1.0;
+  float ExtrapolationFactorZFromSideband   = 1.0;
 
 
-  float VbfExtrapolationFactorW   = 1.00;
-  float BoostExtrapolationFactorW = 1.00;
-
-  float scaleFactorTTinVBF        = 1.00;
   float scaleFactorTTOS           = 1.0;
   float scaleFactorTTSS           = 1.0;
   float scaleFactorTTSSIncl       = 1.0;
+
   /////////////////  change SVfit mass here ///////////////////
 
-  //string variableStr = "";
-  //TString variable(variableStr.c_str());
-  TString variable = variable_;
+  string variableStr = "";
+  TString variable(variableStr.c_str());
+  variable = variable_;
 
   //////////////////////////////////////////////////////////////
 
@@ -610,46 +665,81 @@ void plotMuTau( Int_t mH_           = 120,
 
   THStack* aStack = new THStack("aStack","");
 
-  TH1F* hSiml    = new TH1F( "hSiml"   ,"all"               , nBins , bins.GetArray());
-  TH1F* hSgn     = new TH1F( "hSgn "   ,"vbf+ggf"           , nBins , bins.GetArray());
-  TH1F* hSgn1    = new TH1F( "hSgn1"   ,"vbf"               , nBins , bins.GetArray());
-  TH1F* hSgn2    = new TH1F( "hSgn2"   ,"ggf"               , nBins , bins.GetArray());
-  TH1F* hSgn3    = new TH1F( "hSgn3"   ,"vh"                , nBins , bins.GetArray());
-  TH1F* hData    = new TH1F( "hData"   ,"        "          , nBins , bins.GetArray());
-  TH1F* hDataEmb = new TH1F( "hDataEmb","Embedded"          , nBins , bins.GetArray());
-  TH1F* hW       = new TH1F( "hW"      ,"W+jets"            , nBins , bins.GetArray());
-  TH1F* hWLooseIso2 = new TH1F( "hWLooseIso2","W+jets(miso)", nBins , bins.GetArray());
-  TH1F* hW3Jets  = new TH1F( "hW3Jets" ,"W+3jets"           , nBins , bins.GetArray());
-  TH1F* hEWK     = new TH1F( "hEWK"    ,"EWK"               , nBins , bins.GetArray());
-  TH1F* hZtt     = new TH1F( "hZtt"    ,"Ztautau"           , nBins , bins.GetArray());
-  TH1F* hZmm     = new TH1F( "hZmm"    ,"Z+jets, mu to tau" , nBins , bins.GetArray());
-  TH1F* hZmmLoose= new TH1F( "hZmmLoose","Z+jets, mu to tau (loose)", nBins , bins.GetArray());
-  TH1F* hZmj     = new TH1F( "hZmj"    ,"Z+jets, jet to tau", nBins , bins.GetArray());
-  TH1F* hZmjLoose= new TH1F( "hZmjLoose","Z+jets, jet to tau (loose)",nBins , bins.GetArray());
-  TH1F* hZfakes  = new TH1F( "hZfakes" ,"Z+jets, jet to tau", nBins , bins.GetArray());
-  TH1F* hTTb     = new TH1F( "hTTb"    ,"ttbar"             , nBins , bins.GetArray());
-  TH1F* hQCD     = new TH1F( "hQCD"    ,"QCD"               , nBins , bins.GetArray());
-  TH1F* hLooseIso= new TH1F( "hLooseIso","Loose Iso"        , nBins , bins.GetArray());
-  TH1F* hLooseIso2= new TH1F( "hLooseIso2","Loose Iso"      , nBins , bins.GetArray());
-  TH1F* hLooseIso3= new TH1F( "hLooseIso3","Loose Iso"      , nBins , bins.GetArray());
+  TH1F* hSiml     = new TH1F( "hSiml"   ,"all"               , nBins , bins.GetArray());
+  TH1F* hSgn      = new TH1F( "hSgn "   ,"vbf+ggf"           , nBins , bins.GetArray());         hSgn->SetFillColor(0); hSgn->SetLineColor(kBlue);hSgn->SetLineWidth(2);hSgn->SetLineStyle(kDashed);
+  TH1F* hSgn1     = new TH1F( "hSgn1"   ,"vbf"               , nBins , bins.GetArray());         hSgn1->SetLineWidth(2);
+  TH1F* hSgn2     = new TH1F( "hSgn2"   ,"ggf"               , nBins , bins.GetArray());         hSgn2->SetLineWidth(2);
+  TH1F* hSgn3     = new TH1F( "hSgn3"   ,"vh"                , nBins , bins.GetArray());         hSgn3->SetLineWidth(2);
+  TH1F* hData     = new TH1F( "hData"   ,"        "          , nBins , bins.GetArray());         hData->SetMarkerStyle(20);hData->SetMarkerSize(1.2);hData->SetMarkerColor(kBlack);hData->SetLineColor(kBlack);hData->SetXTitle(XTitle_+" ("+Unities_+")");hData->SetYTitle(Form(" Events/(%.1f %s)", hData->GetBinWidth(1), Unities_.Data() ) );hData->SetTitleSize(0.04,"X");hData->SetTitleSize(0.05,"Y");hData->SetTitleOffset(0.95,"Y");
+  TH1F* hDataEmb  = new TH1F( "hDataEmb","Embedded"          , nBins , bins.GetArray());         hDataEmb->SetFillColor(kOrange-4);
+  TH1F* hW        = new TH1F( "hW"      ,"W+jets"            , nBins , bins.GetArray());         hW->SetFillColor(kRed+2);
+  TH1F* hW3Jets   = new TH1F( "hW3Jets" ,"W+3jets"           , nBins , bins.GetArray());         hW3Jets->SetFillColor(kRed+2);
+  TH1F* hEWK      = new TH1F( "hEWK"    ,"EWK"               , nBins , bins.GetArray());         hEWK->SetFillColor(kRed+2);
+  TH1F* hZtt      = new TH1F( "hZtt"    ,"Ztautau"           , nBins , bins.GetArray());         hZtt->SetFillColor(kOrange-4);
+  TH1F* hZmm      = new TH1F( "hZmm"    ,"Z+jets, mu->tau"   , nBins , bins.GetArray());         hZmm->SetFillColor(kBlue-2);
+  TH1F* hZmmLoose = new TH1F( "hZmmLoose","Z+jets, mu->tau"  , nBins , bins.GetArray());         hZmmLoose->SetFillColor(kBlue-2);
+  TH1F* hZmj      = new TH1F( "hZmj"    ,"Z+jets, jet to tau", nBins , bins.GetArray());         hZmj->SetFillColor(kBlue-2);
+  TH1F* hZmjLoose = new TH1F( "hZmjLoose","Z+jets, jet->tau" , nBins , bins.GetArray());         hZmjLoose->SetFillColor(kBlue-2);
+  TH1F* hZfakes   = new TH1F( "hZfakes" ,"Z+jets, jet to tau", nBins , bins.GetArray());         hZfakes->SetFillColor(kBlue-2);
+  TH1F* hTTb      = new TH1F( "hTTb"    ,"ttbar"             , nBins , bins.GetArray());         hTTb->SetFillColor(kBlue-8); 
+  TH1F* hQCD      = new TH1F( "hQCD"    ,"QCD"               , nBins , bins.GetArray());         hQCD->SetFillColor(kMagenta-10);
+  TH1F* hLooseIso1= new TH1F( "hLooseIso1","Loose Iso"       , nBins , bins.GetArray());
+  TH1F* hLooseIso2= new TH1F( "hLooseIso2","Loose Iso"       , nBins , bins.GetArray());
+  TH1F* hLooseIso3= new TH1F( "hLooseIso3","Loose Iso"       , nBins , bins.GetArray());
+  TH1F* hAntiIso  = new TH1F( "hAntiIso","Anti Iso"          , nBins , bins.GetArray());
+  TH1F* hVV       = new TH1F( "hVV"     ,"Diboson"           , nBins , bins.GetArray());         hVV->SetFillColor(kRed+2);
+  TH1F* hW3JetsMediumTauIso        = new TH1F( "hW3JetsMediumTauIso" ,  "W+3jets (medium tau-iso)"          , nBins , bins.GetArray());
+  TH1F* hW3JetsLooseTauIso         = new TH1F( "hW3JetsLooseTauIso" ,  "W+3jets (loose tau-iso)"            , nBins , bins.GetArray());
+  TH1F* hDataAntiIsoLooseTauIso    = new TH1F( "hDataAntiIsoLooseTauIso"   ,"data anti-iso, loose tau-iso"  , nBins , bins.GetArray());
+  TH1F* hDataAntiIso               = new TH1F( "hDataAntiIso"   ,"data anti-iso"                            , nBins , bins.GetArray());
+  TH1F* hggH110    = new TH1F( "hggH110"   ,"ggH110"               , nBins , bins.GetArray()); hggH110->SetLineWidth(2);
+  TH1F* hggH115    = new TH1F( "hggH115"   ,"ggH115"               , nBins , bins.GetArray()); hggH115->SetLineWidth(2);
+  TH1F* hggH120    = new TH1F( "hggH120"   ,"ggH120"               , nBins , bins.GetArray()); hggH120->SetLineWidth(2);
+  TH1F* hggH125    = new TH1F( "hggH125"   ,"ggH125"               , nBins , bins.GetArray()); hggH125->SetLineWidth(2);
+  TH1F* hggH130    = new TH1F( "hggH130"   ,"ggH130"               , nBins , bins.GetArray()); hggH130->SetLineWidth(2);
+  TH1F* hggH135    = new TH1F( "hggH135"   ,"ggH135"               , nBins , bins.GetArray()); hggH135->SetLineWidth(2);
+  TH1F* hggH140    = new TH1F( "hggH140"   ,"ggH140"               , nBins , bins.GetArray()); hggH140->SetLineWidth(2);
+  TH1F* hggH145    = new TH1F( "hggH145"   ,"ggH145"               , nBins , bins.GetArray()); hggH145->SetLineWidth(2);
+  TH1F* hqqH110    = new TH1F( "hqqH110"   ,"qqH110"               , nBins , bins.GetArray()); hqqH110->SetLineWidth(2);
+  TH1F* hqqH115    = new TH1F( "hqqH115"   ,"qqH115"               , nBins , bins.GetArray()); hqqH115->SetLineWidth(2);
+  TH1F* hqqH120    = new TH1F( "hqqH120"   ,"qqH120"               , nBins , bins.GetArray()); hqqH120->SetLineWidth(2);
+  TH1F* hqqH125    = new TH1F( "hqqH125"   ,"qqH125"               , nBins , bins.GetArray()); hqqH125->SetLineWidth(2);
+  TH1F* hqqH130    = new TH1F( "hqqH130"   ,"qqH130"               , nBins , bins.GetArray()); hqqH130->SetLineWidth(2);
+  TH1F* hqqH135    = new TH1F( "hqqH135"   ,"qqH135"               , nBins , bins.GetArray()); hqqH135->SetLineWidth(2); 
+  TH1F* hqqH140    = new TH1F( "hqqH140"   ,"qqH140"               , nBins , bins.GetArray()); hqqH140->SetLineWidth(2);
+  TH1F* hqqH145    = new TH1F( "hqqH145"   ,"qqH145"               , nBins , bins.GetArray()); hqqH145->SetLineWidth(2);
+  TH1F* hVH110     = new TH1F( "hVH110"   ,"VH110"                 , nBins , bins.GetArray()); hVH110->SetLineWidth(2);
+  TH1F* hVH115     = new TH1F( "hVH115"   ,"VH115"                 , nBins , bins.GetArray()); hVH115->SetLineWidth(2);
+  TH1F* hVH120     = new TH1F( "hVH120"   ,"VH120"                 , nBins , bins.GetArray()); hVH120->SetLineWidth(2);
+  TH1F* hVH125     = new TH1F( "hVH125"   ,"VH125"                 , nBins , bins.GetArray()); hVH125->SetLineWidth(2);
+  TH1F* hVH130     = new TH1F( "hVH130"   ,"VH130"                 , nBins , bins.GetArray()); hVH130->SetLineWidth(2);
+  TH1F* hVH135     = new TH1F( "hVH135"   ,"VH135"                 , nBins , bins.GetArray()); hVH135->SetLineWidth(2);
+  TH1F* hVH140     = new TH1F( "hVH140"   ,"VH140"                 , nBins , bins.GetArray()); hVH140->SetLineWidth(2);
+  TH1F* hVH145     = new TH1F( "hVH145"   ,"VH145"                 , nBins , bins.GetArray()); hVH145->SetLineWidth(2);
 
-  TH1F* hAntiIso = new TH1F( "hAntiIso","Anti Iso"          , nBins , bins.GetArray());
-  TH1F* hVV      = new TH1F( "hVV"     ,"Diboson"           , nBins , bins.GetArray());
+  vector<string> SUSYhistos;
+  //SUSYhistos.push_back("SUSYGG90"); SUSYhistos.push_back("SUSYGG100"); SUSYhistos.push_back("SUSYGG120"); SUSYhistos.push_back("SUSYGG130");
+  //SUSYhistos.push_back("SUSYGG140");SUSYhistos.push_back("SUSYGG160"); SUSYhistos.push_back("SUSYGG180"); SUSYhistos.push_back("SUSYGG200");
+  //SUSYhistos.push_back("SUSYGG250");SUSYhistos.push_back("SUSYGG300"); SUSYhistos.push_back("SUSYGG350"); SUSYhistos.push_back("SUSYGG400");
+  //SUSYhistos.push_back("SUSYGG450");SUSYhistos.push_back("SUSYGG500"); SUSYhistos.push_back("SUSYGG600"); SUSYhistos.push_back("SUSYGG700");
+  //SUSYhistos.push_back("SUSYGG800");SUSYhistos.push_back("SUSYGG900"); SUSYhistos.push_back("SUSYBB90");  SUSYhistos.push_back("SUSYBB100");
+  //SUSYhistos.push_back("SUSYBB120");SUSYhistos.push_back("SUSYBB130"); SUSYhistos.push_back("SUSYBB140"); SUSYhistos.push_back("SUSYBB160");
+  //SUSYhistos.push_back("SUSYBB180");SUSYhistos.push_back("SUSYBB200"); SUSYhistos.push_back("SUSYBB250"); SUSYhistos.push_back("SUSYBB300");
+  //SUSYhistos.push_back("SUSYBB350");SUSYhistos.push_back("SUSYBB400"); SUSYhistos.push_back("SUSYBB450"); SUSYhistos.push_back("SUSYBB500");
+  //SUSYhistos.push_back("SUSYBB600");SUSYhistos.push_back("SUSYBB700"); SUSYhistos.push_back("SUSYBB800"); SUSYhistos.push_back("SUSYBB900");
+  std::map<string,TH1F*> mapSUSYhistos;
+  for(unsigned int i = 0; i < SUSYhistos.size() ; i++){
+    mapSUSYhistos.insert( make_pair(SUSYhistos[i], 
+				    new TH1F(Form("h%s",SUSYhistos[i].c_str()) ,
+					     Form("%s", SUSYhistos[i].c_str()), 
+					     nBins , bins.GetArray()) ) 
+			  );
+  }
 
-  ///////////////////////// for bkg estimation //////////////////////////
+  TH1F* hParameters   = new TH1F( "hParameters", "" ,30, 0, 30);
 
-  TH1F* hW3JetsLooseTauIso         = new TH1F( "hW3JetsLooseTauIso" ,  "W+3jets (loose tau-iso)" ,                      nBins , bins.GetArray());
-  TH1F* hW3JetsLooseTauIsoFR       = new TH1F( "hW3JetsLooseTauIsoFR" ,"W+3jets (loose tau-iso X fake-rate)"          , nBins , bins.GetArray());
-
-  TH1F* hDataAntiIsoLooseTauIso      = new TH1F( "hDataAntiIsoLooseTauIso"   ,"data anti-iso, loose tau-iso"            , nBins , bins.GetArray());
-  TH1F* hDataAntiIsoLooseTauIsoFR    = new TH1F( "hDataAntiIsoLooseTauIsoFR" ,"data anti-iso, loose tau-iso X fake-rate", nBins , bins.GetArray());
-  TH1F* hDataAntiIsoLooseTauIsoFRUp  = new TH1F( "hDataAntiIsoLooseTauIsoFRUp"   ,"data anti-iso, loose tau-iso X fake-rate (Up)", nBins , bins.GetArray());
-  TH1F* hDataAntiIsoLooseTauIsoFRDown= new TH1F( "hDataAntiIsoLooseTauIsoFRDown" ,"data anti-iso, loose tau-iso X fake-rate (Down)", nBins , bins.GetArray());
-
-  TH1F* hDataAntiIso               = new TH1F( "hDataAntiIso"   ,"data anti-iso"                                 , nBins , bins.GetArray());
-  TH1F* hDataAntiIsoFR             = new TH1F( "hDataAntiIsoFR" ,"data anti-iso X fake-rate"                     , nBins , bins.GetArray());
-  TH1F* hDataAntiIsoFRUp           = new TH1F( "hDataAntiIsoFRUp" , "data anti-iso X fake-rate (Up)"             , nBins , bins.GetArray());
-  TH1F* hDataAntiIsoFRDown         = new TH1F( "hDataAntiIsoFRDown" ,"data anti-iso X fake-rate (Down)"          , nBins , bins.GetArray());
+ ///////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////
 
   // get the FR-file
   string scaleFactMu         = "";
@@ -666,109 +756,13 @@ void plotMuTau( Int_t mH_           = 120,
   createStringsIsoFakeRate("FakeRate.root", scaleFactTauQCD, scaleFactTauQCDUp, scaleFactTauQCDDown, "ptL2", "FakeRateQCD", "QCD_","MuTau_Tau_ptL2_QCDSS02_WSS60_incl");
   createStringsIsoFakeRate("FakeRate.root", scaleFactTauW,   scaleFactTauWUp,   scaleFactTauWDown,   "ptL2", "FakeRateW",   "W_",  "MuTau_Tau_ptL2_QCDOS02_WOS60_incl");
 
-  /////////////////////////////////////////////////////////////////////////
-
-
-  TH1*  hW3JetsKeys   = 0;
-  TH1*  hWKeys        = 0;
-  TH1*  hLooseIsoKeys = 0;
-  TH1*  hAntiIsoKeys  = 0;
-  TH1*  hZmmKeys      = 0;
-  TH1*  hZmjKeys      = 0;
-  TH1*  hVVKeys       = 0;
-
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////
 
-  TH1F* hggH110    = new TH1F( "hggH110"   ,"ggH110"               , nBins , bins.GetArray());
-  TH1F* hggH115    = new TH1F( "hggH115"   ,"ggH115"               , nBins , bins.GetArray());
-  TH1F* hggH120    = new TH1F( "hggH120"   ,"ggH120"               , nBins , bins.GetArray());
-  TH1F* hggH125    = new TH1F( "hggH125"   ,"ggH125"               , nBins , bins.GetArray());
-  TH1F* hggH130    = new TH1F( "hggH130"   ,"ggH130"               , nBins , bins.GetArray());
-  TH1F* hggH135    = new TH1F( "hggH135"   ,"ggH135"               , nBins , bins.GetArray());
-  TH1F* hggH140    = new TH1F( "hggH140"   ,"ggH140"               , nBins , bins.GetArray());
-  TH1F* hggH145    = new TH1F( "hggH145"   ,"ggH145"               , nBins , bins.GetArray());
-
-  TH1F* hqqH110    = new TH1F( "hqqH110"   ,"qqH110"               , nBins , bins.GetArray());
-  TH1F* hqqH115    = new TH1F( "hqqH115"   ,"qqH115"               , nBins , bins.GetArray());
-  TH1F* hqqH120    = new TH1F( "hqqH120"   ,"qqH120"               , nBins , bins.GetArray());
-  TH1F* hqqH125    = new TH1F( "hqqH125"   ,"qqH125"               , nBins , bins.GetArray());
-  TH1F* hqqH130    = new TH1F( "hqqH130"   ,"qqH130"               , nBins , bins.GetArray());
-  TH1F* hqqH135    = new TH1F( "hqqH135"   ,"qqH135"               , nBins , bins.GetArray());
-  TH1F* hqqH140    = new TH1F( "hqqH140"   ,"qqH140"               , nBins , bins.GetArray());
-  TH1F* hqqH145    = new TH1F( "hqqH145"   ,"qqH145"               , nBins , bins.GetArray());
-
-  TH1F* hVH110    = new TH1F( "hVH110"   ,"VH110"               , nBins , bins.GetArray());
-  TH1F* hVH115    = new TH1F( "hVH115"   ,"VH115"               , nBins , bins.GetArray());
-  TH1F* hVH120    = new TH1F( "hVH120"   ,"VH120"               , nBins , bins.GetArray());
-  TH1F* hVH125    = new TH1F( "hVH125"   ,"VH125"               , nBins , bins.GetArray());
-  TH1F* hVH130    = new TH1F( "hVH130"   ,"VH130"               , nBins , bins.GetArray());
-  TH1F* hVH135    = new TH1F( "hVH135"   ,"VH135"               , nBins , bins.GetArray());
-  TH1F* hVH140    = new TH1F( "hVH140"   ,"VH140"               , nBins , bins.GetArray());
-  TH1F* hVH145    = new TH1F( "hVH145"   ,"VH145"               , nBins , bins.GetArray());
-
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  vector<string> SUSYhistos;
-  //SUSYhistos.push_back("SUSYGG90");
-  //SUSYhistos.push_back("SUSYGG100");
-  //SUSYhistos.push_back("SUSYGG120");
-  //SUSYhistos.push_back("SUSYGG130");
-  //SUSYhistos.push_back("SUSYGG140");
-  //SUSYhistos.push_back("SUSYGG160");
-  //SUSYhistos.push_back("SUSYGG180");
-  //SUSYhistos.push_back("SUSYGG200");
-  //SUSYhistos.push_back("SUSYGG250");
-  //SUSYhistos.push_back("SUSYGG300");
-  //SUSYhistos.push_back("SUSYGG350");
-  //SUSYhistos.push_back("SUSYGG400");
-  //SUSYhistos.push_back("SUSYGG450");
-  ////SUSYhistos.push_back("SUSYGG500");
-  ////SUSYhistos.push_back("SUSYGG600");
-  ////SUSYhistos.push_back("SUSYGG700");
-  ////SUSYhistos.push_back("SUSYGG800");
-  ////SUSYhistos.push_back("SUSYGG900");
-  //SUSYhistos.push_back("SUSYBB90");
-  //SUSYhistos.push_back("SUSYBB100");
-  //SUSYhistos.push_back("SUSYBB120");
-  //SUSYhistos.push_back("SUSYBB130");
-  //SUSYhistos.push_back("SUSYBB140");
-  //SUSYhistos.push_back("SUSYBB160");
-  //SUSYhistos.push_back("SUSYBB180");
-  //SUSYhistos.push_back("SUSYBB200");
-  //SUSYhistos.push_back("SUSYBB250");
-  //SUSYhistos.push_back("SUSYBB300");
-  //SUSYhistos.push_back("SUSYBB350");
-  //SUSYhistos.push_back("SUSYBB400");
-  //SUSYhistos.push_back("SUSYBB450");
-  ////SUSYhistos.push_back("SUSYBB500");
-  ////SUSYhistos.push_back("SUSYBB600");
-  ////SUSYhistos.push_back("SUSYBB700");
-  ////SUSYhistos.push_back("SUSYBB800");
-  ////SUSYhistos.push_back("SUSYBB900");
-
-  std::map<string,TH1F*> mapSUSYhistos;
-  for(unsigned int i = 0; i < SUSYhistos.size() ; i++){
-    mapSUSYhistos.insert( make_pair(SUSYhistos[i], 
-				    new TH1F(Form("h%s",SUSYhistos[i].c_str()) ,
-					     Form("%s", SUSYhistos[i].c_str()), 
-					     nBins , bins.GetArray()) ) 
-			  );
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-  // pZeta OS, N pZ sideband OS, pZeta SS, N sideband SS, N QCD SS, OS/SS
-  TH1F* hParameters   = new TH1F( "hParameters", "" ,26, 0, 26);
 
   // Open the files
   TFile *fData              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
-  TFile *fDataLooseIso  ///////////////////            
     = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
   TFile *fDataEmbedded              
     = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleRun2011-MuTau-Embedded-All_run_Open_MuTauStream.root", "READ");  
@@ -798,7 +792,6 @@ void plotMuTau( Int_t mH_           = 120,
   hMasses.push_back(135);
   hMasses.push_back(140);
   hMasses.push_back(145);
-
 
   TFile *fSignalggH110 =          
     new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",110) ,"READ");  
@@ -857,7 +850,6 @@ void plotMuTau( Int_t mH_           = 120,
   }
   
 
-  // choose the analysis: Nominal "", jet up/Down "JetUp/Down" , elec up/down "MuUp/Down" , tau up/down "TauUp/Down"
   TString tree         = "outTreePtOrd"+postfix_+analysis_;
   TString treeEmbedded = "outTreePtOrd"+postfix_;
   if(analysis_.find("TauUp")  !=string::npos) 
@@ -870,7 +862,6 @@ void plotMuTau( Int_t mH_           = 120,
     treeEmbedded = tree;
 
   TTree *data                = (TTree*)fData->Get(("outTreePtOrd"+postfix_).c_str());
-  TTree *dataLooseIso        = LOOSEISO  ? (TTree*)fDataLooseIso->Get(("outTreePtOrd"+postfix_).c_str()) : 0;
   TTree *dataEmbedded        = EMBEDDEDSAMPLES ? (TTree*)fDataEmbedded->Get(treeEmbedded) : 0;
   TTree *signalVBF           = (TTree*)fSignalVBF->Get(tree);
   TTree *signalGGH           = (TTree*)fSignalGGH->Get(tree);
@@ -966,20 +957,24 @@ void plotMuTau( Int_t mH_           = 120,
 
 
   ////// CATEGORIES ///
+  TCut zeroJet("nJets30<1");
   TCut oneJet("nJets30>=1");
   TCut twoJets("nJets30>=2");
-  TCut vbf("pt1>30 && pt2>30 && (ptVeto<30 || isVetoInJets!=1) && MVAvbf>0.50");
-  TCut vbfLoose("pt1>30 && pt2>30 && (ptVeto<30 || isVetoInJets!=1 && MVAvbf>-0.30)"); /// <--- -0.30
+  TCut vbf("nJets30>=2 && pt1>30 && pt2>30 && (ptVeto<30 || isVetoInJets!=1) && MVAvbf>0.50");
+  TCut vbfLoose("nJets30>=2 && pt1>30 && pt2>30 && (ptVeto<30 || isVetoInJets!=1 && MVAvbf>-0.30)"); /// <--- -0.30
   TCut vh("pt1>30 && pt2>30 && Mjj>70 && Mjj<120 && diJetPt>150 && MVAvbf<0.80 && nJets20BTagged<1");
-  TCut boost("pt1>30 && nJets20BTagged<1");
+  TCut boost("nJets30>0 && pt1>30 && nJets20BTagged<1");
   boost = boost && !vbf /*&& !vh*/;
   TCut bTag("nJets30<2 && nJets20BTagged>0");
   TCut nobTag("nJets30<2 && nJets20BTagged==0");
-  TCut novbf = !vbf /*&& !vh*/ && !boost && !bTag;
+  TCut novbf("nJets30<1 && nJets20BTagged==0");
 
   TCut sbin; TCut sbinEmbedding; TCut sbinEmbeddingPZetaRel; TCut sbinPZetaRel; TCut sbinSS; 
-  TCut sbinPZetaRelSS; TCut sbinPZetaRev; TCut sbinPZetaRevSS; TCut sbinSSaIso; TCut sbinSSlIso; TCut sbinPZetaRelaIso; TCut sbinPZetaRelSSaIso;
-  TCut sbinSSlIso2; TCut sbinSSlIso3; TCut sbinSSaIsoLtiso; TCut sbinSSltiso; TCut sbinLtiso; TCut sbinMtiso;
+  TCut sbinPZetaRelSS; TCut sbinPZetaRev; TCut sbinPZetaRevSS; TCut sbinSSaIso; 
+  TCut sbinSSlIso1; TCut sbinSSlIso2; TCut sbinSSlIso3;
+  TCut sbinPZetaRelaIso; TCut sbinPZetaRelSSaIso; 
+  TCut sbinSSaIsoLtiso; TCut sbinSSaIsoMtiso;
+  TCut sbinSSltiso; TCut sbinSSmtiso; TCut sbinLtiso; TCut sbinMtiso; TCut sbinPZetaRelMtiso;
 
   TCut sbinInclusive;
   sbinInclusive                     = lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch;
@@ -997,8 +992,13 @@ void plotMuTau( Int_t mH_           = 120,
   sbinSSaIsoInclusive               = lpt && tpt && tiso && laiso&& lveto && SS && pZ  && hltevent && hltmatch;
   TCut sbinPZetaRelSSaIsoInclusive;
   sbinPZetaRelSSaIsoInclusive       = lpt && tpt && tiso && laiso&& lveto && SS        && hltevent && hltmatch;
+  TCut sbinPZetaRelSSaIsoMtisoInclusive;
+  sbinPZetaRelSSaIsoMtisoInclusive  = lpt && tpt && mtiso&& laiso&& lveto && SS        && hltevent && hltmatch;
+
   TCut sbinSSaIsoLtisoInclusive;
-  sbinSSaIsoLtisoInclusive          = lpt && tpt && ltiso&& laiso&& lveto && SS && pZ  && hltevent && hltmatch;
+  sbinSSaIsoLtisoInclusive          = lpt && tpt && mtiso&& laiso&& lveto && SS && pZ  && hltevent && hltmatch;
+  TCut sbinSSaIsoMtisoInclusive;
+  sbinSSaIsoMtisoInclusive          = lpt && tpt && mtiso&& laiso&& lveto && SS && pZ  && hltevent && hltmatch;
   TCut sbinPZetaRelaIsoInclusive;
   sbinPZetaRelaIsoInclusive         = lpt && tpt && tiso && laiso&& lveto && OS        && hltevent && hltmatch;
 
@@ -1043,16 +1043,24 @@ void plotMuTau( Int_t mH_           = 120,
   sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && sbinTmp;
   sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && sbinTmp;
   sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS && pZ  && hltevent && hltmatch && sbinTmp;
-  sbinSSlIso             =  lpt && tpt && tiso && lliso&& lveto && SS && pZ  && hltevent && hltmatch && sbinTmp;
+  sbinSSlIso1            =  lpt && tpt && tiso && lliso&& lveto && SS && pZ  && hltevent && hltmatch && sbinTmp;
   sbinSSlIso2            =  lpt && tpt && mtiso&& liso && lveto && SS && pZ  && hltevent && hltmatch && sbinTmp;
   sbinSSlIso3            =  lpt && tpt && mtiso&& lliso&& lveto && SS && pZ  && hltevent && hltmatch && sbinTmp;
   sbinSSaIsoLtiso        =  lpt && tpt && ltiso&& laiso&& lveto && SS && pZ  && hltevent && hltmatch && sbinTmp;
+  sbinSSaIsoMtiso        =  lpt && tpt && mtiso&& laiso&& lveto && SS && pZ  && hltevent && hltmatch && sbinTmp;
   sbinSSltiso            =  lpt && tpt && ltiso&& liso && lveto && SS && pZ  && hltevent && hltmatch && sbinTmp;
+  sbinSSmtiso            =  lpt && tpt && mtiso&& liso && lveto && SS && pZ  && hltevent && hltmatch && sbinTmp;
   sbinLtiso              =  lpt && tpt && ltiso&& liso && lveto && OS && pZ  && hltevent && hltmatch && sbinTmp;
   sbinMtiso              =  lpt && tpt && mtiso&& liso && lveto && OS && pZ  && hltevent && hltmatch && sbinTmp;
+  sbinPZetaRelMtiso      =  lpt && tpt && mtiso&& liso && lveto && OS        && hltevent && hltmatch && sbinTmp;
+  /////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////
 
-  /////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////
+  cout << endl;
+  cout << "#############################################################" << endl;
+  cout << ">>>>>>>>>>> BEGIN Compute inclusive informations <<<<<<<<<<<<" << endl;
+  cout << "#############################################################" << endl;
+  cout << endl;
 
   cout << "******** Extrapolation factors for Z->tautau normalization ********" << endl;
   // inclusive DY->tautau:
@@ -1062,6 +1070,10 @@ void plotMuTau( Int_t mH_           = 120,
   float ExtrapDYInclusive = 0.;
   drawHistogramMC(backgroundDYTauTau, variable, ExtrapDYInclusive,   Error,   Lumi*lumiCorrFactor*hltEff_/1000., hExtrap, sbinInclusive);
   cout << "All Z->tautau = " << ExtrapDYInclusive << " +/- " <<  Error << endl; 
+
+  float ExtrapDYInclusivePZetaRel = 0.;
+  drawHistogramMC(backgroundDYTauTau, variable, ExtrapDYInclusivePZetaRel,   Error,   Lumi*lumiCorrFactor*hltEff_/1000., hExtrap, sbinPZetaRelInclusive);
+  cout << "All Z->tautau (pZeta Rel) = " << ExtrapDYInclusivePZetaRel << " +/- " <<  Error << endl; 
 
   float ExtrapLFakeInclusive = 0.;
   drawHistogramMC(backgroundDYMutoTau, variable,ExtrapLFakeInclusive,Error,   Lumi*lumiCorrFactor*hltEff_/1000., hExtrap, sbinInclusive);
@@ -1090,24 +1102,27 @@ void plotMuTau( Int_t mH_           = 120,
   float ExtrapEmbedNumPZetaRel = 0.;
   drawHistogramEmbed(dataEmbedded, variable, ExtrapEmbedNumPZetaRel, Error, 1.0, hExtrap, sbinEmbeddingPZetaRel);
   float ExtrapEmbedDen = 0.;
-  drawHistogramEmbed(dataEmbedded, variable, ExtrapEmbedDen, Error, 1.0, hExtrap, sbinEmbeddingInclusive);
+  drawHistogramEmbed(dataEmbedded, variable, ExtrapEmbedDen,         Error, 1.0, hExtrap, sbinEmbeddingInclusive);
+  float ExtrapEmbedDenPZetaRel = 0.;
+  drawHistogramEmbed(dataEmbedded, variable, ExtrapEmbedDenPZetaRel, Error, 1.0, hExtrap, sbinPZetaRelEmbeddingInclusive);
 
-  ExtrapolationFactorZ      = ExtrapEmbedNum/ExtrapEmbedDen; 
-  ErrorExtrapolationFactorZ = TMath::Sqrt(ExtrapolationFactorZ*(1-ExtrapolationFactorZ)/ExtrapEmbedDen);
-  cout << "Extrap. factor using embedded sample: " << ExtrapolationFactorZ << " +/- " << ErrorExtrapolationFactorZ << endl;
-  ExtrapolationFactorZDataMC  = ExtrapolationFactorZ/ExtrapolationFactorMadGraph;
+  ExtrapolationFactorZ             = ExtrapEmbedNum/ExtrapEmbedDen; 
+  ErrorExtrapolationFactorZ        = TMath::Sqrt(ExtrapolationFactorZ*(1-ExtrapolationFactorZ)/ExtrapEmbedDen);
+  ExtrapolationFactorZDataMC       = ExtrapolationFactorZ/ExtrapolationFactorMadGraph;
+  ExtrapolationFactorZFromSideband = ExtrapEmbedDen/ExtrapEmbedDenPZetaRel;
 
   float sidebandRatioMadgraph = ExtrapDYNuminSidebandRegion/ExtrapDYNumPZetaRel;
   float sidebandRatioEmbedded = ExtrapEmbedNuminSidebandRegion/ExtrapEmbedNumPZetaRel;
-
   ExtrapolationFactorSidebandZDataMC = sidebandRatioEmbedded/sidebandRatioMadgraph ;
 
+  cout << "Extrap. factor using embedded sample: " << ExtrapolationFactorZ << " +/- " << ErrorExtrapolationFactorZ << endl;
   cout << " ==> data/MC (signal region) = " << ExtrapolationFactorZDataMC << " +/- " 
        << ExtrapolationFactorZDataMC*(ErrorExtrapolationFactorMadGraph/ExtrapolationFactorMadGraph + 
 				      ErrorExtrapolationFactorZ/ExtrapolationFactorZ) 
        << endl;
-  cout << " ==> data/MC (seideband-to-signal) = " << ExtrapolationFactorSidebandZDataMC << endl;
-
+  cout << " ==> data/MC (sideband-to-signal) = " << ExtrapolationFactorSidebandZDataMC << endl;
+  cout << " ==> data (sideband-to-signal inclusive) = " << ExtrapolationFactorZFromSideband << endl;
+  
   /////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////
 
@@ -1117,8 +1132,8 @@ void plotMuTau( Int_t mH_           = 120,
   float extrapFactorWSSIncl = 0.;
   float SSWinSignalRegionDATAIncl = 0.;
   float SSWinSignalRegionMCIncl = 0.;
-
-  evaluateQCD(true, "SS", "inclusive", 
+      
+  evaluateQCD(0, true, "SS", "inclusive", 
 	      SSQCDinSignalRegionDATAIncl , SSIsoToSSAIsoRatioQCD, scaleFactorTTSSIncl,
 	      extrapFactorWSSIncl, SSWinSignalRegionDATAIncl, SSWinSignalRegionMCIncl,
  	      hExtrap, variable,
@@ -1132,95 +1147,44 @@ void plotMuTau( Int_t mH_           = 120,
  	      scaleFactMu,
 	      sbinSSInclusive,
  	      sbinPZetaRelSSInclusive, pZ, apZ, sbinPZetaRelSSInclusive, 
- 	      sbinPZetaRelSSaIsoInclusive, sbinPZetaRelSSaIsoInclusive, vbf, boost);
+ 	      sbinPZetaRelSSaIsoInclusive, sbinPZetaRelSSaIsoInclusive, sbinPZetaRelSSaIsoMtisoInclusive, vbf, boost);
     
-  cout << "************** END extrapolation *******************" << endl;
   delete hExtrap;
 
+  cout << endl;
+  cout << "#############################################################" << endl;
+  cout << ">>>>>>>>>>> END Compute inclusive informations <<<<<<<<<<<<" << endl;
+  cout << "#############################################################" << endl;
 
   /////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////
-
-
-  TH1F* hWMt = new TH1F("hWMt","",nBins , bins.GetArray());
-  float extrapFactorWOS = 0.; float OSWinSignalRegionDATA = 0.; float OSWinSignalRegionMC = 0.;
-  float extrapFactorWSS = 0.; float SSWinSignalRegionDATA = 0.; float SSWinSignalRegionMC = 0.;
-
-  ///////////////////////////////////////// Doing OS first...
-
-  evaluateWextrapolation("OS", selection_, 
-			 extrapFactorWOS, OSWinSignalRegionDATA, OSWinSignalRegionMC,
-			 scaleFactorTTOS,
-			 hWMt, variable,
-			 backgroundWJets, backgroundTTbar, backgroundOthers, 
-			 backgroundDYTauTau, backgroundDYJtoTau, backgroundDYMutoTau, data,
-			 Lumi*hltEff_/1000., TTxsectionRatio, lumiCorrFactor,
-			 ExtrapolationFactorSidebandZDataMC, ExtrapolationFactorZDataMC,
-			 MutoTauCorrectionFactor, JtoTauCorrectionFactor,
-			 antiWsdb, antiWsgn, useMt,
-			 scaleFactMu,
-			 sbinPZetaRel, pZ, apZ, sbinPZetaRelInclusive, 
-			 sbinPZetaRelaIsoInclusive, sbinPZetaRelaIso, vbf, boost);
-
-  ///////////////////////////////////////// Doing SS last...
-
-  evaluateWextrapolation("SS", selection_, extrapFactorWSS, SSWinSignalRegionDATA, SSWinSignalRegionMC,
-			 scaleFactorTTSS,
-			 hWMt, variable,
-			 backgroundWJets, backgroundTTbar, backgroundOthers, 
-			 backgroundDYTauTau, backgroundDYJtoTau, backgroundDYMutoTau, data,
-			 Lumi*hltEff_/1000., TTxsectionRatio, lumiCorrFactor,
-			 ExtrapolationFactorSidebandZDataMC, ExtrapolationFactorZDataMC,
-			 MutoTauCorrectionFactor, JtoTauCorrectionFactor,
-			 antiWsdb, antiWsgn, useMt,
-			 scaleFactMu,
-			 sbinPZetaRelSS, pZ, apZ, sbinPZetaRelSSInclusive, 
-			 sbinPZetaRelSSaIsoInclusive, sbinPZetaRelSSaIso, vbf, boost);
-
-
-  hParameters->SetBinContent(1, 1./extrapFactorWOS );
-  hParameters->SetBinContent(2, OSWinSignalRegionDATA*extrapFactorWOS );
-  hParameters->SetBinContent(3, 1./extrapFactorWSS );
-  hParameters->SetBinContent(4, SSWinSignalRegionDATA*extrapFactorWSS );
-
-  return;
  
   std::vector<string> samples;
-  samples.push_back("Data");
-  if(dataLooseIso){
-    samples.push_back("LooseIso");
-    samples.push_back("AntiIso");
-  }
-  samples.push_back("Others");
   samples.push_back("SS");
   samples.push_back("WJets");
+  samples.push_back("Data");
   if(backgroundW3Jets)
     samples.push_back("W3Jets");
   samples.push_back("TTbar");
+  samples.push_back("Others");
   samples.push_back("DYMutoTau");
   samples.push_back("DYJtoTau");
   samples.push_back("DYToTauTau");
   if(dataEmbedded)
     samples.push_back("Embedded");
-
   for(unsigned int i = 0 ; i < hMasses.size() ; i++) {
     samples.push_back(string(Form("ggH%d",hMasses[i])));
     samples.push_back(string(Form("qqH%d",hMasses[i])));
     samples.push_back(string(Form("VH%d",hMasses[i])));
   }
-
   for(unsigned int i = 0; i < SUSYhistos.size() ; i++){
     TTree* susyTree = (mapSUSYtrees.find( SUSYhistos[i] ))->second ;
     if( susyTree ) samples.push_back(string(Form("%s",  SUSYhistos[i].c_str() )));
   }
 
-
-  // here I define the map between a sample name and its tree
   std::map<std::string,TTree*> tMap;
   tMap["Data"]         = data;
-  tMap["LooseIso"]     = dataLooseIso;
-  tMap["AntiIso"]      = dataLooseIso;
   tMap["Embedded"]     = dataEmbedded;
   tMap["DYToTauTau"]   = backgroundDYTauTau;
   tMap["DYMutoTau"]    = backgroundDYMutoTau;
@@ -1231,32 +1195,12 @@ void plotMuTau( Int_t mH_           = 120,
   tMap["TTbar"]        = backgroundTTbar;
   tMap["SS"]           = data;
 
-  tMap["ggH110"]       = signalGGF110;
-  tMap["ggH115"]       = signalGGF115;
-  tMap["ggH120"]       = signalGGF120;
-  tMap["ggH125"]       = signalGGF125;
-  tMap["ggH130"]       = signalGGF130;
-  tMap["ggH135"]       = signalGGF135;
-  tMap["ggH140"]       = signalGGF140;
-  tMap["ggH145"]       = signalGGF145;
-
-  tMap["qqH110"]       = signalVBF110;
-  tMap["qqH115"]       = signalVBF115;
-  tMap["qqH120"]       = signalVBF120;
-  tMap["qqH125"]       = signalVBF125;
-  tMap["qqH130"]       = signalVBF130;
-  tMap["qqH135"]       = signalVBF135;
-  tMap["qqH140"]       = signalVBF140;
-  tMap["qqH145"]       = signalVBF145;
-
-  tMap["VH110"]       = signalVH110;
-  tMap["VH115"]       = signalVH115;
-  tMap["VH120"]       = signalVH120;
-  tMap["VH125"]       = signalVH125;
-  tMap["VH130"]       = signalVH130;
-  tMap["VH135"]       = signalVH135;
-  tMap["VH140"]       = signalVH140;
-  tMap["VH145"]       = signalVH145;
+  tMap["ggH110"] = signalGGF110;tMap["ggH115"] = signalGGF115; tMap["ggH120"] = signalGGF120; tMap["ggH125"] = signalGGF125; 
+  tMap["ggH130"] = signalGGF130;tMap["ggH135"] = signalGGF135; tMap["ggH140"] = signalGGF140; tMap["ggH145"] = signalGGF145;
+  tMap["qqH110"] = signalVBF110;tMap["qqH115"] = signalVBF115; tMap["qqH120"] = signalVBF120; tMap["qqH125"] = signalVBF125;
+  tMap["qqH130"] = signalVBF130;tMap["qqH135"] = signalVBF135; tMap["qqH140"] = signalVBF140; tMap["qqH145"] = signalVBF145;
+  tMap["VH110"]  = signalVH110; tMap["VH115"]  = signalVH115;  tMap["VH120"]  = signalVH120;  tMap["VH125"]  = signalVH125;
+  tMap["VH130"]  = signalVH130; tMap["VH135"]  = signalVH135;  tMap["VH140"]  = signalVH140;  tMap["VH145"]  = signalVH145;
 
   for(unsigned int i = 0; i < SUSYhistos.size() ; i++){
     TTree* susyTree = (mapSUSYtrees.find( SUSYhistos[i] ))->second ;
@@ -1267,132 +1211,56 @@ void plotMuTau( Int_t mH_           = 120,
 
   std::map<TString,Float_t> vMap;
 
+  float SSQCDinSignalRegionDATA = 0.; float extrapFactorWSS = 0.;             float SSWinSignalRegionDATA = 0.;     float SSWinSignalRegionMC = 0.;
+  float extrapFactorWOSW3Jets = 0.;   float OSWinSignalRegionDATAW3Jets = 0.; float OSWinSignalRegionMCW3Jets = 0.; float scaleFactorTTOSW3Jets = 0.;
+  float extrapFactorWOSWJets  = 0.;   float OSWinSignalRegionDATAWJets  = 0.; float OSWinSignalRegionMCWJets  = 0.; float scaleFactorTTOSWJets = 0.;
+
   for( unsigned iter=0; iter<samples.size(); iter++){
 
-    cout << "Dealing with sample " << samples[iter] << endl;
-    
+    cout << endl;
+    cout << ">>>> Dealing with sample ## " << samples[iter] << " ##" << endl;
+
     std::map<std::string,TTree*>::iterator it = tMap.find(samples[iter]);
 
     TString h1Name = "h1_"+it->first;
-    TH1F* h1 = new TH1F( h1Name ,"" , nBins , bins.GetArray());
+    TH1F* h1       = new TH1F( h1Name ,"" , nBins , bins.GetArray());
+    TH1F* hCleaner = new TH1F("hCleaner","",nBins , bins.GetArray());
 
     TTree* currentTree = 0;
     
     if((it->first).find("SS")!=string::npos){
       
-      cout << "Remove W contamination from SS data sample ... " << endl;
       currentTree = (it->second);
 
+      cout << "************** BEGIN QCD evaluation using SS events *******************" << endl;
 
-      float error2OnQCD = 0.0;
+      TH1F* hExtrapSS = new TH1F("hExtrapSS","",nBins , bins.GetArray());
+      float dummy1 = 0.;      
+      TTree* treeForWestimation = !((selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || 
+				    selection_.find("twoJets")!=string::npos) ?
+	backgroundWJets : backgroundW3Jets;
       
+      evaluateQCD(h1, true, "SS", selection_, 
+		  SSQCDinSignalRegionDATA , dummy1 , scaleFactorTTSS,
+		  extrapFactorWSS, SSWinSignalRegionDATA, SSWinSignalRegionMC,
+		  hExtrapSS, variable,
+		  treeForWestimation, backgroundTTbar, backgroundOthers, 
+		  backgroundDYTauTau, backgroundDYJtoTau, backgroundDYMutoTau, data,
+		  Lumi/1000*hltEff_,  TTxsectionRatio, lumiCorrFactor,
+		  ExtrapolationFactorSidebandZDataMC, ExtrapolationFactorZDataMC,
+		  MutoTauCorrectionFactor, JtoTauCorrectionFactor, 
+		  OStoSSRatioQCD,
+		  antiWsdb, antiWsgn, useMt,
+		  scaleFactMu,
+		  sbinSS,
+		  sbinPZetaRelSS, pZ, apZ, sbinPZetaRelSSInclusive, 
+		  sbinPZetaRelSSaIsoInclusive, sbinPZetaRelSSaIso, sbinPZetaRelSSaIso, vbf, boost);
 
-  float SSQCDinSignalRegionDATA = 0.; 
-  float extrapFactorWSS = 0.;
-  float SSWinSignalRegionDATA = 0.;
-  float SSWinSignalRegionMC = 0.;
-  float dummy1 = 0.;
+      cout << "************** END QCD evaluation using SS events *******************" << endl;
 
-  evaluateQCD(false, "SS", selection_, 
-	      SSQCDinSignalRegionDATA , dummy , scaleFactorTTSS,
-	      extrapFactorWSS, SSWinSignalRegionDATA, SSWinSignalRegionMC,
- 	      h1, variable,
- 	      backgroundWJets, backgroundTTbar, backgroundOthers, 
- 	      backgroundDYTauTau, backgroundDYJtoTau, backgroundDYMutoTau, data,
- 	      Lumi/1000*hltEff_,  TTxsectionRatio, lumiCorrFactor,
-	      ExtrapolationFactorSidebandZDataMC, ExtrapolationFactorZDataMC,
- 	      MutoTauCorrectionFactor, JtoTauCorrectionFactor, 
-	      OStoSSRatioQCD,
- 	      antiWsdb, antiWsgn, useMt,
- 	      scaleFactMu,
-	      sbinSSInclusive,
- 	      sbinPZetaRelSSInclusive, pZ, apZ, sbinPZetaRelSSInclusive, 
- 	      sbinPZetaRelSSaIsoInclusive, sbinPZetaRelSSaIsoInclusive, vbf, boost);
- 
+      delete hExtrapSS;
 
-
-
-
-      TH1F* hHelp = (TH1F*)h1->Clone("hHelp");
-      hHelp->Reset();
-      currentTree->Draw(variable+">>hHelp", sbinSS);
-      int SSevents = hHelp->GetEntries();
-      cout << "Selected SS events in data " << hHelp->GetEntries() << endl;
-      h1->Add(hHelp,1);
-
-      hHelp->Reset();
-      backgroundWJets->Draw(variable+">>hHelp", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSS);
-      cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from W+jets (from " << hHelp->GetEntries() << " entries)" << endl;
-      float sFWSS = ( selection_.find("novbf") !=string::npos || 
-		      selection_.find("bTag")  !=string::npos || 
-		      selection_.find("boost") !=string::npos || 
-		      selection_.find("oneJet") !=string::npos || 
-		      selection_.find("twoJets") !=string::npos || 
-		      selection_.find("inclusive")!=string::npos) ? 
-	SSWinSignalRegionDATA/SSWinSignalRegionMC : WcorrectionFactorSS; // from the extrapolation factor DATA/MC
-
-      if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) 
-	sFWSS *= VbfExtrapolationFactorW;
-      else if(selection_.find("boost")!=string::npos)
-	sFWSS *= BoostExtrapolationFactorW;
-
-      hHelp->Scale(sFWSS*Lumi/1000*hltEff_);
-      cout << "We estimate " << hHelp->Integral() << " SS events from W+jets by extrapolating" << endl;
-      cout << " ==> removing W+jets from SS...." << endl;
-      h1->Add(hHelp, -1 );
-      if(hHelp->GetEntries()>0) error2OnQCD +=  pow( hHelp->Integral()/hHelp->GetEntries(), 2)*hHelp->GetEntries(); // error on MC W+jets SS events
-      error2OnQCD +=  pow(WcorrectionFactorSS*0.06,2)*pow(hHelp->GetEntries(),2);        // error on W+jets extrapolation factor ==> 6% according to Artur
-      cout << sqrt(error2OnQCD) << " <==  W" << endl;      
-
-      hHelp->Reset();
-      backgroundTTbar->Draw(variable+">>hHelp", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSS);
-      cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_*TTxsectionRatio << " SS events from TTbar (from " << hHelp->GetEntries() << " entries)" << endl;
-      hHelp->Scale(1.0*Lumi/1000*hltEff_*TTxsectionRatio);
-      cout << "We estimate " << hHelp->Integral() << " SS events from TTbar" << endl;
-      cout << " ==> removing TTbar from SS...." << endl;
-      h1->Add(hHelp, -1 );
-      if(hHelp->GetEntries()>0) error2OnQCD +=  pow(hHelp->Integral()/hHelp->GetEntries(),2)*hHelp->GetEntries();   // error on MC TTbar SS events
-      cout << sqrt(error2OnQCD) << " <== W + TTb" << endl;      
-
-      hHelp->Reset();
-      backgroundDYMutoTau->Draw(variable+">>hHelp", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSS);
-      cout << "We expect " << hHelp->Integral()*Lumi/1000*hltEff_ << " SS events from DY->mumu, mu->jet" << endl;
-      hHelp->Scale(MutoTauCorrectionFactor*Lumi*lumiCorrFactor/1000*hltEff_);
-      cout << "We estimate " << hHelp->Integral() << " SS events from DY->mumu, mu->tau" << endl;
-      cout << " ==> removing DY->mumu, mu->tau from SS...." << endl;
-      h1->Add(hHelp, -1 );
-      if(hHelp->GetEntries()>0) error2OnQCD +=  pow(hHelp->Integral()/hHelp->GetEntries(),2)*hHelp->GetEntries();   // error on MC DY->mumu, mu->tau events
-      cout << sqrt(error2OnQCD) << " <== W + TTb + DY(1)" << endl;      
-
-      hHelp->Reset();
-      backgroundDYJtoTau->Draw(variable+">>hHelp", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu)"*sbinSS);
-      cout << "We expect " << hHelp->Integral()*Lumi*lumiCorrFactor/1000*hltEff_ << " SS events from DY->mumu, jet->tau" << endl;
-      hHelp->Scale(JtoTauCorrectionFactor*Lumi*lumiCorrFactor/1000*hltEff_);
-      cout << "We estimate " << hHelp->Integral() << " SS events from DY->mumu, jet->tau" << endl;
-      cout << " ==> removing DY->mumu, mu->jet from SS...." << endl;
-      h1->Add(hHelp, -1 );
-      if(hHelp->GetEntries()>0) error2OnQCD +=  pow(hHelp->Integral()/hHelp->GetEntries(),2)*hHelp->GetEntries();   // error on MC DY->mumu, jet->tau events
-      cout << sqrt(error2OnQCD) << " <== W + TTb + DY(1,2)" << endl;      
-
-      //  OS/SS ratio
-      h1->Scale(OStoSSRatioQCD);
-      cout << "After removing the expected contribution from W+jets and rescaling by " << OStoSSRatioQCD << " we expect " 
-	   << h1->Integral() << " events from QCD processes" << endl;
-
-      hParameters->SetBinContent(5, SSevents);
-      hParameters->SetBinContent(6, h1->Integral()/SSevents);
-
-      cout << "Total unceratinty from bkg subtraction in SS region is " << sqrt(error2OnQCD) << endl;
-      float totalRelErrorOnQCD = 0.02 + sqrt(error2OnQCD)/h1->Integral(); //0.02 ==> uncertainty on OS/SS ratio
-      hParameters->SetBinContent(7,totalRelErrorOnQCD);
-
-      ////////////////////////////////////////////////
-
-      hParameters->SetBinContent(8,ExtrapolationFactorZ);
-      hParameters->SetBinContent(9,ErrorExtrapolationFactorZ);
-      hParameters->SetBinContent(10,ExtrapolationFactorZDataMC);
-      hParameters->SetBinContent(11,SSIsoToSSAIsoRatioQCD);
-
+      hQCD->Add(h1, 1.0);
 
     }
     else{
@@ -1401,957 +1269,296 @@ void plotMuTau( Int_t mH_           = 120,
 
       if((it->first).find("Embed")==string::npos){
 
+	float Error = 0.;
+
 	if((it->first).find("DYToTauTau")!=string::npos){
-	  currentTree->Draw(variable+">>"+h1Name, "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*sbinPZetaRelInclusive);  
-	  float madgraphNoMEtCut = h1->Integral();
-	  h1->Reset();
-	  currentTree->Draw(variable+">>"+h1Name, "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*sbinInclusive);
-	  madgraphMEtCutEff = h1->Integral()/madgraphNoMEtCut;
-	  cout << "Efficiency of antiW cut on madgraph " << madgraphMEtCutEff << endl;
-	  h1->Reset();
-	  currentTree->Draw(variable+">>"+h1Name, "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*sbin);
+	  float NormDYToTauTau = 0.;
+	  drawHistogramMC(currentTree, variable, NormDYToTauTau, Error,   Lumi*lumiCorrFactor*hltEff_/1000., h1, sbin, 1);
+	  hZtt->Add(h1, ExtrapolationFactorZFromSideband);
+	}
+	if((it->first).find("TTbar")!=string::npos){
+	  float NormTTjets = 0.;
+	  drawHistogramMC(currentTree, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio*scaleFactorTTOS*hltEff_/1000., h1, sbin, 1);
+	  hTTb->Add(h1, 1.0);
 	}
 	else if((it->first).find("W3Jets")!=string::npos){
 
-	  currentTree->Draw(variable+">>"+h1Name,     "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*sbin);
-	  hW3JetsKeys = new TH1Keys("hW3JetsKeys","W+3jets smoothed", nBins , bins.GetArray());
-	  currentTree->Draw(variable+">>hW3JetsKeys", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*sbin);
-	  cout << "Keys for W3Jets filled with integral " << hW3JetsKeys->Integral() << " and entries " << hW3JetsKeys->GetEntries() << endl;
+	  TH1F* hExtrapW3Jets = new TH1F("hExtrapW3Jets","",nBins , bins.GetArray());
+	 
+	  
+	  cout << "************** BEGIN W+3jets normalization using high-Mt sideband *******************" << endl;
 
-	  cout << "Filling histo with loose taus... if vbf, apply loose vbf cut" << endl;
-	  h1->Reset();
-	  if((selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || selection_.find("twoJets")!=string::npos){
+	  if(!((selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || 
+	       selection_.find("twoJets")!=string::npos))
+	    evaluateWextrapolation("OS", selection_, 
+				   extrapFactorWOSW3Jets, OSWinSignalRegionDATAW3Jets, OSWinSignalRegionMCW3Jets,
+				   scaleFactorTTOSW3Jets,
+				   hExtrapW3Jets, variable,
+				   currentTree, backgroundTTbar, backgroundOthers, 
+				   backgroundDYTauTau, backgroundDYJtoTau, backgroundDYMutoTau, data,
+				   Lumi*hltEff_/1000., TTxsectionRatio, lumiCorrFactor,
+				   ExtrapolationFactorSidebandZDataMC, ExtrapolationFactorZDataMC,
+				   MutoTauCorrectionFactor, JtoTauCorrectionFactor,
+				   antiWsdb, antiWsgn, useMt,
+				   scaleFactMu,
+				   sbinPZetaRel, sbinPZetaRel,
+				   pZ, apZ, sbinPZetaRelInclusive, 
+				   sbinPZetaRelaIsoInclusive, sbinPZetaRelaIso, vbf, boost, zeroJet);
+	  else
+	    evaluateWextrapolation("OS", selection_, 
+				   extrapFactorWOSW3Jets, OSWinSignalRegionDATAW3Jets, OSWinSignalRegionMCW3Jets,
+				   scaleFactorTTOSW3Jets,
+				   hExtrapW3Jets, variable,
+				   currentTree, backgroundTTbar, backgroundOthers, 
+				   backgroundDYTauTau, backgroundDYJtoTau, backgroundDYMutoTau, data,
+				   Lumi*hltEff_/1000., TTxsectionRatio, lumiCorrFactor,
+				   ExtrapolationFactorSidebandZDataMC, ExtrapolationFactorZDataMC,
+				   MutoTauCorrectionFactor, JtoTauCorrectionFactor,
+				   antiWsdb, antiWsgn, useMt,
+				   scaleFactMu,
+				   sbinPZetaRel, sbinPZetaRelMtiso,
+				   pZ, apZ, sbinPZetaRelInclusive, 
+				   sbinPZetaRelaIsoInclusive, sbinPZetaRelaIso, vbf, boost, zeroJet);
 
-	    if( selection_.find("twoJets")!=string::npos ){
-	      vbfLoose = twoJets;
-	      vbf      = twoJets;
-	    }
+	  cout << "************** END W+3jets normalization using high-Mt sideband *******************" << endl;
+	  delete hExtrapW3Jets;
 
-	    currentTree->Draw(variable+">>"+h1Name,"(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinMtisoInclusive&&vbfLoose)); // <------- sbinLtisoInclusive LOOSE TAU ID?
-	    hW3JetsLooseTauIso->Add(h1,1.0);
+	  float NormW3Jets = 0.;
+	  drawHistogramMC(currentTree, variable, NormW3Jets, Error,   Lumi*hltEff_/1000., h1, sbin, 1);
+	  h1->Scale(OSWinSignalRegionDATAW3Jets/h1->Integral());
+	  hW3Jets->Add(h1, 1.0);
 
-	    // NORMALIZE W3JETS ON DATA
+	  drawHistogramMC(currentTree, variable, NormW3Jets, Error,   Lumi*hltEff_/1000., hCleaner, sbinMtiso, 1);
+	  hW3JetsMediumTauIso->Add(hCleaner, hW3Jets->Integral()/hCleaner->Integral());
 
-	    //TH1F* hHelp = (TH1F*)h1->Clone("hHelp");
-	    TH1F* hHelp = new TH1F( "hHelp" ,"" , nBins , bins.GetArray());
-
-	    // SIDEBAND OS: get extrap factor
-	    hHelp->Reset();
-	    currentTree->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ&&vbfLoose));
-	    cout << hHelp->Integral() << endl;
-	    float W3JetsVBFSdb    = hHelp->Integral();
-	    float W3JetsVBFSdbInt = hHelp->GetEntries();
-	    hHelp->Reset();
-	    currentTree->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&pZ&&vbfLoose));
-	    float W3JetsVBFSgn    = hHelp->Integral();
-	    float W3JetsVBFSgnInt = hHelp->GetEntries();
-	    cout << "W3jets MC in VBF(rel): using " << W3JetsVBFSdbInt << " events from sideband and " << W3JetsVBFSgnInt << " from signal region" << endl;
-	    float ExtrapFactorW3Jets = W3JetsVBFSdb/W3JetsVBFSgn;
-	    cout << " ==> ratio sdb/sgn = " <<  ExtrapFactorW3Jets << endl;
-	    hHelp->Reset();
-            currentTree->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&vbfLoose));
-            cout << hHelp->Integral() << endl;
-            float W3JetsVBFAll    = hHelp->Integral();
-            float W3JetsVBFAlllInt = hHelp->GetEntries();
-
-	    // SIDEBAND2 OS: get extrap factor (2)
-	    hHelp->Reset();
-            currentTree->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbfLoose));
-            cout << hHelp->Integral() << endl;
-            float W3JetsVBFSdb2    = hHelp->Integral();
-            float W3JetsVBFSdbInt2 = hHelp->GetEntries();
-            hHelp->Reset();
-            currentTree->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&pZ&&vbfLoose));
-            float W3JetsVBFSgn2    = hHelp->Integral();
-            float W3JetsVBFSgnInt2 = hHelp->GetEntries();
-            cout << "W3jets MC in VBF(rel): using " << W3JetsVBFSdbInt2 << " events from sideband (2) and " << W3JetsVBFSgnInt2 << " from signal region" << endl;
-            float ExtrapFactorW3Jets2 = W3JetsVBFSdb2/W3JetsVBFSgn2;
-            cout << " ==> ratio sdb2/sgn = " <<  ExtrapFactorW3Jets2 << endl;
+	  drawHistogramMC(currentTree, variable, NormW3Jets, Error,   Lumi*hltEff_/1000., hCleaner, sbinLtiso, 1);
+	  hW3JetsLooseTauIso->Add(hCleaner,  hW3Jets->Integral()/hCleaner->Integral());
 
 
-	    // SIDEBAND SS: get extrap fact SS
-	    hHelp->Reset();
-            currentTree->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&apZ2&&vbfLoose));
-	    cout << hHelp->Integral() << endl;
-            float W3JetsVBFSdbSS    = hHelp->Integral();
-            float W3JetsVBFSdbIntSS = hHelp->GetEntries();
-            hHelp->Reset();
-            currentTree->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&pZ&&vbfLoose));
-	    float W3JetsVBFSgnSS    = hHelp->Integral();
-            float W3JetsVBFSgnIntSS = hHelp->GetEntries();
-            cout << "W3jets MC (SS) in VBF(rel): using " << W3JetsVBFSdbIntSS << " events from sideband SS (2) and " << W3JetsVBFSgnIntSS << " from signal region" << endl;
-            float ExtrapFactorW3JetsSS = W3JetsVBFSdbSS/W3JetsVBFSgnSS;
-	    cout << " ==> ratio sdb/sgn = " <<  ExtrapFactorW3JetsSS << endl;
-
-
-
-	    // now, normalize to sidebands
-	    cout << "#######  Start normalization OS from sidebands #######" << endl;
-	    hHelp->Reset();
-	    data->Draw(variable+">>hHelp",sbinPZetaRelInclusive&&apZ2&&vbf);
-	    float DataVBFSdb = hHelp->Integral();
-	    cout << "In VBF region, I get " << DataVBFSdb << " events in the high Mt sdb" << endl;
-
-	    hHelp->Reset();
-	    backgroundDYTauTau->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbf));
-	    float dytotauVBFSdb = hHelp->Integral()*Lumi/1000.*hltEff_;
-	    cout << "In VBF region, I expect " << dytotauVBFSdb << " events in the high Mt sdb from DYtotautau" << endl;
-	    hHelp->Reset();
-
-	    hHelp->Reset();
-	    backgroundDYMutoTau->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbf));
-	    float dymutotauVBFSdb = hHelp->Integral()*Lumi/1000.*hltEff_;
-	    cout << "In VBF region, I expect " << dymutotauVBFSdb << " events in the high Mt sdb from DYmutotau" << endl;
-	    hHelp->Reset();
-
-	    hHelp->Reset();
-	    backgroundDYJtoTau->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbf));
-	    float dyjtotauVBFSdb = hHelp->Integral()*Lumi/1000.*hltEff_;
-	    cout << "In VBF region, I expect " << dyjtotauVBFSdb << " events in the high Mt sdb from DYjtotau" << endl;
-	    hHelp->Reset();
-
-	    hHelp->Reset();
-	    backgroundOthers->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbf));
-	    float othersVBFSdb = hHelp->Integral()*Lumi/1000.*hltEff_;
-	    cout << "In VBF region, I expect " << othersVBFSdb << " events in the high Mt sdb from others" << endl;
-	    hHelp->Reset();
-
-	    backgroundTTbar->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbf));
-	    float TTbarVBFSdb = hHelp->Integral()*Lumi/1000*hltEff_*TTxsectionRatio;
-	    cout << "In VBF region, I expect " << TTbarVBFSdb << " events in the high Mt sdb from TTbar" << endl;
-	    hHelp->Reset();
-
-	    //////////////////  Here, normalize TTbar from sideband 
-
-	    backgroundTTbar->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0")));
-	    float TTbarVBFSdbBtag = hHelp->Integral()*Lumi/1000*hltEff_*TTxsectionRatio;
-	    hHelp->Reset();
-	    backgroundTTbar->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>-999")));
-	    float TTbarVBFSdbAnyBtag = hHelp->Integral()*Lumi/1000*hltEff_*TTxsectionRatio;
-	    float ratiobTagToAny = TTbarVBFSdbBtag/TTbarVBFSdbAnyBtag;
-	    cout << "The ratio between events with >0 bTagged jets to any in TTJets MC is " << ratiobTagToAny << endl;
-	    hHelp->Reset();
-
-	    data->Draw(variable+">>hHelp",sbinPZetaRelInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0"));
-	    float DataVBFSdbBtag = hHelp->Integral();
-	    cout << "In data, I measure " << DataVBFSdbBtag << " events b-tagged" << endl;
-
-	    hHelp->Reset();
-	    backgroundWJets->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0")));
-	    float WJetsVBFSdbBtag = hHelp->Integral()*Lumi/1000*hltEff_;
-	    hHelp->Reset();
-	    backgroundOthers->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0")));
-	    float OthersVBFSdbBtag = hHelp->Integral()*Lumi/1000*hltEff_;
-	    data->Draw(variable+">>hHelp",(TCut(scaleFactMu.c_str()))*(sbinPZetaRelSSaIsoInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0")));
-	    float QCDVBFSdbBtag = hHelp->Integral()*OStoSSRatioQCD;
-	    cout << "I subtract " << WJetsVBFSdbBtag << " and " << OthersVBFSdbBtag << " and " << QCDVBFSdbBtag << " events from W=jets and others" << endl;
-
-	    scaleFactorTTinVBF = (DataVBFSdbBtag-WJetsVBFSdbBtag-OthersVBFSdbBtag-QCDVBFSdbBtag)/TTbarVBFSdbBtag;
-	    cout << "The SF Data/MC ratio is therefore " << scaleFactorTTinVBF << endl;
-	    cout << " ==> TTbar prediction in sideband goes from " << TTbarVBFSdbAnyBtag << " to " <<  (DataVBFSdbBtag-WJetsVBFSdbBtag-OthersVBFSdbBtag-QCDVBFSdbBtag)/ratiobTagToAny << endl;
-
-	    hHelp->Reset();
-            backgroundTTbar->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbfLoose));
-            cout << hHelp->Integral() << endl;
-            float TTJetsVBFSdb2    = hHelp->Integral();
-            float TTJetsVBFSdbInt2 = hHelp->GetEntries();
-            hHelp->Reset();
-            backgroundTTbar->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&pZ&&vbfLoose));
-            float TTJetsVBFSgn2    = hHelp->Integral();
-            float TTJetsVBFSgnInt2 = hHelp->GetEntries();
-            cout << "TT MC in VBF(rel): using " << TTJetsVBFSdbInt2 << " events from sideband (2) and " << TTJetsVBFSgnInt2 << " from signal region" << endl;
-            float ExtrapFactorTTJets2 = TTJetsVBFSdb2/TTJetsVBFSgn2;
-            cout << " ==> ratio sdb2/sgn = " <<  ExtrapFactorTTJets2 << endl;
-
-	    ///////////////////////////////////////////////////////////////////////////////////////
-	    hHelp->Reset();
-	    data->Draw(variable+">>hHelp",(TCut(scaleFactMu.c_str()))*(sbinPZetaRelSSaIsoInclusive&&apZ2&&vbf));
-
-	    float QCDVBFSdb = hHelp->Integral()*OStoSSRatioQCD;
-	    cout << "In VBF region, I measure " << QCDVBFSdb << " events in the high Mt sdb from anti-isolated events" << endl;
-
-	    cout << "Subtracting the backgrounds from the sideband..." << endl;
-	    //DataVBFSdb -= TTbarVBFSdb;
-	    DataVBFSdb -= (DataVBFSdbBtag-WJetsVBFSdbBtag-OthersVBFSdbBtag/ratiobTagToAny);
-	    DataVBFSdb -= QCDVBFSdb;
-	    DataVBFSdb -= dytotauVBFSdb;
-	    DataVBFSdb -= dymutotauVBFSdb;
-	    DataVBFSdb -= dyjtotauVBFSdb;
-	    DataVBFSdb -= othersVBFSdb;
-	    float normalization = ExtrapFactorW3Jets>0 ? DataVBFSdb/ExtrapFactorW3Jets : -99;
-	    cout << "Estimation of W+jets in the VBF category is " << normalization << endl;
-
-	    hW3JetsLooseTauIso->Scale(normalization/hW3JetsLooseTauIso->Integral());
-
-	    //hW3JetsLooseTauIso->Scale(  W3JetsVBFAll/W3JetsVBFSdb*DataVBFSdb / hW3JetsLooseTauIso->Integral());  //<----------------------------------
-// 	    hHelp->Reset();
-//          data->Draw(variable+">>hHelp",sbinPZetaRelInclusive&&apZ2&&vbf);
-//          float DataVBFSdb2 = hHelp->Integral();
-//          cout << "In VBF region, I get " << DataVBFSdb2 << " events in the high Mt sdb 2" << endl;
-//          hHelp->Reset();
-//          backgroundTTbar->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbf));
-//          float TTbarVBFSdb2 = hHelp->Integral()*Lumi/1000*hltEff_*TTxsectionRatio;
-//          cout << "In VBF region, I expect " << TTbarVBFSdb2 << " events in the high Mt sdb from TTbar" << endl;
-//          hHelp->Reset();
-//          data->Draw(variable+">>hHelp",(TCut(scaleFactMu.c_str()))*(sbinPZetaRelSSaIsoInclusive&&apZ2&&vbf));
-//          float QCDVBFSdb2 = hHelp->Integral()*OStoSSRatioQCD;
-//          cout << "In VBF region, I measure " << QCDVBFSdb2 << " events in the high Mt sdb from anti-isolated events" << endl;
-// 	    backgroundTTbar->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0")));
-// 	    float TTbarVBFSdb2Btag = hHelp->Integral()*Lumi/1000*hltEff_*TTxsectionRatio;
-// 	    hHelp->Reset();
-// 	    backgroundTTbar->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>-999")));
-// 	    float TTbarVBFSdb2AnyBtag = hHelp->Integral()*Lumi/1000*hltEff_*TTxsectionRatio;
-// 	    float ratiobTagToAny2 = TTbarVBFSdb2Btag/TTbarVBFSdb2AnyBtag;
-// 	    cout << "The ratio between events with >0 bTagged jets to any in TTJets MC is (2)" << ratiobTagToAny2 << endl;
-// 	    hHelp->Reset();
-// 	    data->Draw(variable+">>hHelp",sbinPZetaRelInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0"));
-// 	    float DataVBFSdb2Btag = hHelp->Integral();
-// 	    cout << "In data, I measure " << DataVBFSdb2Btag << " events b-tagged" << endl;
-// 	    cout << "The SF Data/MC ratio is therefore " << DataVBFSdb2Btag/TTbarVBFSdb2Btag << endl;
-// 	    cout << " ==> TTbar prediction in sideband 2 goes from " << TTbarVBFSdb2AnyBtag << " to " <<  DataVBFSdb2Btag/ratiobTagToAny2 << endl;
-//          cout << "Subtracting the backgrounds from the sideband..." << endl;
-//          //DataVBFSdb2-= TTbarVBFSdb2;
-// 	    DataVBFSdb2 -= DataVBFSdb2Btag/ratiobTagToAny2;
-//          DataVBFSdb2 -= QCDVBFSdb2;
-//          float normalization2 = ExtrapFactorW3Jets2>0 ? DataVBFSdb2/ExtrapFactorW3Jets2 : -99;
-//          cout << "Estimation of W+jets (2) in the VBF category is " << normalization2 << endl;
-
-
-
-	    cout << "#######  Start normalization SS from sidebands #######" << endl;
-
-	    hHelp->Reset();
-            data->Draw(variable+">>hHelp",sbinPZetaRelSSInclusive&&apZ2&&vbf);
-            float DataVBFSdbSS = hHelp->Integral();
-            cout << "In VBF SS region, I get " << DataVBFSdbSS << " events in the high Mt sdb" << endl;
-
-	    hHelp->Reset();
-	    backgroundDYMutoTau->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&apZ2&&vbf));
-	    float dymutotauVBFSdbSS = hHelp->Integral()*Lumi/1000.*hltEff_;
-	    cout << "In VBF region, I expect " << dymutotauVBFSdbSS << " events in the high Mt sdb SS from DYmutotau" << endl;
-	    hHelp->Reset();
-
-	    hHelp->Reset();
-	    backgroundDYJtoTau->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&apZ2&&vbf));
-	    float dyjtotauVBFSdbSS = hHelp->Integral()*Lumi/1000.*hltEff_;
-	    cout << "In VBF region, I expect " << dyjtotauVBFSdbSS << " events in the high Mt sdb SS from DYjtotau" << endl;
-	    hHelp->Reset();
-
-	    hHelp->Reset();
-	    backgroundOthers->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&apZ2&&vbf));
-	    float othersVBFSdbSS = hHelp->Integral()*Lumi/1000.*hltEff_;
-	    cout << "In VBF region, I expect " << othersVBFSdbSS << " events in the high Mt sdb SS from others" << endl;
-	    hHelp->Reset();
-
-            hHelp->Reset();
-            backgroundTTbar->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&apZ2&&vbf));
-            float TTbarVBFSdbSS = hHelp->Integral()*Lumi/1000*hltEff_*TTxsectionRatio;
-            cout << "In VBF SS region, I expect " << TTbarVBFSdbSS << " events in the high Mt sdb from TTbar" << endl;
-            hHelp->Reset();
-
-	    //////////////////  Here, normalize TTbar from sideband 
-
-	    backgroundTTbar->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0")));
-	    float TTbarVBFSdbSSBtag = hHelp->Integral()*Lumi/1000*hltEff_*TTxsectionRatio;
-	    hHelp->Reset();
-	    backgroundTTbar->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>-999")));
-	    float TTbarVBFSdbSSAnyBtag = hHelp->Integral()*Lumi/1000*hltEff_*TTxsectionRatio;
-	    float ratiobTagToAnySS = TTbarVBFSdbSSBtag/TTbarVBFSdbSSAnyBtag;
-	    cout << "The ratio between events with >0 bTagged jets to any in TTJets MC in SS is " << ratiobTagToAnySS << endl;
-	    hHelp->Reset();
-	    data->Draw(variable+">>hHelp",sbinPZetaRelSSInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0"));
-	    float DataVBFSdbSSBtag = hHelp->Integral();
-	    cout << "In data, I measure " << DataVBFSdbSSBtag << " SS events b-tagged" << endl;
-
-	    hHelp->Reset();
-	    backgroundWJets->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0")));
-	    float WJetsVBFSdbSSBtag = hHelp->Integral()*Lumi/1000*hltEff_;
-	    hHelp->Reset();
-	    backgroundOthers->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0")));
-	    float OthersVBFSdbSSBtag = hHelp->Integral()*Lumi/1000*hltEff_;
-	    data->Draw(variable+">>hHelp",(TCut(scaleFactMu.c_str()))*(sbinPZetaRelSSaIsoInclusive&&apZ2&&vbf&&TCut("nJets20BTagged>0")));
-	    float QCDVBFSdbSSBtag = hHelp->Integral();
-	    cout << "I subtract " << WJetsVBFSdbSSBtag << " and " << OthersVBFSdbSSBtag << " and " << QCDVBFSdbSSBtag << " events from W=jets and others" << endl;
-
-	    cout << "The SF Data/MC ratio is therefore " << (DataVBFSdbSSBtag-WJetsVBFSdbSSBtag-OthersVBFSdbSSBtag-QCDVBFSdbSSBtag)/TTbarVBFSdbSSBtag << endl;
-	    cout << " ==> TTbar prediction in sideband SS goes from " << TTbarVBFSdbSSAnyBtag << " to " <<  (DataVBFSdbSSBtag-WJetsVBFSdbSSBtag-OthersVBFSdbSSBtag-QCDVBFSdbSSBtag)/ratiobTagToAnySS << endl;
-
-	    ///////////////////////////////////////////////////////////////////////////////////////
-
-            data->Draw(variable+">>hHelp",(TCut(scaleFactMu.c_str()))*(sbinPZetaRelSSaIsoInclusive&&apZ2&&vbf));
-            float QCDVBFSdbSS = hHelp->Integral();
-            cout << "In VBF SS region, I measure " << QCDVBFSdbSS << " events in the high Mt sdb from anti-isolated events" << endl;
-
-	    cout << "Now subtracting the expected bkg from the SS signal region" << endl;
-	    hHelp->Reset();
-            data->Draw(variable+">>hHelp",sbinPZetaRelSSInclusive&&pZ&&vbf);
-            float DataVBFSgnSS = hHelp->Integral();
-
-	    hHelp->Reset();
-	    backgroundDYMutoTau->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&pZ&&vbf));
-	    float dymutotauVBFSgnSS = hHelp->Integral()*Lumi/1000.*hltEff_;
-	    cout << "In VBF region, I expect " << dymutotauVBFSgnSS << " events in the sgn SS from DYmutotau" << endl;
-	    hHelp->Reset();
-
-	    hHelp->Reset();
-	    backgroundDYJtoTau->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&pZ&&vbf));
-	    float dyjtotauVBFSgnSS = hHelp->Integral()*Lumi/1000.*hltEff_;
-	    cout << "In VBF region, I expect " << dyjtotauVBFSgnSS << " events in the sgn SS from DYjtotau" << endl;
-	    hHelp->Reset();
-
-	    hHelp->Reset();
-	    backgroundOthers->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&pZ&&vbf));
-	    float othersVBFSgnSS = hHelp->Integral()*Lumi/1000.*hltEff_;
-	    cout << "In VBF region, I expect " << othersVBFSgnSS << " events in the sgn SS from others" << endl;
-	    hHelp->Reset();
-
-            hHelp->Reset();
-            backgroundTTbar->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelSSInclusive&&pZ&&vbf));
-            float TTbarVBFSgnSS = hHelp->Integral()*Lumi/1000*hltEff_*TTxsectionRatio*(DataVBFSdbSSBtag-WJetsVBFSdbSSBtag-OthersVBFSdbSSBtag)/TTbarVBFSdbSSBtag;
-            cout << "In VBF SS region, I expect " << TTbarVBFSgnSS << " events in the sgn from TTbar" << endl;
-            hHelp->Reset();
-
-	    float nonWbackgroundSS = TTbarVBFSgnSS + othersVBFSgnSS + dyjtotauVBFSgnSS + dymutotauVBFSgnSS ;
-	    float WbackgroundSS    = (DataVBFSdbSS - (DataVBFSdbSSBtag-WJetsVBFSdbSSBtag-OthersVBFSdbSSBtag-QCDVBFSdbSSBtag)/ratiobTagToAnySS /*TTbarVBFSdbSS*/-QCDVBFSdbSS-dymutotauVBFSdbSS-dyjtotauVBFSdbSS-othersVBFSdbSS)/ExtrapFactorW3JetsSS;
-            float QCDSgnSS         = DataVBFSgnSS - nonWbackgroundSS - WbackgroundSS;
-            cout << "In VBF SS region, I measure " << DataVBFSgnSS << endl;
-            cout << "The bkg estimation for QCD is therefore: " << DataVBFSgnSS << " - " << nonWbackgroundSS << " - " << WbackgroundSS << " = "
-                 << QCDSgnSS << endl;
-
-	    hParameters->SetBinContent(13, ExtrapFactorW3Jets);
-	    hParameters->SetBinContent(14, DataVBFSdb);
-	    hParameters->SetBinContent(15, TTbarVBFSdb);
-	    hParameters->SetBinContent(16, QCDVBFSdb);
-	    hParameters->SetBinContent(17, ExtrapFactorW3JetsSS);
-	    hParameters->SetBinContent(18, DataVBFSdbSS);
-	    hParameters->SetBinContent(19, TTbarVBFSdbSS);
-	    hParameters->SetBinContent(20, QCDVBFSdbSS);
-	    hParameters->SetBinContent(21, DataVBFSgnSS);
-            hParameters->SetBinContent(22, QCDSgnSS);
-	    hParameters->SetBinContent(23, ExtrapFactorW3Jets2);
-            hParameters->SetBinContent(24, DataVBFSdb);
-            hParameters->SetBinContent(25, TTbarVBFSdb);
-            hParameters->SetBinContent(26, QCDVBFSdb);
-
-
-	    delete hHelp;
-	  }
-	  else{
-	    currentTree->Draw(variable+">>"+h1Name,"(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*sbinLtiso);
-	    hW3JetsLooseTauIso->Add(h1,1.0);
-	  }
-
-	  cout << "Filling histo with loose taus and FR" << endl;
-	  h1->Reset();
-	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-	    currentTree->Draw(variable+">>"+h1Name,"(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*TCut(scaleFactTauW.c_str())*(sbinLtisoInclusive&&vbfLoose));
-	    hW3JetsLooseTauIsoFR->Add(h1,1.0);
-
-	    //TH1F* hHelp = (TH1F*)h1->Clone("hHelp");
-	    TH1F* hHelp = new TH1F( "hHelp" ,"" , nBins , bins.GetArray());
-
-	    hHelp->Reset();
-	    currentTree->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*TCut(scaleFactTauW.c_str())*(sbinPZetaRelLtisoInclusive&&apZ&&vbfLoose));
-	    float W3JetsVBFSdb    = hHelp->Integral();
-	    float W3JetsVBFSdbInt = hHelp->GetEntries();
-	    hHelp->Reset();
-	    currentTree->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*TCut(scaleFactTauW.c_str())*(sbinPZetaRelLtisoInclusive&&pZ&&vbfLoose));
-	    float W3JetsVBFSgn    = hHelp->Integral();
-	    float W3JetsVBFSgnInt = hHelp->GetEntries();
-	    cout << "W3jets MC in VBF(rel): using " << W3JetsVBFSdbInt << " events from sideband and " << W3JetsVBFSgnInt << " from signal region" << endl;
-	    cout << " ==> ratio sdb/sgn = " << W3JetsVBFSdb/W3JetsVBFSgn << endl;
-
-	    hHelp->Reset();
-	    data->Draw(variable+">>hHelp",sbinPZetaRelInclusive&&apZ&&vbf);
-	    float DataVBFSdb = hHelp->Integral();
-	    cout << "In VBF region, I get " << DataVBFSdb << " events in the high Mt sdb" << endl;
-	    hHelp->Reset();
-	    backgroundTTbar->Draw(variable+">>hHelp","(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*(sbinPZetaRelInclusive&&apZ&&vbf));
-	    float TTbarVBFSdb = hHelp->Integral()*Lumi/1000*hltEff_*TTxsectionRatio;
-	    cout << "In VBF region, I expect " << TTbarVBFSdb << " events in the high Mt sdb from TTbar" << endl;
-	    hHelp->Reset();
-	    currentTree->Draw(variable+">>hHelp",(TCut(scaleFactMu.c_str()))*(sbinPZetaRelSSaIsoInclusive&&apZ&&vbf));
-	    float QCDVBFSdb = hHelp->Integral()*OStoSSRatioQCD;
-	    cout << "In VBF region, I measure " << QCDVBFSdb << " events in the high Mt sdb from anti-isolated events" << endl;
-
-	    cout << "Subtracting the backgrounds from the sideband..." << endl;
-	    DataVBFSdb -= TTbarVBFSdb;
-	    DataVBFSdb -= QCDVBFSdb;
-	    float normalization = W3JetsVBFSdb/W3JetsVBFSgn>0 ? DataVBFSdb/(W3JetsVBFSdb/W3JetsVBFSgn) : -99;
-	    cout << "Estimation of W+jets in the VBF category is " << normalization << endl;
-
-	    hW3JetsLooseTauIsoFR->Scale(normalization/hW3JetsLooseTauIso->Integral());
-
-	    delete hHelp;
-
-	  }
-	  else{
-	    currentTree->Draw(variable+">>"+h1Name,"(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau)"*TCut(scaleFactTauW.c_str())*sbinLtiso);
-	    hW3JetsLooseTauIsoFR->Add(h1,1.0);
-	  }
-	  h1->Reset();
-	  currentTree->Draw(variable+">>"+h1Name,     "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*sbin);	  
 	}
 	else if((it->first).find("WJets")!=string::npos){
-	  currentTree->Draw(variable+">>"+h1Name,     "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*sbin);
-	  hWKeys = new TH1Keys("hWKeys","W+jets smoothed", nBins , bins.GetArray());
-	  currentTree->Draw(variable+">>hWKeys", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*sbin);
-	  cout << "Keys for WJets filled with integral " << hWKeys->Integral() << " and entries " << hWKeys->GetEntries() << endl;
+
+	  TH1F* hExtrapW = new TH1F("hExtrap","",nBins , bins.GetArray());
+	  
+	  cout << "************** BEGIN W+jets normalization using high-Mt sideband *******************" << endl;
+
+	  evaluateWextrapolation("OS", selection_, 
+				 extrapFactorWOSWJets, OSWinSignalRegionDATAWJets, OSWinSignalRegionMCWJets,
+				 scaleFactorTTOSWJets,
+				 hExtrapW, variable,
+				 currentTree, backgroundTTbar, backgroundOthers, 
+				 backgroundDYTauTau, backgroundDYJtoTau, backgroundDYMutoTau, data,
+				 Lumi*hltEff_/1000., TTxsectionRatio, lumiCorrFactor,
+				 ExtrapolationFactorSidebandZDataMC, ExtrapolationFactorZDataMC,
+				 MutoTauCorrectionFactor, JtoTauCorrectionFactor,
+				 antiWsdb, antiWsgn, useMt,
+				 scaleFactMu,
+				 sbinPZetaRel, sbinPZetaRel,
+				 pZ, apZ, sbinPZetaRelInclusive, 
+				 sbinPZetaRelaIsoInclusive, sbinPZetaRelaIso, vbf, boost, zeroJet);
+	  delete hExtrapW;
+
+	  cout << "************** END W+jets normalization using high-Mt sideband *******************" << endl;
+
+	  float NormWJets = 0.;
+	  drawHistogramMC(currentTree, variable, NormWJets, Error,   Lumi*hltEff_/1000., h1, sbin, 1);
+	  h1->Scale(OSWinSignalRegionDATAWJets/h1->Integral());
+	  
+	  hW->Add(h1, 1.0);
+	  hEWK->Add(h1,1.0);
 	}
 	else if((it->first).find("DYMutoTau")!=string::npos){
-	  currentTree->Draw(variable+">>"+h1Name,     "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*sbin);
-	  hZmmKeys = new TH1Keys("hZmmKeys","Z+jets, mu to tau smoothed", nBins , bins.GetArray());
-	  currentTree->Draw(variable+">>hZmmKeys", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*sbin);
-	  cout << "Keys for Zmm filled with integral " << hZmmKeys->Integral() << " and entries " << hZmmKeys->GetEntries() << endl;
-	  if( selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos ){
-	    TH1F* hHelp = new TH1F( "hHelp" ,"" , nBins , bins.GetArray());
-	    currentTree->Draw(variable+">>hHelp",     "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*(sbinInclusive&&twoJets));
-	    hHelp->Scale(ExtrapLFakeInclusive*ExtrapolationFactorZ/hHelp->Integral());
-	    hZmmLoose->Add(hHelp,1.0);
-	    delete hHelp;
-	  }
+	  float NormDYMutoTau = 0.;
+	  drawHistogramMC(currentTree, variable, NormDYMutoTau, Error,   Lumi*lumiCorrFactor*MutoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., h1, sbin, 1);
+	  hZmm->Add(h1, 1.0);
+	  hZfakes->Add(h1,1.0);
+	  hEWK->Add(h1,1.0);
 	}
 	else if((it->first).find("DYJtoTau")!=string::npos){
-	  currentTree->Draw(variable+">>"+h1Name,     "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*sbin);
-	  hZmjKeys = new TH1Keys("hZmjKeys","Z+jets, jet to tau smoothed", nBins , bins.GetArray());
-	  currentTree->Draw(variable+">>hZmjKeys", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*sbin);
-	  cout << "Keys for Zmj filled with integral " << hZmjKeys->Integral() << " and entries " << hZmjKeys->GetEntries() << endl;
-	  if( selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos ){
-            TH1F* hHelp = new TH1F( "hHelp" ,"" , nBins , bins.GetArray());
-            currentTree->Draw(variable+">>hHelp",     "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*(sbinInclusive&&twoJets));
-            hHelp->Scale(ExtrapJFakeInclusive*ExtrapolationFactorZ/hHelp->Integral());
-            hZmjLoose->Add(hHelp,1.0);
-            delete hHelp;
-          }
+	  float NormDYJtoTau = 0.;
+	  drawHistogramMC(currentTree, variable, NormDYJtoTau, Error,    Lumi*lumiCorrFactor*JtoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., h1, sbin, 1);
+	  hZmj->Add(h1, 1.0);
+	  hZfakes->Add(h1,1.0);
+	  hEWK->Add(h1,1.0);
 	}
 	else if((it->first).find("Others")!=string::npos){
-	  currentTree->Draw(variable+">>"+h1Name,     "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*sbin);
-	  hVVKeys = new TH1Keys("hVVKeys","Others smoothed", nBins , bins.GetArray());
-	  currentTree->Draw(variable+">>hVVKeys", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*sbin);
-	  cout << "Keys for VV filled with integral " << hVVKeys->Integral() << " and entries " << hVVKeys->GetEntries() << endl;
+	  float NormOthers = 0.;
+	  drawHistogramMC(currentTree, variable, NormOthers , Error,     Lumi*hltEff_/1000., h1, sbin, 1);
+	  hVV->Add(h1, 1.0);
+	  hEWK->Add(h1,1.0);
 	}
-
-	// here, we fill histos for fake-rate
 	else if((it->first).find("Data")!=string::npos){
 
-	  h1->Reset();
-	  currentTree->Draw(variable+">>"+h1Name, sbin);
-	  hData->Add(h1,1.0);
-
-	  cout << "DATA === " << hData->Integral() << endl;
-
-	  cout << "Filling histo with anti-iso muons and loose taus" << endl;
+	  float NormData = 0.;
+	  drawHistogramData(currentTree, variable, NormData,  Error, 1.0 , h1, sbin, 1);
+	  hData->Add(h1, 1.0);
+	  hData->Sumw2();
+	  
 	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-	    currentTree->Draw(variable+">>"+h1Name,sbinSSaIsoLtisoInclusive&&vbfLoose);
-	    hDataAntiIsoLooseTauIso->Add(h1,1.0);
-	    h1->Reset();
-	    currentTree->Draw(variable+">>"+h1Name,sbinSSaIsoLtiso);
-	    float normalization = h1->Integral();
-	    hDataAntiIsoLooseTauIso->Scale(normalization/hDataAntiIsoLooseTauIso->Integral());
+	    drawHistogramData(currentTree, variable, NormData,  Error, 1.0 , hCleaner, sbinSSaIsoMtiso ,1);
+	    float tmpNorm = hCleaner->Integral();
+	    drawHistogramData(currentTree, variable, NormData,  Error, 1.0 , hCleaner, sbinSSaIsoMtisoInclusive&&vbfLoose ,1);
+	    hDataAntiIsoLooseTauIso->Add(hCleaner, SSIsoToSSAIsoRatioQCD*(tmpNorm/hCleaner->Integral()));
 	  }
 	  else{
-	    currentTree->Draw(variable+">>"+h1Name,sbinSSaIsoLtiso);
-	    hDataAntiIsoLooseTauIso->Add(h1,1.0);
+	    drawHistogramData(currentTree, variable, NormData,  Error, 1.0 , hCleaner, sbinSSaIsoMtiso ,1);
+	    hDataAntiIsoLooseTauIso->Add(hCleaner, SSIsoToSSAIsoRatioQCD);
 	  }
 
-	  // template for QCD : anti-iso mu && loose-tau X fake-rate(mu) X fake-rate(tau)
-	  cout << "Filling histo with anti-iso muons and loose taus and FR" << endl;
-	  h1->Reset();
-	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-	    //currentTree->Draw(variable+">>"+h1Name,(TCut(scaleFactMu.c_str()))*(TCut(scaleFactTauQCD.c_str()))*(sbinSSaIsoLtisoInclusive&&vbfLoose));
-	    hDataAntiIsoLooseTauIsoFR->Add(h1,1.0);
-	    h1->Reset();
-	    //currentTree->Draw(variable+">>"+h1Name,(TCut(scaleFactMu.c_str()))*(TCut(scaleFactTauQCD.c_str()))*sbinSSaIsoLtiso);
-	    float normalization = h1->Integral();
-	    //hDataAntiIsoLooseTauIsoFR->Scale(normalization/hDataAntiIsoLooseTauIsoFR->Integral());
-	  }
-	  else{
-	    //currentTree->Draw(variable+">>"+h1Name,(TCut(scaleFactMu.c_str()))*(TCut(scaleFactTauQCD.c_str()))*sbinSSaIsoLtiso);
-	    hDataAntiIsoLooseTauIsoFR->Add(h1,1.0);
-	  }
 
-	  cout << "Filling histo with anti-iso muons and loose taus and FR (Up)" << endl;
-	  h1->Reset();
-	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-	    //currentTree->Draw(variable+">>"+h1Name,(TCut(scaleFactMuUp.c_str()))*(TCut(scaleFactTauQCDUp.c_str()))*(sbinSSaIsoLtisoInclusive&&vbfLoose));
-	    hDataAntiIsoLooseTauIsoFRUp->Add(h1,1.0);
-	    h1->Reset();
-	    //currentTree->Draw(variable+">>"+h1Name,(TCut(scaleFactMuUp.c_str()))*(TCut(scaleFactTauQCDUp.c_str()))*sbinSSaIsoLtiso);
-	    float normalization = h1->Integral()*OStoSSRatioQCD;
- 	    //hDataAntiIsoLooseTauIsoFRUp->Scale(normalization/hDataAntiIsoLooseTauIsoFRUp->Integral());
-	  }
-	  else{
-	    //currentTree->Draw(variable+">>"+h1Name,(TCut(scaleFactMuUp.c_str()))*(TCut(scaleFactTauQCDUp.c_str()))*sbinSSaIsoLtiso);
-	    hDataAntiIsoLooseTauIsoFRUp->Add(h1,OStoSSRatioQCD);
-	  }
+	  drawHistogramData(currentTree, variable, NormData,  Error, 1.0 , hCleaner,  sbinSSlIso1 ,1);
+	  hLooseIso1->Add(hCleaner, 1.0);
+	  drawHistogramData(currentTree, variable, NormData,  Error, 1.0 , hCleaner,  sbinSSlIso2 ,1);
+	  hLooseIso2->Add(hCleaner, 1.0);
+	  drawHistogramData(currentTree, variable, NormData,  Error, 1.0 , hCleaner,  sbinSSlIso3 ,1);
+	  hLooseIso3->Add(hCleaner, 1.0);
+	  drawHistogramData(currentTree, variable, NormData,  Error, 1.0 , hCleaner,  sbinSSaIso  ,1);
+	  hAntiIso->Add(hCleaner, 1.0);
 
-	  cout << "Filling histo with anti-iso muons and loose taus and FR (Down)" << endl;
-	  h1->Reset();
-	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-	    //currentTree->Draw(variable+">>"+h1Name,(TCut(scaleFactMuDown.c_str()))*(TCut(scaleFactTauQCDDown.c_str()))*(sbinSSaIsoLtisoInclusive&&vbfLoose));
-	    hDataAntiIsoLooseTauIsoFRDown->Add(h1,1.0);
-	    h1->Reset();
-	    //currentTree->Draw(variable+">>"+h1Name,(TCut(scaleFactMuDown.c_str()))*(TCut(scaleFactTauQCDDown.c_str()))*sbinSSaIsoLtiso);
-	    float normalization = h1->Integral()*OStoSSRatioQCD;
- 	    //hDataAntiIsoLooseTauIsoFRDown->Scale(normalization/hDataAntiIsoLooseTauIsoFRDown->Integral());
-	  }
-	  else{
-	    //currentTree->Draw(variable+">>"+h1Name,(TCut(scaleFactMuDown.c_str()))*(TCut(scaleFactTauQCDDown.c_str()))*sbinSSaIsoLtiso);
-	    hDataAntiIsoLooseTauIsoFRDown->Add(h1,OStoSSRatioQCD);
-	  }
-
-	  // template for QCD : anti-iso mu && loose-tau X fake-rate(mu) X fake-rate(tau)
-	  cout << "Filling histo with anti-iso muons and tight taus" << endl;
-	  h1->Reset();
-	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-	    //currentTree->Draw(variable+">>"+h1Name, sbinSSaIsoInclusive&&vbfLoose);
-	    hDataAntiIso->Add(h1,1.0);
-	    h1->Reset();
-	    //currentTree->Draw(variable+">>"+h1Name, sbinSSaIso);
-	    float normalization = h1->Integral()*OStoSSRatioQCD;
-	    //hDataAntiIso->Scale(normalization/hDataAntiIso->Integral());
-	  }
-	  else{
-	    //currentTree->Draw(variable+">>"+h1Name, sbinSSaIso);
-	    hDataAntiIso->Add(h1,OStoSSRatioQCD);
-	  }
-
-	  cout << "Filling histo with anti-iso muons and tight taus and FR" << endl;
-	  h1->Reset();
-	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-	    //currentTree->Draw(variable+">>"+h1Name,    (TCut(scaleFactMu.c_str()))*(sbinSSaIsoInclusive&&vbfLoose));
-	    hDataAntiIsoFR->Add(h1,1.0);
-	    h1->Reset();
-	    //currentTree->Draw(variable+">>"+h1Name,    (TCut(scaleFactMu.c_str()))*(sbinSSaIso));
-	    float normalization = h1->Integral()*OStoSSRatioQCD;
-	    //hDataAntiIsoFR->Scale(normalization/hDataAntiIsoFR->Integral());
-	  }
-	  else{
-	    //currentTree->Draw(variable+">>"+h1Name,    (TCut(scaleFactMu.c_str()))*sbinSSaIso);
-	    hDataAntiIsoFR->Add(h1,OStoSSRatioQCD);
-	  }
-
-	  cout << "Filling histo with anti-iso muons and tight taus and FR (Up)" << endl;
-	  h1->Reset();
-	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-	    //currentTree->Draw(variable+">>"+h1Name,  (TCut(scaleFactMuUp.c_str()))*(sbinSSaIsoInclusive&&vbfLoose));
-	    hDataAntiIsoFRUp->Add(h1,1.0);
-	    h1->Reset();
-	    //currentTree->Draw(variable+">>"+h1Name,  (TCut(scaleFactMuUp.c_str()))*sbinSSaIso);
-	    float normalization = h1->Integral()*OStoSSRatioQCD;
-	    //hDataAntiIsoFRUp->Scale(normalization/hDataAntiIsoFRUp->Integral());
-	  }
-	  else{
-	    //currentTree->Draw(variable+">>"+h1Name,  (TCut(scaleFactMuUp.c_str()))*sbinSSaIso);
-	    hDataAntiIsoFRUp->Add(h1,OStoSSRatioQCD);
-	  }
-
-	  cout << "Filling histo with anti-iso muons and tight taus and FR (Down)" << endl;
-	  h1->Reset();
-	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-	    //currentTree->Draw(variable+">>"+h1Name,(TCut(scaleFactMuDown.c_str()))*(sbinSSaIsoInclusive&&vbfLoose));
-	    hDataAntiIsoFRDown->Add(h1,1.0);
-	    h1->Reset();
-	    //currentTree->Draw(variable+">>"+h1Name,(TCut(scaleFactMuDown.c_str()))*sbinSSaIso);
-	    float normalization = h1->Integral()*OStoSSRatioQCD;
-	    //hDataAntiIsoFRDown->Scale(normalization/hDataAntiIsoFRDown->Integral());
-	  }
-	  else{
-	    //currentTree->Draw(variable+">>"+h1Name,(TCut(scaleFactMuDown.c_str()))*sbinSSaIso);
-	    hDataAntiIsoFRDown->Add(h1,OStoSSRatioQCD);
-	  }
+	  cleanQCDHisto(hCleaner, hLooseIso1, variable, 
+			backgroundWJets, backgroundTTbar, backgroundOthers, 
+			backgroundDYMutoTau, backgroundDYJtoTau, backgroundDYTauTau, 
+			Lumi*hltEff_/1000., (SSWinSignalRegionDATA/SSWinSignalRegionMC), 
+			TTxsectionRatio*scaleFactorTTSS, MutoTauCorrectionFactor*lumiCorrFactor, 
+			JtoTauCorrectionFactor*lumiCorrFactor, lumiCorrFactor*ExtrapolationFactorZDataMC,sbinSSlIso1);
+ 	  cleanQCDHisto(hCleaner, hLooseIso2, variable, 
+ 			backgroundWJets, backgroundTTbar, backgroundOthers, 
+ 			backgroundDYMutoTau, backgroundDYJtoTau, backgroundDYTauTau, 
+ 			Lumi*hltEff_/1000., SSWinSignalRegionDATA/SSWinSignalRegionMC, 
+ 			TTxsectionRatio*scaleFactorTTSS, MutoTauCorrectionFactor*lumiCorrFactor, 
+ 			JtoTauCorrectionFactor*lumiCorrFactor, lumiCorrFactor*ExtrapolationFactorZDataMC,sbinSSlIso2);
+ 	  cleanQCDHisto(hCleaner, hLooseIso3, variable, 
+ 			backgroundWJets, backgroundTTbar, backgroundOthers, 
+ 			backgroundDYMutoTau, backgroundDYJtoTau, backgroundDYTauTau, 
+ 			Lumi*hltEff_/1000., SSWinSignalRegionDATA/SSWinSignalRegionMC, 
+ 			TTxsectionRatio*scaleFactorTTSS, MutoTauCorrectionFactor*lumiCorrFactor, 
+ 			JtoTauCorrectionFactor*lumiCorrFactor, lumiCorrFactor*ExtrapolationFactorZDataMC,sbinSSlIso3);
+ 	  cleanQCDHisto(hCleaner, hAntiIso, variable, 
+ 			backgroundWJets, backgroundTTbar, backgroundOthers, 
+ 			backgroundDYMutoTau, backgroundDYJtoTau, backgroundDYTauTau, 
+ 			Lumi*hltEff_/1000., SSWinSignalRegionDATA/SSWinSignalRegionMC, 
+ 			TTxsectionRatio*scaleFactorTTSS, MutoTauCorrectionFactor*lumiCorrFactor, 
+ 			JtoTauCorrectionFactor*lumiCorrFactor, lumiCorrFactor*ExtrapolationFactorZDataMC,sbinSSaIso);
+	  
 	}
 
-	else if((it->first).find("LooseIso")!=string::npos){
-	  currentTree->Draw(variable+">>"+h1Name,    sbinSSlIso);
 
-	  TH1F* hHelp = new TH1F( "hHelp" ,"" , nBins , bins.GetArray());
-	  currentTree->Draw(variable+">>hHelp",    sbinSSlIso2);
-	  hLooseIso2->Add(hHelp,1.0);
-	  hHelp->Reset();
-	  currentTree->Draw(variable+">>hHelp",    sbinSSlIso3);
-	  hLooseIso3->Add(hHelp,1.0);
-	  delete hHelp;
 
-	  hLooseIsoKeys = new TH1Keys("hLooseIsoKeys","Loose Iso smoothed", nBins , bins.GetArray());
-	  if(  ((selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || 
-		selection_.find("boost")!=string::npos ||
-		selection_.find("vh")!=string::npos) )
-	    currentTree->Draw(variable+">>hLooseIsoKeys", sbinSSlIso);
-	  cout << "Keys for LooseIso filled with integral " << hLooseIsoKeys->Integral() << " and entries " << hLooseIsoKeys->GetEntries() << endl;
+	else if((it->first).find("qqH") !=string::npos || 
+		(it->first).find("ggH") !=string::npos ||
+		(it->first).find("VH")  !=string::npos  ||
+		(it->first).find("SUSY")!=string::npos){
+
+	  float NormSign = 0.;
+	  drawHistogramMC(currentTree, variable, NormSign, Error,    Lumi*hltEff_/1000., h1, sbin, 1);
+	   
+	  if((it->first).find(string(Form("qqH%d",mH_)))!=string::npos){
+	    hSgn1->Add(h1,1.0);
+	    hSgn1->Scale(magnifySgn_);
+	    hSgn->Add(hSgn1,1.0);
+	  }
+	  else if((it->first).find(string(Form("ggH%d",mH_)))!=string::npos){
+	    hSgn2->Add(h1,1.0);
+	    hSgn2->Scale(magnifySgn_);
+	    hSgn->Add(hSgn2,1.0);
+	  }
+	  else  if((it->first).find(string(Form("VH%d",mH_)))!=string::npos){
+	    hSgn3->Add(h1,1.0);
+	    hSgn3->Scale(magnifySgn_);
+	    hSgn->Add(hSgn3,1.0);
+	  }
+	  if((it->first).find(string(Form("ggH%d",110)))!=string::npos){
+	    hggH110->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("ggH%d",115)))!=string::npos){
+	    hggH115->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("ggH%d",120)))!=string::npos){
+	    hggH120->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("ggH%d",125)))!=string::npos){
+	    hggH125->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("ggH%d",130)))!=string::npos){
+	    hggH130->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("ggH%d",135)))!=string::npos){
+	    hggH135->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("ggH%d",140)))!=string::npos){
+	    hggH140->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("ggH%d",145)))!=string::npos){
+	    hggH145->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("qqH%d",110)))!=string::npos){
+	    hqqH110->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("qqH%d",115)))!=string::npos){
+	    hqqH115->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("qqH%d",120)))!=string::npos){
+	    hqqH120->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("qqH%d",125)))!=string::npos){
+	    hqqH125->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("qqH%d",130)))!=string::npos){
+	    hqqH130->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("qqH%d",135)))!=string::npos){
+	    hqqH135->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("qqH%d",140)))!=string::npos){
+	    hqqH140->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("qqH%d",145)))!=string::npos){
+	    hqqH145->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("VH%d",110)))!=string::npos){
+	    hVH110->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("VH%d",115)))!=string::npos){
+	    hVH115->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("VH%d",120)))!=string::npos){
+	    hVH120->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("VH%d",125)))!=string::npos){
+	    hVH125->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("VH%d",130)))!=string::npos){
+	    hVH130->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("VH%d",135)))!=string::npos){
+	    hVH135->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("VH%d",140)))!=string::npos){
+	    hVH140->Add(h1,1.0);
+	  }
+	  if((it->first).find(string(Form("VH%d",145)))!=string::npos){
+	    hVH145->Add(h1,1.0);
+	  }
+
+	  if((it->first).find("SUSY")!=string::npos){
+	    TH1F* histoSusy =  (mapSUSYhistos.find( (it->first) ))->second;
+	    histoSusy->Add(h1,1.0);
+	    histoSusy->SetLineWidth(2);
+	  }
 
 	}
-	else if((it->first).find("AntiIso")!=string::npos){
-	  currentTree->Draw(variable+">>"+h1Name,    sbinSSaIso);
-	  hAntiIsoKeys = new TH1Keys("hAntiIsoKeys","Anti Iso smoothed", nBins , bins.GetArray());
-	  currentTree->Draw(variable+">>hAntiIsoKeys", sbinSSaIso);
-	  cout << "Keys for AntiIso filled with integral " << hAntiIsoKeys->Integral() << " and entries " << hAntiIsoKeys->GetEntries() << endl;
-	}
-	else
-	  currentTree->Draw(variable+">>"+h1Name, "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*sbin);
+
       }
 
       else{
-	currentTree->Draw(variable+">>"+h1Name, "(HLTTau*HLTMu*embeddingWeight)"*sbinPZetaRelEmbeddingInclusive);
-	float embeddedNoMEtCut = h1->Integral();
-	h1->Reset();
-	currentTree->Draw(variable+">>"+h1Name, "(HLTTau*HLTMu*embeddingWeight)"*sbinEmbeddingInclusive);
-
-	embeddedMEtCutEff =  h1->Integral()/embeddedNoMEtCut;
-	cout << "Efficiency of antiW cut on embedded " << embeddedMEtCutEff << endl;
-
-	h1->Reset();
-	currentTree->Draw(variable+">>"+h1Name, "(HLTTau*HLTMu*embeddingWeight)"*sbinEmbedding);
+	float NormEmbed = 0.;
+	drawHistogramEmbed(currentTree, variable, NormEmbed,  Error, 1.0 , h1,  sbinEmbedding  ,1);
+	h1->Scale( (ExtrapolationFactorZ*ExtrapDYInclusivePZetaRel*ExtrapolationFactorZFromSideband)/h1->Integral());
+	hDataEmb->Add(h1, 1.0);
       }
-
-
-      // scale by correction factors
-      if( ! ((it->first).find("Data")!=string::npos || 
-	     (it->first).find("LooseIso")!=string::npos ||
-	     (it->first).find("AntiIso")!=string::npos) ) 
-	h1->Scale(Lumi/1000*hltEff_);
-
-      // scale by DATA/MC ratio in Zmumu sideband
-      if((it->first).find("DY")!=string::npos)
-	h1->Scale(lumiCorrFactor);
-
-      // if W+jets, scale by extrapolation
-      float sFWOS = ( selection_.find("novbf")!=string::npos  || 
-		      selection_.find("boost")!=string::npos  || 
-		      selection_.find("bTag")!=string::npos   || 
-		      selection_.find("oneJet") !=string::npos || 
-		      selection_.find("twoJets") !=string::npos || 
-		      selection_.find("inclusive")!=string::npos) ? 
-	OSWinSignalRegionDATA/OSWinSignalRegionMC : WcorrectionFactorOS;
-  
-      if((it->first).find("WJets")!=string::npos){
-
-	TH1F* hHelp = new TH1F( "hHelp" ,"" , nBins , bins.GetArray());
-	currentTree->Draw(variable+">>hHelp", "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFMu*SFTau*HqTWeight)"*sbinMtiso);
-	hWLooseIso2->Add(hHelp,1.0);
-	delete hHelp;
-
-	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-	  sFWOS *= VbfExtrapolationFactorW;
-	  cout << "Wjets will be rescaled by " << VbfExtrapolationFactorW << " according to the Z->mumu+j+vbf/Z->mumu+j ratio" << endl;
-	}
-	else if(selection_.find("boost")!=string::npos){
-	  sFWOS *= BoostExtrapolationFactorW;
-	  cout << "Wjets will be rescaled by " << BoostExtrapolationFactorW << " according to the Z->mumu+j+vbf/Z->mumu+j ratio" << endl;
-	}	else if(selection_.find("boost")!=string::npos){
-	  sFWOS *= BoostExtrapolationFactorW;
-	  cout << "Wjets will be rescaled by " << BoostExtrapolationFactorW << " according to the Z->mumu+j+vbf/Z->mumu+j ratio" << endl;
-	}
-
-	h1->Scale( sFWOS );
-	hW->Add(h1,1.0);
-	if(h1->Integral()>0) hWLooseIso2->Scale(h1->Integral()/hWLooseIso2->Integral());
-      }
-
-      // if DY->tautau, and vbf scale by ratio data/MC
-      if((it->first).find("DYToTauTau")!=string::npos){
-
-
-	h1->Scale( ExtrapolationFactorZDataMC );
-
-	//if(selection_.find("novbf")!=string::npos){
-	//cout << "DY->tautau will be rescaled by " << NoVbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
-	//h1->Scale( NoVbfExtrapolationFactorZ );
-	//}
-	//else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-	//cout << "DY->tautau will be rescaled by " << VbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
-	//h1->Scale( VbfExtrapolationFactorZ );
-	//}
-	//else if(selection_.find("boost")!=string::npos){
-	//cout << "DY->tautau will be rescaled by " << BoostExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
-	//h1->Scale( BoostExtrapolationFactorZ );
-	//}
-      }
-
-      // if DY->mumu, mu->tau, scale by fake-rate
-      if((it->first).find("DYMutoTau")!=string::npos){
-
-	float sF = MutoTauCorrectionFactor;
-
-	sF *= ExtrapolationFactorZDataMC;
-
-	//if(selection_.find("novbf")!=string::npos){
-	//sF *= NoVbfExtrapolationFactorZ;
-	//cout << "DY->tautau, mu->tau will be rescaled by " << NoVbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
-	//}
-	//else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-	//sF *= VbfExtrapolationFactorZ;
-	//cout << "DY->tautau, mu->tau will be rescaled by " << VbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
-	//}
-	//else if(selection_.find("boost")!=string::npos){
-	//cout << "DY->tautau, mu->tau will be rescaled by " << BoostExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
-	//sF *= BoostExtrapolationFactorZ;
-	//}
-
-	h1->Scale(sF);
-	hZmm->Add(h1,1.0);
-	hZfakes->Add(h1,1.0);
-      }
-
-      // if DY->mumu, jet->tau, scale by fake-rate
-      if((it->first).find("DYJtoTau")!=string::npos){
-
-	float sF = JtoTauCorrectionFactor;
-
-	sF *= ExtrapolationFactorZDataMC;
-
-	//if(selection_.find("novbf")!=string::npos){
-	//sF *= NoVbfExtrapolationFactorZ;
-	//cout << "DY->tautau, jet->tau will be rescaled by " << NoVbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
-	//}
-	//else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-	//sF *= VbfExtrapolationFactorZ;
-	//cout << "DY->tautau, jet->tau will be rescaled by " << VbfExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
-	//}
-	//else if(selection_.find("boost")!=string::npos){
-	//cout << "DY->tautau, jet->tau will be rescaled by " << BoostExtrapolationFactorZ << " according to the Z->mumu+vbf/Z->mumu ratio" << endl;
-	//sF *=BoostExtrapolationFactorZ;
-	//}
-
-	h1->Scale(sF);
-	hZmj->Add(h1,1.0); //<-----------------------
-	hZfakes->Add(h1,1.0);
-      }
-
-      //if((it->first).find("ggH")!=string::npos && selection_.find("boost")!=string::npos){
-      //h1->Scale(kFactorSM);
-      //}
-
-
     }
   
     /////////////////////////////////////////////////////////////////////////////////////
-
-    if( (it->first).find("DYMutoTau")!=string::npos ||  
-	(it->first).find("DYJtoTau")!=string::npos || 
-	(it->first).find("WJets")!=string::npos || 
-	(it->first).find("Others")!=string::npos ) {
-      hEWK->SetFillColor(kRed+2);
-      hEWK->Add(h1,1.0);
-
-      if( (it->first).find("Others")!=string::npos ){
-	hVV->Add(h1,1.0);
-	if(hVVKeys->Integral()>0) hVVKeys->Scale(hVV->Integral()/hVVKeys->Integral());
-	hVVKeys->SetFillColor(kRed+2);
-      }
-    }
-
-    if( (it->first).find("DYToTauTau")!=string::npos ) {
-      hZtt->Add(h1,1.0);
-      hZtt->SetFillColor(kOrange-4);
-    }
-    if( (it->first).find("Embedded")!=string::npos ) {
-      //if(hZtt->Integral()>0) h1->Scale(hZtt->Integral()/h1->Integral());
-
-      hParameters->SetBinContent(12,embeddedMEtCutEff/madgraphMEtCutEff);
-
-      h1->Scale( (ExtrapolationFactorZ*ExtrapDYInclusive)/h1->Integral());
-      h1->Scale(embeddedMEtCutEff/madgraphMEtCutEff);
-
-      hDataEmb->Add(h1,1.0);
-      hDataEmb->SetFillColor(kOrange-4);
-    }
-    if( (it->first).find("DYMutoTau")!=string::npos ) {
-      if(hZmmKeys->Integral()>0) hZmmKeys->Scale(hZmm->Integral()/hZmmKeys->Integral());
-      hZmmKeys->SetFillColor(kRed+2);
-    }
-    if( (it->first).find("DYJtoTau")!=string::npos ) {
-      if(hZmjKeys->Integral()>0) hZmjKeys->Scale(hZmj->Integral()/hZmjKeys->Integral());
-      hZmjKeys->SetFillColor(kRed+2);
-    }
-    if( (it->first).find("WJets")!=string::npos ) {
-      if(hWKeys->Integral()>0) hWKeys->Scale(hW->Integral()/hWKeys->Integral());
-      hWKeys->SetFillColor(kRed+2);
-    }
-    if( (it->first).find("W3Jets")!=string::npos ) {
-
-      hW3Jets->Add(h1,1.0);
-      if(hW3Jets->Integral()>0) hW3Jets->Scale(hW->Integral()/hW3Jets->Integral());
-      hW3Jets->SetFillColor(kRed+2);
-      if(hW3JetsKeys->Integral()>0) hW3JetsKeys->Scale(hW->Integral()/hW3JetsKeys->Integral());
-      hW3JetsKeys->SetFillColor(kRed+2);
-    }
-    if( (it->first).find("LooseIso")!=string::npos ) {
-      hLooseIso->Add(h1,1.0);
-      if(hLooseIsoKeys->Integral()>0) hLooseIsoKeys->Scale(hLooseIso->Integral()/hLooseIsoKeys->Integral());
-      hLooseIsoKeys->SetFillColor(0);
-    }
-    if( (it->first).find("AntiIso")!=string::npos ) {
-      float sF = SSIsoToSSAIsoRatioQCD*OStoSSRatioQCD;
-      cout << "Anti-isolated SS data scaled by " <<  SSIsoToSSAIsoRatioQCD << " ratio measured in inclusive sample ==>" << endl;
-      cout << "   SS anti-isolated events = " << h1->GetEntries() << " ==> " << h1->Integral()*SSIsoToSSAIsoRatioQCD << " predicted in signal region" << endl;
-      h1->Scale(sF);
-      hAntiIso->Add(h1,1.0);
-      if(hAntiIsoKeys->Integral()>0) hAntiIsoKeys->Scale(hAntiIso->Integral()/hAntiIsoKeys->Integral());
-      hAntiIsoKeys->SetFillColor(0);
-    }
-    if( (it->first).find("TTbar")!=string::npos ) {
-      hTTb->Add(h1,1.0);
-      hTTb->Scale(TTxsectionRatio);
-      if( selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos )
-	hTTb->Scale(scaleFactorTTinVBF);
-      else
-	hTTb->Scale(scaleFactorTTOS);
-      hTTb->SetFillColor(kBlue-8);     
-    }
-    if( (it->first).find("SS")!=string::npos ) {
-      hQCD->Add(h1,1.0);
-      hQCD->SetFillColor(kMagenta-10);
-    }
-    if((it->first).find(string(Form("qqH%d",mH_)))!=string::npos){
-      hSgn1->Add(h1,1.0);
-      hSgn1->Scale(magnifySgn_);
-      h1->Scale(magnifySgn_);
-      hSgn1->SetLineWidth(2);
-      h1->SetFillColor(kBlack);
-      h1->SetFillStyle(3004);
-      h1->SetLineColor(kBlack);
-    }
-    if((it->first).find(string(Form("ggH%d",mH_)))!=string::npos){
-      hSgn2->Add(h1,1.0);
-      hSgn2->Scale(magnifySgn_);
-      h1->Scale(magnifySgn_);
-      hSgn2->SetLineWidth(2);
-      h1->SetFillColor(kBlack);
-      h1->SetFillStyle(3005);
-      h1->SetLineColor(kBlack);
-    }
-    if((it->first).find(string(Form("VH%d",mH_)))!=string::npos){
-      hSgn3->Add(h1,1.0);
-      hSgn3->Scale(magnifySgn_);
-      h1->Scale(magnifySgn_);
-      hSgn3->SetLineWidth(2);
-      h1->SetFillColor(kBlack);
-      h1->SetFillStyle(3005);
-      h1->SetLineColor(kBlack);
-    }
-    if((it->first).find(string(Form("ggH%d",110)))!=string::npos){
-      hggH110->Add(h1,1.0);
-      hggH110->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("ggH%d",115)))!=string::npos){
-      hggH115->Add(h1,1.0);
-      hggH115->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("ggH%d",120)))!=string::npos){
-      hggH120->Add(h1,1.0);
-      hggH120->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("ggH%d",125)))!=string::npos){
-      hggH125->Add(h1,1.0);
-      hggH125->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("ggH%d",130)))!=string::npos){
-      hggH130->Add(h1,1.0);
-      hggH130->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("ggH%d",135)))!=string::npos){
-      hggH135->Add(h1,1.0);
-      hggH135->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("ggH%d",140)))!=string::npos){
-      hggH140->Add(h1,1.0);
-      hggH140->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("ggH%d",145)))!=string::npos){
-      hggH145->Add(h1,1.0);
-      hggH145->SetLineWidth(2);
-    }
-
-    if((it->first).find(string(Form("qqH%d",110)))!=string::npos){
-      hqqH110->Add(h1,1.0);
-      hqqH110->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("qqH%d",115)))!=string::npos){
-      hqqH115->Add(h1,1.0);
-      hqqH115->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("qqH%d",120)))!=string::npos){
-      hqqH120->Add(h1,1.0);
-      hqqH120->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("qqH%d",125)))!=string::npos){
-      hqqH125->Add(h1,1.0);
-      hqqH125->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("qqH%d",130)))!=string::npos){
-      hqqH130->Add(h1,1.0);
-      hqqH130->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("qqH%d",135)))!=string::npos){
-      hqqH135->Add(h1,1.0);
-      hqqH135->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("qqH%d",140)))!=string::npos){
-      hqqH140->Add(h1,1.0);
-      hqqH140->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("qqH%d",145)))!=string::npos){
-      hqqH145->Add(h1,1.0);
-      hqqH145->SetLineWidth(2);
-    }
-
-    if((it->first).find(string(Form("VH%d",110)))!=string::npos){
-      hVH110->Add(h1,1.0);
-      hVH110->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("VH%d",115)))!=string::npos){
-      hVH115->Add(h1,1.0);
-      hVH115->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("VH%d",120)))!=string::npos){
-      hVH120->Add(h1,1.0);
-      hVH120->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("VH%d",125)))!=string::npos){
-      hVH125->Add(h1,1.0);
-      hVH125->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("VH%d",130)))!=string::npos){
-      hVH130->Add(h1,1.0);
-      hVH130->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("VH%d",135)))!=string::npos){
-      hVH135->Add(h1,1.0);
-      hVH135->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("VH%d",140)))!=string::npos){
-      hVH140->Add(h1,1.0);
-      hVH140->SetLineWidth(2);
-    }
-    if((it->first).find(string(Form("VH%d",145)))!=string::npos){
-      hVH145->Add(h1,1.0);
-      hVH145->SetLineWidth(2);
-    }
-
-    ////////////////////////////////////////////////////////////
-    if((it->first).find("SUSY")!=string::npos){
-      TH1F* histoSusy =  (mapSUSYhistos.find( (it->first) ))->second;
-      histoSusy->Add(h1,1.0);
-      histoSusy->SetLineWidth(2);
-    }
-    ////////////////////////////////////////////////////////////
-
-   
-
-    if((it->first).find("Data")!=string::npos){
-      //hData->Add(h1,1.0);
-      hData->Sumw2();
-      hData->SetMarkerStyle(20);
-      hData->SetMarkerSize(1.2);
-      hData->SetMarkerColor(kBlack);
-      hData->SetLineColor(kBlack);
-      hData->SetXTitle(XTitle_+" ("+Unities_+")");
-      hData->SetYTitle(Form(" Events/(%.1f %s)", hData->GetBinWidth(1), Unities_.Data() ) );
-      hData->SetTitleSize(0.04,"X");
-      hData->SetTitleSize(0.05,"Y");
-      hData->SetTitleOffset(0.95,"Y");
-    }
 
     if(VERBOSE) cout<<(it->first) << " ==> " 
 		    << h1->Integral() << " +/- " 
@@ -2373,56 +1580,50 @@ void plotMuTau( Int_t mH_           = 120,
     out << string(c) << "  //" << (it->first) << endl;
     delete c;
 
+    delete hCleaner;
   }
-
   out.close();
 
-  // all signal summed together:
-  hSgn->Add(hSgn1,hSgn2,1,1);
-  hSgn->Add(hSgn3);
-  hSgn->SetFillColor(0);
-  hSgn->SetLineColor(kBlue);
-  hSgn->SetLineWidth(2);
-  hSgn->SetLineStyle(kDashed);
+  cout << endl;
+  cout << "All samples done. Filling hParameters..." << endl;
+  hParameters->SetBinContent(1, ExtrapolationFactorZ);               hParameters->GetXaxis()->SetBinLabel(1,"ExtrapolationFactorZ");
+  hParameters->SetBinContent(2, ErrorExtrapolationFactorZ);          hParameters->GetXaxis()->SetBinLabel(2,"ErrorExtrapolationFactorZ");
+  hParameters->SetBinContent(3, ExtrapolationFactorZDataMC);         hParameters->GetXaxis()->SetBinLabel(3,"ExtrapolationFactorZDataMC");
+  hParameters->SetBinContent(4, ExtrapolationFactorZFromSideband);   hParameters->GetXaxis()->SetBinLabel(4,"ExtrapolationFactorZFromSideband");
+  hParameters->SetBinContent(5, ExtrapolationFactorSidebandZDataMC); hParameters->GetXaxis()->SetBinLabel(5,"ExtrapolationFactorSidebandZDataMC");
+  hParameters->SetBinContent(6, extrapFactorWSSIncl);                hParameters->GetXaxis()->SetBinLabel(6,"extrapFactorWSSIncl");
+  hParameters->SetBinContent(7, SSWinSignalRegionDATAIncl);          hParameters->GetXaxis()->SetBinLabel(7,"SSWinSignalRegionDATAIncl");
+  hParameters->SetBinContent(8, SSWinSignalRegionMCIncl);            hParameters->GetXaxis()->SetBinLabel(8,"SSWinSignalRegionMCIncl");
+  hParameters->SetBinContent(9, SSQCDinSignalRegionDATAIncl);        hParameters->GetXaxis()->SetBinLabel(9,"SSQCDinSignalRegionDATAIncl");
+  hParameters->SetBinContent(10,extrapFactorWSS);                    hParameters->GetXaxis()->SetBinLabel(10,"extrapFactorWSS");
+  hParameters->SetBinContent(11,SSWinSignalRegionDATA);              hParameters->GetXaxis()->SetBinLabel(11,"SSWinSignalRegionDATA");
+  hParameters->SetBinContent(12,SSWinSignalRegionMC);                hParameters->GetXaxis()->SetBinLabel(12,"SSWinSignalRegionMC");
+  hParameters->SetBinContent(13,SSQCDinSignalRegionDATA);            hParameters->GetXaxis()->SetBinLabel(13,"SSQCDinSignalRegionDATA");
+  hParameters->SetBinContent(14,extrapFactorWOSWJets);               hParameters->GetXaxis()->SetBinLabel(14,"extrapFactorWOSWJets");
+  hParameters->SetBinContent(15,OSWinSignalRegionDATAWJets);         hParameters->GetXaxis()->SetBinLabel(15,"OSWinSignalRegionDATAWJets");
+  hParameters->SetBinContent(16,OSWinSignalRegionMCWJets );          hParameters->GetXaxis()->SetBinLabel(16,"OSWinSignalRegionMCWJets");   
+  hParameters->SetBinContent(17,extrapFactorWOSW3Jets);              hParameters->GetXaxis()->SetBinLabel(17,"extrapFactorWOSW3Jets");
+  hParameters->SetBinContent(18,OSWinSignalRegionDATAW3Jets);        hParameters->GetXaxis()->SetBinLabel(18,"OSWinSignalRegionDATAW3Jets");
+  hParameters->SetBinContent(19,OSWinSignalRegionMCW3Jets );         hParameters->GetXaxis()->SetBinLabel(19,"OSWinSignalRegionMCW3Jets");
+  hParameters->SetBinContent(20,scaleFactorTTOS);                    hParameters->GetXaxis()->SetBinLabel(20,"scaleFactorTTOS");
+  hParameters->SetBinContent(21,scaleFactorTTSS);                    hParameters->GetXaxis()->SetBinLabel(21,"scaleFactorTTSS");
+  hParameters->SetBinContent(22,scaleFactorTTSSIncl);                hParameters->GetXaxis()->SetBinLabel(22,"scaleFactorTTSSIncl");
+  hParameters->SetBinContent(23,SSIsoToSSAIsoRatioQCD);              hParameters->GetXaxis()->SetBinLabel(23,"SSIsoToSSAIsoRatioQCD");
+  hParameters->SetBinContent(24,ExtrapDYInclusive);                  hParameters->GetXaxis()->SetBinLabel(24,"ExtrapDYInclusive");
+  hParameters->SetBinContent(25,ExtrapDYInclusivePZetaRel);          hParameters->GetXaxis()->SetBinLabel(25,"ExtrapDYInclusivePZetaRel");
+  hParameters->SetBinContent(26,ExtrapLFakeInclusive);               hParameters->GetXaxis()->SetBinLabel(26,"ExtrapLFakeInclusive");
+  hParameters->SetBinContent(27,ExtrapJFakeInclusive);               hParameters->GetXaxis()->SetBinLabel(27,"ExtrapJFakeInclusive");
+  hParameters->SetBinContent(28,ExtrapolationFactorMadGraph);        hParameters->GetXaxis()->SetBinLabel(28,"ExtrapolationFactorMadGraph");
+  hParameters->SetBinContent(29,ErrorExtrapolationFactorMadGraph);   hParameters->GetXaxis()->SetBinLabel(29,"ErrorExtrapolationFactorMadGraph");
 
-  // adding alltogether
+
   hSiml->Add(hTTb,1.0);
   if(useEmbedding_)
     hSiml->Add(hDataEmb,1.0);
-  else
-    hSiml->Add(hZtt,1.0);
-
-
-  //Adding to the stack
-  if((selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || selection_.find("twoJets")!=string::npos ){
-    //hDataAntiIsoFR->SetFillColor(kMagenta-10);
-    //aStack->Add(hDataAntiIsoFR);
-    float QCDfromSS = hParameters->GetBinContent(22);
-    QCDfromSS *= OStoSSRatioQCD;
-    hDataAntiIsoLooseTauIso->Scale(QCDfromSS/hDataAntiIsoLooseTauIso->Integral());
-    hDataAntiIsoLooseTauIso->SetFillColor(kMagenta-10);    
-    aStack->Add(hDataAntiIsoLooseTauIso);
-    hSiml->Add(hDataAntiIsoLooseTauIso,1.0);
-  }
-  else{
-    hSiml->Add(hQCD,1.0);
-    aStack->Add(hQCD);
-  }
-
-  if((selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || selection_.find("twoJets")!=string::npos ){
-    hZfakes->SetFillColor(kRed+2);
-    hW3JetsLooseTauIso->SetFillColor(kRed+2);
-    hW3JetsLooseTauIso->SetLineColor(kRed+2);
-    aStack->Add(hW3JetsLooseTauIso);
-    aStack->Add(hZfakes);
-    hSiml->Add(hW3JetsLooseTauIso,1.0);
-    hSiml->Add(hZfakes,1.0);
-  }
-  else{
-    aStack->Add(hEWK);
-    hSiml->Add(hEWK,1.0);
-  }
-
+  hSiml->Add(hQCD,1.0);
+  hSiml->Add(hEWK,1.0);
+  aStack->Add(hQCD);
+  aStack->Add(hEWK);
   aStack->Add(hTTb);
   if(useEmbedding_)
     aStack->Add(hDataEmb);
@@ -2431,7 +1632,6 @@ void plotMuTau( Int_t mH_           = 120,
   if(!logy_)
     aStack->Add(hSgn);
 
-  // legend
   leg->AddEntry(hData,"Observed","P");
   leg->AddEntry(hSgn,Form("(%.0fx) H#rightarrow#tau#tau m_{H}=%d",magnifySgn_,mH_),"F");
   if(useEmbedding_)
@@ -2460,8 +1660,7 @@ void plotMuTau( Int_t mH_           = 120,
   hData->Draw("PSAME");
   if(logy_)
     hSgn->Draw("HISTSAME");
-  
-
+ 
   leg->Draw();
 
   pad2->cd();
@@ -2478,14 +1677,10 @@ void plotMuTau( Int_t mH_           = 120,
   gStyle->SetTitleStyle(0);
   gStyle->SetTitleOffset(1.3,"y");
 
-  //TH1F* hRatio = new TH1F("hRatio", " ; ; #frac{(DATA-MC)}{#sqrt{DATA}}",
-  //		  hStack->GetNbinsX(), 
-  //		  hStack->GetXaxis()->GetXmin(), hStack->GetXaxis()->GetXmax());
-
   TH1F* hRatio = new TH1F( "hRatio" ," ; ; #frac{(DATA-MC)}{#sqrt{DATA}}" , nBins , bins.GetArray());
   hRatio->Reset();
   hRatio->SetXTitle("");
-  hRatio->SetYTitle("#frac{(DATA-MC)}{#sqrt{DATA}}");
+  hRatio->SetYTitle("#frac{(DATA-MC)}{MC}");
 
   hRatio->SetMarkerStyle(kFullCircle);
   hRatio->SetMarkerSize(0.8);
@@ -2493,98 +1688,18 @@ void plotMuTau( Int_t mH_           = 120,
   hRatio->SetLabelSize(0.10,"Y");
   hRatio->SetTitleSize(0.12,"Y");
   hRatio->SetTitleOffset(0.36,"Y");
-  TH1F* hError = (TH1F*)hRatio->Clone("hError");
-  hError->Reset();
-  hError->SetFillColor(kRed);
-  hError->SetFillStyle(3004);
-  hError->SetMarkerStyle(kDot);
-
-  float uncertZtt = 0;
-  if(selection_.find("novbf")!=string::npos  || selection_.find("inclusive")!=string::npos ){
-    uncertZtt += (0.07  * 0.07) ; // Tau-ID 
-    uncertZtt += (0.03  * 0.03);  // Tau-ES
-  }
-  if(selection_.find("oneJet")!=string::npos || selection_.find("twoJets")!=string::npos){
-    uncertZtt += (0.07  * 0.07) ; // Tau-ID 
-    uncertZtt += (0.03 * 0.03);   // Tau-ES 
-  }
-  else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-    uncertZtt += (0.07  * 0.07) ; // Tau-ID 
-    uncertZtt += (0.03 * 0.03);   // Tau-ES 
-    uncertZtt += (0.06 * 0.06);   // Extrap. factor 
-  }
-  else if(selection_.find("boost")!=string::npos){
-    uncertZtt += (0.07  * 0.07) ; // Tau-ID 
-    uncertZtt += (0.03  * 0.03);  // Tau-ES 
-  }
-  uncertZtt = TMath::Sqrt(uncertZtt);
-
-
-  float uncertTTb = 0;
-  if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos||
-     selection_.find("oneJet")!=string::npos || selection_.find("twoJets")!=string::npos){
-    uncertTTb += (0.075 * 0.075) ; // xsection 
-  }
-  else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-    uncertTTb += (0.075 * 0.075) ; // xsection 
-  }
-  else if(selection_.find("boost")!=string::npos){
-    uncertTTb += (0.075 * 0.075) ; // xsection 
-  }
-  uncertTTb = TMath::Sqrt(uncertTTb);
-
-  float uncertEWK = 0;
-  if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos ||
-     selection_.find("oneJet")!=string::npos || selection_.find("twoJets")!=string::npos){
-    uncertEWK += (0.07 * 0.07) ; // extrapolation 
-  }
-  else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-    uncertEWK += (0.07 * 0.07) ; // extrapolation 
-    uncertEWK += (0.20 * 0.20) ; // extrapolation 
-  }
-  else if(selection_.find("boost")!=string::npos){
-    uncertEWK += (0.07 * 0.07) ; // extrapolation 
-    uncertEWK += (0.20 * 0.20) ; // extrapolation  
-  }
-  uncertEWK = TMath::Sqrt(uncertEWK);
-
-  float uncertQCD = 0;
-  if(selection_.find("novbf")!=string::npos || selection_.find("inclusive")!=string::npos ||
-     selection_.find("oneJet")!=string::npos || selection_.find("twoJets")!=string::npos){
-    uncertQCD += (0.10 * 0.10) ; // extrapolation 
-  }
-  else if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
-    uncertQCD += (0.10 * 0.10) ; // extrapolation 
-    uncertQCD += (0.20 * 0.20) ; // extrapolation 
-  }
-  else if(selection_.find("boost")!=string::npos){
-    uncertQCD += (0.10 * 0.10) ; // extrapolation 
-    uncertQCD += (0.20 * 0.20) ; // extrapolation  
-  }
-  uncertQCD = TMath::Sqrt(uncertQCD);
 
   float maxPull = 0.;
   for(int k = 0 ; k < hRatio->GetNbinsX(); k++){
     float pull = hData->GetBinContent(k) - hSiml->GetBinContent(k);
-    if(hData->GetBinContent(k)>0)
-      pull /= TMath::Sqrt(hData->GetBinContent(k));
+    if(hSiml->GetBinContent(k)>0)
+      pull /= hSiml->GetBinContent(k);
     hRatio->SetBinContent(k, pull);
-    hError->SetBinContent(k, 0.0);
-    float error2 = 0.0;
-    error2 += pow(hZtt->GetBinContent(k) * uncertZtt, 2);
-    error2 += pow(hTTb->GetBinContent(k) * uncertTTb, 2);
-    error2 += pow(hEWK->GetBinContent(k) * uncertEWK, 2);
-    error2 += pow(hQCD->GetBinContent(k) * uncertQCD, 2);
-    if(hData->GetBinContent(k)>0)
-      hError->SetBinError(k, TMath::Sqrt(error2/hData->GetBinContent(k)) );
-    else
-      hError->SetBinError(k,0);
     if(TMath::Abs(pull) > maxPull)
       maxPull = TMath::Abs(pull);
   }
   hRatio->SetAxisRange(-1.2*maxPull,1.2*maxPull,"Y");
   hRatio->Draw("P");
-  hError->Draw("E3SAME");
 
   TF1* line = new TF1("line","0",hRatio->GetXaxis()->GetXmin(),hStack->GetXaxis()->GetXmax());
   line->SetLineStyle(3);
@@ -2611,133 +1726,47 @@ void plotMuTau( Int_t mH_           = 120,
   hTTb->Write();
   hZtt->Write();
   hDataEmb->Write();
-  hLooseIso->Write();
+  hLooseIso1->Write();
   hLooseIso2->Write();
   hLooseIso3->Write();
   hAntiIso->Write();
   hW->Write();
-  hWLooseIso2->Write();
-  if(hWKeys) hW3Jets->Write();
-
-  TH1* hWKeysHisto = hWKeys ? ((TH1Keys*)hWKeys)->GetHisto() : 0;
-  if(hWKeysHisto){
-    makeHistoFromDensity(hWKeysHisto,hW);
-    hWKeysHisto->SetName("hWKeys");
-    hWKeysHisto->Write();
-  }
-  TH1* hW3JetsKeysHisto = hW3JetsKeys ? ((TH1Keys*)hW3JetsKeys)->GetHisto() : 0;
-  if(hW3JetsKeysHisto){
-    makeHistoFromDensity(hW3JetsKeysHisto,hW3Jets);
-    hW3JetsKeysHisto->SetName("hW3JetsKeys");
-    hW3JetsKeysHisto->Write();
-  }
-  TH1* hZmmKeysHisto = hZmmKeys ? ((TH1Keys*)hZmmKeys)->GetHisto() : 0;
-  if(hZmmKeysHisto){
-    makeHistoFromDensity(hZmmKeysHisto,hZmm);
-    hZmmKeysHisto->SetName("hZmmKeys");
-    hZmmKeysHisto->Write();
-  }
-
-  TH1* hZmjKeysHisto = hZmjKeys ? ((TH1Keys*)hZmjKeys)->GetHisto() : 0;
-  if(hZmjKeysHisto){
-    makeHistoFromDensity(hZmjKeysHisto,hZmj);
-    hZmjKeysHisto->SetName("hZmjKeys");
-    hZmjKeysHisto->Write();
-  }
-  TH1* hLooseIsoKeysHisto = hLooseIsoKeys ? ((TH1Keys*)hLooseIsoKeys)->GetHisto() : 0;
-  if(hLooseIsoKeysHisto){
-    makeHistoFromDensity(hLooseIsoKeysHisto,hLooseIso);
-    hLooseIsoKeysHisto->SetName("hLooseIsoKeys");
-    hLooseIsoKeysHisto->Write();
-  }
-  TH1* hAntiIsoKeysHisto = hAntiIsoKeys ? ((TH1Keys*)hAntiIsoKeys)->GetHisto() : 0;
-  if(hAntiIsoKeysHisto){
-    makeHistoFromDensity(hAntiIsoKeysHisto,hAntiIso);
-    hAntiIsoKeysHisto->SetName("hAntiIsoKeys");
-    hAntiIsoKeysHisto->Write();
-  }
-  TH1* hVVKeysHisto = hVVKeys ? ((TH1Keys*)hVVKeys)->GetHisto() : 0;
-  if(hVVKeysHisto){
-    makeHistoFromDensity(hVVKeysHisto, hVV);
-    hVVKeysHisto->SetName("hVVKeys");
-    hVVKeysHisto->Write();
-  }
-
+  hW3Jets->Write();
   hVV->Write();
   hEWK->Write();
   hSgn1->Write();
   hSgn2->Write();
   hSgn3->Write();
-
   hW3JetsLooseTauIso->Write();
-  hW3JetsLooseTauIsoFR->Write();
+  hW3JetsMediumTauIso->Write();
   hDataAntiIsoLooseTauIso->Write();
-  hDataAntiIsoLooseTauIsoFR->Write();
-  hDataAntiIsoLooseTauIsoFRUp->Write();
-  hDataAntiIsoLooseTauIsoFRDown->Write();
   hDataAntiIso->Write();
-  hDataAntiIsoFR->Write();
-  hDataAntiIsoFRUp->Write();
-  hDataAntiIsoFRDown->Write();
-
-
-  hggH110->Write();  
-  hggH115->Write();  
-  hggH120->Write();  
-  hggH125->Write();  
-  hggH130->Write();  
-  hggH135->Write();  
-  hggH140->Write();  
-  hggH145->Write(); 
-
-  hqqH110->Write();  
-  hqqH115->Write();  
-  hqqH120->Write();  
-  hqqH125->Write();  
-  hqqH130->Write();  
-  hqqH135->Write();  
-  hqqH140->Write();  
-  hqqH145->Write();  
-
-  hVH110->Write();  
-  hVH115->Write();  
-  hVH120->Write();  
-  hVH125->Write();  
-  hVH130->Write();  
-  hVH135->Write();  
-  hVH140->Write();  
-  hVH145->Write(); 
-
+  hData->Write();
+  hParameters->Write();
+  hggH110->Write(); hggH115->Write(); hggH120->Write(); hggH125->Write();  
+  hggH130->Write(); hggH135->Write(); hggH140->Write(); hggH145->Write(); 
+  hqqH110->Write(); hqqH115->Write(); hqqH120->Write(); hqqH125->Write();  
+  hqqH130->Write(); hqqH135->Write(); hqqH140->Write(); hqqH145->Write();  
+  hVH110->Write();  hVH115->Write();  hVH120->Write();  hVH125->Write();  
+  hVH130->Write();  hVH135->Write();  hVH140->Write();  hVH145->Write(); 
   for(unsigned int i = 0; i < SUSYhistos.size() ; i++){
     ((mapSUSYhistos.find( SUSYhistos[i] ))->second)->Write();
   }
-
-  hData->Write();
-  hParameters->Write();
+ 
   fout->Write();
   fout->Close();
 
-  delete hQCD; delete hZmm; delete hZmj; delete hZfakes; delete hTTb; delete hZtt; delete hW; delete hW3Jets; delete hLooseIso; delete hAntiIso;
-  delete hZmmLoose; delete hZmjLoose;
-  delete hWLooseIso2; delete hLooseIso2; delete hLooseIso3;
-  delete hW3JetsLooseTauIso; delete hW3JetsLooseTauIsoFR;
-  delete hDataAntiIsoLooseTauIso; delete hDataAntiIsoLooseTauIsoFR; delete hDataAntiIsoLooseTauIsoFRUp; delete hDataAntiIsoLooseTauIsoFRDown;
-  delete hDataAntiIso; delete hDataAntiIsoFR; delete hDataAntiIsoFRUp; delete hDataAntiIsoFRDown;
-
-  if(hW3JetsKeys)   delete hW3JetsKeys;
-  if(hWKeys)        delete hWKeys;
-  if(hZmmKeys)      delete hZmmKeys;
-  if(hZmjKeys)      delete hZmjKeys;
-  if(hVVKeys)       delete hVVKeys;
-  if(hLooseIsoKeys) delete hLooseIsoKeys;
-  if(hAntiIsoKeys)  delete hAntiIsoKeys;
+  delete hQCD; delete hZmm; delete hZmj; delete hZfakes; delete hTTb; delete hZtt; 
+  delete hW; delete hW3Jets; delete hAntiIso;
+  delete hZmmLoose; delete hZmjLoose; delete hLooseIso1; delete hLooseIso2; delete hLooseIso3;
+  delete hVV; delete hSgn; delete hSgn1; delete hSgn2; delete hSgn3; delete hData; delete hParameters;
+  delete hW3JetsLooseTauIso; delete hW3JetsMediumTauIso; 
+  delete hDataAntiIsoLooseTauIso; delete hDataAntiIso;
   delete hggH110; delete hggH115 ; delete hggH120; delete hggH125; delete hggH130; delete hggH135; delete hggH140; delete hggH145;
   delete hqqH110; delete hqqH115 ; delete hqqH120; delete hqqH125; delete hqqH130; delete hqqH135; delete hqqH140; delete hqqH145;
   delete hVH110;  delete hVH115 ;  delete hVH120;  delete hVH125;  delete hVH130;  delete hVH135;  delete hVH140;  delete hVH145;
   for(unsigned int i = 0; i < SUSYhistos.size() ; i++) delete mapSUSYhistos.find( SUSYhistos[i] )->second ;
-
-  delete hVV; delete hSgn1; delete hSgn2; delete hSgn3; delete hData; delete hParameters;
-  delete hWMt; delete aStack;  delete hEWK; delete hSiml; delete hDataEmb; delete hSgn; delete hRatio; delete line;
+  delete aStack;  delete hEWK; delete hSiml; delete hDataEmb;  delete hRatio; delete line;
   delete fout;
 
 
@@ -2808,7 +1837,10 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "July2012/Test"){
   //mH.push_back(160);
 
 
-  plotMuTau(120,1,"inclusive",""   ,"hpsMVA",        "#tau MVA","units"              ,outputDir,50,0.75,1.0, 5.0,1.0,0,1.8);
+  plotMuTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
+  plotMuTau(120,1,"boostLow",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
+  plotMuTau(120,1,"novbfHigh",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
+  plotMuTau(120,1,"vbf",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
 
   return; 
   
