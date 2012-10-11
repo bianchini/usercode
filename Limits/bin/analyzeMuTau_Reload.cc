@@ -493,8 +493,7 @@ void evaluateQCD(TH1F* qcdHisto = 0, bool evaluateWSS = true, string sign = "SS"
   if(qcdHisto!=0) qcdHisto->Add(hExtrap,  1.0);
 
   float SSWJetsinSidebandRegionMCIncl    = 0.;
-  drawHistogramMC(backgroundWJets,     variable, SSWJetsinSidebandRegionMCIncl,      Error, scaleFactor, hExtrap, sbin,1);
-  hExtrap->Scale(SSWinSignalRegionDATAIncl/hExtrap->Integral());
+  drawHistogramMC(backgroundWJets,     variable, SSWJetsinSidebandRegionMCIncl,      Error, scaleFactor*(SSWinSignalRegionDATAIncl/SSWinSignalRegionMCIncl), hExtrap, sbin,1);
   if(qcdHisto!=0) qcdHisto->Add(hExtrap, -1.0);
 
   float SSTTbarinSidebandRegionMCIncl    = 0.;
@@ -518,7 +517,7 @@ void evaluateQCD(TH1F* qcdHisto = 0, bool evaluateWSS = true, string sign = "SS"
   if(qcdHisto!=0) qcdHisto->Add(hExtrap, -1.0);
 
   cout << "Selected events in inclusive " << sign << " data " << SSQCDinSignalRegionDATAIncl << endl;
-  SSQCDinSignalRegionDATAIncl  -= SSWinSignalRegionDATAIncl;
+  SSQCDinSignalRegionDATAIncl  -= SSWJetsinSidebandRegionMCIncl;
   SSQCDinSignalRegionDATAIncl  -= SSTTbarinSidebandRegionMCIncl;
   SSQCDinSignalRegionDATAIncl  -= SSOthersinSidebandRegionMCIncl;
   SSQCDinSignalRegionDATAIncl  -= SSDYMutoTauinSidebandRegionMCIncl;
@@ -527,10 +526,10 @@ void evaluateQCD(TH1F* qcdHisto = 0, bool evaluateWSS = true, string sign = "SS"
   SSQCDinSignalRegionDATAIncl *= OStoSSRatioQCD;
   if(qcdHisto!=0) qcdHisto->Scale(OStoSSRatioQCD);
 
-  cout << "- expected from WJets "  << SSWinSignalRegionDATAIncl << endl;
-  cout << "- expected from TTbar "  << SSTTbarinSidebandRegionMCIncl << endl;
-  cout << "- expected from Others " << SSOthersinSidebandRegionMCIncl << endl;
-  cout << "- expected from DY->tautau " << SSDYtoTauinSidebandRegionMCIncl << endl;
+  cout << "- expected from WJets "          << SSWJetsinSidebandRegionMCIncl << endl;
+  cout << "- expected from TTbar "          << SSTTbarinSidebandRegionMCIncl << endl;
+  cout << "- expected from Others "         << SSOthersinSidebandRegionMCIncl << endl;
+  cout << "- expected from DY->tautau "     << SSDYtoTauinSidebandRegionMCIncl << endl;
   cout << "- expected from DY->ll, l->tau " << SSDYMutoTauinSidebandRegionMCIncl << endl;
   cout << "- expected from DY->ll, j->tau " << SSDYJtoTauinSidebandRegionMCIncl  << endl;
   cout << "QCD in inclusive SS region is estimated to be " << SSQCDinSignalRegionDATAIncl/OStoSSRatioQCD  << "*" << OStoSSRatioQCD
@@ -605,7 +604,8 @@ void plotMuTau( Int_t mH_           = 120,
 		Float_t magnifySgn_ = 1.0,
 		Float_t hltEff_     = 1.0,
 		Int_t logy_         = 0,
-		Float_t maxY_       = 1.2
+		Float_t maxY_       = 1.2,
+		bool removeMtCut    = false
 		) 
 {   
 
@@ -1016,7 +1016,7 @@ void plotMuTau( Int_t mH_           = 120,
   TCut novbf("nJets30<1 && nJets20BTagged==0");
 
   TCut sbin; TCut sbinEmbedding; TCut sbinEmbeddingPZetaRel; TCut sbinPZetaRel; TCut sbinSS; 
-  TCut sbinPZetaRelSS; TCut sbinPZetaRev; TCut sbinPZetaRevSS; TCut sbinSSaIso; 
+  TCut sbinPZetaRelSS; TCut sbinSSaIso; 
   TCut sbinSSlIso1; TCut sbinSSlIso2; TCut sbinSSlIso3;
   TCut sbinPZetaRelaIso; TCut sbinPZetaRelSSaIso;  TCut sbinPZetaRelSSaIsoMtiso; 
   TCut sbinSSaIsoLtiso; TCut sbinSSaIsoMtiso;
@@ -1078,14 +1078,13 @@ void plotMuTau( Int_t mH_           = 120,
   else if(selection_.find("nobTag")!=string::npos)
     sbinTmp = nobTag;
 
+
   sbin                   =  lpt && tpt && tiso && liso && lveto && OS && pZ  && hltevent && hltmatch && sbinTmp;
   sbinEmbedding          =  lpt && tpt && tiso && liso && lveto && OS && pZ                          && sbinTmp;
   sbinEmbeddingPZetaRel  =  lpt && tpt && tiso && liso && lveto && OS                                && sbinTmp;
   sbinPZetaRel           =  lpt && tpt && tiso && liso && lveto && OS        && hltevent && hltmatch && sbinTmp;
   sbinPZetaRelaIso       =  lpt && tpt && tiso && laiso&& lveto && OS        && hltevent && hltmatch && sbinTmp;
   sbinPZetaRelSSaIso     =  lpt && tpt && tiso && laiso&& lveto && SS        && hltevent && hltmatch && sbinTmp;
-  sbinPZetaRev           =  lpt && tpt && tiso && liso && lveto && OS && apZ && hltevent && hltmatch && sbinTmp;
-  sbinPZetaRevSS         =  lpt && tpt && tiso && liso && lveto && SS && apZ && hltevent && hltmatch && sbinTmp;
   sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && pZ  && hltevent && hltmatch && sbinTmp;
   sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS        && hltevent && hltmatch && sbinTmp;
   sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS && pZ  && hltevent && hltmatch && sbinTmp;
@@ -1100,6 +1099,40 @@ void plotMuTau( Int_t mH_           = 120,
   sbinMtiso              =  lpt && tpt && mtiso&& liso && lveto && OS && pZ  && hltevent && hltmatch && sbinTmp;
   sbinPZetaRelMtiso      =  lpt && tpt && mtiso&& liso && lveto && OS        && hltevent && hltmatch && sbinTmp;
   sbinPZetaRelSSaIsoMtiso=  lpt && tpt && mtiso&& laiso&& lveto && SS        && hltevent && hltmatch && sbinTmp;
+
+  if(removeMtCut){
+    sbin                   =  lpt && tpt && tiso && liso && lveto && OS   && hltevent && hltmatch && sbinTmp;
+    sbinEmbedding          =  lpt && tpt && tiso && liso && lveto && OS                           && sbinTmp;
+    sbinEmbeddingPZetaRel  =  lpt && tpt && tiso && liso && lveto && OS                           && sbinTmp;
+    sbinPZetaRel           =  lpt && tpt && tiso && liso && lveto && OS   && hltevent && hltmatch && sbinTmp;
+    sbinPZetaRelaIso       =  lpt && tpt && tiso && laiso&& lveto && OS   && hltevent && hltmatch && sbinTmp;
+    sbinPZetaRelSSaIso     =  lpt && tpt && tiso && laiso&& lveto && SS   && hltevent && hltmatch && sbinTmp;
+    sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS   && hltevent && hltmatch && sbinTmp;
+    sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS   && hltevent && hltmatch && sbinTmp;
+    sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS   && hltevent && hltmatch && sbinTmp;
+    sbinSSlIso1            =  lpt && tpt && tiso && lliso&& lveto && SS   && hltevent && hltmatch && sbinTmp;
+    sbinSSlIso2            =  lpt && tpt && mtiso&& liso && lveto && SS   && hltevent && hltmatch && sbinTmp;
+    sbinSSlIso3            =  lpt && tpt && mtiso&& lliso&& lveto && SS   && hltevent && hltmatch && sbinTmp;
+    sbinSSaIsoLtiso        =  lpt && tpt && ltiso&& laiso&& lveto && SS   && hltevent && hltmatch && sbinTmp;
+    sbinSSaIsoMtiso        =  lpt && tpt && mtiso&& laiso&& lveto && SS   && hltevent && hltmatch && sbinTmp;
+    sbinSSltiso            =  lpt && tpt && ltiso&& liso && lveto && SS   && hltevent && hltmatch && sbinTmp;
+    sbinSSmtiso            =  lpt && tpt && mtiso&& liso && lveto && SS   && hltevent && hltmatch && sbinTmp;
+    sbinLtiso              =  lpt && tpt && ltiso&& liso && lveto && OS   && hltevent && hltmatch && sbinTmp;
+    sbinMtiso              =  lpt && tpt && mtiso&& liso && lveto && OS   && hltevent && hltmatch && sbinTmp;
+    sbinPZetaRelMtiso      =  lpt && tpt && mtiso&& liso && lveto && OS   && hltevent && hltmatch && sbinTmp;
+    sbinPZetaRelSSaIsoMtiso=  lpt && tpt && mtiso&& laiso&& lveto && SS   && hltevent && hltmatch && sbinTmp;
+
+    sbinInclusive          =  lpt && tpt && tiso && liso && lveto && OS   && hltevent && hltmatch;
+    sbinEmbeddingInclusive =  lpt && tpt && tiso && liso && lveto && OS                          ;
+    sbinSSInclusive        =  lpt && tpt && tiso && liso && lveto && SS   && hltevent && hltmatch;
+    sbinSSaIsoInclusive    =  lpt && tpt && tiso && laiso&& lveto && SS   && hltevent && hltmatch;
+    sbinSSaIsoLtisoInclusive= lpt && tpt && mtiso&& laiso&& lveto && SS   && hltevent && hltmatch;
+    sbinSSaIsoMtisoInclusive= lpt && tpt && mtiso&& laiso&& lveto && SS   && hltevent && hltmatch;
+    sbinSSltisoInclusive   =  lpt && tpt && ltiso&& liso && lveto && SS   && hltevent && hltmatch;
+    sbinLtisoInclusive     =  lpt && tpt && ltiso&& liso && lveto && OS   && hltevent && hltmatch;
+    sbinMtisoInclusive     =  lpt && tpt && mtiso&& liso && lveto && OS   && hltevent && hltmatch;
+  }
+
   /////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////
 
@@ -1131,11 +1164,11 @@ void plotMuTau( Int_t mH_           = 120,
   cout << "All Z->mumu, j->tau = " << ExtrapJFakeInclusive << " +/- " <<  Error << endl;
 
   float ExtrapDYNum = 0.;
-  drawHistogramMC(backgroundDYTauTau, variable, ExtrapDYNum,         Error,   Lumi*lumiCorrFactor*hltEff_/1000., hExtrap, sbin);
+  drawHistogramMC(backgroundDYTauTau, variable, ExtrapDYNum,                  Error,   Lumi*lumiCorrFactor*hltEff_/1000., hExtrap, sbin);
   float ExtrapDYNuminSidebandRegion = 0.;
   drawHistogramMC(backgroundDYTauTau, variable, ExtrapDYNuminSidebandRegion,  Error,   Lumi*lumiCorrFactor*hltEff_/1000., hExtrap, sbinPZetaRel&&apZ);
   float ExtrapDYNumPZetaRel = 0.;
-  drawHistogramMC(backgroundDYTauTau, variable, ExtrapDYNumPZetaRel,  Error,   Lumi*lumiCorrFactor*hltEff_/1000., hExtrap, sbinPZetaRel);
+  drawHistogramMC(backgroundDYTauTau, variable, ExtrapDYNumPZetaRel,          Error,   Lumi*lumiCorrFactor*hltEff_/1000., hExtrap, sbinPZetaRel);
 
 
   float ExtrapolationFactorMadGraph      = ExtrapDYNum/ExtrapDYInclusive;
@@ -1143,15 +1176,15 @@ void plotMuTau( Int_t mH_           = 120,
   cout << "MadGraph prediction = " << ExtrapolationFactorMadGraph << " +/- " << ErrorExtrapolationFactorMadGraph << endl;
 
   float ExtrapEmbedNum = 0.;
-  drawHistogramEmbed(dataEmbedded, variable, ExtrapEmbedNum, Error, 1.0, hExtrap, sbinEmbedding);
+  drawHistogramEmbed(dataEmbedded, variable, ExtrapEmbedNum,                 Error, 1.0, hExtrap, sbinEmbedding);
   float ExtrapEmbedNuminSidebandRegion = 0.;
   drawHistogramEmbed(dataEmbedded, variable, ExtrapEmbedNuminSidebandRegion, Error, 1.0, hExtrap, sbinEmbeddingPZetaRel&&apZ);
   float ExtrapEmbedNumPZetaRel = 0.;
-  drawHistogramEmbed(dataEmbedded, variable, ExtrapEmbedNumPZetaRel, Error, 1.0, hExtrap, sbinEmbeddingPZetaRel);
+  drawHistogramEmbed(dataEmbedded, variable, ExtrapEmbedNumPZetaRel,         Error, 1.0, hExtrap, sbinEmbeddingPZetaRel);
   float ExtrapEmbedDen = 0.;
-  drawHistogramEmbed(dataEmbedded, variable, ExtrapEmbedDen,         Error, 1.0, hExtrap, sbinEmbeddingInclusive);
+  drawHistogramEmbed(dataEmbedded, variable, ExtrapEmbedDen,                 Error, 1.0, hExtrap, sbinEmbeddingInclusive);
   float ExtrapEmbedDenPZetaRel = 0.;
-  drawHistogramEmbed(dataEmbedded, variable, ExtrapEmbedDenPZetaRel, Error, 1.0, hExtrap, sbinPZetaRelEmbeddingInclusive);
+  drawHistogramEmbed(dataEmbedded, variable, ExtrapEmbedDenPZetaRel,         Error, 1.0, hExtrap, sbinPZetaRelEmbeddingInclusive);
 
   ExtrapolationFactorZ             = ExtrapEmbedNum/ExtrapEmbedDen; 
   ErrorExtrapolationFactorZ        = TMath::Sqrt(ExtrapolationFactorZ*(1-ExtrapolationFactorZ)/ExtrapEmbedDen);
@@ -1367,7 +1400,7 @@ void plotMuTau( Int_t mH_           = 120,
 
 	  float NormW3Jets = 0.;
 	  drawHistogramMC(currentTree, variable, NormW3Jets, Error,   Lumi*hltEff_/1000., h1, sbin, 1);
-	  h1->Scale(OSWinSignalRegionDATAW3Jets/h1->Integral());
+	  h1->Scale(OSWinSignalRegionDATAW3Jets/OSWinSignalRegionMCW3Jets);
 	  hW3Jets->Add(h1, 1.0);
 
 	  drawHistogramMC(currentTree, variable, NormW3Jets, Error,   Lumi*hltEff_/1000., hCleaner, sbinMtiso, 1);
@@ -1415,7 +1448,7 @@ void plotMuTau( Int_t mH_           = 120,
 
 	  float NormWJets = 0.;
 	  drawHistogramMC(currentTree, variable, NormWJets, Error,   Lumi*hltEff_/1000., h1, sbin, 1);
-	  h1->Scale(OSWinSignalRegionDATAWJets/h1->Integral());
+	  h1->Scale(OSWinSignalRegionDATAWJets/OSWinSignalRegionMCWJets);
 	  
 	  hW->Add(h1, 1.0);
 	  if(!((selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || 
@@ -1905,11 +1938,12 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "July2012/Test"){
   //mH.push_back(160);
 
 
-  //plotMuTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
+  plotMuTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
   //plotMuTau(120,1,"boostLow",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
   //plotMuTau(120,1,"novbfHigh",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
-  plotMuTau(120,1,"vbf",""   ,"diTauVisMass","visible mass","GeV"              ,outputDir,10,0,200,5.0,1.0,0,1.2);  
-
+  //plotMuTau(120,1,"vbf",""   ,"diTauVisMass","visible mass","GeV"              ,outputDir,10,0,200,5.0,1.0,0,1.2);  
+  //plotMuTau(120,1,"inclusive",""   ,"MtLeg1Corr","M_{T}(#mu#nu)","GeV" ,       outputDir,40,0,160,5.0,1.0,0,1.2,true);
+  
   return; 
   
 //   plotMuTau(120,1,"inclusive",""   ,"hpsMVA",        "#tau MVA","units"              ,outputDir,50,0.75,1.0, 5.0,1.0,0,1.8);
