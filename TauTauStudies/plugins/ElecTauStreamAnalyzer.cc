@@ -930,10 +930,20 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v5");
     triggerPaths.push_back("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v6");
     triggerPaths.push_back("HLT_Ele22_eta2p1_WP90Rho_LooseIsoPFTau20_v2");
+    triggerPaths.push_back("HLT_Ele22_eta2p1_WP90Rho_LooseIsoPFTau20_v3");
+    triggerPaths.push_back("HLT_Ele22_eta2p1_WP90Rho_LooseIsoPFTau20_v4");
+    triggerPaths.push_back("HLT_Ele22_eta2p1_WP90Rho_LooseIsoPFTau20_v5");
+    triggerPaths.push_back("HLT_Ele22_eta2p1_WP90Rho_LooseIsoPFTau20_v6");
+    triggerPaths.push_back("HLT_Ele22_eta2p1_WP90Rho_LooseIsoPFTau20_v7");
     triggerPaths.push_back("HLT_Ele20_CaloIdVT_TrkIdT_LooseIsoPFTau20_v4");
     triggerPaths.push_back("HLT_Ele20_CaloIdVT_TrkIdT_LooseIsoPFTau20_v5");
     triggerPaths.push_back("HLT_Ele20_CaloIdVT_TrkIdT_LooseIsoPFTau20_v6");
     triggerPaths.push_back("HLT_Ele22_eta2p1_WP90NoIso_LooseIsoPFTau20_v2");
+    triggerPaths.push_back("HLT_Ele22_eta2p1_WP90NoIso_LooseIsoPFTau20_v3");
+    triggerPaths.push_back("HLT_Ele22_eta2p1_WP90NoIso_LooseIsoPFTau20_v4");
+    triggerPaths.push_back("HLT_Ele22_eta2p1_WP90NoIso_LooseIsoPFTau20_v5");
+    triggerPaths.push_back("HLT_Ele22_eta2p1_WP90NoIso_LooseIsoPFTau20_v6");
+    triggerPaths.push_back("HLT_Ele22_eta2p1_WP90NoIso_LooseIsoPFTau20_v7");
                               
     HLTfiltersElec.push_back("hltOverlapFilterIsoEle20LooseIsoPFTau20");
     HLTfiltersElec.push_back("hltOverlapFilterIsoEle20WP90LooseIsoPFTau20");

@@ -876,11 +876,19 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
     triggerPaths.push_back("HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v6");
     triggerPaths.push_back("HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v2");
     triggerPaths.push_back("HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v3");
+    triggerPaths.push_back("HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v4");
+    triggerPaths.push_back("HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v5");
+    triggerPaths.push_back("HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v6");
+    triggerPaths.push_back("HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v7");
     triggerPaths.push_back("HLT_Mu18_eta2p1_LooseIsoPFTau20_v4");
     triggerPaths.push_back("HLT_Mu18_eta2p1_LooseIsoPFTau20_v5");
     triggerPaths.push_back("HLT_Mu18_eta2p1_LooseIsoPFTau20_v6");
     triggerPaths.push_back("HLT_Mu17_eta2p1_LooseIsoPFTau20_v2");
     triggerPaths.push_back("HLT_Mu17_eta2p1_LooseIsoPFTau20_v3");
+    triggerPaths.push_back("HLT_Mu17_eta2p1_LooseIsoPFTau20_v4");
+    triggerPaths.push_back("HLT_Mu17_eta2p1_LooseIsoPFTau20_v5");
+    triggerPaths.push_back("HLT_Mu17_eta2p1_LooseIsoPFTau20_v6");
+    triggerPaths.push_back("HLT_Mu17_eta2p1_LooseIsoPFTau20_v7");
 
     HLTfiltersMu.push_back("hltSingleMuIsoL1s14L3IsoFiltered15eta2p1");
     HLTfiltersMu.push_back("hltL3crIsoL1sMu16Eta2p1L1f0L2f16QL3f18QL3crIsoFiltered10");
