@@ -16,6 +16,7 @@ process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
 runOnMC     = True
 doSVFitReco = True
 usePFMEtMVA = True
+useRecoil   = True
 
 if runOnMC:
     print "Running on MC"
@@ -99,7 +100,10 @@ process.rescaledMET = cms.EDProducer(
     )
 
 if usePFMEtMVA:
-    process.rescaledMET.metTag = cms.InputTag("patPFMetByMVA")
+    if useRecoil :
+        process.rescaledMET.metTag = cms.InputTag("metRecoilCorrector",  "N")
+    else :
+        process.rescaledMET.metTag = cms.InputTag("patPFMetByMVA")
 process.rescaledMETRaw = process.rescaledMET.clone( metTag = cms.InputTag("metRecoilCorrector",  "N") )
 
 
@@ -182,7 +186,9 @@ process.metRecoilCorrector = cms.EDProducer(
     isMC                = cms.bool(runOnMC),
     )
 
-
+if usePFMEtMVA and useRecoil :
+    process.metRecoilCorrector.metTag = cms.InputTag("patPFMetByMVA")
+        
 ###################################################################################
 
 process.load("Bianchi.Utilities.diTausReconstruction_cff")
@@ -193,7 +199,11 @@ process.diTau.srcMET   = cms.InputTag("metRecoilCorrector",  "N")
 process.diTau.dRmin12  = cms.double(0.5)
 process.diTau.doSVreco = cms.bool(doSVFitReco)
 if usePFMEtMVA:
-    process.diTau.srcMET = cms.InputTag("patPFMetByMVA")
+    if useRecoil :
+        process.diTau.srcMET = cms.InputTag("metRecoilCorrector",  "N")
+    else :
+        process.diTau.srcMET = cms.InputTag("patPFMetByMVA")
+
 
 if not runOnMC:
     process.diTau.srcGenParticles = ""
@@ -204,10 +214,16 @@ process.pfMEtMVACov = cms.EDProducer(
     )
 
 if usePFMEtMVA:
-    process.diTau.nSVfit.psKine_MEt_logM_fit.config.event.srcMEt = cms.InputTag("patPFMetByMVA")
-    process.diTau.nSVfit.psKine_MEt_logM_fit.config.event.likelihoodFunctions[0].srcMEtCovMatrix = cms.InputTag("pfMEtMVACov")
-    process.diTau.nSVfit.psKine_MEt_logM_int.config.event.srcMEt = cms.InputTag("patPFMetByMVA")
-    process.diTau.nSVfit.psKine_MEt_logM_int.config.event.likelihoodFunctions[0].srcMEtCovMatrix = cms.InputTag("pfMEtMVACov")
+    if useRecoil :
+        process.diTau.nSVfit.psKine_MEt_logM_fit.config.event.srcMEt = cms.InputTag("metRecoilCorrector", "N")
+        process.diTau.nSVfit.psKine_MEt_logM_fit.config.event.likelihoodFunctions[0].srcMEtCovMatrix = cms.InputTag("pfMEtMVACov")
+        process.diTau.nSVfit.psKine_MEt_logM_int.config.event.srcMEt = cms.InputTag("metRecoilCorrector", "N")
+        process.diTau.nSVfit.psKine_MEt_logM_int.config.event.likelihoodFunctions[0].srcMEtCovMatrix = cms.InputTag("pfMEtMVACov")
+    else :
+        process.diTau.nSVfit.psKine_MEt_logM_fit.config.event.srcMEt = cms.InputTag("patPFMetByMVA")
+        process.diTau.nSVfit.psKine_MEt_logM_fit.config.event.likelihoodFunctions[0].srcMEtCovMatrix = cms.InputTag("pfMEtMVACov")
+        process.diTau.nSVfit.psKine_MEt_logM_int.config.event.srcMEt = cms.InputTag("patPFMetByMVA")
+        process.diTau.nSVfit.psKine_MEt_logM_int.config.event.likelihoodFunctions[0].srcMEtCovMatrix = cms.InputTag("pfMEtMVACov")
 
 process.selectedDiTau = cms.EDFilter(
     "MuTauPairSelector",
@@ -569,7 +585,10 @@ process.muTauStreamAnalyzer = cms.EDAnalyzer(
     )
 
 if usePFMEtMVA:
-    process.muTauStreamAnalyzer.met = cms.InputTag("patPFMetByMVA")
+    if useRecoil :
+        process.muTauStreamAnalyzer.met = cms.InputTag("metRecoilCorrector",  "N")
+    else :
+        process.muTauStreamAnalyzer.met = cms.InputTag("patPFMetByMVA")
 
 process.muTauStreamAnalyzerRaw   = process.muTauStreamAnalyzer.clone(
     diTaus =  cms.InputTag("selectedDiTauRaw"),
