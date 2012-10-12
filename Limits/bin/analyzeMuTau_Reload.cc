@@ -335,8 +335,10 @@ TArrayF createBins(int nBins_ = 80 ,
 
 }
 
-void evaluateWextrapolation(string sign = "OS", string selection_ = "",
-			    float& scaleFactorOS= *(new float()), float& OSWinSignalRegionDATA= *(new float()), float& OSWinSignalRegionMC = *(new float()), 
+void evaluateWextrapolation(string sign = "OS", bool useFakeRate = false, string selection_ = "",
+			    float& scaleFactorOS= *(new float()), 
+			    float& OSWinSignalRegionDATA= *(new float()),   float& OSWinSignalRegionMC = *(new float()), 
+			    float& OSWinSidebandRegionDATA= *(new float()), float& OSWinSidebandRegionMC = *(new float()), 
 			    float& scaleFactorTTOS = *(new float()),
 			    TH1F* hWMt=0, TString variable="",
 			    TTree* backgroundWJets=0, TTree* backgroundTTbar=0, TTree* backgroundOthers=0, 
@@ -354,7 +356,6 @@ void evaluateWextrapolation(string sign = "OS", string selection_ = "",
   
   float Error = 0.; float ErrorW1 = 0.;   float ErrorW2 = 0.;
   drawHistogramMC(backgroundWJets,variable, OSWinSignalRegionMC,   ErrorW1, scaleFactor, hWMt, sbinPZetaRelForWextrapolation&&pZ);
-  float OSWinSidebandRegionMC = 0.;
   drawHistogramMC(backgroundWJets,variable, OSWinSidebandRegionMC, ErrorW2, scaleFactor, hWMt, sbinPZetaRelForWextrapolation&&apZ);
   scaleFactorOS      = OSWinSignalRegionMC>0 ? OSWinSidebandRegionMC/OSWinSignalRegionMC : 1.0 ;
   float scaleFactorOSError = scaleFactorOS*(ErrorW1/OSWinSignalRegionMC + ErrorW2/OSWinSidebandRegionMC);
@@ -362,9 +363,13 @@ void evaluateWextrapolation(string sign = "OS", string selection_ = "",
     cout << "Extrap. factor for W " << sign << " : P(Mt>"     << antiWsdb << ")/P(Mt<"   << antiWsgn << ") ==> " << scaleFactorOS << " +/- " << scaleFactorOSError << endl;
   else
     cout << "Extrap. factor for W " << sign << " : P(pZeta<- "<< antiWsdb << ")/P(pZeta>"<< antiWsgn << ") ==> " << scaleFactorOS << " +/- " << scaleFactorOSError << endl;    
+
   // restore with full cut
-  drawHistogramMC(backgroundWJets,variable, OSWinSignalRegionMC, ErrorW1, scaleFactor, hWMt, sbinPZetaRel&&pZ);
+  drawHistogramMC(backgroundWJets,variable, OSWinSignalRegionMC,   ErrorW1, scaleFactor, hWMt, sbinPZetaRel&&pZ);
+  // restore with full cut
+  drawHistogramMC(backgroundWJets,variable, OSWinSidebandRegionMC, ErrorW2, scaleFactor, hWMt, sbinPZetaRel&&apZ);
  
+
   float OSTTbarinSidebandRegionMC = 0.;
   drawHistogramMC(backgroundTTbar,  variable,  OSTTbarinSidebandRegionMC,     Error, scaleFactor*TTxsectionRatio , hWMt, sbinPZetaRel&&apZ);
 
@@ -426,10 +431,12 @@ void evaluateWextrapolation(string sign = "OS", string selection_ = "",
   float OSDYMutoTauinSidebandRegionMC = 0.;
   drawHistogramMC(backgroundDYMutoTau, variable, OSDYMutoTauinSidebandRegionMC ,Error,scaleFactor*lumiCorrFactor*MutoTauCorrectionFactor , hWMt, sbinPZetaRel&&apZ);
 
-  float OSQCDinSidebandRegionData = 0.;
+  float OSQCDinSidebandRegionData = 0.; float OSAIsoEventsinSidebandRegionData = 0.;
   drawHistogramDataFakeRate(data,  variable,        OSQCDinSidebandRegionData,   Error, 1.0         , hWMt, sbinPZetaRelaIso&&apZ, scaleFactMu);
-  float OSWinSidebandRegionAIsoMC = 0.;
+  OSAIsoEventsinSidebandRegionData =  (OSQCDinSidebandRegionData/Error)*(OSQCDinSidebandRegionData/Error);
+  float OSWinSidebandRegionAIsoMC  = 0.;float OSAIsoEventsWinSidebandRegionAIsoMC  = 0.;
   drawHistogramMCFakeRate(backgroundWJets, variable,OSWinSidebandRegionAIsoMC,   Error, scaleFactor , hWMt, sbinPZetaRelaIso&&apZ, scaleFactMu);
+  OSAIsoEventsWinSidebandRegionAIsoMC = (OSWinSidebandRegionAIsoMC/Error)*(OSWinSidebandRegionAIsoMC/Error)*scaleFactor; 
 
   drawHistogramData(data, variable, OSWinSignalRegionDATA ,Error, 1.0 , hWMt, sbinPZetaRel&&apZ);
   cout << "Selected events in " << sign << " data from high Mt sideband " << OSWinSignalRegionDATA << endl;
@@ -438,23 +445,28 @@ void evaluateWextrapolation(string sign = "OS", string selection_ = "",
   OSWinSignalRegionDATA -= OSDYtoTauinSidebandRegionMC;
   OSWinSignalRegionDATA -= OSDYJtoTauinSidebandRegionMC;
   OSWinSignalRegionDATA -= OSDYMutoTauinSidebandRegionMC;
-  OSWinSignalRegionDATA -= (OSQCDinSidebandRegionData-OSWinSidebandRegionAIsoMC);
+  if(useFakeRate) OSWinSignalRegionDATA -= (OSQCDinSidebandRegionData-OSWinSidebandRegionAIsoMC);
   OSWinSignalRegionDATA /= scaleFactorOS;
   cout << "- expected from TTbar "  << OSTTbarinSidebandRegionMC << endl;
   cout << "- expected from Others " << OSOthersinSidebandRegionMC << endl;
   cout << "- expected from DY->tautau " << OSDYtoTauinSidebandRegionMC << endl;
   cout << "- expected from DY->ll, l->tau " << OSDYMutoTauinSidebandRegionMC << endl;
   cout << "- expected from DY->ll, j->tau " << OSDYJtoTauinSidebandRegionMC  << endl;
-  cout << "- expected from QCD " << OSQCDinSidebandRegionData  << " (MC predicts " << OSWinSidebandRegionAIsoMC << " W events in the aIso region)" << endl;
+  cout << "- expected from QCD " << OSQCDinSidebandRegionData << ", obtained from " << OSAIsoEventsinSidebandRegionData << " anti-isolated events " << endl;
+  cout << "  (MC predicts " << OSWinSidebandRegionAIsoMC << " W events in the aIso region, from a total of " << OSAIsoEventsWinSidebandRegionAIsoMC << " events)" << endl;
+  if(!useFakeRate) cout << " !!! QCD with fake-rate not subtracted !!!" << endl;
   cout << "W+jets in " << sign << " region is estimated to be " <<  OSWinSignalRegionDATA*scaleFactorOS << "/" << scaleFactorOS
        << " = " <<  OSWinSignalRegionDATA << endl;
   cout << " ==> the MC prediction is " << OSWinSignalRegionMC << " +/- " << ErrorW1 << endl;
 
+  OSWinSidebandRegionDATA = OSWinSignalRegionDATA*scaleFactorOS;
 }
 
-void evaluateQCD(TH1F* qcdHisto = 0, bool evaluateWSS = true, string sign = "SS", string selection_ = "", 
+void evaluateQCD(TH1F* qcdHisto = 0, bool evaluateWSS = true, string sign = "SS", bool useFakeRate = false, string selection_ = "", 
 		 float& SSQCDinSignalRegionDATAIncl_ = *(new float()), float& SSIsoToSSAIsoRatioQCD = *(new float()), float& scaleFactorTTSSIncl = *(new float()),
-		 float& extrapFactorWSSIncl = *(new float()), float& SSWinSignalRegionDATAIncl = *(new float()), float& SSWinSignalRegionMCIncl = *(new float()),
+		 float& extrapFactorWSSIncl = *(new float()), 
+		 float& SSWinSignalRegionDATAIncl = *(new float()), float& SSWinSignalRegionMCIncl = *(new float()),
+		 float& SSWinSidebandRegionDATAIncl = *(new float()), float& SSWinSidebandRegionMCIncl = *(new float()),
 		 TH1F* hExtrap=0, TString variable = "",
 		 TTree* backgroundWJets=0, TTree* backgroundTTbar=0, TTree* backgroundOthers=0, 
 		 TTree* backgroundDYTauTau=0, TTree* backgroundDYJtoTau=0, TTree* backgroundDYMutoTau=0, TTree* data=0,
@@ -471,8 +483,10 @@ void evaluateQCD(TH1F* qcdHisto = 0, bool evaluateWSS = true, string sign = "SS"
 		 TCut vbf="", TCut boost="", TCut zeroJet=""){
 
   if(evaluateWSS)
-    evaluateWextrapolation(sign, selection_ , 
-			   extrapFactorWSSIncl, SSWinSignalRegionDATAIncl, SSWinSignalRegionMCIncl,
+    evaluateWextrapolation(sign, useFakeRate, selection_ , 
+			   extrapFactorWSSIncl, 
+			   SSWinSignalRegionDATAIncl,   SSWinSignalRegionMCIncl,
+			   SSWinSidebandRegionDATAIncl, SSWinSidebandRegionMCIncl,
 			   scaleFactorTTSSIncl,
 			   hExtrap, variable,
 			   backgroundWJets, backgroundTTbar, backgroundOthers, 
@@ -493,7 +507,7 @@ void evaluateQCD(TH1F* qcdHisto = 0, bool evaluateWSS = true, string sign = "SS"
   if(qcdHisto!=0) qcdHisto->Add(hExtrap,  1.0);
 
   float SSWJetsinSidebandRegionMCIncl    = 0.;
-  drawHistogramMC(backgroundWJets,     variable, SSWJetsinSidebandRegionMCIncl,      Error, scaleFactor*(SSWinSignalRegionDATAIncl/SSWinSignalRegionMCIncl), hExtrap, sbin,1);
+  drawHistogramMC(backgroundWJets,     variable, SSWJetsinSidebandRegionMCIncl,      Error, scaleFactor*(SSWinSidebandRegionDATAIncl/SSWinSidebandRegionMCIncl), hExtrap, sbin,1);
   if(qcdHisto!=0) qcdHisto->Add(hExtrap, -1.0);
 
   float SSTTbarinSidebandRegionMCIncl    = 0.;
@@ -624,9 +638,9 @@ void plotMuTau( Int_t mH_           = 120,
   float lumiCorrFactor                     = (1-0.056);
   float TTxsectionRatio                    = lumiCorrFactor*(165.8/157.5) ;
   float OStoSSRatioQCD                     = 1.11;
-  float SSIsoToSSAIsoRatioQCD              = 1.00;
-  float MutoTauCorrectionFactor            = 1.00;
-  float JtoTauCorrectionFactor             = 1.00;
+  float SSIsoToSSAIsoRatioQCD              = 1.0;
+  float MutoTauCorrectionFactor            = 1.0;
+  float JtoTauCorrectionFactor             = 1.0;
   float ExtrapolationFactorZ               = 1.0;
   float ErrorExtrapolationFactorZ          = 1.0;
   float ExtrapolationFactorZDataMC         = 1.0;
@@ -638,12 +652,12 @@ void plotMuTau( Int_t mH_           = 120,
 
   cout << endl;
   cout << "Input: " << endl;
-  cout << " > Lumi = " << Lumi/1000. << " fb-1" << endl;
+  cout << " > Lumi           = " << Lumi/1000. << " fb-1" << endl;
   cout << " > DY xsection SF = " << lumiCorrFactor << endl;
-  cout << " > TTbar SF " << TTxsectionRatio << endl;
-  cout << " > QCD OS/SS SF = " << OStoSSRatioQCD << endl;
-  cout << " > J->tau SF = " << JtoTauCorrectionFactor << endl;
-  cout << " > Mu->tau SF = " << MutoTauCorrectionFactor << endl;
+  cout << " > TTbar SF       = " << TTxsectionRatio << endl;
+  cout << " > QCD OS/SS SF   = " << OStoSSRatioQCD << endl;
+  cout << " > J->tau SF      = " << JtoTauCorrectionFactor << endl;
+  cout << " > Mu->tau SF     = " << MutoTauCorrectionFactor << endl;
   cout << endl;
 
   /////////////////  change SVfit mass here ///////////////////
@@ -1109,7 +1123,7 @@ void plotMuTau( Int_t mH_           = 120,
 
   float ExtrapDYInclusive = 0.;
   drawHistogramMC(backgroundDYTauTau, variable, ExtrapDYInclusive,   Error,   Lumi*lumiCorrFactor*hltEff_/1000., hExtrap, sbinInclusive);
-  cout << "All Z->tautau = " << ExtrapDYInclusive << " +/- " <<  Error << endl; 
+  cout << "All Z->tautau             = " << ExtrapDYInclusive << " +/- " <<  Error << endl; 
 
   float ExtrapDYInclusivePZetaRel = 0.;
   drawHistogramMC(backgroundDYTauTau, variable, ExtrapDYInclusivePZetaRel,   Error,   Lumi*lumiCorrFactor*hltEff_/1000., hExtrap, sbinPZetaRelInclusive);
@@ -1117,11 +1131,12 @@ void plotMuTau( Int_t mH_           = 120,
 
   float ExtrapLFakeInclusive = 0.;
   drawHistogramMC(backgroundDYMutoTau, variable,ExtrapLFakeInclusive,Error,   Lumi*lumiCorrFactor*hltEff_/1000., hExtrap, sbinInclusive);
-  cout << "All Z->mumu, mu->tau = " << ExtrapLFakeInclusive << " +/- " <<  Error << endl;
+  cout << "All Z->mumu, mu->tau      = " << ExtrapLFakeInclusive << " +/- " <<  Error << endl;
 
   float ExtrapJFakeInclusive = 0.;
   drawHistogramMC(backgroundDYJtoTau, variable, ExtrapJFakeInclusive,Error,   Lumi*lumiCorrFactor*hltEff_/1000., hExtrap, sbinInclusive);
-  cout << "All Z->mumu, j->tau = " << ExtrapJFakeInclusive << " +/- " <<  Error << endl;
+  cout << "All Z->mumu, j->tau       = " << ExtrapJFakeInclusive << " +/- " <<  Error << endl;
+  cout << endl;
 
   float ExtrapDYNum = 0.;
   drawHistogramMC(backgroundDYTauTau, variable, ExtrapDYNum,                  Error,   Lumi*lumiCorrFactor*hltEff_/1000., hExtrap, sbin);
@@ -1133,7 +1148,7 @@ void plotMuTau( Int_t mH_           = 120,
 
   float ExtrapolationFactorMadGraph      = ExtrapDYNum/ExtrapDYInclusive;
   float ErrorExtrapolationFactorMadGraph = TMath::Sqrt(ExtrapolationFactorMadGraph*(1-ExtrapolationFactorMadGraph)/ExtrapDYInclusive);
-  cout << "MadGraph prediction = " << ExtrapolationFactorMadGraph << " +/- " << ErrorExtrapolationFactorMadGraph << endl;
+  cout << "Extrap. factor using MadGraph            = " << ExtrapolationFactorMadGraph << " +/- " << ErrorExtrapolationFactorMadGraph << endl;
 
   float ExtrapEmbedNum = 0.;
   drawHistogramEmbed(dataEmbedded, variable, ExtrapEmbedNum,                 Error, 1.0, hExtrap, sbinEmbedding);
@@ -1155,27 +1170,32 @@ void plotMuTau( Int_t mH_           = 120,
   float sidebandRatioEmbedded = ExtrapEmbedNuminSidebandRegion/ExtrapEmbedNumPZetaRel;
   ExtrapolationFactorSidebandZDataMC = sidebandRatioEmbedded/sidebandRatioMadgraph ;
 
-  cout << "Extrap. factor using embedded sample: " << ExtrapolationFactorZ << " +/- " << ErrorExtrapolationFactorZ << endl;
-  cout << " ==> data/MC (signal region) = " << ExtrapolationFactorZDataMC << " +/- " 
+  cout << "Extrap. factor using embedded sample     = " << ExtrapolationFactorZ << " +/- " << ErrorExtrapolationFactorZ << endl;
+  cout << " ==> data/MC (signal region)             = " << ExtrapolationFactorZDataMC << " +/- " 
        << ExtrapolationFactorZDataMC*(ErrorExtrapolationFactorMadGraph/ExtrapolationFactorMadGraph + 
 				      ErrorExtrapolationFactorZ/ExtrapolationFactorZ) 
        << endl;
-  cout << " ==> data/MC (sideband-to-signal) = " << ExtrapolationFactorSidebandZDataMC << endl;
+  cout << " ==> data/MC (sideband-to-signal)        = " << ExtrapolationFactorSidebandZDataMC << endl;
   cout << " ==> data (sideband-to-signal inclusive) = " << ExtrapolationFactorZFromSideband << endl;
   
   /////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////
 
+  cout << endl;
   cout << "******** Extrapolation factors for QCD normalization ********" << endl;
 
   float SSQCDinSignalRegionDATAIncl = 0.; 
   float extrapFactorWSSIncl = 0.;
   float SSWinSignalRegionDATAIncl = 0.;
   float SSWinSignalRegionMCIncl = 0.;
+  float SSWinSidebandRegionDATAIncl = 0.;
+  float SSWinSidebandRegionMCIncl = 0.;
       
-  evaluateQCD(0, true, "SS", "inclusive", 
+  evaluateQCD(0, true, "SS", false, "inclusive", 
 	      SSQCDinSignalRegionDATAIncl , SSIsoToSSAIsoRatioQCD, scaleFactorTTSSIncl,
-	      extrapFactorWSSIncl, SSWinSignalRegionDATAIncl, SSWinSignalRegionMCIncl,
+	      extrapFactorWSSIncl, 
+	      SSWinSignalRegionDATAIncl, SSWinSignalRegionMCIncl,
+	      SSWinSidebandRegionDATAIncl, SSWinSidebandRegionMCIncl,
  	      hExtrap, variable,
  	      backgroundWJets, backgroundTTbar, backgroundOthers, 
  	      backgroundDYTauTau, backgroundDYJtoTau, backgroundDYMutoTau, data,
@@ -1253,10 +1273,20 @@ void plotMuTau( Int_t mH_           = 120,
 
   std::map<TString,Float_t> vMap;
 
-  float SSQCDinSignalRegionDATA = 0.; float extrapFactorWSS = 0.;             float SSWinSignalRegionDATA = 0.;     float SSWinSignalRegionMC = 0.;
-  float extrapFactorWOSW3Jets = 0.;   float OSWinSignalRegionDATAW3Jets = 0.; float OSWinSignalRegionMCW3Jets = 0.; float scaleFactorTTOSW3Jets = 0.;
-  float extrapFactorWOSWJets  = 0.;   float OSWinSignalRegionDATAWJets  = 0.; float OSWinSignalRegionMCWJets  = 0.; float scaleFactorTTOSWJets = 0.;
+  float SSQCDinSignalRegionDATA = 0.; 
 
+  float extrapFactorWSS = 0.;             
+  float SSWinSignalRegionDATA = 0.;       float SSWinSignalRegionMC = 0.; float SSWinSidebandRegionDATA = 0.; float SSWinSidebandRegionMC = 0.;
+  
+  float extrapFactorWOSW3Jets = 0.;   
+  float OSWinSignalRegionDATAW3Jets = 0.; float OSWinSignalRegionMCW3Jets = 0.; float OSWinSidebandRegionDATAW3Jets = 0.; float OSWinSidebandRegionMCW3Jets = 0.;
+
+  float extrapFactorWOSWJets  = 0.; 
+  float OSWinSignalRegionDATAWJets  = 0.; float OSWinSignalRegionMCWJets  = 0.; float OSWinSidebandRegionDATAWJets  = 0.; float OSWinSidebandRegionMCWJets  = 0.; 
+
+  float scaleFactorTTOSW3Jets = 0.;
+  float scaleFactorTTOSWJets  = 0.;
+ 
   for( unsigned iter=0; iter<samples.size(); iter++){
 
     cout << endl;
@@ -1286,9 +1316,11 @@ void plotMuTau( Int_t mH_           = 120,
 	sbinPZetaRelSSForWextrapolation = (sbinPZetaRelSSInclusive&&vbfLoose);     
 
 
-      evaluateQCD(h1, true, "SS", selection_, 
+      evaluateQCD(h1, true, "SS", false, selection_, 
 		  SSQCDinSignalRegionDATA , dummy1 , scaleFactorTTSS,
-		  extrapFactorWSS, SSWinSignalRegionDATA, SSWinSignalRegionMC,
+		  extrapFactorWSS, 
+		  SSWinSignalRegionDATA, SSWinSignalRegionMC,
+		  SSWinSidebandRegionDATA, SSWinSidebandRegionMC,
 		  hExtrapSS, variable,
 		  treeForWestimation, backgroundTTbar, backgroundOthers, 
 		  backgroundDYTauTau, backgroundDYJtoTau, backgroundDYMutoTau, data,
@@ -1326,7 +1358,7 @@ void plotMuTau( Int_t mH_           = 120,
 	}
 	if((it->first).find("TTbar")!=string::npos){
 	  float NormTTjets = 0.;
-	  drawHistogramMC(currentTree, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio*scaleFactorTTOS*hltEff_/1000., h1, sbin, 1);
+	  drawHistogramMC(currentTree, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio*scaleFactorTTOSWJets*hltEff_/1000., h1, sbin, 1);
 	  hTTb->Add(h1, 1.0);
 	}
 	else if((it->first).find("W3Jets")!=string::npos){
@@ -1339,8 +1371,10 @@ void plotMuTau( Int_t mH_           = 120,
 	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos)
 	    sbinPZetaRelForWextrapolation = (sbinPZetaRelInclusive&&vbfLoose);     
 
-	  evaluateWextrapolation("OS", selection_, 
-				 extrapFactorWOSW3Jets, OSWinSignalRegionDATAW3Jets, OSWinSignalRegionMCW3Jets,
+	  evaluateWextrapolation("OS", false, selection_, 
+				 extrapFactorWOSW3Jets, 
+				 OSWinSignalRegionDATAW3Jets,   OSWinSignalRegionMCW3Jets,
+				 OSWinSidebandRegionDATAW3Jets, OSWinSidebandRegionMCW3Jets,
 				 scaleFactorTTOSW3Jets,
 				 hExtrapW3Jets, variable,
 				 currentTree, backgroundTTbar, backgroundOthers, 
@@ -1360,7 +1394,7 @@ void plotMuTau( Int_t mH_           = 120,
 
 	  float NormW3Jets = 0.;
 	  drawHistogramMC(currentTree, variable, NormW3Jets, Error,   Lumi*hltEff_/1000., h1, sbin, 1);
-	  h1->Scale(OSWinSignalRegionDATAW3Jets/OSWinSignalRegionMCW3Jets);
+	  h1->Scale(OSWinSidebandRegionDATAW3Jets/OSWinSidebandRegionMCW3Jets);
 	  hW3Jets->Add(h1, 1.0);
 
 	  drawHistogramMC(currentTree, variable, NormW3Jets, Error,   Lumi*hltEff_/1000., hCleaner, sbinMtiso, 1);
@@ -1369,13 +1403,14 @@ void plotMuTau( Int_t mH_           = 120,
 	  drawHistogramMC(currentTree, variable, NormW3Jets, Error,   Lumi*hltEff_/1000., hCleaner, sbinLtiso, 1);
 	  hW3JetsLooseTauIso->Add(hCleaner,  hW3Jets->Integral()/hCleaner->Integral());
 
-	  drawHistogramMC(currentTree, variable, NormW3Jets, Error,   Lumi*hltEff_/1000., hCleaner, sbinMtisoInclusive&&vbfLoose, 1);
+	  drawHistogramMC(currentTree, variable, NormW3Jets, Error,   Lumi*hltEff_/1000., hCleaner, sbinInclusive&&vbfLoose, 1);
 	  hW3JetsMediumTauIsoRelVBF->Add(hCleaner,  hW3Jets->Integral()/hCleaner->Integral());
 	  
-
 	  if(((selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || 
-	      selection_.find("twoJets")!=string::npos)) 
+	      selection_.find("twoJets")!=string::npos)){
 	    hEWK->Add(hW3JetsMediumTauIsoRelVBF,1.0);
+	    //hEWK->Add(hW3Jets,1.0);
+	  }
 	}
 	else if((it->first).find("WJets")!=string::npos){
 
@@ -1387,8 +1422,10 @@ void plotMuTau( Int_t mH_           = 120,
 	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos)
 	    sbinPZetaRelForWextrapolation = (sbinPZetaRelInclusive&&vbfLoose); 
 	  
-	  evaluateWextrapolation("OS", selection_, 
-				 extrapFactorWOSWJets, OSWinSignalRegionDATAWJets, OSWinSignalRegionMCWJets,
+	  evaluateWextrapolation("OS", false, selection_, 
+				 extrapFactorWOSWJets, 
+				 OSWinSignalRegionDATAWJets,   OSWinSignalRegionMCWJets,
+				 OSWinSidebandRegionDATAWJets, OSWinSidebandRegionMCWJets,
 				 scaleFactorTTOSWJets,
 				 hExtrapW, variable,
 				 currentTree, backgroundTTbar, backgroundOthers, 
@@ -1408,7 +1445,7 @@ void plotMuTau( Int_t mH_           = 120,
 
 	  float NormWJets = 0.;
 	  drawHistogramMC(currentTree, variable, NormWJets, Error,   Lumi*hltEff_/1000., h1, sbin, 1);
-	  h1->Scale(OSWinSignalRegionDATAWJets/OSWinSignalRegionMCWJets);
+	  h1->Scale(OSWinSidebandRegionDATAWJets/OSWinSidebandRegionMCWJets);
 	  
 	  hW->Add(h1, 1.0);
 	  if(!((selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || 
@@ -1464,32 +1501,32 @@ void plotMuTau( Int_t mH_           = 120,
 	  drawHistogramData(currentTree, variable, NormData,  Error, 1.0 , hCleaner,  sbinSSaIso  ,1);
 	  hAntiIso->Add(hCleaner, 1.0);
 	  drawHistogramDataFakeRate(currentTree, variable, NormData,  Error, 1.0 , hCleaner,  sbinSSaIso , scaleFactMu ,1);
-	  hAntiIsoFR->Add(hCleaner, SSIsoToSSAIsoRatioQCD);
+	  hAntiIsoFR->Add(hCleaner, 1.0);
 	  
 	  cleanQCDHisto(hCleaner, hLooseIso1, variable, 
 			backgroundWJets, backgroundTTbar, backgroundOthers, 
 			backgroundDYMutoTau, backgroundDYJtoTau, backgroundDYTauTau, 
-			Lumi*hltEff_/1000., (SSWinSignalRegionDATA/SSWinSignalRegionMC), 
+			Lumi*hltEff_/1000., (SSWinSidebandRegionDATA/SSWinSidebandRegionMC), 
 			TTxsectionRatio*scaleFactorTTSS, MutoTauCorrectionFactor*lumiCorrFactor, 
 			JtoTauCorrectionFactor*lumiCorrFactor, lumiCorrFactor*ExtrapolationFactorZDataMC,sbinSSlIso1);
  	  cleanQCDHisto(hCleaner, hLooseIso2, variable, 
  			backgroundWJets, backgroundTTbar, backgroundOthers, 
  			backgroundDYMutoTau, backgroundDYJtoTau, backgroundDYTauTau, 
- 			Lumi*hltEff_/1000., SSWinSignalRegionDATA/SSWinSignalRegionMC, 
+ 			Lumi*hltEff_/1000., SSWinSidebandRegionDATA/SSWinSidebandRegionMC, 
  			TTxsectionRatio*scaleFactorTTSS, MutoTauCorrectionFactor*lumiCorrFactor, 
  			JtoTauCorrectionFactor*lumiCorrFactor, lumiCorrFactor*ExtrapolationFactorZDataMC,sbinSSlIso2);
  	  cleanQCDHisto(hCleaner, hLooseIso3, variable, 
  			backgroundWJets, backgroundTTbar, backgroundOthers, 
  			backgroundDYMutoTau, backgroundDYJtoTau, backgroundDYTauTau, 
- 			Lumi*hltEff_/1000., SSWinSignalRegionDATA/SSWinSignalRegionMC, 
+ 			Lumi*hltEff_/1000., SSWinSidebandRegionDATA/SSWinSidebandRegionMC, 
  			TTxsectionRatio*scaleFactorTTSS, MutoTauCorrectionFactor*lumiCorrFactor, 
  			JtoTauCorrectionFactor*lumiCorrFactor, lumiCorrFactor*ExtrapolationFactorZDataMC,sbinSSlIso3);
- 	  cleanQCDHisto(hCleaner, hAntiIso, variable, 
- 			backgroundWJets, backgroundTTbar, backgroundOthers, 
- 			backgroundDYMutoTau, backgroundDYJtoTau, backgroundDYTauTau, 
- 			Lumi*hltEff_/1000., SSWinSignalRegionDATA/SSWinSignalRegionMC, 
- 			TTxsectionRatio*scaleFactorTTSS, MutoTauCorrectionFactor*lumiCorrFactor, 
- 			JtoTauCorrectionFactor*lumiCorrFactor, lumiCorrFactor*ExtrapolationFactorZDataMC,sbinSSaIso);
+//  	  cleanQCDHisto(hCleaner, hAntiIso, variable, 
+//  			backgroundWJets, backgroundTTbar, backgroundOthers, 
+//  			backgroundDYMutoTau, backgroundDYJtoTau, backgroundDYTauTau, 
+//  			Lumi*hltEff_/1000., SSWinSidebandRegionDATA/SSWinSidebandRegionMC, 
+//  			TTxsectionRatio*scaleFactorTTSS, MutoTauCorrectionFactor*lumiCorrFactor, 
+//  			JtoTauCorrectionFactor*lumiCorrFactor, lumiCorrFactor*ExtrapolationFactorZDataMC,sbinSSaIso);
 	  
 	}
 
@@ -1896,11 +1933,12 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "July2012/Test"){
   //mH.push_back(160);
 
 
-  plotMuTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
+  //plotMuTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
   //plotMuTau(120,1,"boostLow",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
   //plotMuTau(120,1,"novbfHigh",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
   //plotMuTau(120,1,"vbf",""   ,"diTauVisMass","visible mass","GeV"              ,outputDir,10,0,200,5.0,1.0,0,1.2);  
-  //plotMuTau(120,1,"inclusive",""   ,"MtLeg1Corr","M_{T}(#mu#nu)","GeV" ,       outputDir,40,0,160,5.0,1.0,0,1.2,true);
+  //plotMuTau(120,1,"vbf",""   ,"MtLeg1Corr","M_{T}(#mu#nu)","GeV" ,       outputDir,16,0,160,5.0,1.0,0,1.2,true);
+  plotMuTau(120,1,"inclusive",""   ,"MtLeg1Corr","M_{T}(#mu#nu)","GeV" ,       outputDir,32,0,160,5.0,1.0,0,1.2,true);
   
   return; 
   
