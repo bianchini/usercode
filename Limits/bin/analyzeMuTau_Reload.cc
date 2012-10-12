@@ -462,7 +462,7 @@ void evaluateWextrapolation(string sign = "OS", bool useFakeRate = false, string
   OSWinSidebandRegionDATA = OSWinSignalRegionDATA*scaleFactorOS;
 }
 
-void evaluateQCD(TH1F* qcdHisto = 0, bool evaluateWSS = true, string sign = "SS", bool useFakeRate = false, string selection_ = "", 
+void evaluateQCD(TH1F* qcdHisto = 0, bool evaluateWSS = true, string sign = "SS", bool useFakeRate = false, bool removeMtCut = false, string selection_ = "", 
 		 float& SSQCDinSignalRegionDATAIncl_ = *(new float()), float& SSIsoToSSAIsoRatioQCD = *(new float()), float& scaleFactorTTSSIncl = *(new float()),
 		 float& extrapFactorWSSIncl = *(new float()), 
 		 float& SSWinSignalRegionDATAIncl = *(new float()), float& SSWinSignalRegionMCIncl = *(new float()),
@@ -508,6 +508,10 @@ void evaluateQCD(TH1F* qcdHisto = 0, bool evaluateWSS = true, string sign = "SS"
 
   float SSWJetsinSidebandRegionMCIncl    = 0.;
   drawHistogramMC(backgroundWJets,     variable, SSWJetsinSidebandRegionMCIncl,      Error, scaleFactor*(SSWinSidebandRegionDATAIncl/SSWinSidebandRegionMCIncl), hExtrap, sbin,1);
+  if(!removeMtCut){
+    hExtrap->Scale(SSWinSignalRegionDATAIncl/hExtrap->Integral());
+    SSWJetsinSidebandRegionMCIncl = SSWinSignalRegionDATAIncl;
+  }
   if(qcdHisto!=0) qcdHisto->Add(hExtrap, -1.0);
 
   float SSTTbarinSidebandRegionMCIncl    = 0.;
@@ -1191,7 +1195,7 @@ void plotMuTau( Int_t mH_           = 120,
   float SSWinSidebandRegionDATAIncl = 0.;
   float SSWinSidebandRegionMCIncl = 0.;
       
-  evaluateQCD(0, true, "SS", false, "inclusive", 
+  evaluateQCD(0, true, "SS", false, removeMtCut, "inclusive", 
 	      SSQCDinSignalRegionDATAIncl , SSIsoToSSAIsoRatioQCD, scaleFactorTTSSIncl,
 	      extrapFactorWSSIncl, 
 	      SSWinSignalRegionDATAIncl, SSWinSignalRegionMCIncl,
@@ -1316,7 +1320,7 @@ void plotMuTau( Int_t mH_           = 120,
 	sbinPZetaRelSSForWextrapolation = (sbinPZetaRelSSInclusive&&vbfLoose);     
 
 
-      evaluateQCD(h1, true, "SS", false, selection_, 
+      evaluateQCD(h1, true, "SS", false, removeMtCut, selection_, 
 		  SSQCDinSignalRegionDATA , dummy1 , scaleFactorTTSS,
 		  extrapFactorWSS, 
 		  SSWinSignalRegionDATA, SSWinSignalRegionMC,
@@ -1394,7 +1398,8 @@ void plotMuTau( Int_t mH_           = 120,
 
 	  float NormW3Jets = 0.;
 	  drawHistogramMC(currentTree, variable, NormW3Jets, Error,   Lumi*hltEff_/1000., h1, sbin, 1);
-	  h1->Scale(OSWinSidebandRegionDATAW3Jets/OSWinSidebandRegionMCW3Jets);
+	  if(removeMtCut) h1->Scale(OSWinSidebandRegionDATAW3Jets/OSWinSidebandRegionMCW3Jets);
+	  else h1->Scale(OSWinSignalRegionDATAW3Jets/h1->Integral());
 	  hW3Jets->Add(h1, 1.0);
 
 	  drawHistogramMC(currentTree, variable, NormW3Jets, Error,   Lumi*hltEff_/1000., hCleaner, sbinMtiso, 1);
@@ -1445,9 +1450,10 @@ void plotMuTau( Int_t mH_           = 120,
 
 	  float NormWJets = 0.;
 	  drawHistogramMC(currentTree, variable, NormWJets, Error,   Lumi*hltEff_/1000., h1, sbin, 1);
-	  h1->Scale(OSWinSidebandRegionDATAWJets/OSWinSidebandRegionMCWJets);
-	  
+	  if(removeMtCut) h1->Scale(OSWinSidebandRegionDATAWJets/OSWinSidebandRegionMCWJets);
+	  else h1->Scale(OSWinSignalRegionDATAWJets/h1->Integral());
 	  hW->Add(h1, 1.0);
+
 	  if(!((selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || 
 	       selection_.find("twoJets")!=string::npos)) 
 	    hEWK->Add(h1,1.0);
@@ -1938,7 +1944,10 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "July2012/Test"){
   //plotMuTau(120,1,"novbfHigh",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
   //plotMuTau(120,1,"vbf",""   ,"diTauVisMass","visible mass","GeV"              ,outputDir,10,0,200,5.0,1.0,0,1.2);  
   //plotMuTau(120,1,"vbf",""   ,"MtLeg1Corr","M_{T}(#mu#nu)","GeV" ,       outputDir,16,0,160,5.0,1.0,0,1.2,true);
-  plotMuTau(120,1,"inclusive",""   ,"MtLeg1Corr","M_{T}(#mu#nu)","GeV" ,       outputDir,32,0,160,5.0,1.0,0,1.2,true);
+  //plotMuTau(120,1,"inclusive",""   ,"MtLeg1Corr","M_{T}(#mu#nu)","GeV" ,       outputDir,32,0,160,5.0,1.0,0,1.2,true);
+
+  plotMuTau(120,1,"vbf",""   ,"ptL2","tau pt","GeV" ,                    outputDir,16,20,100,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"boostHigh",""   ,"diTauNSVfitMass","mass","GeV"      ,outputDir,35,0,350,5.0,1.0,0,1.2);  
   
   return; 
   
