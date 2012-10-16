@@ -413,7 +413,8 @@ void evaluateWextrapolation(string sign = "OS", bool useFakeRate = false, string
   cout << "Normalizing TTbar from sideband: " << OSTTbarinSidebandRegionBtagMC << " events expected from TTbar." << endl 
        << "From WJets " << OSWinSidebandRegionBtagMC <<  ", from QCD " << OSQCDinSidebandRegionBtag << " (of which " 
        << OSWinSidebandRegionBtagAIsoMC << " expected from anti-isolated W)"
-       << ", from others " << OSOthersinSidebandRegionBtagMC << ". Observed " << OSDatainSidebandRegionBtag << endl;
+       << ", from others " << OSOthersinSidebandRegionBtagMC << endl;
+  cout << "Observed " << OSDatainSidebandRegionBtag << endl;
   cout << "====> scale factor for " << sign << " TTbar is " << scaleFactorTTOS << endl;
   if(scaleFactorTTOS<0){
     cout << "!!! scale factor is negative... set it to 1 !!!" << endl;
@@ -447,9 +448,9 @@ void evaluateWextrapolation(string sign = "OS", bool useFakeRate = false, string
   OSWinSignalRegionDATA -= OSDYMutoTauinSidebandRegionMC;
   if(useFakeRate) OSWinSignalRegionDATA -= (OSQCDinSidebandRegionData-OSWinSidebandRegionAIsoMC);
   OSWinSignalRegionDATA /= scaleFactorOS;
-  cout << "- expected from TTbar "  << OSTTbarinSidebandRegionMC << endl;
-  cout << "- expected from Others " << OSOthersinSidebandRegionMC << endl;
-  cout << "- expected from DY->tautau " << OSDYtoTauinSidebandRegionMC << endl;
+  cout << "- expected from TTbar          " << OSTTbarinSidebandRegionMC << endl;
+  cout << "- expected from Others         " << OSOthersinSidebandRegionMC << endl;
+  cout << "- expected from DY->tautau     " << OSDYtoTauinSidebandRegionMC << endl;
   cout << "- expected from DY->ll, l->tau " << OSDYMutoTauinSidebandRegionMC << endl;
   cout << "- expected from DY->ll, j->tau " << OSDYJtoTauinSidebandRegionMC  << endl;
   cout << "- expected from QCD " << OSQCDinSidebandRegionData << ", obtained from " << OSAIsoEventsinSidebandRegionData << " anti-isolated events " << endl;
@@ -544,10 +545,10 @@ void evaluateQCD(TH1F* qcdHisto = 0, bool evaluateWSS = true, string sign = "SS"
   SSQCDinSignalRegionDATAIncl *= OStoSSRatioQCD;
   if(qcdHisto!=0) qcdHisto->Scale(OStoSSRatioQCD);
 
-  cout << "- expected from WJets "          << SSWJetsinSidebandRegionMCIncl << endl;
-  cout << "- expected from TTbar "          << SSTTbarinSidebandRegionMCIncl << endl;
-  cout << "- expected from Others "         << SSOthersinSidebandRegionMCIncl << endl;
-  cout << "- expected from DY->tautau "     << SSDYtoTauinSidebandRegionMCIncl << endl;
+  cout << "- expected from WJets          " << SSWJetsinSidebandRegionMCIncl << endl;
+  cout << "- expected from TTbar          " << SSTTbarinSidebandRegionMCIncl << endl;
+  cout << "- expected from Others         " << SSOthersinSidebandRegionMCIncl << endl;
+  cout << "- expected from DY->tautau     " << SSDYtoTauinSidebandRegionMCIncl << endl;
   cout << "- expected from DY->ll, l->tau " << SSDYMutoTauinSidebandRegionMCIncl << endl;
   cout << "- expected from DY->ll, j->tau " << SSDYJtoTauinSidebandRegionMCIncl  << endl;
   cout << "QCD in inclusive SS region is estimated to be " << SSQCDinSignalRegionDATAIncl/OStoSSRatioQCD  << "*" << OStoSSRatioQCD
@@ -608,6 +609,76 @@ void cleanQCDHisto(TH1F* hCleaner = 0, TH1F* hLooseIso = 0, TString variable = "
 }
 
 
+
+void evaluateWusingSSEvents(TH1F* hCleaner = 0, int bin_low = 0, int bin_high = 0,
+			    string selection_ = "",
+			    float& pseudoExtrapolationFactor = *(new float()),
+			    float& ErrorPseudoExtrapolationFactor = *(new float()),
+			    TH1F* hWMt=0, TString variable="",
+			    TTree* backgroundWJets=0, TTree* backgroundTTbar=0, TTree* backgroundOthers=0, 
+			    TTree* backgroundDYTauTau=0, TTree* backgroundDYJtoTau=0, TTree* backgroundDYMutoTau=0, TTree* data=0,
+			    float scaleFactor=0., float TTxsectionRatio=0., float lumiCorrFactor=0.,
+			    float ExtrapolationFactorSidebandZDataMC = 0., float ExtrapolationFactorZDataMC = 0.,
+			    float MutoTauCorrectionFactor = 0., float JtoTauCorrectionFactor = 0.,
+			    float scaleFactorTTSS = 0.,
+			    string scaleFactMu    = "",
+			    TCut sbinPZetaRelSS   = ""){
+
+  float Error = 0.;
+  hCleaner->Reset();
+  hCleaner->Sumw2();
+
+  cout << "Extrapolation from bin [1," <<  bin_low << "] and [" <<  bin_high << ",inf]" << endl;
+
+  float SSData = 0.;
+  drawHistogramData(data, variable, SSData ,Error, 1.0 , hWMt, sbinPZetaRelSS, 1);
+  hCleaner->Add(hWMt, +1.0);
+  float SSTTbarinSidebandRegionMC = 0.;
+  drawHistogramMC(backgroundTTbar,  variable,  SSTTbarinSidebandRegionMC,     Error, scaleFactor*TTxsectionRatio , hWMt, sbinPZetaRelSS,1);  
+  SSTTbarinSidebandRegionMC *= scaleFactorTTSS;
+  hCleaner->Add(hWMt, -scaleFactorTTSS);
+  cout << "Contribution from TTbar in SS is " << SSTTbarinSidebandRegionMC << endl;
+  float SSOthersinSidebandRegionMC   = 0.;
+  drawHistogramMC(backgroundOthers,    variable, SSOthersinSidebandRegionMC  ,Error,  scaleFactor , hWMt, sbinPZetaRelSS, 1);
+  hCleaner->Add(hWMt, -1.0);
+  float SSDYtoTauinSidebandRegionMC  = 0.;
+  drawHistogramMC(backgroundDYTauTau,  variable, SSDYtoTauinSidebandRegionMC ,Error,  scaleFactor*lumiCorrFactor*ExtrapolationFactorZDataMC , hWMt, sbinPZetaRelSS,1);
+  hCleaner->Add(hWMt, -1.0);
+  float SSDYJtoTauinSidebandRegionMC = 0.;
+  drawHistogramMC(backgroundDYJtoTau,  variable, SSDYJtoTauinSidebandRegionMC ,Error, scaleFactor*lumiCorrFactor*JtoTauCorrectionFactor , hWMt, sbinPZetaRelSS,1);
+  hCleaner->Add(hWMt, -1.0);
+  float SSDYMutoTauinSidebandRegionMC = 0.;
+  drawHistogramMC(backgroundDYMutoTau, variable, SSDYMutoTauinSidebandRegionMC ,Error,scaleFactor*lumiCorrFactor*MutoTauCorrectionFactor , hWMt, sbinPZetaRelSS,1);
+  hCleaner->Add(hWMt, -1.0);
+  
+  cout << "Selected events in SS data " << SSData << endl;
+  SSData -= SSTTbarinSidebandRegionMC;
+  SSData -= SSOthersinSidebandRegionMC;
+  SSData -= SSDYtoTauinSidebandRegionMC;
+  SSData -= SSDYJtoTauinSidebandRegionMC;
+  SSData -= SSDYMutoTauinSidebandRegionMC;
+  cout << "- expected from TTbar "          << SSTTbarinSidebandRegionMC << endl;
+  cout << "- expected from Others "         << SSOthersinSidebandRegionMC << endl;
+  cout << "- expected from DY->tautau "     << SSDYtoTauinSidebandRegionMC << endl;
+  cout << "- expected from DY->ll, l->tau " << SSDYMutoTauinSidebandRegionMC << endl;
+  cout << "- expected from DY->ll, j->tau " << SSDYJtoTauinSidebandRegionMC  << endl;
+
+  double errorNum = 0.; double errorDen = 0.;
+  float num = hCleaner->IntegralAndError(bin_high+1, hCleaner->GetNbinsX(),errorNum);
+  float den = hCleaner->IntegralAndError(1, bin_low, errorDen);
+  pseudoExtrapolationFactor = num/den;
+  ErrorPseudoExtrapolationFactor = pseudoExtrapolationFactor*TMath::Sqrt( errorNum*errorNum/num/num  +  errorDen*errorDen/den/den);
+  cout << " ==> the high -> low extrapolation factor using SS events is "
+       << num << "/" << den << " = " << pseudoExtrapolationFactor << " +/- " << ErrorPseudoExtrapolationFactor << endl;
+  
+}
+
+
+
+
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////7
 
 void plotMuTau( Int_t mH_           = 120,
@@ -622,8 +693,7 @@ void plotMuTau( Int_t mH_           = 120,
 		Float_t magnifySgn_ = 1.0,
 		Float_t hltEff_     = 1.0,
 		Int_t logy_         = 0,
-		Float_t maxY_       = 1.2,
-		bool removeMtCut    = false
+		Float_t maxY_       = 1.2
 		) 
 {   
 
@@ -824,87 +894,82 @@ void plotMuTau( Int_t mH_           = 120,
   ///////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////
 
+  TString pathToFile = "/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis/";
 
   // Open the files
   TFile *fData              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile(pathToFile+"nTupleRun2011-MuTau-All_run_Open_MuTauStream.root", "READ");  
   TFile *fDataEmbedded              
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleRun2011-MuTau-Embedded-All_run_Open_MuTauStream.root", "READ");  
+    = new TFile(pathToFile+"nTupleRun2011-MuTau-Embedded-All_run_Open_MuTauStream.root", "READ");  
   TFile *fBackgroundDY
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile(pathToFile+"nTupleDYJets-MuTau-50-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundWJets   
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile(pathToFile+"nTupleWJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundW3Jets   
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleW3Jets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile(pathToFile+"nTupleW3Jets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundTTbar  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile(pathToFile+"nTupleTTJets-MuTau-madgraph-PUS6_run_Open_MuTauStream.root","READ"); 
   TFile *fBackgroundOthers  
-    = new TFile("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
+    = new TFile(pathToFile+"nTupleOthers-MuTau-PUS6_run_Open_MuTauStream.root","READ"); 
 
   vector<int> hMasses;
-  hMasses.push_back(110);
-  hMasses.push_back(115);
-  hMasses.push_back(120);
-  hMasses.push_back(125);
-  hMasses.push_back(130);
-  hMasses.push_back(135);
-  hMasses.push_back(140);
-  hMasses.push_back(145);
+  hMasses.push_back(110);hMasses.push_back(115);hMasses.push_back(120);hMasses.push_back(125);
+  hMasses.push_back(130);hMasses.push_back(135);hMasses.push_back(140);hMasses.push_back(145);
 
   TFile *fSignalggH110 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",110) ,"READ");  
+    new TFile(Form("%s/nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),110) ,"READ");  
   TFile *fSignalggH115 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",115) ,"READ");  
+    new TFile(Form("%s/nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),115) ,"READ");  
   TFile *fSignalggH120 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",120) ,"READ");  
+    new TFile(Form("%s/nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),120) ,"READ");  
   TFile *fSignalggH125 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",125) ,"READ");  
+    new TFile(Form("%s/nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),125) ,"READ");  
   TFile *fSignalggH130 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",130) ,"READ");  
+    new TFile(Form("%s/nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),130) ,"READ");  
   TFile *fSignalggH135 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",135) ,"READ");  
+    new TFile(Form("%s/nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),135) ,"READ");  
   TFile *fSignalggH140 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",140) ,"READ");  
+    new TFile(Form("%s/nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),140) ,"READ");  
   TFile *fSignalggH145 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",145) ,"READ");  
+    new TFile(Form("%s/nTupleGGFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),145) ,"READ");  
 
   TFile *fSignalqqH110 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",110) ,"READ");  
+    new TFile(Form("%s/nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),110) ,"READ");  
   TFile *fSignalqqH115 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",115) ,"READ");  
+    new TFile(Form("%s/nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),115) ,"READ");  
   TFile *fSignalqqH120 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",120) ,"READ");  
+    new TFile(Form("%s/nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),120) ,"READ");  
   TFile *fSignalqqH125 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",125) ,"READ");  
+    new TFile(Form("%s/nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),125) ,"READ");  
   TFile *fSignalqqH130 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",130) ,"READ");  
+    new TFile(Form("%s/nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),130) ,"READ");  
   TFile *fSignalqqH135 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",135) ,"READ");  
+    new TFile(Form("%s/nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),135) ,"READ");  
   TFile *fSignalqqH140 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",140) ,"READ");  
+    new TFile(Form("%s/nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),140) ,"READ");  
   TFile *fSignalqqH145 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",145) ,"READ");  
+    new TFile(Form("%s/nTupleVBFH%d-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),145) ,"READ");  
  
   TFile *fSignalVH110 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",110) ,"READ");  
+    new TFile(Form("%s/nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",  pathToFile.Data(),110) ,"READ");  
   TFile *fSignalVH115 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",115) ,"READ");  
+    new TFile(Form("%s/nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",  pathToFile.Data(),115) ,"READ");  
   TFile *fSignalVH120 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",120) ,"READ");  
+    new TFile(Form("%s/nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",  pathToFile.Data(),120) ,"READ");  
   TFile *fSignalVH125 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",125) ,"READ");  
+    new TFile(Form("%s/nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",  pathToFile.Data(),125) ,"READ");  
   TFile *fSignalVH130 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",130) ,"READ");  
+    new TFile(Form("%s/nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",  pathToFile.Data(),130) ,"READ");  
   TFile *fSignalVH135 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",135) ,"READ");  
+    new TFile(Form("%s/nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",  pathToFile.Data(),135) ,"READ");  
   TFile *fSignalVH140 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",140) ,"READ");  
+    new TFile(Form("%s/nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",  pathToFile.Data(),140) ,"READ");  
   TFile *fSignalVH145 =          
-    new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_Approval_thesis//nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",145) ,"READ");  
+    new TFile(Form("%s/nTupleVH%d-MuTau-pythia-PUS6_run_Open_MuTauStream.root",  pathToFile.Data(),145) ,"READ");  
  
   std::map<string,TFile*> mapSUSYfiles;
   for(unsigned int i = 0; i < SUSYhistos.size() ; i++){
-    mapSUSYfiles.insert( make_pair(SUSYhistos[i], new TFile(Form("/data_CMS/cms/lbianchini/VbfJetsStudy/OpenNtuples/MuTauStreamFall11_04May2012_PreApproval_thesis//nTuple%s-MuTau-powheg-PUS6_run_Open_MuTauStream.root",SUSYhistos[i].c_str()) ,"READ")  )  );
+    mapSUSYfiles.insert( make_pair(SUSYhistos[i], new TFile(Form("%s/nTuple%s-MuTau-powheg-PUS6_run_Open_MuTauStream.root",pathToFile.Data(),SUSYhistos[i].c_str()) ,"READ")  )  );
   }
   
 
@@ -959,14 +1024,14 @@ void plotMuTau( Int_t mH_           = 120,
   TTree *signalVBF140        = (TTree*)fSignalqqH140->Get(tree);
   TTree *signalVBF145        = (TTree*)fSignalqqH145->Get(tree);
 
-  TTree *signalVH110        = (TTree*)fSignalVH110->Get(tree);
-  TTree *signalVH115        = (TTree*)fSignalVH115->Get(tree);
-  TTree *signalVH120        = (TTree*)fSignalVH120->Get(tree);
-  TTree *signalVH125        = (TTree*)fSignalVH125->Get(tree);
-  TTree *signalVH130        = (TTree*)fSignalVH130->Get(tree);
-  TTree *signalVH135        = (TTree*)fSignalVH135->Get(tree);
-  TTree *signalVH140        = (TTree*)fSignalVH140->Get(tree);
-  TTree *signalVH145        = (TTree*)fSignalVH145->Get(tree);
+  TTree *signalVH110         = (TTree*)fSignalVH110->Get(tree);
+  TTree *signalVH115         = (TTree*)fSignalVH115->Get(tree);
+  TTree *signalVH120         = (TTree*)fSignalVH120->Get(tree);
+  TTree *signalVH125         = (TTree*)fSignalVH125->Get(tree);
+  TTree *signalVH130         = (TTree*)fSignalVH130->Get(tree);
+  TTree *signalVH135         = (TTree*)fSignalVH135->Get(tree);
+  TTree *signalVH140         = (TTree*)fSignalVH140->Get(tree);
+  TTree *signalVH145         = (TTree*)fSignalVH145->Get(tree);
 
   std::map<string,TTree*> mapSUSYtrees;
   for(unsigned int i = 0; i < SUSYhistos.size() ; i++){
@@ -1024,7 +1089,11 @@ void plotMuTau( Int_t mH_           = 120,
   TCut nobTag("nJets30<2 && nJets20BTagged==0");
   TCut novbf("nJets30<1 && nJets20BTagged==0");
 
-  TCut MtCut = removeMtCut ? "(etaL1<999)" : pZ;
+  bool removeMtCut     = bool(selection_.find("NoMt")!=string::npos);
+  bool invertDiTauSign = bool(selection_.find("SS")!=string::npos);
+
+  TCut MtCut       = removeMtCut     ? "(etaL1<999)" : pZ;
+  TCut diTauCharge = invertDiTauSign ? SS : OS; 
 
   TCut sbin; TCut sbinEmbedding; TCut sbinEmbeddingPZetaRel; TCut sbinPZetaRel; TCut sbinSS; 
   TCut sbinPZetaRelSS; TCut sbinSSaIso; 
@@ -1034,39 +1103,39 @@ void plotMuTau( Int_t mH_           = 120,
   TCut sbinSSltiso; TCut sbinSSmtiso; TCut sbinLtiso; TCut sbinMtiso; TCut sbinPZetaRelMtiso;
 
   TCut sbinInclusive;
-  sbinInclusive                     = lpt && tpt && tiso && liso && lveto && OS && MtCut  && hltevent && hltmatch;
+  sbinInclusive                     = lpt && tpt && tiso && liso && lveto && diTauCharge && MtCut  && hltevent && hltmatch;
   TCut sbinEmbeddingInclusive;
-  sbinEmbeddingInclusive            = lpt && tpt && tiso && liso && lveto && OS && MtCut                         ;
+  sbinEmbeddingInclusive            = lpt && tpt && tiso && liso && lveto && diTauCharge && MtCut                         ;
   TCut sbinPZetaRelEmbeddingInclusive;
-  sbinPZetaRelEmbeddingInclusive    = lpt && tpt && tiso && liso && lveto && OS                                  ;
+  sbinPZetaRelEmbeddingInclusive    = lpt && tpt && tiso && liso && lveto && diTauCharge                                  ;
   TCut sbinPZetaRelSSInclusive;
-  sbinPZetaRelSSInclusive           = lpt && tpt && tiso && liso && lveto && SS           && hltevent && hltmatch;
+  sbinPZetaRelSSInclusive           = lpt && tpt && tiso && liso && lveto && SS                    && hltevent && hltmatch;
   TCut sbinPZetaRelInclusive;
-  sbinPZetaRelInclusive             = lpt && tpt && tiso && liso && lveto && OS           && hltevent && hltmatch;
+  sbinPZetaRelInclusive             = lpt && tpt && tiso && liso && lveto && diTauCharge           && hltevent && hltmatch;
   TCut sbinSSInclusive;
-  sbinSSInclusive                   = lpt && tpt && tiso && liso && lveto && SS && MtCut  && hltevent && hltmatch;
+  sbinSSInclusive                   = lpt && tpt && tiso && liso && lveto && SS          && MtCut  && hltevent && hltmatch;
   TCut sbinSSaIsoInclusive;
-  sbinSSaIsoInclusive               = lpt && tpt && tiso && laiso&& lveto && SS && MtCut  && hltevent && hltmatch;
+  sbinSSaIsoInclusive               = lpt && tpt && tiso && laiso&& lveto && SS          && MtCut  && hltevent && hltmatch;
   TCut sbinPZetaRelSSaIsoInclusive;
-  sbinPZetaRelSSaIsoInclusive       = lpt && tpt && tiso && laiso&& lveto && SS           && hltevent && hltmatch;
+  sbinPZetaRelSSaIsoInclusive       = lpt && tpt && tiso && laiso&& lveto && SS                    && hltevent && hltmatch;
   TCut sbinPZetaRelSSaIsoMtisoInclusive;
-  sbinPZetaRelSSaIsoMtisoInclusive  = lpt && tpt && mtiso&& laiso&& lveto && SS           && hltevent && hltmatch;
+  sbinPZetaRelSSaIsoMtisoInclusive  = lpt && tpt && mtiso&& laiso&& lveto && SS                    && hltevent && hltmatch;
 
   TCut sbinSSaIsoLtisoInclusive;
-  sbinSSaIsoLtisoInclusive          = lpt && tpt && mtiso&& laiso&& lveto && SS && MtCut  && hltevent && hltmatch;
+  sbinSSaIsoLtisoInclusive          = lpt && tpt && mtiso&& laiso&& lveto && SS && MtCut           && hltevent && hltmatch;
   TCut sbinSSaIsoMtisoInclusive;
-  sbinSSaIsoMtisoInclusive          = lpt && tpt && mtiso&& laiso&& lveto && SS && MtCut  && hltevent && hltmatch;
+  sbinSSaIsoMtisoInclusive          = lpt && tpt && mtiso&& laiso&& lveto && SS && MtCut           && hltevent && hltmatch;
   TCut sbinPZetaRelaIsoInclusive;
-  sbinPZetaRelaIsoInclusive         = lpt && tpt && tiso && laiso&& lveto && OS           && hltevent && hltmatch;
+  sbinPZetaRelaIsoInclusive         = lpt && tpt && tiso && laiso&& lveto && diTauCharge           && hltevent && hltmatch;
 
   TCut sbinSSltisoInclusive;
-  sbinSSltisoInclusive              = lpt && tpt && ltiso&& liso && lveto && SS && MtCut  && hltevent && hltmatch;
+  sbinSSltisoInclusive              = lpt && tpt && ltiso&& liso && lveto && SS && MtCut           && hltevent && hltmatch;
   TCut sbinLtisoInclusive;
-  sbinLtisoInclusive                = lpt && tpt && ltiso&& liso && lveto && OS && MtCut  && hltevent && hltmatch;
+  sbinLtisoInclusive                = lpt && tpt && ltiso&& liso && lveto && diTauCharge && MtCut  && hltevent && hltmatch;
   TCut sbinMtisoInclusive;
-  sbinMtisoInclusive                = lpt && tpt && mtiso&& liso && lveto && OS && MtCut  && hltevent && hltmatch;
+  sbinMtisoInclusive                = lpt && tpt && mtiso&& liso && lveto && diTauCharge && MtCut  && hltevent && hltmatch;
   TCut sbinPZetaRelLtisoInclusive;
-  sbinPZetaRelLtisoInclusive        = lpt && tpt && ltiso&& liso && lveto && OS           && hltevent && hltmatch;
+  sbinPZetaRelLtisoInclusive        = lpt && tpt && ltiso&& liso && lveto && diTauCharge           && hltevent && hltmatch;
 
 
   TCut sbinTmp("");
@@ -1090,26 +1159,26 @@ void plotMuTau( Int_t mH_           = 120,
     sbinTmp = nobTag;
 
 
-  sbin                   =  lpt && tpt && tiso && liso && lveto && OS && MtCut  && hltevent && hltmatch && sbinTmp;
-  sbinEmbedding          =  lpt && tpt && tiso && liso && lveto && OS && MtCut                          && sbinTmp;
-  sbinEmbeddingPZetaRel  =  lpt && tpt && tiso && liso && lveto && OS                                   && sbinTmp;
-  sbinPZetaRel           =  lpt && tpt && tiso && liso && lveto && OS           && hltevent && hltmatch && sbinTmp;
-  sbinPZetaRelaIso       =  lpt && tpt && tiso && laiso&& lveto && OS           && hltevent && hltmatch && sbinTmp;
-  sbinPZetaRelSSaIso     =  lpt && tpt && tiso && laiso&& lveto && SS           && hltevent && hltmatch && sbinTmp;
-  sbinSS                 =  lpt && tpt && tiso && liso && lveto && SS && MtCut  && hltevent && hltmatch && sbinTmp;
-  sbinPZetaRelSS         =  lpt && tpt && tiso && liso && lveto && SS           && hltevent && hltmatch && sbinTmp;
-  sbinSSaIso             =  lpt && tpt && tiso && laiso&& lveto && SS && MtCut  && hltevent && hltmatch && sbinTmp;
-  sbinSSlIso1            =  lpt && tpt && tiso && lliso&& lveto && SS && MtCut  && hltevent && hltmatch && sbinTmp;
-  sbinSSlIso2            =  lpt && tpt && mtiso&& liso && lveto && SS && MtCut  && hltevent && hltmatch && sbinTmp;
-  sbinSSlIso3            =  lpt && tpt && mtiso&& lliso&& lveto && SS && MtCut  && hltevent && hltmatch && sbinTmp;
-  sbinSSaIsoLtiso        =  lpt && tpt && ltiso&& laiso&& lveto && SS && MtCut  && hltevent && hltmatch && sbinTmp;
-  sbinSSaIsoMtiso        =  lpt && tpt && mtiso&& laiso&& lveto && SS && MtCut  && hltevent && hltmatch && sbinTmp;
-  sbinSSltiso            =  lpt && tpt && ltiso&& liso && lveto && SS && MtCut  && hltevent && hltmatch && sbinTmp;
-  sbinSSmtiso            =  lpt && tpt && mtiso&& liso && lveto && SS && MtCut  && hltevent && hltmatch && sbinTmp;
-  sbinLtiso              =  lpt && tpt && ltiso&& liso && lveto && OS && MtCut  && hltevent && hltmatch && sbinTmp;
-  sbinMtiso              =  lpt && tpt && mtiso&& liso && lveto && OS && MtCut  && hltevent && hltmatch && sbinTmp;
-  sbinPZetaRelMtiso      =  lpt && tpt && mtiso&& liso && lveto && OS           && hltevent && hltmatch && sbinTmp;
-  sbinPZetaRelSSaIsoMtiso=  lpt && tpt && mtiso&& laiso&& lveto && SS           && hltevent && hltmatch && sbinTmp;
+  sbin                   =  sbinTmp && lpt && tpt && tiso && liso && lveto && diTauCharge  && MtCut  && hltevent && hltmatch ;
+  sbinEmbedding          =  sbinTmp && lpt && tpt && tiso && liso && lveto && diTauCharge  && MtCut                          ;
+  sbinEmbeddingPZetaRel  =  sbinTmp && lpt && tpt && tiso && liso && lveto && diTauCharge                                    ;
+  sbinPZetaRel           =  sbinTmp && lpt && tpt && tiso && liso && lveto && diTauCharge            && hltevent && hltmatch ;
+  sbinPZetaRelaIso       =  sbinTmp && lpt && tpt && tiso && laiso&& lveto && diTauCharge            && hltevent && hltmatch ;
+  sbinPZetaRelSSaIso     =  sbinTmp && lpt && tpt && tiso && laiso&& lveto && SS                     && hltevent && hltmatch ;
+  sbinSS                 =  sbinTmp && lpt && tpt && tiso && liso && lveto && SS           && MtCut  && hltevent && hltmatch ;
+  sbinPZetaRelSS         =  sbinTmp && lpt && tpt && tiso && liso && lveto && SS                     && hltevent && hltmatch ;
+  sbinSSaIso             =  sbinTmp && lpt && tpt && tiso && laiso&& lveto && SS           && MtCut  && hltevent && hltmatch ;
+  sbinSSlIso1            =  sbinTmp && lpt && tpt && tiso && lliso&& lveto && SS           && MtCut  && hltevent && hltmatch ;
+  sbinSSlIso2            =  sbinTmp && lpt && tpt && mtiso&& liso && lveto && SS           && MtCut  && hltevent && hltmatch ;
+  sbinSSlIso3            =  sbinTmp && lpt && tpt && mtiso&& lliso&& lveto && SS           && MtCut  && hltevent && hltmatch ;
+  sbinSSaIsoLtiso        =  sbinTmp && lpt && tpt && ltiso&& laiso&& lveto && SS           && MtCut  && hltevent && hltmatch ;
+  sbinSSaIsoMtiso        =  sbinTmp && lpt && tpt && mtiso&& laiso&& lveto && SS           && MtCut  && hltevent && hltmatch ;
+  sbinSSltiso            =  sbinTmp && lpt && tpt && ltiso&& liso && lveto && SS           && MtCut  && hltevent && hltmatch ;
+  sbinSSmtiso            =  sbinTmp && lpt && tpt && mtiso&& liso && lveto && SS           && MtCut  && hltevent && hltmatch ;
+  sbinLtiso              =  sbinTmp && lpt && tpt && ltiso&& liso && lveto && diTauCharge  && MtCut  && hltevent && hltmatch ;
+  sbinMtiso              =  sbinTmp && lpt && tpt && mtiso&& liso && lveto && diTauCharge  && MtCut  && hltevent && hltmatch ;
+  sbinPZetaRelMtiso      =  sbinTmp && lpt && tpt && mtiso&& liso && lveto && diTauCharge            && hltevent && hltmatch ;
+  sbinPZetaRelSSaIsoMtiso=  sbinTmp && lpt && tpt && mtiso&& laiso&& lveto && SS                     && hltevent && hltmatch ;
 
   /////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////
@@ -1193,8 +1262,9 @@ void plotMuTau( Int_t mH_           = 120,
   float SSWinSignalRegionDATAIncl = 0.;
   float SSWinSignalRegionMCIncl = 0.;
   float SSWinSidebandRegionDATAIncl = 0.;
-  float SSWinSidebandRegionMCIncl = 0.;
-      
+  float SSWinSidebandRegionMCIncl = 0.;      
+  if(invertDiTauSign) OStoSSRatioQCD = 1.0;
+
   evaluateQCD(0, true, "SS", false, removeMtCut, "inclusive", 
 	      SSQCDinSignalRegionDATAIncl , SSIsoToSSAIsoRatioQCD, scaleFactorTTSSIncl,
 	      extrapFactorWSSIncl, 
@@ -1214,7 +1284,7 @@ void plotMuTau( Int_t mH_           = 120,
  	      sbinPZetaRelSSInclusive, pZ, apZ, sbinPZetaRelSSInclusive, 
  	      sbinPZetaRelSSaIsoInclusive, sbinPZetaRelSSaIsoInclusive, sbinPZetaRelSSaIsoMtisoInclusive, 
 	      vbf, oneJet, zeroJet);
-    
+
   delete hExtrap;
 
   cout << endl;
@@ -1278,16 +1348,12 @@ void plotMuTau( Int_t mH_           = 120,
   std::map<TString,Float_t> vMap;
 
   float SSQCDinSignalRegionDATA = 0.; 
-
   float extrapFactorWSS = 0.;             
   float SSWinSignalRegionDATA = 0.;       float SSWinSignalRegionMC = 0.; float SSWinSidebandRegionDATA = 0.; float SSWinSidebandRegionMC = 0.;
-  
   float extrapFactorWOSW3Jets = 0.;   
   float OSWinSignalRegionDATAW3Jets = 0.; float OSWinSignalRegionMCW3Jets = 0.; float OSWinSidebandRegionDATAW3Jets = 0.; float OSWinSidebandRegionMCW3Jets = 0.;
-
   float extrapFactorWOSWJets  = 0.; 
   float OSWinSignalRegionDATAWJets  = 0.; float OSWinSignalRegionMCWJets  = 0.; float OSWinSidebandRegionDATAWJets  = 0.; float OSWinSidebandRegionMCWJets  = 0.; 
-
   float scaleFactorTTOSW3Jets = 0.;
   float scaleFactorTTOSWJets  = 0.;
  
@@ -1533,7 +1599,42 @@ void plotMuTau( Int_t mH_           = 120,
 //  			Lumi*hltEff_/1000., SSWinSidebandRegionDATA/SSWinSidebandRegionMC, 
 //  			TTxsectionRatio*scaleFactorTTSS, MutoTauCorrectionFactor*lumiCorrFactor, 
 //  			JtoTauCorrectionFactor*lumiCorrFactor, lumiCorrFactor*ExtrapolationFactorZDataMC,sbinSSaIso);
-	  
+
+
+	  float pseudoExtrapolationFactor = 0.; float ErrorPseudoExtrapolationFactor = 0.;
+	  TH1F* hCleanerMt = new TH1F("hCleanerMt","",400,0,400);
+	  TH1F* hWMtMt     = new TH1F("hWMtMt",    "",400,0,400);
+	  evaluateWusingSSEvents(hCleanerMt,int(antiWsgn),int(antiWsdb), 
+				 selection_,
+				 pseudoExtrapolationFactor,
+				 ErrorPseudoExtrapolationFactor,
+				 hWMtMt, TString(antiWcut.c_str()),
+				 backgroundWJets,backgroundTTbar,backgroundOthers,
+				 backgroundDYTauTau,backgroundDYJtoTau,backgroundDYMutoTau,currentTree,
+				 Lumi*hltEff_/1000.,TTxsectionRatio,lumiCorrFactor,
+				 ExtrapolationFactorSidebandZDataMC,ExtrapolationFactorZDataMC,
+				 MutoTauCorrectionFactor,JtoTauCorrectionFactor,
+				 scaleFactorTTSS,
+				 scaleFactMu,
+				 sbinPZetaRelSS);
+
+	  float a      = OSWinSidebandRegionDATAWJets/pseudoExtrapolationFactor;
+	  float errorA = a*TMath::Sqrt( 1./OSWinSidebandRegionDATAWJets + 
+					(ErrorPseudoExtrapolationFactor/pseudoExtrapolationFactor)*
+					(ErrorPseudoExtrapolationFactor/pseudoExtrapolationFactor));
+
+	  float b      = OSWinSidebandRegionDATAWJets/SSWinSidebandRegionDATA;
+	  float errorB = b*TMath::Sqrt( 1./OSWinSidebandRegionDATAWJets + 1./SSWinSidebandRegionDATA );
+
+	  float c      = hDataAntiIsoLooseTauIso->Integral()/OStoSSRatioQCD;
+	  float errorC = 0.10*c;
+	  float WfromSSEvents      = a - b*c;
+	  float ErrorWfromSSEvents = TMath::Sqrt(errorA*errorA + c*c*errorB*errorB + b*b*errorC*errorC);
+
+	  cout << "WfromSSEvents = " << OSWinSidebandRegionDATAWJets << "/" << pseudoExtrapolationFactor 
+	       << " - " << OSWinSidebandRegionDATAWJets/SSWinSidebandRegionDATA << "*" << hDataAntiIsoLooseTauIso->Integral()/OStoSSRatioQCD 
+	       << " = " << WfromSSEvents << " +/- " << ErrorWfromSSEvents <<  endl;
+	  delete hCleanerMt; delete hWMtMt;
 	}
 
 
@@ -1942,11 +2043,11 @@ void plotMuTauAll( Int_t useEmbedded = 1, TString outputDir = "July2012/Test"){
   //plotMuTau(120,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
   //plotMuTau(120,1,"boostLow",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
   //plotMuTau(120,1,"novbfHigh",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2);  
-  //plotMuTau(120,1,"vbf",""   ,"diTauVisMass","visible mass","GeV"              ,outputDir,10,0,200,5.0,1.0,0,1.2);  
+  plotMuTau(120,1,"vbf",""   ,"diTauVisMass","visible mass","GeV"              ,outputDir,10,0,200,5.0,1.0,0,1.2);  
   //plotMuTau(120,1,"vbf",""   ,"MtLeg1Corr","M_{T}(#mu#nu)","GeV" ,       outputDir,16,0,160,5.0,1.0,0,1.2,true);
-  //plotMuTau(120,1,"inclusive",""   ,"MtLeg1Corr","M_{T}(#mu#nu)","GeV" ,       outputDir,32,0,160,5.0,1.0,0,1.2,true);
+  //plotMuTau(120,1,"inclusiveNoMtSS",""   ,"MtLeg1Corr","M_{T}(#mu#nu)","GeV" ,       outputDir,32,0,160,5.0,1.0,0,1.2);
 
-  plotMuTau(120,1,"vbf",""   ,"ptL2","tau pt","GeV" ,                    outputDir,16,20,100,5.0,1.0,0,1.2);
+  //plotMuTau(120,1,"vbf",""   ,"ptL2","tau pt","GeV" ,                    outputDir,16,20,100,5.0,1.0,0,1.2);
   //plotMuTau(120,1,"boostHigh",""   ,"diTauNSVfitMass","mass","GeV"      ,outputDir,35,0,350,5.0,1.0,0,1.2);  
   
   return; 
