@@ -1653,7 +1653,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 //     cout << leg2->tauID("againstElectronLooseMVA2") << endl;
 
     tightestAntiEMVAWP_ = 0;
-    /* //commented out for the time being to run over Ivo's patuple. 
+    //commented out for the time being to run over Ivo's patuple. 
     if( leg2->tauID("againstElectronLooseMVA2")  >0.5 &&  
         leg2->tauID("againstElectronMediumMVA2") <0.5 && 
         leg2->tauID("againstElectronTightMVA2")  <0.5) tightestAntiEMVAWP_ = 1; 
@@ -1681,7 +1681,6 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     if( leg2->tauID("againstElectronLooseMVA2")  >0.5 &&  
         leg2->tauID("againstElectronMediumMVA2") >0.5 && 
         leg2->tauID("againstElectronTightMVA2")  >0.5) tightestAntiEMVAWP_ = 7; 
-    */
     
     diTauVisP4_->push_back( theDiTau->p4Vis() );
     diTauCAP4_->push_back(  theDiTau->p4CollinearApprox() );
