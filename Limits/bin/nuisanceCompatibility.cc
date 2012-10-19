@@ -66,7 +66,7 @@ using namespace RooFit;
 using namespace std;
 
 
-void produce(string nuisance = "lumi", int mH = 120, bool doCombined = true){
+void produce(string nuisance = "lumi", int mH = 120, bool doCombined = true, bool combineChannels = false){
 
 
   TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
@@ -96,7 +96,7 @@ void produce(string nuisance = "lumi", int mH = 120, bool doCombined = true){
 
   vector<string> channels;
   channels.push_back("muTau");
-//   channels.push_back("eTau");
+  channels.push_back("eTau");
 
   vector<string> categories;
   categories.push_back("0jet_low");
@@ -104,7 +104,7 @@ void produce(string nuisance = "lumi", int mH = 120, bool doCombined = true){
   categories.push_back("boost_low");
   categories.push_back("boost_high");
   categories.push_back("vbf");
-  //   categories.push_back("comb");
+  //categories.push_back("comb");
   
   int totalBins  = channels.size()*categories.size();
   int binCounter = 0;
@@ -128,15 +128,19 @@ void produce(string nuisance = "lumi", int mH = 120, bool doCombined = true){
   histoS->SetLineWidth(2);
 
   if(doCombined){
-
-    gSystem->Exec( "cp test/muTauSM.root test/muTauSM_tmp.root" );
-    TFile* fileTmp = new TFile("test/muTauSM_tmp.root","UPDATE");
     
     string combine = "combineCards.py ";
     int inter = 0;
     
     for(unsigned int ch = 0; ch<channels.size(); ch++){
-      inter = 0;
+
+      gSystem->Exec( Form("cp test/%sSM.root test/%sSM_tmp.root", channels[ch].c_str(), channels[ch].c_str()) );
+      TFile* fileTmp = new TFile(Form("test/%sSM_tmp.root",channels[ch].c_str()),"UPDATE");
+
+      if(!combineChannels){
+	inter = 0;
+	combine = "combineCards.py ";
+      }
       
       for(unsigned int ca = 0; ca<categories.size(); ca++){
 	
@@ -165,7 +169,7 @@ void produce(string nuisance = "lumi", int mH = 120, bool doCombined = true){
 	  TIter nextkey(dir->GetListOfKeys());
 	  TH1F *key;
 	  while (key = (TH1F*)nextkey()) {
-	    cout << string(key->GetName()) << endl;
+	    //cout << string(key->GetName()) << endl;
 	    string name(key->GetName());
 	    if(  name.find(nuisance)!=string::npos && name.find(nuisance+"_"+channels[ch]+"_"+categories[ca])==string::npos ){
 	      name.replace( name.find(nuisance), nuisance.size()/*+channels[ch].size()+categories[ca].size()+2*/, 
@@ -184,24 +188,31 @@ void produce(string nuisance = "lumi", int mH = 120, bool doCombined = true){
 	combine = combine+string(Form(" Name%d=%s_%s_mH%d_tmp.txt",inter,channels[ch].c_str(),categories[ca].c_str(),mH));
 	
       }
+            
+      if(!combineChannels){
+	combine = combine + " > " + string(Form("%s_comb_mH%d_tmp.txt",channels[ch].c_str(),mH));
+	cout << combine << endl;
+	gSystem->Exec( combine.c_str() );
+	gSystem->Exec( "mv *tmp* test/" );
+      }
       
-      combine = combine + " > " + string(Form("%s_comb_mH%d_tmp.txt",channels[ch].c_str(),mH));
-      
-      cout << combine << endl;
-      
-      gSystem->Exec( combine.c_str() );
-      gSystem->Exec( "mv *tmp* test/" );
-      
-      
+      fileTmp->Close();
+      delete fileTmp;
+
     }
     
-    //return;
-    fileTmp->Close();
+    if(combineChannels){
+      combine = combine + " > " + string(Form("comb_comb_mH%d_tmp.txt",mH));
+      cout << combine << endl;
+      gSystem->Exec( combine.c_str() );
+      gSystem->Exec( "mv *tmp* test/" );
+    }
+
   }
 
+  //return;
 
   float maxY = 0.;
-
 
   if(doCombined){
 
@@ -211,7 +222,11 @@ void produce(string nuisance = "lumi", int mH = 120, bool doCombined = true){
 	
 	binCounter++;
 	
-	gSystem->Exec( Form("combine -M MaxLikelihoodFit test/%s_comb_mH%d_tmp.txt",channels[ch].c_str(),mH) );
+	if(!combineChannels) 
+	  gSystem->Exec( Form("combine -M MaxLikelihoodFit test/%s_comb_mH%d_tmp.txt",channels[ch].c_str(),mH) );
+	else
+	  gSystem->Exec( Form("combine -M MaxLikelihoodFit test/comb_comb_mH%d_tmp.txt",mH) );
+
 	TFile* file = new TFile("./mlfit.root","READ");
 	if(!file || file->IsZombie()) continue;
 	
@@ -347,9 +362,15 @@ void produce(string nuisance = "lumi", int mH = 120, bool doCombined = true){
   line->SetLineColor(kBlack);
   line->Draw("SAME");
 
-  c1->SaveAs(Form("nuisance_%s.png", nuisance.c_str()));
+  if(doCombined){
+    if(!combineChannels) c1->SaveAs(Form("nuisance_%s_COMB_PERCHANNEL.png", nuisance.c_str() ));
+    else c1->SaveAs(Form("nuisance_%s_COMB_ALLCHANNELS.png", nuisance.c_str() ));
+  }
+  else{
+    c1->SaveAs(Form("nuisance_%s_PERCATEGORY.png", nuisance.c_str()));
+  }
 
-
+  gSystem->Exec( "rm test/*tmp*" );
   return;
 }
 
@@ -359,8 +380,9 @@ void produce(string nuisance = "lumi", int mH = 120, bool doCombined = true){
 void produceAll(){
 
   //produce("r",120);
- //  produce("lumi",120);
-  produce("CMS_scale_t",120, false);
+  //produce("lumi",120);
+  //produce("CMS_scale_t",125, true, false);
+  produce("CMS_scale_t",125, true, true);
 //   produce("CMS_eff_t",120);
 //   produce("CMS_htt_zttNorm",120);
 //   produce("CMS_scale_j",120);
