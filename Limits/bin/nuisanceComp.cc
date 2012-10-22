@@ -66,13 +66,18 @@ using namespace RooFit;
 using namespace std;
 
 
-void produce(string nuisance = "lumi", bool isNuisance = true,
-	     int mH = 120, 
-	     bool doCombined      = true, 
-	     bool combineChannels = false, 
-	     bool combineEnergy   = false,
-	     bool forceLimits     = false){
+void produce(string nuisance          = "lumi", 
+	     bool isNuisance          = true,
+	     int mH                   = 120, 
+	     bool doCombined          = true,
+	     vector<string>& channels = *(new  vector<string>()),
+	     vector<string>& com      = *(new  vector<string>()),
+	     TString title            = "",
+	     bool forceLimits         = false
+	     ){
 
+  bool combineEnergy   = com.size()>1 ;
+  bool combineChannels = (channels.size()>1) || combineEnergy;
 
   TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
   c1->SetGrid(0,0);
@@ -98,14 +103,29 @@ void produce(string nuisance = "lumi", bool isNuisance = true,
   leg->SetBorderSize(0);
   leg->SetFillColor(10);
   leg->SetTextSize(0.03);
+  leg->SetHeader(title);
 
-  vector<string> com;
-  com.push_back("7TeV");
-  com.push_back("8TeV");
-
-  vector<string> channels;  vector<string> channelsDir;
-  channels.push_back("mt");   channelsDir.push_back("muTau");
+  //vector<string> com;
+  //com.push_back("7TeV");
+  //com.push_back("8TeV");
+  //vector<string> channels;  
+  //channels.push_back("mt"); channelsDir.push_back("muTau");
   //channels.push_back("et"); channelsDir.push_back("eleTau");
+  //channels.push_back("tt"); channelsDir.push_back("tauTau");
+  //channels.push_back("em"); channelsDir.push_back("emu");
+
+
+  for(unsigned int en = 0; en<com.size(); en++){
+    cout << com[en] << endl;
+  }
+  vector<string> channelsDir;
+  for(unsigned int ch = 0; ch<channels.size(); ch++){
+    cout << channels[ch] << endl;
+    if(channels[ch].find("mt")!=string::npos) channelsDir.push_back("muTau");
+    if(channels[ch].find("et")!=string::npos) channelsDir.push_back("eleTau");
+    if(channels[ch].find("tt")!=string::npos) channelsDir.push_back("tauTau");
+    if(channels[ch].find("em")!=string::npos) channelsDir.push_back("emu");
+  }
 
   vector<string> categories;
   vector<string> categoriesIndex;
@@ -142,6 +162,8 @@ void produce(string nuisance = "lumi", bool isNuisance = true,
   for(unsigned int en = 0; en<com.size(); en++){
     
     for(unsigned int ch = 0; ch<channels.size(); ch++){
+
+      if(channels[ch].find("tt")!=string::npos && com[en].find("7TeV")!=string::npos) continue;
       
       gSystem->Exec( Form("cp ../test/root/htt_%s.inputs-sm-%s.root ../test/htt_%s.inputs-sm-%s_tmp.root", channels[ch].c_str(), com[en].c_str(), channels[ch].c_str(), com[en].c_str()) );
       TFile* fileTmp = new TFile(Form("../test/htt_%s.inputs-sm-%s_tmp.root",channels[ch].c_str(), com[en].c_str()),"UPDATE");
@@ -152,6 +174,14 @@ void produce(string nuisance = "lumi", bool isNuisance = true,
       }
       
       for(unsigned int ca = 0; ca<categories.size(); ca++){
+
+	if(channels[ch].find("tt")!=string::npos && ca>1) continue;
+	string categoryName = categories[ca];
+	if(channels[ch].find("tt")!=string::npos){
+	  if( ca == 0) categoryName = "boost";
+	  if( ca == 1) categoryName = "vbf";
+	}
+
 	
 	inter++;
 	
@@ -161,7 +191,7 @@ void produce(string nuisance = "lumi", bool isNuisance = true,
 	if(isNuisance){
 	  gSystem->Exec( Form("sed  's/%s/%s/g' htt_%s_%s_%s-%d_tmp0.txt > htt_%s_%s_%s-%d_tmp1.txt", 
 			      nuisance.c_str(), 
-			      (nuisance+"_"+channelsDir[ch]+"_"+categories[ca]+"_"+com[en]).c_str(),
+			      (nuisance+"_"+channelsDir[ch]+"_"+categoryName+"_"+com[en]).c_str(),
 			      channels[ch].c_str(),categoriesIndex[ca].c_str(),com[en].c_str(), mH,
 			      channels[ch].c_str(),categoriesIndex[ca].c_str(),com[en].c_str(), mH));
 	  gSystem->Exec( Form("sed  's/htt_%s.inputs-sm-%s.root/htt_%s.inputs-sm-%s_tmp.root/g' htt_%s_%s_%s-%d_tmp1.txt > htt_%s_%s_%s-%d_tmp.txt",
@@ -180,8 +210,9 @@ void produce(string nuisance = "lumi", bool isNuisance = true,
 			      channels[ch].c_str(),categoriesIndex[ca].c_str(), com[en].c_str(), mH ));
 	  gSystem->Exec( "rm *tmp0*txt" );  
 	}
-	
-	TString dirName( Form("%s_%s",channelsDir[ch].c_str(), categories[ca].c_str()) );
+       
+
+	TString dirName( Form("%s_%s",channelsDir[ch].c_str(), categoryName.c_str()) );
 	TDirectory* dir = (TDirectory*)fileTmp->Get( dirName.Data() );
 	
 	if( dir!=0 ){
@@ -193,9 +224,9 @@ void produce(string nuisance = "lumi", bool isNuisance = true,
 	  while ( (key = (TH1F*)nextkey()) ) {
 	    //cout << string(key->GetName()) << endl;
 	    string name(key->GetName());
-	    if( isNuisance && name.find(nuisance)!=string::npos && name.find(nuisance+"_"+channelsDir[ch]+"_"+categories[ca]+"_"+com[en])==string::npos ){
+	    if( isNuisance && name.find(nuisance)!=string::npos && name.find(nuisance+"_"+channelsDir[ch]+"_"+categoryName+"_"+com[en])==string::npos ){
 	      name.replace( name.find(nuisance), nuisance.size(), 
-			    nuisance+"_"+channelsDir[ch]+"_"+categories[ca]+"_"+com[en] );
+			    nuisance+"_"+channelsDir[ch]+"_"+categoryName+"_"+com[en] );
 	      //cout << " ==> " << name << endl;
 	      TH1F* h = (TH1F*)dir->FindObjectAny( key->GetName());
 	      h->Write(name.c_str());
@@ -204,7 +235,7 @@ void produce(string nuisance = "lumi", bool isNuisance = true,
 	  
 	}
 	else{
-	  cout << "Could not find directory " << string(Form("%s_%s",channelsDir[ch].c_str(), categories[ca].c_str())) << endl;
+	  cout << "Could not find directory " << string(Form("%s_%s",channelsDir[ch].c_str(), categoryName.c_str())) << endl;
 	}
 	
 	combine = combine+string(Form(" Name%d=htt_%s_%s_%s-%d_tmp.txt",inter,channels[ch].c_str(),categoriesIndex[ca].c_str(),com[en].c_str(), mH));
@@ -246,13 +277,22 @@ void produce(string nuisance = "lumi", bool isNuisance = true,
     for(unsigned int en = 0; en<com.size(); en++){
 
       for(unsigned int ch = 0; ch<channels.size(); ch++){
+
+	if(channels[ch].find("tt")!=string::npos && com[en].find("7TeV")!=string::npos) continue;
 	
 	for(unsigned int ca = 0; ca<categories.size(); ca++){
+
+	  if(channels[ch].find("tt")!=string::npos && ca>1) continue;
+	  string categoryName = categories[ca];
+	  if(channels[ch].find("tt")!=string::npos){
+	    if( ca == 0) categoryName = "boost";
+	    if( ca == 1) categoryName = "vbf";
+	  }
 	  
 	  binCounter++;
 	  
 	  if(!doCombined)
-	    gSystem->Exec( Form("combine -M MaxLikelihoodFit -m %d ../test/htt_%s_%s_%s-%d_tmp.txt",         mH, channels[ch].c_str(),categoriesIndex[ca].c_str(),com[en].c_str(), mH) );
+	    gSystem->Exec( Form("combine -M MaxLikelihoodFit   -m %d ../test/htt_%s_%s_%s-%d_tmp.txt",         mH, channels[ch].c_str(),categoriesIndex[ca].c_str(),com[en].c_str(), mH) );
 	  else{
 	    if(!combineChannels && !combineEnergy) 
 	      gSystem->Exec( Form("combine -M MaxLikelihoodFit -m %d ../test/htt_%s_comb_%s-%d_tmp.txt",     mH, channels[ch].c_str(), com[en].c_str(), mH) );
@@ -269,7 +309,7 @@ void produce(string nuisance = "lumi", bool isNuisance = true,
 	  float value; float error;
 	  
 	  string uncorrelatedNuisanceName = isNuisance ? 
-	    nuisance+"_"+channelsDir[ch]+"_"+categories[ca]+"_"+com[en] : nuisance;
+	    nuisance+"_"+channelsDir[ch]+"_"+categoryName+"_"+com[en] : nuisance;
 	  
 	  RooFitResult* fit_b = (RooFitResult*)file->Get("fit_b");
 	  if(!fit_b){
@@ -288,7 +328,7 @@ void produce(string nuisance = "lumi", bool isNuisance = true,
 	  }
 	  histoB->SetBinContent(binCounter, value);
 	  histoB->SetBinError(binCounter,   error);
-	  histoB->GetXaxis()->SetBinLabel(binCounter,Form("%s_%s_%s",channelsDir[ch].c_str(),categories[ca].c_str(),com[en].c_str()));
+	  histoB->GetXaxis()->SetBinLabel(binCounter,Form("%s_%s_%s",channelsDir[ch].c_str(),categoryName.c_str(),com[en].c_str()));
 	  
 	  if(value+error>maxY) maxY = value+error;
 	  
@@ -310,7 +350,7 @@ void produce(string nuisance = "lumi", bool isNuisance = true,
 	  }
 	  histoS->SetBinContent(binCounter, value);
 	  histoS->SetBinError(binCounter,   error);
-	  histoS->GetXaxis()->SetBinLabel(binCounter,Form("%s_%s_%s",channelsDir[ch].c_str(),categories[ca].c_str(),com[en].c_str()));
+	  histoS->GetXaxis()->SetBinLabel(binCounter,Form("%s_%s_%s",channelsDir[ch].c_str(),categoryName.c_str(),com[en].c_str()));
 	  
 	  if(value+error>maxY) maxY = value+error;
 	  
@@ -340,16 +380,16 @@ void produce(string nuisance = "lumi", bool isNuisance = true,
   line->SetLineColor(kBlack);
   line->Draw("SAME");
 
+  string pngName = "";
+  for(unsigned int en = 0; en<com.size(); en++)      pngName = pngName+com[en];
+  pngName = pngName+"-";
+  for(unsigned int ch = 0; ch<channels.size(); ch++) pngName = pngName+channels[ch];
+  
   if(doCombined){
-    if(!combineChannels && !combineEnergy) 
-      c1->SaveAs(Form("nuisance_%s_mH%d_COMB_PERCHANNEL.png",  nuisance.c_str(), mH ));
-    else if(combineChannels && !combineEnergy) 
-      c1->SaveAs(Form("nuisance_%s_mH%d_COMB_ALLCHANNELS.png", nuisance.c_str(), mH ));
-    else
-      c1->SaveAs(Form("nuisance_%s_mH%d_COMB_ALLCHANNELS_ALLENERGY.png", nuisance.c_str(), mH ));
+    c1->SaveAs(Form("nuisance_%s_mH%d_COMB_%s.png",  nuisance.c_str(), mH, pngName.c_str() ));
   }
   else{
-    c1->SaveAs(Form("nuisance_%s_mH%d_PERCATEGORY.png", nuisance.c_str(), mH));
+    c1->SaveAs(Form("nuisance_%s_mH%d_%s.png",  nuisance.c_str(), mH, pngName.c_str() ));
   }
 
   gSystem->Exec( "rm ../test/*tmp*" );
@@ -361,12 +401,59 @@ void produce(string nuisance = "lumi", bool isNuisance = true,
 
 void produceAll(){
 
-  //produce("CMS_scale_j_8TeV"   ,125, true, true, true);
-  //produce("CMS_scale_met_8TeV" ,125, true, true, true);
-  //produce("CMS_scale_met_7TeV" ,125, true, true, true);
-  //produce("CMS_eff_t"          ,125, true, true, true);
-  produce("CMS_scale_t",            1, 125 ,true, true, true);
-  //produce("r"                    ,0, 125, true, true, true, true);
+  vector<string> sevenTeV;
+  sevenTeV.push_back("7TeV");
+
+  vector<string> eightTeV;
+  eightTeV.push_back("8TeV");
+  
+  vector<string> allTeV;
+  allTeV.push_back("7TeV"); allTeV.push_back("8TeV");
+
+  vector<string> mt;
+  mt.push_back("mt");
+
+  vector<string> et;
+  et.push_back("et");
+
+  vector<string> tt;
+  tt.push_back("tt");
+
+  vector<string> em;
+  em.push_back("em");
+
+  vector<string> lt;
+  lt.push_back("mt"); lt.push_back("et");
+
+  vector<string> lx;
+  lx.push_back("mt"); lx.push_back("et");  lx.push_back("em"); 
+
+  vector<string> xt;
+  xt.push_back("mt"); xt.push_back("et");  xt.push_back("tt");
+
+  vector<string> xx;
+  xx.push_back("mt"); xx.push_back("et");  xx.push_back("tt");  xx.push_back("em"); 
+
+
+
+  produce("CMS_scale_t", 1, 125 ,true, mt, sevenTeV, "#mu+#tau, 7 TeV");
+  produce("CMS_scale_t", 1, 125 ,true, mt, eightTeV, "#mu+#tau, 8 TeV");
+  produce("CMS_scale_t", 1, 125 ,true, mt, allTeV,   "#mu+#tau, 7+8 TeV");
+
+  produce("CMS_scale_t", 1, 125 ,true, et, sevenTeV, "e+#tau, 7 TeV");
+  produce("CMS_scale_t", 1, 125 ,true, et, eightTeV, "e+#tau, 8 TeV");
+  produce("CMS_scale_t", 1, 125 ,true, et, allTeV,   "e+#tau, 7+8 TeV");
+
+  produce("CMS_scale_t", 1, 125 ,true, tt, sevenTeV, "#tau+#tau, 7 TeV");
+  produce("CMS_scale_t", 1, 125 ,true, tt, eightTeV, "#tau+#tau, 8 TeV");
+  produce("CMS_scale_t", 1, 125 ,true, tt, allTeV,   "#tau+#tau, 7+8 TeV");
+
+  //produce("CMS_scale_t", 1, 125 ,true, lt, allTeV, "l+#tau, 7+8 TeV");
+  //produce("CMS_scale_t", 1, 125 ,true, lx, allTeV, "l+#tau, 7+8 TeV");
+  produce("CMS_scale_t", 1, 125 ,true, xt, allTeV,    "x+#tau, 7+8 TeV");
+  produce("CMS_scale_t", 1, 125 ,true, xx, allTeV,    "x+x, 7+8 TeV");
+
+  //produce("CMS_scale_t", 1, 125 ,true, mt, sevenTeV, "#mu+#tau, 7 TeV");
 
 }
 
