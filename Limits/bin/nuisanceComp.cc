@@ -23,6 +23,9 @@
 #include "TArrayF.h"
 #include "TStyle.h"
 #include "TCollection.h"
+#include "TGraphAsymmErrors.h"
+#include "TGraphPainter.h"
+#include "TMultiGraph.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -113,7 +116,7 @@ void produce(string nuisance          = "lumi",
   //channels.push_back("et"); channelsDir.push_back("eleTau");
   //channels.push_back("tt"); channelsDir.push_back("tauTau");
   //channels.push_back("em"); channelsDir.push_back("emu");
-
+  bool tauTauIsThere = false;
 
   for(unsigned int en = 0; en<com.size(); en++){
     cout << com[en] << endl;
@@ -123,7 +126,10 @@ void produce(string nuisance          = "lumi",
     cout << channels[ch] << endl;
     if(channels[ch].find("mt")!=string::npos) channelsDir.push_back("muTau");
     if(channels[ch].find("et")!=string::npos) channelsDir.push_back("eleTau");
-    if(channels[ch].find("tt")!=string::npos) channelsDir.push_back("tauTau");
+    if(channels[ch].find("tt")!=string::npos){
+      channelsDir.push_back("tauTau");
+      tauTauIsThere = true;
+    }
     if(channels[ch].find("em")!=string::npos) channelsDir.push_back("emu");
   }
 
@@ -135,7 +141,7 @@ void produce(string nuisance          = "lumi",
   categories.push_back("boost_high"); categoriesIndex.push_back("3");
   categories.push_back("vbf");        categoriesIndex.push_back("5");
   
-  int totalBins  = channels.size()*categories.size()*com.size();
+  int totalBins  = !tauTauIsThere ? channels.size()*categories.size()*com.size() : (channels.size()-1)*categories.size()*com.size() + 2;
   int binCounter = 0;
 
   TH1F* histoB = new TH1F("histoB",Form("Nuisance O = %s, for m_{H}=%d GeV;;[(O_{fit}-O_{in}) #pm #sigma_{fit}]/#sigma_{in}",
@@ -155,6 +161,21 @@ void produce(string nuisance          = "lumi",
   histoS->SetFillStyle(3003);
   histoS->SetLineColor(kBlue);
   histoS->SetLineWidth(2);
+
+  float X[totalBins];
+  float Y[totalBins];
+  float XL[totalBins];
+  float XH[totalBins];
+  float YL[totalBins];
+  float YH[totalBins];
+
+  float X2[totalBins];
+  float Y2[totalBins];
+  float XL2[totalBins];
+  float XH2[totalBins];
+  float YL2[totalBins];
+  float YH2[totalBins];
+
 
   string combine = "combineCards.py ";
   int inter = 0;
@@ -274,101 +295,185 @@ void produce(string nuisance          = "lumi",
 
   float maxY = 0.;
 
-    for(unsigned int en = 0; en<com.size(); en++){
-
-      for(unsigned int ch = 0; ch<channels.size(); ch++){
-
-	if(channels[ch].find("tt")!=string::npos && com[en].find("7TeV")!=string::npos) continue;
-	
-	for(unsigned int ca = 0; ca<categories.size(); ca++){
-
-	  if(channels[ch].find("tt")!=string::npos && ca>1) continue;
-	  string categoryName = categories[ca];
-	  if(channels[ch].find("tt")!=string::npos){
-	    if( ca == 0) categoryName = "boost";
-	    if( ca == 1) categoryName = "vbf";
-	  }
-	  
-	  binCounter++;
-	  
-	  if(!doCombined)
-	    gSystem->Exec( Form("combine -M MaxLikelihoodFit   -m %d ../test/htt_%s_%s_%s-%d_tmp.txt",         mH, channels[ch].c_str(),categoriesIndex[ca].c_str(),com[en].c_str(), mH) );
-	  else{
-	    if(!combineChannels && !combineEnergy) 
-	      gSystem->Exec( Form("combine -M MaxLikelihoodFit -m %d ../test/htt_%s_comb_%s-%d_tmp.txt",     mH, channels[ch].c_str(), com[en].c_str(), mH) );
-	    else if(combineChannels && !combineEnergy)
-	      gSystem->Exec( Form("combine -M MaxLikelihoodFit -m %d ../test/htt_comb_comb_%s-%d_tmp.txt",   mH, com[en].c_str(), mH) );
-	    else
-	      gSystem->Exec( Form("combine -M MaxLikelihoodFit -m %d ../test/htt_comb_comb_comb-%d_tmp.txt", mH, mH) );
-	  }
-	  
-
-	  TFile* file = new TFile("./mlfit.root","READ");
-	  if(!file || file->IsZombie()) continue;
-	  
-	  float value; float error;
-	  
-	  string uncorrelatedNuisanceName = isNuisance ? 
-	    nuisance+"_"+channelsDir[ch]+"_"+categoryName+"_"+com[en] : nuisance;
-	  
-	  RooFitResult* fit_b = (RooFitResult*)file->Get("fit_b");
-	  if(!fit_b){
-	    cout << "No fit_b available..." << endl; continue;
-	  }
-	  RooArgSet fit_b_list(fit_b->floatParsFinal());
-	  RooRealVar* nuisanceFitB   = 0;
-	  if( !fit_b_list.find(Form("%s",uncorrelatedNuisanceName.c_str() ))){
-	    cout << "Nuisance " << nuisance << " is not available for b fit..." << endl;
-	    value = 0.0; error = 0.0;
-	  }
-	  else{
-	    nuisanceFitB = (RooRealVar*)(&fit_b_list[uncorrelatedNuisanceName.c_str()]);
-	    value = nuisanceFitB->getVal();
-	    error = nuisanceFitB->getError();
-	  }
-	  histoB->SetBinContent(binCounter, value);
-	  histoB->SetBinError(binCounter,   error);
-	  histoB->GetXaxis()->SetBinLabel(binCounter,Form("%s_%s_%s",channelsDir[ch].c_str(),categoryName.c_str(),com[en].c_str()));
-	  
-	  if(value+error>maxY) maxY = value+error;
-	  
-
-	  RooFitResult* fit_s = (RooFitResult*)file->Get("fit_s");
-	  if(!fit_s){
-	    cout << "No fit_s available..." << endl; continue;
-	  }
-	  RooArgSet fit_s_list(fit_s->floatParsFinal());
-	  RooRealVar* nuisanceFitS   = 0;
-	  if(!fit_s_list.find(Form("%s", uncorrelatedNuisanceName.c_str() ))){
-	    cout << "Nuisance " << nuisance << " is not available for s+b fit..." << endl;
-	    value = 0.0; error = 0.0;
-	  }
-	  else{
-	    nuisanceFitS = (RooRealVar*)(&fit_s_list[uncorrelatedNuisanceName.c_str()]);
-	    value = nuisanceFitS->getVal();
-	    error = nuisanceFitS->getError();
-	  }
-	  histoS->SetBinContent(binCounter, value);
-	  histoS->SetBinError(binCounter,   error);
-	  histoS->GetXaxis()->SetBinLabel(binCounter,Form("%s_%s_%s",channelsDir[ch].c_str(),categoryName.c_str(),com[en].c_str()));
-	  
-	  if(value+error>maxY) maxY = value+error;
-	  
-	  file->Close();
-	  delete file;
-	}
-      }
-
-    }
+  if(doCombined && combineChannels && combineEnergy)
+    gSystem->Exec( Form("combine -M MaxLikelihoodFit  --robustFit 1  --rMin -30 --rMax 30 -m %d ../test/htt_comb_comb_comb-%d_tmp.txt", mH, mH) );
   
+  
+  for(unsigned int en = 0; en<com.size(); en++){
+    
+    if(doCombined && combineChannels && !combineEnergy)
+      gSystem->Exec( Form("combine -M MaxLikelihoodFit --robustFit 1  --rMin -30 --rMax 30 -m %d ../test/htt_comb_comb_%s-%d_tmp.txt",   mH, com[en].c_str(), mH) );
+    
+    for(unsigned int ch = 0; ch<channels.size(); ch++){
+      
+      if(channels[ch].find("tt")!=string::npos && com[en].find("7TeV")!=string::npos) continue;
+      
+      if(doCombined && !combineChannels && !combineEnergy)
+	gSystem->Exec( Form("combine -M MaxLikelihoodFit --robustFit 1 --rMin -30 --rMax 30 -m %d ../test/htt_%s_comb_%s-%d_tmp.txt",     mH, channels[ch].c_str(), com[en].c_str(), mH) );
+      
+      
+      for(unsigned int ca = 0; ca<categories.size(); ca++){
+	
+	if(channels[ch].find("tt")!=string::npos && ca>1) continue;
+	string categoryName = categories[ca];
+	if(channels[ch].find("tt")!=string::npos){
+	  if( ca == 0) categoryName = "boost";
+	  if( ca == 1) categoryName = "vbf";
+	}
+	
+	binCounter++;
+	
+	if(!doCombined)
+	  gSystem->Exec( Form("combine -M MaxLikelihoodFit --robustFit 1 --rMin -30 --rMax 30  -m %d ../test/htt_%s_%s_%s-%d_tmp.txt",
+			      mH, channels[ch].c_str(),categoriesIndex[ca].c_str(),com[en].c_str(), mH) );
+	// else{
+	//if(!combineChannels && !combineEnergy) 
+	//  gSystem->Exec( Form("combine -M MaxLikelihoodFit -m %d ../test/htt_%s_comb_%s-%d_tmp.txt",     mH, channels[ch].c_str(), com[en].c_str(), mH) );
+	//else if(combineChannels && !combineEnergy)
+	//  gSystem->Exec( Form("combine -M MaxLikelihoodFit -m %d ../test/htt_comb_comb_%s-%d_tmp.txt",   mH, com[en].c_str(), mH) );
+	//else
+	//  gSystem->Exec( Form("combine -M MaxLikelihoodFit -m %d ../test/htt_comb_comb_comb-%d_tmp.txt", mH, mH) );
+	//}
+	
+	
+	TFile* file = new TFile("./mlfit.root","READ");
+	if(!file || file->IsZombie()) continue;
+	
+	float value; float error; float errorLo; float errorHi;
+	
+	string uncorrelatedNuisanceName = isNuisance ? 
+	  nuisance+"_"+channelsDir[ch]+"_"+categoryName+"_"+com[en] : nuisance;
+	
+	RooFitResult* fit_b = (RooFitResult*)file->Get("fit_b");
+	if(!fit_b){
+	  cout << "No fit_b available..." << endl; continue;
+	}
+	RooArgSet fit_b_list(fit_b->floatParsFinal());
+	RooRealVar* nuisanceFitB   = 0;
+	if( !fit_b_list.find(Form("%s",uncorrelatedNuisanceName.c_str() ))){
+	  cout << "Nuisance " << nuisance << " is not available for b fit..." << endl;
+	  value = 0.0; error = 0.0; errorLo = 0.0; errorHi = 0.0;
+	  X[binCounter-1]  = binCounter-1+0.5;
+	  XL[binCounter-1] = 0.50; 
+	  XH[binCounter-1] = 0.50; 
+	  Y[binCounter-1]  = value;
+	  YL[binCounter-1] = errorLo; 
+	  YH[binCounter-1] = errorHi; 
+	}
+	else{
+	  nuisanceFitB = (RooRealVar*)(&fit_b_list[uncorrelatedNuisanceName.c_str()]);
+	  value   = nuisanceFitB->getVal();
+	  error   = nuisanceFitB->getError();
+	  errorLo = nuisanceFitB->getErrorLo();
+	  errorHi = nuisanceFitB->getErrorHi();
+	  X[binCounter-1]  = binCounter-1+0.5;
+	  XL[binCounter-1] = 0.50; 
+	  XH[binCounter-1] = 0.50; 
+	  Y[binCounter-1]  = value;
+	  YL[binCounter-1] = -errorLo; 
+	  YH[binCounter-1] = errorHi; 
+	}
+	histoB->SetBinContent(binCounter, value);
+	histoB->SetBinError(binCounter,   error);
+	histoB->GetXaxis()->SetBinLabel(binCounter,Form("%s_%s_%s",channelsDir[ch].c_str(),categoryName.c_str(),com[en].c_str()));
+	
+	float newMax = TMath::Max(float(fabs(value)+fabs(errorLo)),float(fabs(value)+fabs(errorHi)));
+	if(newMax>maxY) maxY = newMax ;
+	
+	RooFitResult* fit_s = (RooFitResult*)file->Get("fit_s");
+	if(!fit_s){
+	  cout << "No fit_s available..." << endl; continue;
+	}
+	RooArgSet fit_s_list(fit_s->floatParsFinal());
+	RooRealVar* nuisanceFitS   = 0;
+	if(!fit_s_list.find(Form("%s", uncorrelatedNuisanceName.c_str() ))){
+	  cout << "Nuisance " << nuisance << " is not available for s+b fit..." << endl;
+	  value = 0.0; error = 0.0; errorLo = 0.0; errorHi = 0.0;
+	  X2[binCounter-1]  = binCounter-1+0.5;
+	  XL2[binCounter-1] = 0.50; 
+	  XH2[binCounter-1] = 0.50; 
+	  Y2[binCounter-1]  = value;
+	  YL2[binCounter-1] = errorLo; 
+	  YH2[binCounter-1] = errorHi; 
+	}
+	else{
+	  nuisanceFitS = (RooRealVar*)(&fit_s_list[uncorrelatedNuisanceName.c_str()]);
+	  value = nuisanceFitS->getVal();
+	  error = nuisanceFitS->getError();
+	  errorLo = nuisanceFitS->getErrorLo();
+	  errorHi = nuisanceFitS->getErrorHi();
+	  X2[binCounter-1]  = binCounter-1+0.5;
+	  XL2[binCounter-1] = 0.50; 
+	  XH2[binCounter-1] = 0.50; 
+	  Y2[binCounter-1]  = value;
+	  YL2[binCounter-1] = -errorLo; 
+	  YH2[binCounter-1] = errorHi; 
+	}
+	histoS->SetBinContent(binCounter, value);
+	histoS->SetBinError(binCounter,   error);
+	histoS->GetXaxis()->SetBinLabel(binCounter,Form("%s_%s_%s",channelsDir[ch].c_str(),categoryName.c_str(),com[en].c_str()));
+	
+	float newMax = TMath::Max(float(fabs(value)+fabs(errorLo)),float(fabs(value)+fabs(errorHi)));
+	if(newMax>maxY) maxY = newMax ;
+
+	file->Close();
+	delete file;
+      }
+    }
+    
+  }
+  
+  TMultiGraph *mg = new TMultiGraph();
+  mg->SetTitle(histoB->GetTitle());
+
+  TGraphAsymmErrors* background = new TGraphAsymmErrors(histoB->GetNbinsX(), X, Y, XL ,XH , YL, YH);
+  background->SetMarkerStyle(kFullCircle);
+  background->SetMarkerSize(1.6);
+  background->SetMarkerColor(kRed);
+  background->SetLineColor(kRed);
+  background->SetLineWidth(2);
+  TGraphAsymmErrors* signal = new TGraphAsymmErrors(histoB->GetNbinsX(), X2, Y2, XL2 ,XH2 , YL2, YH2);
+  signal->SetMarkerStyle(kOpenSquare);
+  signal->SetMarkerSize(1.6);
+  signal->SetMarkerColor(kBlue);
+  signal->SetFillStyle(3003);
+  signal->SetLineColor(kBlue);  
+  signal->SetFillColor(kBlue);
+  signal->SetLineWidth(2);
+  mg->Add(background);
+  mg->Add(signal, "pe2");
+
   float MaxY = TMath::Max( maxY, float(2.0/(1.10)));
   if(forceLimits) MaxY = 1.5;
 
   c1->cd();
-  histoB->SetAxisRange(-MaxY*1.10, +MaxY*1.10 ,"Y");
-  histoB->Draw("PE");
-  histoS->Draw("PSAMEE2");
-  histoB->Draw("PESAME");
+  mg->Draw("ap");
+  //histoB->SetAxisRange(-MaxY*1.10, +MaxY*1.10 ,"Y");
+  //histoB->Draw("PESAME");
+  //histoS->Draw("PSAMEE2");
+  //histoB->Draw("PESAME");
+
+
+  gPad->Modified();
+  mg->GetXaxis()->SetLimits(0,totalBins);
+  mg->GetYaxis()->SetTitleOffset(0.97);
+  mg->SetMinimum(-MaxY*1.10);
+  mg->SetMaximum(+MaxY*1.10);
+
+  float arrayX[totalBins+1];
+  for(unsigned int i = 0; i <= (unsigned int)(totalBins) ; i++){
+    if(i<(unsigned int)(totalBins)) arrayX[i] = X[i]-0.5; 
+    else  arrayX[i]  = X[i-1]+0.5; 
+    //cout << arrayX[i] << endl;
+  }
+
+  mg->GetXaxis()->Set(totalBins,arrayX);
+  mg->GetXaxis()->SetTitle(histoB->GetXaxis()->GetTitle());
+  mg->GetYaxis()->SetTitle(histoB->GetYaxis()->GetTitle());
+
+  for(unsigned int i = 1; i <= (unsigned int)(totalBins) ; i++ )
+    mg->GetXaxis()->SetBinLabel(i,histoB->GetXaxis()->GetBinLabel(i));
+
 
   leg->AddEntry(histoB,"b fit","P");
   leg->AddEntry(histoS,"s+b fit","F");
@@ -391,6 +496,17 @@ void produce(string nuisance          = "lumi",
   else{
     c1->SaveAs(Form("nuisance_%s_mH%d_%s.png",  nuisance.c_str(), mH, pngName.c_str() ));
   }
+
+  TFile* outFile = new TFile("nuisance.root","UPDATE");
+  outFile->mkdir(Form("nuisance_%s_mH%d_COMB_%s",  nuisance.c_str(), mH, pngName.c_str() ));
+  outFile->cd(Form("nuisance_%s_mH%d_COMB_%s",  nuisance.c_str(), mH, pngName.c_str() ));
+  histoB->Write("histoB",TObject::kOverwrite);
+  histoS->Write("histoS",TObject::kOverwrite);
+  background->Write("graphB",TObject::kOverwrite);
+  signal->Write("graphS",TObject::kOverwrite);
+  outFile->Write(); 
+  outFile->Close();
+  delete outFile; delete histoB; delete histoS; //delete mg; delete background; delete signal;
 
   gSystem->Exec( "rm ../test/*tmp*" );
   return;
@@ -434,7 +550,11 @@ void produceAll(){
   vector<string> xx;
   xx.push_back("mt"); xx.push_back("et");  xx.push_back("tt");  xx.push_back("em"); 
 
-
+  produce("r",0, 125   ,false, xx, allTeV,    "x+x, 7+8 TeV");
+  produce("r",0, 125   ,false, mt, allTeV,    "#mu+#tau, 7+8 TeV");
+  produce("r",0, 125   ,false, et, allTeV,    "e+#tau, 7+8 TeV");
+  produce("r",0, 125   ,false, tt, allTeV,    "#tau+#tau, 7+8 TeV");
+  produce("r",0, 125   ,false, em, allTeV,    "e+#mu, 7+8 TeV");
 
   produce("CMS_scale_t", 1, 125 ,true, mt, sevenTeV, "#mu+#tau, 7 TeV");
   produce("CMS_scale_t", 1, 125 ,true, mt, eightTeV, "#mu+#tau, 8 TeV");
@@ -447,13 +567,16 @@ void produceAll(){
   produce("CMS_scale_t", 1, 125 ,true, tt, sevenTeV, "#tau+#tau, 7 TeV");
   produce("CMS_scale_t", 1, 125 ,true, tt, eightTeV, "#tau+#tau, 8 TeV");
   produce("CMS_scale_t", 1, 125 ,true, tt, allTeV,   "#tau+#tau, 7+8 TeV");
-
+  
   //produce("CMS_scale_t", 1, 125 ,true, lt, allTeV, "l+#tau, 7+8 TeV");
   //produce("CMS_scale_t", 1, 125 ,true, lx, allTeV, "l+#tau, 7+8 TeV");
-  produce("CMS_scale_t", 1, 125 ,true, xt, allTeV,    "x+#tau, 7+8 TeV");
-  produce("CMS_scale_t", 1, 125 ,true, xx, allTeV,    "x+x, 7+8 TeV");
 
-  //produce("CMS_scale_t", 1, 125 ,true, mt, sevenTeV, "#mu+#tau, 7 TeV");
+  produce("CMS_scale_t", 1, 125 ,true, xt, allTeV,    "x+#tau, 7+8 TeV");
+
+  produce("CMS_eff_t",     1, 125   ,true, xt, allTeV,    "x+#tau, 7+8 TeV");
+  produce("CMS_scale_met", 1, 125   ,true, xx, allTeV,    "x+x, 7+8 TeV");
+  produce("CMS_scale_jet", 1, 125   ,true, xx, allTeV,    "x+x, 7+8 TeV");
+  
 
 }
 
