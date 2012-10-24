@@ -1781,8 +1781,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
       JetCorrectionUncertainty* deltaJEC = new JetCorrectionUncertainty(param);
       deltaJEC->setJetEta(newJet->eta()); deltaJEC->setJetPt(newJet->pt());
       float shift  = deltaJEC->getUncertainty( true );
+      delete deltaJEC;
       /////////////////////////////////////////////////////////////////////////
-      
+
       if(verbose_){
 	cout << "Analyzing jet with pt " << (newJet->p4()).Pt() 
 	     << "and eta " << (newJet->p4()).Eta() << endl;

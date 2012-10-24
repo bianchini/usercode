@@ -1570,6 +1570,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
       JetCorrectionUncertainty* deltaJEC = new JetCorrectionUncertainty(param);
       deltaJEC->setJetEta(newJet->eta()); deltaJEC->setJetPt(newJet->pt());
       float shift  = deltaJEC->getUncertainty( true );
+      delete deltaJEC;
       /////////////////////////////////////////////////////////////////////////
       
       if(verbose_){

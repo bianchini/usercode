@@ -218,6 +218,7 @@ void MEtRescalerProducer::produce(edm::Event & iEvent, const edm::EventSetup & i
 		else     dSumEt -= (*jets)[it].correctedJet("Uncorrected","none","patJetCorrFactors").pt() * jetShift;
 
 		unClusterEnergy -= (*jets)[it].correctedJet("Uncorrected","none","patJetCorrFactors").p4();
+		delete deltaJEC;
 		if(verbose_){
 		  cout << "Shifting jet #" << it << " => dPx= " << dPx
 		       << " , dPy= " << dPy
