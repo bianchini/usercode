@@ -46,6 +46,7 @@
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
 
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenFilterInfo.h"
 
 #include "PhysicsTools/JetMCUtils/interface/JetMCTag.h"
 
@@ -703,9 +704,11 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   iEvent.getByLabel(edm::InputTag("kt6PFJetsForRhoComputationVoronoi","rho"), rhoFastJetHandle);
   rhoFastJet_ = rhoFastJetHandle.isValid() ? (*rhoFastJetHandle) : -99;
 
-  edm::Handle<double> embeddingWeightHandle;
-  iEvent.getByLabel(edm::InputTag("generator","weight",""), embeddingWeightHandle);
-  embeddingWeight_ = embeddingWeightHandle.isValid() ? (*embeddingWeightHandle) : 1.0;
+  edm::Handle<GenFilterInfo> embeddingWeightHandle;
+  iEvent.getByLabel(edm::InputTag("generator","minVisPtFilter",""), embeddingWeightHandle);
+  embeddingWeight_ = embeddingWeightHandle.isValid() ? embeddingWeightHandle->filterEfficiency() : 1.0;
+
+  //cout << "--- EMBEDDING WEIGHT : " << embeddingWeight_ << endl;
 
   edm::Handle<double> rhoNeutralFastJetHandle;
   iEvent.getByLabel(edm::InputTag("kt6PFJetsNeutral","rho", ""), rhoNeutralFastJetHandle);
