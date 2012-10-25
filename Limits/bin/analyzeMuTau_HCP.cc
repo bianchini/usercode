@@ -911,7 +911,7 @@ void plotMuTau( Int_t mH_           = 120,
   ///////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////
 
-  TString pathToFile = "/data_CMS/cms/ndaci/ndaci_2012/HTauTau/AnalysisHCP/ntuples/";
+  TString pathToFile = "/data_CMS/cms/htautau/HCP12/ntuples/MuTau/";
 
   // Open the files
   TFile *fData              
