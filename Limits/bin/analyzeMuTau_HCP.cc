@@ -723,7 +723,7 @@ void plotMuTau( Int_t mH_           = 120,
   float Lumi                               = 5000 ; //= (-47.4 + 215.6 + 955.3 + 389.9 + 706.719 + 2714);
   float lumiCorrFactor                     = 1 ;    //= (1-0.056);
   float TTxsectionRatio                    = lumiCorrFactor*(165.8/157.5) ;
-  float OStoSSRatioQCD                     = 1.11;
+  float OStoSSRatioQCD                     = 1.06;
   float SSIsoToSSAIsoRatioQCD              = 1.0;
   float MutoTauCorrectionFactor            = 1.0;
   float JtoTauCorrectionFactor             = 1.0;
@@ -757,7 +757,7 @@ void plotMuTau( Int_t mH_           = 120,
 
   bool useMt      = true;
   string antiWcut = useMt ? "MtLeg1Corr" : "-(pZetaCorr-1.5*pZetaVisCorr)" ; 
-  float antiWsgn  = useMt ? 40. :  20. ;
+  float antiWsgn  = useMt ? 20. :  20. ;
   float antiWsdb  = useMt ? 70. :  40. ; 
 
   bool use2Dcut   = false;
@@ -1005,7 +1005,7 @@ void plotMuTau( Int_t mH_           = 120,
   ////// TAU ISO //////
   TCut tiso("tightestHPSMVAWP>=0"); 
   TCut ltiso("tightestHPSMVAWP>-99");
-  TCut mtiso("hpsMVA>0.0");
+  TCut mtiso("hpsMVA>0.7");
 
   ////// MU ISO ///////
   TCut liso("combRelIsoLeg1DBetav2<0.10");
@@ -1019,7 +1019,8 @@ void plotMuTau( Int_t mH_           = 120,
   TCut OS("diTauCharge==0");
   TCut pZ( Form("((%s)<%f)",antiWcut.c_str(),antiWsgn));
   TCut apZ(Form("((%s)>%f)",antiWcut.c_str(),antiWsdb));
-  TCut apZ2(Form("((%s)>%f && (%s)<120)",antiWcut.c_str(),antiWsdb,antiWcut.c_str()));
+  //TCut apZ2(Form("((%s)>%f && (%s)<120)",antiWcut.c_str(),antiWsdb,antiWcut.c_str()));
+  TCut apZ2(Form("((%s)>60 && (%s)<120)",antiWcut.c_str(),antiWcut.c_str()));
   TCut hltevent("pairIndex<1 && HLTx==1 && ( run>=163269 || run==1)");
   TCut hltmatch("HLTmatch==1");
 
@@ -1028,12 +1029,13 @@ void plotMuTau( Int_t mH_           = 120,
   TCut zeroJet("nJets30<1");
   TCut oneJet("nJets30>=1");
   TCut twoJets("nJets30>=2");
-  TCut vbf("nJets30>=2 && pt1>30 && pt2>30 && (ptVeto<30 || isVetoInJets!=1) && MVAvbf>0.50");
-  TCut vbfLoose("nJets30>=2 && pt1>30 && pt2>30 && (ptVeto<30 || isVetoInJets!=1 && MVAvbf>-0.30)");
+  TCut vbf("nJets30>=2 && pt1>30 && pt2>30 && Mjj>500 && deta>3.5 && isVetoInJets!=1");
+  TCut vbfLoose("nJets30>=2 && pt1>30 && pt2>30 && isVetoInJets!=1 && Mjj>200 && deta>2");
   TCut vh("pt1>30 && pt2>30 && Mjj>70 && Mjj<120 && diJetPt>150 && MVAvbf<0.80 && nJets20BTagged<1");
   TCut boost("nJets30>0 && pt1>30 && nJets20BTagged<1");
   boost = boost && !vbf /*&& !vh*/;
   TCut bTag("nJets30<2 && nJets20BTagged>0");
+  TCut bTagLoose("nJets30<2 && nJets20BTaggedLoose>0"); //for W shape in b-Category
   TCut nobTag("nJets30<2 && nJets20BTagged==0");
   TCut novbf("nJets30<1 && nJets20BTagged==0");
 
@@ -1336,7 +1338,7 @@ void plotMuTau( Int_t mH_           = 120,
       TCut sbinPZetaRelSSForWextrapolation = sbinPZetaRelSS;
       if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos)
 	sbinPZetaRelSSForWextrapolation = (sbinPZetaRelSSInclusive&&vbfLoose);     
-
+      
 
       evaluateQCD(h1, hCleaner, true, "SS", false, removeMtCut, selection_, 
 		  SSQCDinSignalRegionDATA , dummy1 , scaleFactorTTSS,
@@ -1381,9 +1383,20 @@ void plotMuTau( Int_t mH_           = 120,
 	  hZtt->Add(h1, ExtrapolationFactorZFromSideband);
 	}
 	if((it->first).find("TTbar")!=string::npos){
-	  float NormTTjets = 0.;
-	  drawHistogramMC(currentTree, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio*scaleFactorTTOSWJets*hltEff_/1000., h1, sbin, 1);
-	  hTTb->Add(h1, 1.0);
+	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){ 
+	    float NormTTjets = 0.; 
+	    TCut sbinVBFLoose = sbinInclusive && vbfLoose; 
+	    drawHistogramMC(currentTree, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio*scaleFactorTTOSWJets*hltEff_/1000., hCleaner, sbinVBFLoose, 1);
+	    hTTb->Add(hCleaner, 1.0);
+	    NormTTjets = 0.;
+	    drawHistogramMC(currentTree, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio*scaleFactorTTOSWJets*hltEff_/1000., h1, sbin, 1);
+	    hTTb->Scale(h1->Integral()/hTTb->Integral()); 
+	  } 
+	  else{
+	    float NormTTjets = 0.;
+	    drawHistogramMC(currentTree, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio*scaleFactorTTOSWJets*hltEff_/1000., h1, sbin, 1);
+	    hTTb->Add(h1, 1.0);
+	  }
 	}
 	else if((it->first).find("W3Jets")!=string::npos){
 
@@ -1492,24 +1505,62 @@ void plotMuTau( Int_t mH_           = 120,
 	  }
 	}
 	else if((it->first).find("DYMutoTau")!=string::npos){
-	  float NormDYMutoTau = 0.;
-	  drawHistogramMC(currentTree, variable, NormDYMutoTau, Error,   Lumi*lumiCorrFactor*MutoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., h1, sbin, 1);
-	  hZmm->Add(h1, 1.0);
-	  hZfakes->Add(h1,1.0);
-	  hEWK->Add(h1,1.0);
+	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){  
+            float NormDYMutoTau = 0.;
+            TCut sbinVBFLoose = sbinInclusive && vbfLoose;  
+	    drawHistogramMC(currentTree, variable, NormDYMutoTau, Error,   Lumi*lumiCorrFactor*MutoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., hCleaner, sbinVBFLoose, 1);
+            NormDYMutoTau = 0.; 
+	    drawHistogramMC(currentTree, variable, NormDYMutoTau, Error,   Lumi*lumiCorrFactor*MutoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., h1, sbin, 1);
+            hCleaner->Scale(h1->Integral()/hCleaner->Integral());  
+	    hZmm->Add(hCleaner, 1.0); 
+	    hZfakes->Add(hCleaner,1.0); 
+	    hEWK->Add(hCleaner,1.0);
+          }  
+	  else{
+	    float NormDYMutoTau = 0.;
+	    drawHistogramMC(currentTree, variable, NormDYMutoTau, Error,   Lumi*lumiCorrFactor*MutoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., h1, sbin, 1);
+	    hZmm->Add(h1, 1.0);
+	    hZfakes->Add(h1,1.0);
+	    hEWK->Add(h1,1.0);
+	  }
 	}
 	else if((it->first).find("DYJtoTau")!=string::npos){
-	  float NormDYJtoTau = 0.;
-	  drawHistogramMC(currentTree, variable, NormDYJtoTau, Error,    Lumi*lumiCorrFactor*JtoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., h1, sbin, 1);
-	  hZmj->Add(h1, 1.0);
-	  hZfakes->Add(h1,1.0);
-	  hEWK->Add(h1,1.0);
+	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){   
+            float NormDYJtoTau = 0.; 
+            TCut sbinVBFLoose = sbinInclusive && vbfLoose;   
+            drawHistogramMC(currentTree, variable, NormDYJtoTau, Error,    Lumi*lumiCorrFactor*JtoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., hCleaner, sbinVBFLoose, 1);
+	    NormDYJtoTau = 0.; 
+	    drawHistogramMC(currentTree, variable, NormDYJtoTau, Error,    Lumi*lumiCorrFactor*JtoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., h1, sbin, 1); 
+	    hCleaner->Scale(h1->Integral()/hCleaner->Integral());
+	    hZmj->Add(hCleaner, 1.0); 
+	    hZfakes->Add(hCleaner,1.0); 
+	    hEWK->Add(hCleaner,1.0); 
+	  }
+	  else{
+	    float NormDYJtoTau = 0.;
+	    drawHistogramMC(currentTree, variable, NormDYJtoTau, Error,    Lumi*lumiCorrFactor*JtoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., h1, sbin, 1);
+	    hZmj->Add(h1, 1.0);
+	    hZfakes->Add(h1,1.0);
+	    hEWK->Add(h1,1.0);
+	  }
 	}
 	else if((it->first).find("Others")!=string::npos){
-	  float NormOthers = 0.;
-	  drawHistogramMC(currentTree, variable, NormOthers , Error,     Lumi*hltEff_/1000., h1, sbin, 1);
-	  hVV->Add(h1, 1.0);
-	  hEWK->Add(h1,1.0);
+	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){    
+            float NormOthers = 0.;  
+            TCut sbinVBFLoose = sbinInclusive && vbfLoose;    
+	    drawHistogramMC(currentTree, variable, NormOthers, Error,     Lumi*hltEff_/1000., hCleaner, sbinVBFLoose, 1);
+	    NormOthers = 0.; 
+            drawHistogramMC(currentTree, variable, NormOthers , Error,     Lumi*hltEff_/1000., h1, sbin, 1);
+            hCleaner->Scale(h1->Integral()/hCleaner->Integral()); 
+            hVV->Add(hCleaner, 1.0);  
+            hEWK->Add(hCleaner,1.0);  
+          } 
+	  else{
+	    float NormOthers = 0.;
+	    drawHistogramMC(currentTree, variable, NormOthers , Error,     Lumi*hltEff_/1000., h1, sbin, 1);
+	    hVV->Add(h1, 1.0);
+	    hEWK->Add(h1,1.0);
+	  }
 	}
 	else if((it->first).find("Data")!=string::npos){
 
@@ -1723,10 +1774,22 @@ void plotMuTau( Int_t mH_           = 120,
       }
 
       else{
-	float NormEmbed = 0.;
-	drawHistogramEmbed(currentTree, variable, NormEmbed,  Error, 1.0 , h1,  sbinEmbedding  ,1);
-	h1->Scale( (ExtrapolationFactorZ*ExtrapDYInclusivePZetaRel*ExtrapolationFactorZFromSideband)/h1->Integral());
-	hDataEmb->Add(h1, 1.0);
+	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
+	  float NormEmbed = 0.;
+	  TCut sbinEmbeddingLoose = sbinEmbeddingInclusive && vbfLoose;
+	  drawHistogramEmbed(currentTree, variable, NormEmbed,  Error, 1.0 , hCleaner,  sbinEmbeddingLoose  ,1);
+	  hDataEmb->Add(hCleaner, 1.0);
+	  NormEmbed = 0.; 
+	  drawHistogramEmbed(currentTree, variable, NormEmbed,  Error, 1.0 , h1,  sbinEmbedding  ,1); 
+	  h1->Scale( (ExtrapolationFactorZ*ExtrapDYInclusivePZetaRel*ExtrapolationFactorZFromSideband)/h1->Integral()); 
+	  hDataEmb->Scale(h1->Integral()/hDataEmb->Integral());
+	}
+	else{
+	  float NormEmbed = 0.;
+	  drawHistogramEmbed(currentTree, variable, NormEmbed,  Error, 1.0 , h1,  sbinEmbedding  ,1);
+	  h1->Scale( (ExtrapolationFactorZ*ExtrapDYInclusivePZetaRel*ExtrapolationFactorZFromSideband)/h1->Integral());
+	  hDataEmb->Add(h1, 1.0);
+	}
       }
     }
   
