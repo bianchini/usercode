@@ -33,7 +33,7 @@
 #define SAVE             true
 #define addVH            true
 #define EMBEDDEDSAMPLES  true
-#define W3JETS           true
+#define W3JETS           false
 #define LOOSEISO         true
 #define kFactorSM         1.0
 
@@ -147,7 +147,7 @@ void drawHistogramMC(TTree* tree = 0,
 		     int verbose = 0 ){
   if(tree!=0 && h!=0){
     h->Reset();
-    tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu*HqTWeight)"*cut);
+    tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu*HqTWeight*weightHepNup)"*cut);
     h->Scale(scaleFactor);
     normalization      = h->Integral();
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
@@ -258,7 +258,7 @@ void drawHistogramMCFakeRate(TTree* tree = 0,
 			     int verbose = 0 ){
   if(tree!=0 && h!=0){
     h->Reset();
-    TString cutWeight = "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu*HqTWeight)*"+scaleFact;
+    TString cutWeight = "(sampleWeight*puWeight2*HLTweightTau*HLTweightMu*SFTau*SFMu*HqTWeight*weightHepNup)*"+scaleFact;
     tree->Draw(variable+">>"+TString(h->GetName()),TCut(cutWeight.Data())*cut);
     normalization      = h->Integral()*scaleFactor;
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
@@ -720,8 +720,8 @@ void plotMuTau( Int_t mH_           = 120,
   int nBins = nBins_;
   TArrayF bins = createBins(nBins_, xMin_, xMax_, nBins, selection_, variable_);
 
-  float Lumi                               = (-47.4 + 215.6 + 955.3 + 389.9 + 706.719 + 2714);
-  float lumiCorrFactor                     = (1-0.056);
+  float Lumi                               = 5000 ; //= (-47.4 + 215.6 + 955.3 + 389.9 + 706.719 + 2714);
+  float lumiCorrFactor                     = 1 ;    //= (1-0.056);
   float TTxsectionRatio                    = lumiCorrFactor*(165.8/157.5) ;
   float OStoSSRatioQCD                     = 1.11;
   float SSIsoToSSAIsoRatioQCD              = 1.0;
@@ -914,26 +914,17 @@ void plotMuTau( Int_t mH_           = 120,
   TString pathToFile = "/data_CMS/cms/htautau/HCP12/ntuples/MuTau/";
 
   // Open the files
-  TFile *fData              
-    = new TFile(pathToFile+"/dummy/ntuple_MuTau_DATA_Nominal.root", "READ");  
-  TFile *fDataEmbedded              
-    = new TFile(pathToFile+"/embeddedTauUpDown/nTuple_embedded_MuTau.root", "READ");  
-  TFile *fBackgroundDY
-    = new TFile(pathToFile+"/dummy/ntuple_MuTau_DYJ_LL_Nominal.root","READ"); 
-  TFile *fBackgroundWJets   
-    = new TFile(pathToFile+"/dummy/ntuple_MuTau_Wj_Ln_Nominal.root","READ"); 
-  TFile *fBackgroundW3Jets   
-    = new TFile(pathToFile+"/dummy/ntuple_MuTau_Wj_Ln_Nominal.root","READ"); 
-  TFile *fBackgroundTTbar  
-    = new TFile(pathToFile+"/dummy/ntuple_MuTau_TTJ_Nominal.root","READ"); 
-  TFile *fBackgroundOthers  
-    = new TFile(pathToFile+"/dummy/ntuple_MuTau_VV_Nominal.root","READ"); 
+  TFile *fData            = new TFile(pathToFile+"/nTupleRun2012-MuTau-All_run_Open_MuTauStream.root", "READ");
+  TFile *fDataEmbedded    = new TFile(pathToFile+"/nTuple_2012ABC_Embedded_MuTau.root", "READ");
+  TFile *fBackgroundDY    = new TFile(pathToFile+"/nTupleDYJets-MuTau-50-madgraph-PUS10_run_Open_MuTauStream.root","READ");
+  TFile *fBackgroundWJets = new TFile(pathToFile+"/nTupleWJets-MuTau-madgraph-PUS10_run_Open_MuTauStream.root","READ");
+  TFile *fBackgroundW3Jets= new TFile(pathToFile+"/nTupleW3Jets-MuTau-madgraph-PUS10_run_Open_MuTauStream.root","READ");
+  TFile *fBackgroundTTbar = new TFile(pathToFile+"/nTupleTTJets-MuTau-madgraph-PUS10_run_Open_MuTauStream.root","READ");
+  TFile *fBackgroundOthers= new TFile(pathToFile+"/nTupleOthers-MuTau-madgraph-PUS10_run_Open_MuTauStream.root","READ");
 
   vector<int> hMasses;
   hMasses.push_back(110);hMasses.push_back(115);hMasses.push_back(120);hMasses.push_back(125);
   hMasses.push_back(130);hMasses.push_back(135);hMasses.push_back(140);hMasses.push_back(145);
-
-  TString pathHiggsSM="/data_CMS/cms/ndaci/ndaci_2012/HTauTau/AnalysisHCP/ntuples/MC/HiggsSM/";
 
   const int nProd=3;
   const int nMasses=11;
@@ -944,7 +935,7 @@ void plotMuTau( Int_t mH_           = 120,
 
   for(int iP=0 ; iP<nProd ; iP++)
     for(int iM=0 ; iM<nMasses ; iM++)
-      fSignal[iP][iM] = new TFile(pathHiggsSM+"/nTuple_"+nameProd[iP]+"_M-"+nameMasses[iM]+"_MuTau.root","READ");
+      fSignal[iP][iM] = new TFile(pathToFile+"/nTuple_"+nameProd[iP]+"_M-"+nameMasses[iM]+"_MuTau.root","READ");
        
   std::map<string,TFile*> mapSUSYfiles;
   for(unsigned int i = 0; i < SUSYhistos.size() ; i++){
@@ -1335,9 +1326,13 @@ void plotMuTau( Int_t mH_           = 120,
 
       TH1F* hExtrapSS = new TH1F("hExtrapSS","",nBins , bins.GetArray());
       float dummy1 = 0.;      
+      /*
       TTree* treeForWestimation = !((selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || 
 				    selection_.find("twoJets")!=string::npos) ?
 	backgroundWJets : backgroundW3Jets;
+      */
+      TTree* treeForWestimation = backgroundWJets;
+
       TCut sbinPZetaRelSSForWextrapolation = sbinPZetaRelSS;
       if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos)
 	sbinPZetaRelSSForWextrapolation = (sbinPZetaRelSSInclusive&&vbfLoose);     
