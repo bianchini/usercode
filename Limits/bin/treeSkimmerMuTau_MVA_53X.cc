@@ -1229,7 +1229,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   // define JSON selector //
   int nJson=3;
   string jsonFile[nJson];
-  string dirJson = "./JSON/"; 
+  string dirJson = "/data_CMS/cms/htautau/JSON/"; 
   jsonFile[0] = dirJson+"/Cert_190456-196531_8TeV_13Jul2012ReReco_Collisions12_JSON_v2.txt"; // ReReco 13Jul 
   jsonFile[1] = dirJson+"/Cert_198022-198523_8TeV_24Aug2012ReReco_Collisions12_JSON.txt"; // ReReco 24 Aug 
   jsonFile[2] = dirJson+"/Cert_190456-203002_8TeV_PromptReco_Collisions12_JSON_v2.txt"; // PromptReco 
