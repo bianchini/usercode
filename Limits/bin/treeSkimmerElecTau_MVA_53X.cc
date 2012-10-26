@@ -112,6 +112,17 @@ void smear( float& reco, float gen = float(0.), float dM = float(0.), float dRMS
 
 }
 
+float reweightHEPNUP(int hepNUP) {
+
+  int nJets = hepNUP-5;
+  
+  if(nJets==0)      return 1 ;
+  else if(nJets==1) return 0.368748897 ;
+  else if(nJets==2) return 0.114009944 ;
+  else if(nJets==3) return 0.077158785 ;
+  else if(nJets>=4) return 0.038490064 ;
+  else return 1 ;
+}
 
 void createReWeighting3D(){
 
@@ -508,7 +519,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
 
   // quality cuts of the first 2 jets
   float jetsBtagHE1,jetsBtagHE2,jetsBtagHP1,jetsBtagHP2, jetsBtagCSV1, jetsBtagCSV2;
-  int nJets20BTagged, nJets20BTaggedBUp, nJets20BTaggedBDown, nJets20BTaggedLUp, nJets20BTaggedLDown;
+  int nJets20BTagged, nJets20BTaggedBUp, nJets20BTaggedBDown, nJets20BTaggedLUp, nJets20BTaggedLDown, nJets20BTaggedLoose;
   float chFracPV1, chFracPV2;
 
   // kinematical variables of the veto jet
@@ -559,7 +570,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   float sihih_, dEta_, dPhi_, HoE_;
 
   // event-related variables
-  float numPV_ , sampleWeight, puWeight, puWeight2, puWeight3D, embeddingWeight_,HqTWeight;
+  float numPV_ , sampleWeight, puWeight, puWeight2, puWeight3D, embeddingWeight_,HqTWeight, weightHepNup;
   int numOfLooseIsoDiTaus_;
   int nPUVertices_;
 
@@ -634,6 +645,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   outTreePtOrd->Branch("nJets30",       &nJets30,  "nJets30/I");  
   outTreePtOrd->Branch("nJets20",       &nJets20,  "nJets20/I");  
   outTreePtOrd->Branch("nJets20BTagged",&nJets20BTagged,  "nJets20BTagged/I");  
+  outTreePtOrd->Branch("nJets20BTaggedLoose",&nJets20BTaggedLoose,  "nJets20BTaggedLoose/I");  
   outTreePtOrd->Branch("nJets20BTaggedBUp",&nJets20BTaggedBUp,  "nJets20BTaggedBUp/I");
   outTreePtOrd->Branch("nJets20BTaggedBDown",&nJets20BTaggedBDown,  "nJets20BTaggedBDown/I");
   outTreePtOrd->Branch("nJets20BTaggedLUp",&nJets20BTaggedLUp,  "nJets20BTaggedLUp/I");
@@ -760,6 +772,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   outTreePtOrd->Branch("puWeight2",          &puWeight2,"puWeight2/F");
   outTreePtOrd->Branch("puWeight3D",         &puWeight3D,"puWeight3D/F");
   outTreePtOrd->Branch("embeddingWeight",    &embeddingWeight_,"embeddingWeight/F");
+  outTreePtOrd->Branch("weightHepNup",       &weightHepNup,"weightHepNup/F");
   outTreePtOrd->Branch("HqTWeight",          &HqTWeight,"HqTWeight/F");
   outTreePtOrd->Branch("numOfLooseIsoDiTaus",&numOfLooseIsoDiTaus_,"numOfLooseIsoDiTaus/I");
   outTreePtOrd->Branch("nPUVertices",        &nPUVertices_, "nPUVertices/I");
@@ -1265,7 +1278,7 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     MVAvbf = -99;
 
     // define the relevant jet collection
-    nJets20BTagged = 0; nJets20BTaggedBUp = 0; nJets20BTaggedBDown = 0;
+    nJets20BTagged = 0; nJets20BTaggedBUp = 0; nJets20BTaggedBDown = 0; nJets20BTaggedLoose = 0;
     nJets20BTaggedLUp = 0; nJets20BTaggedLDown = 0;
     nJets30        = 0; nJets20 = 0;
     int lead  = -99;
@@ -1285,7 +1298,11 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
     for(unsigned int v = 0 ; v < indexes.size() ; v++){
       if( (*jets)[indexes[v]].Pt() > 30 ) nJets30++;
       if( (*jets)[indexes[v]].Pt() > 20 ) nJets20++;
-      //if( (*jets)[indexes[v]].Pt() > 20 && TMath::Abs((*jets)[indexes[v]].Eta())<2.4 && (*jetsBtagCSV)[indexes[v]] > 0.679 ){
+
+      // b-tag loose
+      if( (*jets)[indexes[v]].Pt() > 20 && TMath::Abs((*jets)[indexes[v]].Eta())<2.4 && (*jetsBtagCSV)[indexes[v]] > 0.244 )
+	nJets20BTaggedLoose++ ;
+
       if( (*jets)[indexes[v]].Pt() > 20 && TMath::Abs((*jets)[indexes[v]].Eta())<2.4){ 
         int jetFlavour = ((*bQuark)[indexes[v]] > 0) ? 5 : 1;
 	bool isBtag = btsf->isbtagged((*jets)[indexes[v]].Pt(), (*jets)[indexes[v]].Eta(), (*jetsBtagCSV)[indexes[v]], jetFlavour, isData ,kNo, kNo, true);
@@ -1642,6 +1659,9 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
       //cout << "Correcting with " << corrFactorEmbed << endl;
     }
 
+    // Reweight W+Jets
+    weightHepNup=1;
+    if( sample_.find("WJets")!=string::npos ) weightHepNup = reweightHEPNUP( hepNUP_ );
 
     HqTWeight = histo!=0 ? histo->GetBinContent( histo->FindBin( (*genVP4)[0].Pt() ) ) : 1.0;
 
