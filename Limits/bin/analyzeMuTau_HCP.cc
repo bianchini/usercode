@@ -1326,12 +1326,12 @@ void plotMuTau( Int_t mH_           = 120,
 
       TH1F* hExtrapSS = new TH1F("hExtrapSS","",nBins , bins.GetArray());
       float dummy1 = 0.;      
-      /*
-      TTree* treeForWestimation = !((selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos) || 
-				    selection_.find("twoJets")!=string::npos) ?
-	backgroundWJets : backgroundW3Jets;
-      */
-      TTree* treeForWestimation = backgroundWJets;
+
+      TTree* treeForWestimation;
+
+      if(W3JETS && ( ( selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos ) || selection_.find("twoJets")!=string::npos ) )
+	treeForWestimation = backgroundW3Jets ;
+      else treeForWestimation = backgroundWJets ;
 
       TCut sbinPZetaRelSSForWextrapolation = sbinPZetaRelSS;
       if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos)
