@@ -69,9 +69,9 @@
 using namespace RooFit;
 using namespace std;
 
+#define BLIND 1
 
-
-void mergeDifferentHistos(TH1F* hTarget=0, TH1F* hInput=0, float weight = 1.0, bool isError = false, bool verbose = false){
+void mergeDifferentHistos(TH1F* hTarget=0, TH1F* hInput=0, float weight = 1.0,  bool verbose = false){
 
   
   for(unsigned int i = 1; i <= (unsigned int)(hTarget->GetNbinsX()); i++){
@@ -125,11 +125,12 @@ void mergeDifferentHistos(TH1F* hTarget=0, TH1F* hInput=0, float weight = 1.0, b
     float entryi = 0.; float errori2 = 0.;
 
     for(int j = binLowInput; j <= binHighInput; j++){
+
       float widthj = hInput->GetBinWidth(j);
       float inputj = hInput->GetBinContent(j);
-
       float errorj = hInput->GetBinError(j)*widthj;
       float entryj = inputj*widthj;
+
       if(j==binLowInput){
 	entryi  += binLowInputFracHigh*entryj;
 	errori2 += (binLowInputFracHigh*errorj)*(binLowInputFracHigh*errorj);
@@ -163,15 +164,27 @@ void mergeDifferentHistos(TH1F* hTarget=0, TH1F* hInput=0, float weight = 1.0, b
 
 }
 
+void blindHisto(TH1F* histo=0){
+
+  int vetoBinLow  = histo->FindBin(90.);
+  int vetoBinHigh = histo->FindBin(130.);
+
+  for(int i =0; i <= histo->GetNbinsX() ; i++){
+    if( i>= vetoBinLow && i<= vetoBinHigh){
+      histo->SetBinContent(i, 0.0);
+      histo->SetBinError(i, 0.0);
+    }
+  }
+}
 
 
-void produce(int mH                   = 120,
-	     float signalRescale      = 0.20, 
-	     vector<string>& channels = *(new  vector<string>()),
-	     vector<string>& com      = *(new  vector<string>()),
+void produce(int mH                     = 120,
+	     float signalRescale        = 0.20, 
+	     vector<string>& channels   = *(new  vector<string>()),
+	     vector<string>& com        = *(new  vector<string>()),
 	     Int_t nBins_ = 80, 
 	     Float_t xMin_=  0, Float_t xMax_=400,
-	     TString title            = ""
+	     bool verbose               = false
 	     ){
 
   TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
@@ -217,16 +230,13 @@ void produce(int mH                   = 120,
   gStyle->SetTitleStyle(0);
   gStyle->SetTitleOffset(1.1,"y");
 
-  TLegend* leg = new TLegend(0.50,0.65,0.75,0.85,NULL,"brNDC");
+  TLegend* leg = new TLegend(0.50,0.50,0.75,0.85,NULL,"brNDC");
   leg->SetFillStyle(0);
   leg->SetBorderSize(0);
   leg->SetFillColor(10);
   leg->SetTextSize(0.04);
-  //leg->SetHeader(title);
 
-  for(unsigned int en = 0; en<com.size(); en++){
-    cout << com[en] << endl;
-  }
+  string title = "";
 
   typedef std::map<string, std::pair<vector<string>,vector<string> > >::iterator IT;
   std::map<string, std::pair<vector<string>,vector<string> > > channelToCatMap; 
@@ -235,10 +245,10 @@ void produce(int mH                   = 120,
   vector<string> categoriesTT; vector<string> categoriesIndexTT;
   vector<string> categoriesMM; vector<string> categoriesIndexMM;
 
-  //categoriesLT.push_back("0jet_low");   categoriesIndexLT.push_back("0");
-  //categoriesLT.push_back("0jet_high");  categoriesIndexLT.push_back("1");
-  //categoriesLT.push_back("boost_low");  categoriesIndexLT.push_back("2");
-  //categoriesLT.push_back("boost_high"); categoriesIndexLT.push_back("3");
+  categoriesLT.push_back("0jet_low");   categoriesIndexLT.push_back("0");
+  categoriesLT.push_back("0jet_high");  categoriesIndexLT.push_back("1");
+  categoriesLT.push_back("boost_low");  categoriesIndexLT.push_back("2");
+  categoriesLT.push_back("boost_high"); categoriesIndexLT.push_back("3");
   categoriesLT.push_back("vbf");        categoriesIndexLT.push_back("5");
 
   categoriesTT.push_back("boost");      categoriesIndexTT.push_back("0");
@@ -250,27 +260,39 @@ void produce(int mH                   = 120,
   for(unsigned int ch = 0; ch<channels.size(); ch++){
     cout << channels[ch] << endl;
     if(channels[ch].find("mt")!=string::npos){
+      title = title+"#tau_{#mu}#tau_{h} ";
       channelToCatMap.insert( make_pair("mt", make_pair(categoriesLT, categoriesIndexLT) )  );
       channelsDir.push_back("muTau");
     }
     if(channels[ch].find("et")!=string::npos){
+      title = title+"#tau_{e}#tau_{h} ";
       channelToCatMap.insert( make_pair("et", make_pair(categoriesLT, categoriesIndexLT) )  );
       channelsDir.push_back("eleTau");
     }
     if(channels[ch].find("tt")!=string::npos){
+      title = title+"#tau_{h}#tau_{h} ";
       channelToCatMap.insert( make_pair("tt", make_pair(categoriesTT, categoriesIndexTT) )  );
       channelsDir.push_back("tauTau");
     }
     if(channels[ch].find("em")!=string::npos){
+      title = title+"#tau_{e}#tau_{#mu} ";
       channelToCatMap.insert( make_pair("em", make_pair(categoriesLT, categoriesIndexLT) )  );
       channelsDir.push_back("emu");
     }
     if(channels[ch].find("mm")!=string::npos){
+      title = title+"#tau_{#mu}#tau_{#mu} ";
       channelToCatMap.insert( make_pair("mm", make_pair(categoriesMM, categoriesIndexMM) )  );
       channelsDir.push_back("muMu");
     }
   }
 
+  for(unsigned int en = 0; en<com.size(); en++){
+    cout << com[en] << endl;
+    if(en!= (com.size()-1) ) 
+      title = (title + ", " +  com[en] + "+");
+    else
+      title = (title + com[en]);
+  }
 
   // input txt file with bins
   ifstream is;
@@ -319,12 +341,12 @@ void produce(int mH                   = 120,
   }
 
   THStack* aStack  = new THStack("aStack","");
-  THStack* aStackW = new THStack("aStack","");
+  THStack* aStackW = new THStack("aStackW","");
 
-  TH1F* hData  = new TH1F( "hData" ,"Data; mass (GeV); events/GeV"            , nBins , bins.GetArray());
-  TH1F* hDataW = new TH1F( "hDataW","Data weighted; mass (GeV); weighted events/GeV"   , nBins , bins.GetArray());
-  TH1F* hBkg   = new TH1F( "hBkg"   ,"MC"              , nBins , bins.GetArray());
-  TH1F* hBkgW  = new TH1F( "hBkgW"  ,"MC weighted"     , nBins , bins.GetArray());
+  TH1F* hData  = new TH1F( "hData" ,"Data; mass (GeV); events/ 1 GeV"                             , nBins , bins.GetArray());
+  TH1F* hDataW = new TH1F( "hDataW","Data weighted; mass (GeV); S/(S+B) weighted events/ 1 GeV"   , nBins , bins.GetArray());
+  TH1F* hBkg   = new TH1F( "hBkg"   ,"MC"             , nBins , bins.GetArray());
+  TH1F* hBkgW  = new TH1F( "hBkgW"  ,"MC weighted"    , nBins , bins.GetArray());
   TH1F* hSgn   = new TH1F( "hSgn"  ,"Signal"          , nBins , bins.GetArray());
   TH1F* hSgnW  = new TH1F( "hSgnW" ,"Signal weightes" , nBins , bins.GetArray());
   TH1F* hErr   = new TH1F( "hErr"  ,"Signal"          , nBins , bins.GetArray());
@@ -376,9 +398,11 @@ void produce(int mH                   = 120,
   hErrW->SetFillColor(1);
   hErrW->SetFillStyle(3013);
 
-  leg->AddEntry(hData,"Observed","P");
-  leg->AddEntry(hBkg,"Background","F");
   leg->AddEntry(hSgn,Form("SM Higgs (m_{H}=%d GeV)",mH),"F");
+  leg->AddEntry(hData,"Observed","PE");
+  leg->AddEntry(hBkg,"Background","F");
+  leg->AddEntry(hErr,"#pm 1#sigma","F");
+  leg->SetHeader(title.c_str());
 
   TList *listData = new TList();
   TList *listMC   = new TList();
@@ -387,8 +411,6 @@ void produce(int mH                   = 120,
   TList *listMCW   = new TList();
   TList *listSgnW  = new TList();
 
-  float totalSgn = 0.;
-  
   for(unsigned int en = 0; en<com.size(); en++){
     string iEn = com[en];
 
@@ -417,16 +439,17 @@ void produce(int mH                   = 120,
 	TH1F *key;
 	while ( (key = (TH1F*)nextkey()) ) {
 	  string name(key->GetName());
-
 	  TH1F* h = (TH1F*)gDirectory->FindObjectAny( key->GetName());
 
+	  if(verbose) cout << "Processing " << name << ": " << h->Integral("width") << endl;
+
 	  if(  name.find("ggH")!=string::npos ){
-	    //cout << "This is signal ... " << name << endl;
+	    if(verbose) cout << "... This is signal ... " << name << endl;
 	    if( !ihSgn ){
 	      ihSgn  = (TH1F*)h->Clone("ihSgn");
 	      ihSgnW = (TH1F*)h->Clone("ihSgnW");
-	      ihSgn->Add(h);
-	      ihSgnW->Add(h);
+	      //ihSgn->Add(h);
+	      //ihSgnW->Add(h);
 	    }
 	    else{
 	      ihSgn->Add(h);
@@ -434,12 +457,12 @@ void produce(int mH                   = 120,
 	    }
 	  }
 	  else if(  name.find("data_obs")==string::npos &&  name.find("Ztt")!=string::npos) {
-	    //cout << "This is background ... " << name << endl;
+	    if(verbose) cout << "... This is background ... " << name << endl;
 	    if( !ihBkg ){
 	      ihBkg  = (TH1F*)h->Clone("ihBkg");
 	      ihBkgW = (TH1F*)h->Clone("ihBkgW");
-	      ihBkg->Add(h);
-	      ihBkgW->Add(h);
+	      //ihBkg->Add(h);
+	      //ihBkgW->Add(h);
 	    }
 	    else{
 	      ihBkg->Add(h);
@@ -447,12 +470,12 @@ void produce(int mH                   = 120,
 	    }
 	  }
 	  else if( name.find("data_obs")!=string::npos){
-	    //cout << "This is data ... " << name << endl;
+	    if(verbose) cout << "... This is data ... " << name << endl;
 	    if( !ihData ){
 	      ihData  = (TH1F*)h->Clone("ihData");
 	      ihDataW = (TH1F*)h->Clone("ihDataW");
-	      ihData->Add(h);
-	      ihDataW->Add(h);
+	      //ihData->Add(h);
+	      //ihDataW->Add(h);
 	    }
 	    else{
 	      ihData->Add(h);
@@ -460,12 +483,12 @@ void produce(int mH                   = 120,
 	    }
 	  }
 	  else if( name.find("errorBand")!=string::npos ){
-	    //cout << "This is error band ... " << name << endl;
+	    if(verbose) cout << "... This is error band ... " << name << endl;
 	    if( !ihErr ){
 	      ihErr  = (TH1F*)h->Clone("ihErr");
 	      ihErrW = (TH1F*)h->Clone("ihErrW");
-	      ihErr->Add(h);
-	      ihErrW->Add(h);
+	      //ihErr->Add(h);
+	      //ihErrW->Add(h);
 	    }
 	    else{
 	      ihErr->Add(h);
@@ -473,7 +496,7 @@ void produce(int mH                   = 120,
 	    }
 	  }
 	  else{
-	    //cout << "This histo will not be considered!" << endl;
+	    if(verbose) cout << "This histo will not be considered!" << endl;
 	  }
 	}
 
@@ -489,11 +512,6 @@ void produce(int mH                   = 120,
 	ihSgn->Scale(signalRescale);
 	ihSgnW->Scale(signalRescale);
 
-	totalSgn += ihSgn->Integral("width");
-
-	//cout << "Sgn  = " << ihSgn->Integral() << endl;
-	//cout << "Bkg  = " << ihBkg->Integral() << endl;
-	//cout << "Data = " << ihData->Integral() << endl;
 
 	double quantiles[] = {0.05,0.16, 0.50, 0.84, 0.95};
 	double positions[] = {0.0,0.0, 0.0, 0.0, 0.0};
@@ -512,19 +530,14 @@ void produce(int mH                   = 120,
 	//cout << "Weight S/sqrt(B) = " << SoSqrtB << endl;
 	//cout << "Weight S/(S+B) = "   << SoBpS << endl;
 
-	//ihDataW->Scale(SoB);
-	//ihSgnW->Scale(SoB);
-	//ihBkgW->Scale(SoB);
-	//ihErrW->Scale(SoB);
-
-	mergeDifferentHistos(hSgn,  ihSgn,   1.0);
-	mergeDifferentHistos(hSgnW, ihSgnW , SoB);
-	mergeDifferentHistos(hBkg,  ihBkg,   1.0);
-	mergeDifferentHistos(hBkgW, ihBkgW , SoB);
-	mergeDifferentHistos(hData, ihData,  1.0);
-	mergeDifferentHistos(hDataW,ihDataW, SoB);
-	mergeDifferentHistos(hErr, ihErr,    1.0, true);
-	mergeDifferentHistos(hErrW,ihErrW,   SoB, true);
+	mergeDifferentHistos(hSgn,  ihSgn,   1.0, verbose);
+	mergeDifferentHistos(hSgnW, ihSgnW , SoB, verbose);
+	mergeDifferentHistos(hBkg,  ihBkg,   1.0, verbose);
+	mergeDifferentHistos(hBkgW, ihBkgW , SoB, verbose);
+	mergeDifferentHistos(hData, ihData,  1.0, verbose);
+	mergeDifferentHistos(hDataW,ihDataW, SoB, verbose);
+	mergeDifferentHistos(hErr, ihErr,    1.0, verbose);
+	mergeDifferentHistos(hErrW,ihErrW,   SoB, verbose);
 
 	listData->Add(ihData);
 	listDataW->Add(ihDataW);
@@ -533,24 +546,16 @@ void produce(int mH                   = 120,
 	listSgn->Add(ihSgn);
 	listSgnW->Add(ihSgnW);
 
-	cout << "SgnW ==> " << hSgnW->Integral() << endl;
-
       }
       
     }
      
   }
     
-
-//   hSgn->Merge(listSgn);
-//   hSgnW->Merge(listSgnW);
-//   hData->Merge(listData);
-//   hDataW->Merge(listDataW);
-//   hBkg->Merge(listMC);
-//   hBkgW->Merge(listMCW);
-//   hSgnW->Scale(totalSgn/hSgnW->Integral("width"));
-//   hDataW->Scale(totalSgn/hSgnW->Integral("width"));
-//   hBkgW->Scale(totalSgn/hSgnW->Integral("width"));
+  if(BLIND){
+    blindHisto(hData);
+    blindHisto(hDataW);
+  }
 
   TH1F* hErrSub = (TH1F*)hErr->Clone("hErrSub");
   hErrSub->Add(hBkg,-1.0);
@@ -565,20 +570,20 @@ void produce(int mH                   = 120,
   aStackW->Add(hSgnW);
 
   cout << "Unweighted = " << endl;
-  cout << " Sgn TOT = " << hSgn->Integral() << endl;
-  cout << " Bkg TOT = " << hBkg->Integral() << endl;
-  cout << " Data TOT = " << hData->Integral() << endl;
-  cout << "Weighted = " << endl;
-  cout << " SgnW TOT = " << hSgnW->Integral() << endl;
-  cout << " BkgW TOT = " << hBkgW->Integral() << endl;
-  cout << " DataW TOT = " << hDataW->Integral() << endl;
+  cout << " Sgn TOT = "   << hSgn->Integral("width") << endl;
+  cout << " Bkg TOT = "   << hBkg->Integral("width") << endl;
+  cout << " Data TOT = "  << hData->Integral("width") << endl;
+  cout << "Weighted = "   << endl;
+  cout << " SgnW TOT = "  << hSgnW->Integral("width") << endl;
+  cout << " BkgW TOT = "  << hBkgW->Integral("width") << endl;
+  cout << " DataW TOT = " << hDataW->Integral("width") << endl;
 
   c1->cd();
   pad1->cd();
   hData->Draw("P");
   aStack->Draw("HISTSAME");
+  hErr->Draw("e2SAME");
   hData->Draw("PSAME");
-
   leg->Draw();
 
   pad2->cd();
@@ -591,9 +596,10 @@ void produce(int mH                   = 120,
   hRatio->SetMarkerSize(1.0);
   hRatio->SetMarkerColor(kBlack);
   hRatio->SetLineColor(kBlack);
-  hRatio->SetLabelSize(0.12,"Y");
-  hRatio->SetLabelSize(0.12,"X");
+  hRatio->SetLabelSize(0.16,"Y");
+  hRatio->SetLabelSize(0.16,"X");
   hRatio->Add(hBkg,-1.0);
+  if(BLIND) blindHisto(hRatio);
   for(unsigned int i = 1; i <= (unsigned int)(hRatio->GetNbinsX()); i++)
     hRatio->SetBinError(i, hData->GetBinError(i));
     
@@ -617,8 +623,8 @@ void produce(int mH                   = 120,
   pad1W->cd();
   hDataW->Draw("P");
   aStackW->Draw("HISTSAME");
-  hDataW->Draw("PSAME");
   hErrW->Draw("e2SAME");
+  hDataW->Draw("PSAME");
   leg->Draw();
 
   pad2W->cd();
@@ -631,9 +637,10 @@ void produce(int mH                   = 120,
   hRatioW->SetMarkerSize(1.0);
   hRatioW->SetMarkerColor(kBlack);
   hRatioW->SetLineColor(kBlack);
-  hRatioW->SetLabelSize(0.10,"Y");
-  hRatioW->SetLabelSize(0.10,"X");
+  hRatioW->SetLabelSize(0.16,"Y");
+  hRatioW->SetLabelSize(0.16,"X");
   hRatioW->Add(hBkgW,-1.0);
+  if(BLIND) blindHisto(hRatioW);
   for(unsigned int i = 1; i <= (unsigned int)(hRatioW->GetNbinsX()); i++)
     hRatioW->SetBinError(i, hDataW->GetBinError(i));
 
@@ -654,7 +661,10 @@ void produce(int mH                   = 120,
 
   
 
-void produceAll(){
+void produceAll( vector<string>& channels = *(new vector<string>) ,
+		 vector<string>& com      = *(new vector<string>),
+		 string title = ""
+		 ){
 
   vector<string> sevenTeV;
   sevenTeV.push_back("7TeV");
@@ -682,7 +692,8 @@ void produceAll(){
 
   vector<string> lx;
   lx.push_back("em"); 
-  lx.push_back("mt"); /*lx.push_back("et");*/  
+  lx.push_back("mt"); 
+  lx.push_back("et");  
 
   vector<string> xt;
   xt.push_back("mt"); xt.push_back("et");  xt.push_back("tt");
@@ -690,7 +701,7 @@ void produceAll(){
   vector<string> xx;
   xx.push_back("mt"); xx.push_back("et");  xx.push_back("tt");  xx.push_back("em"); 
 
-  produce(125, 0.20,lx, allTeV, -1, 0, 400, "");
+  produce(125, 0.20, channels , com , -1, 0, 400);
 
   return;
 
@@ -708,41 +719,28 @@ int main(int argc, const char* argv[])
   gSystem->Load("libFWCoreFWLite");
   AutoLibraryLoader::enable();
 
-  produceAll();
+  if ( argc < 3 ) {
+    std::cout << "Usage: " << argv[0] << " <channel> <period>" << std::endl;
+    return 0;
+  }
+
+  vector<string> channels; vector<string> com;
+
+  for(int i = 1; i < argc; i++){
+    string input(argv[i]);
+    if( input.find("mt")!=string::npos ||
+	input.find("et")!=string::npos ||
+	input.find("em")!=string::npos ||
+	input.find("tt")!=string::npos ||
+	input.find("mm")!=string::npos
+	) 
+      channels.push_back(input);
+    else if( input.find("TeV")!=string::npos )
+      com.push_back(input);
+    else
+      cout << input << ": invalid input" << endl;
+  }
+
+  produceAll( channels, com);
 
 }
-
-
-
-// 	for(unsigned int i = 1; i <= (unsigned int)(hData->GetNbinsX()); i++){
-// 	  float centralValue = hData->GetBinCenter(i);
-// 	  //cout <<  " ==> " << centralValue << endl;
-
-// 	  float totData = ihData->GetBinContent(ihData->FindBin(centralValue));
-// 	  float totSgn  = ihSgn->GetBinContent(ihSgn->FindBin(centralValue));
-// 	  float totBkg  = ihBkg->GetBinContent(ihBkg->FindBin(centralValue));
-
-// 	  float binWidth= ihData->GetBinWidth(ihData->FindBin(centralValue));
-// 	  //cout << totData << endl;cout << totSgn << endl;cout << totBkg << endl;
-
-// 	  float oldDataContent = hData->GetBinContent(i);
-// 	  float oldDataError   = hData->GetBinError(i);
-// 	  hData->SetBinContent(i,  totData+oldDataContent);
-// 	  hData->SetBinError(i, TMath::Sqrt( oldDataError*oldDataError + totData*totData) ); // to be checked!
-// 	  hDataW->SetBinContent(i,  SoB*totData+oldDataContent);
-// 	  hDataW->SetBinError(i, TMath::Sqrt( oldDataError*oldDataError + SoB*SoB*totData*totData) ); // to be checked!
-
-// 	  float oldSgnContent = hSgn->GetBinContent(i);
-// 	  float oldSgnError   = hSgn->GetBinError(i);
-// 	  hSgn->SetBinContent(i,  totSgn+oldSgnContent);
-// 	  hSgn->SetBinError(i, TMath::Sqrt( oldSgnError*oldSgnError + totSgn*totSgn) ); // to be checked!
-// 	  hSgnW->SetBinContent(i,  SoB*totSgn+oldSgnContent);
-// 	  hSgnW->SetBinError(i, TMath::Sqrt( oldSgnError*oldSgnError + SoB*SoB*totSgn*totSgn) ); // to be checked!
-	  
-// 	  float oldBkgContent = hBkg->GetBinContent(i);
-// 	  float oldBkgError   = hBkg->GetBinError(i);
-// 	  hBkg->SetBinContent(i,  totBkg+oldBkgContent);
-// 	  hBkg->SetBinError(i, TMath::Sqrt( oldBkgError*oldBkgError + totBkg*totBkg) ); // to be checked!
-// 	  hBkgW->SetBinContent(i,  SoB*totBkg+oldBkgContent);
-// 	  hBkgW->SetBinError(i, TMath::Sqrt( oldBkgError*oldBkgError + SoB*SoB*totBkg*totBkg) ); // to be checked!
-// 	}
