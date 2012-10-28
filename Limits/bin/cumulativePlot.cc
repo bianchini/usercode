@@ -69,7 +69,7 @@
 using namespace RooFit;
 using namespace std;
 
-#define BLIND 1
+#define BLIND 0
 
 void mergeDifferentHistos(TH1F* hTarget=0, TH1F* hInput=0, float weight = 1.0,  bool verbose = false){
 
@@ -367,7 +367,7 @@ void produce(int mH                     = 120,
   hData->SetLabelSize(0.04,"Y");
   hData->SetTitleSize(0.06,"Y");
   hData->SetMarkerStyle(20);
-  hData->SetMarkerSize(1.0);
+  hData->SetMarkerSize(0.6);
   hData->SetMarkerColor(kBlack);
   hData->SetLineColor(kBlack);
   hDataW->Sumw2();
@@ -376,7 +376,7 @@ void produce(int mH                     = 120,
   hData->SetLabelSize(0.04,"Y");
   hData->SetTitleSize(0.06,"Y");
   hDataW->SetMarkerStyle(20);
-  hDataW->SetMarkerSize(1.0);
+  hDataW->SetMarkerSize(0.6);
   hDataW->SetMarkerColor(kBlack);
   hDataW->SetLineColor(kBlack);
 
@@ -500,7 +500,7 @@ void produce(int mH                     = 120,
 	  }
 	}
 
-	if( !ihSgn || !ihBkg || !ihData){
+	if( !ihSgn || !ihBkg || !ihData || !ihErr){
 	  cout << "Could not find some histos... continue" << endl;
 	  continue;
 	}
@@ -519,15 +519,25 @@ void produce(int mH                     = 120,
 	int binLow  = ihSgn->FindBin(positions[1]);
 	int binHigh = ihSgn->FindBin(positions[3]);
 
-	float totalSig = ihSgn->Integral(binLow,binHigh);
-	float totalBkg = ihBkg->Integral(binLow,binHigh);
+	//binLow  = 1;
+	//binHigh = ihSgn->GetNbinsX();
 
-	float SoB     = totalSig/(totalBkg+totalSig);
-	float SoSqrtB = totalSig/TMath::Sqrt(totalBkg);
-	float SoBpS   = totalSig/(totalBkg+totalSig);
+	float totalSig = ihSgn->Integral(binLow,binHigh,"width");
+	float totalBkg = ihBkg->Integral(binLow,binHigh,"width");
 
-	cout << "Weight S/B = "       << SoB << endl;
-	//cout << "Weight S/sqrt(B) = " << SoSqrtB << endl;
+	float errorBkg2 = 0.;
+	for(int i = binLow; i <= binHigh; i++){
+	  errorBkg2 += (ihErr->GetBinError(i)*ihErr->GetBinWidth(i))*(ihErr->GetBinError(i)*ihErr->GetBinWidth(i));
+	}
+
+	float SoB       = totalSig/(totalBkg+totalSig);
+	float SoSqrtB   = totalSig/TMath::Sqrt(totalBkg);
+	float SoSqrtBdB = totalSig/TMath::Sqrt(totalBkg+errorBkg2);
+	float SoBpS     = totalSig/(totalBkg+totalSig);
+
+	cout << "Weight S/B          = " << totalSig << "/" << totalBkg+totalSig << " = "  << SoB << endl;
+	cout << "Weight S/sqrt(B)    = " << totalSig << "/sqrt(" << totalBkg << ") = " << SoSqrtB << endl;
+	cout << "Weight S/sqrt(B+dB) = " << totalSig << "/sqrt(" << totalBkg << "+" << errorBkg2 << ") = " << SoSqrtBdB << endl;
 	//cout << "Weight S/(S+B) = "   << SoBpS << endl;
 
 	mergeDifferentHistos(hSgn,  ihSgn,   1.0, verbose);
@@ -551,7 +561,22 @@ void produce(int mH                     = 120,
     }
      
   }
-    
+
+  float maxData   = hData->GetBinContent(hData->GetMaximumBin());
+  float maxDataW  = hDataW->GetBinContent(hDataW->GetMaximumBin());;
+
+  float maxRatio = 0.;
+  for(unsigned int i = 1; i <= (unsigned int)(hData->GetNbinsX()); i++){
+    if( TMath::Abs(hData->GetBinContent(i) - hBkg->GetBinContent(i) ) > maxRatio ) maxRatio = TMath::Abs(hData->GetBinContent(i) - hBkg->GetBinContent(i) );
+  }
+  cout << maxRatio << endl;
+  float maxRatioW = 0.;
+  for(unsigned int i = 1; i <= (unsigned int)(hDataW->GetNbinsX()); i++){
+    if( TMath::Abs(hDataW->GetBinContent(i) - hBkgW->GetBinContent(i) ) > maxRatioW ) maxRatioW = TMath::Abs(hDataW->GetBinContent(i) - hBkgW->GetBinContent(i) );
+  }
+  cout << maxRatioW << endl;
+
+
   if(BLIND){
     blindHisto(hData);
     blindHisto(hDataW);
@@ -580,6 +605,8 @@ void produce(int mH                     = 120,
 
   c1->cd();
   pad1->cd();
+
+  hData->SetAxisRange(0,1.2*maxData,"Y");
   hData->Draw("P");
   aStack->Draw("HISTSAME");
   hErr->Draw("e2SAME");
@@ -589,11 +616,13 @@ void produce(int mH                     = 120,
   pad2->cd();
 
   TH1F* hRatio = (TH1F*)hData->Clone("hRatio");
+  hRatio->Reset(); 
+  hRatio->Add(hData,1.0);
   hRatio->SetTitle("");
   hRatio->SetYTitle("");
   hRatio->SetXTitle("");
   hRatio->SetMarkerStyle(20);
-  hRatio->SetMarkerSize(1.0);
+  hRatio->SetMarkerSize(0.6);
   hRatio->SetMarkerColor(kBlack);
   hRatio->SetLineColor(kBlack);
   hRatio->SetLabelSize(0.16,"Y");
@@ -609,6 +638,7 @@ void produce(int mH                     = 120,
   line->SetLineWidth(1.5);
   line->SetLineColor(kBlack);
 
+  hRatio->SetAxisRange(-1.5*maxRatio,1.5*maxRatio,"Y");
   hRatio->Draw("PE");
   hSgn->Draw("HISTSAME");
   hRatio->Draw("PESAME");
@@ -622,6 +652,7 @@ void produce(int mH                     = 120,
 
   pad1W->cd();
   hDataW->Draw("P");
+  hDataW->SetAxisRange(0,1.2*maxDataW,"Y");
   aStackW->Draw("HISTSAME");
   hErrW->Draw("e2SAME");
   hDataW->Draw("PSAME");
@@ -634,17 +665,18 @@ void produce(int mH                     = 120,
   hRatioW->SetYTitle("");
   hRatioW->SetXTitle("");
   hRatioW->SetMarkerStyle(20);
-  hRatioW->SetMarkerSize(1.0);
+  hRatioW->SetMarkerSize(0.6);
   hRatioW->SetMarkerColor(kBlack);
   hRatioW->SetLineColor(kBlack);
   hRatioW->SetLabelSize(0.16,"Y");
   hRatioW->SetLabelSize(0.16,"X");
   hRatioW->Add(hBkgW,-1.0);
+  hRatioW->SetAxisRange(-1.2*maxRatioW,1.2*maxRatioW,"Y");
   if(BLIND) blindHisto(hRatioW);
   for(unsigned int i = 1; i <= (unsigned int)(hRatioW->GetNbinsX()); i++)
     hRatioW->SetBinError(i, hDataW->GetBinError(i));
 
-
+  hRatioW->SetAxisRange(-1.5*maxRatioW,1.5*maxRatioW,"Y");
   hRatioW->Draw("PE");
   hSgnW->Draw("HISTSAME");
   hRatioW->Draw("PESAME");
