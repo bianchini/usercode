@@ -166,8 +166,8 @@ void mergeDifferentHistos(TH1F* hTarget=0, TH1F* hInput=0, float weight = 1.0,  
 
 void blindHisto(TH1F* histo=0){
 
-  int vetoBinLow  = histo->FindBin(90.);
-  int vetoBinHigh = histo->FindBin(130.);
+  int vetoBinLow  = histo->FindBin(100.);
+  int vetoBinHigh = histo->FindBin(160.);
 
   for(int i =0; i <= histo->GetNbinsX() ; i++){
     if( i>= vetoBinLow && i<= vetoBinHigh){
@@ -184,6 +184,7 @@ void produce(int mH                     = 120,
 	     vector<string>& com        = *(new  vector<string>()),
 	     Int_t nBins_ = 80, 
 	     Float_t xMin_=  0, Float_t xMax_=400,
+	     string binFile             = "",
 	     bool verbose               = false
 	     ){
 
@@ -217,6 +218,24 @@ void produce(int mH                     = 120,
   pad1W->Draw();
   pad2W->Draw();
 
+
+  TCanvas *c1P = new TCanvas("c1P","",5,30,650,600);
+  c1P->SetGrid(0,0);
+  c1P->SetFillStyle(4000);
+  c1P->SetFillColor(10);
+  c1P->SetTicky();
+  c1P->SetObjectStat(0);
+  c1P->SetLogy(1);
+
+  TPad* pad1P = new TPad("pad1P","",0.05,0.22,0.96,0.97);
+  TPad* pad2P = new TPad("pad2P","",0.05,0.02,0.96,0.20);
+  pad1P->SetFillColor(0);
+  pad2P->SetFillColor(0);
+  pad1P->SetLogy(1);
+  pad2P->SetLogy(0);
+  pad1P->Draw();
+  pad2P->Draw();
+
   gStyle->SetOptStat(0);
   gStyle->SetTitleFillColor(0);
   gStyle->SetCanvasBorderMode(0);
@@ -248,8 +267,8 @@ void produce(int mH                     = 120,
   categoriesLT.push_back("0jet_low");   categoriesIndexLT.push_back("0");
   categoriesLT.push_back("0jet_high");  categoriesIndexLT.push_back("1");
   categoriesLT.push_back("boost_low");  categoriesIndexLT.push_back("2");
-  categoriesLT.push_back("boost_high"); categoriesIndexLT.push_back("3");
-  categoriesLT.push_back("vbf");        categoriesIndexLT.push_back("5");
+  //categoriesLT.push_back("boost_high"); categoriesIndexLT.push_back("3");
+  //categoriesLT.push_back("vbf");        categoriesIndexLT.push_back("5");
 
   categoriesTT.push_back("boost");      categoriesIndexTT.push_back("0");
   categoriesTT.push_back("vbf");        categoriesIndexTT.push_back("1");
@@ -298,7 +317,7 @@ void produce(int mH                     = 120,
   ifstream is;
 
   char* c = new char[10];
-  is.open("../test/bins_coarse.txt"); 
+  is.open( ("../test/"+binFile).c_str() ); 
   if(nBins_<0 &&  !is.good()){
     cout << "Bins file not found" << endl;
     return;
@@ -318,7 +337,7 @@ void produce(int mH                     = 120,
   cout << "Making histograms with " << nBins << " bins:" << endl;
 
   is.close();
-  is.open("../test/bins_coarse.txt");
+  is.open( ("../test/"+binFile).c_str() );
   
   nBinsFromFile = 0;
 
@@ -342,6 +361,7 @@ void produce(int mH                     = 120,
 
   THStack* aStack  = new THStack("aStack","");
   THStack* aStackW = new THStack("aStackW","");
+  THStack* aStackP = new THStack("aStackP","");
 
   TH1F* hData  = new TH1F( "hData" ,"Data; mass (GeV); events/ 1 GeV"                             , nBins , bins.GetArray());
   TH1F* hDataW = new TH1F( "hDataW","Data weighted; mass (GeV); S/(S+B) weighted events/ 1 GeV"   , nBins , bins.GetArray());
@@ -351,6 +371,34 @@ void produce(int mH                     = 120,
   TH1F* hSgnW  = new TH1F( "hSgnW" ,"Signal weightes" , nBins , bins.GetArray());
   TH1F* hErr   = new TH1F( "hErr"  ,"Signal"          , nBins , bins.GetArray());
   TH1F* hErrW  = new TH1F( "hErrW" ,"Signal weightes" , nBins , bins.GetArray());
+
+  TH1F* hPuritySgn  =  new TH1F( "hPuritySgn" ,"Signal purity; S/(S+B); events" , 7 , 0, 0.28);
+  TH1F* hPurityBkg  =  new TH1F( "hPurityBkg" ,"Bkg purity; S/(S+B); events" ,    7 , 0, 0.28);
+  TH1F* hPurityData =  new TH1F( "hPurityData","Data purity; S/(S+B); events",    7 , 0, 0.28);
+  TH1F* hPurityErr  =  new TH1F( "hPurityErr", "Err purity; S/(S+B); events" ,    7 , 0, 0.28);
+  
+
+  hPuritySgn->SetFillColor(kRed);
+  hPuritySgn->SetLineColor(kRed);
+  hPuritySgn->SetFillStyle(1001);
+  hPuritySgn->SetLineWidth(1);
+  hPuritySgn->SetLineStyle(kSolid);
+  hPurityBkg->SetFillColor(kBlue);
+  hPurityBkg->SetLineColor(kBlue);
+  hPurityBkg->SetLineWidth(1);
+  hPurityBkg->SetFillStyle(3003);
+  hPurityData->Sumw2();
+  hPurityData->SetLabelSize(0.04,"X");
+  hPurityData->SetTitleSize(0.06,"X");
+  hPurityData->SetLabelSize(0.04,"Y");
+  hPurityData->SetTitleSize(0.06,"Y");
+  hPurityData->SetMarkerStyle(20);
+  hPurityData->SetMarkerSize(0.6);
+  hPurityData->SetMarkerColor(kBlack);
+  hPurityData->SetLineColor(kBlack);
+  hPurityErr->SetMarkerSize(0);
+  hPurityErr->SetFillColor(1);
+  hPurityErr->SetFillStyle(3013);
 
   hBkg->SetFillColor(kBlue);
   hBkg->SetLineColor(kBlue);
@@ -404,12 +452,8 @@ void produce(int mH                     = 120,
   leg->AddEntry(hErr,"#pm 1#sigma","F");
   leg->SetHeader(title.c_str());
 
-  TList *listData = new TList();
-  TList *listMC   = new TList();
-  TList *listSgn  = new TList();
-  TList *listDataW = new TList();
-  TList *listMCW   = new TList();
-  TList *listSgnW  = new TList();
+  std::map<float, string> mapOfWeights;
+
 
   for(unsigned int en = 0; en<com.size(); en++){
     string iEn = com[en];
@@ -429,7 +473,7 @@ void produce(int mH                     = 120,
 
 	cout << "Now doing " << string(Form("%s_%s_rescaled_%s_.root", iChIn.c_str(),iCat.c_str(),iEn.c_str() )) << endl;
 	
-	TFile* fInput = new TFile(Form("../test/%s_%s_rescaled_%s_.root", iChIn.c_str(),iCat.c_str(),iEn.c_str() ),"READ");
+	TFile* fInput = new TFile(Form("../test/histos/v2/%s_%s_rescaled_%s_.root", iChIn.c_str(),iCat.c_str(),iEn.c_str() ),"READ");
 	if(!fInput || fInput->IsZombie() ) continue;
 	
 	TH1F* ihSgn = 0;  TH1F* ihBkg  = 0; TH1F* ihData  = 0; TH1F* ihErr  = 0;
@@ -461,6 +505,8 @@ void produce(int mH                     = 120,
 	    if( !ihBkg ){
 	      ihBkg  = (TH1F*)h->Clone("ihBkg");
 	      ihBkgW = (TH1F*)h->Clone("ihBkgW");
+	      ihErr  = (TH1F*)h->Clone("ihErr");
+              ihErrW = (TH1F*)h->Clone("ihErrW");
 	      //ihBkg->Add(h);
 	      //ihBkgW->Add(h);
 	    }
@@ -480,21 +526,23 @@ void produce(int mH                     = 120,
 	    else{
 	      ihData->Add(h);
 	      ihDataW->Add(h);
+	      ihErr->Add(h);
+              ihErrW->Add(h);
 	    }
 	  }
-	  else if( name.find("errorBand")!=string::npos ){
-	    if(verbose) cout << "... This is error band ... " << name << endl;
-	    if( !ihErr ){
-	      ihErr  = (TH1F*)h->Clone("ihErr");
-	      ihErrW = (TH1F*)h->Clone("ihErrW");
+	  //else if( name.find("errorBand")!=string::npos ){
+	  //  if(verbose) cout << "... This is error band ... " << name << endl;
+	  //  if( !ihErr ){
+	  //    ihErr  = (TH1F*)h->Clone("ihErr");
+	  //    ihErrW = (TH1F*)h->Clone("ihErrW");
 	      //ihErr->Add(h);
 	      //ihErrW->Add(h);
-	    }
-	    else{
-	      ihErr->Add(h);
-	      ihErrW->Add(h);
-	    }
-	  }
+	  //  }
+	  //  else{
+	  //    ihErr->Add(h);
+	  //    ihErrW->Add(h);
+	  //  }
+	  //}
 	  else{
 	    if(verbose) cout << "This histo will not be considered!" << endl;
 	  }
@@ -513,54 +561,98 @@ void produce(int mH                     = 120,
 	ihSgnW->Scale(signalRescale);
 
 
-	double quantiles[] = {0.05,0.16, 0.50, 0.84, 0.95};
-	double positions[] = {0.0,0.0, 0.0, 0.0, 0.0};
+	for(int l = 0; l <= ihSgn->GetNbinsX() ; l++){
+
+	  float purityl  = ihSgn->GetBinContent(l)/( ihSgn->GetBinContent(l) + ihBkg->GetBinContent(l) );
+	  float binWidthl= ihSgn->GetBinWidth(l);
+	  float datal    = ihData->GetBinContent(l)*binWidthl;
+	  float dataErrl = ihData->GetBinError(l)*binWidthl;
+	  float sgnl     = ihSgn->GetBinContent(l)*binWidthl;
+	  float sgnErrl  = ihSgn->GetBinError(l)*binWidthl;
+	  float bkgl     = ihBkg->GetBinContent(l)*binWidthl;
+	  float bkgErrl  = ihBkg->GetBinError(l)*binWidthl;
+
+	  int binPurity          = hPuritySgn->FindBin( purityl );
+	
+	  float oldDataPurity    = hPurityData->GetBinContent(binPurity);
+	  float oldDataPurityErr = hPurityData->GetBinError(binPurity);
+	  hPurityData->SetBinContent( binPurity, oldDataPurity+datal);
+	  hPurityData->SetBinError(   binPurity, TMath::Sqrt(oldDataPurityErr*oldDataPurityErr + dataErrl*dataErrl));
+
+	  float oldSgnPurity    = hPuritySgn->GetBinContent(binPurity);
+	  float oldSgnPurityErr = hPuritySgn->GetBinError(binPurity);
+	  hPuritySgn->SetBinContent( binPurity, oldSgnPurity+sgnl);
+	  hPuritySgn->SetBinError(   binPurity, TMath::Sqrt(oldSgnPurityErr*oldSgnPurityErr + sgnErrl*sgnErrl));
+
+	  float oldBkgPurity    = hPurityBkg->GetBinContent(binPurity);
+	  float oldBkgPurityErr = hPurityBkg->GetBinError(binPurity);
+	  hPurityBkg->SetBinContent( binPurity, oldBkgPurity+bkgl);
+	  hPurityBkg->SetBinError(   binPurity, TMath::Sqrt(oldBkgPurityErr*oldBkgPurityErr + bkgErrl*bkgErrl));
+
+	  float oldErrPurity    = hPurityErr->GetBinContent(binPurity);
+	  float oldErrPurityErr = hPurityErr->GetBinError(binPurity);
+	  hPurityErr->SetBinContent( binPurity, oldErrPurity+bkgl);
+	  hPurityErr->SetBinError(   binPurity, TMath::Sqrt(oldErrPurityErr*oldErrPurityErr + bkgErrl*bkgErrl));
+	}
+
+
+	double quantiles[] = {0.05, 0.16, 0.50, 0.84, 0.95};
+	double positions[] = {0.00, 0.00, 0.00, 0.00, 0.00};
 	ihSgn->GetQuantiles(5, positions, quantiles);
 	int binLow  = ihSgn->FindBin(positions[1]);
 	int binHigh = ihSgn->FindBin(positions[3]);
 
-	//binLow  = 1;
-	//binHigh = ihSgn->GetNbinsX();
+	cout << "Bin [" << binLow << "," << binHigh << "]" << endl;
+	binLow  = 1;
+	binHigh = ihSgn->GetNbinsX();
 
 	float totalSig = ihSgn->Integral(binLow,binHigh,"width");
 	float totalBkg = ihBkg->Integral(binLow,binHigh,"width");
 
-	float errorBkg2 = 0.;
+	float errorBkg2 = 0.; float errorBkgUnc =0.;
 	for(int i = binLow; i <= binHigh; i++){
-	  errorBkg2 += (ihErr->GetBinError(i)*ihErr->GetBinWidth(i))*(ihErr->GetBinError(i)*ihErr->GetBinWidth(i));
+	  errorBkg2   += (ihErr->GetBinError(i)*ihErr->GetBinWidth(i))*(ihErr->GetBinError(i)*ihErr->GetBinWidth(i));
+	  errorBkgUnc += (ihErr->GetBinError(i)*ihErr->GetBinWidth(i));
 	}
+	errorBkg2 = errorBkgUnc*errorBkgUnc;
 
-	float SoB       = totalSig/(totalBkg+totalSig);
+	float SoB       = totalSig/(totalBkg);
 	float SoSqrtB   = totalSig/TMath::Sqrt(totalBkg);
 	float SoSqrtBdB = totalSig/TMath::Sqrt(totalBkg+errorBkg2);
 	float SoBpS     = totalSig/(totalBkg+totalSig);
 
-	cout << "Weight S/B          = " << totalSig << "/" << totalBkg+totalSig << " = "  << SoB << endl;
-	cout << "Weight S/sqrt(B)    = " << totalSig << "/sqrt(" << totalBkg << ") = " << SoSqrtB << endl;
-	cout << "Weight S/sqrt(B+dB) = " << totalSig << "/sqrt(" << totalBkg << "+" << errorBkg2 << ") = " << SoSqrtBdB << endl;
-	//cout << "Weight S/(S+B) = "   << SoBpS << endl;
+	cout << "Weight S/B          = " << totalSig << "/"      << totalBkg          << " = "  << SoB       << endl;
+	cout << "Weight S/(S+B)      = " << totalSig << "/"      << totalBkg+totalSig << " = "  << SoBpS     << endl;
+	cout << "Weight S/sqrt(B)    = " << totalSig << "/sqrt(" << totalBkg          << ") = " << SoSqrtB   << endl;
+	cout << "Weight S/sqrt(B+dB) = " << totalSig << "/sqrt(" << totalBkg          << "+"    << errorBkg2 << ") = " << SoSqrtBdB << endl;
 
-	mergeDifferentHistos(hSgn,  ihSgn,   1.0, verbose);
-	mergeDifferentHistos(hSgnW, ihSgnW , SoB, verbose);
-	mergeDifferentHistos(hBkg,  ihBkg,   1.0, verbose);
-	mergeDifferentHistos(hBkgW, ihBkgW , SoB, verbose);
-	mergeDifferentHistos(hData, ihData,  1.0, verbose);
-	mergeDifferentHistos(hDataW,ihDataW, SoB, verbose);
-	mergeDifferentHistos(hErr, ihErr,    1.0, verbose);
-	mergeDifferentHistos(hErrW,ihErrW,   SoB, verbose);
+	float weight = SoBpS; 
 
-	listData->Add(ihData);
-	listDataW->Add(ihDataW);
-	listMC->Add(ihBkg);
-	listMCW->Add(ihBkgW);
-	listSgn->Add(ihSgn);
-	listSgnW->Add(ihSgnW);
+	mapOfWeights.insert(  make_pair(weight, string(Form("%s_%s_%s", iChIn.c_str(),iCat.c_str(),iEn.c_str() )) ) );
+
+	mergeDifferentHistos(hSgn,  ihSgn,   1.0,    verbose);
+	mergeDifferentHistos(hSgnW, ihSgnW , weight, verbose);
+	mergeDifferentHistos(hBkg,  ihBkg,   1.0,    verbose);
+	mergeDifferentHistos(hBkgW, ihBkgW , weight, verbose);
+	mergeDifferentHistos(hData, ihData,  1.0,    verbose);
+	mergeDifferentHistos(hDataW,ihDataW, weight, verbose);
+	mergeDifferentHistos(hErr,  ihErr,   1.0,    verbose);
+	mergeDifferentHistos(hErrW, ihErrW,  weight, verbose);
+
 
       }
       
     }
      
   }
+
+  float signalUnWeighted = hSgn->Integral("width");
+  float signalWeighted   = hSgnW->Integral("width");
+  float normWeights      = signalUnWeighted/signalWeighted;
+  hDataW->Scale(normWeights);
+  hErrW->Scale(normWeights);
+  hBkgW->Scale(normWeights);
+  hSgnW->Scale(normWeights);
 
   float maxData   = hData->GetBinContent(hData->GetMaximumBin());
   float maxDataW  = hDataW->GetBinContent(hDataW->GetMaximumBin());;
@@ -588,6 +680,9 @@ void produce(int mH                     = 120,
   TH1F* hErrSubW = (TH1F*)hErrW->Clone("hErrSubW");
   hErrSubW->Add(hBkgW,-1.0);
 
+  TH1F* hPurityErrSub = (TH1F*)hPurityErr->Clone("hPurityErrSub");
+  hPurityErrSub->Add(hPurityBkg,-1.0);
+
   aStack->Add(hBkg);
   aStack->Add(hSgn);
 
@@ -602,6 +697,12 @@ void produce(int mH                     = 120,
   cout << " SgnW TOT = "  << hSgnW->Integral("width") << endl;
   cout << " BkgW TOT = "  << hBkgW->Integral("width") << endl;
   cout << " DataW TOT = " << hDataW->Integral("width") << endl;
+  cout << endl;
+
+  for(std::map<float, string>::iterator it = mapOfWeights.begin(); it!=mapOfWeights.end() ; it++){
+    cout << it->second << " ==> " << it->first << endl;
+  }
+
 
   c1->cd();
   pad1->cd();
@@ -638,7 +739,7 @@ void produce(int mH                     = 120,
   line->SetLineWidth(1.5);
   line->SetLineColor(kBlack);
 
-  hRatio->SetAxisRange(-1.5*maxRatio,1.5*maxRatio,"Y");
+  hRatio->SetAxisRange(-1.4*maxRatio,1.4*maxRatio,"Y");
   hRatio->Draw("PE");
   hSgn->Draw("HISTSAME");
   hRatio->Draw("PESAME");
@@ -671,12 +772,12 @@ void produce(int mH                     = 120,
   hRatioW->SetLabelSize(0.16,"Y");
   hRatioW->SetLabelSize(0.16,"X");
   hRatioW->Add(hBkgW,-1.0);
-  hRatioW->SetAxisRange(-1.2*maxRatioW,1.2*maxRatioW,"Y");
+  hRatioW->SetAxisRange(-1.4*maxRatioW,1.4*maxRatioW,"Y");
   if(BLIND) blindHisto(hRatioW);
   for(unsigned int i = 1; i <= (unsigned int)(hRatioW->GetNbinsX()); i++)
     hRatioW->SetBinError(i, hDataW->GetBinError(i));
 
-  hRatioW->SetAxisRange(-1.5*maxRatioW,1.5*maxRatioW,"Y");
+  hRatioW->SetAxisRange(-1.6*maxRatioW,1.6*maxRatioW,"Y");
   hRatioW->Draw("PE");
   hSgnW->Draw("HISTSAME");
   hRatioW->Draw("PESAME");
@@ -685,7 +786,59 @@ void produce(int mH                     = 120,
 
   c1W->SaveAs("weighted.png");
 
-  delete hData; delete hDataW; delete hBkg; delete hBkgW; delete hSgn; delete hSgnW;
+
+  c1P->cd();
+
+  pad1P->cd();
+
+  hPurityData->SetAxisRange(0.1,1.2*hPurityData->GetMaximum(),"Y");
+
+  aStackP->Add(hPurityBkg);
+  aStackP->Add(hPuritySgn);
+
+  hPurityData->Draw("PE");
+  aStackP->Draw("HISTSAME");
+  hPurityErr->Draw("e2SAME");
+  hPurityData->Draw("PESAME");
+  leg->Draw();
+
+  pad2P->cd();
+  
+  TH1F* hPurityRatio = (TH1F*)hPurityData->Clone("hPurityRatio");
+  hPurityRatio->Reset(); 
+  hPurityRatio->Add(hPurityData,1.0);
+  hPurityRatio->SetTitle("");
+  hPurityRatio->SetYTitle("");
+  hPurityRatio->SetXTitle("");
+  hPurityRatio->SetMarkerStyle(20);
+  hPurityRatio->SetMarkerSize(0.6);
+  hPurityRatio->SetMarkerColor(kBlack);
+  hPurityRatio->SetLineColor(kBlack);
+  hPurityRatio->SetLabelSize(0.12,"Y");
+  hPurityRatio->SetLabelSize(0.16,"X");
+  hPurityRatio->Add(hPurityBkg,-1.0);
+  if(BLIND) blindHisto(hPurityRatio);
+  for(unsigned int i = 1; i <= (unsigned int)(hPurityRatio->GetNbinsX()); i++)
+    hPurityRatio->SetBinError(i, hPurityData->GetBinError(i));
+    
+  TF1* lineP = new TF1("lineP","0",hPurityRatio->GetXaxis()->GetXmin(),hPurityRatio->GetXaxis()->GetXmax());
+  lineP->SetLineStyle(3);
+  lineP->SetLineWidth(1.5);
+  lineP->SetLineColor(kBlack);
+
+  hPurityRatio->SetAxisRange(-10,10,"Y");
+  //hPurityRatio->SetAxisRange(-50,50,"Y");
+  hPurityRatio->Draw("PE");
+  hPuritySgn->Draw("HISTSAME");
+  hPurityRatio->Draw("PESAME");
+  hPurityErrSub->Draw("e2SAME");
+  lineP->Draw("SAME");
+
+  c1P->SaveAs("purity.png");
+
+  delete hData; delete hDataW; delete hBkg; delete hErr;
+  delete hBkgW; delete hSgn; delete hSgnW;  delete hErrW;
+  delete hPurityBkg; delete hPuritySgn; delete hPurityData; delete hPurityErr;
 
   return;
 }
@@ -695,7 +848,7 @@ void produce(int mH                     = 120,
 
 void produceAll( vector<string>& channels = *(new vector<string>) ,
 		 vector<string>& com      = *(new vector<string>),
-		 string title = ""
+		 string binFile = ""
 		 ){
 
   vector<string> sevenTeV;
@@ -733,7 +886,7 @@ void produceAll( vector<string>& channels = *(new vector<string>) ,
   vector<string> xx;
   xx.push_back("mt"); xx.push_back("et");  xx.push_back("tt");  xx.push_back("em"); 
 
-  produce(125, 0.20, channels , com , -1, 0, 400);
+  produce(125, 0.20, channels , com , -1, 0, 400, binFile, false);
 
   return;
 
@@ -756,7 +909,7 @@ int main(int argc, const char* argv[])
     return 0;
   }
 
-  vector<string> channels; vector<string> com;
+  vector<string> channels; vector<string> com; string binFile = "dummy";
 
   for(int i = 1; i < argc; i++){
     string input(argv[i]);
@@ -769,10 +922,14 @@ int main(int argc, const char* argv[])
       channels.push_back(input);
     else if( input.find("TeV")!=string::npos )
       com.push_back(input);
+    else if( input.find("txt")!=string::npos )
+      binFile = input;
     else
       cout << input << ": invalid input" << endl;
   }
 
-  produceAll( channels, com);
+  if( binFile.find("dummy")!=string::npos )  binFile="bins_coarse.txt";
+
+  produceAll( channels, com, binFile);
 
 }
