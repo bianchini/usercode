@@ -143,9 +143,9 @@ Double_t myFuncRatioEleAllBL(Double_t* x, Double_t *par) { //modified-53x
   
   ratioEfficiencyTest* fitEffElecMCBL = new ratioEfficiencyTest(22.00666445, 0.00036058, 0.00000251, 1.38456083, 1.02640579);
 
-  float weightElec20 = 809.4; //change
-  float weightElec22RunB = 4403.6; //change
-  float weightElec22RunC = 6816.0; //change
+  float weightElec20 = 0.067; //change
+  float weightElec22RunB = 0.367; //change
+  float weightElec22RunC = 0.566; //change
 
   float total = weightElec20+weightElec22RunB+weightElec22RunC;
   weightElec20/=total;
@@ -167,9 +167,9 @@ Double_t myFuncTurnOnEleAllBL(Double_t* x, Double_t *par) { //modified-53x
   ratioEfficiencyTest* fitEffEle22RunBBL = new ratioEfficiencyTest(22.90752344, 1.32376429, 2.17813319,1.03674051, 2.15454768);
   ratioEfficiencyTest* fitEffEle22RunCBL = new ratioEfficiencyTest(23.05556088, 0.96047151, 1.24782044,1.26042277,1.09675041);
  
-  float weightElec20 = 809.4; //change
-  float weightElec22RunB = 4403.6; //change
-  float weightElec22RunC = 6816.0; //change
+  float weightElec20 = 0.067; //change
+  float weightElec22RunB = 0.367; //change
+  float weightElec22RunC = 0.566; //change
 
   float total = weightElec20+weightElec22RunB+weightElec22RunC;
   weightElec20/=total;
@@ -197,9 +197,9 @@ Double_t myFuncRatioEleAllEC(Double_t* x, Double_t *par) { //modified-53x
 
   ratioEfficiencyTest* fitEffElecMCEC = new ratioEfficiencyTest(22.18226941, 1.07762306, 1.23712775, 1.27324238, 1.15312185);
 
-  float weightElec20 = 809.4; //change
-  float weightElec22RunB = 4403.6; //change
-  float weightElec22RunC = 6816.0; //change
+  float weightElec20 = 0.067; //change
+  float weightElec22RunB = 0.367; //change
+  float weightElec22RunC = 0.566; //change
 
   float total = weightElec20+weightElec22RunB+weightElec22RunC;
   weightElec20/=total;
@@ -221,9 +221,9 @@ Double_t myFuncTurnOnEleAllEC(Double_t* x, Double_t *par) { //modified-53x
   ratioEfficiencyTest* fitEffEle22RunBEC = new ratioEfficiencyTest(22.14553261, 1.19913124, 1.75642067, 1.00826962, 9.04331617); 
   ratioEfficiencyTest* fitEffEle22RunCEC = new ratioEfficiencyTest(21.99911375, 1.15806380, 0.80675262, 1.98765770, 0.97138507);
 
-  float weightElec20 = 809.4; //change
-  float weightElec22RunB = 4403.6; //change
-  float weightElec22RunC = 6816.0; //change
+  float weightElec20 = 0.067; //change
+  float weightElec22RunB = 0.367; //change
+  float weightElec22RunC = 0.566; //change
 
   float total = weightElec20+weightElec22RunB+weightElec22RunC;
   weightElec20/=total;
@@ -730,9 +730,9 @@ Double_t myFuncRatioMuAllBL(Double_t* x, Double_t *par) { //modified-53x
   TF1* ratioMu17RunBBL = new TF1("ratioMu17RunBBL", myFuncRatioMu17RunBBL,0,400,0);
   TF1* ratioMu17RunCBL = new TF1("ratioMu17RunCBL", myFuncRatioMu17RunCBL,0,400,0);
 
-  float weightIsoMu18 = 809.4;  //change
-  float weightIsoMu17RunB = 4403.6;  //change
-  float weightIsoMu17RunC = 6816.0;  //change
+  float weightIsoMu18 = 0.067;  //change
+  float weightIsoMu17RunB = 0.367;  //change
+  float weightIsoMu17RunC = 0.566;  //change
 
   float total = weightIsoMu18+weightIsoMu17RunB+weightIsoMu17RunC;
   weightIsoMu18 /= total;
@@ -753,9 +753,9 @@ Double_t myFuncTurnOnMuAllBL(Double_t* x, Double_t *par) { //modified-53x
   TF1* turnOnMu17RunBBL = new TF1("turnOnMu17RunBBL", myFuncTurnOnMu17RunBBL,0,400,0);
   TF1* turnOnMu17RunCBL = new TF1("turnOnMu17RunCBL", myFuncTurnOnMu17RunCBL,0,400,0);
 
-  float weightIsoMu18 = 809.4;  //change
-  float weightIsoMu17RunB = 4403.6;  //change
-  float weightIsoMu17RunC = 6816.0;  //change
+  float weightIsoMu18 = 0.067;  //change
+  float weightIsoMu17RunB = 0.367;  //change
+  float weightIsoMu17RunC = 0.566;  //change
 
   float total = weightIsoMu18+weightIsoMu17RunB+weightIsoMu17RunC;
   weightIsoMu18 /= total;
@@ -776,9 +776,9 @@ Double_t myFuncRatioMuAllEC(Double_t* x, Double_t *par) { //modified-53x
   TF1* ratioMu17RunBEC = new TF1("ratioMu17RunBEC", myFuncRatioMu17RunBEC,0,400,0);
   TF1* ratioMu17RunCEC = new TF1("ratioMu17RunCEC", myFuncRatioMu17RunCEC,0,400,0);
   
-  float weightIsoMu18 = 809.4;  //change
-  float weightIsoMu17RunB = 4403.6;  //change
-  float weightIsoMu17RunC = 6816.0;  //change
+  float weightIsoMu18 = 0.067;  //change
+  float weightIsoMu17RunB = 0.367;  //change
+  float weightIsoMu17RunC = 0.566;  //change
 
   float total = weightIsoMu18+weightIsoMu17RunB+weightIsoMu17RunC;
   weightIsoMu18 /= total;
@@ -799,9 +799,9 @@ Double_t myFuncTurnOnMuAllEC(Double_t* x, Double_t *par) {  //modified-53x
   TF1* turnOnMu17RunBEC = new TF1("turnOnMu17RunBEC", myFuncTurnOnMu17RunBEC,0,400,0);
   TF1* turnOnMu17RunCEC = new TF1("turnOnMu17RunCEC", myFuncTurnOnMu17RunCEC,0,400,0);
 
-  float weightIsoMu18 = 809.4;  //change
-  float weightIsoMu17RunB = 4403.6;  //change
-  float weightIsoMu17RunC = 6816.0;  //change
+  float weightIsoMu18 = 0.067;  //change
+  float weightIsoMu17RunB = 0.367;  //change
+  float weightIsoMu17RunC = 0.566;  //change
 
   float total = weightIsoMu18+weightIsoMu17RunB+weightIsoMu17RunC;
   weightIsoMu18 /= total;
