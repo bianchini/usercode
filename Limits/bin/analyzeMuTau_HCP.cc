@@ -720,7 +720,7 @@ void plotMuTau( Int_t mH_           = 120,
   int nBins = nBins_;
   TArrayF bins = createBins(nBins_, xMin_, xMax_, nBins, selection_, variable_);
 
-  float Lumi                               = 808.472 + 4398.0 + 495.003 + 5719.0; 
+  float Lumi                               = 809.379+4404.0+495.003+5720.0;//808.472 + 4398.0 + 495.003 + 5719.0; 
   float lumiCorrFactor                     = 1 ;    //= (1-0.056);
   float TTxsectionRatio                    = 0.92; //lumiCorrFactor*(165.8/157.5) ;
   float OStoSSRatioQCD                     = 1.06;
