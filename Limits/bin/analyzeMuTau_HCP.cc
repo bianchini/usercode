@@ -2287,20 +2287,37 @@ int main(int argc, const char* argv[])
   float magnify, hltEff, xMin, xMax, maxY;
   string category, analysis, variable, xtitle, unity, outputDir;
 
+  //cout << argc << " arguments" << endl < endl;
+
   if(argc==1) plotMuTauAll();
-  else if(argc>7) { 
+  //else if(argc>14) { 
+  else {
+    mH=(int)atof(argv[1]); category=argv[2]; variable=argv[3]; 
 
-    mH=(int)atof(argv[1]); category=argv[2]; variable=argv[3]; xtitle=argv[4]; unity=argv[5]; 
+    int i=4;
+    while(string(argv[i])!="XX") {
+      xtitle += string(argv[i]);
+      xtitle += " "; 
+      i++ ;
+    }
+    i++ ;
+    unity=argv[i]; 
 
-    nBins=(int)atof(argv[6]); xMin=atof(argv[7]); xMax=atof(argv[8]); 
+    nBins=(int)atof(argv[i+1]); xMin=atof(argv[i+2]); xMax=atof(argv[i+3]); 
 
-    magnify=atof(argv[9]); hltEff=atof(argv[10]); logy=(int)atof(argv[11]); maxY=atof(argv[12]) ;
+    magnify=atof(argv[i+4]); hltEff=atof(argv[i+5]); logy=(int)atof(argv[i+6]); maxY=atof(argv[i+7]) ;
 
-    outputDir=argv[13]; analysis = argc>14 ? argv[14] : ""; 
+    outputDir=argv[i+8]; analysis = argc>i+9 ? argv[i+9] : ""; 
     
+    cout << endl
+	 << "plotMuTau(" << mH << ",1," << category << "," << analysis << "," << variable << "," << xtitle << "," 
+	 << unity << "," << outputDir << "," << nBins << "," << xMin << "," << xMax << "," << magnify << "," 
+	 << hltEff << "," << logy << "," << maxY << ")" << endl << endl;
+
     plotMuTau(mH,1,category,analysis,variable,xtitle,unity,outputDir,nBins,xMin,xMax,magnify,hltEff,logy,maxY);
+
   }
-  else { cout << "Please put at least 9 arguments" << endl; return 1;}
+  //else { cout << "Please put at least 14 arguments" << endl; return 1;}
 
   cout << "DONE" << endl;
   return 0;
