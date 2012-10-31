@@ -842,10 +842,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   outTreePtOrd->Branch("metSigmaParl", &metSigmaParl, "metSigmaParl/F");
   outTreePtOrd->Branch("metSigmaPerp", &metSigmaPerp, "metSigmaPerp/F");
 
-  //string currentInName = "/data_CMS/cms/lbianchini/"+inputDir_+"//treeMuTauStream_"+sample_+".root" ;
-  //string currentInName = inputDir_+"//treeMuTauStream_"+sample_+".root" ;
-  string currentInName = "/data_CMS/cms/anayak/"+inputDir_+"//treeMuTauStream_"+sample_+".root" ; //HTauTauSynchronization/
-  //string currentInName = "/home/llr/cms/veelken/ArunAnalysis/CMSSW_5_2_6_July12/src/Bianchi/TauTauStudies/test/treeMuTauStream_"+sample_+".root" ;
+  string currentInName = inputDir_+"/treeMuTauStream_"+sample_+".root" ;
 
   TString inName(currentInName.c_str());
   TFile* file   = new TFile(inName,"READ");
@@ -1889,14 +1886,48 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     
     
     outTreePtOrd->Fill();
+
+  }
+  file->Close();  
+
+  /////////////////////
+  // SPLIT DY Sample //
+  /////////////////////
+  cout << "DY Sample splitting" << endl;
+  TTree* backgroundDYTauTau, *backgroundDYMutoTau, *backgroundDYJtoTau;
+
+  TFile* outFile;
+
+  if(sample.Contains("DY")) {
+    backgroundDYTauTau  = outTreePtOrd->CopyTree("abs(genDecay)==(23*15)"); // g/Z -> tau+ tau-
+    backgroundDYMutoTau = outTreePtOrd->CopyTree("abs(genDecay)!=(23*15) &&  leptFakeTau"); // g/Z -> mu+mu- mu->tau
+    backgroundDYJtoTau  = outTreePtOrd->CopyTree("abs(genDecay)!=(23*15) && !leptFakeTau"); // g/Z -> mu+mu- jet->tau
+
+    cout << "-- copy tree" << endl;
+
+    if(backgroundDYTauTau) {
+      outName = "nTuple_DYJ_TauTau_Open_MuTauStream_"+analysisFileName+".root" ;
+      outFile = new TFile(outName,"RECREATE");
+      backgroundDYTauTau->Write();
+      outFile->Close();
+    }
+
+    if(backgroundDYMutoTau) {
+      outName = "nTuple_DYJ_MuToTau_Open_MuTauStream_"+analysisFileName+".root";
+      outFile = new TFile(outName,"RECREATE");
+      backgroundDYMutoTau->Write();
+      outFile->Close();
+    }
+
+    if(backgroundDYJtoTau) {
+      outName = "nTuple_DYJ_JetToTau_Open_MuTauStream_"+analysisFileName+".root";
+      outFile = new TFile(outName,"RECREATE");
+      backgroundDYJtoTau->Write();
+      outFile->Close();
+    }
   }
 
-  return;
-
-  file->Close();
-  
-  //if(SAVE) outFile->Write();
-  //outFile->Close();
+  //return;
 
   delete jets; delete jets_v2; delete diTauLegsP4; delete diTauVisP4; delete diTauSVfitP4; delete diTauCAP4; delete genDiTauLegsP4; delete genTausP4;
   delete tauXTriggers; delete triggerBits;
@@ -1913,7 +1944,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
 }
 
 
-void doAllSamplesMu(string inputDir_ = "HTauTauSynchronization/SyncDataCard-53X-v1/MuTauStream/")
+void doAllSamplesMu(string inputDir_ = "/data_CMS/cms/anayak/H2TauTauHCP/MuTauStream/")
 {
 
 
@@ -1924,7 +1955,9 @@ void doAllSamplesMu(string inputDir_ = "HTauTauSynchronization/SyncDataCard-53X-
   
   //samples.push_back("Run2011-MuTau-All_run");             crossSec.push_back( 0  );                          
   //samples.push_back("Run2011-MuTau-LooseIso-All_run");    crossSec.push_back( 0  );                          
-  samples.push_back("VBFH125-MuTau-8TeV-powheg-DR53X-PUS10_run"); crossSec.push_back(1.578 * 0.0632 * 1.0 * 0.0780138080726);
+  //samples.push_back("VBFH125-MuTau-8TeV-powheg-DR53X-PUS10_run"); crossSec.push_back(1.578 * 0.0632 * 1.0 * 0.0780138080726);
+
+  samples.push_back("DYJets-MuTau-50-madgraph-PUS10_run"); crossSec.push_back(1.578 * 0.0632 * 1.0 * 0.0780138080726);
 
   makeTrees_MuTauStream("",             samples[0], crossSec[0], inputDir_);
  
@@ -1960,13 +1993,16 @@ int main(int argc, const char* argv[])
 
   if ( argc < 3 ) {
    std::cout << "Usage: " << argv[0] << " fileName xsection" << std::endl;
-   return 0;
+   //return 0;
   }
+
+  //doAllSamplesMu();
+  //return 1;
 
   //doAllSamplesMu( "MuTauStreamFall11_04May2012");
   //return 1;
 
-  string inputDir = "H2TauTauHCP/MuTauStream/";
+  string inputDir = "";
 
   makeTrees_MuTauStream("",           argv[1], atof(argv[2]), inputDir);
 
