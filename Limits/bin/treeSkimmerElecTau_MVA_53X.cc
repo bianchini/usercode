@@ -1870,24 +1870,57 @@ void makeTrees_ElecTauStream(string analysis_ = "", string sample_ = "", float x
   }
 
 
- file->Close();
+  file->Close();
+  
+  /////////////////////
+  // SPLIT DY Sample //
+  /////////////////////
+  cout << "DY Sample splitting" << endl;
+  TTree* backgroundDYTauTau, *backgroundDYEtoTau, *backgroundDYJtoTau;
 
- //if(SAVE) outFile->Write();
- //outFile->Close();
+  TFile* outFile;
 
- delete jets; delete jets_v2; delete diTauLegsP4; delete diTauVisP4; delete diTauSVfitP4; delete diTauCAP4; delete genDiTauLegsP4; delete genTausP4;
- delete tauXTriggers; delete triggerBits;
- delete METP4; delete jetsBtagHE; delete jetsBtagHP; delete jetsBtagCSV; delete jetsChNfraction; delete genVP4; delete genMETP4;
- delete gammadEta; delete gammadPhi; delete gammaPt;  delete HqT; 
- delete jetPUMVA; delete jetPUWP;
- delete ran;
+  if(sample.Contains("DY")) {
+    backgroundDYTauTau  = outTreePtOrd->CopyTree("abs(genDecay)==(23*15)"); // g/Z -> tau+ tau-
+    backgroundDYEtoTau  = outTreePtOrd->CopyTree("abs(genDecay)!=(23*15) && leptFakeTau"); // g/Z -> mu+mu- mu->tau
+    backgroundDYJtoTau  = outTreePtOrd->CopyTree("abs(genDecay)!=(23*15) && !leptFakeTau"); // g/Z -> mu+mu- jet->tau
 
- for(std::map<string , TMVA::Reader*>::iterator read = readers.begin() ; read!=readers.end(); read++)
-   delete (*read).second;
- 
- return;
+    cout << "-- copy tree" << endl;
+
+    if(backgroundDYTauTau) {
+      outName = "nTuple_DYJ_TauTau_Open_ElecTauStream_"+analysisFileName+".root" ;
+      outFile = new TFile(outName,"RECREATE");
+      backgroundDYTauTau->Write();
+      outFile->Close();
+    }
+
+    if(backgroundDYEtoTau) {
+      outName = "nTuple_DYJ_EToTau_Open_ElecTauStream_"+analysisFileName+".root";
+      outFile = new TFile(outName,"RECREATE");
+      backgroundDYEtoTau->Write();
+      outFile->Close();
+    }
+    
+    if(backgroundDYJtoTau) {
+      outName = "nTuple_DYJ_JetToTau_Open_ElecTauStream_"+analysisFileName+".root";
+      outFile = new TFile(outName,"RECREATE");
+      backgroundDYJtoTau->Write();
+      outFile->Close();
+    }
+  }
+  
+  delete jets; delete jets_v2; delete diTauLegsP4; delete diTauVisP4; delete diTauSVfitP4; delete diTauCAP4; delete genDiTauLegsP4; delete genTausP4;
+  delete tauXTriggers; delete triggerBits;
+  delete METP4; delete jetsBtagHE; delete jetsBtagHP; delete jetsBtagCSV; delete jetsChNfraction; delete genVP4; delete genMETP4;
+  delete gammadEta; delete gammadPhi; delete gammaPt;  delete HqT; 
+  delete jetPUMVA; delete jetPUWP;
+  delete ran;
+  
+  for(std::map<string , TMVA::Reader*>::iterator read = readers.begin() ; read!=readers.end(); read++)
+    delete (*read).second;
+  
+  return;
 }
-
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
