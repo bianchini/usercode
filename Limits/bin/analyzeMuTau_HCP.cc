@@ -39,6 +39,7 @@
 
 #define USESSBKG         false
 #define scaleByBinWidth  false
+#define DOSPLIT          false
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 void makeHistoFromDensity(TH1* hDensity, TH1* hHistogram){
@@ -280,7 +281,10 @@ TArrayF createBins(int nBins_ = 80 ,
 		   float xMax_ = 400.,
 		   int& nBins = *(new int()),
 		   string selection_   = "inclusive",
-		   TString variable_   = "diTauVisMass"){
+		   TString variable_   = "diTauVisMass",
+		   //TString location    = "/home/llr/cms/veelken/ArunAnalysis/CMSSW_5_3_4_Sep12/src/Bianchi/Limits/bin/results/bins/"
+		   TString location    = "/data_CMS/cms/htautau/HCP12/binning/"
+		   ){
 
   // input txt file with bins
   ifstream is;
@@ -289,7 +293,7 @@ TArrayF createBins(int nBins_ = 80 ,
   dummy[0] = xMin_; dummy[1] = xMax_;
   
   char* c = new char[10];
-  is.open(Form("/home/llr/cms/veelken/ArunAnalysis/CMSSW_5_3_4_Sep12/src/Bianchi/Limits/bin/results/bins/bins_muTau_%s_%s.txt",variable_.Data(), selection_.c_str())); 
+  is.open(Form(location+"/bins_muTau_%s_%s.txt",variable_.Data(), selection_.c_str())); 
   if(nBins_<0 &&  !is.good()){
     cout << "Bins file not found" << endl;
     return dummy;
@@ -311,7 +315,7 @@ TArrayF createBins(int nBins_ = 80 ,
   cout << "Making histograms with " << nBins << " bins:" << endl;
 
   is.close();
-  is.open(Form("/home/llr/cms/veelken/ArunAnalysis/CMSSW_5_3_4_Sep12/src/Bianchi/Limits/bin/results/bins/bins_muTau_%s_%s.txt",variable_.Data(), selection_.c_str())); 
+  is.open(Form(location+"/bins_muTau_%s_%s.txt",variable_.Data(), selection_.c_str())); 
   
   nBinsFromFile = 0;
 
@@ -698,12 +702,14 @@ void plotMuTau( Int_t mH_           = 120,
 		TString variable_   = "diTauVisMass",
 		TString XTitle_     = "full mass",
 		TString Unities_    = "GeV",
-		TString outputDir   = "./",
+		TString outputDir   = "test",
 		Int_t nBins_ = 80, Float_t xMin_=0, Float_t xMax_=400,
 		Float_t magnifySgn_ = 1.0,
 		Float_t hltEff_     = 1.0,
 		Int_t logy_         = 0,
-		Float_t maxY_       = 1.2
+		Float_t maxY_       = 1.2,
+		//TString location    = "/home/llr/cms/veelken/ArunAnalysis/CMSSW_5_3_4_Sep12/src/Bianchi/Limits/bin/results/"
+		TString location    = "/home/llr/cms/ndaci/WorkArea/HTauTau/Analysis/CMSSW_534_CVS/src/Bianchi/Limits/bin/results/"
 		) 
 {   
 
@@ -714,7 +720,7 @@ void plotMuTau( Int_t mH_           = 120,
 
   //string postfix_ = "Raw";
   string postfix_ = "";
-  ofstream out(Form("/home/llr/cms/veelken/ArunAnalysis/CMSSW_5_3_4_Sep12/src/Bianchi/Limits/bin/results/histograms/%s/yieldsMuTau_mH%d_%s_%s.txt",
+  ofstream out(Form(location+"/histograms/%s/yieldsMuTau_mH%d_%s_%s.txt",
 		    outputDir.Data(),mH_,selection_.c_str(), analysis_.c_str() ),ios_base::out); 
   out.precision(5);
   int nBins = nBins_;
@@ -958,14 +964,36 @@ void plotMuTau( Int_t mH_           = 120,
   TTree *data                = (TTree*)fData->Get(("outTreePtOrd"+postfix_).c_str());
   TTree *dataEmbedded        = EMBEDDEDSAMPLES ? (TTree*)fDataEmbedded->Get(treeEmbedded) : 0;
 
-  // split the DY->ll into l=e/mu and l=tau (MC level) ===> temporary, need fix !!!
-  TFile* dummy1 = new TFile("dummy2.root","RECREATE");
-  cout << "Now copying g/Z -> tau+ tau- " << endl;
-  TTree *backgroundDYTauTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)==(23*15)");                 // g/Z -> tau+ tau-
-  cout << "Now copying g/Z -> mu+mu- mu->tau" << endl;
-  TTree *backgroundDYMutoTau = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) &&  leptFakeTau"); // g/Z -> mu+mu- mu->tau
-  cout << "Now copying g/Z -> mu+mu- jet->tau" << endl;
-  TTree *backgroundDYJtoTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) && !leptFakeTau"); // g/Z -> mu+mu- jet->tau
+  // Split DY into 3 sub-samples (TauTau, MuToTau, JetToTau)
+  TFile *dummy1, *fBackgroundDYTauTau, *fBackgroundDYMuToTau, *fBackgroundDYJetToTau;
+  TTree *backgroundDYTauTau, *backgroundDYMutoTau, *backgroundDYJtoTau, *backgroundDY;
+
+  if(DOSPLIT) {
+    cout << "SPLIT DY SAMPLE ON THE FLY" << endl;
+    //
+    dummy1 = new TFile("dummy2.root","RECREATE");
+    backgroundDY = (TTree*)fBackgroundDY->Get(tree);
+    //
+    cout << "Now copying g/Z -> tau+ tau- " << endl;
+    backgroundDYTauTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)==(23*15)");                 // g/Z -> tau+ tau-
+    //
+    cout << "Now copying g/Z -> mu+mu- mu->tau" << endl;
+    backgroundDYMutoTau = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) &&  leptFakeTau"); // g/Z -> mu+mu- mu->tau
+    //
+    cout << "Now copying g/Z -> mu+mu- jet->tau" << endl;
+    backgroundDYJtoTau  = ((TTree*)fBackgroundDY->Get(tree))->CopyTree("abs(genDecay)!=(23*15) && !leptFakeTau"); // g/Z -> mu+mu- jet->tau
+  }
+  else {
+    cout << "USE DY SEPARATE SUB-SAMPLES" << endl;
+    //
+    fBackgroundDYTauTau   = new TFile(pathToFile+"/nTuple_DYJ_TauTau_Open_MuTauStream.root"  ,"READ");
+    fBackgroundDYMuToTau  = new TFile(pathToFile+"/nTuple_DYJ_MuToTau_Open_MuTauStream.root" ,"READ");
+    fBackgroundDYJetToTau = new TFile(pathToFile+"/nTuple_DYJ_JetToTau_Open_MuTauStream.root","READ");
+    //
+    backgroundDYTauTau    = (TTree*)(fBackgroundDYTauTau  ->Get(tree));
+    backgroundDYMutoTau   = (TTree*)(fBackgroundDYMuToTau ->Get(tree));
+    backgroundDYJtoTau    = (TTree*)(fBackgroundDYJetToTau->Get(tree));
+  }
 
   cout << backgroundDYTauTau->GetEntries()  << " come from DY->tautau"         << endl;
   cout << backgroundDYMutoTau->GetEntries() << " come from DY->mumu, mu->tau"  << endl;
@@ -2024,11 +2052,11 @@ void plotMuTau( Int_t mH_           = 120,
   
   //return;
 
-  c1->SaveAs(Form("/home/llr/cms/veelken/ArunAnalysis/CMSSW_5_3_4_Sep12/src/Bianchi/Limits/bin/results/plots/%s/plot_muTau_mH%d_%s_%s_%s.png",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
-  c1->SaveAs(Form("/home/llr/cms/veelken/ArunAnalysis/CMSSW_5_3_4_Sep12/src/Bianchi/Limits/bin/results/plots/%s/plot_muTau_mH%d_%s_%s_%s.pdf",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
+  c1->SaveAs(Form(location+"/plots/%s/plot_muTau_mH%d_%s_%s_%s.png",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
+  c1->SaveAs(Form(location+"/plots/%s/plot_muTau_mH%d_%s_%s_%s.pdf",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
 
   // templates for fitting
-  TFile* fout = new TFile(Form("/home/llr/cms/veelken/ArunAnalysis/CMSSW_5_3_4_Sep12/src/Bianchi/Limits/bin/results/histograms/%s/muTau_mH%d_%s_%s_%s.root",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()),"RECREATE");
+  TFile* fout = new TFile(Form(location+"/histograms/%s/muTau_mH%d_%s_%s_%s.root",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()),"RECREATE");
   fout->cd();
 
   hSiml->Write();
@@ -2255,7 +2283,7 @@ int main(int argc, const char* argv[])
   gSystem->Load("libFWCoreFWLite");
   AutoLibraryLoader::enable();
 
-  int mH;
+  int mH, nBins, xMin, xMax;
   float magnify, hlt;
   string category, analysis, variable, xtitle, unity, outputDir;
 
@@ -2263,11 +2291,14 @@ int main(int argc, const char* argv[])
   else if(argc>7) { 
 
     mH=(int)atof(argv[1]);
-    magnify=atof(argv[7]);
-    category=argv[2]; variable=argv[3]; xtitle=argv[4]; unity=argv[5]; outputDir=argv[6];
-    analysis=argc>8?argv[8] : ""; 
+    category=argv[2]; variable=argv[3]; xtitle=argv[4]; unity=argv[5]; 
+    //
+    nBins=(int)atof(argv[6]); xMin=(int)atof(argv[7]); xMax=(int)atof(argv[8]); magnify=atof(argv[9]);
+    //
+    outputDir=argv[10];
+    analysis=argc>11?argv[11] : ""; 
     
-    plotMuTau(mH,1,category,analysis,variable,xtitle,unity,outputDir,-1,0,100,magnify,1.0,0,1.2);
+    plotMuTau(mH,1,category,analysis,variable,xtitle,unity,outputDir,nBins,xMin,xMax,magnify,1.0,0,1.2);
   }
   else { cout << "Please put at least 9 arguments" << endl; return 1;}
 
