@@ -2283,22 +2283,22 @@ int main(int argc, const char* argv[])
   gSystem->Load("libFWCoreFWLite");
   AutoLibraryLoader::enable();
 
-  int mH, nBins, xMin, xMax;
-  float magnify, hlt;
+  int mH, nBins, logy; 
+  float magnify, hltEff, xMin, xMax, maxY;
   string category, analysis, variable, xtitle, unity, outputDir;
 
   if(argc==1) plotMuTauAll();
   else if(argc>7) { 
 
-    mH=(int)atof(argv[1]);
-    category=argv[2]; variable=argv[3]; xtitle=argv[4]; unity=argv[5]; 
-    //
-    nBins=(int)atof(argv[6]); xMin=(int)atof(argv[7]); xMax=(int)atof(argv[8]); magnify=atof(argv[9]);
-    //
-    outputDir=argv[10];
-    analysis=argc>11?argv[11] : ""; 
+    mH=(int)atof(argv[1]); category=argv[2]; variable=argv[3]; xtitle=argv[4]; unity=argv[5]; 
+
+    nBins=(int)atof(argv[6]); xMin=atof(argv[7]); xMax=atof(argv[8]); 
+
+    magnify=atof(argv[9]); hltEff=atof(argv[10]); logy=(int)atof(argv[11]); maxY=atof(argv[12]) ;
+
+    outputDir=argv[13]; analysis = argc>14 ? argv[14] : ""; 
     
-    plotMuTau(mH,1,category,analysis,variable,xtitle,unity,outputDir,nBins,xMin,xMax,magnify,1.0,0,1.2);
+    plotMuTau(mH,1,category,analysis,variable,xtitle,unity,outputDir,nBins,xMin,xMax,magnify,hltEff,logy,maxY);
   }
   else { cout << "Please put at least 9 arguments" << endl; return 1;}
 
