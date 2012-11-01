@@ -42,7 +42,7 @@ analyze(125,"inclusive",""   ,"decayMode",     "\#tau_{h} decay mode XX","units"
 analyze(125,"inclusive",""   ,"visibleTauMass","visible \#tau_{h} mass XX","GeV"   ,outputDir,40,0,2,5.0,1.0,0,1.2);  
 analyze(125,"inclusive",""   ,"MEtMVA","MET XX","GeV"                             ,outputDir,40,0,100,5.0,1.0,0,1.2);
 analyze(125,"inclusive",""   ,"MEtMVAPhi","MET \#phi XX","units"                   ,outputDir,32,-3.2,3.2,   5.0,1.0,0,1.5);
-analyze(125,"inclusiveNoMt",""   ,"MtLeg1MVA","M_{T}(\#mu\#nu) XX","GeV"            ,outputDir,40,0,160,5.0,1.0,0,1.2);
+analyze(125,"inclusiveNoMt",""   ,"MtLeg1MVA","M_{T}\(\#mu\#nu\) XX","GeV"            ,outputDir,40,0,160,5.0,1.0,0,1.2);
 analyze(125,"inclusive",""   ,"diTauVisMass","visible mass XX","GeV"              ,outputDir,50,0,200,5.0,1.0,0,1.2); 
 analyze(125,"inclusive",""   ,"diTauNSVfitMass","SVfit mass XX","GeV"             ,outputDir,60,0,360,5.0,1.0,0,1.2);
 analyze(125,"inclusive",""   ,"etaL1","\#mu \#eta XX","units"                      ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
@@ -57,7 +57,7 @@ analyze(125,"bTag",""        ,"etaB1","leading b-tagged jet \#eta XX","units"   
 
 analyze(125,"novbfLow",""   ,"MEtMVA","MET XX","GeV"                              ,outputDir,10,0,100,5.0,1.0,0,   1.2);
 analyze(125,"novbfLow",""   ,"MEtMVAPhi","MET \#phi XX","units"                    ,outputDir,20,-3.2,3.2,   5.0,1.0,0,1.5);
-analyze(125,"novbfLowNoMt",""   ,"MtLeg1MVA","M_{T}(\#mu\#nu) XX","GeV"             ,outputDir,16,0,160,5.0,1.0,0,1.2);
+analyze(125,"novbfLowNoMt",""   ,"MtLeg1MVA","M_{T}\(\#mu\#nu\) XX","GeV"             ,outputDir,16,0,160,5.0,1.0,0,1.2);
 analyze(125,"novbfLow",""   ,"diTauVisMass","visible mass XX","GeV"               ,outputDir,20,0,200,5.0,1.0,0,1.2);  
 analyze(125,"novbfLow",""   ,"diTauNSVfitMass","SVfit mass XX","GeV"              ,outputDir,-1,0,100,5.0,1.0,0,1.2);
 analyze(125,"novbfLow",""   ,"etaL1","\#mu \#eta XX","units"                       ,outputDir,10,-2.5, 2.5,5.0,1.0,0,2.);
@@ -67,7 +67,7 @@ analyze(125,"novbfLow",""   ,"etaL2","\#tau \#eta XX","units"                   
 
 analyze(125,"novbfHigh",""   ,"MEtMVA","MET XX","GeV"                             ,outputDir,10,0,100,5.0,1.0,0, 1.2);
 analyze(125,"novbfHigh",""   ,"MEtMVAPhi","MET \#phi XX","units"                   ,outputDir,10,-3.2,3.2,   5.0,1.0,0,1.5);
-analyze(125,"novbfHighNoMt",""   ,"MtLeg1MVA","M_{T}(\#mu\#nu) XX","GeV"            ,outputDir,16,0,160,5.0,1.0,0,1.2);
+analyze(125,"novbfHighNoMt",""   ,"MtLeg1MVA","M_{T}\(\#mu\#nu\) XX","GeV"            ,outputDir,16,0,160,5.0,1.0,0,1.2);
 analyze(125,"novbfHigh",""   ,"diTauVisMass","visible mass XX","GeV"              ,outputDir,10,0,200,5.0,1.0,0,1.2); 
 analyze(125,"novbfHigh",""   ,"diTauNSVfitMass","SVfit mass XX","GeV"             ,outputDir,-1,0,100,5.0,1.0,0,1.2);
 analyze(125,"novbfHigh",""   ,"etaL1","\#mu \#eta XX","units"                      ,outputDir,10,-2.5, 2.5,5.0,1.0,0,2.);
@@ -77,7 +77,7 @@ analyze(125,"novbfHigh",""   ,"etaL2","\#tau \#eta XX","units"                  
 
 analyze(125,"boostLow",""   ,"MEtMVA","MET XX","GeV"                              ,outputDir,10,0,100,5.0,1.0,0, 1.2);
 analyze(125,"boostLow",""   ,"MEtMVAPhi","MET \#phi XX","units"                    ,outputDir,10,-3.2,3.2,   5.0,1.0,0,1.5);
-analyze(125,"boostLowNoMt",""   ,"MtLeg1MVA","M_{T}(\#mu\#nu) XX","GeV"             ,outputDir,16,0,160,5.0,1.0,0,1.2);
+analyze(125,"boostLowNoMt",""   ,"MtLeg1MVA","M_{T}\(\#mu\#nu\) XX","GeV"             ,outputDir,16,0,160,5.0,1.0,0,1.2);
 analyze(125,"boostLow",""   ,"diTauVisMass","visible mass XX","GeV"               ,outputDir,20,0,200,5.0,1.0,0,1.2);  
 analyze(125,"boostLow",""   ,"diTauNSVfitMass","SVfit mass XX","GeV"              ,outputDir,-1,0,100,5.0,1.0,0,1.2);
 analyze(125,"boostLow",""   ,"etaL1","\#mu \#eta XX","units"                       ,outputDir,10,-2.5, 2.5,5.0,1.0,0,2.);
@@ -87,7 +87,7 @@ analyze(125,"boostLow",""   ,"etaL2","\#tau \#eta XX","units"                   
 
 analyze(125,"boostHigh",""   ,"MEtMVA","MET XX","GeV"                             ,outputDir,10,0,100,5.0,1.0,0, 1.2);
 analyze(125,"boostHigh",""   ,"MEtMVAPhi","MET \#phi XX","units"                   ,outputDir,10,-3.2,3.2,   5.0,1.0,0,1.5);
-analyze(125,"boostHighNoMt",""   ,"MtLeg1MVA","M_{T}(\#mu\#nu) XX","GeV"            ,outputDir,16,0,160,5.0,1.0,0,1.2);
+analyze(125,"boostHighNoMt",""   ,"MtLeg1MVA","M_{T}\(\#mu\#nu\) XX","GeV"            ,outputDir,16,0,160,5.0,1.0,0,1.2);
 analyze(125,"boostHigh",""   ,"diTauVisMass","visible mass XX","GeV"              ,outputDir,10,0,200,5.0,1.0,0,1.2); 
 analyze(125,"boostHigh",""   ,"diTauNSVfitMass","SVfit mass XX","GeV"             ,outputDir,-1,0,100,5.0,1.0,0,1.2);
 analyze(125,"boostHigh",""   ,"etaL1","\#mu \#eta XX","units"                      ,outputDir,10,-2.5, 2.5,5.0,1.0,0,2.);
@@ -97,7 +97,7 @@ analyze(125,"boostHigh",""   ,"etaL2","\#tau \#eta XX","units"                  
 
 analyze(125,"vbf",""   ,"MEtMVA","MET XX","GeV"                                   ,outputDir,10,0,100,5.0,1.0,0, 1.2);
 analyze(125,"vbf",""   ,"MEtMVAPhi","MET \#phi XX","units"                         ,outputDir,16,-3.2,3.2,   5.0,1.0,0,1.5);
-analyze(125,"vbfNoMt",""   ,"MtLeg1MVA","M_{T}(\#mu\#nu) XX","GeV"                  ,outputDir,16,0,160,5.0,1.0,0,1.2);
+analyze(125,"vbfNoMt",""   ,"MtLeg1MVA","M_{T}\(\#mu\#nu\) XX","GeV"                  ,outputDir,16,0,160,5.0,1.0,0,1.2);
 analyze(125,"vbf",""   ,"diTauVisMass","visible mass XX","GeV"                    ,outputDir,10,0,200,5.0,1.0,0,1.2);  
 analyze(125,"vbf",""   ,"diTauNSVfitMass","SVfit mass XX","GeV"                   ,outputDir,-1,0,100,5.0,1.0,0,1.2);
 analyze(125,"vbf",""   ,"etaL1","\#mu \#eta XX","units"                            ,outputDir,10,-2.5, 2.5,5.0,1.0,0, 2.);
