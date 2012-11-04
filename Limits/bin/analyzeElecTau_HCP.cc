@@ -728,7 +728,7 @@ void plotElecTau( Int_t mH_           = 120,
   TArrayF bins = createBins(nBins_, xMin_, xMax_, nBins, selection_, variable_);
 
 //   float Lumi                               = 808.472 + 4398.0 + 495.003 + 5719.0 + 652.755 + 31.099; //last 2 are residual json from RunB and RunC prompt
-  float Lumi                               =  791.872;
+  float Lumi                               =  791.872 + 412.610;
   float lumiCorrFactor                     = 1 ;    //= (1-0.056);
   float TTxsectionRatio                    = 0.92; //lumiCorrFactor*(165.8/157.5) ;
   float OStoSSRatioQCD                     = 1.06;
@@ -831,8 +831,8 @@ void plotElecTau( Int_t mH_           = 120,
   TH1F* hW3Jets   = new TH1F( "hW3Jets" ,"W+3jets"           , nBins , bins.GetArray());         hW3Jets->SetFillColor(kRed+2);
   TH1F* hEWK      = new TH1F( "hEWK"    ,"EWK"               , nBins , bins.GetArray());         hEWK->SetFillColor(kRed+2);
   TH1F* hZtt      = new TH1F( "hZtt"    ,"Ztautau"           , nBins , bins.GetArray());         hZtt->SetFillColor(kOrange-4);
-  TH1F* hZmm      = new TH1F( "hZmm"    ,"Z+jets, e->tau"   , nBins , bins.GetArray());         hZmm->SetFillColor(kBlue-2);
-  TH1F* hZmmLoose = new TH1F( "hZmmLoose","Z+jets, e->tau"  , nBins , bins.GetArray());         hZmmLoose->SetFillColor(kBlue-2);
+  TH1F* hZmm      = new TH1F( "hZmm"    ,"Z+jets, e->tau"    , nBins , bins.GetArray());         hZmm->SetFillColor(kBlue-2);
+  TH1F* hZmmLoose = new TH1F( "hZmmLoose","Z+jets, e->tau"   , nBins , bins.GetArray());         hZmmLoose->SetFillColor(kBlue-2);
   TH1F* hZmj      = new TH1F( "hZmj"    ,"Z+jets, jet to tau", nBins , bins.GetArray());         hZmj->SetFillColor(kBlue-2);
   TH1F* hZmjLoose = new TH1F( "hZmjLoose","Z+jets, jet->tau" , nBins , bins.GetArray());         hZmjLoose->SetFillColor(kBlue-2);
   TH1F* hZfakes   = new TH1F( "hZfakes" ,"Z+jets, jet to tau", nBins , bins.GetArray());         hZfakes->SetFillColor(kBlue-2);
@@ -922,7 +922,7 @@ void plotElecTau( Int_t mH_           = 120,
   TString pathToFile = "/data_CMS/cms/htautau/HCP12/ntuples/ElecTau/";
 
   // Open the files
-  TFile *fData            = new TFile(pathToFile+"/nTupleRun2012A-13Jul2012-ElecTau_Open_ElecTauStream_Nominal.root", "READ");
+  TFile *fData            = new TFile(pathToFile+"/nTupleRun2012ABC_ElecTau.root", "READ");
   TFile *fDataEmbedded    = new TFile(pathToFile+"/nTupleRun2012ABC_Embedded_ElecTau.root", "READ");
   TFile *fBackgroundDY    = new TFile(pathToFile+"/nTupleDYJets_ElecTau.root","READ");
   //TFile *fBackgroundWJets = new TFile(pathToFile+"/nTupleWJets-ElecTau-madgraph-PUS10_run_Open_ElecTauStream.root","READ");
@@ -972,10 +972,11 @@ void plotElecTau( Int_t mH_           = 120,
   TFile *dummy1, *fBackgroundDYTauTau, *fBackgroundDYElecToTau, *fBackgroundDYJetToTau;
   TTree *backgroundDYTauTau, *backgroundDYElectoTau, *backgroundDYJtoTau, *backgroundDY;
 
+    dummy1 = new TFile("dummy2.root","RECREATE");
   if(DOSPLIT) {
     cout << "SPLIT DY SAMPLE ON THE FLY" << endl;
     //
-    dummy1 = new TFile("dummy2.root","RECREATE");
+    //dummy1 = new TFile("dummy2.root","RECREATE");
     backgroundDY = (TTree*)fBackgroundDY->Get(tree);
     //
     cout << "Now copying g/Z -> tau+ tau- " << endl;
@@ -1038,8 +1039,8 @@ void plotElecTau( Int_t mH_           = 120,
     tpt = tpt&&TCut("ptL2<40");
 
   ////// TAU ISO //////
-  TCut tiso("tightestHPSMVAWP>=0"); 
-  TCut ltiso("tightestHPSMVAWP>-99");
+  TCut tiso("tightestHPSMVAWP>=0 && tightestAntiECutWP>1 && tightestAntiEMVAWP>3"); 
+  TCut ltiso("tightestHPSMVAWP>-99 && tightestAntiECutWP<1");
   TCut mtiso("hpsMVA>0.7");
 
   ////// E ISO ///////
@@ -1062,7 +1063,7 @@ void plotElecTau( Int_t mH_           = 120,
 
   ////// CATEGORIES ///
   TCut zeroJet("nJets30<1");
-  TCut oneJet("nJets30>=1");
+  TCut oneJet("nJets30>=1 && MEtMVA>30");
   TCut twoJets("nJets30>=2");
   TCut vbf("nJets30>=2 && pt1>30 && pt2>30 && Mjj>500 && Deta>3.5 && isVetoInJets!=1");
   TCut vbfLoose("nJets30>=2 && pt1>30 && pt2>30 && isVetoInJets!=1 && Mjj>200 && Deta>2");
@@ -1364,7 +1365,7 @@ void plotElecTau( Int_t mH_           = 120,
       cout << "************** BEGIN QCD evaluation using SS events *******************" << endl;
 
       TH1F* hExtrapSS = new TH1F("hExtrapSS","",nBins , bins.GetArray());
-      float dummy1 = 0.;      
+      float dummyfloat = 0.;      
 
       TTree* treeForWestimation;
 
@@ -1378,7 +1379,7 @@ void plotElecTau( Int_t mH_           = 120,
       
 
       evaluateQCD(h1, hCleaner, true, "SS", false, removeMtCut, selection_, 
-		  SSQCDinSignalRegionDATA , dummy1 , scaleFactorTTSS,
+		  SSQCDinSignalRegionDATA , dummyfloat , scaleFactorTTSS,
 		  extrapFactorWSS, 
 		  SSWinSignalRegionDATA, SSWinSignalRegionMC,
 		  SSWinSidebandRegionDATA, SSWinSidebandRegionMC,
@@ -1551,14 +1552,14 @@ void plotElecTau( Int_t mH_           = 120,
             hCleaner->Scale(h1->Integral()/hCleaner->Integral());  
 	    hZmm->Add(hCleaner, 1.0); 
 	    hZfakes->Add(hCleaner,1.0); 
-	    hEWK->Add(hCleaner,1.0);
+	    //hEWK->Add(hCleaner,1.0);
           }  
 	  else{
 	    float NormDYElectoTau = 0.;
 	    drawHistogramMC(currentTree, variable, NormDYElectoTau, Error,   Lumi*lumiCorrFactor*ElectoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., h1, sbin, 1);
 	    hZmm->Add(h1, 1.0);
 	    hZfakes->Add(h1,1.0);
-	    hEWK->Add(h1,1.0);
+	    //hEWK->Add(h1,1.0);
 	  }
 	}
 	else if((it->first).find("DYJtoTau")!=string::npos){
@@ -1951,6 +1952,7 @@ void plotElecTau( Int_t mH_           = 120,
 
   hSiml->Add(hEWK,1.0);
 
+  aStack->Add(hTTb);
   if(!USESSBKG){
     if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
       aStack->Add(hDataAntiIsoLooseTauIsoQCD);
@@ -1968,8 +1970,10 @@ void plotElecTau( Int_t mH_           = 120,
       aStack->Add(hSS);
   }
   
+//   hEWK->Add(hZmm,-1.0);
   aStack->Add(hEWK);
-  aStack->Add(hTTb);
+  aStack->Add(hZmm);
+
   if(useEmbedding_)
     aStack->Add(hDataEmb);
   else
@@ -1985,6 +1989,7 @@ void plotElecTau( Int_t mH_           = 120,
     leg->AddEntry(hZtt,"Z#rightarrow#tau#tau","F"); 
   leg->AddEntry(hTTb,"t#bar{t}","F");
   leg->AddEntry(hEWK,"Electroweak","F");
+  leg->AddEntry(hZmm,"Zee","F");
   leg->AddEntry(hQCD,"QCD","F");
   
   hData->Draw("P");
@@ -2063,7 +2068,7 @@ void plotElecTau( Int_t mH_           = 120,
   c1->SaveAs(Form(location+"/plots/%s/plot_eTau_mH%d_%s_%s_%s.pdf",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()));
 
   // templates for fitting
-  TFile* fout = new TFile(Form(location+"/histograms/%s/eTau_mH%d_%s_%s_%s.root",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()),"RECREATE");
+  TFile* fout = new TFile(Form(location+"/histograms/%s/eTau_mH%d_%s_%s_%s.root",outputDir.Data(), mH_,selection_.c_str(),analysis_.c_str(),variable_.Data()),"RECREATE");  
   fout->cd();
 
   hSiml->Write();
@@ -2125,14 +2130,12 @@ void plotElecTau( Int_t mH_           = 120,
   for(unsigned int i = 0; i < SUSYhistos.size() ; i++) delete mapSUSYhistos.find( SUSYhistos[i] )->second ;
   delete aStack;  delete hEWK; delete hSiml; delete hDataEmb;  delete hRatio; delete line;
   delete fout;
-
   for(int iP=0 ; iP<nProd ; iP++) {
     for(int iM=0 ; iM<nMasses ; iM++) {
       fSignal[iP][iM]->Close();
       delete fSignal[iP][iM];
     }
   }
-
   for(unsigned int i = 0; i < SUSYhistos.size() ; i++){
     (mapSUSYfiles.find( SUSYhistos[i] )->second)->Close();
     delete mapSUSYfiles.find( SUSYhistos[i] )->second ;
