@@ -76,7 +76,7 @@ process.fwliteOutput = cms.PSet(
     fileName = cms.string('$outputFileName')
 )
 
-process.treeSkimmerElecTau_MVA_53X = cms.PSet(
+process.treeSkimmerElecTau_HCP = cms.PSet(
     sample = cms.string('$sample'),
     analysis = cms.string('$analysis'),
     xSection = cms.double($xSection),
