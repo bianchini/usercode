@@ -39,7 +39,7 @@
 
 #define USESSBKG         false
 #define scaleByBinWidth  false
-#define DOSPLIT          false
+#define DOSPLIT          true
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 void makeHistoFromDensity(TH1* hDensity, TH1* hHistogram){
@@ -148,7 +148,7 @@ void drawHistogramMC(TTree* tree = 0,
 		     int verbose = 0 ){
   if(tree!=0 && h!=0){
     h->Reset();
-    tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup)"*cut);
+    tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup*ZeeWeight)"*cut);
     h->Scale(scaleFactor);
     normalization      = h->Integral();
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
@@ -293,7 +293,7 @@ TArrayF createBins(int nBins_ = 80 ,
   dummy[0] = xMin_; dummy[1] = xMax_;
   
   char* c = new char[10];
-  is.open(Form(location+"/bins_elecTau_%s_%s.txt",variable_.Data(), selection_.c_str())); 
+  is.open(Form(location+"/bins_eTau_%s_%s.txt",variable_.Data(), selection_.c_str())); 
   if(nBins_<0 &&  !is.good()){
     cout << "Bins file not found" << endl;
     return dummy;
@@ -305,7 +305,7 @@ TArrayF createBins(int nBins_ = 80 ,
       is.getline(c,999,',');     
       if (is.good()){
 	nBinsFromFile++;
-	//cout << c << endl;
+// 	cout <<"c "<< c << endl;
       }
     }
 
@@ -315,13 +315,14 @@ TArrayF createBins(int nBins_ = 80 ,
   cout << "Making histograms with " << nBins << " bins:" << endl;
 
   is.close();
-  is.open(Form(location+"/bins_elecTau_%s_%s.txt",variable_.Data(), selection_.c_str())); 
+  is.open(Form(location+"/bins_eTau_%s_%s.txt",variable_.Data(), selection_.c_str())); 
   
   nBinsFromFile = 0;
 
   if(nBins_>0){
     for( ; nBinsFromFile <= nBins ; nBinsFromFile++){
       bins[nBinsFromFile] =  xMin_ + nBinsFromFile*(xMax_-xMin_)/nBins_;
+      cout<<"bins : "<<bins[nBinsFromFile]<<endl;
     }
   }
   else{
@@ -330,7 +331,7 @@ TArrayF createBins(int nBins_ = 80 ,
 	is.getline(c,999,',');     
 	if (is.good() && nBinsFromFile<=nBins) {
 	  bins[nBinsFromFile] = atof(c);
-	  cout << bins[nBinsFromFile] << ", " ;
+	  cout <<"bins from file : "<< bins[nBinsFromFile] << ", "<<endl; ;
 	}
 	nBinsFromFile++;
       }
@@ -726,9 +727,10 @@ void plotElecTau( Int_t mH_           = 120,
   out.precision(5);
   int nBins = nBins_;
   TArrayF bins = createBins(nBins_, xMin_, xMax_, nBins, selection_, variable_);
-
+  cout<<"Bins : "<<endl;
+  for(int i=0 ; i<bins.GetSize() ; i++)cout<<"bin "<<i<<"   "<<bins[i]<<endl;
 //   float Lumi                               = 808.472 + 4398.0 + 495.003 + 5719.0 + 652.755 + 31.099; //last 2 are residual json from RunB and RunC prompt
-  float Lumi                               =  791.872 + 412.610;
+  float Lumi                               =  791.872 + 4434.0 + 495.003 + 6174 + 206.196 /*+ 412.610*/;
   float lumiCorrFactor                     = 1 ;    //= (1-0.056);
   float TTxsectionRatio                    = 0.92; //lumiCorrFactor*(165.8/157.5) ;
   float OStoSSRatioQCD                     = 1.06;
@@ -932,15 +934,13 @@ void plotElecTau( Int_t mH_           = 120,
   TFile *fBackgroundOthers= new TFile(pathToFile+"/nTupleOthers_ElecTau.root","READ");
 
   vector<int> hMasses;
-  hMasses.push_back(110);hMasses.push_back(115);hMasses.push_back(120);//hMasses.push_back(125);
-  //hMasses.push_back(130);hMasses.push_back(135);hMasses.push_back(140);hMasses.push_back(145);
+  hMasses.push_back(110);hMasses.push_back(115);hMasses.push_back(120);hMasses.push_back(125);
+  hMasses.push_back(130);hMasses.push_back(135);hMasses.push_back(140);hMasses.push_back(145);
 
   const int nProd=3;
-//   const int nMasses=8;
-  const int nMasses=3;
+  const int nMasses=8;
   TString nameProd[nProd]={"GGFH","VBFH","VH"};
-//   TString nameMasses[nMasses]={"110","115","120","125","130","135","140","145"};
-  TString nameMasses[nMasses]={"110","115","120"};
+  TString nameMasses[nMasses]={"110","115","120","125","130","135","140","145"};
 
   TFile *fSignal[nProd][nMasses];
 
@@ -990,14 +990,21 @@ void plotElecTau( Int_t mH_           = 120,
   }
   else {
     cout << "USE DY SEPARATE SUB-SAMPLES" << endl;
+    cout<<tree<<endl;
     //
-    fBackgroundDYTauTau   = new TFile(pathToFile+"/nTupleDYJ_TauTau-ElecTau.root"  ,"READ");
-    fBackgroundDYElecToTau  = new TFile(pathToFile+"/nTupleDYJ_EToTau-ElecTau.root" ,"READ");
-    fBackgroundDYJetToTau = new TFile(pathToFile+"/nTupleDYJ_JetToTau-ElecTau.root","READ");
+    fBackgroundDYTauTau   = new TFile(pathToFile+"/nTupleDYJ_TauTau_ElecTau.root"  ,"READ");
+    cout<<tree<<endl;
+    fBackgroundDYElecToTau  = new TFile(pathToFile+"/nTupleDYJ_EToTau_ElecTau.root" ,"READ");
+    cout<<tree<<endl;
+    fBackgroundDYJetToTau = new TFile(pathToFile+"/nTupleDYJ_JetToTau_ElecTau.root","READ");
     // 
+    cout<<tree<<endl;
     backgroundDYTauTau    = (TTree*)(fBackgroundDYTauTau  ->Get(tree));
+    cout<<tree<<endl;
     backgroundDYElectoTau   = (TTree*)(fBackgroundDYElecToTau ->Get(tree));
+    cout<<tree<<endl;
     backgroundDYJtoTau    = (TTree*)(fBackgroundDYJetToTau->Get(tree));
+    cout<<tree<<endl;
   }
 
   cout << backgroundDYTauTau->GetEntries()  << " come from DY->tautau"         << endl;
@@ -1037,6 +1044,12 @@ void plotElecTau( Int_t mH_           = 120,
     tpt = tpt&&TCut("ptL2>40");
   else if(selection_.find("Low")!=string::npos)
     tpt = tpt&&TCut("ptL2<40");
+  else if(selection_.find("1Prong0Pi0")!=string::npos)
+    tpt = tpt&&TCut("decayMode==0");
+  else if(selection_.find("1Prong1Pi0")!=string::npos)
+    tpt = tpt&&TCut("decayMode==1");
+  else if(selection_.find("3Prongs")!=string::npos)
+    tpt = tpt&&TCut("decayMode==2");
 
   ////// TAU ISO //////
   TCut tiso("tightestHPSMVAWP>=0 && tightestAntiECutWP>1 && tightestAntiEMVAWP>3"); 
@@ -1069,7 +1082,7 @@ void plotElecTau( Int_t mH_           = 120,
   TCut vbfLoose("nJets30>=2 && pt1>30 && pt2>30 && isVetoInJets!=1 && Mjj>200 && Deta>2");
   TCut vbfLooseQCD("nJets20>=2 && isVetoInJets!=1 && Mjj>200 && Deta>2");
   TCut vh("pt1>30 && pt2>30 && Mjj>70 && Mjj<120 && diJetPt>150 && MVAvbf<0.80 && nJets20BTagged<1");
-  TCut boost("nJets30>0 && pt1>30 && nJets20BTagged<1");
+  TCut boost("nJets30>0 && pt1>30 && nJets20BTagged<1 && MEtMVA>30");
   boost = boost && !vbf /*&& !vh*/;
   TCut bTag("nJets30<2 && nJets20BTagged>0");
   TCut bTagLoose("nJets30<2 && nJets20BTaggedLoose>0"); //for W shape in b-Category
@@ -1145,7 +1158,6 @@ void plotElecTau( Int_t mH_           = 120,
   else if(selection_.find("nobTag")!=string::npos)
     sbinTmp = nobTag;
 
-
   sbin                   =  sbinTmp && lpt && tpt && tiso && liso && lveto && diTauCharge  && MtCut  && hltevent && hltmatch ;
   sbinEmbedding          =  sbinTmp && lpt && tpt && tiso && liso && lveto && diTauCharge  && MtCut                          ;
   sbinEmbeddingPZetaRel  =  sbinTmp && lpt && tpt && tiso && liso && lveto && diTauCharge                                    ;
@@ -1167,6 +1179,7 @@ void plotElecTau( Int_t mH_           = 120,
   sbinPZetaRelMtiso      =  sbinTmp && lpt && tpt && mtiso&& liso && lveto && diTauCharge            && hltevent && hltmatch ;
   sbinPZetaRelSSaIsoMtiso=  sbinTmp && lpt && tpt && mtiso&& laiso&& lveto && SS                     && hltevent && hltmatch ;
 
+  cout<<sbin<<endl;
   /////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////
 
@@ -1178,6 +1191,7 @@ void plotElecTau( Int_t mH_           = 120,
 
   cout << "******** Extrapolation factors for Z->tautau normalization ********" << endl;
   // inclusive DY->tautau:
+  cout<<"Number of bins "<<nBins<<endl;
   TH1F* hExtrap = new TH1F("hExtrap","",nBins , bins.GetArray());
   float Error = 0.;
 
@@ -1319,8 +1333,7 @@ void plotElecTau( Int_t mH_           = 120,
   tMap["SS"]           = data;
 
   string shortProd[nProd]={"ggH","qqH","VH"};
-//   string sMasses[nMasses] = {"110","115","120","125","130","135","140","145"};
-  string sMasses[nMasses] = {"110","115","120"};
+  string sMasses[nMasses] = {"110","115","120","125","130","135","140","145"};
 
   for(int iP=0 ; iP<nProd ; iP++)
     for(int iM=0 ; iM<nMasses ; iM++)
@@ -1919,6 +1932,7 @@ void plotElecTau( Int_t mH_           = 120,
     hData->Scale(1.0, "width");
     hTTb->Scale(1.0, "width");
     hDataEmb->Scale(1.0, "width");
+    hZmm->Scale(1.0, "width");
     hZtt->Scale(1.0, "width");
     hDataAntiIsoLooseTauIsoQCD->Scale(1.0, "width");
     hQCD->Scale(1.0, "width");
@@ -1951,6 +1965,7 @@ void plotElecTau( Int_t mH_           = 120,
   }
 
   hSiml->Add(hEWK,1.0);
+  hSiml->Add(hZmm,1.0);
 
   aStack->Add(hTTb);
   if(!USESSBKG){
@@ -2045,7 +2060,7 @@ void plotElecTau( Int_t mH_           = 120,
   hRatio->SetTitleOffset(0.36,"Y");
 
   float maxPull = 0.;
-  for(int k = 0 ; k < hRatio->GetNbinsX(); k++){
+  for(int k = 1 ; k <= hRatio->GetNbinsX(); k++){
     float pull = hData->GetBinContent(k) - hSiml->GetBinContent(k);
     if(hSiml->GetBinContent(k)>0)
       pull /= hSiml->GetBinContent(k);
@@ -2163,16 +2178,16 @@ void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "test"){
   //variables.push_back("diTauVisMass");
   variables.push_back("diTauNSVfitMass");
  
-  //mH.push_back(105);
-  //mH.push_back(110);
-  //mH.push_back(115);
-  //mH.push_back(120);
+  mH.push_back(105);
+  mH.push_back(110);
+  mH.push_back(115);
+  mH.push_back(120);
   mH.push_back(125);
-  //mH.push_back(130);
-  //mH.push_back(135);
-  //mH.push_back(140);
-  //mH.push_back(145);
-  //mH.push_back(160);
+  mH.push_back(130);
+  mH.push_back(135);
+  mH.push_back(140);
+  mH.push_back(145);
+  mH.push_back(160);
   
 //   plotElecTau(125,1,"inclusive",""   ,"decayMode",     "#tau_{h} decay mode","units"   ,outputDir,3,0,3, 5.0,1.0,0,1.4);
 //   plotElecTau(125,1,"inclusive",""   ,"visibleTauMass","visible #tau_{h} mass","GeV"   ,outputDir,40,0,2,5.0,1.0,0,1.2);  
@@ -2180,7 +2195,7 @@ void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "test"){
 //   plotElecTau(125,1,"inclusive",""   ,"MEtMVAPhi","MET #phi","units"              ,outputDir,32,-3.2,3.2,   5.0,1.0,0,1.5);
 //   plotElecTau(125,1,"inclusiveNoMt",""   ,"MtLeg1MVA","M_{T}(#e#nu)","GeV" ,                  outputDir,40,0,160,5.0,1.0,0,1.2);
 //   plotElecTau(125,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2); 
-  plotElecTau(125,1,"inclusive",""   ,"diTauNSVfitMass","SVfit mass","GeV"     ,outputDir,60,0,360,5.0,1.0,0,1.2);
+//   plotElecTau(125,1,"inclusive",""   ,"diTauNSVfitMass","SVfit mass","GeV"     ,outputDir,60,0,360,5.0,1.0,0,1.2);
 //   plotElecTau(125,1,"inclusive",""   ,"etaL1","#e #eta", "units"              ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
 //   plotElecTau(125,1,"inclusive",""   ,"ptL1","#e p_{T}", "GeV"                ,outputDir,27,11, 92,5.0,1.0,0,1.2);
 //   plotElecTau(125,1,"inclusive",""   ,"ptL2","#tau p_{T}","GeV"           ,outputDir,27,11, 92,5.0,1.0,0,1.2);
