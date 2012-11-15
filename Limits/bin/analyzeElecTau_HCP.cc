@@ -149,6 +149,7 @@ void drawHistogramMC(TTree* tree = 0,
   if(tree!=0 && h!=0){
     h->Reset();
     tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup*ZeeWeight)"*cut);
+//     tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup)"*cut);
     h->Scale(scaleFactor);
     normalization      = h->Integral();
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
@@ -1036,7 +1037,7 @@ void plotElecTau( Int_t mH_           = 120,
 
   ///// LEPT PT ///////
   TCut lpt("ptL1>24 && TMath::Abs(etaL1)<2.1");
-  TCut lID("((TMath::Abs(scEtaL1)<0.80 && mvaPOGNonTrig>0.925) || (TMath::Abs(scEtaL1)<1.479 && TMath::Abs(etaL1)>0.80 && mvaPOGNonTrig>0.975) || (TMath::Abs(scEtaL1)>1.479 && mvaPOGNonTrig>0.985))");
+  TCut lID("((TMath::Abs(scEtaL1)<0.80 && mvaPOGNonTrig>0.925) || (TMath::Abs(scEtaL1)<1.479 && TMath::Abs(scEtaL1)>0.80 && mvaPOGNonTrig>0.975) || (TMath::Abs(scEtaL1)>1.479 && mvaPOGNonTrig>0.985))");
   lpt = lpt && lID;
   TCut tpt("ptL2>20 && TMath::Abs(etaL2)<2.3");
 
@@ -1044,16 +1045,21 @@ void plotElecTau( Int_t mH_           = 120,
     tpt = tpt&&TCut("ptL2>40");
   else if(selection_.find("Low")!=string::npos)
     tpt = tpt&&TCut("ptL2<40");
-  else if(selection_.find("1Prong0Pi0")!=string::npos)
+  
+  if(selection_.find("1Prong0Pi0")!=string::npos)
     tpt = tpt&&TCut("decayMode==0");
-  else if(selection_.find("1Prong1Pi0")!=string::npos)
+  if(selection_.find("1Prong1Pi0")!=string::npos)
     tpt = tpt&&TCut("decayMode==1");
-  else if(selection_.find("3Prongs")!=string::npos)
+  if(selection_.find("3Prongs")!=string::npos)
     tpt = tpt&&TCut("decayMode==2");
+  if(selection_.find("BL")!=string::npos)
+    tpt = tpt&&TCut("TMath::Abs(etaL2)<1.5");
+  if(selection_.find("EC")!=string::npos)
+    tpt = tpt&&TCut("TMath::Abs(etaL2)>1.5");
 
-  ////// TAU ISO //////
-  TCut tiso("tightestHPSMVAWP>=0 && tightestAntiECutWP>1 && tightestAntiEMVAWP>3"); 
-  TCut ltiso("tightestHPSMVAWP>-99 && tightestAntiECutWP<1");
+ ////// TAU ISO //////
+  TCut tiso("tightestHPSMVAWP>=0 && tightestAntiECutWP>1 && tightestAntiEMVAWP>6"); 
+  TCut ltiso("tightestHPSMVAWP>-99 && tightestAntiECutWP<1 ");
   TCut mtiso("hpsMVA>0.7");
 
   ////// E ISO ///////
@@ -1063,7 +1069,7 @@ void plotElecTau( Int_t mH_           = 120,
 
  
   ////// EVENT WISE //////
-  TCut lveto("elecFlag!=1"); //elecFlag==0
+  TCut lveto("elecFlag!=1 && vetoEvent<0.5"); //elecFlag==0
   TCut SS("diTauCharge!=0");
   TCut OS("diTauCharge==0");
   TCut pZ( Form("((%s)<%f)",antiWcut.c_str(),antiWsgn));
