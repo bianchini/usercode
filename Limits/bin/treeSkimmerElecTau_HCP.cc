@@ -1227,6 +1227,9 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     jsonMap[iJ] = readJSONFile(jsonFile[iJ]);
   bool isGoodRun=false;
   //////////////////////////
+   map < pair<int,int> , int > mapRunsEvts;
+   map < pair<int,int> , int >::iterator mapIter;
+   pair<int,int> runEvt;
 
   for (int n = 0; n <nEntries  ; n++) {
 
@@ -1242,6 +1245,20 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     if(!isGoodRun) continue;
     /////////////////////////
       
+     runEvt = make_pair(run,event);
+     mapIter = mapRunsEvts.find( runEvt );
+    
+     if(sample.Contains("Data")){
+       if( mapIter==mapRunsEvts.end() )
+	 mapRunsEvts[ runEvt ] = 1;
+       else {
+	 mapRunsEvts[ runEvt ] += 1;
+	 //        cout<<"Event double counted !! Run : "<<iRun<<" Event "<<iEvt<<" LumiSection "<<iLumi<<endl;
+	 continue;
+       }
+     }
+  
+
     // initialize variables filled only in the two jet case
     pt1=-99;pt2=-99;eta1=-99,eta2=-99;Deta=-99;Dphi=-99;Mjj=-99;phi1=-99;phi2=-99;
     pt1_v2=-99;pt2_v2=-99;eta1_v2=-99,eta2_v2=-99;Deta_v2=-99;Dphi_v2=-99;Mjj_v2=-99;phi1_v2=-99;phi2_v2=-99;
@@ -1861,46 +1878,6 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 
     outTreePtOrd->Fill();
   }
-
-
-//   file->Close();
-  
-//   /////////////////////
-//   // SPLIT DY Sample //
-//   /////////////////////
-//   cout << "DY Sample splitting" << endl;
-//   TTree* backgroundDYTauTau, *backgroundDYEtoTau, *backgroundDYJtoTau;
-
-//   TFile* outFile;
-
-//   if(sample.Contains("DY")) {
-//     backgroundDYTauTau  = outTreePtOrd->CopyTree("abs(genDecay)==(23*15)"); // g/Z -> tau+ tau-
-//     backgroundDYEtoTau  = outTreePtOrd->CopyTree("abs(genDecay)!=(23*15) && leptFakeTau"); // g/Z -> mu+mu- mu->tau
-//     backgroundDYJtoTau  = outTreePtOrd->CopyTree("abs(genDecay)!=(23*15) && !leptFakeTau"); // g/Z -> mu+mu- jet->tau
-
-//     cout << "-- copy tree" << endl;
-
-//     if(backgroundDYTauTau) {
-//       outName = dirOut_+"nTupleDYJ_TauTau_Open_ElecTauStream_"+analysisFileName+".root" ;
-//       outFile = new TFile(outName,"RECREATE");
-//       backgroundDYTauTau->Write();
-//       outFile->Close();
-//     }
-
-//     if(backgroundDYEtoTau) {
-//       outName = dirOut_+"nTupleDYJ_EToTau_Open_ElecTauStream_"+analysisFileName+".root";
-//       outFile = new TFile(outName,"RECREATE");
-//       backgroundDYEtoTau->Write();
-//       outFile->Close();
-//     }
-    
-//     if(backgroundDYJtoTau) {
-//       outName = dirOut_+"nTupleDYJ_JetToTau_Open_ElecTauStream_"+analysisFileName+".root";
-//       outFile = new TFile(outName,"RECREATE");
-//       backgroundDYJtoTau->Write();
-//       outFile->Close();
-//     }
-//   }
   
   delete jets; delete jets_v2; delete diTauLegsP4; delete diTauVisP4; delete diTauSVfitP4; delete diTauCAP4; delete genDiTauLegsP4; delete genTausP4;
   delete tauXTriggers; delete triggerBits;
@@ -1941,7 +1918,7 @@ int main(int argc, const char* argv[])
 
   edm::ParameterSet cfg = edm::readPSetsFrom(argv[1])->getParameter<edm::ParameterSet>("process");
 
-  edm::ParameterSet cfgTreeSkimmerElecTauAnalyzer = cfg.getParameter<edm::ParameterSet>("treeSkimmerElecTau_MVA_53X");
+  edm::ParameterSet cfgTreeSkimmerElecTauAnalyzer = cfg.getParameter<edm::ParameterSet>("treeSkimmerElecTau_HCP");
 
   std::string sample = cfgTreeSkimmerElecTauAnalyzer.getParameter<std::string>("sample");
   std::string analysis = cfgTreeSkimmerElecTauAnalyzer.getParameter<std::string>("analysis");
@@ -1999,6 +1976,40 @@ int main(int argc, const char* argv[])
     currentTree->Add(inputFileName->data());
   }
   fillTrees_ElecTauStream(currentTree,outTreePtOrd,nEventsRead,analysis,sample,xSection,skimEff,iJson);
+
+  TString dirOut_ = "/data_CMS/cms/ivo/HTauTauAnalysis/Trees/ElecTauStream_HCP2012/ntuples/";
+  TTree* backgroundDYTauTau, *backgroundDYEtoTau, *backgroundDYJtoTau;
+  TString outName ="";
+  TFile *outFile = new TFile(outName,"UPDATE");
+
+  if(sample=="DYJets") {
+    backgroundDYTauTau  = outTreePtOrd->CopyTree("abs(genDecay)==(23*15)"); // g/Z -> tau+ tau-
+    backgroundDYEtoTau  = outTreePtOrd->CopyTree("abs(genDecay)!=(23*15) && leptFakeTau"); // g/Z -> mu+mu- mu->tau
+    backgroundDYJtoTau  = outTreePtOrd->CopyTree("abs(genDecay)!=(23*15) && !leptFakeTau"); // g/Z -> mu+mu- jet->tau
+
+    cout << "-- copy tree" << endl;
+    if(backgroundDYTauTau) { 
+      outName = dirOut_+"nTupleDYJ_TauTau_"+analysis+".root" ;
+      outFile = new TFile(outName,"RECREATE");
+      backgroundDYTauTau->Write();
+      outFile->Close();
+    }
+    
+    if(backgroundDYEtoTau) {
+      outName = dirOut_+"nTupleDYJ_EToTau_"+analysis+".root";
+      outFile = new TFile(outName,"RECREATE");
+      backgroundDYEtoTau->Write();
+      outFile->Close();
+    }
+    
+    if(backgroundDYJtoTau) {
+      outName = dirOut_+"nTupleDYJ_JetToTau_"+analysis+".root";
+      outFile = new TFile(outName,"RECREATE");
+      backgroundDYJtoTau->Write();
+      outFile->Close();
+    }
+  }
+
 
   return 0;
 }
