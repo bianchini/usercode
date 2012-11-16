@@ -538,7 +538,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     analysisFileName = "RawNominal";
 
   TString outName = "nTuple"+sample+"_Open_MuTauStream_"+analysisFileName+".root";
-  cout << "Output file name called " << string(outName.Data()) << endl;
+  cout << "Output file name called " << outName << endl;
 
   //TFile *outFile = new TFile(outName,"UPDATE");
   //TTree* outTreePtOrd     = new TTree(TString(("outTreePtOrd"+analysis_).c_str()),"tree jets pT-ord");
@@ -866,7 +866,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   float crossSection = xsec_ ;
   float scaleFactor = (crossSection != 0) ? Lumi / (  float(nEventsRead)/crossSection )  : 1.0;
 
-  cout << "Processing sample " << sample.Data() << endl;
+  cout << "Processing sample " << sample << endl;
   cout<< "nEventsRead = " << nEventsRead << endl;
   cout<< "nEntries    = " << nEntries << endl;
   cout<< "crossSection " << crossSection << " pb ==> scaleFactor " << scaleFactor << endl;
@@ -1237,10 +1237,16 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   bool isGoodRun=false;
   //////////////////////////
   
+  // define double event counting remover //
+  map < pair<int,int> , int > mapRunsEvts;
+  map < pair<int,int> , int >::iterator mapIter;
+  pair<int,int> runEvt;
+
   for (int n = 0; n < nEntries ; n++) {
     
     currentTree->GetEntry(n);
     if(n%5000==0) cout << n << endl;
+    bool isData = sample.Contains("Run2012");
 
     // APPLY JSON SELECTION //
     isGoodRun=true;
@@ -1250,6 +1256,20 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
 
     if(!isGoodRun) continue;
     /////////////////////////
+
+    // REMOVE DOUBLE COUNTING OF EVENTS IN DATA //
+    if(isData || sample.Contains("Embed")) {
+      runEvt = make_pair(run,event);
+      mapIter = mapRunsEvts.find( runEvt );
+      
+      if( mapIter==mapRunsEvts.end() )
+	mapRunsEvts[ runEvt ] = 1;
+      
+      else {
+	mapRunsEvts[ runEvt ] += 1;
+	continue;
+      }
+    }
 
     uParl=-999.; uPerp=-999.; metParl=-999.; metPerp=-999.; metSigmaParl=-999.; metSigmaPerp=-999.;
 
@@ -1281,8 +1301,6 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     if(indexes.size()>0) lead  = indexes[0];  
     if(indexes.size()>1) trail = indexes[1];  
     if(indexes.size()>2) veto  = indexes[2];  
-
-    bool isData = ((std::string(sample.Data())).find("Run2012")!=string::npos) ? true : false;
 
     for(unsigned int v = 0 ; v < indexes.size() ; v++){
       if( (*jets)[indexes[v]].Pt() > 30 ) nJets30++;
@@ -1569,7 +1587,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     (*metsig)[1][1] = (*metSgnMatrix)[2];  
     
     //add additional variables to test MVA Met (from Christian)
-    if((std::string(sample.Data())).find("Run2012")==string::npos && genVP4->size() > 0){
+    if( !isData && genVP4->size() > 0){
       int errorFlag = 0;
       std::pair<double, double> uT = compMEtProjU((*genVP4)[0], (*METP4)[1].Px() - (*genMETP4)[0].px(), (*METP4)[1].py() - (*genMETP4)[0].py(), errorFlag);
       if ( !errorFlag ) {
@@ -1648,13 +1666,13 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     numPV_           = numPV;
     sampleWeight     = scaleFactor; 
     //puWeight         = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : mcPUweight ;
-    puWeight         = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : pileupWeight( nPUVertices);   
-    puWeight2        = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : pileupWeight2(int(nPUVertices));   
+    puWeight         = isData ? 1.0 : pileupWeight( nPUVertices);   
+    puWeight2        = isData ? 1.0 : pileupWeight2(int(nPUVertices));   
     //puWeight         = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : Lumi3DReWeighting->weight3D(nPUVerticesM1, nPUVertices, nPUVerticesP1) ;
     nPUVertices_     = nPUVertices;
     embeddingWeight_ = embeddingWeight;
 
-    if((std::string(sample.Data())).find("Embed")!=string::npos && UnfoldDen1 && genTausP4->size()>1){
+    if(sample.Contains("Embed") && UnfoldDen1 && genTausP4->size()>1){
       float corrFactorEmbed = (UnfoldDen1->GetBinContent( UnfoldDen1->GetXaxis()->FindBin( (*genTausP4)[0].Eta() ) ,  UnfoldDen1->GetYaxis()->FindBin( (*genTausP4)[1].Eta() ) )); 
       embeddingWeight_ *=  corrFactorEmbed;
       //cout << "Correcting with " << corrFactorEmbed << endl;
@@ -1707,7 +1725,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     signalPFChargedHadrCands_ = signalPFChargedHadrCands;
     pfJetPt_                  = pfJetPt;
 
-    if((std::string(sample.Data())).find("Run2012")!=string::npos){
+    if( isData ){
       HLTx = float((*triggerBits)[0] || (*triggerBits)[1] || 
 		   (*triggerBits)[2] || (*triggerBits)[3] ||
 		   (*triggerBits)[4] || (*triggerBits)[5] ||
@@ -1736,7 +1754,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
       HLTweightMu  = 1.0;
       HLTmu        = 1.0;
    
-      if( (std::string(sample.Data())).find("Embed")!=string::npos ){
+      if( sample.Contains("Embed") ){
 
 	HLTMu  = TMath::Abs((*diTauLegsP4)[0].Eta())<1.2 ? 
 	  turnOnMuAllBL->Eval( (*diTauLegsP4)[0].Pt() ) : turnOnMuAllEC->Eval( (*diTauLegsP4)[0].Pt() );
@@ -1820,7 +1838,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
     }
    
     isTauLegMatched_ = isTauLegMatched;
-    if((std::string(sample.Data())).find("Run2012")==string::npos)
+    if( !isData )
       leptFakeTau      = (isTauLegMatched==0 && (*genDiTauLegsP4)[1].E()>0) ? 1 : 0;
     else 
       leptFakeTau = -99;
