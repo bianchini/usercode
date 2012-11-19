@@ -1729,7 +1729,7 @@ void plotMuTau( Int_t mH_           = 120,
             drawHistogramMC(backgroundDYJtoTau, variable, NormDYJtoTau, Error,    Lumi*lumiCorrFactor*JtoTauCorrectionFactor*hltEff_/1000., hCleaner, sbinSSaIso, 1);
 	    hDataAntiIsoLooseTauIso->Add(hCleaner, -1.0);
 	    float NormTTjets = 0.; 
-            drawHistogramMC(backgroundTTbar, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio*scaleFactorTTOSWJets*hltEff_/1000., hCleaner, sbinSSaIso, 1);
+            drawHistogramMC(backgroundTTbar, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio*scaleFactorTTSS*hltEff_/1000., hCleaner, sbinSSaIso, 1);
 	    hDataAntiIsoLooseTauIso->Add(hCleaner, -1.0);
 	    hDataAntiIsoLooseTauIsoQCD->Add(hDataAntiIsoLooseTauIso, hQCD->Integral()/hDataAntiIsoLooseTauIso->Integral());
 	  }
@@ -1756,7 +1756,7 @@ void plotMuTau( Int_t mH_           = 120,
 			sbinPZetaRelSSForWextrapolation,
 			sbinPZetaRelSS, pZ, apZ, sbinPZetaRelSSInclusive, 
 			sbinPZetaRelSSaIsoInclusive, sbinPZetaRelSSaIso, sbinPZetaRelSSaIsoMtiso, 
-			vbfLoose, oneJet, zeroJet, false, false);
+			vbfLoose, oneJet, zeroJet, true, true);
 	    
 	    hDataAntiIsoLooseTauIsoQCD->Add(hDataAntiIsoLooseTauIso, hQCD->Integral()/hDataAntiIsoLooseTauIso->Integral());
 	    delete hExtrapSS;
