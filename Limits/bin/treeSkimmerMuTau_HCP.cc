@@ -976,6 +976,11 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   currentTree->SetBranchStatus("isTightMuon"           ,1);
   currentTree->SetBranchStatus("vetoEvent"             ,1);
 
+  // leptons for veto
+  currentTree->SetBranchStatus("vetoMuonsP4"        ,1);
+  // currentTree->SetBranchStatus("vetoElectronsP4"    ,1);
+  // currentTree->SetBranchStatus("vetoTausP4"         ,1);
+
   // event-dependent variables
   currentTree->SetBranchStatus("rhoFastJet"            ,1);
   currentTree->SetBranchStatus("rhoNeutralFastJet"     ,1);
@@ -1082,6 +1087,10 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   std::vector< float >* metSgnMatrix = new std::vector< float >();
   currentTree->SetBranchAddress("metSgnMatrix", &metSgnMatrix);
   
+  // leptons for veto
+  //std::vector< LV >* vetoElectronsP4 = new std::vector< LV >();
+  std::vector< LV >* vetoMuonsP4 = new std::vector< LV >();
+  //std::vector< LV >* vetoTausP4 = new std::vector< LV >();
 
   // auxiliary float to store branch values
   float diTauNSVfitMass,diTauNSVfitMassErrUp,diTauNSVfitMassErrDown,mTauTauMin;;
