@@ -1702,7 +1702,12 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
 
     // Reweight W+Jets
     weightHepNup=1;
-    if( sample_.find("WJets")!=string::npos ) weightHepNup = reweightHEPNUP( hepNUP_ );
+    //if( sample_.find("WJets")!=string::npos ) weightHepNup = reweightHEPNUP( hepNUP_ );
+    if( sample_.find("WJets")!=string::npos || sample_.find("W1Jets")!=string::npos ||
+        sample_.find("W2Jets")!=string::npos || sample_.find("W3Jets")!=string::npos ||
+        sample_.find("W4Jets")!=string::npos
+        ) 
+      weightHepNup = reweightHEPNUP( hepNUP_ );
 
     HqTWeight = histo!=0 ? histo->GetBinContent( histo->FindBin( (*genVP4)[0].Pt() ) ) : 1.0;
 
