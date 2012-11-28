@@ -346,6 +346,34 @@ float pileupWeight2( int intimepileup_ ){
 
 
 
+int getJetIDMVALoose(double pt, double eta, double rawMVA)
+{
+  float eta_bin[] = {0,2.5,2.75,3.0,5.0};
+  float Pt010_Loose[]    = {-0.95,-0.97,-0.97,-0.97};
+  float Pt1020_Loose[]   = {-0.95,-0.97,-0.97,-0.97};
+  float Pt2030_Loose[]   = {-0.80,-0.85,-0.84,-0.85};
+  float Pt3050_Loose[]   = {-0.80,-0.74,-0.68,-0.77};
+
+  int passId = 0;
+  for(int i = 0; i < 4; i++){
+    if(TMath::Abs(eta) >= eta_bin[i] && TMath::Abs(eta) < eta_bin[i+1]){
+      if(pt < 10){
+	if(rawMVA > Pt010_Loose[i])passId = 1;
+      }
+      else if(pt >= 10 && pt < 20){
+	if(rawMVA > Pt1020_Loose[i])passId = 1;
+      }
+      else if(pt >= 20 && pt < 30){ 
+        if(rawMVA > Pt2030_Loose[i])passId = 1; 
+      }
+      else if(pt >= 30){  
+        if(rawMVA > Pt3050_Loose[i])passId = 1;  
+      }
+    }
+  }
+
+  return passId;
+}
 
 void fillTrees_ElecTauStream( TChain* currentTree,
 			      TTree* outTreePtOrd,
@@ -420,36 +448,36 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   TF1 *ratioElecIDEC      = (TF1*)corrections.Get("ratioElecIDEC");
   TF1 *ratioElecIsoEC     = (TF1*)corrections.Get("ratioElecIsoEC");
 
-  //TF1 *ratioElecIDIsoBL   = (TF1*)corrections.Get("ratioElecIDIsoBL");
-  //TF1 *ratioElecIDIsoEC   = (TF1*)corrections.Get("ratioElecIDIsoEC");
-
-  //TF1 *ratioTauElecTauAll = (TF1*)corrections.Get("ratioTauElecTauAll");
-  TF1 *ratioTauElecTauAllBL = (TF1*)corrections.Get("ratioTauElecTauAllBL");
-  TF1 *ratioTauElecTauAllEC = (TF1*)corrections.Get("ratioTauElecTauAllEC");
   TF1 *ratioElecAllBL     = (TF1*)corrections.Get("ratioElecAllBL");
   TF1 *ratioElecAllEC     = (TF1*)corrections.Get("ratioElecAllEC");
-  //TF1 *turnOnTauElecTauAll= (TF1*)corrections.Get("turnOnTauElecTauAll");
-  TF1 *turnOnTauElecTauAllBL = (TF1*)corrections.Get("turnOnTauElecTauAllBL");
-  TF1 *turnOnTauElecTauAllEC = (TF1*)corrections.Get("turnOnTauElecTauAllEC");
   TF1 *turnOnElecAllBL    = (TF1*)corrections.Get("turnOnElecAllBL");
   TF1 *turnOnElecAllEC    = (TF1*)corrections.Get("turnOnElecAllEC");
 
-  //if(!ratioElecIDIsoBL)   cout << "Missing corrections for ElecID+Iso (BL)" << endl;
-  //if(!ratioElecIDIsoEC)   cout << "Missing corrections for ElecID+Iso (EC)" << endl;
+  TF1 *ratioElecRunABL     = (TF1*)corrections.Get("ratioElecRunABL");
+  TF1 *ratioElecRunAEC     = (TF1*)corrections.Get("ratioElecRunAEC");
+  TF1 *ratioElecRunBBL     = (TF1*)corrections.Get("ratioElecRunBBL");
+  TF1 *ratioElecRunBEC     = (TF1*)corrections.Get("ratioElecRunBEC");
+  TF1 *ratioElecRunCBL     = (TF1*)corrections.Get("ratioElecRunCBL");
+  TF1 *ratioElecRunCEC     = (TF1*)corrections.Get("ratioElecRunCEC");
+  TF1 *turnOnElecRunABL     = (TF1*)corrections.Get("turnOnElecRunABL");
+  TF1 *turnOnElecRunAEC     = (TF1*)corrections.Get("turnOnElecRunAEC");
+  TF1 *turnOnElecRunBBL     = (TF1*)corrections.Get("turnOnElecRunBBL");
+  TF1 *turnOnElecRunBEC     = (TF1*)corrections.Get("turnOnElecRunBEC");
+  TF1 *turnOnElecRunCBL     = (TF1*)corrections.Get("turnOnElecRunCBL");
+  TF1 *turnOnElecRunCEC     = (TF1*)corrections.Get("turnOnElecRunCEC");
+
+  TF1 *turnOnTauElecTauBL = (TF1*)corrections.Get("turnOnTauElecTauBL");
+  TF1 *turnOnTauElecTauEC = (TF1*)corrections.Get("turnOnTauElecTauEC");
+  TF1 *ratioTauElecTauBL = (TF1*)corrections.Get("ratioTauElecTauBL");
+  TF1 *ratioTauElecTauEC = (TF1*)corrections.Get("ratioTauElecTauEC");
+
   if(!ratioElecIDBL)      cout << "Missing corrections for ElecID (BL)" << endl;
   if(!ratioElecIDEC)      cout << "Missing corrections for ElecID (EC)" << endl;
   if(!ratioElecIsoBL)     cout << "Missing corrections for ElecIso (BL)" << endl;
   if(!ratioElecIsoEC)     cout << "Missing corrections for ElecIso (EC)" << endl;
   if(!ratioElecAllBL)     cout << "Missing corrections for Elec HLT (BL)" << endl;
   if(!ratioElecAllEC)     cout << "Missing corrections for Elec HLT (EC)" << endl;
-  //if(!ratioTauElecTauAll) cout << "Missing corrections for tau HLT" << endl;
-  if(!ratioTauElecTauAllBL) cout << "Missing corrections for tau HLT (BL)" << endl;
-  if(!ratioTauElecTauAllEC) cout << "Missing corrections for tau HLT (EC)" << endl;
-  if(!turnOnElecAllBL)    cout << "Missing turnOn for mu (BL)" << endl;
-  if(!turnOnElecAllEC)    cout << "Missing turnOn for mu (EC)" << endl;
-  //if(!turnOnTauElecTauAll)cout << "Missing turnOn for tau" << endl;
-  if(!turnOnTauElecTauAllBL)cout << "Missing turnOn for tau (BL)" << endl;
-  if(!turnOnTauElecTauAllEC)cout << "Missing turnOn for tau (EC)" << endl;
+
 
   //////////////////////////////////////////////////////////
  
@@ -1226,38 +1254,55 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   for(int iJ=0 ; iJ<nJson ; iJ++)
     jsonMap[iJ] = readJSONFile(jsonFile[iJ]);
   bool isGoodRun=false;
+  bool isDoubleCount=false;
   //////////////////////////
-   map < pair<int,int> , int > mapRunsEvts;
-   map < pair<int,int> , int >::iterator mapIter;
-   pair<int,int> runEvt;
-
+  map < pair<int,int> , vector<double> > mapRunsEvts;
+  map < pair<int,int> , vector<double> >::iterator mapIter;
+  pair<int,int> runEvt;
+  vector<double> ID;
   for (int n = 0; n <nEntries  ; n++) {
 
     currentTree->GetEntry(n);
     if(n%1000==0) cout << n << endl;
-
+    
     // APPLY JSON SELECTION //
     isGoodRun=true;
-
+    
     if(iJson_>=0 && iJson_<=3)
       isGoodRun = AcceptEventByRunAndLumiSection(run, lumi, jsonMap[iJson_]);
-
+    
     if(!isGoodRun) continue;
     /////////////////////////
-      
-     runEvt = make_pair(run,event);
-     mapIter = mapRunsEvts.find( runEvt );
     
-     if(sample.Contains("Data")){
-       if( mapIter==mapRunsEvts.end() )
-	 mapRunsEvts[ runEvt ] = 1;
-       else {
-	 mapRunsEvts[ runEvt ] += 1;
-	 //        cout<<"Event double counted !! Run : "<<iRun<<" Event "<<iEvt<<" LumiSection "<<iLumi<<endl;
-	 continue;
-       }
-     }
+    isDoubleCount = false;
+    runEvt = make_pair(run,event);
+    mapIter = mapRunsEvts.find( runEvt );
+    ID.clear();
+
+    if(sample.Contains("Data")){
+      if( mapIter==mapRunsEvts.end() ){
+	ID.push_back((*diTauLegsP4)[0].Pt());
+	ID.push_back((*diTauLegsP4)[0].Eta());
+	ID.push_back((*diTauLegsP4)[1].Pt());
+	ID.push_back((*diTauLegsP4)[1].Eta());
+	mapRunsEvts[ runEvt ] = ID;
+      }
+      else {
+	ID.push_back((*diTauLegsP4)[0].Pt());
+	ID.push_back((*diTauLegsP4)[0].Eta());
+	ID.push_back((*diTauLegsP4)[1].Pt());
+	ID.push_back((*diTauLegsP4)[1].Eta());
+// 	cout<<"Event double counted !! Run : "<<run<<" Event "<<event<<" LumiSection "<<lumi<<endl;
+// 	cout<<" current  ptL1     = "<<(*diTauLegsP4)[0].Pt()<<" previous  ptL1     = "<<mapRunsEvts[ runEvt ][0]<<endl;
+// 	cout<<" current  etaL1    = "<<(*diTauLegsP4)[0].Eta()<<" previous  etaL1     = "<<mapRunsEvts[ runEvt ][1]<<endl;
+// 	cout<<" current  ptL2     = "<<(*diTauLegsP4)[1].Pt()<<" previous  ptL2     = "<<mapRunsEvts[ runEvt ][2]<<endl;
+// 	cout<<" current  etaL2    = "<<(*diTauLegsP4)[1].Eta()<<" previous  etaL2     = "<<mapRunsEvts[ runEvt ][3]<<endl;
+	mapRunsEvts[ runEvt ] = ID;
+	isDoubleCount = true;
+      }
+    }
   
+//     if (!isDoubleCount) continue;
 
     // initialize variables filled only in the two jet case
     pt1=-99;pt2=-99;eta1=-99,eta2=-99;Deta=-99;Dphi=-99;Mjj=-99;phi1=-99;phi2=-99;
@@ -1280,7 +1325,9 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     int veto  = -99;
     vector<int> indexes;
     for(unsigned int l = 0 ; l < jets->size() ; l++){
-      if((*jets)[l].Pt()>MINPt1 && TMath::Abs((*jets)[l].Eta())<MAXEta && (*jetPUWP)[l*3]>MINJetID)
+//       if((*jets)[l].Pt()>MINPt1 && TMath::Abs((*jets)[l].Eta())<MAXEta && (*jetPUWP)[l*3]>MINJetID)
+      int passJetID = getJetIDMVALoose((*jets)[l].Pt(), (*jets)[l].Eta(), (*jetPUMVA)[l]);
+      if((*jets)[l].Pt()>MINPt1 && TMath::Abs((*jets)[l].Eta())<MAXEta && passJetID>MINJetID)
 	indexes.push_back(l);
     }
     if(indexes.size()>0) lead  = indexes[0];  
@@ -1684,37 +1731,38 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 				((*tauXTriggers)[3] && (*tauXTriggers)[7])); 
       HLTmatchQCD = isTriggMatchedQCD ? 1.0 : 0.0 ;
 
-
       HLTweightTau  = 1.0;
       HLTweightElec = 1.0;
       if( (std::string(sample.Data())).find("Embed")!=string::npos ){
-
-	HLTElec = TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?
-	  turnOnElecAllBL->Eval((*diTauLegsP4)[0].Pt()) : 
-	  turnOnElecAllEC->Eval((*diTauLegsP4)[0].Pt());
-	
-	//HLTTau  =  turnOnTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() ) ; 
-	HLTTau  = ((*diTauLegsP4)[1].Eta()<1.5) ? 
-	  turnOnTauElecTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) :
-	  turnOnTauElecTauAllEC->Eval( (*diTauLegsP4)[1].Pt() ) ;
-
+	if(run<193686){
+	  HLTElec = TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?
+	    turnOnElecRunABL->Eval((*diTauLegsP4)[0].Pt()) : 
+	    turnOnElecRunAEC->Eval((*diTauLegsP4)[0].Pt());
+	}
+	else if(run>=193686 && run<196531){
+	  HLTElec = TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?
+	    turnOnElecRunBBL->Eval((*diTauLegsP4)[0].Pt()) : 
+	    turnOnElecRunBEC->Eval((*diTauLegsP4)[0].Pt());
+	}
+	else{
+	  HLTElec = TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?
+	    turnOnElecRunCBL->Eval((*diTauLegsP4)[0].Pt()) : 
+	    turnOnElecRunCEC->Eval((*diTauLegsP4)[0].Pt());
+	}
+	HLTTau  = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
+	  turnOnTauElecTauBL->Eval((*diTauLegsP4)[1].Pt()): 
+	  turnOnTauElecTauEC->Eval((*diTauLegsP4)[1].Pt()); 
 	SFTau         = 1.0;
 	SFElec        =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ? 
-	  //ratioElecIDIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) :
-	  //ratioElecIDIsoEC->Eval( (*diTauLegsP4)[0].Pt() ) ;
 	  ratioElecIDBL->Eval( (*diTauLegsP4)[0].Pt() )*ratioElecIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) : 
 	  ratioElecIDEC->Eval( (*diTauLegsP4)[0].Pt() )*ratioElecIsoEC->Eval( (*diTauLegsP4)[0].Pt() ) ;
-
 	SFElecID =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?  
 	  ratioElecIDBL->Eval( (*diTauLegsP4)[0].Pt() ) :   
 	  ratioElecIDEC->Eval( (*diTauLegsP4)[0].Pt() );  
- 
 	SFElecIso =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?  
 	  ratioElecIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) :   
 	  ratioElecIsoEC->Eval( (*diTauLegsP4)[0].Pt() ); 
-	
 	SFEtoTau      = 1.0;
-
       }
       else{
 	HLTElec       = 1.0;
@@ -1723,68 +1771,48 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 	SFElec        = 1.0;
 	SFEtoTau      = 1.0;
       }
-
-     
-
     } else{
-
       HLTx     = float((*triggerBits)[0]);
       //HLTmatch = ((*tauXTriggers)[0] && (*tauXTriggers)[2]) ? 1.0 : 0.0;
       HLTmatch = ((*tauXTriggers)[1] && (*tauXTriggers)[2]) ? 1.0 : 0.0;
-
       HLTxQCD = 1.0;
       HLTmatchQCD = 1.0;
-
-      //HLTweightTau  = ratioTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() );
-      HLTweightTau  = ((*diTauLegsP4)[1].Eta()<1.5) ? 
-	ratioTauElecTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) :
-	ratioTauElecTauAllEC->Eval( (*diTauLegsP4)[1].Pt() ) ;
-      
+      HLTweightTau  =TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
+	ratioTauElecTauBL->Eval((*diTauLegsP4)[1].Pt()): 
+	ratioTauElecTauEC->Eval((*diTauLegsP4)[1].Pt());
       if((*diTauLegsP4)[0].Pt()>24){
 	HLTweightElec = TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?
 	  ratioElecAllBL->Eval((*diTauLegsP4)[0].Pt()) : 
 	  ratioElecAllEC->Eval((*diTauLegsP4)[0].Pt());
       }
       else HLTweightElec = 1.0;
-
-      //HLTTau  = turnOnTauElecTauAll->Eval( (*diTauLegsP4)[1].Pt() );
-      HLTTau  = ((*diTauLegsP4)[1].Eta()<1.5) ? 
-	turnOnTauElecTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) :
-        turnOnTauElecTauAllEC->Eval( (*diTauLegsP4)[1].Pt() ) ;
-
+      HLTTau  = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
+	turnOnTauElecTauBL->Eval((*diTauLegsP4)[1].Pt()): 
+	turnOnTauElecTauEC->Eval((*diTauLegsP4)[1].Pt());
       HLTElec = TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ? 
 	turnOnElecAllBL->Eval((*diTauLegsP4)[0].Pt()) : 
 	turnOnElecAllEC->Eval((*diTauLegsP4)[0].Pt());
-
       SFTau  = 1.0;
       SFElec =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?
-	//ratioElecIDIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) :
-	//ratioElecIDIsoEC->Eval( (*diTauLegsP4)[0].Pt() ) ;
 	ratioElecIDBL->Eval( (*diTauLegsP4)[0].Pt() )*ratioElecIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) : 
 	ratioElecIDEC->Eval( (*diTauLegsP4)[0].Pt() )*ratioElecIsoEC->Eval( (*diTauLegsP4)[0].Pt() );
-
       SFElecID =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ? 
         ratioElecIDBL->Eval( (*diTauLegsP4)[0].Pt() ) :  
         ratioElecIDEC->Eval( (*diTauLegsP4)[0].Pt() ); 
-
       SFElecIso =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ? 
         ratioElecIsoBL->Eval( (*diTauLegsP4)[0].Pt() ) :  
         ratioElecIsoEC->Eval( (*diTauLegsP4)[0].Pt() );
-
-      if((*diTauLegsP4)[0].Pt() >= 30.0 && (*diTauLegsP4)[0].Pt() < 31.0){
-	SFElec =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ? 
-	  ratioElecIDBL->Eval( 31.5 )*ratioElecIsoBL->Eval( 31.5 ) :  
-	  ratioElecIDEC->Eval( 31.5 )*ratioElecIsoEC->Eval( 31.5 ); 
- 
-	SFElecID =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?  
-	  ratioElecIDBL->Eval( 31.5 ) :   
-	  ratioElecIDEC->Eval( 31.5 );  
- 
-	SFElecIso =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?  
-	  ratioElecIsoBL->Eval( 31.5 ) :   
-	  ratioElecIsoEC->Eval( 31.5 ); 
-      }
-
+//       if((*diTauLegsP4)[0].Pt() >= 30.0 && (*diTauLegsP4)[0].Pt() < 31.0){
+// 	SFElec =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ? 
+// 	  ratioElecIDBL->Eval( 31.5 )*ratioElecIsoBL->Eval( 31.5 ) :  
+// 	  ratioElecIDEC->Eval( 31.5 )*ratioElecIsoEC->Eval( 31.5 ); 
+// 	SFElecID =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?  
+// 	  ratioElecIDBL->Eval( 31.5 ) :   
+// 	  ratioElecIDEC->Eval( 31.5 );  
+// 	SFElecIso =  TMath::Abs((*diTauLegsP4)[0].Eta())<1.479 ?  
+// 	  ratioElecIsoBL->Eval( 31.5 ) :   
+// 	  ratioElecIsoEC->Eval( 31.5 ); 
+//       }
       SFEtoTau = 1.0;
 
     }

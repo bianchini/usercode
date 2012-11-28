@@ -380,9 +380,10 @@ Bool_t isbtagged(Bool_t isBQuark, Double_t btagCSV, Bool_t isdata, UInt_t btagef
 }  
 
 void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xsec_ = 0., string inputDir_ = "./", string dirOut_ = "./", int iJson_=-1){
-  
 
   cout << "Now skimming analysis " << analysis_ << endl;
+  if(analysis_ == "nominal")
+    analysis_ = "";
 
   TMVA::Tools::Instance();
 
@@ -435,45 +436,57 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   cout << "Using corrections from llrCorrections.root" << endl;
   TFile corrections("../../Utilities/data/corrections/llrCorrections.root");
   
-  //TF1 *ratioMuIDIsoBL    = (TF1*)corrections.Get("ratioMuIDIsoBL");
-  //TF1 *ratioMuIDIsoEC    = (TF1*)corrections.Get("ratioMuIDIsoEC");
-
   TF1 *ratioMuIDBL1       = (TF1*)corrections.Get("ratioMuIDBL1");
   TF1 *ratioMuIDBL2       = (TF1*)corrections.Get("ratioMuIDBL2");
-  TF1 *ratioMuIDEC       = (TF1*)corrections.Get("ratioMuIDEC");
-
+  TF1 *ratioMuIDEC        = (TF1*)corrections.Get("ratioMuIDEC");
   TF1 *ratioMuIsoBL1      = (TF1*)corrections.Get("ratioMuIsoBL1");
   TF1 *ratioMuIsoBL2      = (TF1*)corrections.Get("ratioMuIsoBL2");
-  TF1 *ratioMuIsoEC      = (TF1*)corrections.Get("ratioMuIsoEC");
+  TF1 *ratioMuIsoEC       = (TF1*)corrections.Get("ratioMuIsoEC");
 
-  TF1 *ratioMuAllBL       = (TF1*)corrections.Get("ratioMuAllBL");
-  TF1 *ratioMuAllEC       = (TF1*)corrections.Get("ratioMuAllEC");
-  //TF1 *ratioTauMuTauAll   = (TF1*)corrections.Get("ratioTauMuTauAll");
-  TF1 *ratioTauMuTauAllBL = (TF1*)corrections.Get("ratioTauMuTauAllBL");
-  TF1 *ratioTauMuTauAllEC = (TF1*)corrections.Get("ratioTauMuTauAllEC");
+  TF1 *ratioMuAllBL1Pos   = (TF1*)corrections.Get("ratioMuAllBL1Pos");
+  TF1 *ratioMuAllBL2Pos   = (TF1*)corrections.Get("ratioMuAllBL2Pos");
+  TF1 *ratioMuAllECPos    = (TF1*)corrections.Get("ratioMuAllECPos");
+  TF1 *ratioMuAllBL1Neg   = (TF1*)corrections.Get("ratioMuAllBL1Neg");
+  TF1 *ratioMuAllBL2Neg   = (TF1*)corrections.Get("ratioMuAllBL2Neg");
+  TF1 *ratioMuAllECNeg    = (TF1*)corrections.Get("ratioMuAllECNeg");
 
-  TF1 *turnOnMuAllBL       = (TF1*)corrections.Get("turnOnMuAllBL");
-  TF1 *turnOnMuAllEC       = (TF1*)corrections.Get("turnOnMuAllEC");
-  //TF1 *turnOnTauMuTauAll   = (TF1*)corrections.Get("turnOnTauMuTauAll");  
-  TF1 *turnOnTauMuTauAllBL = (TF1*)corrections.Get("turnOnTauMuTauAllBL");  
-  TF1 *turnOnTauMuTauAllEC = (TF1*)corrections.Get("turnOnTauMuTauAllEC");  
+  TF1 *turnOnMuAllBL1Pos  = (TF1*)corrections.Get("turnOnMuAllBL1Pos");
+  TF1 *turnOnMuAllBL2Pos  = (TF1*)corrections.Get("turnOnMuAllBL2Pos");
+  TF1 *turnOnMuAllECPos   = (TF1*)corrections.Get("turnOnMuAllECPos");
+  TF1 *turnOnMuAllBL1Neg  = (TF1*)corrections.Get("turnOnMuAllBL1Neg");
+  TF1 *turnOnMuAllBL2Neg  = (TF1*)corrections.Get("turnOnMuAllBL2Neg");
+  TF1 *turnOnMuAllECNeg   = (TF1*)corrections.Get("turnOnMuAllECNeg");
 
-  //if(!ratioMuIDIsoBL)     cout << "Missing corrections for MuID+Iso (BL)" << endl;
-  //if(!ratioMuIDIsoEC)     cout << "Missing corrections for MuID+Iso (EC)" << endl;
-  if(!ratioMuIDBL1)        cout << "Missing corrections for MuID (BL1)" << endl;
-  if(!ratioMuIDBL2)        cout << "Missing corrections for MuID (BL2)" << endl;
+  TF1 *ratioTauMuTauBL    = (TF1*)corrections.Get("ratioTauMuTauBL");  
+  TF1 *ratioTauMuTauEC    = (TF1*)corrections.Get("ratioTauMuTauEC"); 
+  TF1 *turnOnTauMuTauBL   = (TF1*)corrections.Get("turnOnTauMuTauBL");  
+  TF1 *turnOnTauMuTauEC   = (TF1*)corrections.Get("turnOnTauMuTauEC");  
+
+  if(!ratioMuIDBL1)       cout << "Missing corrections for MuID (BL1)" << endl;
+  if(!ratioMuIDBL2)       cout << "Missing corrections for MuID (BL2)" << endl;
   if(!ratioMuIDEC)        cout << "Missing corrections for MuID (EC)" << endl;
-  if(!ratioMuIsoBL1)       cout << "Missing corrections for MuIso (BL1)" << endl;
-  if(!ratioMuIsoBL2)       cout << "Missing corrections for MuIso (BL2)" << endl;
+  if(!ratioMuIsoBL1)      cout << "Missing corrections for MuIso (BL1)" << endl;
+  if(!ratioMuIsoBL2)      cout << "Missing corrections for MuIso (BL2)" << endl;
   if(!ratioMuIsoEC)       cout << "Missing corrections for MuIso (EC)" << endl;
-  if(!ratioMuAllBL)       cout << "Missing corrections for Mu HLT (BL)" << endl;
-  if(!ratioMuAllEC)       cout << "Missing corrections for Mu HLT (EC)" << endl;
-  //if(!ratioTauMuTauAll)   cout << "Missing corrections for tau HLT" << endl;
-  if(!ratioTauMuTauAllBL) cout << "Missing corrections for tau HLT (BL)" << endl;
-  if(!ratioTauMuTauAllEC) cout << "Missing corrections for tau HLT (EC)" << endl;
-  if(!turnOnMuAllBL)      cout << "Missing turnOn for mu (BL)" << endl;
-  if(!turnOnMuAllEC)      cout << "Missing turnOn for mu (EC)" << endl;
-  //if(!turnOnTauMuTauAll)  cout << "Missing turnOn for tau" << endl;
+
+  if(!ratioMuAllBL1Pos)   cout << "Missing corrections for Mu HLT (BL1Pos)" << endl;
+  if(!ratioMuAllBL2Pos)   cout << "Missing corrections for Mu HLT (BL2Pos)" << endl;
+  if(!ratioMuAllECPos)    cout << "Missing corrections for Mu HLT (ECPos)" << endl;
+  if(!ratioMuAllBL1Neg)   cout << "Missing corrections for Mu HLT (BL1Neg)" << endl;
+  if(!ratioMuAllBL2Neg)   cout << "Missing corrections for Mu HLT (BL2Neg)" << endl;
+  if(!ratioMuAllECNeg)    cout << "Missing corrections for Mu HLT (ECNeg)" << endl;
+
+  if(!turnOnMuAllBL1Pos)  cout << "Missing corrections for Mu HLT (BL1Pos)" << endl;
+  if(!turnOnMuAllBL2Pos)  cout << "Missing corrections for Mu HLT (BL2Pos)" << endl;
+  if(!turnOnMuAllECPos)   cout << "Missing corrections for Mu HLT (ECPos)" << endl;
+  if(!turnOnMuAllBL1Neg)  cout << "Missing corrections for Mu HLT (BL1Neg)" << endl;
+  if(!turnOnMuAllBL2Neg)  cout << "Missing corrections for Mu HLT (BL2Neg)" << endl;
+  if(!turnOnMuAllECNeg)   cout << "Missing corrections for Mu HLT (ECNeg)" << endl;
+
+  if(!ratioTauMuTauBL)    cout << "Missing corrections for tau HLT (BL)" << endl;
+  if(!ratioTauMuTauEC)    cout << "Missing corrections for tau HLT (EC)" << endl;
+  if(!turnOnTauMuTauBL)   cout << "Missing corrections for tau HLT (BL)" << endl;
+  if(!turnOnTauMuTauEC)   cout << "Missing corrections for tau HLT (EC)" << endl;
 
   //////////////////////////////////////////////////////////
 
@@ -842,7 +855,7 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
   outTreePtOrd->Branch("metSigmaParl", &metSigmaParl, "metSigmaParl/F");
   outTreePtOrd->Branch("metSigmaPerp", &metSigmaPerp, "metSigmaPerp/F");
 
-  string currentInName = inputDir_+"/treeMuTauStream_"+sample_+".root" ;
+  string currentInName = inputDir_+"/tree_MuTau_"+sample_+".root" ;
 
   TString inName(currentInName.c_str());
   TFile* file   = new TFile(inName,"READ");
@@ -1765,12 +1778,25 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
    
       if( sample.Contains("Embed") ){
 
-	HLTMu  = TMath::Abs((*diTauLegsP4)[0].Eta())<1.2 ? 
-	  turnOnMuAllBL->Eval( (*diTauLegsP4)[0].Pt() ) : turnOnMuAllEC->Eval( (*diTauLegsP4)[0].Pt() );
+	if((*diTauLegsP4)[0].Eta()>0){
+	  if( TMath::Abs((*diTauLegsP4)[0].Eta())<0.8)
+	    HLTMu = turnOnMuAllBL1Pos->Eval( (*diTauLegsP4)[0].Pt());
+	  else if( TMath::Abs((*diTauLegsP4)[0].Eta())<1.2)
+	    HLTMu = turnOnMuAllBL2Pos->Eval( (*diTauLegsP4)[0].Pt());
+	  else
+	    HLTMu = turnOnMuAllECPos->Eval( (*diTauLegsP4)[0].Pt());
+	}
+	else{
+	  if( TMath::Abs((*diTauLegsP4)[0].Eta())<0.8)
+	    HLTMu = turnOnMuAllBL1Neg->Eval( (*diTauLegsP4)[0].Pt());
+	  else if( TMath::Abs((*diTauLegsP4)[0].Eta())<1.2)
+	    HLTMu = turnOnMuAllBL2Neg->Eval( (*diTauLegsP4)[0].Pt());
+	  else
+	    HLTMu = turnOnMuAllECNeg->Eval( (*diTauLegsP4)[0].Pt());
+	}
 
-	//HLTTau = turnOnTauMuTauAll->Eval( (*diTauLegsP4)[1].Pt() );
 	HLTTau = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?  
-	  turnOnTauMuTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) : turnOnTauMuTauAllEC->Eval( (*diTauLegsP4)[1].Pt() ) ;
+	  turnOnTauMuTauBL->Eval( (*diTauLegsP4)[1].Pt() ) : turnOnTauMuTauEC->Eval( (*diTauLegsP4)[1].Pt() ) ;
 
 	SFTau = 1.0;
 	//eta region 0.8, 1.2, 2.1
@@ -1814,15 +1840,43 @@ void makeTrees_MuTauStream(string analysis_ = "", string sample_ = "", float xse
       HLTxQCD = 1.0;
       HLTmatchQCD = 1.0;
 
-      //HLTweightTau = ratioTauMuTauAll->Eval( (*diTauLegsP4)[1].Pt() );
+      if((*diTauLegsP4)[0].Eta()>0){
+	if( TMath::Abs((*diTauLegsP4)[0].Eta())<0.8)
+	  HLTweightMu = ratioMuAllBL1Pos->Eval( (*diTauLegsP4)[0].Pt());
+	else if( TMath::Abs((*diTauLegsP4)[0].Eta())<1.2)
+	  HLTweightMu = ratioMuAllBL2Pos->Eval( (*diTauLegsP4)[0].Pt());
+	else
+	  HLTweightMu = ratioMuAllECPos->Eval( (*diTauLegsP4)[0].Pt());
+      }
+      else{
+	if( TMath::Abs((*diTauLegsP4)[0].Eta())<0.8)
+	  HLTweightMu = ratioMuAllBL1Neg->Eval( (*diTauLegsP4)[0].Pt());
+	else if( TMath::Abs((*diTauLegsP4)[0].Eta())<1.2)
+	  HLTweightMu = ratioMuAllBL2Neg->Eval( (*diTauLegsP4)[0].Pt());
+	else
+	  HLTweightMu = ratioMuAllECNeg->Eval( (*diTauLegsP4)[0].Pt());
+      }
       HLTweightTau  = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?  
-	ratioTauMuTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) : ratioTauMuTauAllEC->Eval( (*diTauLegsP4)[1].Pt() );
-      HLTweightMu  = TMath::Abs((*diTauLegsP4)[0].Eta())<1.2 ?  
-	ratioMuAllBL->Eval( (*diTauLegsP4)[0].Pt() ) : ratioMuAllEC->Eval( (*diTauLegsP4)[0].Pt() );
-      HLTMu  = TMath::Abs((*diTauLegsP4)[0].Eta())<1.2 ? 
-	turnOnMuAllBL->Eval( (*diTauLegsP4)[0].Pt() ) : turnOnMuAllEC->Eval( (*diTauLegsP4)[0].Pt() );
+	ratioTauMuTauBL->Eval( (*diTauLegsP4)[1].Pt() ) : ratioTauMuTauEC->Eval( (*diTauLegsP4)[1].Pt() );
+      if((*diTauLegsP4)[0].Eta()>0){
+	if( TMath::Abs((*diTauLegsP4)[0].Eta())<0.8)
+	  HLTMu = turnOnMuAllBL1Pos->Eval( (*diTauLegsP4)[0].Pt());
+	else if( TMath::Abs((*diTauLegsP4)[0].Eta())<1.2)
+	  HLTMu = turnOnMuAllBL2Pos->Eval( (*diTauLegsP4)[0].Pt());
+	else
+	  HLTMu = turnOnMuAllECPos->Eval( (*diTauLegsP4)[0].Pt());
+      }
+      else{
+	if( TMath::Abs((*diTauLegsP4)[0].Eta())<0.8)
+	  HLTMu = turnOnMuAllBL1Neg->Eval( (*diTauLegsP4)[0].Pt());
+	else if( TMath::Abs((*diTauLegsP4)[0].Eta())<1.2)
+	  HLTMu = turnOnMuAllBL2Neg->Eval( (*diTauLegsP4)[0].Pt());
+	else
+	  HLTMu = turnOnMuAllECNeg->Eval( (*diTauLegsP4)[0].Pt());
+      }
       HLTTau = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
-	turnOnTauMuTauAllBL->Eval( (*diTauLegsP4)[1].Pt() ) : turnOnTauMuTauAllEC->Eval( (*diTauLegsP4)[1].Pt() ); 
+	turnOnTauMuTauBL->Eval( (*diTauLegsP4)[1].Pt() ) : turnOnTauMuTauEC->Eval( (*diTauLegsP4)[1].Pt() );
+
       SFTau  = 1.0;
       //eta region 0.8, 1.2, 2.1
       if(TMath::Abs((*diTauLegsP4)[0].Eta())<=0.8)
