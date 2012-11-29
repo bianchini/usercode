@@ -436,6 +436,11 @@ process.selectedPatElectronsUserEmbedded = cms.EDProducer(
     #inputFileNameMVADaniele = cms.FileInPath('Bianchi/Utilities/data/mvaEleId/TMVA_BDTSimpleCat.weights.xml')
     )
 
+process.selectedPatElectronsUserEmbeddedIso = cms.EDProducer(
+    "ElectronsUserEmbeddedIso",
+    electronTag = cms.InputTag("selectedPatElectronsUserEmbedded")
+    )
+
 process.selectedPatTausUserEmbedded = cms.EDProducer(
     "TausUserEmbedded",
     tauTag    = cms.InputTag("selectedPatTaus"),
@@ -488,7 +493,7 @@ process.muPtEtaRelIDRelIso = cms.EDFilter(
     "PATMuonSelector",
     src = cms.InputTag("selectedPatMuonsUserEmbedded"),
     cut = cms.string(process.muPtEtaRelID.cut.value()+
-                     " && userFloat('PFRelIsoDB04')<0.20"),
+                     " && userFloat('PFRelIsoDB04v2')<0.20"),
     filter = cms.bool(False)
     )
 
@@ -644,7 +649,7 @@ simpleCutsWP95 = "(userFloat('nHits')<=1"+ \
 
 process.elecPtEtaRelID = cms.EDFilter(
     "PATElectronSelector",
-    src = cms.InputTag("selectedPatElectronsUserEmbedded"),
+    src = cms.InputTag("selectedPatElectronsUserEmbeddedIso"),
     cut = cms.string("pt>15 && abs(eta)<2.4" +
                      " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2 &&"+
                      simpleCutsVeto
@@ -653,19 +658,19 @@ process.elecPtEtaRelID = cms.EDFilter(
     )
 process.elecPtEtaRelIDRelIso = cms.EDFilter(
     "PATElectronSelector",
-    src = cms.InputTag("selectedPatElectronsUserEmbedded"),
+    src = cms.InputTag("selectedPatElectronsUserEmbeddedIso"),
     cut = cms.string(process.elecPtEtaRelID.cut.value()+
-                     " && userFloat('PFRelIsoDB04')<0.20"
+                     " && userFloat('PFRelIsoDB04v3')<0.20"
                      ),
     filter = cms.bool(False)
     )
 process.electronsForVeto = cms.EDFilter(
     "PATElectronSelector",
-    src = cms.InputTag("selectedPatElectronsUserEmbedded"),
-    cut = cms.string("pt>10 && abs(eta)<2.4" +
+    src = cms.InputTag("selectedPatElectronsUserEmbeddedIso"),
+    cut = cms.string("pt>10 && abs(eta)<2.5" +
                      " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"+
-                     " && ( (abs(eta)<0.80 && userFloat('mvaPOGNonTrig')>0.925) || (abs(eta)<1.479 && abs(eta)>0.80 && userFloat('mvaPOGNonTrig')>0.975) || (abs(eta)>1.479 && userFloat('mvaPOGNonTrig')>0.985)  )"+
-                     " && userFloat('PFRelIsoDB04')<0.30"),
+                     " && ( ( pt > 20 && (abs(eta)<0.80 && userFloat('mvaPOGNonTrig')>0.905) || (abs(eta)<1.479 && abs(eta)>0.80 && userFloat('mvaPOGNonTrig')>0.955) || (abs(eta)>1.479 && userFloat('mvaPOGNonTrig')>0.975) ) || (pt < 20 && (abs(eta)<0.80 && userFloat('mvaPOGNonTrig')>0.925) || (abs(eta)<1.479 && abs(eta)>0.80 && userFloat('mvaPOGNonTrig')>0.915) || (abs(eta)>1.479 && userFloat('mvaPOGNonTrig')>0.965) ))"+
+                     " && userFloat('PFRelIsoDB04v3')<0.30"),
     filter = cms.bool(False)
     )
 
@@ -746,6 +751,7 @@ process.skim = cms.Sequence(
     ##process.kt6PFJetsNeutral*
     process.selectedPatMuonsUserEmbedded*
     process.selectedPatElectronsUserEmbedded*
+    process.selectedPatElectronsUserEmbeddedIso*
     (process.elecPtEtaRelID+process.elecPtEtaRelIDRelIso+process.electronsForVeto)*
     process.selectedPatTausUserEmbedded*
     process.alLeastOneMuTauSequence*
@@ -831,6 +837,8 @@ process.out.outputCommands.extend( cms.vstring(
     'drop *_selectedPatElectrons_*_*',
     'drop *_selectedPatTaus_*_*',
     'drop *_selectedPatMuonsUserEmbedded_*_*',
+    'drop *_selectedPatElectronsUserEmbedded_*_*',
+    'drop *_selectedPatElectronsUserEmbeddedIso_*_*',
     'drop *_selectedPatTausUserEmbedded_*_*',
     'keep *_puJetId_*_*',
     'keep *_puJetMva_*_*',
