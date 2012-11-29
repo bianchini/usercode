@@ -669,7 +669,7 @@ process.electronsForVeto = cms.EDFilter(
     src = cms.InputTag("selectedPatElectronsUserEmbeddedIso"),
     cut = cms.string("pt>10 && abs(eta)<2.5" +
                      " && abs(userFloat('dxyWrtPV'))<0.045 && abs(userFloat('dzWrtPV'))<0.2"+
-                     " && ( ( pt > 20 && (abs(eta)<0.80 && userFloat('mvaPOGNonTrig')>0.905) || (abs(eta)<1.479 && abs(eta)>0.80 && userFloat('mvaPOGNonTrig')>0.955) || (abs(eta)>1.479 && userFloat('mvaPOGNonTrig')>0.975) ) || (pt < 20 && (abs(eta)<0.80 && userFloat('mvaPOGNonTrig')>0.925) || (abs(eta)<1.479 && abs(eta)>0.80 && userFloat('mvaPOGNonTrig')>0.915) || (abs(eta)>1.479 && userFloat('mvaPOGNonTrig')>0.965) ))"+
+                     " && ( ( pt > 20 && ( (abs(eta)<0.80 && userFloat('mvaPOGNonTrig')>0.905) || (abs(eta)<1.479 && abs(eta)>0.80 && userFloat('mvaPOGNonTrig')>0.955) || (abs(eta)>1.479 && userFloat('mvaPOGNonTrig')>0.975) )) || (pt < 20 && ( (abs(eta)<0.80 && userFloat('mvaPOGNonTrig')>0.925) || (abs(eta)<1.479 && abs(eta)>0.80 && userFloat('mvaPOGNonTrig')>0.915) || (abs(eta)>1.479 && userFloat('mvaPOGNonTrig')>0.965) )))"+
                      " && userFloat('PFRelIsoDB04v3')<0.30"),
     filter = cms.bool(False)
     )
