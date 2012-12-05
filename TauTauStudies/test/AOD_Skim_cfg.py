@@ -78,6 +78,7 @@ process.HLTFilterMuTau = cms.EDFilter(
                                      "HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v*",
                                      "HLT_IsoMu15_eta2p1_L1ETM20_v*",
                                      "HLT_IsoMu8_eta2p1_LooseIsoPFTau20_L1ETM26_v*",
+                                     "HLT_IsoMu8_eta2p1_LooseIsoPFTau20_v*",#monitoring
                                      ),
     eventSetupPathsKey = cms.string(''),
     andOr              = cms.bool(True),   # OR
@@ -89,6 +90,7 @@ process.HLTFilterEleTau = process.HLTFilterMuTau.clone()
 process.HLTFilterEleTau.HLTPaths = cms.vstring("HLT_Ele20_CaloIdVT_CaloIsoRhoT_TrkIdT_TrkIsoT_LooseIsoPFTau20_v*",
                                                "HLT_Ele22_eta2p1_WP90Rho_LooseIsoPFTau20_v*",
                                                "HLT_Ele13_eta2p1_WP90Rho_LooseIsoPFTau20_L1ETM36_v*",
+                                               "HLT_Ele13_eta2p1_WP90Rho_LooseIsoPFTau20_v*",#monitoring
                                                )
 
 ### to "emulate" e/mu+tau_etm triggers in MC
