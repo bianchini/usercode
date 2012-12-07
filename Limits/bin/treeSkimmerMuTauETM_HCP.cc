@@ -60,6 +60,7 @@
 #define USEFAKERATE false
 #define DOSVFITSTANDALONE false
 #define DOVBFMVA true
+#define READSOFT true
 
 using namespace ROOT::Math;
 using namespace std;
@@ -980,8 +981,8 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
   currentTree->SetBranchStatus("pZetaVis"              ,0);
   currentTree->SetBranchStatus("pZetaSig"              ,1);
   currentTree->SetBranchStatus("metSgnMatrix"          ,1);
-  currentTree->SetBranchStatus("l1ETMP4"               ,1);//MB
-  currentTree->SetBranchStatus("caloMETP4"             ,1);//MB
+  if(READSOFT) currentTree->SetBranchStatus("l1ETMP4"  ,1);//MB
+  if(READSOFT) currentTree->SetBranchStatus("caloMETP4",1);//MB
 
   // generator-level boson
   currentTree->SetBranchStatus("genVP4"                ,1);
@@ -1028,8 +1029,8 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
   // triggers
   currentTree->SetBranchStatus("tauXTriggers"          ,1);
   currentTree->SetBranchStatus("triggerBits"           ,1);
-  currentTree->SetBranchStatus("trgTaus"               ,1);//MB
-  currentTree->SetBranchStatus("trgTauId"              ,1);//MB
+  if(READSOFT) currentTree->SetBranchStatus("trgTaus"               ,1);//MB
+  if(READSOFT) currentTree->SetBranchStatus("trgTauId"              ,1);//MB
 
   cout << "SetBranchStatus done" << endl;
 
@@ -1078,10 +1079,10 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
   currentTree->SetBranchAddress("METP4",           &METP4);
 
   std::vector< LV >* l1ETMP4        = new std::vector< LV >();//MB
-  currentTree->SetBranchAddress("l1ETMP4",         &l1ETMP4); //MB
+  if(READSOFT) currentTree->SetBranchAddress("l1ETMP4",         &l1ETMP4); //MB
 
   std::vector< LV >* caloMETP4      = new std::vector< LV >();//MB
-  currentTree->SetBranchAddress("caloMETP4",       &caloMETP4); //MB
+  if(READSOFT) currentTree->SetBranchAddress("caloMETP4",       &caloMETP4); //MB
 
   std::vector< LV >* genMETP4          = new std::vector< LV >();
   currentTree->SetBranchAddress("genMETP4",        &genMETP4);
@@ -1092,9 +1093,9 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
   currentTree->SetBranchAddress("triggerBits",     &triggerBits);
 
   std::vector< LV >* trgTaus        = new std::vector< LV >();//MB
-  currentTree->SetBranchAddress("trgTaus",         &trgTaus);//MB
+  if(READSOFT) currentTree->SetBranchAddress("trgTaus",         &trgTaus);//MB
   std::vector< int >* trgTauId   = new std::vector< int >();//MB
-  currentTree->SetBranchAddress("trgTauId",        &trgTauId);//MB
+  if(READSOFT) currentTree->SetBranchAddress("trgTauId",        &trgTauId);//MB
 
   std::vector< double >* jetsBtagHE = new std::vector< double >();
   currentTree->SetBranchAddress("jetsBtagHE",      &jetsBtagHE);
