@@ -610,7 +610,8 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
   float HLTx,HLTmu,HLTmatch,HLTweightTau, HLTweightMu, SFMu, SFTau, HLTMu, HLTTau;
   float HLTxQCD,HLTmatchQCD; //for QCD estimation
   float SFMuID, SFMuIso;
-  float HLTweightMuSoft, HLTMuSoft, SFMuSoft; //MB
+  float HLTweightMuSoft, HLTMuSoft; //MB
+  float HLTweightMuD, HLTMuD, HLTweightTauD, HLTTauD; //ND -> D only performance (for comparison)
   float HLTxETM,HLTmatchETM; //MB
   int isTauLegMatched_,muFlag_,isPFMuon_,isTightMuon_,genDecay_,leptFakeTau;
   int vetoEvent_, leptonVeto_;
@@ -817,11 +818,15 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
   outTreePtOrd->Branch("HLTmu",        &HLTmu,"HLTmu/F");
   outTreePtOrd->Branch("HLTmatch",     &HLTmatch,"HLTmatch/F");
   outTreePtOrd->Branch("HLTweightMu",  &HLTweightMu,"HLTweightMu/F");
-  outTreePtOrd->Branch("HLTweightMuSoft",  &HLTweightMuSoft,"HLTweightMuSoft/F"); //MB
+  outTreePtOrd->Branch("HLTweightMuD", &HLTweightMuD,"HLTweightMuD/F");
+  outTreePtOrd->Branch("HLTweightMuSoft",&HLTweightMuSoft,"HLTweightMuSoft/F"); //MB
   outTreePtOrd->Branch("HLTweightTau", &HLTweightTau,"HLTweightTau/F");
+  outTreePtOrd->Branch("HLTweightTauD",&HLTweightTauD,"HLTweightTauD/F");
   outTreePtOrd->Branch("HLTMu",        &HLTMu,"HLTMu/F");
+  outTreePtOrd->Branch("HLTMuD",       &HLTMuD,"HLTMuD/F");
   outTreePtOrd->Branch("HLTMuSoft",    &HLTMuSoft,"HLTMuSoft/F"); //MB
   outTreePtOrd->Branch("HLTTau",       &HLTTau,"HLTTau/F");
+  outTreePtOrd->Branch("HLTTauD",      &HLTTauD,"HLTTauD/F");
   outTreePtOrd->Branch("SFTau",        &SFTau,"SFTau/F");
   outTreePtOrd->Branch("SFMu",         &SFMu,"SFMu/F");
   outTreePtOrd->Branch("SFMuID",       &SFMuID,"SFMuID/F");
@@ -1841,13 +1846,17 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
       L1etmWeight_ = 1;    //no correction for data
       L1etmCorr_ = L1etm_; //no correction for data
 
-      HLTweightTau = 1.0;
-      HLTweightMu  = 1.0;
-      HLTweightMuSoft  = 1.0;
-      HLTmu        = 1.0;
-      HLTMu  = 1.0;
-      HLTTau = 1.0;
-      HLTMuSoft  = 1.0;
+      HLTweightTau  = 1.0;
+      HLTweightMu   = 1.0;
+      HLTweightTauD = 1.0;
+      HLTweightMuD  = 1.0;
+      HLTweightMuSoft = 1.0;
+      HLTmu   = 1.0;
+      HLTMu   = 1.0;
+      HLTTau  = 1.0;
+      HLTMuD  = 1.0;
+      HLTTauD = 1.0;
+      HLTMuSoft = 1.0;
       SFTau  = 1.0;
       SFMu   = 1.0;
       SFMuID = 1.0;
@@ -1889,12 +1898,16 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
       // Tau
       SFTau  = 1.0;
       if( TMath::Abs(etaL2)<1.5 ) {
-	HLTTau       = turnOnTauMuTauRunDBL->Eval( ptL2 );
-	HLTweightTau = ratioTauMuTauRunDBL->Eval( ptL2 );
+	HLTTau        = turnOnTauMuTauBL->Eval( ptL2 );
+	HLTweightTau  = ratioTauMuTauBL ->Eval( ptL2 );
+	HLTTauD       = turnOnTauMuTauRunDBL->Eval( ptL2 );
+	HLTweightTauD = ratioTauMuTauRunDBL ->Eval( ptL2 );
       }
       else {
-	HLTTau       = turnOnTauMuTauRunDEC->Eval( ptL2 );
-	HLTweightTau = ratioTauMuTauRunDEC->Eval( ptL2 );
+	HLTTau        = turnOnTauMuTauEC->Eval( ptL2 );
+	HLTweightTau  = ratioTauMuTauEC ->Eval( ptL2 );
+	HLTTauD       = turnOnTauMuTauRunDEC->Eval( ptL2 );
+	HLTweightTauD = ratioTauMuTauRunDEC ->Eval( ptL2 );
       }
       
       // Muon
@@ -1905,15 +1918,19 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
 	SFMu    = SFMuID*SFMuIso;
 
 	if(etaL1>0){
-	  HLTweightMu     = ratioMuRunCBL1Pos->Eval( ptL1);
-	  HLTweightMuSoft = ratioMuRunCBL1Pos->Eval( ptL1+(17.-8.));
-	  HLTMu           = turnOnMuRunCBL1Pos->Eval( ptL1);
+	  HLTweightMu     = ratioMuAllBL1Pos  ->Eval( ptL1);
+	  HLTweightMuD    = ratioMuRunCBL1Pos ->Eval( ptL1);
+	  HLTweightMuSoft = ratioMuRunCBL1Pos ->Eval( ptL1+(17.-8.));
+	  HLTMu           = turnOnMuAllBL1Pos ->Eval( ptL1);
+	  HLTMuD          = turnOnMuRunCBL1Pos->Eval( ptL1);
 	  HLTMuSoft       = turnOnMuRunCBL1Pos->Eval( ptL1+(17.-8.));
 	}
 	else {
-	  HLTweightMu     = ratioMuRunCBL1Neg->Eval( ptL1);
-	  HLTweightMuSoft = ratioMuRunCBL1Neg->Eval( ptL1+(17.-8.));
+	  HLTweightMu     = ratioMuAllBL1Neg  ->Eval( ptL1);
+	  HLTweightMuD    = ratioMuRunCBL1Neg ->Eval( ptL1);
+	  HLTweightMuSoft = ratioMuRunCBL1Neg ->Eval( ptL1+(17.-8.));
 	  HLTMu           = turnOnMuRunCBL1Neg->Eval( ptL1);
+	  HLTMuD          = turnOnMuAllBL1Neg ->Eval( ptL1);
 	  HLTMuSoft       = turnOnMuRunCBL1Neg->Eval( ptL1+(17.-8.));
 	}
       }
@@ -1923,15 +1940,19 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
 	SFMu    = SFMuID*SFMuIso;
 
 	if(etaL1>0){
-	  HLTweightMu     = ratioMuRunCBL2Pos->Eval( ptL1);
-	  HLTweightMuSoft = ratioMuRunCBL2Pos->Eval( ptL1+(17.-8.));
-	  HLTMu           = turnOnMuRunCBL2Pos->Eval( ptL1);
+	  HLTweightMu     = ratioMuAllBL2Pos  ->Eval( ptL1);
+	  HLTweightMuD    = ratioMuRunCBL2Pos ->Eval( ptL1);
+	  HLTweightMuSoft = ratioMuRunCBL2Pos ->Eval( ptL1+(17.-8.));
+	  HLTMu           = turnOnMuAllBL2Pos ->Eval( ptL1);
+	  HLTMuD          = turnOnMuRunCBL2Pos->Eval( ptL1);
 	  HLTMuSoft       = turnOnMuRunCBL2Pos->Eval( ptL1+(17.-8.));
 	}
 	else {
-	  HLTweightMu     = ratioMuRunCBL2Neg->Eval( ptL1);
-	  HLTweightMuSoft = ratioMuRunCBL2Neg->Eval( ptL1+(17.-8.));
-	  HLTMu           = turnOnMuRunCBL2Neg->Eval( ptL1);
+	  HLTweightMu     = ratioMuAllBL2Neg  ->Eval( ptL1);
+	  HLTweightMuD    = ratioMuRunCBL2Neg ->Eval( ptL1);
+	  HLTweightMuSoft = ratioMuRunCBL2Neg ->Eval( ptL1+(17.-8.));
+	  HLTMu           = turnOnMuAllBL2Neg ->Eval( ptL1);
+	  HLTMuD          = turnOnMuRunCBL2Neg->Eval( ptL1);
 	  HLTMuSoft       = turnOnMuRunCBL2Neg->Eval( ptL1+(17.-8.));
 	}
       }
@@ -1941,15 +1962,19 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
 	SFMu    = SFMuID*SFMuIso;
 
 	if(etaL1>0){
-	  HLTweightMu     = ratioMuRunCECPos->Eval( ptL1);
-	  HLTweightMuSoft = ratioMuRunCECPos->Eval( ptL1+(17.-8.));
-	  HLTMu           = turnOnMuRunCECPos->Eval( ptL1);
+	  HLTweightMu     = ratioMuAllECPos  ->Eval( ptL1);
+	  HLTweightMuD    = ratioMuRunCECPos ->Eval( ptL1);
+	  HLTweightMuSoft = ratioMuRunCECPos ->Eval( ptL1+(17.-8.));
+	  HLTMu           = turnOnMuAllECPos ->Eval( ptL1);
+	  HLTMuD          = turnOnMuRunCECPos->Eval( ptL1);
 	  HLTMuSoft       = turnOnMuRunCECPos->Eval( ptL1+(17.-8.));
 	}
 	else {
-	  HLTweightMu     = ratioMuRunCECNeg->Eval( ptL1);
-	  HLTweightMuSoft = ratioMuRunCECNeg->Eval( ptL1+(17.-8.));
-	  HLTMu           = turnOnMuRunCECNeg->Eval( ptL1);
+	  HLTweightMu     = ratioMuAllECNeg  ->Eval( ptL1);
+	  HLTweightMuD    = ratioMuRunCECNeg ->Eval( ptL1);
+	  HLTweightMuSoft = ratioMuRunCECNeg ->Eval( ptL1+(17.-8.));
+	  HLTMu           = turnOnMuAllECNeg ->Eval( ptL1);
+	  HLTMuD          = turnOnMuRunCECNeg->Eval( ptL1);
 	  HLTMuSoft       = turnOnMuRunCECNeg->Eval( ptL1+(17.-8.));
 	}
       }
