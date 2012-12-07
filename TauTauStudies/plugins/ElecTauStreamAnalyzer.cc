@@ -178,7 +178,9 @@ void ElecTauStreamAnalyzer::beginJob(){
   
   leptonJets_       = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   extraElectrons_   = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
-  vetoLeptonsP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  vetoMuonsP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  vetoElectronsP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
+  vetoTausP4_    = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
   pfElectrons_      = new std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >();
 
   //antiE_  = new AntiElectronIDMVA();
@@ -331,7 +333,9 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("leptonJets","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&leptonJets_);
   tree_->Branch("extraElectrons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&extraElectrons_);
   tree_->Branch("pfElectrons","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&pfElectrons_);
-  tree_->Branch("vetoLeptonsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&vetoLeptonsP4_);
+  tree_->Branch("vetoMuonsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&vetoMuonsP4_);
+  tree_->Branch("vetoTausP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&vetoTausP4_);
+  tree_->Branch("vetoElectronsP4","std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&vetoElectronsP4_);
 
   tree_->Branch("sumEt",&sumEt_,"sumEt/F");
   tree_->Branch("mTauTauMin",&mTauTauMin_,"mTauTauMin/F");
@@ -466,7 +470,8 @@ ElecTauStreamAnalyzer::~ElecTauStreamAnalyzer(){
   delete diTauLegsP4_; delete jetsBtagHE_; delete jetsBtagHP_; delete jetsBtagCSV_;
   delete bQuark_;
   delete tauXTriggers_; delete triggerBits_; delete sigDCA_;
-  delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;delete extraElectrons_; delete vetoLeptonsP4_;
+  delete genJetsIDP4_; delete genDiTauLegsP4_; delete genMETP4_;delete extraElectrons_; 
+  delete vetoElectronsP4_; delete vetoTausP4_; delete vetoMuonsP4_; 
   delete pfElectrons_;
   delete genTausP4_;
   delete jetsChNfraction_; delete jetsChEfraction_; delete jetMoments_;
@@ -486,7 +491,9 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   genTausP4_->clear();
   pfElectrons_->clear();
   triggerBits_->clear();
-  vetoLeptonsP4_->clear();
+  vetoMuonsP4_->clear();
+  vetoTausP4_->clear();
+  vetoElectronsP4_->clear();
 
   edm::ESHandle<TransientTrackBuilder> builder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",builder);
@@ -779,7 +786,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   }
   
 
-  /////////////////////////
+  // Loose leptons for veto //
   vetoEvent_ = 0;
   
   edm::Handle<pat::MuonCollection> muonsForVetoHandle;
@@ -790,60 +797,25 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
   iEvent.getByLabel( "electronsForVeto" , electronsForVetoHandle);
   iEvent.getByLabel( "tausForVeto" ,      tausForVetoHandle);
 
-  if( muonsForVetoHandle.isValid() && electronsForVetoHandle.isValid() && tausForVetoHandle.isValid()){
-
+  if( muonsForVetoHandle.isValid() ) {
     const pat::MuonCollection* muonsForVeto         = muonsForVetoHandle.product();
+    for(unsigned int l = 0; l < muonsForVeto->size() ; l++)
+      vetoMuonsP4_->push_back((*muonsForVeto)[l].p4());
+  }
+  
+  if( electronsForVetoHandle.isValid() ) {
     const pat::ElectronCollection* electronsForVeto = electronsForVetoHandle.product();
+    for(unsigned int l = 0; l < electronsForVeto->size() ; l++)
+      vetoElectronsP4_->push_back((*electronsForVeto)[l].p4());
+  }
+
+  if( tausForVetoHandle.isValid() ) {
     const pat::TauCollection* tausForVeto           = tausForVetoHandle.product();
-
-    std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > > buffer;
-
-    int nMuonsForVeto = 0; int nElectronsForVeto = 0; int nTausForVeto = 0;
-    bool alreadyThere = false;
-
-    for(unsigned int l = 0; l < muonsForVeto->size() ; l++){
-      vetoLeptonsP4_->push_back((*muonsForVeto)[l].p4());
-      nMuonsForVeto++;
-    }
-    for( unsigned int l = 0; l < electronsForVeto->size() ; l++ ){
-      for(unsigned int m = 0; m < vetoLeptonsP4_->size() && !alreadyThere; m++){
-	if( Geom::deltaR( (*electronsForVeto)[l].p4(), (*vetoLeptonsP4_)[m] ) < 0.3 ) alreadyThere = true;
-      }
-      if(!alreadyThere){
-	//cout << "new electron eta " <<  (*electronsForVeto)[l].eta() << endl;
-	buffer.push_back((*electronsForVeto)[l].p4());
-	nElectronsForVeto++;
-      }
-    }
-    for(unsigned int m = 0; m < buffer.size() ; m++) vetoLeptonsP4_->push_back( buffer[m] );
-    buffer.clear();
-    alreadyThere = false;
-
-    for( unsigned int l = 0; l < tausForVeto->size() ; l++ ){
-      for(unsigned int m = 0; m < vetoLeptonsP4_->size() ; m++){
-	if( Geom::deltaR( (*tausForVeto)[l].p4(), (*vetoLeptonsP4_)[m] ) < 0.3 ) alreadyThere = true;
-      }
-      if(!alreadyThere){
-	//cout << "new taus eta " <<  (*tausForVeto)[l].eta() << endl;
-	buffer.push_back((*tausForVeto)[l].p4());
-	nTausForVeto++;
-      }
-    }
-    for(unsigned int m = 0; m < buffer.size() ; m++) vetoLeptonsP4_->push_back( buffer[m] );
-    buffer.clear();
-
-    if( nMuonsForVeto+nElectronsForVeto+nTausForVeto >= 3 ){
-      vetoEvent_ = 1;
-      //cout << "Muons " << nMuonsForVeto << endl;
-      //cout << "Electrons " << nElectronsForVeto << endl;
-      //cout << "Taus " <<  nTausForVeto << endl;
-    }
-    else
-      vetoEvent_ = 0;
+    for(unsigned int l = 0; l < tausForVeto->size() ; l++)
+      vetoTausP4_->push_back((*tausForVeto)[l].p4());
   }
 
   /////////////////////////
-
 
 
   const PATElecTauPair *theDiTau = 0;
