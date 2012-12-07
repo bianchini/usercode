@@ -706,6 +706,7 @@ process.tauPtEtaIDAgMu  = cms.EDFilter(
                      " && tauID('againstMuonTight')>0.5"),
     filter = cms.bool(False)
     )
+
 process.atLeastOneMuTautauPtEtaIDAgMu = process.atLeastOneMuTau.clone(
     decay=cms.string("muPtEtaID tauPtEtaIDAgMu")
     )
@@ -722,6 +723,7 @@ process.tauPtEtaIDAgMuAgElec  = cms.EDFilter(
                      " && tauID('againstElectronLoose')>0.5"),
     filter = cms.bool(False)
     )
+
 process.atLeastOneMuTautauPtEtaIDAgMuAgElec = process.atLeastOneMuTau.clone(
     decay=cms.string("muPtEtaID tauPtEtaIDAgMuAgElec")
     )
@@ -921,7 +923,7 @@ process.elecTauPtEtaIDCounter = cms.EDFilter(
 
 '''
 #MB already defined -> use different name
-process.tauPtEtaIDAgMu  = cms.EDFilter(
+#MBprocess.tauPtEtaIDAgMu  = cms.EDFilter(
 '''
 process.tauPtEtaIDAgMuL  = cms.EDFilter(
     "PATTauSelector",
@@ -943,7 +945,7 @@ process.elecTauPtEtaIDAgMuCounter = cms.EDFilter(
 
 '''
 #MB already defined -> use different name
-process.tauPtEtaIDAgMuAgElec  = cms.EDFilter(
+#MBprocess.tauPtEtaIDAgMuAgElec  = cms.EDFilter(
 '''
 process.tauPtEtaIDAgMuLAgElec  = cms.EDFilter(
     "PATTauSelector",
@@ -952,7 +954,7 @@ process.tauPtEtaIDAgMuLAgElec  = cms.EDFilter(
                      " && tauID('againstElectronLoose')>0.5"),
     filter = cms.bool(False)
     )
-
+    
 process.atLeastOneElecTautauPtEtaIDAgMuAgElec = process.atLeastOneElecTau.clone(
     decay=cms.string("elecPtEtaID tauPtEtaIDAgMuLAgElec")
     )
@@ -965,7 +967,7 @@ process.elecTauPtEtaIDAgMuAgElecCounter = cms.EDFilter(
 
 '''
 #MB already defined -> use different name
-process.tauPtEtaIDAgMuAgElecRelIso  = cms.EDFilter(
+#MBprocess.tauPtEtaIDAgMuAgElecRelIso  = cms.EDFilter(
 '''
 process.tauPtEtaIDAgMuLAgElecRelIso  = cms.EDFilter(
     "PATTauSelector",
@@ -974,7 +976,6 @@ process.tauPtEtaIDAgMuLAgElecRelIso  = cms.EDFilter(
                      " && tauID('byVLooseCombinedIsolationDeltaBetaCorr')>0.5"),
     filter = cms.bool(False)
     )
-
 
 '''
 #MB: needed?
@@ -1061,9 +1062,9 @@ process.muLegSequence = cms.Sequence(
 process.tauLegForMuTauSequence = cms.Sequence(
     (process.tauPtEta*process.atLeastOneMuTautauPtEta*process.tauPtEtaCounter*process.tauPtEtaFilter) *
     (process.tauPtEtaID*process.atLeastOneMuTautauPtEtaID*process.tauPtEtaIDCounter*process.tauPtEtaIDFilter) *
-    (process.tauPtEtaIDAgMu*process.atLeastOneMuTautauPtEtaIDAgMu*process.tauPtEtaIDAgMuCounter*process.tauPtEtaIDAgMuFilter)*
-    (process.tauPtEtaIDAgMuAgElec*process.atLeastOneMuTautauPtEtaIDAgMuAgElec*process.tauPtEtaIDAgMuAgElecCounter*process.tauPtEtaIDAgMuAgElecFilter)*
-    process.tauPtEtaIDAgMuAgElecRelIso#MB*process.tausForVeto 
+    (process.tauPtEtaIDAgMu*process.tauPtEtaIDAgMuL*process.atLeastOneMuTautauPtEtaIDAgMu*process.tauPtEtaIDAgMuCounter*process.tauPtEtaIDAgMuFilter)*
+    (process.tauPtEtaIDAgMuAgElec*process.tauPtEtaIDAgMuLAgElec*process.atLeastOneMuTautauPtEtaIDAgMuAgElec*process.tauPtEtaIDAgMuAgElecCounter*process.tauPtEtaIDAgMuAgElecFilter)*
+    process.tauPtEtaIDAgMuAgElecRelIso*process.tauPtEtaIDAgMuLAgElecRelIso#MB*process.tausForVeto 
     )
 
 process.atLeastOneElecTauSequence = cms.Sequence(
@@ -1080,11 +1081,14 @@ process.elecLegSequence = cms.Sequence(
 process.tauLegForElecTauSequence = cms.Sequence(
     (process.tauPtEta*process.atLeastOneElecTautauPtEta*process.elecTauPtEtaCounter*process.elecTauPtEtaFilter) *
     (process.tauPtEtaID*process.atLeastOneElecTautauPtEtaID*process.elecTauPtEtaIDCounter*process.elecTauPtEtaIDFilter) *
-    (process.tauPtEtaIDAgMuL*process.atLeastOneElecTautauPtEtaIDAgMu*process.elecTauPtEtaIDAgMuCounter*process.elecTauPtEtaIDAgMuFilter)*
-    (process.tauPtEtaIDAgMuLAgElec*process.atLeastOneElecTautauPtEtaIDAgMuAgElec*process.elecTauPtEtaIDAgMuAgElecCounter*process.elecTauPtEtaIDAgMuAgElecFilter)*
-    process.tauPtEtaIDAgMuLAgElecRelIso#MB*process.tausForVeto
+    (process.tauPtEtaIDAgMu*process.tauPtEtaIDAgMuL*process.atLeastOneElecTautauPtEtaIDAgMu*process.elecTauPtEtaIDAgMuCounter*process.elecTauPtEtaIDAgMuFilter)*
+    (process.tauPtEtaIDAgMuAgElec*process.tauPtEtaIDAgMuLAgElec*process.atLeastOneElecTautauPtEtaIDAgMuAgElec*process.elecTauPtEtaIDAgMuAgElecCounter*process.elecTauPtEtaIDAgMuAgElecFilter)*
+    process.tauPtEtaIDAgMuAgElecRelIso*process.tauPtEtaIDAgMuLAgElecRelIso#MB*process.tausForVeto
     )
-
+process.looseLeptonsSequence = cms.Sequence(
+    process.muPtEtaID+process.muPtEtaRelID
+    +process.elecPtEtaID+process.elecPtEtaRelID
+    )
 process.leptonsForVetoSequence = cms.Sequence(
     process.muonsForVeto+process.electronsForVeto+process.tausForVeto
     )
@@ -1125,6 +1129,7 @@ process.jetCleaningSequence = cms.Sequence(
 ########################## paths ###############################
 process.commonOfflineSequence = cms.Sequence(
     process.atLeastOneGoodVertexSequence*
+    process.PFTau*
     process.pfParticleSelectionSequence*
     process.muIsoSequence*
     process.electronIsoSequence*
@@ -1133,6 +1138,7 @@ process.commonOfflineSequence = cms.Sequence(
     process.puJetIdSqeuence *
     ##process.kt6PFJetsNeutral*
     process.patLeptonsUserEmbeddedSequnce*
+    process.looseLeptonsSequence*
     process.leptonsForVetoSequence
     +process.hltPFTauSequence
     )
