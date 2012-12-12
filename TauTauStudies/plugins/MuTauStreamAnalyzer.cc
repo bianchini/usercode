@@ -786,6 +786,8 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   iEvent.getByLabel( "electronsForVeto" , electronsForVetoHandle);
   iEvent.getByLabel( "tausForVeto" ,      tausForVetoHandle);
 
+  std::vector< ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > > buffer;
+  bool alreadyThere = false;
   if( muonsForVetoHandle.isValid() ) {
     const pat::MuonCollection* muonsForVeto         = muonsForVetoHandle.product();
     for(unsigned int l = 0; l < muonsForVeto->size() ; l++)
@@ -794,15 +796,44 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   
   if( electronsForVetoHandle.isValid() ) {
     const pat::ElectronCollection* electronsForVeto = electronsForVetoHandle.product();
-    for(unsigned int l = 0; l < electronsForVeto->size() ; l++)
-      vetoElectronsP4_->push_back((*electronsForVeto)[l].p4());
+    for( unsigned int l = 0; l < electronsForVeto->size() ; l++ ){
+      alreadyThere = false;
+      for(unsigned int m = 0; m < vetoMuonsP4_->size() && !alreadyThere; m++){
+        if( Geom::deltaR( (*electronsForVeto)[l].p4(), (*vetoMuonsP4_)[m] ) < 0.3 ) alreadyThere = true;
+      }
+      if(!alreadyThere){
+        //cout << "new electron eta " <<  (*electronsForVeto)[l].eta() << endl;
+        buffer.push_back((*electronsForVeto)[l].p4());
+      }
+    }
+    for(unsigned int m = 0; m < buffer.size() ; m++){
+      vetoElectronsP4_->push_back( buffer[m] );
+    }
+    
   }
+  buffer.clear();
+  alreadyThere = false;
 
   if( tausForVetoHandle.isValid() ) {
     const pat::TauCollection* tausForVeto           = tausForVetoHandle.product();
-    for(unsigned int l = 0; l < tausForVeto->size() ; l++)
-      vetoTausP4_->push_back((*tausForVeto)[l].p4());
+    for(unsigned int l = 0; l < tausForVeto->size() ; l++){
+      alreadyThere = false; 
+      for(unsigned int m = 0; m < vetoMuonsP4_->size() ; m++){
+        if( Geom::deltaR( (*tausForVeto)[l].p4(), (*vetoMuonsP4_)[m] ) < 0.3 ) alreadyThere = true;
+      }
+      for(unsigned int m = 0; m < vetoElectronsP4_->size() ; m++){ 
+        if( Geom::deltaR( (*tausForVeto)[l].p4(), (*vetoElectronsP4_)[m] ) < 0.3 ) alreadyThere = true; 
+      }
+      if(!alreadyThere){
+        //cout << "new taus eta " <<  (*tausForVeto)[l].eta() << endl;
+        buffer.push_back((*tausForVeto)[l].p4());
+      }
+    }
+    for(unsigned int m = 0; m < buffer.size() ; m++){
+      vetoTausP4_->push_back( buffer[m] );
+    }
   }
+
   /// l+tau+ETM analysis stuff
   edm::Handle<l1extra::L1MuonParticleCollection> l1muonsHandle; ;
   const l1extra::L1MuonParticleCollection* l1mus = 0;
@@ -1059,16 +1090,16 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
   for(unsigned int i=0; i< diTaus->size(); i++){
     float sumPt    = (((*diTaus)[i].leg1())->pt() + ((*diTaus)[i].leg2())->pt());
     int pairCharge = (((*diTaus)[i].leg1())->charge()*((*diTaus)[i].leg2())->charge());
-
+    float isoMVA = ((*diTaus)[i].leg2())->tauID("byIsolationMVAraw");
     const pat::Tau*  tau_i = dynamic_cast<const pat::Tau*>(  ((*diTaus)[i].leg2()).get() );
-    if(tau_i->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5 ||
+    if(//tau_i->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5 ||
        tau_i->tauID("byLooseIsolationMVA")>0.5)
-      sortedDiTausLooseIso.insert( make_pair( sumPt, i ) );
-    sortedDiTaus.insert( make_pair( sumPt, i ) );
+      sortedDiTausLooseIso.insert( make_pair( isoMVA, i ) );
+    sortedDiTaus.insert( make_pair( isoMVA, i ) );
     if(pairCharge<0) 
-      sortedDiTausOS.insert( make_pair( sumPt, i ) );
+      sortedDiTausOS.insert( make_pair( isoMVA, i ) );
     else
-      sortedDiTausSS.insert( make_pair( sumPt, i ) );
+      sortedDiTausSS.insert( make_pair( isoMVA, i ) );
   }
   if( sortedDiTausOS.size()>0 ) 
     index = (sortedDiTausOS.begin())->second ;
