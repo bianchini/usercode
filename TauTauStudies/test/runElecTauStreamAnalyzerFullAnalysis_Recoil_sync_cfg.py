@@ -42,7 +42,8 @@ process.source = cms.Source(
     #'file:./root/patTuples_ElecTauStream_VBFH125.root'
         #'file:./patTuples_ElecTauStream.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-04May2012-Reload-05AugReReco/396c4fb61647929194f9a223b98504bc/patTuples_ElecTauStream_9_1_kgg.root'
-    'file:patTuples_ElecTauStream.root'     
+    #MB'file:patTuples_ElecTauStream.root'
+    'file:patTuples_LepTauStream.root'     
     )
     )
 
@@ -478,7 +479,8 @@ simpleCutsWP80 = "(userFloat('nHits')==0 && userInt('antiConv')>0.5 "+ \
 
 process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
+    #MBsrc = cms.InputTag("tauPtEtaIDAgMuAgElec"),
+    src = cms.InputTag("tauPtEtaIDAgMuLAgElec"),
     cut = cms.string("pt>20 && abs(eta)<2.3"+
                      " && tauID('byLooseIsolationMVA')>-0.5"+
                      #" && (tauID('againstElectronTight')>0.5 || tauID('againstElectronMVA')>0.5)"
@@ -488,7 +490,8 @@ process.tauPtEtaIDAgMuAgElecIso  = cms.EDFilter(
     )
 process.tauPtEtaIDAgMuAgElecIsoPtRel  = cms.EDFilter(
     "PATTauSelector",
-    src = cms.InputTag("tauPtEtaIDAgMuAgElec"),
+    #MBsrc = cms.InputTag("tauPtEtaIDAgMuAgElec"),
+    src = cms.InputTag("tauPtEtaIDAgMuLAgElec"),
     cut = cms.string("pt>19 && abs(eta)<2.3"+
                      " && tauID('byLooseIsolationMVA')>-0.5"+
                      #" && (tauID('againstElectronTight')>0.5 || tauID('againstElectronMVA')>0.5 )"
@@ -1104,10 +1107,12 @@ process.out = cms.OutputModule(
 
 process.TFileService = cms.Service(
     "TFileService",
-    fileName = cms.string("treeElecTauStream.root")
+    #MBfileName = cms.string("treeElecTauStream.root")
+    fileName = cms.string("treeElecTauStream_new.root")
     )
 
 process.outpath = cms.EndPath()
 
-processDumpFile = open('runElecTauStreamAnalyzerFullAnalysis_Recoil.dump', 'w')
-print >> processDumpFile, process.dumpPython()
+#MB needed?
+#processDumpFile = open('runElecTauStreamAnalyzerFullAnalysis_Recoil.dump', 'w')
+#print >> processDumpFile, process.dumpPython()
