@@ -198,8 +198,8 @@ class ElecTauStreamAnalyzer : public edm::EDAnalyzer{
   int tightestAntiEWP_;
   int tightestAntiEMVAWP_;
   int tightestAntiEMVA3WP_;
-  int tightestAntiEMVA3raw_;
-  int tightestAntiEMVA3category_;
+  float AntiEMVA3raw_;
+  int AntiEMVA3category_;
   int tightestCiCWP_;
   int tightestHPSWP_;
   int tightestHPSDBWP_;

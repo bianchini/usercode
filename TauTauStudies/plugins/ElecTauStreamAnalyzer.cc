@@ -421,8 +421,8 @@ void ElecTauStreamAnalyzer::beginJob(){
   tree_->Branch("tightestAntiEWP",&tightestAntiEWP_,"tightestAntiEWP/I");
   tree_->Branch("tightestAntiEMVAWP",&tightestAntiEMVAWP_,"tightestAntiEMVAWP/I");
   tree_->Branch("tightestAntiEMVA3WP",&tightestAntiEMVA3WP_,"tightestAntiEMVA3WP/I");
-  tree_->Branch("tightestAntiEMVA3category",&tightestAntiEMVA3category_,"tightestAntiEMVA3category/I");
-  tree_->Branch("tightestAntiEMVA3raw",&tightestAntiEMVA3raw_,"tightestAntiEMVA3raw/F");
+  tree_->Branch("AntiEMVA3category",&AntiEMVA3category_,"AntiEMVA3category/I");
+  tree_->Branch("AntiEMVA3raw",&AntiEMVA3raw_,"AntiEMVA3raw/F");
   tree_->Branch("tightestHPSDBWP",&tightestHPSDBWP_,"tightestHPSDBWP/I");
   tree_->Branch("tightestHPSMVAWP",&tightestHPSMVAWP_,"tightestHPSMVAWP/I");
   tree_->Branch("visibleTauMass",&visibleTauMass_,"visibleTauMass/F");
@@ -1696,8 +1696,8 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     if( leg2->tauID("againstElectronMediumMVA3")>0.5) tightestAntiEMVA3WP_  = 2;
     if( leg2->tauID("againstElectronTightMVA3")>0.5)  tightestAntiEMVA3WP_  = 3;
     if( leg2->tauID("againstElectronVTightMVA3")>0.5) tightestAntiEMVA3WP_  = 4;
-    tightestAntiEMVA3raw_ = leg2->tauID("againstElectronMVA3raw");
-    tightestAntiEMVA3category_ = leg2->tauID("againstElectronMVA3category");
+    AntiEMVA3raw_ = leg2->tauID("againstElectronMVA3raw");
+    AntiEMVA3category_ = leg2->tauID("againstElectronMVA3category");
 
     diTauVisP4_->push_back( theDiTau->p4Vis() );
     diTauCAP4_->push_back(  theDiTau->p4CollinearApprox() );
