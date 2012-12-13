@@ -134,20 +134,20 @@ process.goodL1IsoEG12er = cms.EDFilter("HLTLevel1EG",
 )
 
 ### cone-based tau to mimic trigger //CUSTOM
-process.load("Bianchi.TauTauStudies.emulateHLTPFTau_cff")
+#process.load("Bianchi.TauTauStudies.emulateHLTPFTau_cff")
 
 process.pseudoMuTauETMtriggerSequence = cms.Sequence(
     #process.HLTFilterSingleMu+
     #process.goodL1Mu7er+
-    process.goodL1ETM20+
-    process.hltPFTauSequence
+    process.goodL1ETM20
+    #+process.hltPFTauSequence
     #+process.hltPFTauFilterSeqence
     )
 process.pseudoEleTauETMtriggerSequence = cms.Sequence(
     #process.HLTFilterSingleEle+
     #process.goodL1IsoEG12er+
-    process.goodL1ETM30+
-    process.hltPFTauSequence
+    process.goodL1ETM30
+    #+process.hltPFTauSequence
     #+process.hltPFTauFilterSeqence
     )
 
