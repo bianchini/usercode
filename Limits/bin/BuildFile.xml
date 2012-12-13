@@ -68,7 +68,7 @@
   <use   name="rootgraphics"/>
 </bin>
 
-<bin   file="makeElecTauTemplates-HCP.cc" name="makeElecTauTemplates_HCP">
+<bin   file="makeElecTauTemplates-2012.cc" name="makeElecTauTemplates_2012">
   <use   name="DataFormats/FWLite"/>
   <use   name="FWCore/FWLite"/>
   <use   name="FWCore/ParameterSet"/>
