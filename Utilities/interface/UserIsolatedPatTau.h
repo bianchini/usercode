@@ -23,6 +23,8 @@ class UserIsolatedPatTau : public edm::EDProducer{
 
   edm::InputTag patTauTag_;
   bool isMC_;
+  bool verbose_;
+  bool useIsoMVA_;
 };
 
 

@@ -33,6 +33,8 @@ UserIsolatedPatTau::UserIsolatedPatTau(const edm::ParameterSet & iConfig){
 
   patTauTag_ = iConfig.getParameter<edm::InputTag>("patTauTag"); 
   isMC_ = iConfig.getParameter<bool>("isMC");
+  verbose_ = iConfig.getUntrackedParameter<bool>("verbose",false);
+  useIsoMVA_ = iConfig.getUntrackedParameter<bool>("useIsoMVA",true);
   
   produces<pat::TauCollection>("");
 }
@@ -73,16 +75,22 @@ void UserIsolatedPatTau::produce(edm::Event & iEvent, const edm::EventSetup & iS
   
   const pat::Tau* mostIsolatedTau = 0;
   std::vector<PatTauInfo> tmpPatTauInfos;
-  std::cout<<" New Event "<<std::endl;
+  if(verbose_)
+    std::cout<<"[UserIsolatedPatTau]: New Event "<<std::endl;
   for ( pat::TauCollection::const_iterator patTau = patTaus->begin(); 
 	patTau != patTaus->end(); ++patTau ) { 
     const pat::Tau* tau = &(*patTau);
 
     PatTauInfo tmpPatTauInfo;
     tmpPatTauInfo.tau_ = tau;
-    tmpPatTauInfo.passIsoDiscr_ = patTau->tauID("byLooseCombinedIsolationDeltaBetaCorr");
-    tmpPatTauInfo.rawIso_ = patTau->tauID("byCombinedIsolationDeltaBetaCorrRaw");
-    
+    if(useIsoMVA_){
+      tmpPatTauInfo.passIsoDiscr_ = ( patTau->tauID("byIsolationMVAraw")>0.7 );
+      tmpPatTauInfo.rawIso_ = -patTau->tauID("byIsolationMVAraw");
+    }
+    else{//FIXME use 3Hit when Raw available
+      tmpPatTauInfo.passIsoDiscr_ = ( patTau->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5 );
+      tmpPatTauInfo.rawIso_ = patTau->tauID("byCombinedIsolationDeltaBetaCorrRaw");
+    }
     bool isTriggerMatched = false;
     for ( std::vector<std::string>::const_iterator triggerPath = HLTfiltersTau.begin();
 	  triggerPath != HLTfiltersTau.end(); ++triggerPath ) {
@@ -97,7 +105,11 @@ void UserIsolatedPatTau::produce(edm::Event & iEvent, const edm::EventSetup & iS
     tmpPatTauInfo.triggerMatch_ = isTriggerMatched;
     
     tmpPatTauInfos.push_back(tmpPatTauInfo);
-    std::cout<<"tau rawIso "<<tmpPatTauInfo.rawIso_<<" iso "<<tmpPatTauInfo.passIsoDiscr_<<" trig match "<<tmpPatTauInfo.triggerMatch_<<std::endl;
+    if(verbose_)
+      std::cout<<"\ttau rawIso="<< (useIsoMVA_ ? -tmpPatTauInfo.rawIso_ : tmpPatTauInfo.rawIso_) 
+	       <<", iso "<<tmpPatTauInfo.passIsoDiscr_
+	       <<", trig match "<<tmpPatTauInfo.triggerMatch_
+	       <<std::endl;
   }
   
   std::sort(tmpPatTauInfos.begin(), tmpPatTauInfos.end(), SortTauDescendingIsolation());
@@ -105,12 +117,16 @@ void UserIsolatedPatTau::produce(edm::Event & iEvent, const edm::EventSetup & iS
   if ( mostIsolatedTau ) {
     UserIsolatedTausColl->push_back(*mostIsolatedTau);
   }
-  //std::cout<<" size of output tau coll "<<UserIsolatedTausColl->size()<<std::endl;
-  if(mostIsolatedTau) 
-    std::cout<<" selected tau rawIso "<<mostIsolatedTau->tauID("byCombinedIsolationDeltaBetaCorrRaw")
-	     <<" Iso "<<mostIsolatedTau->tauID("byLooseCombinedIsolationDeltaBetaCorr")
-	     <<" trig match "<<tmpPatTauInfos.front().triggerMatch_<<std::endl;
-  
+  //if(verbose_) std::cout<<" size of output tau coll "<<UserIsolatedTausColl->size()<<std::endl;
+  if(verbose_){
+    if(mostIsolatedTau)
+      std::cout<<"Selected tau rawIso "<< ( useIsoMVA_ ? mostIsolatedTau->tauID("byIsolationMVAraw") : mostIsolatedTau->tauID("byCombinedIsolationDeltaBetaCorrRaw") )
+	       <<" Iso "<< ( useIsoMVA_ ? mostIsolatedTau->tauID("byIsolationMVAraw")>0.7 : mostIsolatedTau->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5 ) //FIXME use 3Hit
+	       <<" trig match "<<tmpPatTauInfos.front().triggerMatch_
+	       <<std::endl;
+    else
+      std::cout<<"Tau collection empty!"<<std::endl; 
+  }
   iEvent.put( UserIsolatedTausColl );
   return;
 }
