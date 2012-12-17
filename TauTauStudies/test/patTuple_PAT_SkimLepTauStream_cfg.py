@@ -374,7 +374,7 @@ from PhysicsTools.PatAlgos.tools.tauTools import *
 #                 )
 
 #MB needed??
-#switchToPFTauHPS(process)
+switchToPFTauHPS(process)
 
 '''
 #MB needed? tracks and PFlow kept and gen
