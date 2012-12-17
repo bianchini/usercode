@@ -1280,7 +1280,7 @@ void MuTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventSet
 	tauXTriggers_->push_back(0);
       if(verbose_){
 	if(matched) cout << "Muon matched within dR=0.5 with trigger L1Mu pt>7, |eta|<2.1" << endl;
-	else cout << "!!! Muon is not trigger matched to L1 within dR=0.5 !!!" << endl;
+	else cout << "!!! Muon is not matched to L1Mu within dR=0.5 !!!" << endl;
       }
     }
     else
