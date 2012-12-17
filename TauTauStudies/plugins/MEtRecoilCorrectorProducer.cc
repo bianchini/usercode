@@ -106,7 +106,7 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
       if( gen.pdgId()== 25       && gen.status()==3 ) counterH++;
     }
     if(verbose_) cout << "Zs = " << counterZ << ", Ws = " << counterW << ", Hs = " << counterH << endl;
-    /* //file not available
+    //file available only for ZTT, not Zll+fakes
     if(counterZ==1 && counterW==0 && counterH==0){
       genDecay_ = 23;
       recoilCorr_ = new  RecoilCorrector(inputFileNamezjets_.fullPath().data());
@@ -115,8 +115,6 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
       if(verbose_) cout << "Loading corrections for DY" << endl;
     }
     else if(counterZ==0 && counterW==1 && counterH==0){
-    */
-    if(counterZ==0 && counterW==1 && counterH==0){ 
       genDecay_ = 24;
       recoilCorr_ = new  RecoilCorrector(inputFileNamewjets_.fullPath().data());
       recoilCorr_->addMCFile(inputFileNamezmm42X_.fullPath().data());
@@ -556,6 +554,7 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
     }
 
     // Z->ll + fakes
+    /* //correction file not available
     else if(fabs(eventDecay)==23*11 || fabs(eventDecay)==23*13){
 
       if(verbose_) cout << " ==> Z->ll + fakes event" << endl;
@@ -682,7 +681,8 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
 				u1, u2 , 0 , -1*numOfSigmas_, TMath::Min(nJets30,2) );
       if(verbose_) cout << "corrected MET Down = "    << scaledMETPtDm << endl;
 
-    }
+      }
+    */
 
   }
   
