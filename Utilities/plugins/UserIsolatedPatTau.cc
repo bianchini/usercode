@@ -84,7 +84,8 @@ void UserIsolatedPatTau::produce(edm::Event & iEvent, const edm::EventSetup & iS
     PatTauInfo tmpPatTauInfo;
     tmpPatTauInfo.tau_ = tau;
     if(useIsoMVA_){
-      tmpPatTauInfo.passIsoDiscr_ = ( patTau->tauID("byIsolationMVAraw")>0.7 );
+      //tmpPatTauInfo.passIsoDiscr_ = ( patTau->tauID("byIsolationMVAraw")>0.7 );
+      tmpPatTauInfo.passIsoDiscr_ = ( patTau->tauID("byLooseIsolationMVA")>0.5 );
       tmpPatTauInfo.rawIso_ = -patTau->tauID("byIsolationMVAraw");
     }
     else{//FIXME use 3Hit when Raw available
@@ -121,7 +122,8 @@ void UserIsolatedPatTau::produce(edm::Event & iEvent, const edm::EventSetup & iS
   if(verbose_){
     if(mostIsolatedTau)
       std::cout<<"Selected tau rawIso "<< ( useIsoMVA_ ? mostIsolatedTau->tauID("byIsolationMVAraw") : mostIsolatedTau->tauID("byCombinedIsolationDeltaBetaCorrRaw") )
-	       <<" Iso "<< ( useIsoMVA_ ? mostIsolatedTau->tauID("byIsolationMVAraw")>0.7 : mostIsolatedTau->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5 ) //FIXME use 3Hit
+	//<<" Iso "<< ( useIsoMVA_ ? mostIsolatedTau->tauID("byIsolationMVAraw")>0.7 : mostIsolatedTau->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5 ) //FIXME use 3Hit
+	       <<" Iso "<< ( useIsoMVA_ ? mostIsolatedTau->tauID("byLooseIsolationMVA")>0.5 : mostIsolatedTau->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5 ) //FIXME use 3Hit
 	       <<" trig match "<<tmpPatTauInfos.front().triggerMatch_
 	       <<std::endl;
     else
