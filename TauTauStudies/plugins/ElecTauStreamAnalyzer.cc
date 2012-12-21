@@ -1157,12 +1157,12 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     const pat::Tau*  tau_i = dynamic_cast<const pat::Tau*>(  ((*diTaus)[i].leg2()).get() );
     if(//tau_i->tauID("byLooseCombinedIsolationDeltaBetaCorr")>0.5 || 
        tau_i->tauID("byLooseIsolationMVA")>0.5 )
-      sortedDiTausLooseIso.insert( make_pair( isoMVA, i ) );
-    sortedDiTaus.insert( make_pair( isoMVA, i ) );
+      sortedDiTausLooseIso.insert( make_pair( sumPt, i ) );
+    sortedDiTaus.insert( make_pair( sumPt, i ) );
     if(pairCharge<0) 
-      sortedDiTausOS.insert( make_pair( isoMVA, i ) );
+      sortedDiTausOS.insert( make_pair( sumPt, i ) );
     else
-      sortedDiTausSS.insert( make_pair( isoMVA, i ) );
+      sortedDiTausSS.insert( make_pair( sumPt, i ) );
   }
   if( sortedDiTausOS.size()>0 ) 
     index = (sortedDiTausOS.begin())->second ;
