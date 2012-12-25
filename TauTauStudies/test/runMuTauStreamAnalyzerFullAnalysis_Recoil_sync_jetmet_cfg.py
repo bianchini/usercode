@@ -43,9 +43,9 @@ process.source = cms.Source(
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_1_1_QFt.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_2_1_QDr.root',
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-130_7TeV-powheg-pythia6-tauola/MuTauStream-04May2012-Reload_VBFH130-MuTau-powheg-PUS6_skim/f2017a8682c2724bef5e6ba529285334/patTuples_MuTauStream_3_1_IXG.root',
-    #'file:./patTuples_MuTauStream.root'
+    'file:./patTuples_MuTauStream.root'
     #'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat/store/user/mbluj/VBF_HToTauTau_M-125_8TeV-powheg-pythia6/LepTauStream-07Dec2012_VBFH125-LepTau-powheg-PUS10_pat/fbab02682d6b416ae6da687406f89be0/patTuples_LepTauStream_100_1_PYQ.root'
-    'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat/store/user/ndaci/VBF_HToTauTau_M-125_8TeV-powheg-pythia6/HTT_PAT_MuTau_Oct02_MC_VBF_HToTauTau_M-125/1580e1ad29bd5f6cf6006f65f956c13c/patTuples_MuTauStream_9_8_FTF.root'
+    #'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat/store/user/ndaci/VBF_HToTauTau_M-125_8TeV-powheg-pythia6/HTT_PAT_MuTau_Oct02_MC_VBF_HToTauTau_M-125/1580e1ad29bd5f6cf6006f65f956c13c/patTuples_MuTauStream_9_8_FTF.root'
     )
     )
 #process.source.skipEvents = cms.untracked.uint32(90)
@@ -105,7 +105,8 @@ process.muPtEtaRelIDRelIso = cms.EDFilter(
 process.elecPtEtaRelIDRelIso = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("electronsForVeto"),
-    cut = cms.string("pt>10 && abs(eta)<2.5"+
+    cut = cms.string("pt>10 && abs(eta)<2.4"+
+                     " && ( (abs(eta)<0.80 && userFloat('mvaPOGNonTrig')>0.925) || (abs(eta)<1.479 && abs(eta)>0.80 && userFloat('mvaPOGNonTrig')>0.975) || (abs(eta)>1.479 && userFloat('mvaPOGNonTrig')>0.985)  )"+
                      " && gsfTrack.trackerExpectedHitsInner.numberOfHits == 0"),
     filter = cms.bool(False)
     )

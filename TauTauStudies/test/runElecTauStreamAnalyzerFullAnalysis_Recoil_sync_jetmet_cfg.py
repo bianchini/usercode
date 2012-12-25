@@ -38,8 +38,7 @@ else:
     
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 10
-#FIXMEprocess.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
 process.source = cms.Source(
@@ -49,10 +48,10 @@ process.source = cms.Source(
     #'file:./root/patTuples_ElecTauStream_VBFH125.root'
         #'file:./patTuples_ElecTauStream.root'
     #'rfio:/dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/TauPlusX/ElecTauStream-04May2012-Reload-05AugReReco/396c4fb61647929194f9a223b98504bc/patTuples_ElecTauStream_9_1_kgg.root'
-    #MB'file:patTuples_ElecTauStream.root'
+    'file:patTuples_ElecTauStream.root'
     #'file:patTuples_LepTauStream.root'     
     #'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat/store/user/mbluj/VBF_HToTauTau_M-125_8TeV-powheg-pythia6/LepTauStream-07Dec2012_VBFH125-LepTau-powheg-PUS10_pat/fbab02682d6b416ae6da687406f89be0/patTuples_LepTauStream_100_1_PYQ.root'
-    'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-125_8TeV-powheg-pythia6/ElecTauStream-03Oct2012_VBFH125-ElecTau-powheg-PUS10_skim/2cba4db6c1b24ee590644d6e0883abd2/patTuples_ElecTauStream_184_1_GQb.root'
+    #'root://polgrid4.in2p3.fr//dpm/in2p3.fr/home/cms/trivcat/store/user/bianchi/VBF_HToTauTau_M-125_8TeV-powheg-pythia6/ElecTauStream-03Oct2012_VBFH125-ElecTau-powheg-PUS10_skim/2cba4db6c1b24ee590644d6e0883abd2/patTuples_ElecTauStream_184_1_GQb.root'
     )
     )
 
@@ -112,7 +111,8 @@ process.muPtEtaRelIDRelIso = cms.EDFilter(
 process.elecPtEtaRelIDRelIso = cms.EDFilter(
     "PATElectronSelector",
     src = cms.InputTag("electronsForVeto"), #loose MVA-Id
-    cut = cms.string("pt>10 && abs(eta)<2.5"+
+    cut = cms.string("pt>10 && abs(eta)<2.4"+
+                     " && ( (abs(eta)<0.80 && userFloat('mvaPOGNonTrig')>0.925) || (abs(eta)<1.479 && abs(eta)>0.80 && userFloat('mvaPOGNonTrig')>0.975) || (abs(eta)>1.479 && userFloat('mvaPOGNonTrig')>0.985)  )"+
                      " && gsfTrack.trackerExpectedHitsInner.numberOfHits == 0"),
     filter = cms.bool(False)
     )
@@ -1175,8 +1175,8 @@ if runOnMC:
 
 else:
     process.pNominal            = cms.Path( process.seqNominal )
-    process.pTauUp              = cms.Path( process.seqTauUp)
-    process.pTauDown            = cms.Path( process.seqTauDown )
+    #process.pTauUp              = cms.Path( process.seqTauUp)
+    #process.pTauDown            = cms.Path( process.seqTauDown )
     #process.pRawNominal         = cms.Path( process.seqRawNominal )
     #process.pRawTauUp           = cms.Path( process.seqRawTauUp )
     #process.pRawTauDown         = cms.Path( process.seqRawTauDown )
@@ -1191,8 +1191,7 @@ process.out = cms.OutputModule(
 
 process.TFileService = cms.Service(
     "TFileService",
-    #MBfileName = cms.string("treeElecTauStream.root")
-    fileName = cms.string("treeElecTauStream_new.root")
+    fileName = cms.string("treeElecTauStream.root")
     )
 
 process.outpath = cms.EndPath()
