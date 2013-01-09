@@ -328,7 +328,7 @@ Bool_t isbtagged(Bool_t isBQuark, Double_t btagCSV, Bool_t isdata, UInt_t btagef
   return btagged;
 }  
 
-void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float xsec_ = 0., string inputDir_ = "./", string dirOut_ = "./", int iJson_=-1, bool doLepVeto=false){
+void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0., string inputDir_ = "./", string dirOut_ = "./", int iJson_=-1, bool doLepVeto=false){
 
   cout << "Now skimming analysis " << analysis_ << endl;
   if(analysis_ == "nominal")
@@ -382,8 +382,8 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
 
   //////////////////////////////////////////////////////////
 
-  cout << "Using corrections from llrCorrections_ETM.root" << endl;
-  TFile corrections("../../Utilities/data/corrections/llrCorrections_ETM.root");
+  cout << "Using corrections from llrCorrections_Moriond.root" << endl;
+  TFile corrections("/data_CMS/cms/htautau/Moriond/tools/llrCorrections_Moriond.root");
   
   TF1 *ratioMuIDBL1       = (TF1*)corrections.Get("ratioMuIDBL1");
   TF1 *ratioMuIDBL2       = (TF1*)corrections.Get("ratioMuIDBL2");
@@ -392,33 +392,7 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
   TF1 *ratioMuIsoBL2      = (TF1*)corrections.Get("ratioMuIsoBL2");
   TF1 *ratioMuIsoEC       = (TF1*)corrections.Get("ratioMuIsoEC");
 
-  TF1 *ratioMuAllBL1Pos   = (TF1*)corrections.Get("ratioMuAllBL1Pos");
-  TF1 *ratioMuAllBL2Pos   = (TF1*)corrections.Get("ratioMuAllBL2Pos");
-  TF1 *ratioMuAllECPos    = (TF1*)corrections.Get("ratioMuAllECPos");
-  TF1 *ratioMuAllBL1Neg   = (TF1*)corrections.Get("ratioMuAllBL1Neg");
-  TF1 *ratioMuAllBL2Neg   = (TF1*)corrections.Get("ratioMuAllBL2Neg");
-  TF1 *ratioMuAllECNeg    = (TF1*)corrections.Get("ratioMuAllECNeg");
-
-  TF1 *turnOnMuAllBL1Pos  = (TF1*)corrections.Get("turnOnMuAllBL1Pos");
-  TF1 *turnOnMuAllBL2Pos  = (TF1*)corrections.Get("turnOnMuAllBL2Pos");
-  TF1 *turnOnMuAllECPos   = (TF1*)corrections.Get("turnOnMuAllECPos");
-  TF1 *turnOnMuAllBL1Neg  = (TF1*)corrections.Get("turnOnMuAllBL1Neg");
-  TF1 *turnOnMuAllBL2Neg  = (TF1*)corrections.Get("turnOnMuAllBL2Neg");
-  TF1 *turnOnMuAllECNeg   = (TF1*)corrections.Get("turnOnMuAllECNeg");
-
-  TF1 *turnOnMuRunCBL1Pos  = (TF1*)corrections.Get("turnOnMuRunCBL1Pos");
-  TF1 *turnOnMuRunCBL2Pos  = (TF1*)corrections.Get("turnOnMuRunCBL2Pos");
-  TF1 *turnOnMuRunCECPos   = (TF1*)corrections.Get("turnOnMuRunCECPos");
-  TF1 *turnOnMuRunCBL1Neg  = (TF1*)corrections.Get("turnOnMuRunCBL1Neg");
-  TF1 *turnOnMuRunCBL2Neg  = (TF1*)corrections.Get("turnOnMuRunCBL2Neg");
-  TF1 *turnOnMuRunCECNeg   = (TF1*)corrections.Get("turnOnMuRunCECNeg");
-
-  TF1 *ratioMuRunCBL1Pos  = (TF1*)corrections.Get("ratioMuRunCBL1Pos");
-  TF1 *ratioMuRunCBL2Pos  = (TF1*)corrections.Get("ratioMuRunCBL2Pos");
-  TF1 *ratioMuRunCECPos   = (TF1*)corrections.Get("ratioMuRunCECPos");
-  TF1 *ratioMuRunCBL1Neg  = (TF1*)corrections.Get("ratioMuRunCBL1Neg");
-  TF1 *ratioMuRunCBL2Neg  = (TF1*)corrections.Get("ratioMuRunCBL2Neg");
-  TF1 *ratioMuRunCECNeg   = (TF1*)corrections.Get("ratioMuRunCECNeg");
+  TF1 *turnOnMu       = (TF1*)corrections.Get("turnOnMu"); // par=[eta,run,ratio]  
 
   TF1 *ratioTauMuTauBL    = (TF1*)corrections.Get("ratioTauMuTauBL");  
   TF1 *ratioTauMuTauEC    = (TF1*)corrections.Get("ratioTauMuTauEC"); 
@@ -442,33 +416,7 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
   if(!ratioMuIsoBL2)      cout << "Missing corrections for MuIso (BL2)" << endl;
   if(!ratioMuIsoEC)       cout << "Missing corrections for MuIso (EC)" << endl;
 
-  if(!ratioMuAllBL1Pos)   cout << "Missing corrections for Mu HLT (BL1Pos)" << endl;
-  if(!ratioMuAllBL2Pos)   cout << "Missing corrections for Mu HLT (BL2Pos)" << endl;
-  if(!ratioMuAllECPos)    cout << "Missing corrections for Mu HLT (ECPos)" << endl;
-  if(!ratioMuAllBL1Neg)   cout << "Missing corrections for Mu HLT (BL1Neg)" << endl;
-  if(!ratioMuAllBL2Neg)   cout << "Missing corrections for Mu HLT (BL2Neg)" << endl;
-  if(!ratioMuAllECNeg)    cout << "Missing corrections for Mu HLT (ECNeg)" << endl;
-
-  if(!turnOnMuAllBL1Pos)  cout << "Missing corrections for Mu HLT (BL1Pos)" << endl;
-  if(!turnOnMuAllBL2Pos)  cout << "Missing corrections for Mu HLT (BL2Pos)" << endl;
-  if(!turnOnMuAllECPos)   cout << "Missing corrections for Mu HLT (ECPos)" << endl;
-  if(!turnOnMuAllBL1Neg)  cout << "Missing corrections for Mu HLT (BL1Neg)" << endl;
-  if(!turnOnMuAllBL2Neg)  cout << "Missing corrections for Mu HLT (BL2Neg)" << endl;
-  if(!turnOnMuAllECNeg)   cout << "Missing corrections for Mu HLT (ECNeg)" << endl;
-
-  if(!ratioMuRunCBL1Pos)   cout << "Missing corrections for Mu HLT (BL1Pos)" << endl;
-  if(!ratioMuRunCBL2Pos)   cout << "Missing corrections for Mu HLT (BL2Pos)" << endl;
-  if(!ratioMuRunCECPos)    cout << "Missing corrections for Mu HLT (ECPos)" << endl;
-  if(!ratioMuRunCBL1Neg)   cout << "Missing corrections for Mu HLT (BL1Neg)" << endl;
-  if(!ratioMuRunCBL2Neg)   cout << "Missing corrections for Mu HLT (BL2Neg)" << endl;
-  if(!ratioMuRunCECNeg)    cout << "Missing corrections for Mu HLT (ECNeg)" << endl;
-
-  if(!turnOnMuRunCBL1Pos)  cout << "Missing corrections for Mu HLT (BL1Pos)" << endl;
-  if(!turnOnMuRunCBL2Pos)  cout << "Missing corrections for Mu HLT (BL2Pos)" << endl;
-  if(!turnOnMuRunCECPos)   cout << "Missing corrections for Mu HLT (ECPos)" << endl;
-  if(!turnOnMuRunCBL1Neg)  cout << "Missing corrections for Mu HLT (BL1Neg)" << endl;
-  if(!turnOnMuRunCBL2Neg)  cout << "Missing corrections for Mu HLT (BL2Neg)" << endl;
-  if(!turnOnMuRunCECNeg)   cout << "Missing corrections for Mu HLT (ECNeg)" << endl;
+  if(!turnOnMu) cout << "Missing Mu trigger corrections" << endl;
 
   if(!ratioTauMuTauBL)    cout << "Missing corrections for tau HLT (BL)" << endl;
   if(!ratioTauMuTauEC)    cout << "Missing corrections for tau HLT (EC)" << endl;
@@ -546,7 +494,7 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
   if( !(analysis_.find("Up")!=string::npos || analysis_.find("Down")!=string::npos) &&  analysis_.find("Raw")!=string::npos)
     analysisFileName = "RawNominal";
 
-  TString outName = dirOut_+"/nTuple"+sample+"_Open_MuTauETMStream_"+analysisFileName+".root";
+  TString outName = dirOut_+"/nTuple"+sample+"_MuTau_"+analysisFileName+".root";
   cout << "Output file name called " << outName << endl;
 
   //TFile *outFile = new TFile(outName,"UPDATE");
@@ -878,7 +826,7 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
   outTreePtOrd->Branch("metSigmaPerp", &metSigmaPerp, "metSigmaPerp/F");
 
   //string currentInName = inputDir_+"/treeMuTauStream_"+sample_+".root" ;
-  string currentInName = inputDir_+"/treeMuTauETMStream_"+sample_+".root"; //MB
+  string currentInName = inputDir_+"/treeMuTauStream_"+sample_+".root"; //MB
 
   TString inName(currentInName.c_str());
   TFile* file   = new TFile(inName,"READ");
@@ -1298,7 +1246,7 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
   jsonFile[1] = dirJson+"/Cert_198022-198523_8TeV_24Aug2012ReReco_Collisions12_JSON.txt";    // ReReco 24 Aug 
   jsonFile[2] = dirJson+"/Cert_190456-203002_8TeV_PromptReco_Collisions12_JSON_v2.txt";      // PromptReco 
   jsonFile[3] = dirJson+"/Cert_190782-190949_8TeV_06Aug2012ReReco_Collisions12_JSON.txt";    // ReReco 06Aug
-  jsonFile[4] = dirJson+"/Cert_190456-207898_8TeV_PromptReco_Collisions12_JSON.txt";         // PromptReco updated
+  jsonFile[4] = dirJson+"/Cert_190456-208686_8TeV_PromptReco_Collisions12_JSON.txt";         // PromptReco updated
 
   map<int, vector<pair<int, int> > > jsonMap[nJson] ;  
   for(int iJ=0 ; iJ<nJson ; iJ++)
@@ -1929,71 +1877,34 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
       
       // Muon
       float ptMaxMu = 14.0;
+
+      // trigger
+      Double_t mupt[1] = {(Double_t) ptL1};
+      Double_t muptSoft[1] = {(Double_t) (ptL1+17.-8.)};
+      Double_t par[3]={etaL1,0,0};
+      // par[1]=run (A,B,C,D,MC,ABCD) ; par[2]=ratio(0=efficiency,1=ratio)
+
+      par[1]=5; par[2]=1; HLTweightMu     = turnOnMu->EvalPar( mupt, par);
+      par[1]=3; par[2]=1; HLTweightMuD    = turnOnMu->EvalPar( mupt, par);
+      par[1]=3; par[2]=1; HLTweightMuSoft = turnOnMu->EvalPar( muptSoft, par);
+      par[1]=5; par[2]=0; HLTMu           = turnOnMu->EvalPar( mupt, par);
+      par[1]=3; par[2]=0; HLTMuD          = turnOnMu->EvalPar( mupt, par);
+      par[1]=3; par[2]=0; HLTMuSoft       = turnOnMu->EvalPar( muptSoft, par);
+
       if(TMath::Abs(etaL1)<=0.8) {
 	SFMuID  = ratioMuIDBL1->Eval( std::max( ptL1 , ptMaxMu ) ) ;
 	SFMuIso = ratioMuIsoBL1->Eval( std::max( ptL1 , ptMaxMu ) ) ;
 	SFMu    = SFMuID*SFMuIso;
-
-	if(etaL1>0){
-	  HLTweightMu     = ratioMuAllBL1Pos  ->Eval( ptL1);
-	  HLTweightMuD    = ratioMuRunCBL1Pos ->Eval( ptL1);
-	  HLTweightMuSoft = ratioMuRunCBL1Pos ->Eval( ptL1+(17.-8.));
-	  HLTMu           = turnOnMuAllBL1Pos ->Eval( ptL1);
-	  HLTMuD          = turnOnMuRunCBL1Pos->Eval( ptL1);
-	  HLTMuSoft       = turnOnMuRunCBL1Pos->Eval( ptL1+(17.-8.));
-	}
-	else {
-	  HLTweightMu     = ratioMuAllBL1Neg  ->Eval( ptL1);
-	  HLTweightMuD    = ratioMuRunCBL1Neg ->Eval( ptL1);
-	  HLTweightMuSoft = ratioMuRunCBL1Neg ->Eval( ptL1+(17.-8.));
-	  HLTMu           = turnOnMuRunCBL1Neg->Eval( ptL1);
-	  HLTMuD          = turnOnMuAllBL1Neg ->Eval( ptL1);
-	  HLTMuSoft       = turnOnMuRunCBL1Neg->Eval( ptL1+(17.-8.));
-	}
       }
       else if(TMath::Abs(etaL1)>0.8 && TMath::Abs(etaL1)<=1.2) {
 	SFMuID  = ratioMuIDBL2->Eval( std::max( ptL1 , ptMaxMu ) ) ;
  	SFMuIso = ratioMuIsoBL2->Eval( std::max( ptL1 , ptMaxMu ) ) ;
 	SFMu    = SFMuID*SFMuIso;
-
-	if(etaL1>0){
-	  HLTweightMu     = ratioMuAllBL2Pos  ->Eval( ptL1);
-	  HLTweightMuD    = ratioMuRunCBL2Pos ->Eval( ptL1);
-	  HLTweightMuSoft = ratioMuRunCBL2Pos ->Eval( ptL1+(17.-8.));
-	  HLTMu           = turnOnMuAllBL2Pos ->Eval( ptL1);
-	  HLTMuD          = turnOnMuRunCBL2Pos->Eval( ptL1);
-	  HLTMuSoft       = turnOnMuRunCBL2Pos->Eval( ptL1+(17.-8.));
-	}
-	else {
-	  HLTweightMu     = ratioMuAllBL2Neg  ->Eval( ptL1);
-	  HLTweightMuD    = ratioMuRunCBL2Neg ->Eval( ptL1);
-	  HLTweightMuSoft = ratioMuRunCBL2Neg ->Eval( ptL1+(17.-8.));
-	  HLTMu           = turnOnMuAllBL2Neg ->Eval( ptL1);
-	  HLTMuD          = turnOnMuRunCBL2Neg->Eval( ptL1);
-	  HLTMuSoft       = turnOnMuRunCBL2Neg->Eval( ptL1+(17.-8.));
-	}
       }
       else {
 	SFMuID  = ratioMuIDEC->Eval( std::max( ptL1 , ptMaxMu ) ) ;
 	SFMuIso = ratioMuIsoEC->Eval( std::max( ptL1 , ptMaxMu ) ) ;
 	SFMu    = SFMuID*SFMuIso;
-
-	if(etaL1>0){
-	  HLTweightMu     = ratioMuAllECPos  ->Eval( ptL1);
-	  HLTweightMuD    = ratioMuRunCECPos ->Eval( ptL1);
-	  HLTweightMuSoft = ratioMuRunCECPos ->Eval( ptL1+(17.-8.));
-	  HLTMu           = turnOnMuAllECPos ->Eval( ptL1);
-	  HLTMuD          = turnOnMuRunCECPos->Eval( ptL1);
-	  HLTMuSoft       = turnOnMuRunCECPos->Eval( ptL1+(17.-8.));
-	}
-	else {
-	  HLTweightMu     = ratioMuAllECNeg  ->Eval( ptL1);
-	  HLTweightMuD    = ratioMuRunCECNeg ->Eval( ptL1);
-	  HLTweightMuSoft = ratioMuRunCECNeg ->Eval( ptL1+(17.-8.));
-	  HLTMu           = turnOnMuAllECNeg ->Eval( ptL1);
-	  HLTMuD          = turnOnMuRunCECNeg->Eval( ptL1);
-	  HLTMuSoft       = turnOnMuRunCECNeg->Eval( ptL1+(17.-8.));
-	}
       }
       
     }// end MC/embedded case
@@ -2096,21 +2007,21 @@ void makeTrees_MuTauETMStream(string analysis_ = "", string sample_ = "", float 
     cout << "-- copy tree" << endl;
 
     if(backgroundDYTauTau) {
-      outName = "nTuple_DYJ_TauTau_Open_MuTauStream_"+analysisFileName+".root" ;
+      outName = "nTuple_DYJ_TauTau_MuTau_"+analysisFileName+".root" ;
       outFile = new TFile(outName,"RECREATE");
       backgroundDYTauTau->Write();
       outFile->Close();
     }
 
     if(backgroundDYMutoTau) {
-      outName = "nTuple_DYJ_MuToTau_Open_MuTauStream_"+analysisFileName+".root";
+      outName = "nTuple_DYJ_MuToTau_MuTau_"+analysisFileName+".root";
       outFile = new TFile(outName,"RECREATE");
       backgroundDYMutoTau->Write();
       outFile->Close();
     }
 
     if(backgroundDYJtoTau) {
-      outName = "nTuple_DYJ_JetToTau_Open_MuTauStream_"+analysisFileName+".root";
+      outName = "nTuple_DYJ_JetToTau_MuTau_"+analysisFileName+".root";
       outFile = new TFile(outName,"RECREATE");
       backgroundDYJtoTau->Write();
       outFile->Close();
@@ -2149,22 +2060,22 @@ void doAllSamplesMu(string inputDir_ = "/data_CMS/cms/anayak/H2TauTauHCP/MuTauSt
 
   samples.push_back("DYJets-MuTau-50-madgraph-PUS10_run"); crossSec.push_back(1.578 * 0.0632 * 1.0 * 0.0780138080726);
 
-  makeTrees_MuTauETMStream("",             samples[0], crossSec[0], inputDir_);
+  makeTrees_MuTau("",             samples[0], crossSec[0], inputDir_);
  
   return;
 
   for( unsigned int k = 0; k < samples.size(); k++) {
     
-    makeTrees_MuTauETMStream("",        samples[k], crossSec[k], inputDir_);
+    makeTrees_MuTau("",        samples[k], crossSec[k], inputDir_);
 
     if( samples[k].find("Run2012-MuTau-All")!=string::npos )
       continue;
-    makeTrees_MuTauETMStream("TauUp",   samples[k], crossSec[k], inputDir_);
-    makeTrees_MuTauETMStream("TauDown", samples[k], crossSec[k], inputDir_);
+    makeTrees_MuTau("TauUp",   samples[k], crossSec[k], inputDir_);
+    makeTrees_MuTau("TauDown", samples[k], crossSec[k], inputDir_);
     if( samples[k].find("Embedded")!=string::npos)
       continue;
-    makeTrees_MuTauETMStream("JetUp",   samples[k], crossSec[k], inputDir_);
-    makeTrees_MuTauETMStream("JetDown", samples[k], crossSec[k], inputDir_);
+    makeTrees_MuTau("JetUp",   samples[k], crossSec[k], inputDir_);
+    makeTrees_MuTau("JetDown", samples[k], crossSec[k], inputDir_);
   }
   
   return;
@@ -2189,23 +2100,23 @@ int main(int argc, const char* argv[])
   }
   else if( argc==3 ) {
     
-    makeTrees_MuTauETMStream("",           argv[1], atof(argv[2]), inputDir, dirOut, -1);
+    makeTrees_MuTau("",           argv[1], atof(argv[2]), inputDir, dirOut, -1);
     
     if( string(argv[1]).find("Run2012-MuTau-All")!=string::npos )
       return 0;
-    makeTrees_MuTauETMStream("TauUp",      argv[1], atof(argv[2]), inputDir, dirOut, -1);
-    makeTrees_MuTauETMStream("TauDown",    argv[1], atof(argv[2]), inputDir, dirOut, -1);
+    makeTrees_MuTau("TauUp",      argv[1], atof(argv[2]), inputDir, dirOut, -1);
+    makeTrees_MuTau("TauDown",    argv[1], atof(argv[2]), inputDir, dirOut, -1);
     
     if( string(argv[1]).find("Embedded")!=string::npos)
       return 0;
-    makeTrees_MuTauETMStream("JetUp",      argv[1], atof(argv[2]), inputDir, dirOut, -1);
-    makeTrees_MuTauETMStream("JetDown",    argv[1], atof(argv[2]), inputDir, dirOut, -1);
+    makeTrees_MuTau("JetUp",      argv[1], atof(argv[2]), inputDir, dirOut, -1);
+    makeTrees_MuTau("JetDown",    argv[1], atof(argv[2]), inputDir, dirOut, -1);
   }
   else if( argc==7 ){
-    makeTrees_MuTauETMStream(argv[1], argv[2], atof(argv[3]), argv[4], argv[5], (int)atof(argv[6]));
+    makeTrees_MuTau(argv[1], argv[2], atof(argv[3]), argv[4], argv[5], (int)atof(argv[6]));
   }
   else if( argc==8 ){
-    makeTrees_MuTauETMStream(argv[1], argv[2], atof(argv[3]), argv[4], argv[5], (int)atof(argv[6]), (int)atof(argv[7]));
+    makeTrees_MuTau(argv[1], argv[2], atof(argv[3]), argv[4], argv[5], (int)atof(argv[6]), (int)atof(argv[7]));
   }
   else {
     cout << "Wrong number of arguments. Specify either 0, 2, or 6 arguments" << endl;
@@ -2214,5 +2125,6 @@ int main(int argc, const char* argv[])
 
   cout << "finished running treeSkimmer" << endl;
   return 0;
+  //makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0., string inputDir_ = "./", string dirOut_ = "./", int iJson_=-1, bool doLepVeto=false){
 
 }
