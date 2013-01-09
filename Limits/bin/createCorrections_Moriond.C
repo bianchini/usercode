@@ -98,11 +98,11 @@ Double_t myFuncTurnOnElecRunDIDEC(Double_t* x, Double_t *par) {
   double ratio = 1.;    
   Float_t xx = x[0];    
   if( xx < 24 )     
-    ratio = 0.3631;    
+    ratio = 0.3294;    
   else if( xx >= 24 && xx< 30)     
-    ratio = 0.3631;    
+    ratio = 0.3294;    
   else if( xx >= 30)   
-    ratio = 0.5611 ;    
+    ratio = 0.5491;    
   return ratio;    
 }
 
@@ -161,44 +161,44 @@ Double_t myFuncRatioElecRunDIsoBL(Double_t* x, Double_t *par) {
   double ratio = 1.;
   Float_t xx = x[0];
   if( xx < 24 ) 
-    ratio = 0.9602;
+    ratio = 0.9440;
   else if( xx >= 24 && xx< 30) 
-    ratio = 0.9602;
+    ratio = 0.9440;
   else if( xx >= 30)
-    ratio = 0.9858 ;
+    ratio =  0.9764;
   return ratio;
 }
 Double_t myFuncTurnOnElecRunDIsoBL(Double_t* x, Double_t *par) { 
   double ratio = 1.;
   Float_t xx = x[0];
   if( xx < 24 ) 
-    ratio = 0.7496;
+    ratio = 0.7302;
   else if( xx >= 24 && xx< 30) 
-    ratio = 0.7496;
+    ratio = 0.7302;
   else if( xx >= 30)
-    ratio = 0.8956;
+    ratio = 0.8823;
   return ratio; 
 }
 Double_t myFuncRatioElecRunDIsoEC(Double_t* x, Double_t *par) { 
   double ratio = 1.;
   Float_t xx = x[0];
   if( xx < 24 )  
-    ratio = 0.9661; 
+    ratio = 0.9757; 
   else if( xx >= 24 && xx< 30)  
-    ratio = 0.9661; 
+    ratio = 0.9757; 
   else if( xx >= 30) 
-    ratio = 0.9942; 
+    ratio = 0.9764; 
   return ratio;
 }
 Double_t myFuncTurnOnElecRunDIsoEC(Double_t* x, Double_t *par) {  
   double ratio = 1.;
   Float_t xx = x[0];
   if( xx < 24 )   
-    ratio = 0.8244;  
+    ratio = 0.8304;  
   else if( xx >= 24 && xx< 30)   
-    ratio = 0.8244;  
+    ratio = 0.8304;  
   else if( xx >= 30)  
-    ratio = 0.9187 ;  
+    ratio = 0.9174;  
   return ratio;
 }
 
@@ -858,6 +858,16 @@ void makeFile(){
   TF1 *turnOnElecIsoBL      = new TF1("turnOnElecIsoBL",         myFuncTurnOnElecIsoBL ,    14,800,0);
   TF1 *ratioElecIsoEC       = new TF1("ratioElecIsoEC",          myFuncRatioElecIsoEC ,     14,800,0);
   TF1 *turnOnElecIsoEC      = new TF1("turnOnElecIsoEC",         myFuncTurnOnElecIsoEC ,    14,800,0);
+
+  TF1 *ratioElecRunDIDBL        = new TF1("ratioElecRunDIDBL",           myFuncRatioElecRunDIDBL ,      14,800,0);
+  TF1 *turnOnElecRunDIDBL       = new TF1("turnOnElecRunDIDBL",          myFuncTurnOnElecRunDIDBL ,     14,800,0);
+  TF1 *ratioElecRunDIDEC        = new TF1("ratioElecRunDIDEC",           myFuncRatioElecRunDIDEC ,      14,800,0);
+  TF1 *turnOnElecRunDIDEC       = new TF1("turnOnElecRunDIDEC",          myFuncTurnOnElecRunDIDEC ,     14,800,0);
+
+  TF1 *ratioElecRunDIsoBL       = new TF1("ratioElecRunDIsoBL",          myFuncRatioElecRunDIsoBL ,     14,800,0);
+  TF1 *turnOnElecRunDIsoBL      = new TF1("turnOnElecRunDIsoBL",         myFuncTurnOnElecRunDIsoBL ,    14,800,0);
+  TF1 *ratioElecRunDIsoEC       = new TF1("ratioElecRunDIsoEC",          myFuncRatioElecRunDIsoEC ,     14,800,0);
+  TF1 *turnOnElecRunDIsoEC      = new TF1("turnOnElecRunDIsoEC",         myFuncTurnOnElecRunDIsoEC ,    14,800,0);
 
   TF1 *ratioElecRunABL      = new TF1("ratioElecRunABL",         myFuncRatioEleRunABL,      24,800,0);
   TF1 *turnOnElecRunABL     = new TF1("turnOnElecRunABL",        myFuncTurnOnEleRunABL,     24,800,0);
