@@ -61,6 +61,7 @@
 #define DOSVFITSTANDALONE false
 #define DOVBFMVA true
 #define READSOFT false
+#define DEBUG false
 
 using namespace ROOT::Math;
 using namespace std;
@@ -1252,7 +1253,6 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   for(int iJ=0 ; iJ<nJson ; iJ++)
     jsonMap[iJ] = readJSONFile(jsonFile[iJ]);
   bool isGoodRun=false;
-  cout << "defined" << endl;
   //////////////////////////
   
   // define double event counting remover //
@@ -1266,19 +1266,21 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     
     currentTree->GetEntry(n);
     if(n%5000==0) cout << n << endl;
-    bool isData = sample.Contains("Run2012");
+    //bool isData = sample.Contains("Run2012");
+    bool isData = sample.Contains("Run201");
 
     // APPLY JSON SELECTION //
     isGoodRun=true;
 
-    if(iJson_>=0 && iJson_<=3)
+    if(iJson_>=0 && iJson_<=4)
       isGoodRun = AcceptEventByRunAndLumiSection(run, lumi, jsonMap[iJson_]);
 
     if(!isGoodRun) continue;
+    if(DEBUG) cout << "passed JSON i=" << iJson_ << endl;
     /////////////////////////
 
     // REMOVE DOUBLE COUNTING OF EVENTS IN DATA //
-//     if(isData || sample.Contains("Embed")) {
+//     if(isData || sample.Contains("Emb")) {
 //       runEvt = make_pair(run,event);
 //       mapIter = mapRunsEvts.find( runEvt );
       
@@ -1714,7 +1716,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     nPUVertices_     = nPUVertices;
     embeddingWeight_ = embeddingWeight;
 
-    if(sample.Contains("Embed") && UnfoldDen1 && genTausP4->size()>1){
+    if(sample.Contains("Emb") && UnfoldDen1 && genTausP4->size()>1){
       float corrFactorEmbed = (UnfoldDen1->GetBinContent( UnfoldDen1->GetXaxis()->FindBin( (*genTausP4)[0].Eta() ) ,  UnfoldDen1->GetYaxis()->FindBin( (*genTausP4)[1].Eta() ) )); 
       embeddingWeight_ *=  corrFactorEmbed;
       //cout << "Correcting with " << corrFactorEmbed << endl;
@@ -1772,7 +1774,13 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     signalPFChargedHadrCands_ = signalPFChargedHadrCands;
     pfJetPt_                  = pfJetPt;
 
-    if( isData && !sample.Contains("Embed") ){
+    ////////////////////////////////
+    // CORRECTIONS : TRIGGER & SF //
+    ////////////////////////////////
+
+    if(DEBUG) cout << "Start checking trigger information" << endl;
+
+    if( isData && !sample.Contains("Emb") ){
 
       HLTx = float((*triggerBits)[0]  || // HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v4
 		   (*triggerBits)[1]  || // HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v5
@@ -1824,6 +1832,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
       SFMuIso= 1.0;
     } // end if Data
 
+    if(DEBUG) cout << "-- MC or embedded" << endl;
     else { // MC or embedded
 
       HLTxQCD     = 1.0;
@@ -1831,7 +1840,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
       HLTxETM     = 1.0; //MB L+tau+ETM is not present in MC, set always 1.
       L1etmWeight_= 1;            
 
-      if( !sample.Contains("Embed") ) { // Check trigger matching only for MC
+      if( !sample.Contains("Emb") ) { // Check trigger matching only for MC
 
 	HLTx  =  float((*triggerBits)[0]); // HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v2
 	HLTmu =  triggerBits->size()>1 ? float((*triggerBits)[1]) : 1.0; // HLT_Mu8_v16 //MB
@@ -1909,13 +1918,18 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
       
     }// end MC/embedded case
    
+    if(DEBUG) cout << "End of corrections trigger+SF" << endl;
+
     isTauLegMatched_ = isTauLegMatched;
-    if( !isData )
+    if( !isData ) {
+      if(DEBUG) cout << "!isData --> leptFakeTau = " ;
       leptFakeTau      = (isTauLegMatched==0 && (*genDiTauLegsP4)[1].E()>0) ? 1 : 0;
+      if(DEBUG) cout << leptFakeTau << endl;
+    }
     else 
       leptFakeTau = -99;
     
-    
+    if(DEBUG) cout << "CDF weight" << endl;    
     if(hfakeRateDYJets==0 || hfakeRateRun2011==0){
       CDFWeight       = -99;
     }
@@ -1933,6 +1947,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     effDYMC         = (hfakeRateDYJets!=0)  ? hfakeRateDYJets->GetBinContent(  hfakeRateDYJets->FindBin( pfJetPt, ptL2, 0) ) : -99;
 
     // Third lepton veto
+    if(DEBUG) cout << "Third lepton veto" << endl;
     leptonVeto_ = 0;
     if(doLepVeto) {
       for(u_int iMu=0 ; iMu<vetoMuonsP4->size() ; iMu++) {
@@ -1940,6 +1955,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
 	else leptonVeto_ = 1;
       }
     }
+    if(DEBUG) cout << "End 3rd lepton veto" << endl;
 
     isPFMuon_        = isPFMuon;
     isTightMuon_     = isTightMuon;
