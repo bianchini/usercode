@@ -454,11 +454,9 @@ Double_t myFuncTurnOnMuIdIso(Double_t *x, Double_t *par) {
   else return 0;
 }
 
-
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
+//
 // MUON TRIGGER
-
+//
 Double_t myFuncTurnOnMu(Double_t *x, Double_t *par) { 
 
   Double_t pt  = x[0];
@@ -467,7 +465,12 @@ Double_t myFuncTurnOnMu(Double_t *x, Double_t *par) {
   Int_t ratio  = (Int_t)par[2];
 
   const int nEta=6; // ]-inf,-1.2[ [-1.2,-0.8[ [-0.8,0[ [0,0.8[ [0.8,1.2[ [1.2,+inf[
-  const int nRun=5; // A, B, C, D, MC, (all)
+  const int nRun=7; // A, B, C, D, MC-old, ABCD, MC-new
+
+  // aborting cases //
+  if(run<0   || run>=nRun)   { cout << "Choose run>=0 and run<" << nRun << endl; return 0; }
+  if(ratio<0 || ratio>1) { cout << "Choose ratio=0 or 1"            << endl; return 0; }
+
   ratioEfficiencyTest* fitEffMu[nRun][nEta];
 
   // 2012A
@@ -502,7 +505,7 @@ Double_t myFuncTurnOnMu(Double_t *x, Double_t *par) {
   fitEffMu[3][4] = new ratioEfficiencyTest(16.7041, 0.383545,    0.467605,    1.59941, 0.882451);
   fitEffMu[3][5] = new ratioEfficiencyTest(15.9994, 7.37077e-05, 7.21076e-08, 1.58178, 0.861339);
 					   
-  // MC
+  // MC-old
   fitEffMu[4][0] = new ratioEfficiencyTest(15.997,  8.73042e-05, 5.36172e-08, 1.67934, 0.871415);
   fitEffMu[4][1] = new ratioEfficiencyTest(17.3339, 0.768105,    1.31172,     1.35161, 0.942887);
   fitEffMu[4][2] = new ratioEfficiencyTest(15.959,  0.0229759,   0.00597735,  1.76124, 0.980734);
@@ -510,9 +513,24 @@ Double_t myFuncTurnOnMu(Double_t *x, Double_t *par) {
   fitEffMu[4][4] = new ratioEfficiencyTest(16.7859, 0.443337,    0.571078,    1.62214, 0.919211);
   fitEffMu[4][5] = new ratioEfficiencyTest(15.9974, 8.50572e-05, 5.53033e-08, 1.64714, 0.888026);
 					   
-  // Choose function to be used
-  int iEta=-1;
-
+  // ABCD
+  fitEffMu[5][0] = new ratioEfficiencyTest(15.9825, 	7.90724e-05, 	5.49275e-08, 	1.6403, 	0.858285);
+  fitEffMu[5][1] = new ratioEfficiencyTest(17.3283, 	0.707103, 	1.2047, 	1.3732, 	0.900519);
+  fitEffMu[5][2] = new ratioEfficiencyTest(15.9828, 	0.0412999, 	0.0177441, 	1.66934, 	0.970097);
+  fitEffMu[5][3] = new ratioEfficiencyTest(15.9802, 	0.0548775, 	0.020313, 	1.79791, 	0.968398);
+  fitEffMu[5][4] = new ratioEfficiencyTest(16.8396, 	0.458636, 	0.633185, 	1.5706, 	0.8848);
+  fitEffMu[5][5] = new ratioEfficiencyTest(15.9987, 	8.94398e-05, 	5.18549e-08, 	1.8342, 	0.854625);
+					   
+  // MC-new
+  fitEffMu[6][0] = new ratioEfficiencyTest(16.0051, 	2.45144e-05, 	4.3335e-09, 	1.66134, 	0.87045);
+  fitEffMu[6][1] = new ratioEfficiencyTest(17.3135, 	0.747636, 	1.21803, 	1.40611, 	0.934983);
+  fitEffMu[6][2] = new ratioEfficiencyTest(15.9556, 	0.0236127, 	0.00589832, 	1.75409, 	0.981338);
+  fitEffMu[6][3] = new ratioEfficiencyTest(15.9289, 	0.0271317, 	0.00448573, 	1.92101, 	0.978625);
+  fitEffMu[6][4] = new ratioEfficiencyTest(16.5678, 	0.328333, 	0.354533, 	1.67085, 	0.916992);
+  fitEffMu[6][5] = new ratioEfficiencyTest(15.997,	7.90069e-05, 	4.40036e-08, 	1.66272, 	0.884502);
+					   
+  // choose iEta //
+  int iEta;
   if(eta < -1.2)      iEta = 0;
   else if(eta < -0.8) iEta = 1;
   else if(eta < 0)    iEta = 2;
@@ -520,38 +538,17 @@ Double_t myFuncTurnOnMu(Double_t *x, Double_t *par) {
   else if(eta < 1.2)  iEta = 4;
   else                iEta = 5;
 
-  if(run<0 || run>5) {cout << "Choose run in [0,5]" << endl; return 0; }
 
-  if(run==5) { // all 2012
-    if(ratio==1) { // compute ratio data/MC
-      if( fitEffMu[4][iEta]->turnOn(pt)!=0 ) 
-	return (fitEffMu[0][iEta]->turnOn(pt)*weightRunA +  
-		fitEffMu[1][iEta]->turnOn(pt)*weightRunB +  
-		fitEffMu[2][iEta]->turnOn(pt)*weightRunC +  
-		fitEffMu[3][iEta]->turnOn(pt)*weightRunD ) / fitEffMu[4][iEta]->turnOn(pt);
-      else return 0;
-    }
-    else { // compute efficiency
-      return (fitEffMu[0][iEta]->turnOn(pt)*weightRunA +  
-	      fitEffMu[1][iEta]->turnOn(pt)*weightRunB +  
-	      fitEffMu[2][iEta]->turnOn(pt)*weightRunC +  
-	      fitEffMu[3][iEta]->turnOn(pt)*weightRunD );
-    }
-  }
-  
-  // A,B,C,D,MC
-  else {
-    if(ratio==1) { // compute ratio data/MC
-      if( fitEffMu[4][iEta]->turnOn(pt)!=0 ) 
-	return fitEffMu[run][iEta]->turnOn(pt) / fitEffMu[4][iEta]->turnOn(pt);
-      else return 0;
-    }
-    else { // compute efficiency
-      return fitEffMu[run][iEta]->turnOn(pt) ;
-    }
-  }
+  // return relevant result //
+  if(ratio==0) return fitEffMu[run][iEta]->turnOn(pt) ;
 
-  //return 0;
+  else if(run>=0 && run<=3) 
+    return fitEffMu[4][iEta]->turnOn(pt)!=0 ? fitEffMu[run][iEta]->turnOn(pt) / fitEffMu[4][iEta]->turnOn(pt) : 0;
+
+  else if(run==5)
+    return fitEffMu[6][iEta]->turnOn(pt)!=0 ? fitEffMu[run][iEta]->turnOn(pt) / fitEffMu[6][iEta]->turnOn(pt) : 0;
+
+  else return 0;
 
 }
 
