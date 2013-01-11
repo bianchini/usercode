@@ -33,7 +33,7 @@
 #include "PhysicsTools/FWLite/interface/TFileService.h"
 #include "TauAnalysis/CandidateTools/interface/candidateAuxFunctions.h"
 #include "TauAnalysis/CandidateTools/interface/neuralMtautauAuxFunctions.h"
-#include "Bianchi/Utilities/interface/BtagSF.hh"
+#include "Bianchi/Utilities/interface/BtagSF.hh" // --> TO UPDATE FOR MORIOND !!!!!
 #include "/home/llr/cms/ndaci/SKWork/macro/skEfficiency/analyzers/COMMON/readJSONFile.cc"
 
 #include "Math/Vector3D.h"
@@ -63,13 +63,24 @@
 #define READSOFT false
 #define DEBUG false
 
+// Weights of differents periods
+#define wA  0.04185 //0.067   L=810.99
+#define wB  0.22924 //0.367   L=4442.288743
+#define wC  0.35354 //0.566   L=6851.050214
+#define wD  0.37537 //0       L=7274
+// total L(ABC)= 12104.329
+// total L(D)  = 7274
+// total ABCD  = 19378.329
+
 using namespace ROOT::Math;
 using namespace std;
 
 typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LV;
 //edm::LumiReWeighting LumiWeights_("../../Utilities/data/pileUp/MC_Summer12_PU_S10-600bins.root","../../Utilities/data/pileUp/Data_Pileup_2012_HCP-600bins.root","pileup","pileup");
 //edm::LumiReWeighting LumiWeights_("/data_CMS/cms/htautau/SoftLeptonAnalysis/tools/MC_Summer12_PU_S10-600bins.root","/data_CMS/cms/htautau/SoftLeptonAnalysis/tools/Data_Pileup_2012D_19-26OctPlus02-16Nov-600bins-mbiasXS69400.root","pileup","pileup"); //MB
-edm::LumiReWeighting LumiWeights_("/data_CMS/cms/htautau/Moriond/tools/MC_Summer12_PU_S10-600bins.root","/data_CMS/cms/htautau/Moriond/tools/Data_Pileup_2012_Moriond-600bins.root","pileup","pileup"); //MB
+edm::LumiReWeighting LumiWeights_("/data_CMS/cms/htautau/Moriond/tools/MC_Summer12_PU_S10-600bins.root","/data_CMS/cms/htautau/Moriond/tools/Data_Pileup_2012_Moriond-600bins.root","pileup","pileup");
+edm::LumiReWeighting LumiWeightsHCP_("/data_CMS/cms/htautau/Moriond/tools/MC_Summer12_PU_S10-600bins.root","/data_CMS/cms/htautau/Moriond/tools/Data_Pileup_2012_HCP-600bins.root","pileup","pileup"); 
+edm::LumiReWeighting LumiWeightsD_("/data_CMS/cms/htautau/Moriond/tools/MC_Summer12_PU_S10-600bins.root","/data_CMS/cms/htautau/Moriond/tools/Data_Pileup_2012_DOnly-600bins.root","pileup","pileup"); 
 
 enum BVariation{kNo = 0, kDown = 1, kUp = 2};
 BtagSF* btsf = new BtagSF(12345);
@@ -220,6 +231,24 @@ float pileupWeight( float intimepileup_ ){
 
   //return LumiWeights_.ITweight(intimepileup);
   return LumiWeights_.weight(intimepileup);
+  
+}
+
+float pileupWeightHCP( float intimepileup_ ){
+
+  float intimepileup = intimepileup_; //>59 ? 59 : intimepileup_;
+
+  //return LumiWeights_.ITweight(intimepileup);
+  return LumiWeightsHCP_.weight(intimepileup);
+  
+}
+
+float pileupWeightD( float intimepileup_ ){
+
+  float intimepileup = intimepileup_; //>59 ? 59 : intimepileup_;
+
+  //return LumiWeights_.ITweight(intimepileup);
+  return LumiWeightsD_.weight(intimepileup);
   
 }
 
@@ -386,14 +415,8 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   cout << "Using corrections from llrCorrections_Moriond.root" << endl;
   TFile corrections("/data_CMS/cms/htautau/Moriond/tools/llrCorrections_Moriond.root");
   
-  TF1 *ratioMuIDBL1       = (TF1*)corrections.Get("ratioMuIDBL1");
-  TF1 *ratioMuIDBL2       = (TF1*)corrections.Get("ratioMuIDBL2");
-  TF1 *ratioMuIDEC        = (TF1*)corrections.Get("ratioMuIDEC");
-  TF1 *ratioMuIsoBL1      = (TF1*)corrections.Get("ratioMuIsoBL1");
-  TF1 *ratioMuIsoBL2      = (TF1*)corrections.Get("ratioMuIsoBL2");
-  TF1 *ratioMuIsoEC       = (TF1*)corrections.Get("ratioMuIsoEC");
-
-  TF1 *turnOnMu       = (TF1*)corrections.Get("turnOnMu"); // par=[eta,run,ratio]  
+  TF1 *turnOnMu       = (TF1*)corrections.Get("turnOnMu");      // par=[eta,run,ratio]  
+  TF1 *turnOnMuIdIso  = (TF1*)corrections.Get("turnOnMuIdIso"); // par=[eta,run,ratio]  
 
   TF1 *ratioTauMuTauBL    = (TF1*)corrections.Get("ratioTauMuTauBL");  
   TF1 *ratioTauMuTauEC    = (TF1*)corrections.Get("ratioTauMuTauEC"); 
@@ -410,14 +433,8 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   TF1 *turnOnTauMuTauRunDBL   = (TF1*)corrections.Get("turnOnTauMuTauRunDBL");  
   TF1 *turnOnTauMuTauRunDEC   = (TF1*)corrections.Get("turnOnTauMuTauRunDEC");  
 
-  if(!ratioMuIDBL1)       cout << "Missing corrections for MuID (BL1)" << endl;
-  if(!ratioMuIDBL2)       cout << "Missing corrections for MuID (BL2)" << endl;
-  if(!ratioMuIDEC)        cout << "Missing corrections for MuID (EC)" << endl;
-  if(!ratioMuIsoBL1)      cout << "Missing corrections for MuIso (BL1)" << endl;
-  if(!ratioMuIsoBL2)      cout << "Missing corrections for MuIso (BL2)" << endl;
-  if(!ratioMuIsoEC)       cout << "Missing corrections for MuIso (EC)" << endl;
-
-  if(!turnOnMu) cout << "Missing Mu trigger corrections" << endl;
+  if(!turnOnMu)      cout << "Missing Mu trigger corrections" << endl;
+  if(!turnOnMuIdIso) cout << "Missing Mu id+iso  corrections" << endl;
 
   if(!ratioTauMuTauBL)    cout << "Missing corrections for tau HLT (BL)" << endl;
   if(!ratioTauMuTauEC)    cout << "Missing corrections for tau HLT (EC)" << endl;
@@ -441,16 +458,16 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   //TH2F* UnfoldDen1 = embeddingUnfoldingLead.IsZombie()    ? 0 : (TH2F*)embeddingUnfoldingLead.Get("UnfoldDen1");
   //TH2F* UnfoldDen2 = embeddingUnfoldingSubLead.IsZombie() ? 0 : (TH2F*)embeddingUnfoldingSubLead.Get("UnfoldDen2");
 
-  TFile embeddingUnfolding("../../Utilities/data/unfolding/Unfold2DEta.root");
+  TFile embeddingUnfolding("../../Utilities/data_arch/unfolding/Unfold2DEta.root");
   TH2F* UnfoldDen1 = embeddingUnfolding.IsZombie()    ? 0 : (TH2F*)embeddingUnfolding.Get("UnfoldDen1");
   if(UnfoldDen1) cout << "Unfolding for embedded sample open!!" << endl;
 
   //////////////////////////////////////////////////////////
 
   cout << "Using fake-rate method from fakeRate.root" << endl;
-  TFile fakeRate_DYJets ("../../Utilities/data/fakeRate/fakeRate_DYJetsToTauTau_rebinned.root","READ");
-  TFile fakeRate_Run2011("../../Utilities/data/fakeRate/fakeRate_Run2011AB_rebinned.root","READ");
-  TFile fakeRate_WJets  ("../../Utilities/data/fakeRate/fakeRate_WJetsToMuNu_rebinned.root","READ");
+  TFile fakeRate_DYJets ("../../Utilities/data_arch/fakeRate/fakeRate_DYJetsToTauTau_rebinned.root","READ");
+  TFile fakeRate_Run2011("../../Utilities/data_arch/fakeRate/fakeRate_Run2011AB_rebinned.root","READ");
+  TFile fakeRate_WJets  ("../../Utilities/data_arch/fakeRate/fakeRate_WJetsToMuNu_rebinned.root","READ");
 
  
   TH3F* hfakeRateDYJets  = 0;
@@ -562,17 +579,26 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   float fakeRateRun2011, fakeRateWMC, effDYMC, CDFWeight;
 
   // event-related variables
-  float numPV_ , sampleWeight, puWeight, puWeight2, embeddingWeight_,HqTWeight, weightHepNup;
+  float numPV_ , sampleWeight, puWeight, puWeight2, embeddingWeight_,HqTWeight, weightHepNup, puWeightHCP, puWeightD;
   int numOfLooseIsoDiTaus_;
   int nPUVertices_;
  
-  // object-related weights and triggers
-  float HLTx,HLTmu,HLTmatch,HLTweightTau, HLTweightMu, SFMu, SFTau, HLTMu, HLTTau;
-  float HLTxQCD,HLTmatchQCD; //for QCD estimation
-  float SFMuID, SFMuIso;
-  float HLTweightMuSoft, HLTMuSoft; //MB
-  float HLTweightMuD, HLTMuD, HLTweightTauD, HLTTauD, HLTweightTauABC, HLTTauABC; //ND -> D only performance (for comparison)
-  float HLTxETM,HLTmatchETM; //MB
+  // Event trigger matching
+  float HLTx, HLTmatch, HLTxQCD, HLTmatchQCD, HLTxETM, HLTmatchETM;
+
+  // Muon weights
+  float HLTMu, HLTMuA, HLTMuB, HLTMuC, HLTMuD, HLTMuABC, HLTMuABCD, HLTMuMCold, HLTMuSoft;
+  float HLTweightMu, HLTweightMuA, HLTweightMuB, HLTweightMuC, HLTweightMuD, HLTweightMuABC, HLTweightMuABCD, HLTweightMuSoft;
+  float SFMuID, SFMuID_ABC, SFMuID_D, SFMuID_ABCD;
+  float SFMuIso, SFMuIso_ABC, SFMuIso_D, SFMuIso_ABCD;
+  float SFMu, SFMu_ABC, SFMu_D, SFMu_ABCD;
+
+  // Tau weights
+  float HLTTau, HLTTauD, HLTTauABC;
+  float HLTweightTau, HLTweightTauD, HLTweightTauABC;
+  float SFTau;
+
+  // Other informations about mu/tau
   int isTauLegMatched_,muFlag_,isPFMuon_,isTightMuon_,genDecay_,leptFakeTau;
   int vetoEvent_, leptonVeto_;
   
@@ -767,6 +793,8 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   outTreePtOrd->Branch("numPV",              &numPV_,"numPV/F");
   outTreePtOrd->Branch("sampleWeight",       &sampleWeight,"sampleWeight/F"); 
   outTreePtOrd->Branch("puWeight",           &puWeight,"puWeight/F");
+  outTreePtOrd->Branch("puWeightHCP",        &puWeightHCP,"puWeightHCP/F");
+  outTreePtOrd->Branch("puWeightD",          &puWeightD,"puWeightD/F");
   outTreePtOrd->Branch("puWeight2",          &puWeight2,"puWeight2/F");
   outTreePtOrd->Branch("embeddingWeight",    &embeddingWeight_,"embeddingWeight/F");
   outTreePtOrd->Branch("weightHepNup",       &weightHepNup,"weightHepNup/F");
@@ -775,28 +803,53 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   outTreePtOrd->Branch("nPUVertices",        &nPUVertices_, "nPUVertices/I");
 
   outTreePtOrd->Branch("HLTx",         &HLTx, "HLTx/F");
-  outTreePtOrd->Branch("HLTmu",        &HLTmu,"HLTmu/F");
   outTreePtOrd->Branch("HLTmatch",     &HLTmatch,"HLTmatch/F");
-  outTreePtOrd->Branch("HLTweightMu",  &HLTweightMu,"HLTweightMu/F");
-  outTreePtOrd->Branch("HLTweightMuD", &HLTweightMuD,"HLTweightMuD/F");
-  outTreePtOrd->Branch("HLTweightMuSoft",&HLTweightMuSoft,"HLTweightMuSoft/F"); //MB
-  outTreePtOrd->Branch("HLTweightTau", &HLTweightTau,"HLTweightTau/F");
-  outTreePtOrd->Branch("HLTweightTauD",&HLTweightTauD,"HLTweightTauD/F");
-  outTreePtOrd->Branch("HLTweightTauABC",&HLTweightTauABC,"HLTweightTauABC/F");
-  outTreePtOrd->Branch("HLTMu",        &HLTMu,"HLTMu/F");
-  outTreePtOrd->Branch("HLTMuD",       &HLTMuD,"HLTMuD/F");
-  outTreePtOrd->Branch("HLTMuSoft",    &HLTMuSoft,"HLTMuSoft/F"); //MB
-  outTreePtOrd->Branch("HLTTau",       &HLTTau,"HLTTau/F");
-  outTreePtOrd->Branch("HLTTauD",      &HLTTauD,"HLTTauD/F");
-  outTreePtOrd->Branch("HLTTauABC",    &HLTTauABC,"HLTTauABC/F");
-  outTreePtOrd->Branch("SFTau",        &SFTau,"SFTau/F");
-  outTreePtOrd->Branch("SFMu",         &SFMu,"SFMu/F");
-  outTreePtOrd->Branch("SFMuID",       &SFMuID,"SFMuID/F");
-  outTreePtOrd->Branch("SFMuIso",      &SFMuIso,"SFMuIso/F");
   outTreePtOrd->Branch("HLTxQCD",      &HLTxQCD, "HLTxQCD/F"); 
   outTreePtOrd->Branch("HLTmatchQCD",  &HLTmatchQCD,"HLTmatchQCD/F"); 
   outTreePtOrd->Branch("HLTxETM",      &HLTxETM, "HLTxETM/F"); 
   outTreePtOrd->Branch("HLTmatchETM",  &HLTmatchETM,"HLTmatchETM/F"); 
+
+  // muons
+  outTreePtOrd->Branch("HLTweightMu",  &HLTweightMu,"HLTweightMu/F");
+  outTreePtOrd->Branch("HLTweightMuA", &HLTweightMuA,"HLTweightMuA/F");
+  outTreePtOrd->Branch("HLTweightMuB", &HLTweightMuB,"HLTweightMuB/F");
+  outTreePtOrd->Branch("HLTweightMuC", &HLTweightMuC,"HLTweightMuC/F");
+  outTreePtOrd->Branch("HLTweightMuD", &HLTweightMuD,"HLTweightMuD/F");
+  outTreePtOrd->Branch("HLTweightMuABC", &HLTweightMuABC,"HLTweightMuABC/F");
+  outTreePtOrd->Branch("HLTweightMuABCD", &HLTweightMuABCD,"HLTweightMuABCD/F");
+  outTreePtOrd->Branch("HLTweightMuSoft",&HLTweightMuSoft,"HLTweightMuSoft/F"); //MB
+  //
+  outTreePtOrd->Branch("HLTMu",  &HLTMu,"HLTMu/F");
+  outTreePtOrd->Branch("HLTMuA", &HLTMuA,"HLTMuA/F");
+  outTreePtOrd->Branch("HLTMuB", &HLTMuB,"HLTMuB/F");
+  outTreePtOrd->Branch("HLTMuC", &HLTMuC,"HLTMuC/F");
+  outTreePtOrd->Branch("HLTMuD", &HLTMuD,"HLTMuD/F");
+  outTreePtOrd->Branch("HLTMuABC", &HLTMuABC,"HLTMuABC/F");
+  outTreePtOrd->Branch("HLTMuABCD", &HLTMuABCD,"HLTMuABCD/F");
+  outTreePtOrd->Branch("HLTMuSoft",&HLTMuSoft,"HLTMuSoft/F"); //MB
+  //
+  outTreePtOrd->Branch("SFMu",         &SFMu,     "SFMu/F");
+  outTreePtOrd->Branch("SFMu_ABC",     &SFMu_ABC, "SFMu_ABC/F");
+  outTreePtOrd->Branch("SFMu_D",       &SFMu_D,   "SFMu_D/F");
+  outTreePtOrd->Branch("SFMu_ABCD",    &SFMu_ABCD,"SFMu_ABCD/F");
+  outTreePtOrd->Branch("SFMuID",         &SFMuID,     "SFMuID/F");
+  outTreePtOrd->Branch("SFMuID_ABC",     &SFMuID_ABC, "SFMuID_ABC/F");
+  outTreePtOrd->Branch("SFMuID_D",       &SFMuID_D,   "SFMuID_D/F");
+  outTreePtOrd->Branch("SFMuID_ABCD",    &SFMuID_ABCD,"SFMuID_ABCD/F");
+  outTreePtOrd->Branch("SFMuIso",         &SFMuIso,     "SFMuIso/F");
+  outTreePtOrd->Branch("SFMuIso_ABC",     &SFMuIso_ABC, "SFMuIso_ABC/F");
+  outTreePtOrd->Branch("SFMuIso_D",       &SFMuIso_D,   "SFMuIso_D/F");
+  outTreePtOrd->Branch("SFMuIso_ABCD",    &SFMuIso_ABCD,"SFMuIso_ABCD/F");
+
+  // taus
+  outTreePtOrd->Branch("HLTweightTau", &HLTweightTau,"HLTweightTau/F");
+  outTreePtOrd->Branch("HLTweightTauD",&HLTweightTauD,"HLTweightTauD/F");
+  outTreePtOrd->Branch("HLTweightTauABC",&HLTweightTauABC,"HLTweightTauABC/F");
+  outTreePtOrd->Branch("HLTTau",       &HLTTau,"HLTTau/F");
+  outTreePtOrd->Branch("HLTTauD",      &HLTTauD,"HLTTauD/F");
+  outTreePtOrd->Branch("HLTTauABC",    &HLTTauABC,"HLTTauABC/F");
+  //
+  outTreePtOrd->Branch("SFTau",        &SFTau,"SFTau/F");
 
   outTreePtOrd->Branch("isTauLegMatched", &isTauLegMatched_,"isTauLegMatched/I");
   outTreePtOrd->Branch("muFlag",          &muFlag_,"muFlag/I"); 
@@ -1196,19 +1249,19 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   cout << "SetBranchAddress done" << endl;
 
   if(sample_.find("WJets")!=string::npos){
-    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_wjets_njet.root");
-    recoilCorr->addMCFile(           "../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
-    recoilCorr->addDataFile(         "../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
+    recoilCorr = new RecoilCorrector("../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_wjets_njet.root");
+    recoilCorr->addMCFile(           "../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
+    recoilCorr->addDataFile(         "../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
   }
   else if(sample_.find("DYJets")!=string::npos){
-    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zjets_ltau_njet.root");
-    recoilCorr->addMCFile(           "../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
-    recoilCorr->addDataFile(         "../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
+    recoilCorr = new RecoilCorrector("../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zjets_ltau_njet.root");
+    recoilCorr->addMCFile(           "../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
+    recoilCorr->addDataFile(         "../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
   }
   else if(sample_.find("H1")!=string::npos){
-    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_higgs_njet.root");
-    recoilCorr->addMCFile(           "../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
-    recoilCorr->addDataFile(         "../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
+    recoilCorr = new RecoilCorrector("../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_higgs_njet.root");
+    recoilCorr->addMCFile(           "../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
+    recoilCorr->addDataFile(         "../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
   }
     
 
@@ -1228,7 +1281,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     if(sample_.find("GGFH145")!=string::npos) mH = 145;
     if(sample_.find("GGFH160")!=string::npos) mH = 160;
     cout << "Reweighting powheg with HqT mH=" << mH << endl;
-    HqT = new TFile(Form("../../Utilities/data/HqTFeHiPro/weight_ptH_%d.root", mH));
+    HqT = new TFile(Form("../../Utilities/data_arch/HqTFeHiPro/weight_ptH_%d.root", mH));
     if(!HqT) cout << "Cannot find HqT file..." << endl;
     else{
       histo = (TH1F*)(HqT->Get(Form("powheg_weight/weight_hqt_fehipro_fit_%d",mH)));
@@ -1361,6 +1414,8 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
         if(isMistagDown)nJets20BTaggedLDown++;
       }
     }
+
+    if(DEBUG) cout << "look at first jet" << endl;
 
     // first jet
     if(lead>=0){
@@ -1537,7 +1592,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     diTauCharge_    = diTauCharge;
     
     ////////////////////////////////////////////////////////////////////
-
+    if(DEBUG) cout << "Look at MET correct" << endl;
     TLorentzVector corrMET_tmp;
     LV corrMET(1,0,0,1);
     double corrPt = (*METP4)[0].Et(); double corrPhi = (*METP4)[0].Phi();
@@ -1715,6 +1770,8 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     sampleWeight     = scaleFactor; 
     //puWeight         = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : mcPUweight ;
     puWeight         = isData ? 1.0 : pileupWeight( nPUVertices);   
+    puWeightHCP      = isData ? 1.0 : pileupWeightHCP( nPUVertices);   
+    puWeightD        = isData ? 1.0 : pileupWeightD( nPUVertices);   
     puWeight2        = isData ? 1.0 : pileupWeight2(int(nPUVertices));   
     //puWeight         = (std::string(sample.Data())).find("Run2012")!=string::npos ? 1.0 : Lumi3DReWeighting->weight3D(nPUVerticesM1, nPUVertices, nPUVerticesP1) ;
     nPUVertices_     = nPUVertices;
@@ -1822,7 +1879,6 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
       HLTweightTauD = 1.0;
       HLTweightMuD  = 1.0;
       HLTweightMuSoft = 1.0;
-      HLTmu   = 1.0;
       HLTMu   = 1.0;
       HLTTau  = 1.0;
       HLTMuD  = 1.0;
@@ -1864,7 +1920,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
       }
       else {
 	L1etmCorr_ = L1etm_ ;
-	HLTx = HLTmu = HLTmatch = HLTmatchETM = 1.0;
+	HLTx = HLTmatch = HLTmatchETM = 1.0;
       }
 
       // Weights for both MC and embedded
@@ -1888,36 +1944,54 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
       }
       
       // Muon
-      float ptMaxMu = 14.0;
 
       // trigger
       Double_t mupt[1] = {(Double_t) ptL1};
       Double_t muptSoft[1] = {(Double_t) (ptL1+17.-8.)};
       Double_t par[3]={etaL1,0,0};
-      // par[1]=run (A,B,C,D,MC,ABCD) ; par[2]=ratio(0=efficiency,1=ratio)
+      // par[1]=run (A,B,C,D,MC-old,ABCD,MC-new) ; par[2]=ratio(0=efficiency,1=ratio)
 
-      par[1]=5; par[2]=1; HLTweightMu     = turnOnMu->EvalPar( mupt, par);
+      par[1]=0; par[2]=1; HLTweightMuA    = turnOnMu->EvalPar( mupt, par);
+      par[1]=1; par[2]=1; HLTweightMuB    = turnOnMu->EvalPar( mupt, par);
+      par[1]=2; par[2]=1; HLTweightMuC    = turnOnMu->EvalPar( mupt, par);
       par[1]=3; par[2]=1; HLTweightMuD    = turnOnMu->EvalPar( mupt, par);
       par[1]=3; par[2]=1; HLTweightMuSoft = turnOnMu->EvalPar( muptSoft, par);
-      par[1]=5; par[2]=0; HLTMu           = turnOnMu->EvalPar( mupt, par);
+      par[1]=5; par[2]=1; HLTweightMuABCD = turnOnMu->EvalPar( mupt, par);
+
+      par[1]=0; par[2]=0; HLTMuA          = turnOnMu->EvalPar( mupt, par);
+      par[1]=1; par[2]=0; HLTMuB          = turnOnMu->EvalPar( mupt, par);
+      par[1]=2; par[2]=0; HLTMuC          = turnOnMu->EvalPar( mupt, par);
       par[1]=3; par[2]=0; HLTMuD          = turnOnMu->EvalPar( mupt, par);
       par[1]=3; par[2]=0; HLTMuSoft       = turnOnMu->EvalPar( muptSoft, par);
+      par[1]=5; par[2]=0; HLTMuABCD       = turnOnMu->EvalPar( mupt, par);
 
-      if(TMath::Abs(etaL1)<=0.8) {
-	SFMuID  = ratioMuIDBL1->Eval( std::max( ptL1 , ptMaxMu ) ) ;
-	SFMuIso = ratioMuIsoBL1->Eval( std::max( ptL1 , ptMaxMu ) ) ;
-	SFMu    = SFMuID*SFMuIso;
-      }
-      else if(TMath::Abs(etaL1)>0.8 && TMath::Abs(etaL1)<=1.2) {
-	SFMuID  = ratioMuIDBL2->Eval( std::max( ptL1 , ptMaxMu ) ) ;
- 	SFMuIso = ratioMuIsoBL2->Eval( std::max( ptL1 , ptMaxMu ) ) ;
-	SFMu    = SFMuID*SFMuIso;
-      }
-      else {
-	SFMuID  = ratioMuIDEC->Eval( std::max( ptL1 , ptMaxMu ) ) ;
-	SFMuIso = ratioMuIsoEC->Eval( std::max( ptL1 , ptMaxMu ) ) ;
-	SFMu    = SFMuID*SFMuIso;
-      }
+      par[1]=4; par[2]=0; HLTMuMCold      = turnOnMu->EvalPar( mupt, par);
+      HLTMuABC       = (HLTMuA*wA + HLTMuB*wB + HLTMuC*wC)/(wA+wB+wC) ;
+      HLTweightMuABC = HLTMuMCold!=0 ?  HLTMuABC / HLTMuMCold : 0;
+
+      HLTMu = HLTMuABCD; 
+      HLTweightMu = HLTweightMuABCD;
+
+      // id+iso scale factors
+      float ptMaxMu = 14.0;
+      Double_t muptIdIso[1] = {(Double_t) std::max(ptL1,ptMaxMu)};
+      Double_t parIdIso[4]={etaL1,0,1,0}; // eta, run, ratio, idiso
+
+      parIdIso[1]=0; parIdIso[3]=0; SFMuID_ABCD  = turnOnMuIdIso->EvalPar( muptIdIso, parIdIso );
+      parIdIso[1]=0; parIdIso[3]=1; SFMuIso_ABCD = turnOnMuIdIso->EvalPar( muptIdIso, parIdIso );
+      SFMu_ABCD = SFMuID_ABCD*SFMuIso_ABCD;
+
+      parIdIso[1]=2; parIdIso[3]=0; SFMuID_ABC  = turnOnMuIdIso->EvalPar( muptIdIso, parIdIso );
+      parIdIso[1]=2; parIdIso[3]=1; SFMuIso_ABC = turnOnMuIdIso->EvalPar( muptIdIso, parIdIso );
+      SFMu_ABC = SFMuID_ABC*SFMuIso_ABC;
+
+      parIdIso[1]=4; parIdIso[3]=0; SFMuID_D  = turnOnMuIdIso->EvalPar( muptIdIso, parIdIso );
+      parIdIso[1]=4; parIdIso[3]=1; SFMuIso_D = turnOnMuIdIso->EvalPar( muptIdIso, parIdIso );
+      SFMu_D = SFMuID_D*SFMuIso_D;
+      
+      SFMu    = SFMu_ABCD;
+      SFMuID  = SFMuID_ABCD;
+      SFMuIso = SFMuIso_ABCD;
       
     }// end MC/embedded case
    
