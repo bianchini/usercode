@@ -1782,34 +1782,32 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
 
     if( isData && !sample.Contains("Emb") ){
 
-      HLTx = float((*triggerBits)[0]  || // HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v4
-		   (*triggerBits)[1]  || // HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v5
-		   (*triggerBits)[2]  || // HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v6
-		   (*triggerBits)[3]  || // HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v2
-		   (*triggerBits)[4]  || // HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v3
-		   (*triggerBits)[13] || // HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v6
-		   (*triggerBits)[14] ); // HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v7
+      bool b_HLTx = false;
+      for(int i=0 ; i<9 ; i++)
+	b_HLTx = b_HLTx || (*triggerBits)[i]; // HLT_IsoMu18_eta2p1_LooseIsoPFTau20_v4-6 , HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v2-7
 
-      HLTxQCD = float((*triggerBits)[5]  || // HLT_Mu18_eta2p1_LooseIsoPFTau20_v4
-		      (*triggerBits)[6]  || // HLT_Mu18_eta2p1_LooseIsoPFTau20_v5
-		      (*triggerBits)[7]  || // HLT_Mu18_eta2p1_LooseIsoPFTau20_v6
-		      (*triggerBits)[8]  || // HLT_Mu17_eta2p1_LooseIsoPFTau20_v2
-		      (*triggerBits)[9]  || // HLT_Mu17_eta2p1_LooseIsoPFTau20_v3
-		      (*triggerBits)[15] || // HLT_Mu17_eta2p1_LooseIsoPFTau20_v6
-		      (*triggerBits)[16] ); // HLT_Mu17_eta2p1_LooseIsoPFTau20_v7
-      
-      HLTxETM = float((*triggerBits)[10]); // HLT_IsoMu8_eta2p1_LooseIsoPFTau20_L1ETM26_v1
+      HLTx = b_HLTx ? 1.0 : 0.0 ;
 
-      bool isTriggMatched = (((*tauXTriggers)[2]  && (*tauXTriggers)[13]) || // hltOverlapFilterIsoMu18LooseIsoPFTau20
-			     ((*tauXTriggers)[3]  && (*tauXTriggers)[14]));  // hltOverlapFilterIsoMu17LooseIsoPFTau20
+      bool b_HLTxQCD = false;
+      for(int i=9 ; i<18 ; i++)
+	b_HLTxQCD = b_HLTxQCD || (*triggerBits)[i]; // HLT_Mu18_eta2p1_LooseIsoPFTau20_v4-6 , HLT_Mu17_eta2p1_LooseIsoPFTau20_v2-7
+
+      HLTxQCD = b_HLTxQCD ? 1.0 : 0.0 ;
+
+      //HLTxETM = float((*triggerBits)[10]); // HLT_IsoMu8_eta2p1_LooseIsoPFTau20_L1ETM26_v1
+      HLTxETM = 0;
+
+      bool isTriggMatched = (((*tauXTriggers)[2]  && (*tauXTriggers)[6]) || // hltOverlapFilterIsoMu18LooseIsoPFTau20
+			     ((*tauXTriggers)[3]  && (*tauXTriggers)[7]));  // hltOverlapFilterIsoMu17LooseIsoPFTau20
       HLTmatch = isTriggMatched ? 1.0 : 0.0 ;
       
-      bool isTriggMatchedQCD = (((*tauXTriggers)[4]  && (*tauXTriggers)[15]) || // hltOverlapFilterMu18LooseIsoPFTau20
-				((*tauXTriggers)[5]  && (*tauXTriggers)[16]));  // hltOverlapFilterMu17LooseIsoPFTau20
+      bool isTriggMatchedQCD = (((*tauXTriggers)[4]  && (*tauXTriggers)[8]) || // hltOverlapFilterMu18LooseIsoPFTau20
+				((*tauXTriggers)[5]  && (*tauXTriggers)[9]));  // hltOverlapFilterMu17LooseIsoPFTau20
       HLTmatchQCD = isTriggMatchedQCD ? 1.0 : 0.0 ;       
 
-      bool isTriggMatchedETM = (((*tauXTriggers)[7]  && (*tauXTriggers)[17]));  // hltOverlapFilterIsoMu8LooseIsoPFTau20
-      //isTriggMatchedETM &= (L1etm_>26);//MB is this x-check needed?
+      //bool isTriggMatchedETM = (((*tauXTriggers)[7]  && (*tauXTriggers)[17]));  // hltOverlapFilterIsoMu8LooseIsoPFTau20
+      // //isTriggMatchedETM &= (L1etm_>26);//MB is this x-check needed?
+      bool isTriggMatchedETM = false;
       HLTmatchETM = isTriggMatchedETM ? 1.0 : 0.0 ;//MB
 
       L1etmWeight_ = 1;    //no correction for data
@@ -1843,17 +1841,18 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
       if( !sample.Contains("Emb") ) { // Check trigger matching only for MC
 
 	HLTx  =  float((*triggerBits)[0]); // HLT_IsoMu17_eta2p1_LooseIsoPFTau20_v2
-	HLTmu =  triggerBits->size()>1 ? float((*triggerBits)[1]) : 1.0; // HLT_Mu8_v16 //MB
+	//HLTmu =  triggerBits->size()>1 ? float((*triggerBits)[1]) : 1.0; // HLT_Mu8_v16 //MB
 	
-	bool isTriggMatched = (*tauXTriggers)[2] && (*tauXTriggers)[5] ; // hltOverlapFilterIsoMu17LooseIsoPFTau20 //MB
+	bool isTriggMatched = (*tauXTriggers)[2] && (*tauXTriggers)[3] ; // hltOverlapFilterIsoMu17LooseIsoPFTau20 //MB
 	HLTmatch = isTriggMatched ? 1.0 : 0.0;
 	
 	
 	//eumlate matching by matching to L1Mu7, HLT_Mu8 (w/o iso :(), offline tagTau and cut on L1etm  
-	bool isTriggMatchedETM = ( (*tauXTriggers)[3] && // Mu8 //MB
-				   (*tauXTriggers)[4] && // L1ExtraMu Pt>7, |eta|<2.1 //MB
-				   (*tauXTriggers)[6] ); // offline trgTau  //MB
-	
+	//bool isTriggMatchedETM = ( (*tauXTriggers)[3] && // Mu8 //MB
+	//		   (*tauXTriggers)[4] && // L1ExtraMu Pt>7, |eta|<2.1 //MB
+	//		   (*tauXTriggers)[6] ); // offline trgTau  //MB
+	bool isTriggMatchedETM = false;
+
 	L1etmCorr_  = L1etm_*0.8716;//difference of 'energy scale' found by fittig landau convoluted with gaus (MPV_data/MPV_mc=1.59390e+01/1.82863e+01)
 
 	//isTriggMatchedETM &= (L1etm_>26);
