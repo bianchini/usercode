@@ -6,10 +6,13 @@
 #include "ratioEfficiencyTest.C"
 
 // Weights of differents periods
-#define weightRunA  0.067
-#define weightRunB  0.367 
-#define weightRunC  0.566
-#define weightRunD  0
+#define weightRunA  0.04185 //0.067   L=810.99
+#define weightRunB  0.22924 //0.367   L=4442.288743
+#define weightRunC  0.35354 //0.566   L=6851.050214
+#define weightRunD  0.37537 //0       L=7274
+// total L(ABC)= 12104.329
+// total L(D)  = 7274
+// total ABCD  = 19378.329
 
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////
@@ -847,7 +850,7 @@ Double_t myFuncTurnOnTauMuTauEC(Double_t* x, Double_t *par) {
 /////////////////////////////////////////////////
 void makeFile(){
 
-  TFile* fout = new TFile("llrCorrections_ETM.root","RECREATE");
+  TFile* fout = new TFile("llrCorrections_Moriond.root","RECREATE");
 
   TF1 *ratioElecIDBL        = new TF1("ratioElecIDBL",           myFuncRatioElecIDBL ,      14,800,0);
   TF1 *turnOnElecIDBL       = new TF1("turnOnElecIDBL",          myFuncTurnOnElecIDBL ,     14,800,0);
