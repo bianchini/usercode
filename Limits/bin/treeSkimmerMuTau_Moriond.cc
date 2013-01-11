@@ -329,7 +329,7 @@ Bool_t isbtagged(Bool_t isBQuark, Double_t btagCSV, Bool_t isdata, UInt_t btagef
   return btagged;
 }  
 
-void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0., string inputDir_ = "./", string dirOut_ = "./", int iJson_=-1, bool doLepVeto=false){
+void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0., string inputDir_ = "./", string dirOut_ = "./", int iJson_=-1, bool doLepVeto=true){
 
   cout << "Now skimming analysis " << analysis_ << endl;
   if(analysis_ == "nominal")
@@ -964,9 +964,11 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   currentTree->SetBranchStatus("vetoEvent"             ,1);
 
   // leptons for veto
-  if(doLepVeto) currentTree->SetBranchStatus("vetoMuonsP4"        ,1);
-  // currentTree->SetBranchStatus("vetoElectronsP4"    ,1);
+  if(doLepVeto) {
+    currentTree->SetBranchStatus("vetoMuonsP4"        ,1);
+    currentTree->SetBranchStatus("vetoElectronsP4"    ,1);
   // currentTree->SetBranchStatus("vetoTausP4"         ,1);
+  }
 
   // event-dependent variables
   currentTree->SetBranchStatus("rhoFastJet"            ,1);
@@ -1090,11 +1092,13 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   currentTree->SetBranchAddress("metSgnMatrix", &metSgnMatrix);
   
   // leptons for veto
-  //std::vector< LV >* vetoElectronsP4 = new std::vector< LV >();
+  std::vector< LV >* vetoElectronsP4 = new std::vector< LV >();
   std::vector< LV >* vetoMuonsP4 = new std::vector< LV >();
-  //std::vector< LV >* vetoTausP4 = new std::vector< LV >();
-
-  if(doLepVeto) currentTree->SetBranchAddress("vetoMuonsP4",&vetoMuonsP4);
+  if(doLepVeto) {
+    currentTree->SetBranchAddress("vetoElectronsP4", &vetoElectronsP4);
+    currentTree->SetBranchAddress("vetoMuonsP4",     &vetoMuonsP4); 
+    //std::vector< LV >* vetoTausP4 = new std::vector< LV >();
+  }
 
   // auxiliary float to store branch values
   float diTauNSVfitMass,diTauNSVfitMassErrUp,diTauNSVfitMassErrDown,mTauTauMin;;
@@ -1947,20 +1951,24 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
 
     // Third lepton veto
     if(DEBUG) cout << "Third lepton veto" << endl;
-    leptonVeto_ = 0;
-    if(doLepVeto) {
-      for(u_int iMu=0 ; iMu<vetoMuonsP4->size() ; iMu++) {
-	if( deltaR( (*vetoMuonsP4)[iMu] , (*diTauLegsP4)[0] ) < 0.3 ) continue;
-	else leptonVeto_ = 1;
-      }
+    int nVetoLepton = 0;
+    for(size_t imu = 0; imu < vetoMuonsP4->size(); imu++){
+      if(deltaR((*diTauLegsP4)[0], (*vetoMuonsP4)[imu]) > 0.3 && 
+	 deltaR((*diTauLegsP4)[1], (*vetoMuonsP4)[imu]) > 0.3 )
+	nVetoLepton++;
     }
+    for(size_t imu = 0; imu < vetoElectronsP4->size(); imu++){ 
+      if(deltaR((*diTauLegsP4)[0], (*vetoElectronsP4)[imu]) > 0.3 &&  
+         deltaR((*diTauLegsP4)[1], (*vetoElectronsP4)[imu]) > 0.3 ) 
+        nVetoLepton++; 
+    }    
     if(DEBUG) cout << "End 3rd lepton veto" << endl;
 
     isPFMuon_        = isPFMuon;
     isTightMuon_     = isTightMuon;
     muFlag_          = muFlag;
     genDecay_        = genDecay ;
-    vetoEvent_       = vetoEvent; 
+    vetoEvent_       = (nVetoLepton > 0) ? 1 : 0; //vetoEvent; 
     parton_          = parton;
     genPartMult_     = genPartMult;
     leadGenPartPdg_  = leadGenPartPdg;
