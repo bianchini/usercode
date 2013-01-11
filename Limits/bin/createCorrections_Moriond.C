@@ -387,171 +387,73 @@ Double_t myFuncTurnOnEleAllEC(Double_t* x, Double_t *par) {
 ///////////////////////////////////////////////////////
 //MUID
 ///eta < 0.8
-Double_t myFuncRatioMuIDBL1(Double_t* x, Double_t *par) {  
-  double ratio = 1.;  
-  Float_t xx = x[0];  
-  if( xx < 15 )   
-    ratio = 0.9877;  
-  else if( xx >= 15 && xx< 20)   
-    ratio = 0.9877;  
-  else if( xx >= 20 && xx< 30)   
-    ratio = 0.9870;  
-  else if( xx >= 30) 
-    ratio = 0.9871;  
-  return ratio; 
-} 
-Double_t myFuncTurnOnMuIDBL1(Double_t* x, Double_t *par) {  
-  double ratio = 1.;   
-  Float_t xx = x[0];   
-  if( xx < 15 )    
-    ratio = 0.9538;   
-  else if( xx >= 15 && xx< 20)    
-    ratio = 0.9538;   
-  else if( xx >= 20 && xx< 30)    
-    ratio = 0.9524;   
-  else if( xx >= 30)  
-    ratio = 0.9508;   
-  return ratio;   
- } 
-///0.8 < eta < 1.2
-Double_t myFuncRatioMuIDBL2(Double_t* x, Double_t *par) { 
-  double ratio = 1.; 
-  Float_t xx = x[0]; 
-  if( xx < 15 )  
-    ratio = 0.9813; 
-  else if( xx >= 15 && xx< 20)  
-    ratio = 0.9813; 
-  else if( xx >= 20 && xx< 30)  
-    ratio = 0.9837; 
-  else if( xx >= 30)
-    ratio = 0.9817; 
-  return ratio; 
+
+Double_t myFuncTurnOnMuIdIso(Double_t *x, Double_t *par) {
+
+  Double_t pt  = x[0];
+  Double_t eta = par[0];
+  Int_t run    = (Int_t)par[1];
+  Int_t ratio  = (Int_t)par[2];
+  Int_t idiso  = (Int_t)par[3]; // 0 : id ; 1 : iso
+
+  const int nEta=3; // [0;0.8[  [0.8;1.2[  [1.2;2.1[
+  const int nRun=6; // ABCD, MC-ABCD, ABC, MC-ABC, D, MC-D
+  const int nPt =2; // ]-inf;30[ [30;+inf[
+
+  // aborting cases //
+  if(run<0 || run>=nRun) { cout << "Choose run>=0 and run<" << nRun << endl; return 0; }
+  if(ratio<0 || ratio>1) { cout << "Choose ratio=0 or 1"            << endl; return 0; }
+  if(idiso<0 || idiso>1) { cout << "Choose idiso=0 or 1"            << endl; return 0; }
+  
+  // define results
+  //
+  // ID
+  //
+  Double_t resID[nRun][nEta][nPt]
+    = { { { 0.9505 , 0.9493} , { 0.9412 , 0.9391} , { 0.9415 , 0.9396} } ,  // ABCD
+	{ { 0.9647 , 0.9631} , { 0.9586 , 0.9578} , { 0.9511 , 0.9490} } ,  // MC ABCD
+	{ { 0.9524 , 0.9508} , { 0.9430 , 0.9406} , { 0.9430 , 0.9508} } ,  // ABC
+	{ { 0.9649 , 0.9632} , { 0.9586 , 0.9581} , { 0.9512 , 0.9491} } ,  // MC ABC
+	{ { 0.9485 , 0.9470} , { 0.9382 , 0.9370} , { 0.9392 , 0.9379} } ,  // D
+	{ { 0.9644 , 0.9629} , { 0.9585 , 0.9576} , { 0.9510 , 0.9489} } }; // MC D
+	//                  //                   //                         //
+	//      [0;0.8[             [0.8;1.2[            [1.2;2.1[
+  // ISO
+  //
+  Double_t resISO[nRun][nEta][nPt]
+    = { { { 0.7591 , 0.9016} , { 0.8044 , 0.9218} , { 0.8491 , 0.9393} } ,  // ABCD
+	{ { 0.7838 , 0.9133} , { 0.8201 , 0.9289} , { 0.8515 , 0.9382} } ,  // MC ABCD
+	{ { 0.7642 , 0.9041} , { 0.8080 , 0.9239} , { 0.8497 , 0.9397} } ,  // ABC
+	{ { 0.7866 , 0.9151} , { 0.8222 , 0.9361} , { 0.8531 , 0.9389} } ,  // MC ABC
+	{ { 0.7493 , 0.8973} , { 0.7986 , 0.9187} , { 0.8486 , 0.9387} } ,  // D
+	{ { 0.7794 , 0.9337} , { 0.8168 , 0.9270} , { 0.8491 , 0.9370} } }; // MC D
+	//                  //                   //                         //
+	//      [0;0.8[             [0.8;1.2[            [1.2;2.1[
+	
+
+  // choose eta index
+  int iEta;
+  if(abs(eta) < 0.8)      iEta = 0; // [0;0.8[
+  else if(abs(eta) < 1.2) iEta = 1; // [0.8;1.2[
+  else                    iEta = 2; // [1.2;2.1[
+  
+  // choose pt index
+  int iPt;
+  if(pt<30.) iPt=0;
+  else       iPt=1;
+
+  // Return relevant result //
+  if(ratio==0) {
+    if(idiso==0) return resID[run][iEta][iPt];
+    else         return resISO[run][iEta][iPt];
+  }
+  else if(run==0 || run==2 || run==4) { // numerator is always data
+    if(idiso==0) return resID[run+1][iEta][iPt]!=0 ? resID[run][iEta][iPt]/resID[run+1][iEta][iPt] : 0 ;
+    else         return resISO[run+1][iEta][iPt]!=0 ? resISO[run][iEta][iPt]/resISO[run+1][iEta][iPt] : 0 ;
+  }
+  else return 0;
 }
-Double_t myFuncTurnOnMuIDBL2(Double_t* x, Double_t *par) { 
-  double ratio = 1.;  
-  Float_t xx = x[0];  
-  if( xx < 15 )   
-    ratio = 0.9400;  
-  else if( xx >= 15 && xx< 20)   
-    ratio = 0.9400;  
-  else if( xx >= 20 && xx< 30)   
-    ratio = 0.9430;  
-  else if( xx >= 30) 
-    ratio = 0.9406;  
-  return ratio;  
-}
-///1.2 < eta < 2.1
-Double_t myFuncRatioMuIDEC(Double_t* x, Double_t *par) {  
-  double ratio = 1.;   
-  Float_t xx = x[0];   
-  if( xx < 15 )    
-    ratio = 0.9885;   
-  else if( xx >= 15 && xx< 20)    
-    ratio = 0.9885;   
-  else if( xx >= 20 && xx< 30)    
-    ratio = 0.9914;   
-  else if( xx >= 30)  
-    ratio = 1.0018;   
-  return ratio;   
-}
-Double_t myFuncTurnOnMuIDEC(Double_t* x, Double_t *par) {  
-  double ratio = 1.;    
-  Float_t xx = x[0];    
-  if( xx < 15 )     
-    ratio = 0.9417;    
-  else if( xx >= 15 && xx< 20)     
-    ratio = 0.9417;    
-  else if( xx >= 20 && xx< 30)     
-    ratio = 0.9430;    
-  else if( xx >= 30)   
-    ratio = 0.9508;    
-  return ratio;    
-}
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-//MUISO
-///eta < 0.8
-Double_t myFuncRatioMuIsoBL1(Double_t* x, Double_t *par) {  
-  double ratio = 1.;      
-  Float_t xx = x[0];      
-  if( xx < 15 )       
-    ratio = 0.9720 ;      
-  else if( xx >= 15 && xx< 20)       
-    ratio = 0.9720 ;      
-  else if( xx >= 20 && xx< 30)       
-    ratio = 0.9715 ;      
-  else if( xx >= 30)     
-    ratio = 0.9880 ;      
-  return ratio;      
-} 
-Double_t myFuncTurnOnMuIsoBL1(Double_t* x, Double_t *par) {   
-  double ratio = 1.;       
-  Float_t xx = x[0];       
-  if( xx < 15 )        
-    ratio = 0.6390 ;       
-  else if( xx >= 15 && xx< 20)        
-    ratio = 0.6390 ;       
-  else if( xx >= 20 && xx< 30)        
-    ratio = 0.7642 ;       
-  else if( xx >= 30)      
-    ratio = 0.9041 ;       
-  return ratio;       
-} 
-///0.8 < eta < 1.2
-Double_t myFuncRatioMuIsoBL2(Double_t* x, Double_t *par) { 
-  double ratio = 1.;     
-  Float_t xx = x[0];     
-  if( xx < 15 )      
-    ratio = 0.9677 ;     
-  else if( xx >= 15 && xx< 20)      
-    ratio = 0.9677 ;     
-  else if( xx >= 20 && xx< 30)      
-    ratio = 0.9826 ;     
-  else if( xx >= 30)    
-    ratio = 0.9870 ;     
-  return ratio;     
-}
-Double_t myFuncTurnOnMuIsoBL2(Double_t* x, Double_t *par) {  
-  double ratio = 1.;      
-  Float_t xx = x[0];      
-  if( xx < 15 )       
-    ratio = 0.7036 ;      
-  else if( xx >= 15 && xx< 20)       
-    ratio = 0.7036 ;      
-  else if( xx >= 20 && xx< 30)       
-    ratio = 0.8080 ;      
-  else if( xx >= 30)     
-    ratio = 0.9239 ;      
-  return ratio;      
-}
-///1.2 < eta < 2.1
-Double_t myFuncRatioMuIsoEC(Double_t* x, Double_t *par) {  
-  double ratio = 1.;       
-  Float_t xx = x[0];       
-  if( xx < 15 )        
-    ratio = 0.9843 ;       
-  else if( xx >= 15 && xx< 20)        
-    ratio = 0.9843 ;       
-  else if( xx >= 20 && xx< 30)        
-    ratio = 0.9960 ;       
-  else if( xx >= 30)      
-    ratio = 1.0008 ;       
-  return ratio;       
-}
-Double_t myFuncTurnOnMuIsoEC(Double_t* x, Double_t *par) { 
-  double ratio = 1.;        
-  Float_t xx = x[0];        
-  if( xx < 15 )         
-    ratio = 0.7561 ;        
-  else if( xx >= 15 && xx< 20)         
-    ratio = 0.7561 ;        
-  else if( xx >= 20 && xx< 30)         
-    ratio = 0.8497 ;        
-  else if( xx >= 30)       
-    ratio = 0.9397 ;        
-  return ratio;        
-}
+
 
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////
@@ -565,7 +467,7 @@ Double_t myFuncTurnOnMu(Double_t *x, Double_t *par) {
   Int_t ratio  = (Int_t)par[2];
 
   const int nEta=6; // ]-inf,-1.2[ [-1.2,-0.8[ [-0.8,0[ [0,0.8[ [0.8,1.2[ [1.2,+inf[
-  const int nRun=5; // A, B, C, D, MC
+  const int nRun=5; // A, B, C, D, MC, (all)
   ratioEfficiencyTest* fitEffMu[nRun][nEta];
 
   // 2012A
@@ -897,25 +799,10 @@ void makeFile(){
   TF1 *ratioElecAllEC       = new TF1("ratioElecAllEC",          myFuncRatioEleAllEC,       24,800,0);
   TF1 *turnOnElecAllEC      = new TF1("turnOnElecAllEC",         myFuncTurnOnEleAllEC,      24,800,0);
 
-  //
-
-  TF1 *ratioMuIDBL1         = new TF1("ratioMuIDBL1",            myFuncRatioMuIDBL1,        14,800,0);
-  TF1 *turnOnMuIDBL1        = new TF1("turnOnMuIDBL1",           myFuncTurnOnMuIDBL1,       14,800,0);
-  TF1 *ratioMuIDBL2         = new TF1("ratioMuIDBL2",            myFuncRatioMuIDBL2,        14,800,0); 
-  TF1 *turnOnMuIDBL2        = new TF1("turnOnMuIDBL2",           myFuncTurnOnMuIDBL2,       14,800,0); 
-  TF1 *ratioMuIDEC          = new TF1("ratioMuIDEC",             myFuncRatioMuIDEC ,        14,800,0);
-  TF1 *turnOnMuIDEC         = new TF1("turnOnMuIDEC",            myFuncTurnOnMuIDEC ,       14,800,0);
-
-  TF1 *ratioMuIsoBL1        = new TF1("ratioMuIsoBL1",           myFuncRatioMuIsoBL1,       14,800,0);
-  TF1 *turnOnMuIsoBL1       = new TF1("turnOnMuIsoBL1",          myFuncTurnOnMuIsoBL1,      14,800,0);
-  TF1 *ratioMuIsoBL2        = new TF1("ratioMuIsoBL2",           myFuncRatioMuIsoBL2,       14,800,0); 
-  TF1 *turnOnMuIsoBL2       = new TF1("turnOnMuIsoBL2",          myFuncTurnOnMuIsoBL2,      14,800,0);
-  TF1 *ratioMuIsoEC         = new TF1("ratioMuIsoEC",            myFuncRatioMuIsoEC ,       14,800,0);
-  TF1 *turnOnMuIsoEC        = new TF1("turnOnMuIsoEC",           myFuncTurnOnMuIsoEC ,      14,800,0);
-
-  TF1 *turnOnMu             = new TF1("turnOnMu",      myFuncTurnOnMu,  0,800,3); // don't forget to SetParameters  
-
-  //
+  // MUON //
+  TF1 *turnOnMuIdIso = new TF1("turnOnMuIdIso", myFuncTurnOnMuIdIso, 0,800,4); // don't forget to SetParameters !
+  TF1 *turnOnMu      = new TF1("turnOnMu",      myFuncTurnOnMu,      0,800,3); // don't forget to SetParameters !
+  //////////
 
   TF1 *turnOnTauElecTauMCBL      = new TF1("turnOnTauElecTauMCBL",   myFuncTurnOnTauElecTauMCBL, 20,800,0);
   TF1 *turnOnTauElecTauMCEC      = new TF1("turnOnTauElecTauMCEC",   myFuncTurnOnTauElecTauMCEC, 20,800,0);
@@ -986,23 +873,8 @@ void makeFile(){
   turnOnElecAllEC->SetNpx(25600);
 
   //
-
-  ratioMuIDBL1->SetNpx(25600);
-  turnOnMuIDBL1->SetNpx(25600);
-  ratioMuIDBL2->SetNpx(25600); 
-  turnOnMuIDBL2->SetNpx(25600);
-  ratioMuIDEC->SetNpx(25600);
-  turnOnMuIDEC->SetNpx(25600);
-
-  ratioMuIsoBL1->SetNpx(25600);
-  ratioMuIsoBL2->SetNpx(25600);
-  ratioMuIsoEC->SetNpx(25600);
-  turnOnMuIsoBL1->SetNpx(25600);
-  turnOnMuIsoBL2->SetNpx(25600);
-  turnOnMuIsoEC->SetNpx(25600);
-  
   turnOnMu->SetNpx(25600);
-
+  turnOnMuIdIso->SetNpx(25600);
   //
 
   turnOnTauElecTauMCBL->SetNpx(25600);
@@ -1073,23 +945,8 @@ void makeFile(){
   turnOnElecAllEC->Write();
 
   //
-
-  ratioMuIDBL1->Write();
-  turnOnMuIDBL1->Write();
-  ratioMuIDBL2->Write(); 
-  turnOnMuIDBL2->Write();
-  ratioMuIDEC->Write();
-  turnOnMuIDEC->Write();
-
-  ratioMuIsoBL1->Write();
-  ratioMuIsoBL2->Write(); 
-  ratioMuIsoEC->Write();
-  turnOnMuIsoBL1->Write();
-  turnOnMuIsoBL2->Write();
-  turnOnMuIsoEC->Write();
-  
   turnOnMu->Write();
-
+  turnOnMuIdIso->Write();
   //
 
   turnOnTauElecTauMCBL->Write();
