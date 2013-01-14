@@ -752,7 +752,7 @@ Double_t myFuncTurnOnTauMuTauEC(Double_t* x, Double_t *par) {
 /////////////////////////////////////////////////
 void makeFile(){
 
-  TFile* fout = new TFile("/data_CMS/cms/htautau/Moriond/tools/llrCorrections_Moriond_test.root","RECREATE");
+  TFile* fout = new TFile("/data_CMS/cms/htautau/Moriond/tools/llrCorrections_Moriond.root","RECREATE");
 
   TF1 *ratioElecIDBL        = new TF1("ratioElecIDBL",           myFuncRatioElecIDBL ,      14,800,0);
   TF1 *turnOnElecIDBL       = new TF1("turnOnElecIDBL",          myFuncTurnOnElecIDBL ,     14,800,0);
@@ -821,17 +821,22 @@ void makeFile(){
   // Id, Iso
   //
   const int nEtaMuI=3; // [0,0.8[ [0.8,1.2[ [1.2,+inf[
-  const int nRunMuI=6; // ABCD, MC-ABCD, ABCD, MC-ABC, D, MC-D
+  const int nRunMuI=6; // ABCD, MC-ABCD, ABC, MC-ABC, D, MC-D
+  const int nIdIso =2; // id, iso
   TString nom_run_muI[nRunMuI]={"ABCD","MC-ABCD","ABC","MC-ABC","D","MC-D"};
   TString nom_eta_muI[nEtaMuI]={"0","1","2"};
-  TF1 *turnOnMuIdIso[nEtaMuI][nRunMuI];
+  TString nom_idiso_muI[nIdIso]={"id","iso"};
+  TF1 *turnOnMuIdIso[nEtaMuI][nRunMuI][nIdIso];
   
   for(int iR=0 ; iR<nRunMuI ; iR++) {
     for(int iE=0 ; iE<nEtaMuI ; iE++) {
-      turnOnMuIdIso[iE][iR] = new TF1("turnOnMuIdIso_"+nom_run_muI[iR]+"_"+nom_eta_muI[iE], myFuncTurnOnMu, 0,800,3);
-      turnOnMuIdIso[iE][iR]->SetParameters(iE,iR,0);
-      turnOnMuIdIso[iE][iR]->SetNpx(25600);
-      turnOnMuIdIso[iE][iR]->Write();
+      for(int idiso=0 ; idiso<nIdIso ; idiso++) {
+	turnOnMuIdIso[iE][iR][idiso] = new TF1("turnOnMuIdIso_"+nom_run_muI[iR]+"_"+nom_eta_muI[iE]+"_"+nom_idiso_muI[idiso], 
+					       myFuncTurnOnMuIdIso, 0,800,4);
+	turnOnMuIdIso[iE][iR][idiso]->SetParameters(iE,iR,0,idiso);
+	turnOnMuIdIso[iE][iR][idiso]->SetNpx(25600);
+	turnOnMuIdIso[iE][iR][idiso]->Write();
+      }
     }
   }
   //////////

@@ -33,7 +33,7 @@
 #include "PhysicsTools/FWLite/interface/TFileService.h"
 #include "TauAnalysis/CandidateTools/interface/candidateAuxFunctions.h"
 #include "TauAnalysis/CandidateTools/interface/neuralMtautauAuxFunctions.h"
-#include "Bianchi/Utilities/interface/BtagSF.hh" // --> TO UPDATE FOR MORIOND !!!!!
+#include "Bianchi/Utilities/interface/BtagSF.hh" // --> UPDATED FOR MORIOND
 #include "/home/llr/cms/ndaci/SKWork/macro/skEfficiency/analyzers/COMMON/readJSONFile.cc"
 
 #include "Math/Vector3D.h"
@@ -415,8 +415,30 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   cout << "Using corrections from llrCorrections_Moriond.root" << endl;
   TFile corrections("/data_CMS/cms/htautau/Moriond/tools/llrCorrections_Moriond.root");
   
-  TF1 *turnOnMu       = (TF1*)corrections.Get("turnOnMu");      // par=[eta,run,ratio]  
-  TF1 *turnOnMuIdIso  = (TF1*)corrections.Get("turnOnMuIdIso"); // par=[eta,run,ratio]  
+  // Muon trigger
+  const int nEtaMuT=6;    // ]-inf,-1.2[ [-1.2,-0.8[ [-0.8,0[ [0,0.8[ [0.8,1.2[ [1.2,+inf[
+  const int nRunMuT=7; // A, B, C, D, MC-old, ABCD, MC-new
+  TString nom_run_mu[nRunMuT]={"A","B","C","D","MCold","ABCD","MCnew"};
+  TString nom_eta_mu[nEtaMuT]={"0","1","2","3","4","5"};
+  TF1 *turnOnMu[nEtaMuT][nRunMuT];
+
+  for(int iR=0 ; iR<nRunMuT ; iR++)
+    for(int iE=0 ; iE<nEtaMuT ; iE++)
+      turnOnMu[iE][iR] = (TF1*)corrections.Get("turnOnMu_"+nom_run_mu[iR]+"_"+nom_eta_mu[iE]);
+
+  // Muon Id+Iso
+  const int nEtaMuI=3; // [0,0.8[ [0.8,1.2[ [1.2,+inf[
+  const int nRunMuI=6; // ABCD, MC-ABCD, ABCD, MC-ABC, D, MC-D
+  const int nIdIso =2; // id, iso
+  TString nom_run_muI[nRunMuI]={"ABCD","MC-ABCD","ABC","MC-ABC","D","MC-D"};
+  TString nom_eta_muI[nEtaMuI]={"0","1","2"};
+  TString nom_idiso_muI[nIdIso]={"id","iso"};
+  TF1 *turnOnMuIdIso[nEtaMuI][nRunMuI][nIdIso];
+  
+  for(int iR=0 ; iR<nRunMuI ; iR++)
+    for(int iE=0 ; iE<nEtaMuI ; iE++)
+      for(int idiso=0 ; idiso<nIdIso ; idiso++)
+	turnOnMuIdIso[iE][iR][idiso] = (TF1*)corrections.Get("turnOnMuIdIso_"+nom_run_muI[iR]+"_"+nom_eta_muI[iE]+"_"+nom_idiso_muI[idiso]);
 
   TF1 *ratioTauMuTauBL    = (TF1*)corrections.Get("ratioTauMuTauBL");  
   TF1 *ratioTauMuTauEC    = (TF1*)corrections.Get("ratioTauMuTauEC"); 
@@ -433,8 +455,8 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   TF1 *turnOnTauMuTauRunDBL   = (TF1*)corrections.Get("turnOnTauMuTauRunDBL");  
   TF1 *turnOnTauMuTauRunDEC   = (TF1*)corrections.Get("turnOnTauMuTauRunDEC");  
 
-  if(!turnOnMu)      cout << "Missing Mu trigger corrections" << endl;
-  if(!turnOnMuIdIso) cout << "Missing Mu id+iso  corrections" << endl;
+  //if(!turnOnMu)      cout << "Missing Mu trigger corrections" << endl;
+  //if(!turnOnMuIdIso) cout << "Missing Mu id+iso  corrections" << endl;
 
   if(!ratioTauMuTauBL)    cout << "Missing corrections for tau HLT (BL)" << endl;
   if(!ratioTauMuTauEC)    cout << "Missing corrections for tau HLT (EC)" << endl;
@@ -587,11 +609,13 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   float HLTx, HLTmatch, HLTxQCD, HLTmatchQCD, HLTxETM, HLTmatchETM;
 
   // Muon weights
-  float HLTMu, HLTMuA, HLTMuB, HLTMuC, HLTMuD, HLTMuABC, HLTMuABCD, HLTMuMCold, HLTMuSoft;
+  float HLTMu, HLTMuA, HLTMuB, HLTMuC, HLTMuD, HLTMuABC, HLTMuABCD, HLTMuMCold, HLTMuMCnew, HLTMuSoft, HLTMuSoftMC;
   float HLTweightMu, HLTweightMuA, HLTweightMuB, HLTweightMuC, HLTweightMuD, HLTweightMuABC, HLTweightMuABCD, HLTweightMuSoft;
   float SFMuID, SFMuID_ABC, SFMuID_D, SFMuID_ABCD;
   float SFMuIso, SFMuIso_ABC, SFMuIso_D, SFMuIso_ABCD;
   float SFMu, SFMu_ABC, SFMu_D, SFMu_ABCD;
+  float EffMuID_ABC, EffMuID_D, EffMuID_ABCD, EffMuID_ABC_MC, EffMuID_D_MC, EffMuID_ABCD_MC;
+  float EffMuIso_ABC, EffMuIso_D, EffMuIso_ABCD, EffMuIso_ABC_MC, EffMuIso_D_MC, EffMuIso_ABCD_MC;
 
   // Tau weights
   float HLTTau, HLTTauD, HLTTauABC;
@@ -1320,6 +1344,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   cout << "START LOOP OVER EVENTS" << endl;
 
   for (int n = 0; n < nEntries ; n++) {
+  //for (int n = 0; n < 100 ; n++) {
     
     currentTree->GetEntry(n);
     if(n%5000==0) cout << n << endl;
@@ -1890,13 +1915,15 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
       SFMuIso= 1.0;
     } // end if Data
 
-    if(DEBUG) cout << "-- MC or embedded" << endl;
     else { // MC or embedded
+      if(DEBUG) cout << "-- MC or embedded" << endl;
 
       HLTxQCD     = 1.0;
       HLTmatchQCD = 1.0;
       HLTxETM     = 1.0; //MB L+tau+ETM is not present in MC, set always 1.
       L1etmWeight_= 1;            
+
+      if(DEBUG) cout << "HLTxQCD=" << HLTxQCD << endl;
 
       if( !sample.Contains("Emb") ) { // Check trigger matching only for MC
 
@@ -1946,53 +1973,86 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
       // Muon
 
       // trigger
-      Double_t mupt[1] = {(Double_t) ptL1};
-      Double_t muptSoft[1] = {(Double_t) (ptL1+17.-8.)};
-      Double_t par[3]={etaL1,0,0};
-      // par[1]=run (A,B,C,D,MC-old,ABCD,MC-new) ; par[2]=ratio(0=efficiency,1=ratio)
 
-      par[1]=0; par[2]=1; HLTweightMuA    = turnOnMu->EvalPar( mupt, par);
-      par[1]=1; par[2]=1; HLTweightMuB    = turnOnMu->EvalPar( mupt, par);
-      par[1]=2; par[2]=1; HLTweightMuC    = turnOnMu->EvalPar( mupt, par);
-      par[1]=3; par[2]=1; HLTweightMuD    = turnOnMu->EvalPar( mupt, par);
-      par[1]=3; par[2]=1; HLTweightMuSoft = turnOnMu->EvalPar( muptSoft, par);
-      par[1]=5; par[2]=1; HLTweightMuABCD = turnOnMu->EvalPar( mupt, par);
+      //choose iEta
+      int iEta;
+      if(etaL1 < -1.2)    iEta = 0;
+      else if(etaL1 < -0.8) iEta = 1;
+      else if(etaL1 < 0)    iEta = 2;
+      else if(etaL1 < 0.8)  iEta = 3;
+      else if(etaL1 < 1.2)  iEta = 4;
+      else                  iEta = 5;
+      
+      // compute efficiency
+      HLTMuA     = turnOnMu[iEta][0]->Eval(ptL1);
+      HLTMuB     = turnOnMu[iEta][1]->Eval(ptL1);
+      HLTMuC     = turnOnMu[iEta][2]->Eval(ptL1);
+      HLTMuD     = turnOnMu[iEta][3]->Eval(ptL1);
+      HLTMuMCold = turnOnMu[iEta][4]->Eval(ptL1);
+      HLTMuABCD  = turnOnMu[iEta][5]->Eval(ptL1);
+      HLTMuMCnew = turnOnMu[iEta][6]->Eval(ptL1);
 
-      par[1]=0; par[2]=0; HLTMuA          = turnOnMu->EvalPar( mupt, par);
-      par[1]=1; par[2]=0; HLTMuB          = turnOnMu->EvalPar( mupt, par);
-      par[1]=2; par[2]=0; HLTMuC          = turnOnMu->EvalPar( mupt, par);
-      par[1]=3; par[2]=0; HLTMuD          = turnOnMu->EvalPar( mupt, par);
-      par[1]=3; par[2]=0; HLTMuSoft       = turnOnMu->EvalPar( muptSoft, par);
-      par[1]=5; par[2]=0; HLTMuABCD       = turnOnMu->EvalPar( mupt, par);
+      HLTMuSoft   = turnOnMu[iEta][3]->Eval(ptL1+17.-8.);
+      HLTMuSoftMC = turnOnMu[iEta][6]->Eval(ptL1+17.-8.);
 
-      par[1]=4; par[2]=0; HLTMuMCold      = turnOnMu->EvalPar( mupt, par);
       HLTMuABC       = (HLTMuA*wA + HLTMuB*wB + HLTMuC*wC)/(wA+wB+wC) ;
-      HLTweightMuABC = HLTMuMCold!=0 ?  HLTMuABC / HLTMuMCold : 0;
+
+      // Compute weight D/MC
+      HLTweightMuA    = HLTMuMCold!=0 ?  HLTMuA / HLTMuMCold : 0;
+      HLTweightMuB    = HLTMuMCold!=0 ?  HLTMuB / HLTMuMCold : 0;
+      HLTweightMuC    = HLTMuMCold!=0 ?  HLTMuC / HLTMuMCold : 0;
+      HLTweightMuD    = HLTMuMCold!=0 ?  HLTMuD / HLTMuMCnew : 0;
+      HLTweightMuABC  = HLTMuMCold!=0 ?  HLTMuABC / HLTMuMCold : 0;
+      HLTweightMuABCD = HLTMuMCnew!=0 ?  HLTMuABCD / HLTMuMCnew : 0;
+      HLTweightMuSoft = HLTMuSoftMC!=0 ? HLTMuSoft / HLTMuSoftMC : 0;
 
       HLTMu = HLTMuABCD; 
       HLTweightMu = HLTweightMuABCD;
 
       // id+iso scale factors
       float ptMaxMu = 14.0;
-      Double_t muptIdIso[1] = {(Double_t) std::max(ptL1,ptMaxMu)};
-      Double_t parIdIso[4]={etaL1,0,1,0}; // eta, run, ratio, idiso
+      Double_t ptMuSF  = std::max(ptL1,ptMaxMu);
 
-      parIdIso[1]=0; parIdIso[3]=0; SFMuID_ABCD  = turnOnMuIdIso->EvalPar( muptIdIso, parIdIso );
-      parIdIso[1]=0; parIdIso[3]=1; SFMuIso_ABCD = turnOnMuIdIso->EvalPar( muptIdIso, parIdIso );
+      // choose iEta
+      if(abs(etaL1) < 0.8)      iEta = 0; // [0;0.8[
+      else if(abs(etaL1) < 1.2) iEta = 1; // [0.8;1.2[
+      else                      iEta = 2; // [1.2;2.1[
+
+      // compute ID and Iso efficiency
+      EffMuID_ABCD     = turnOnMuIdIso[iEta][0][0]->Eval(ptMuSF);
+      EffMuIso_ABCD    = turnOnMuIdIso[iEta][0][1]->Eval(ptMuSF);
+      EffMuID_ABCD_MC  = turnOnMuIdIso[iEta][1][0]->Eval(ptMuSF);
+      EffMuIso_ABCD_MC = turnOnMuIdIso[iEta][1][1]->Eval(ptMuSF);
+
+      EffMuID_ABC     = turnOnMuIdIso[iEta][2][0]->Eval(ptMuSF);
+      EffMuIso_ABC    = turnOnMuIdIso[iEta][2][1]->Eval(ptMuSF);
+      EffMuID_ABC_MC  = turnOnMuIdIso[iEta][3][0]->Eval(ptMuSF);
+      EffMuIso_ABC_MC = turnOnMuIdIso[iEta][3][1]->Eval(ptMuSF);
+
+      EffMuID_D     = turnOnMuIdIso[iEta][4][0]->Eval(ptMuSF);
+      EffMuIso_D    = turnOnMuIdIso[iEta][4][1]->Eval(ptMuSF);
+      EffMuID_D_MC  = turnOnMuIdIso[iEta][5][0]->Eval(ptMuSF);
+      EffMuIso_D_MC = turnOnMuIdIso[iEta][5][1]->Eval(ptMuSF);
+      
+      // compute D/MC weights
+      SFMuID_ABCD  = EffMuID_ABCD_MC !=0 ? EffMuID_ABCD  / EffMuID_ABCD_MC  : 0;
+      SFMuIso_ABCD = EffMuIso_ABCD_MC!=0 ? EffMuIso_ABCD / EffMuIso_ABCD_MC : 0;
       SFMu_ABCD = SFMuID_ABCD*SFMuIso_ABCD;
 
-      parIdIso[1]=2; parIdIso[3]=0; SFMuID_ABC  = turnOnMuIdIso->EvalPar( muptIdIso, parIdIso );
-      parIdIso[1]=2; parIdIso[3]=1; SFMuIso_ABC = turnOnMuIdIso->EvalPar( muptIdIso, parIdIso );
+      SFMuID_ABC  = EffMuID_ABC_MC !=0 ? EffMuID_ABC  / EffMuID_ABC_MC  : 0;
+      SFMuIso_ABC = EffMuIso_ABC_MC!=0 ? EffMuIso_ABC / EffMuIso_ABC_MC : 0;
       SFMu_ABC = SFMuID_ABC*SFMuIso_ABC;
 
-      parIdIso[1]=4; parIdIso[3]=0; SFMuID_D  = turnOnMuIdIso->EvalPar( muptIdIso, parIdIso );
-      parIdIso[1]=4; parIdIso[3]=1; SFMuIso_D = turnOnMuIdIso->EvalPar( muptIdIso, parIdIso );
+      SFMuID_D  = EffMuID_D_MC !=0 ? EffMuID_D  / EffMuID_D_MC  : 0;
+      SFMuIso_D = EffMuIso_D_MC!=0 ? EffMuIso_D / EffMuIso_D_MC : 0;
       SFMu_D = SFMuID_D*SFMuIso_D;
       
       SFMu    = SFMu_ABCD;
       SFMuID  = SFMuID_ABCD;
       SFMuIso = SFMuIso_ABCD;
       
+      if(DEBUG) cout << "HLTxQCD=" << HLTxQCD << endl;
+
     }// end MC/embedded case
    
     if(DEBUG) cout << "End of corrections trigger+SF" << endl;
@@ -2104,21 +2164,21 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     cout << "-- copy tree" << endl;
 
     if(backgroundDYTauTau) {
-      outName = "nTuple_DYJ_TauTau_MuTau_"+analysisFileName+".root" ;
+      outName = dirOut_+"/nTuple_DYJ_TauTau_MuTau_"+analysisFileName+".root" ;
       outFile = new TFile(outName,"RECREATE");
       backgroundDYTauTau->Write();
       outFile->Close();
     }
 
     if(backgroundDYMutoTau) {
-      outName = "nTuple_DYJ_MuToTau_MuTau_"+analysisFileName+".root";
+      outName = dirOut_+"/nTuple_DYJ_MuToTau_MuTau_"+analysisFileName+".root";
       outFile = new TFile(outName,"RECREATE");
       backgroundDYMutoTau->Write();
       outFile->Close();
     }
 
     if(backgroundDYJtoTau) {
-      outName = "nTuple_DYJ_JetToTau_MuTau_"+analysisFileName+".root";
+      outName = dirOut_+"/nTuple_DYJ_JetToTau_MuTau_"+analysisFileName+".root";
       outFile = new TFile(outName,"RECREATE");
       backgroundDYJtoTau->Write();
       outFile->Close();
