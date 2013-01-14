@@ -460,16 +460,18 @@ Double_t myFuncTurnOnMuIdIso(Double_t *x, Double_t *par) {
 Double_t myFuncTurnOnMu(Double_t *x, Double_t *par) { 
 
   Double_t pt  = x[0];
-  Double_t eta = par[0];
-  Int_t run    = (Int_t)par[1];
-  Int_t ratio  = (Int_t)par[2];
+  //Double_t eta = par[0];
+  Int_t iEta  = (Int_t)par[0];
+  Int_t run   = (Int_t)par[1];
+  Int_t ratio = (Int_t)par[2];
 
   const int nEta=6; // ]-inf,-1.2[ [-1.2,-0.8[ [-0.8,0[ [0,0.8[ [0.8,1.2[ [1.2,+inf[
   const int nRun=7; // A, B, C, D, MC-old, ABCD, MC-new
 
   // aborting cases //
-  if(run<0   || run>=nRun)   { cout << "Choose run>=0 and run<" << nRun << endl; return 0; }
+  if(run<0   || run>=nRun)   { cout << "Choose run>=0 and run<"     << nRun << endl; return 0; }
   if(ratio<0 || ratio>1) { cout << "Choose ratio=0 or 1"            << endl; return 0; }
+  if(iEta<0  || iEta>=nEta)  { cout << "Choose iEta>=0 and <"       << nEta   << endl; return 0; }
 
   ratioEfficiencyTest* fitEffMu[nRun][nEta];
 
@@ -514,42 +516,43 @@ Double_t myFuncTurnOnMu(Double_t *x, Double_t *par) {
   fitEffMu[4][5] = new ratioEfficiencyTest(15.9974, 8.50572e-05, 5.53033e-08, 1.64714, 0.888026);
 					   
   // ABCD
-  fitEffMu[5][0] = new ratioEfficiencyTest(15.9825, 	7.90724e-05, 	5.49275e-08, 	1.6403, 	0.858285);
-  fitEffMu[5][1] = new ratioEfficiencyTest(17.3283, 	0.707103, 	1.2047, 	1.3732, 	0.900519);
-  fitEffMu[5][2] = new ratioEfficiencyTest(15.9828, 	0.0412999, 	0.0177441, 	1.66934, 	0.970097);
-  fitEffMu[5][3] = new ratioEfficiencyTest(15.9802, 	0.0548775, 	0.020313, 	1.79791, 	0.968398);
-  fitEffMu[5][4] = new ratioEfficiencyTest(16.8396, 	0.458636, 	0.633185, 	1.5706, 	0.8848);
-  fitEffMu[5][5] = new ratioEfficiencyTest(15.9987, 	8.94398e-05, 	5.18549e-08, 	1.8342, 	0.854625);
+  fitEffMu[5][0] = new ratioEfficiencyTest(15.9825, 7.90724e-05, 5.49275e-08, 1.6403,  0.858285);
+  fitEffMu[5][1] = new ratioEfficiencyTest(17.3283, 0.707103,    1.2047,      1.3732,  0.900519);
+  fitEffMu[5][2] = new ratioEfficiencyTest(15.9828, 0.0412999,   0.0177441,   1.66934, 0.970097);
+  fitEffMu[5][3] = new ratioEfficiencyTest(15.9802, 0.0548775,   0.020313,    1.79791, 0.968398);
+  fitEffMu[5][4] = new ratioEfficiencyTest(16.8396, 0.458636,    0.633185,    1.5706,  0.8848);
+  fitEffMu[5][5] = new ratioEfficiencyTest(15.9987, 8.94398e-05, 5.18549e-08, 1.8342,  0.854625);
 					   
   // MC-new
-  fitEffMu[6][0] = new ratioEfficiencyTest(16.0051, 	2.45144e-05, 	4.3335e-09, 	1.66134, 	0.87045);
-  fitEffMu[6][1] = new ratioEfficiencyTest(17.3135, 	0.747636, 	1.21803, 	1.40611, 	0.934983);
-  fitEffMu[6][2] = new ratioEfficiencyTest(15.9556, 	0.0236127, 	0.00589832, 	1.75409, 	0.981338);
-  fitEffMu[6][3] = new ratioEfficiencyTest(15.9289, 	0.0271317, 	0.00448573, 	1.92101, 	0.978625);
-  fitEffMu[6][4] = new ratioEfficiencyTest(16.5678, 	0.328333, 	0.354533, 	1.67085, 	0.916992);
-  fitEffMu[6][5] = new ratioEfficiencyTest(15.997,	7.90069e-05, 	4.40036e-08, 	1.66272, 	0.884502);
+  fitEffMu[6][0] = new ratioEfficiencyTest(16.0051, 2.45144e-05, 4.3335e-09,  1.66134, 0.87045);
+  fitEffMu[6][1] = new ratioEfficiencyTest(17.3135, 0.747636,    1.21803,     1.40611, 0.934983);
+  fitEffMu[6][2] = new ratioEfficiencyTest(15.9556, 0.0236127,   0.00589832,  1.75409, 0.981338);
+  fitEffMu[6][3] = new ratioEfficiencyTest(15.9289, 0.0271317,   0.00448573,  1.92101, 0.978625);
+  fitEffMu[6][4] = new ratioEfficiencyTest(16.5678, 0.328333,    0.354533,    1.67085, 0.916992);
+  fitEffMu[6][5] = new ratioEfficiencyTest(15.997,  7.90069e-05, 4.40036e-08, 1.66272, 0.884502);
 					   
   // choose iEta //
-  int iEta;
-  if(eta < -1.2)      iEta = 0;
-  else if(eta < -0.8) iEta = 1;
-  else if(eta < 0)    iEta = 2;
-  else if(eta < 0.8)  iEta = 3;
-  else if(eta < 1.2)  iEta = 4;
-  else                iEta = 5;
+//   int iEta;
+//   if(eta < -1.2)      iEta = 0;
+//   else if(eta < -0.8) iEta = 1;
+//   else if(eta < 0)    iEta = 2;
+//   else if(eta < 0.8)  iEta = 3;
+//   else if(eta < 1.2)  iEta = 4;
+//   else                iEta = 5;
 
 
   // return relevant result //
   if(ratio==0) return fitEffMu[run][iEta]->turnOn(pt) ;
 
-  else if(run>=0 && run<=3) 
-    return fitEffMu[4][iEta]->turnOn(pt)!=0 ? fitEffMu[run][iEta]->turnOn(pt) / fitEffMu[4][iEta]->turnOn(pt) : 0;
+  else {
+    if(run>=0 && run<=3) 
+      return fitEffMu[4][iEta]->turnOn(pt)!=0 ? fitEffMu[run][iEta]->turnOn(pt) / fitEffMu[4][iEta]->turnOn(pt) : 0;
 
-  else if(run==5)
-    return fitEffMu[6][iEta]->turnOn(pt)!=0 ? fitEffMu[run][iEta]->turnOn(pt) / fitEffMu[6][iEta]->turnOn(pt) : 0;
+    else if(run==5)
+      return fitEffMu[6][iEta]->turnOn(pt)!=0 ? fitEffMu[run][iEta]->turnOn(pt) / fitEffMu[6][iEta]->turnOn(pt) : 0;
 
-  else return 0;
-
+    else return 0;
+  }
 }
 
 
@@ -749,7 +752,7 @@ Double_t myFuncTurnOnTauMuTauEC(Double_t* x, Double_t *par) {
 /////////////////////////////////////////////////
 void makeFile(){
 
-  TFile* fout = new TFile("/data_CMS/cms/htautau/Moriond/tools/llrCorrections_Moriond.root","RECREATE");
+  TFile* fout = new TFile("/data_CMS/cms/htautau/Moriond/tools/llrCorrections_Moriond_test.root","RECREATE");
 
   TF1 *ratioElecIDBL        = new TF1("ratioElecIDBL",           myFuncRatioElecIDBL ,      14,800,0);
   TF1 *turnOnElecIDBL       = new TF1("turnOnElecIDBL",          myFuncTurnOnElecIDBL ,     14,800,0);
@@ -797,8 +800,40 @@ void makeFile(){
   TF1 *turnOnElecAllEC      = new TF1("turnOnElecAllEC",         myFuncTurnOnEleAllEC,      24,800,0);
 
   // MUON //
-  TF1 *turnOnMuIdIso = new TF1("turnOnMuIdIso", myFuncTurnOnMuIdIso, 0,800,4); // don't forget to SetParameters !
-  TF1 *turnOnMu      = new TF1("turnOnMu",      myFuncTurnOnMu,      0,800,3); // don't forget to SetParameters !
+  //
+  // Trigger
+  //
+  const int nEtaMuT=6;    // ]-inf,-1.2[ [-1.2,-0.8[ [-0.8,0[ [0,0.8[ [0.8,1.2[ [1.2,+inf[
+  const int nRunMuT=7; // A, B, C, D, MC-old, ABCD, MC-new
+  TString nom_run_mu[nRunMuT]={"A","B","C","D","MCold","ABCD","MCnew"};
+  TString nom_eta_mu[nEtaMuT]={"0","1","2","3","4","5"};
+  TF1 *turnOnMu[nEtaMuT][nRunMuT];
+
+  for(int iR=0 ; iR<nRunMuT ; iR++) {
+    for(int iE=0 ; iE<nEtaMuT ; iE++) {
+      turnOnMu[iE][iR] = new TF1("turnOnMu_"+nom_run_mu[iR]+"_"+nom_eta_mu[iE], myFuncTurnOnMu, 0,800,3);
+      turnOnMu[iE][iR]->SetParameters(iE,iR,0);
+      turnOnMu[iE][iR]->SetNpx(25600);
+      turnOnMu[iE][iR]->Write();
+    }
+  }
+  //
+  // Id, Iso
+  //
+  const int nEtaMuI=3; // [0,0.8[ [0.8,1.2[ [1.2,+inf[
+  const int nRunMuI=6; // ABCD, MC-ABCD, ABCD, MC-ABC, D, MC-D
+  TString nom_run_muI[nRunMuI]={"ABCD","MC-ABCD","ABC","MC-ABC","D","MC-D"};
+  TString nom_eta_muI[nEtaMuI]={"0","1","2"};
+  TF1 *turnOnMuIdIso[nEtaMuI][nRunMuI];
+  
+  for(int iR=0 ; iR<nRunMuI ; iR++) {
+    for(int iE=0 ; iE<nEtaMuI ; iE++) {
+      turnOnMuIdIso[iE][iR] = new TF1("turnOnMuIdIso_"+nom_run_muI[iR]+"_"+nom_eta_muI[iE], myFuncTurnOnMu, 0,800,3);
+      turnOnMuIdIso[iE][iR]->SetParameters(iE,iR,0);
+      turnOnMuIdIso[iE][iR]->SetNpx(25600);
+      turnOnMuIdIso[iE][iR]->Write();
+    }
+  }
   //////////
 
   TF1 *turnOnTauElecTauMCBL      = new TF1("turnOnTauElecTauMCBL",   myFuncTurnOnTauElecTauMCBL, 20,800,0);
@@ -869,11 +904,6 @@ void makeFile(){
   ratioElecAllEC->SetNpx(25600);
   turnOnElecAllEC->SetNpx(25600);
 
-  //
-  turnOnMu->SetNpx(25600);
-  turnOnMuIdIso->SetNpx(25600);
-  //
-
   turnOnTauElecTauMCBL->SetNpx(25600);
   turnOnTauElecTauMCEC->SetNpx(25600);
 
@@ -940,11 +970,6 @@ void makeFile(){
   turnOnElecAllBL->Write();
   ratioElecAllEC->Write();
   turnOnElecAllEC->Write();
-
-  //
-  turnOnMu->Write();
-  turnOnMuIdIso->Write();
-  //
 
   turnOnTauElecTauMCBL->Write();
   turnOnTauElecTauMCEC->Write();
