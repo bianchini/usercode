@@ -10,9 +10,9 @@ sys.path.append('./')
 ###########################################
 ###########################################
 
-def treeSkim( ana, sample, xsection, dirIn, dirOut, iJson, lepveto=0):
+def treeSkim( ana, sample, xsection, dirIn, dirOut, iJson, lepveto=1):
     
-    release="/home/llr/cms/ndaci/WorkArea/HTauTau/Analysis/CMSSW_534_CVS/"
+    release="/home/llr/cms/ndaci/WorkArea/HTauTau/Analysis/CMSSW_534_TopUp/"
     
     stream = "MuTau"
         
@@ -31,11 +31,11 @@ def treeSkim( ana, sample, xsection, dirIn, dirOut, iJson, lepveto=0):
     f.write('source /opt/exp_soft/cms/cms_ui_env_crab.sh\n')
     ##
     if lepveto==0:
-        f.write('treeSkimmer'+stream+'_Moriond '+ana+' '+sample+' '+str(xsection)+' '+str(dirIn)+' '+str(dirOut)+' '+str(iJson)+' > '+fileLog+'\n')
+        f.write('treeSkimmer'+stream+'_Moriond '+ana+' '+sample+' '+str(xsection)+' '+str(dirIn)+' '+str(dirOut)+' '+str(iJson)+' &> '+fileLog+'\n')
     elif lepveto==1:
-        f.write('treeSkimmer'+stream+'_Moriond '+ana+' '+sample+' '+str(xsection)+' '+str(dirIn)+' '+str(dirOut)+' '+str(iJson)+' '+str(lepveto)+' > '+fileLog+'\n')
+        f.write('treeSkimmer'+stream+'_Moriond '+ana+' '+sample+' '+str(xsection)+' '+str(dirIn)+' '+str(dirOut)+' '+str(iJson)+' '+str(lepveto)+' &> '+fileLog+'\n')
     f.close()
-    os.system('chmod u+x batch/treeSkim/*.sh')
+    os.system('chmod u+x batch/Moriond/treeSkim/*.sh')
     
 ###########################################
 ###########################################
@@ -43,7 +43,7 @@ def treeSkim( ana, sample, xsection, dirIn, dirOut, iJson, lepveto=0):
 dirInArun = '/data_CMS/cms/anayak/H2TauTauHCP/Moriond/MuTauStream/'
 #dirInTest = '/data_CMS/cms/ndaci/ndaci_2012/HTauTau/AnalysisHCP/trees/TestTrileptonVeto/'
 #dirIn     = '/data_CMS/cms/ndaci/ndaci_2012/HTauTau/AnalysisHCP/trees/'
-dirOut    = '/data_CMS/cms/htautau/Moriond/ntuples/MuTau/'
+dirOut    = '/data_CMS/cms/htautau/Moriond/ntuples/MuTau/round3/'
 
 ## MC Higgs SM
 basenameH = 'HTT_RUN_MuTau_Dec25_MC_'
