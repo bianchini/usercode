@@ -14,389 +14,22 @@
 // total L(D)  = 7274
 // total ABCD  = 19378.329
 
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-//ELEC ID
-Double_t myFuncRatioElecIDBL(Double_t* x, Double_t *par) {  
-  double ratio = 1.; 
-  Float_t xx = x[0]; 
-  if( xx < 24 )  
-    ratio = 0.9130; 
-  else if( xx >= 24 && xx< 30)  
-    ratio = 0.9130; 
-  else if( xx >= 30)
-    ratio = 0.9567; 
-  return ratio; 
-}
-Double_t myFuncTurnOnElecIDBL(Double_t* x, Double_t *par) {  
-  double ratio = 1.;  
-  Float_t xx = x[0];  
-  if( xx < 24 )   
-    ratio = 0.7532;  
-  else if( xx >= 24 && xx< 30)   
-    ratio = 0.7532;  
-  else if( xx >= 30) 
-    ratio = 0.8587;  
-  return ratio;  
-}
-Double_t myFuncRatioElecIDEC(Double_t* x, Double_t *par) {
-  double ratio = 1.;   
-  Float_t xx = x[0];   
-  if( xx < 24 )    
-    ratio = 0.8509;   
-  else if( xx >= 24 && xx< 30)    
-    ratio = 0.8509 ;   
-  else if( xx >= 30)  
-    ratio = 0.9239 ;   
-  return ratio;   
-}
-Double_t myFuncTurnOnElecIDEC(Double_t* x, Double_t *par) {
-  double ratio = 1.;    
-  Float_t xx = x[0];    
-  if( xx < 24 )     
-    ratio = 0.3631;    
-  else if( xx >= 24 && xx< 30)     
-    ratio = 0.3631;    
-  else if( xx >= 30)   
-    ratio = 0.5611 ;    
-  return ratio;    
-}
+///////////////////
+//   ELECTRONS   //
+///////////////////
+//
+// Electron ID, ISO
+//
+Double_t myFuncTurnOnEleIdIso(Double_t *x, Double_t *par) 
+{
 
-// Run D
-Double_t myFuncRatioElecRunDIDBL(Double_t* x, Double_t *par) {  
-  double ratio = 1.; 
-  Float_t xx = x[0]; 
-  if( xx < 24 )  
-    ratio = 0.9236; 
-  else if( xx >= 24 && xx< 30)  
-    ratio = 0.9236; 
-  else if( xx >= 30)
-    ratio = 0.9497; 
-  return ratio; 
-}
-Double_t myFuncTurnOnElecRunDIDBL(Double_t* x, Double_t *par) {  
-  double ratio = 1.;  
-  Float_t xx = x[0];  
-  if( xx < 24 )   
-    ratio = 0.7299;  
-  else if( xx >= 24 && xx< 30)   
-    ratio = 0.7299;  
-  else if( xx >= 30) 
-    ratio = 0.8510;  
-  return ratio;  
-}
-Double_t myFuncRatioElecRunDIDEC(Double_t* x, Double_t *par) {
-  double ratio = 1.;   
-  Float_t xx = x[0];   
-  if( xx < 24 )    
-    ratio = 0.8082;   
-  else if( xx >= 24 && xx< 30)    
-    ratio = 0.8082;   
-  else if( xx >= 30)  
-    ratio = 0.9175;   
-  return ratio;   
-}
-Double_t myFuncTurnOnElecRunDIDEC(Double_t* x, Double_t *par) {
-  double ratio = 1.;    
-  Float_t xx = x[0];    
-  if( xx < 24 )     
-    ratio = 0.3294;    
-  else if( xx >= 24 && xx< 30)     
-    ratio = 0.3294;    
-  else if( xx >= 30)   
-    ratio = 0.5491;    
-  return ratio;    
-}
+  Double_t pt = x[0];
+  Int_t iEta  = (Int_t)par[0];
+  Int_t run   = (Int_t)par[1];
+  Int_t ratio = (Int_t)par[2];
+  Int_t idiso = (Int_t)par[3]; // 0 : id ; 1 : iso
 
-
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-//ELECISO
-Double_t myFuncRatioElecIsoBL(Double_t* x, Double_t *par) {
-  double ratio = 1.;
-  Float_t xx = x[0];
-  if( xx < 24 ) 
-    ratio = 0.9602;
-  else if( xx >= 24 && xx< 30) 
-    ratio = 0.9602;
-  else if( xx >= 30)
-    ratio = 0.9858 ;
-  return ratio;
-}
-Double_t myFuncTurnOnElecIsoBL(Double_t* x, Double_t *par) { 
-  double ratio = 1.;
-  Float_t xx = x[0];
-  if( xx < 24 ) 
-    ratio = 0.7496;
-  else if( xx >= 24 && xx< 30) 
-    ratio = 0.7496;
-  else if( xx >= 30)
-    ratio = 0.8956;
-  return ratio; 
-}
-Double_t myFuncRatioElecIsoEC(Double_t* x, Double_t *par) { 
-  double ratio = 1.;
-  Float_t xx = x[0];
-  if( xx < 24 )  
-    ratio = 0.9661; 
-  else if( xx >= 24 && xx< 30)  
-    ratio = 0.9661; 
-  else if( xx >= 30) 
-    ratio = 0.9942; 
-  return ratio;
-}
-Double_t myFuncTurnOnElecIsoEC(Double_t* x, Double_t *par) {  
-  double ratio = 1.;
-  Float_t xx = x[0];
-  if( xx < 24 )   
-    ratio = 0.8244;  
-  else if( xx >= 24 && xx< 30)   
-    ratio = 0.8244;  
-  else if( xx >= 30)  
-    ratio = 0.9187 ;  
-  return ratio;
-}
-
-// Run D
-Double_t myFuncRatioElecRunDIsoBL(Double_t* x, Double_t *par) {
-  double ratio = 1.;
-  Float_t xx = x[0];
-  if( xx < 24 ) 
-    ratio = 0.9440;
-  else if( xx >= 24 && xx< 30) 
-    ratio = 0.9440;
-  else if( xx >= 30)
-    ratio =  0.9764;
-  return ratio;
-}
-Double_t myFuncTurnOnElecRunDIsoBL(Double_t* x, Double_t *par) { 
-  double ratio = 1.;
-  Float_t xx = x[0];
-  if( xx < 24 ) 
-    ratio = 0.7302;
-  else if( xx >= 24 && xx< 30) 
-    ratio = 0.7302;
-  else if( xx >= 30)
-    ratio = 0.8823;
-  return ratio; 
-}
-Double_t myFuncRatioElecRunDIsoEC(Double_t* x, Double_t *par) { 
-  double ratio = 1.;
-  Float_t xx = x[0];
-  if( xx < 24 )  
-    ratio = 0.9757; 
-  else if( xx >= 24 && xx< 30)  
-    ratio = 0.9757; 
-  else if( xx >= 30) 
-    ratio = 0.9764; 
-  return ratio;
-}
-Double_t myFuncTurnOnElecRunDIsoEC(Double_t* x, Double_t *par) {  
-  double ratio = 1.;
-  Float_t xx = x[0];
-  if( xx < 24 )   
-    ratio = 0.8304;  
-  else if( xx >= 24 && xx< 30)   
-    ratio = 0.8304;  
-  else if( xx >= 30)  
-    ratio = 0.9174;  
-  return ratio;
-}
-
-
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-//ELECTRIGGER
-//Run 2012A
-Double_t myFuncRatioEleRunABL(Double_t* x, Double_t *par) {  
-  gSystem->Load("ratioEfficiencyTest_C.so");  
-  ratioEfficiencyTest* fitEffElecRunABL = new ratioEfficiencyTest(20.4669,1.20429,1.84954,1.38645,0.891122);
-  ratioEfficiencyTest* fitEffElecBLMC   = new ratioEfficiencyTest(21.4136,0.000422,2.47314e-06,1.42487,1.00104);  
-  Float_t xx = x[0];  
-  return fitEffElecRunABL->turnOn(xx)/fitEffElecBLMC->turnOn(xx);  
-}
-Double_t myFuncTurnOnEleRunABL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so"); 
-  ratioEfficiencyTest* fitEffElecRunABL = new ratioEfficiencyTest(20.4669,1.20429,1.84954,1.38645,0.891122);
-  Float_t xx = x[0];   
-  return fitEffElecRunABL->turnOn(xx);
-}
-Double_t myFuncRatioEleRunAEC(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");   
-  ratioEfficiencyTest* fitEffElecRunAEC = new ratioEfficiencyTest(21.4136,1.93922,2.43562,1.00186,51.947);
-  ratioEfficiencyTest* fitEffElecECMC = new ratioEfficiencyTest(20.9985,0.002918,3.43131e-05,1.41479,1.06506);
-  Float_t xx = x[0];   
-  return fitEffElecRunAEC->turnOn(xx)/fitEffElecECMC->turnOn(xx);   
-}
-Double_t myFuncTurnOnEleRunAEC(Double_t* x, Double_t *par) {
-  gSystem->Load("ratioEfficiencyTest_C.so");   
-  ratioEfficiencyTest* fitEffElecRunAEC = new ratioEfficiencyTest(21.4136,1.93922,2.43562,1.00186,51.947);
-  Float_t xx = x[0];    
-  return fitEffElecRunAEC->turnOn(xx);
-}
-//Run2012B
-Double_t myFuncRatioEleRunBBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");   
-  ratioEfficiencyTest* fitEffElecRunBBL = new ratioEfficiencyTest(22.8618,0.844755,1.07941,1.27956,1.07722);
-  ratioEfficiencyTest* fitEffElecBLMC = new ratioEfficiencyTest(21.4136,0.000422,2.47314e-06,1.42487,1.00104);  
-  Float_t xx = x[0];   
-  return fitEffElecRunBBL->turnOn(xx)/fitEffElecBLMC->turnOn(xx);   
-}
-Double_t myFuncTurnOnEleRunBBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");    
-  ratioEfficiencyTest* fitEffElecRunBBL = new ratioEfficiencyTest(22.8618,0.844755,1.07941,1.27956,1.07722);
-  Float_t xx = x[0];    
-  return fitEffElecRunBBL->turnOn(xx);
-}
-/////////
-Double_t myFuncRatioEleRunBEC(Double_t* x, Double_t *par) {
-  gSystem->Load("ratioEfficiencyTest_C.so");    
-  ratioEfficiencyTest* fitEffElecRunBEC = new ratioEfficiencyTest(22.1045,1.08481,0.780119,1.91846,0.962174);
-  ratioEfficiencyTest* fitEffElecECMC = new ratioEfficiencyTest(20.9985,0.002918,3.43131e-05,1.41479,1.06506);
-  Float_t xx = x[0];    
-  return fitEffElecRunBEC->turnOn(xx)/fitEffElecECMC->turnOn(xx);     
-}
-Double_t myFuncTurnOnEleRunBEC(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");     
-  ratioEfficiencyTest* fitEffElecRunBEC = new ratioEfficiencyTest(22.1045,1.08481,0.780119,1.91846,0.962174);
-  Float_t xx = x[0];     
-  return fitEffElecRunBEC->turnOn(xx);
-}
-//Run2012C
-Double_t myFuncRatioEleRunCBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");   
-  ratioEfficiencyTest* fitEffElecRunCBL = new ratioEfficiencyTest(22.8598,0.855666,1.02951,1.32713,1.05486);
-  ratioEfficiencyTest* fitEffElecBLMC = new ratioEfficiencyTest(21.4136,0.000422,2.47314e-06,1.42487,1.00104);  
-  Float_t xx = x[0];   
-  return fitEffElecRunCBL->turnOn(xx)/fitEffElecBLMC->turnOn(xx);   
-}
-Double_t myFuncTurnOnEleRunCBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");  
-  ratioEfficiencyTest* fitEffElecRunCBL = new ratioEfficiencyTest(22.8598,0.855666,1.02951,1.32713,1.05486);
-  Float_t xx = x[0];    
-  return fitEffElecRunCBL->turnOn(xx);
-}
-Double_t myFuncRatioEleRunCEC(Double_t* x, Double_t *par) {
-  gSystem->Load("ratioEfficiencyTest_C.so");    
-  ratioEfficiencyTest* fitEffElecRunCEC = new ratioEfficiencyTest(21.7643,1.45024,0.785753,3.14722,0.926788);
-  ratioEfficiencyTest* fitEffElecECMC = new ratioEfficiencyTest(20.9985,0.002918,3.43131e-05,1.41479,1.06506);
-  Float_t xx = x[0];    
-  return fitEffElecRunCEC->turnOn(xx)/fitEffElecECMC->turnOn(xx);     
-}
-Double_t myFuncTurnOnEleRunCEC(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");     
-  ratioEfficiencyTest* fitEffElecRunCEC = new ratioEfficiencyTest(21.7643,1.45024,0.785753,3.14722,0.926788);
-  Float_t xx = x[0];     
-  return fitEffElecRunCEC->turnOn(xx);
-}
-
-//Run2012D
-Double_t myFuncRatioEleRunDBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");   
-  ratioEfficiencyTest* fitEffElecRunDBL = new ratioEfficiencyTest(23.2037, 0.947222, 1.29024, 1.09804, 1.53015 );
-  ratioEfficiencyTest* fitEffElecBLMC = new ratioEfficiencyTest(21.4136,0.000422,2.47314e-06,1.42487,1.00104);  
-  Float_t xx = x[0];   
-  return fitEffElecRunDBL->turnOn(xx)/fitEffElecBLMC->turnOn(xx);   
-}
-Double_t myFuncTurnOnEleRunDBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");  
-  ratioEfficiencyTest* fitEffElecRunDBL = new ratioEfficiencyTest(23.2037, 0.947222, 1.29024, 1.09804, 1.53015 );
-  Float_t xx = x[0];    
-  return fitEffElecRunDBL->turnOn(xx);
-}
-Double_t myFuncRatioEleRunDEC(Double_t* x, Double_t *par) {
-  gSystem->Load("ratioEfficiencyTest_C.so");    
-  ratioEfficiencyTest* fitEffElecRunDEC = new ratioEfficiencyTest(21.86, 0.979008, 0.505753, 2.2701, 0.94213 );
-  ratioEfficiencyTest* fitEffElecECMC = new ratioEfficiencyTest(20.9985,0.002918,3.43131e-05,1.41479,1.06506);
-  Float_t xx = x[0];    
-  return fitEffElecRunDEC->turnOn(xx)/fitEffElecECMC->turnOn(xx);     
-}
-Double_t myFuncTurnOnEleRunDEC(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");     
-  ratioEfficiencyTest* fitEffElecRunDEC = new ratioEfficiencyTest(21.86, 0.979008, 0.505753, 2.2701, 0.94213 );
-  Float_t xx = x[0];     
-  return fitEffElecRunDEC->turnOn(xx);
-}
-
-//Combined Electron 
-Double_t myFuncRatioEleAllBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* fitEffElecRunABL = new ratioEfficiencyTest(20.4669,1.20429,1.84954,1.38645,0.891122);
-  ratioEfficiencyTest* fitEffElecRunBBL = new ratioEfficiencyTest(22.8618,0.844755,1.07941,1.27956,1.07722);
-  ratioEfficiencyTest* fitEffElecRunCBL = new ratioEfficiencyTest(22.8598,0.855666,1.02951,1.32713,1.05486);
-  ratioEfficiencyTest* fitEffElecRunDBL = new ratioEfficiencyTest(23.2037, 0.947222, 1.29024, 1.09804, 1.53015 );
-  ratioEfficiencyTest* fitEffElecBLMC = new ratioEfficiencyTest(21.4136,0.000422,2.47314e-06,1.42487,1.00104);  
-
-  Float_t xx = x[0];
-  return (fitEffElecRunABL->turnOn(xx) * weightRunA +
-	  fitEffElecRunBBL->turnOn(xx) * weightRunB +
-	  fitEffElecRunCBL->turnOn(xx) * weightRunC +
-	  fitEffElecRunDBL->turnOn(xx) * weightRunD
-	  )/fitEffElecBLMC->turnOn(xx);
-}
-Double_t myFuncTurnOnEleAllBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so"); 
-  ratioEfficiencyTest* fitEffElecRunABL = new ratioEfficiencyTest(20.4669,1.20429,1.84954,1.38645,0.891122);
-  ratioEfficiencyTest* fitEffElecRunBBL = new ratioEfficiencyTest(22.8618,0.844755,1.07941,1.27956,1.07722);
-  ratioEfficiencyTest* fitEffElecRunCBL = new ratioEfficiencyTest(22.8598,0.855666,1.02951,1.32713,1.05486);
-  ratioEfficiencyTest* fitEffElecRunDBL = new ratioEfficiencyTest(23.2037, 0.947222, 1.29024, 1.09804, 1.53015 );
-
-  Float_t xx = x[0];
-  return (fitEffElecRunABL->turnOn(xx) * weightRunA +
-	  fitEffElecRunBBL->turnOn(xx) * weightRunB +
-	  fitEffElecRunCBL->turnOn(xx) * weightRunC +
-	  fitEffElecRunDBL->turnOn(xx) * weightRunD
-	  );
-}
-Double_t myFuncRatioEleAllEC(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* fitEffElecRunAEC = new ratioEfficiencyTest(21.4136,1.93922,2.43562,1.00186,51.947);
-  ratioEfficiencyTest* fitEffElecRunBEC = new ratioEfficiencyTest(22.1045,1.08481,0.780119,1.91846,0.962174);
-  ratioEfficiencyTest* fitEffElecRunCEC = new ratioEfficiencyTest(21.7643,1.45024,0.785753,3.14722,0.926788);
-  ratioEfficiencyTest* fitEffElecRunDEC = new ratioEfficiencyTest(21.86, 0.979008, 0.505753, 2.2701, 0.94213 );
-  ratioEfficiencyTest* fitEffElecECMC = new ratioEfficiencyTest(20.9985,0.002918,3.43131e-05,1.41479,1.06506);
-
-  Float_t xx = x[0];
-  return (fitEffElecRunAEC->turnOn(xx) * weightRunA +
-	  fitEffElecRunBEC->turnOn(xx) * weightRunB +
-	  fitEffElecRunCEC->turnOn(xx) * weightRunC +
-	  fitEffElecRunDEC->turnOn(xx) * weightRunD
-	  )/fitEffElecECMC->turnOn(xx);
-}
-
-Double_t myFuncTurnOnEleAllEC(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* fitEffElecRunAEC = new ratioEfficiencyTest(21.4136,1.93922,2.43562,1.00186,51.947);
-  ratioEfficiencyTest* fitEffElecRunBEC = new ratioEfficiencyTest(22.1045,1.08481,0.780119,1.91846,0.962174);
-  ratioEfficiencyTest* fitEffElecRunCEC = new ratioEfficiencyTest(21.7643,1.45024,0.785753,3.14722,0.926788);
-  ratioEfficiencyTest* fitEffElecRunDEC = new ratioEfficiencyTest(21.86, 0.979008, 0.505753, 2.2701, 0.94213 );
-
-  Float_t xx = x[0];
-  return (fitEffElecRunAEC->turnOn(xx) * weightRunA +
-	  fitEffElecRunBEC->turnOn(xx) * weightRunB +
-	  fitEffElecRunCEC->turnOn(xx) * weightRunC +
-	  fitEffElecRunDEC->turnOn(xx) * weightRunD
-	  );
-}
-
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-//MUID
-///eta < 0.8
-
-Double_t myFuncTurnOnMuIdIso(Double_t *x, Double_t *par) {
-
-  Double_t pt  = x[0];
-  Double_t eta = par[0];
-  Int_t run    = (Int_t)par[1];
-  Int_t ratio  = (Int_t)par[2];
-  Int_t idiso  = (Int_t)par[3]; // 0 : id ; 1 : iso
-
-  const int nEta=3; // [0;0.8[  [0.8;1.2[  [1.2;2.1[
+  const int nEta=2; // [0;1.479[  [1.479;2.1[
   const int nRun=6; // ABCD, MC-ABCD, ABC, MC-ABC, D, MC-D
   const int nPt =2; // ]-inf;30[ [30;+inf[
 
@@ -404,6 +37,150 @@ Double_t myFuncTurnOnMuIdIso(Double_t *x, Double_t *par) {
   if(run<0 || run>=nRun) { cout << "Choose run>=0 and run<" << nRun << endl; return 0; }
   if(ratio<0 || ratio>1) { cout << "Choose ratio=0 or 1"            << endl; return 0; }
   if(idiso<0 || idiso>1) { cout << "Choose idiso=0 or 1"            << endl; return 0; }
+  if(iEta<0  || iEta>=nEta)  { cout << "Choose iEta>=0 and <"       << nEta   << endl; return 0; }
+  
+  // define results
+  //
+  // ID
+  //
+  Double_t resID[nRun][nEta][nPt]
+    = { { { 0.7463 , 0.8506} , { 0.3444 , 0.5580} } ,  // ABCD
+	{ { 0.8200 , 0.8961} , { 0.4178 , 0.6026} } ,  // MC ABCD
+	{ { 0.7532 , 0.8587} , {0.3631  , 0.5611} } ,  // ABC
+	{ { 0.8249 , 0.8975} , {0.4267  , 0.6074} } ,  // MC ABC
+	{ { 0.7299 , 0.8510} , {0.3294  , 0.5491} } ,  // D
+	{ { 0.7903 , 0.8961} , {0.4075  , 0.5984} } }; // MC D
+	//                  //                   //                         //
+	//      [0;1.479[           [1.479;2.1[
+  // ISO
+  //
+  Double_t resISO[nRun][nEta][nPt]
+    = { { { 0.7365 , 0.8904} , { 0.8177 , 0.9190} } ,  // ABCD
+	{ { 0.7779 , 0.9068} , { 0.8530 , 0.9237} } ,  // MC ABCD
+	{ { 0.7496 , 0.8956} , {0.8244  , 0.9187} } ,  // ABC
+	{ { 0.7806 , 0.9084} , {0.8533  , 0.9240} } ,  // MC ABC
+	{ { 0.7302 , 0.8823} , {0.8304  , 0.9174} } ,  // D
+	{ { 0.7735 , 0.9041} , {0.8511  , 0.9233} } }; // MC D
+	//                  //                   //                         //
+	//      [0;1.479[           [1.479;2.1[
+	
+
+  // choose eta index
+//   int iEta;
+//   if(abs(eta) < 0.8)      iEta = 0; // [0;0.8[
+//   else if( iEta = 1; // [0.8;1.2[
+  
+  // choose pt index
+  int iPt;
+  if(pt<30.) iPt=0;
+  else       iPt=1;
+
+  // Return relevant result //
+  if(ratio==0) {
+    if(idiso==0) return resID[run][iEta][iPt];
+    else         return resISO[run][iEta][iPt];
+  }
+  else if(run==0 || run==2 || run==4) { // numerator is always data
+    if(idiso==0) return resID[run+1][iEta][iPt] !=0 ? resID[run][iEta][iPt] / resID[run+1][iEta][iPt] : 0 ;
+    else         return resISO[run+1][iEta][iPt]!=0 ? resISO[run][iEta][iPt]/ resISO[run+1][iEta][iPt]: 0 ;
+  }
+  else return 0;
+}
+//
+// Electron Trigger
+//
+Double_t myFuncTurnOnEle(Double_t *x, Double_t *par) { 
+
+  Double_t pt  = x[0];
+  Int_t iEta  = (Int_t)par[0];
+  Int_t run   = (Int_t)par[1];
+  Int_t ratio = (Int_t)par[2];
+
+  const int nEta=2; // EB / EE (1.479)
+  const int nRun=7; // A, B, C, D, MC-old, ABCD, MC-new
+
+  // aborting cases //
+  if(run<0   || run>=nRun) { cout << "Choose run>=0 and run<" << nRun << endl; return 0; }
+  if(ratio<0 || ratio>1)   { cout << "Choose ratio=0 or 1"    << endl; return 0; }
+  if(iEta<0  || iEta>=nEta){ cout << "Choose iEta>=0 and <"   << nEta << endl; return 0; }
+
+  ratioEfficiencyTest* fitEffEle[nRun][nEta];
+
+  // 2012A
+  fitEffEle[0][0] = new ratioEfficiencyTest(20.4669, 1.20429, 1.84954, 1.38645, 0.891122);
+  fitEffEle[0][1] = new ratioEfficiencyTest(21.4136, 1.93922, 2.43562, 1.00186, 51.947);
+
+  // 2012B
+  fitEffEle[1][0] = new ratioEfficiencyTest(22.8618, 0.844755, 1.07941, 1.27956, 1.07722);
+  fitEffEle[1][1] = new ratioEfficiencyTest(22.1045, 1.08481, 0.780119, 1.91846, 0.962174);
+
+  // 2012C
+  fitEffEle[2][0] = new ratioEfficiencyTest(22.8598, 0.855666, 1.02951, 1.32713, 1.05486);
+  fitEffEle[2][1] = new ratioEfficiencyTest(21.7643, 1.45024, 0.785753, 3.14722, 0.926788 );
+
+  // 2012D 
+  fitEffEle[3][0] = new ratioEfficiencyTest(23.0825, 0.930633, 1.17931, 1.19807, 1.19376 );
+  fitEffEle[3][1] = new ratioEfficiencyTest(21.8373, 1.26926, 0.801134, 2.27808, 0.938937 );
+					   
+  // MC-old
+  fitEffEle[4][0] = new ratioEfficiencyTest(21.4136, 0.000422, 2.47314e-06, 1.42487, 1.00104);
+  fitEffEle[4][1] = new ratioEfficiencyTest(20.9985, 0.002918, 3.43131e-05, 1.41479, 1.06506);
+					   
+  // ABCD
+  fitEffEle[5][0] = new ratioEfficiencyTest(22.9041, 1.04728, 1.38544, 1.22576, 1.13019);
+  fitEffEle[5][1] = new ratioEfficiencyTest(21.9941, 1.43419, 1.01152, 2.28622, 0.939872);
+					   
+  // MC-new
+  fitEffEle[6][0] = new ratioEfficiencyTest(21.7243, 0.619015, 0.739301, 1.34903, 1.02594);
+  fitEffEle[6][1] = new ratioEfficiencyTest(22.1217, 1.34054, 1.8885, 1.01855, 4.7241);
+					   
+  // choose iEta //
+//   int iEta;
+//   if(eta < -1.2)      iEta = 0;
+//   else if(eta < -0.8) iEta = 1;
+//   else if(eta < 0)    iEta = 2;
+//   else if(eta < 0.8)  iEta = 3;
+//   else if(eta < 1.2)  iEta = 4;
+//   else                iEta = 5;
+
+
+  // return relevant result //
+  if(ratio==0) return fitEffEle[run][iEta]->turnOn(pt) ;
+
+  else {
+    if(run>=0 && run<=3) 
+      return fitEffEle[4][iEta]->turnOn(pt)!=0 ? fitEffEle[run][iEta]->turnOn(pt) / fitEffEle[4][iEta]->turnOn(pt) : 0;
+
+    else if(run==5)
+      return fitEffEle[6][iEta]->turnOn(pt)!=0 ? fitEffEle[run][iEta]->turnOn(pt) / fitEffEle[6][iEta]->turnOn(pt) : 0;
+
+    else return 0;
+  }
+}
+
+///////////////
+//   MUONS   //
+///////////////
+//
+// Muons ID, ISO
+//
+Double_t myFuncTurnOnMuIdIso(Double_t *x, Double_t *par) {
+
+  Double_t pt = x[0];
+  Int_t iEta  = (Int_t)par[0];
+  Int_t run   = (Int_t)par[1];
+  Int_t ratio = (Int_t)par[2];
+  Int_t idiso = (Int_t)par[3]; // 0 : id ; 1 : iso
+
+  const int nEta=3; // [0;0.8[  [0.8;1.2[  [1.2;2.1[
+  const int nRun=6; // ABCD, MC-ABCD, ABC, MC-ABC, D, MC-D
+  const int nPt =2; // ]-inf;30[ [30;+inf[
+
+  // aborting cases //
+  if(run<0 || run>=nRun)    { cout << "Choose run>=0 and run<" << nRun << endl; return 0; }
+  if(ratio<0 || ratio>1)    { cout << "Choose ratio=0 or 1"            << endl; return 0; }
+  if(idiso<0 || idiso>1)    { cout << "Choose idiso=0 or 1"            << endl; return 0; }
+  if(iEta<0  || iEta>=nEta) { cout << "Choose iEta>=0 and <"   << nEta << endl; return 0; }
   
   // define results
   //
@@ -432,10 +209,10 @@ Double_t myFuncTurnOnMuIdIso(Double_t *x, Double_t *par) {
 	
 
   // choose eta index
-  int iEta;
-  if(abs(eta) < 0.8)      iEta = 0; // [0;0.8[
-  else if(abs(eta) < 1.2) iEta = 1; // [0.8;1.2[
-  else                    iEta = 2; // [1.2;2.1[
+//   int iEta;
+//   if(abs(eta) < 0.8)      iEta = 0; // [0;0.8[
+//   else if(abs(eta) < 1.2) iEta = 1; // [0.8;1.2[
+//   else                    iEta = 2; // [1.2;2.1[
   
   // choose pt index
   int iPt;
@@ -453,7 +230,6 @@ Double_t myFuncTurnOnMuIdIso(Double_t *x, Double_t *par) {
   }
   else return 0;
 }
-
 //
 // MUON TRIGGER
 //
@@ -556,252 +332,150 @@ Double_t myFuncTurnOnMu(Double_t *x, Double_t *par) {
 }
 
 
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-//TAU TRIGGER
+//////////////
+//   TAUS   //
+//////////////
 //
-/////////////////////////////////////////////////////////
+// TAU TRIGGER
+//
 // HLT PFTauLoose20 / MC Summer12 53X / elec+tau
 //
-Double_t myFuncTurnOnTauElecTauMCBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauMCBL = new ratioEfficiencyTest(18.40815138, 1.53235636, 3.55989632, 1.74542709, 0.90118450);
-  Float_t xx = x[0];
-  return ratioEffTauMCBL->turnOn(xx);
-}
-Double_t myFuncTurnOnTauElecTauMCEC(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so"); 
-  ratioEfficiencyTest* ratioEffTauMCEC = new ratioEfficiencyTest(18.29028052, 1.56239255, 11.03605631, 155.89290151, 0.85683995);
-  Float_t xx = x[0]; 
-  return ratioEffTauMCEC->turnOn(xx); 
-} 
-/////////////////////////////////////////////////
-// HLT PFTau All / e+tau
-Double_t myFuncTurnOnTauElecTauBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauElecTauBL = new ratioEfficiencyTest(18.43442868,2.08967536,3.27357845,6.96327309,0.85564484);
-  Float_t xx = x[0];
-  return ratioEffTauElecTauBL->turnOn(xx);
-}
+Double_t myFuncTurnOnTau(Double_t *x, Double_t *par) { 
 
-Double_t myFuncRatioTauElecTauBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauElecTauBL = new ratioEfficiencyTest(18.43442868,2.08967536,3.27357845,6.96327309,0.85564484);
-  ratioEfficiencyTest* ratioEffTauMCBL = new ratioEfficiencyTest(18.40815138, 1.53235636, 3.55989632, 1.74542709, 0.90118450);
-  Float_t xx = x[0];
-  return ratioEffTauElecTauBL->turnOn(xx)/ratioEffTauMCBL->turnOn(xx);
-}
+  Double_t pt  = x[0];
+  Int_t iEta  = (Int_t)par[0];
+  Int_t run   = (Int_t)par[1];
+  Int_t ratio = (Int_t)par[2];
+  Int_t emu   = (Int_t)par[3];
 
-Double_t myFuncTurnOnTauElecTauEC(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauElecTauEC = new ratioEfficiencyTest(18.16839440,1.86184564,4.39116712,1.01410741,1.39240481);
-  Float_t xx = x[0];
-  return ratioEffTauElecTauEC->turnOn(xx);
-}
+  const int nEta=2; // EB / EE (1.5)
+  const int nRun=6; // ABC, MC-ABC, D, MC-D, ABCD, MC-ABCD
+  const int nemu=2; // e+tau / mu+tau
 
-Double_t myFuncRatioTauElecTauEC(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauElecTauEC = new ratioEfficiencyTest(18.16839440,1.86184564,4.39116712,1.01410741,1.39240481);
-  ratioEfficiencyTest* ratioEffTauMCEC = new ratioEfficiencyTest(18.29028052, 1.56239255, 11.03605631, 155.89290151, 0.85683995);
-  Float_t xx = x[0];
-  return ratioEffTauElecTauEC->turnOn(xx)/ratioEffTauMCEC->turnOn(xx);
-}
+  // aborting cases //
+  if(run<0   || run>=nRun) { cout << "Choose run>=0 and run<" << nRun << endl; return 0; }
+  if(ratio<0 || ratio>1)   { cout << "Choose ratio=0 or 1"    << endl; return 0; }
+  if(iEta<0  || iEta>=nEta){ cout << "Choose iEta>=0 and <"   << nEta << endl; return 0; }
+  if(emu<0   || emu>=nemu) { cout << "Choose emu >=0 and <"   << nemu << endl; return 0; }
 
-// Run 2012D
-Double_t myFuncTurnOnTauElecTauRunDBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauElecTauRunDBL = new ratioEfficiencyTest(18.73, 0.374578, 0.136068, 5.789410, 0.8638);
-  Float_t xx = x[0];
-  return ratioEffTauElecTauRunDBL->turnOn(xx);
-}
+  ratioEfficiencyTest* fitEffTau[nemu][nRun][nEta];
 
-Double_t myFuncRatioTauElecTauRunDBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauElecTauRunDBL = new ratioEfficiencyTest(18.73, 0.374578, 0.136068, 5.789410, 0.8638);
-  ratioEfficiencyTest* ratioEffTauMCBL = new ratioEfficiencyTest(19.22, 0.204905, 0.175676, 2.644803, 0.8974);
-  Float_t xx = x[0];
-  return ratioEffTauElecTauRunDBL->turnOn(xx)/ratioEffTauMCBL->turnOn(xx);
-}
+  // e+tau channel
+  // 2012 ABC (took by Ivo from Josh code)
+  fitEffTau[0][0][0] = new ratioEfficiencyTest(18.43442868,2.08967536,3.27357845,6.96327309,0.85564484);
+  fitEffTau[0][0][1] = new ratioEfficiencyTest(18.16839440,1.86184564,4.39116712,1.01410741,1.39240481);
+  // MC ABC (took by Ivo from Josh code)
+  fitEffTau[0][1][0] = new ratioEfficiencyTest(18.40815138, 1.53235636, 3.55989632, 1.74542709, 0.90118450);
+  fitEffTau[0][1][1] = new ratioEfficiencyTest(18.29028052, 1.56239255, 11.03605631, 155.89290151, 0.85683995);
+  // 2012 D
+  fitEffTau[0][2][0] = new ratioEfficiencyTest(18.73, 0.374578, 0.136068, 5.789410, 0.8638 );
+  fitEffTau[0][2][1] = new ratioEfficiencyTest(19.32, 0.146243, 0.123579, 3.126114, 0.8313 );
+  // MC D
+  fitEffTau[0][3][0] = new ratioEfficiencyTest(19.22, 0.204905, 0.175676, 2.644803, 0.8974);
+  fitEffTau[0][3][1] = new ratioEfficiencyTest(18.62, 0.037935, 0.002134, 95.090919, 0.8515 );
+  // ABCD
+  fitEffTau[0][4][0] = new ratioEfficiencyTest(18.686211, 1.993524, 3.202713, 3.612693, 0.871640 );
+  fitEffTau[0][4][1] = new ratioEfficiencyTest(18.472954, 1.606388, 3.468975, 55.629620,0.828977 );
+  // MC ABCD
+  fitEffTau[0][5][0] = new ratioEfficiencyTest(18.431118, 1.572877, 3.301699, 4.760769, 0.899620 );
+  fitEffTau[0][5][1] = new ratioEfficiencyTest(18.257217, 1.632443, 9.283116, 40.219585,0.858643 );
+					   
+  // mu+tau channel
+  // 2012 ABC
+  fitEffTau[1][0][0] = new ratioEfficiencyTest(18.50940288, 1.62285299, 2.73232995, 1.79135412, 0.91481432);
+  fitEffTau[1][0][1] = new ratioEfficiencyTest(18.45678784, 0.68697618, 0.57008697, 3.73470825, 0.84747211);
+  // MC ABC
+  fitEffTau[1][1][0] = new ratioEfficiencyTest(18.80484409, 0.19082817, 0.19983010, 1.81979820, 0.93270649);
+  fitEffTau[1][1][1] = new ratioEfficiencyTest(18.25975478, 1.32745225, 1.70380810, 149.18410074, 0.87377770);
+  // 2012 D
+  fitEffTau[1][2][0] = new ratioEfficiencyTest(19.09, 0.236111, 0.140104, 2.361672, 0.9137 );
+  fitEffTau[1][2][1] = new ratioEfficiencyTest(19.49, 0.003359, 0.005832, 1.000378, 85.3401 );
+  // MC D
+  fitEffTau[1][3][0] = new ratioEfficiencyTest(18.84, 0.962342, 2.103198, 1.014981, 1.8846 );
+  fitEffTau[1][3][1] = new ratioEfficiencyTest(19.01, 0.492647, 0.449299, 137.190323, 0.8850 );
+  // ABCD
+  fitEffTau[1][4][0] = new ratioEfficiencyTest(18.52036251, 1.47760312, 2.53574445, 1.71202550, 0.93019930 );
+  fitEffTau[1][4][1] = new ratioEfficiencyTest(18.41225333, 0.76598912, 0.60544260, 5.38350881, 0.85870108 );
+  // MC ABCD
+  fitEffTau[1][5][0] = new ratioEfficiencyTest(18.88740627, 0.10718873, 0.12277723, 1.60581265, 0.95041892 );
+  fitEffTau[1][5][1] = new ratioEfficiencyTest(18.30439676, 1.44360240,	3.79358997, 1.07560564, 0.93103925 );
+					   
+  // choose iEta //
+//   int iEta;
+//   if(eta < -1.2)      iEta = 0;
+//   else if(eta < -0.8) iEta = 1;
+//   else if(eta < 0)    iEta = 2;
+//   else if(eta < 0.8)  iEta = 3;
+//   else if(eta < 1.2)  iEta = 4;
+//   else                iEta = 5;
 
-Double_t myFuncTurnOnTauElecTauRunDEC(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauElecTauRunDEC = new ratioEfficiencyTest(19.32, 0.146243, 0.123579, 3.126114, 0.8313);
-  Float_t xx = x[0];
-  return ratioEffTauElecTauRunDEC->turnOn(xx);
-}
+  // return relevant result //
+  if(ratio==0) return fitEffTau[emu][run][iEta]->turnOn(pt) ;
 
-Double_t myFuncRatioTauElecTauRunDEC(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauElecTauRunDEC = new ratioEfficiencyTest(19.32, 0.146243, 0.123579, 3.126114, 0.8313);
-  ratioEfficiencyTest* ratioEffTauMCEC = new ratioEfficiencyTest(18.62, 0.037935, 0.002134, 95.090919, 0.8515);
-  Float_t xx = x[0];
-  return ratioEffTauElecTauRunDEC->turnOn(xx)/ratioEffTauMCEC->turnOn(xx);
-}
+  else {
+    if(run==0 || run==2 || run==4)
+      return fitEffTau[emu][run+1][iEta]->turnOn(pt)!=0 ? fitEffTau[emu][run][iEta]->turnOn(pt) / fitEffTau[emu][run+1][iEta]->turnOn(pt) : 0;
 
-
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////////////
-// HLT PFTauLoose20 / MC Summer12 53X / mu+tau
-//
-Double_t myFuncTurnOnTauMuTauMCBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauMuTauMCBL = new ratioEfficiencyTest(18.80484409, 0.19082817, 0.19983010, 1.81979820, 0.93270649);
-  Float_t xx = x[0];
-  return ratioEffTauMuTauMCBL->turnOn(xx);
+    else return 0;
+  }
 }
-Double_t myFuncTurnOnTauMuTauMCEC(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauMuTauMCEC = new ratioEfficiencyTest(18.25975478, 1.32745225, 1.70380810, 149.18410074, 0.87377770);
-  Float_t xx = x[0]; 
-  return ratioEffTauMuTauMCEC->turnOn(xx); 
-} 
-/////////////////////////////////////////////////
-// HLT PFTauLoose20 / Run2012A+B+C     / mu+tau
-Double_t myFuncRatioTauMuTauRunABCBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauMuTauRunABCBL   = new ratioEfficiencyTest(18.50940288, 1.62285299, 2.73232995, 1.79135412, 0.91481432);
-  ratioEfficiencyTest* ratioEffTauMuTauMCBL = new ratioEfficiencyTest(18.80484409, 0.19082817, 0.19983010, 1.81979820, 0.93270649);
-  Float_t xx = x[0];
-  return ratioEffTauMuTauRunABCBL->turnOn(xx)/ratioEffTauMuTauMCBL->turnOn(xx);
-}
-Double_t myFuncTurnOnTauMuTauRunABCBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauMuTauRunABCBL = new ratioEfficiencyTest(18.50940288, 1.62285299, 2.73232995, 1.79135412, 0.91481432);
-  Float_t xx = x[0];
-  return ratioEffTauMuTauRunABCBL->turnOn(xx);
-}
-Double_t myFuncRatioTauMuTauRunABCEC(Double_t* x, Double_t *par) {    
-  gSystem->Load("ratioEfficiencyTest_C.so"); 
-  ratioEfficiencyTest* ratioEffTauMuTauRunABCEC = new ratioEfficiencyTest(18.45678784, 0.68697618, 0.57008697, 3.73470825, 0.84747211);
-  ratioEfficiencyTest* ratioEffTauMuTauMCEC = new ratioEfficiencyTest(18.25975478, 1.32745225, 1.70380810, 149.18410074, 0.87377770);
-  Float_t xx = x[0]; 
-  return ratioEffTauMuTauRunABCEC->turnOn(xx)/ratioEffTauMuTauMCEC->turnOn(xx); 
-} 
-Double_t myFuncTurnOnTauMuTauRunABCEC(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");  
-  ratioEfficiencyTest* ratioEffTauMuTauRunABCEC = new ratioEfficiencyTest(18.45678784, 0.68697618, 0.57008697, 3.73470825, 0.84747211);
-  Float_t xx = x[0];  
-  return ratioEffTauMuTauRunABCEC->turnOn(xx);
-}
-
-// HLT PFTauLoose20 / Run2012D     / mu+tau
-Double_t myFuncRatioTauMuTauRunDBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauMuTauBL   = new ratioEfficiencyTest(18.5793, 0.2706, 0.1356, 2.4432, 0.9190); // Run D only
-  ratioEfficiencyTest* ratioEffTauMuTauMCBL = new ratioEfficiencyTest(18.80484409, 0.19082817, 0.19983010, 1.81979820, 0.93270649);
-  Float_t xx = x[0];
-  return ratioEffTauMuTauBL->turnOn(xx)/ratioEffTauMuTauMCBL->turnOn(xx);
-}
-Double_t myFuncTurnOnTauMuTauRunDBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauMuTauBL = new ratioEfficiencyTest(18.5793, 0.2706, 0.1356, 2.4432, 0.9190); // Run D only
-  Float_t xx = x[0];
-  return ratioEffTauMuTauBL->turnOn(xx);
-}
-Double_t myFuncRatioTauMuTauRunDEC(Double_t* x, Double_t *par) {    
-  gSystem->Load("ratioEfficiencyTest_C.so"); 
-  ratioEfficiencyTest* ratioEffTauMuTauEC   = new ratioEfficiencyTest(18.8394, 0.1354, 0.1648, 1.3407, 0.9696); // Run D only
-  ratioEfficiencyTest* ratioEffTauMuTauMCEC = new ratioEfficiencyTest(18.25975478, 1.32745225, 1.70380810, 149.18410074, 0.87377770);
-  Float_t xx = x[0]; 
-  return ratioEffTauMuTauEC->turnOn(xx)/ratioEffTauMuTauMCEC->turnOn(xx); 
-} 
-Double_t myFuncTurnOnTauMuTauRunDEC(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");  
-  ratioEfficiencyTest* ratioEffTauMuTauEC = new ratioEfficiencyTest(18.8394, 0.1354, 0.1648, 1.3407, 0.9696); // Run D only
-  Float_t xx = x[0];  
-  return ratioEffTauMuTauEC->turnOn(xx);
-}
-
-// Tau trigger in mu+tau channel : 2012ABCD all together
-Double_t myFuncRatioTauMuTauBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauMuTauBL   = new ratioEfficiencyTest(18.53484769, 1.55026068, 2.78382728, 1.40048225, 0.94356699);
-  ratioEfficiencyTest* ratioEffTauMuTauMCBL = new ratioEfficiencyTest(18.90334548, 0.08929792, 0.10788389, 1.47675914, 0.95116761);
-  Float_t xx = x[0];
-  return ratioEffTauMuTauBL->turnOn(xx)/ratioEffTauMuTauMCBL->turnOn(xx);
-}
-Double_t myFuncTurnOnTauMuTauBL(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");
-  ratioEfficiencyTest* ratioEffTauMuTauBL = new ratioEfficiencyTest(18.53484769, 1.55026068, 2.78382728, 1.40048225, 0.94356699);
-  Float_t xx = x[0];
-  return ratioEffTauMuTauBL->turnOn(xx);
-}
-Double_t myFuncRatioTauMuTauEC(Double_t* x, Double_t *par) {    
-  gSystem->Load("ratioEfficiencyTest_C.so"); 
-  ratioEfficiencyTest* ratioEffTauMuTauEC   = new ratioEfficiencyTest(18.28798198, 0.95234835, 0.75147523, 7.78047104, 0.84161836);
-  ratioEfficiencyTest* ratioEffTauMuTauMCEC = new ratioEfficiencyTest(18.65016918, 0.40513575, 0.38648072, 3.63287413, 0.87121168);
-  Float_t xx = x[0]; 
-  return ratioEffTauMuTauEC->turnOn(xx)/ratioEffTauMuTauMCEC->turnOn(xx); 
-} 
-Double_t myFuncTurnOnTauMuTauEC(Double_t* x, Double_t *par) { 
-  gSystem->Load("ratioEfficiencyTest_C.so");  
-  ratioEfficiencyTest* ratioEffTauMuTauEC = new ratioEfficiencyTest(18.28798198, 0.95234835, 0.75147523, 7.78047104, 0.84161836);
-  Float_t xx = x[0];  
-  return ratioEffTauMuTauEC->turnOn(xx);
-}
-
 
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
+
 void makeFile(){
 
-  TFile* fout = new TFile("/data_CMS/cms/htautau/Moriond/tools/llrCorrections_Moriond.root","RECREATE");
+  TFile* fout = new TFile("/data_CMS/cms/htautau/Moriond/tools/llrCorrections_Moriond_v2.root","RECREATE");
+  //fout->cd();
 
-  TF1 *ratioElecIDBL        = new TF1("ratioElecIDBL",           myFuncRatioElecIDBL ,      14,800,0);
-  TF1 *turnOnElecIDBL       = new TF1("turnOnElecIDBL",          myFuncTurnOnElecIDBL ,     14,800,0);
-  TF1 *ratioElecIDEC        = new TF1("ratioElecIDEC",           myFuncRatioElecIDEC ,      14,800,0);
-  TF1 *turnOnElecIDEC       = new TF1("turnOnElecIDEC",          myFuncTurnOnElecIDEC ,     14,800,0);
+  // ELECTRON //
+  //
+  // Trigger
+  cout << "Electron trigger" << endl;
+  //
+  const int nEtaEle=2;
+  const int nRunEle=7;
+  TString nom_run_ele[nRunEle]={"A","B","C","D","MCold","ABCD","MCnew"};
+  TString nom_eta_ele[nEtaEle]={"EB","EE"};
+  TF1 *turnOnEle[nEtaEle][nRunEle];
 
-  TF1 *ratioElecIsoBL       = new TF1("ratioElecIsoBL",          myFuncRatioElecIsoBL ,     14,800,0);
-  TF1 *turnOnElecIsoBL      = new TF1("turnOnElecIsoBL",         myFuncTurnOnElecIsoBL ,    14,800,0);
-  TF1 *ratioElecIsoEC       = new TF1("ratioElecIsoEC",          myFuncRatioElecIsoEC ,     14,800,0);
-  TF1 *turnOnElecIsoEC      = new TF1("turnOnElecIsoEC",         myFuncTurnOnElecIsoEC ,    14,800,0);
+  for(int iR=0 ; iR<nRunEle ; iR++) {
+    for(int iE=0 ; iE<nEtaEle ; iE++) {
+      turnOnEle[iE][iR] = new TF1("turnOnEle_"+nom_run_ele[iR]+"_"+nom_eta_ele[iE], myFuncTurnOnEle, 0,800,3);
+      turnOnEle[iE][iR]->SetParameters(iE,iR,0);
+      turnOnEle[iE][iR]->SetNpx(25600);
+      turnOnEle[iE][iR]->Write();
+    }
+  }
+  //
+  // Id, Iso
+  cout << "Electron id/iso" << endl;
+  //
+  const int nEtaEleI=2; // EB / EE (1.479)
+  const int nRunEleI=6; // 
+  const int nIdIso=2;   // id / iso
+  TString nom_run_eleI[nRunEleI]={"ABCD","MC-ABCD","ABC","MC-ABC","D","MC-D"};
+  TString nom_eta_eleI[nEtaEleI]={"EB","EE"};
+  TString nom_idiso_ele[nIdIso]={"id","iso"};
+  TF1 *turnOnEleIdIso[nEtaEle][nRunEle][nIdIso];
 
-  TF1 *ratioElecRunDIDBL        = new TF1("ratioElecRunDIDBL",           myFuncRatioElecRunDIDBL ,      14,800,0);
-  TF1 *turnOnElecRunDIDBL       = new TF1("turnOnElecRunDIDBL",          myFuncTurnOnElecRunDIDBL ,     14,800,0);
-  TF1 *ratioElecRunDIDEC        = new TF1("ratioElecRunDIDEC",           myFuncRatioElecRunDIDEC ,      14,800,0);
-  TF1 *turnOnElecRunDIDEC       = new TF1("turnOnElecRunDIDEC",          myFuncTurnOnElecRunDIDEC ,     14,800,0);
-
-  TF1 *ratioElecRunDIsoBL       = new TF1("ratioElecRunDIsoBL",          myFuncRatioElecRunDIsoBL ,     14,800,0);
-  TF1 *turnOnElecRunDIsoBL      = new TF1("turnOnElecRunDIsoBL",         myFuncTurnOnElecRunDIsoBL ,    14,800,0);
-  TF1 *ratioElecRunDIsoEC       = new TF1("ratioElecRunDIsoEC",          myFuncRatioElecRunDIsoEC ,     14,800,0);
-  TF1 *turnOnElecRunDIsoEC      = new TF1("turnOnElecRunDIsoEC",         myFuncTurnOnElecRunDIsoEC ,    14,800,0);
-
-  TF1 *ratioElecRunABL      = new TF1("ratioElecRunABL",         myFuncRatioEleRunABL,      24,800,0);
-  TF1 *turnOnElecRunABL     = new TF1("turnOnElecRunABL",        myFuncTurnOnEleRunABL,     24,800,0);
-  TF1 *ratioElecRunAEC      = new TF1("ratioElecRunAEC",         myFuncRatioEleRunAEC,      24,800,0);
-  TF1 *turnOnElecRunAEC     = new TF1("turnOnElecRunAEC",        myFuncTurnOnEleRunAEC,     24,800,0);
-
-  TF1 *ratioElecRunBBL      = new TF1("ratioElecRunBBL",         myFuncRatioEleRunBBL,      24,800,0);
-  TF1 *turnOnElecRunBBL     = new TF1("turnOnElecRunBBL",        myFuncTurnOnEleRunBBL,     24,800,0);
-  TF1 *ratioElecRunBEC      = new TF1("ratioElecRunBEC",         myFuncRatioEleRunBEC,      24,800,0);
-  TF1 *turnOnElecRunBEC     = new TF1("turnOnElecRunBEC",        myFuncTurnOnEleRunBEC,     24,800,0);
-
-  TF1 *ratioElecRunCBL      = new TF1("ratioElecRunCBL",         myFuncRatioEleRunCBL,      24,800,0);
-  TF1 *turnOnElecRunCBL     = new TF1("turnOnElecRunCBL",        myFuncTurnOnEleRunCBL,     24,800,0);
-  TF1 *ratioElecRunCEC      = new TF1("ratioElecRunCEC",         myFuncRatioEleRunCEC,      24,800,0);
-  TF1 *turnOnElecRunCEC     = new TF1("turnOnElecRunCEC",        myFuncTurnOnEleRunCEC,     24,800,0);
-
-  TF1 *ratioElecRunDBL      = new TF1("ratioElecRunDBL",         myFuncRatioEleRunDBL,      24,800,0);
-  TF1 *turnOnElecRunDBL     = new TF1("turnOnElecRunDBL",        myFuncTurnOnEleRunDBL,     24,800,0);
-  TF1 *ratioElecRunDEC      = new TF1("ratioElecRunDEC",         myFuncRatioEleRunDEC,      24,800,0);
-  TF1 *turnOnElecRunDEC     = new TF1("turnOnElecRunDEC",        myFuncTurnOnEleRunDEC,     24,800,0);
-
-  TF1 *ratioElecAllBL       = new TF1("ratioElecAllBL",          myFuncRatioEleAllBL,       24,800,0);
-  TF1 *turnOnElecAllBL      = new TF1("turnOnElecAllBL",         myFuncTurnOnEleAllBL,      24,800,0);
-  TF1 *ratioElecAllEC       = new TF1("ratioElecAllEC",          myFuncRatioEleAllEC,       24,800,0);
-  TF1 *turnOnElecAllEC      = new TF1("turnOnElecAllEC",         myFuncTurnOnEleAllEC,      24,800,0);
+  for(int iR=0 ; iR<nRunEleI ; iR++) {
+    for(int iE=0 ; iE<nEtaEleI ; iE++) {
+      for(int idiso=0 ; idiso<nIdIso ; idiso++) {
+	turnOnEleIdIso[iE][iR][idiso] = new TF1("turnOnEle_"+nom_run_eleI[iR]+"_"+nom_eta_eleI[iE]+"_"+nom_idiso_ele[idiso], 
+					   myFuncTurnOnEleIdIso, 0,800,4);
+	turnOnEleIdIso[iE][iR][idiso]->SetParameters(iE,iR,0,idiso);
+	turnOnEleIdIso[iE][iR][idiso]->SetNpx(25600);
+	turnOnEleIdIso[iE][iR][idiso]->Write();
+      }
+    }
+  }
+  
 
   // MUON //
   //
   // Trigger
+  cout << "Muon trigger" << endl;
   //
   const int nEtaMuT=6;    // ]-inf,-1.2[ [-1.2,-0.8[ [-0.8,0[ [0,0.8[ [0.8,1.2[ [1.2,+inf[
   const int nRunMuT=7; // A, B, C, D, MC-old, ABCD, MC-new
@@ -819,10 +493,11 @@ void makeFile(){
   }
   //
   // Id, Iso
+  cout << "Muon id/iso" << endl;
   //
   const int nEtaMuI=3; // [0,0.8[ [0.8,1.2[ [1.2,+inf[
   const int nRunMuI=6; // ABCD, MC-ABCD, ABC, MC-ABC, D, MC-D
-  const int nIdIso =2; // id, iso
+  //const int nIdIso =2; // id, iso
   TString nom_run_muI[nRunMuI]={"ABCD","MC-ABCD","ABC","MC-ABC","D","MC-D"};
   TString nom_eta_muI[nEtaMuI]={"0","1","2"};
   TString nom_idiso_muI[nIdIso]={"id","iso"};
@@ -839,173 +514,34 @@ void makeFile(){
       }
     }
   }
-  //////////
-
-  TF1 *turnOnTauElecTauMCBL      = new TF1("turnOnTauElecTauMCBL",   myFuncTurnOnTauElecTauMCBL, 20,800,0);
-  TF1 *turnOnTauElecTauMCEC      = new TF1("turnOnTauElecTauMCEC",   myFuncTurnOnTauElecTauMCEC, 20,800,0);
-
-  TF1 *ratioTauElecTauBL    = new TF1("ratioTauElecTauBL", myFuncRatioTauElecTauBL, 20,800,0);
-  TF1 *turnOnTauElecTauBL   = new TF1("turnOnTauElecTauBL", myFuncTurnOnTauElecTauBL, 20,800,0);
-  TF1 *ratioTauElecTauEC    = new TF1("ratioTauElecTauEC", myFuncRatioTauElecTauEC, 20,800,0);
-  TF1 *turnOnTauElecTauEC   = new TF1("turnOnTauElecTauEC", myFuncTurnOnTauElecTauEC, 20,800,0);
-
-  TF1 *ratioTauElecTauRunDBL    = new TF1("ratioTauElecTauRunDBL", myFuncRatioTauElecTauRunDBL, 20,800,0);
-  TF1 *turnOnTauElecTauRunDBL   = new TF1("turnOnTauElecTauRunDBL", myFuncTurnOnTauElecTauRunDBL, 20,800,0);
-  TF1 *ratioTauElecTauRunDEC    = new TF1("ratioTauElecTauRunDEC", myFuncRatioTauElecTauRunDEC, 20,800,0);
-  TF1 *turnOnTauElecTauRunDEC   = new TF1("turnOnTauElecTauRunDEC", myFuncTurnOnTauElecTauRunDEC, 20,800,0);
-
-  TF1 *turnOnTauMuTauMCBL      = new TF1("turnOnTauMuTauMCBL",   myFuncTurnOnTauMuTauMCBL,      20,800,0);
-  TF1 *turnOnTauMuTauMCEC      = new TF1("turnOnTauMuTauMCEC",   myFuncTurnOnTauMuTauMCEC,	20,800,0); 
-
-  TF1 *ratioTauMuTauBL      = new TF1("ratioTauMuTauBL", myFuncRatioTauMuTauBL ,20,800,0);
-  TF1 *turnOnTauMuTauBL     = new TF1("turnOnTauMuTauBL",myFuncTurnOnTauMuTauBL,20,800,0);
-  TF1 *ratioTauMuTauEC      = new TF1("ratioTauMuTauEC", myFuncRatioTauMuTauEC ,20,800,0); 
-  TF1 *turnOnTauMuTauEC     = new TF1("turnOnTauMuTauEC",myFuncTurnOnTauMuTauEC,20,800,0);
   
-  TF1 *ratioTauMuTauRunABCBL  = new TF1("ratioTauMuTauRunABCBL", myFuncRatioTauMuTauRunABCBL ,20,800,0);
-  TF1 *turnOnTauMuTauRunABCBL = new TF1("turnOnTauMuTauRunABCBL",myFuncTurnOnTauMuTauRunABCBL,20,800,0);
-  TF1 *ratioTauMuTauRunABCEC  = new TF1("ratioTauMuTauRunABCEC", myFuncRatioTauMuTauRunABCEC ,20,800,0); 
-  TF1 *turnOnTauMuTauRunABCEC = new TF1("turnOnTauMuTauRunABCEC",myFuncTurnOnTauMuTauRunABCEC,20,800,0);
 
-  TF1 *ratioTauMuTauRunDBL  = new TF1("ratioTauMuTauRunDBL", myFuncRatioTauMuTauRunDBL ,20,800,0);
-  TF1 *turnOnTauMuTauRunDBL = new TF1("turnOnTauMuTauRunDBL",myFuncTurnOnTauMuTauRunDBL,20,800,0);
-  TF1 *ratioTauMuTauRunDEC  = new TF1("ratioTauMuTauRunDEC", myFuncRatioTauMuTauRunDEC ,20,800,0); 
-  TF1 *turnOnTauMuTauRunDEC = new TF1("turnOnTauMuTauRunDEC",myFuncTurnOnTauMuTauRunDEC,20,800,0);
+  // TAU //
+  //
+  // Trigger
+  cout << "Tau trigger" << endl;
+  //
+  const int nemu=2; // e+tau / mu+tau
+  const int nEtaTauT=2; // EB / EE
+  const int nRunTauT=6; // ABC, MC-ABC, D, MC-D, ABCD, MC-ABCD
+  TString nom_emu_tau[nemu]={"etau","mutau"};
+  TString nom_run_tau[nRunTauT]={"ABC","MC-ABC","D","MC-D","ABCD","MC-ABCD"};
+  TString nom_eta_tau[nEtaTauT]={"EB","EE"};
 
-  fout->cd();
+  TF1 *turnOnTau[nemu][nEtaTauT][nRunTauT];
 
-  ratioElecIDBL->SetNpx(25600);
-  turnOnElecIDBL->SetNpx(25600);
-  ratioElecIDEC->SetNpx(25600);
-  turnOnElecIDEC->SetNpx(25600);
-
-  ratioElecIsoBL->SetNpx(25600);
-  turnOnElecIsoBL->SetNpx(25600);
-  ratioElecIsoEC->SetNpx(25600);
-  turnOnElecIsoEC->SetNpx(25600);
-
-  ratioElecRunABL->SetNpx(25600);
-  turnOnElecRunABL->SetNpx(25600);
-  ratioElecRunAEC->SetNpx(25600);
-  turnOnElecRunAEC->SetNpx(25600);
-  
-  ratioElecRunBBL->SetNpx(25600);
-  turnOnElecRunBBL->SetNpx(25600);
-  ratioElecRunBEC->SetNpx(25600);
-  turnOnElecRunBEC->SetNpx(25600);
-  
-  ratioElecRunCBL->SetNpx(25600);
-  turnOnElecRunCBL->SetNpx(25600);
-  ratioElecRunCEC->SetNpx(25600);
-  turnOnElecRunCEC->SetNpx(25600);
-  
-  ratioElecRunDBL->SetNpx(25600);
-  turnOnElecRunDBL->SetNpx(25600);
-  ratioElecRunDEC->SetNpx(25600);
-  turnOnElecRunDEC->SetNpx(25600);
-  
-  ratioElecAllBL->SetNpx(25600);
-  turnOnElecAllBL->SetNpx(25600);
-  ratioElecAllEC->SetNpx(25600);
-  turnOnElecAllEC->SetNpx(25600);
-
-  turnOnTauElecTauMCBL->SetNpx(25600);
-  turnOnTauElecTauMCEC->SetNpx(25600);
-
-  ratioTauElecTauBL->SetNpx(25600);
-  turnOnTauElecTauBL->SetNpx(25600);
-  ratioTauElecTauEC->SetNpx(25600);
-  turnOnTauElecTauEC->SetNpx(25600);
-
-  ratioTauElecTauRunDBL->SetNpx(25600);
-  turnOnTauElecTauRunDBL->SetNpx(25600);
-  ratioTauElecTauRunDEC->SetNpx(25600);
-  turnOnTauElecTauRunDEC->SetNpx(25600);
-
-  turnOnTauMuTauMCBL->SetNpx(25600);
-  turnOnTauMuTauMCEC->SetNpx(25600);
-
-  ratioTauMuTauBL->SetNpx(25600);
-  turnOnTauMuTauBL->SetNpx(25600);
-  ratioTauMuTauEC->SetNpx(25600); 
-  turnOnTauMuTauEC->SetNpx(25600);
-
-  ratioTauMuTauRunABCBL->SetNpx(25600);
-  turnOnTauMuTauRunABCBL->SetNpx(25600);
-  ratioTauMuTauRunABCEC->SetNpx(25600); 
-  turnOnTauMuTauRunABCEC->SetNpx(25600);
-
-  ratioTauMuTauRunDBL->SetNpx(25600);
-  turnOnTauMuTauRunDBL->SetNpx(25600);
-  ratioTauMuTauRunDEC->SetNpx(25600); 
-  turnOnTauMuTauRunDEC->SetNpx(25600);
-
-  //==============================
-  ratioElecIDBL->Write();
-  turnOnElecIDBL->Write();
-  ratioElecIDEC->Write();
-  turnOnElecIDEC->Write();
-
-  ratioElecIsoBL->Write();
-  turnOnElecIsoBL->Write();
-  ratioElecIsoEC->Write();
-  turnOnElecIsoEC->Write();
-
-  ratioElecRunABL->Write();
-  turnOnElecRunABL->Write();
-  ratioElecRunAEC->Write();
-  turnOnElecRunAEC->Write();
-  
-  ratioElecRunBBL->Write();
-  turnOnElecRunBBL->Write();
-  ratioElecRunBEC->Write();
-  turnOnElecRunBEC->Write();
-  
-  ratioElecRunCBL->Write();
-  turnOnElecRunCBL->Write();
-  ratioElecRunCEC->Write();
-  turnOnElecRunCEC->Write();
-  
-  ratioElecRunDBL->Write();
-  turnOnElecRunDBL->Write();
-  ratioElecRunDEC->Write();
-  turnOnElecRunDEC->Write();
-  
-  ratioElecAllBL->Write();
-  turnOnElecAllBL->Write();
-  ratioElecAllEC->Write();
-  turnOnElecAllEC->Write();
-
-  turnOnTauElecTauMCBL->Write();
-  turnOnTauElecTauMCEC->Write();
-
-  ratioTauElecTauBL->Write();
-  turnOnTauElecTauBL->Write();
-  ratioTauElecTauEC->Write();
-  turnOnTauElecTauEC->Write();
-
-  ratioTauElecTauRunDBL->Write();
-  turnOnTauElecTauRunDBL->Write();
-  ratioTauElecTauRunDEC->Write();
-  turnOnTauElecTauRunDEC->Write();
-
-  turnOnTauMuTauMCBL->Write();
-  turnOnTauMuTauMCEC->Write();
-
-  ratioTauMuTauBL->Write();
-  turnOnTauMuTauBL->Write();
-  ratioTauMuTauEC->Write(); 
-  turnOnTauMuTauEC->Write();
-
-  ratioTauMuTauRunABCBL->Write();
-  turnOnTauMuTauRunABCBL->Write();
-  ratioTauMuTauRunABCEC->Write(); 
-  turnOnTauMuTauRunABCEC->Write();
-
-  ratioTauMuTauRunDBL->Write();
-  turnOnTauMuTauRunDBL->Write();
-  ratioTauMuTauRunDEC->Write(); 
-  turnOnTauMuTauRunDEC->Write();
+  for(int emu=0 ; emu<nemu ; emu++) {
+    for(int iR=0 ; iR<nRunTauT ; iR++) {
+      for(int iE=0 ; iE<nEtaTauT ; iE++) {
+	turnOnTau[emu][iE][iR] = new TF1("turnOnTau_"+nom_emu_tau[emu]+"_"+nom_run_tau[iR]+"_"+nom_eta_tau[iE], 
+					 myFuncTurnOnTau, 0,800,4);
+	turnOnTau[emu][iE][iR]->SetParameters(iE,iR,0,emu);
+	turnOnTau[emu][iE][iR]->SetNpx(25600);
+	turnOnTau[emu][iE][iR]->Write();
+      }
+    }
+  }
+  //
 
   fout->Write();
   fout->Close();

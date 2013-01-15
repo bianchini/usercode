@@ -408,12 +408,12 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   //cout << "Lumi3D rewieghting initialized" << endl;
   //////////////////////////////////////////////////////////
   
-  RecoilCorrector* recoilCorr = 0;
-
-  //////////////////////////////////////////////////////////
+  ////////////////////
+  //   CORRECTIONS  //
+  ////////////////////
 
   cout << "Using corrections from llrCorrections_Moriond.root" << endl;
-  TFile corrections("/data_CMS/cms/htautau/Moriond/tools/llrCorrections_Moriond.root");
+  TFile corrections("/data_CMS/cms/htautau/Moriond/tools/llrCorrections_Moriond_v2.root");
   
   // Muon trigger
   const int nEtaMuT=6;    // ]-inf,-1.2[ [-1.2,-0.8[ [-0.8,0[ [0,0.8[ [0.8,1.2[ [1.2,+inf[
@@ -422,9 +422,12 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   TString nom_eta_mu[nEtaMuT]={"0","1","2","3","4","5"};
   TF1 *turnOnMu[nEtaMuT][nRunMuT];
 
-  for(int iR=0 ; iR<nRunMuT ; iR++)
-    for(int iE=0 ; iE<nEtaMuT ; iE++)
+  for(int iR=0 ; iR<nRunMuT ; iR++) {
+    for(int iE=0 ; iE<nEtaMuT ; iE++) {
       turnOnMu[iE][iR] = (TF1*)corrections.Get("turnOnMu_"+nom_run_mu[iR]+"_"+nom_eta_mu[iE]);
+      if(!turnOnMu[iE][iR]) cout << "Missing turnOnMu_"+nom_run_mu[iR]+"_"+nom_eta_mu[iE] << endl;
+    }
+  }
 
   // Muon Id+Iso
   const int nEtaMuI=3; // [0,0.8[ [0.8,1.2[ [1.2,+inf[
@@ -435,43 +438,31 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   TString nom_idiso_muI[nIdIso]={"id","iso"};
   TF1 *turnOnMuIdIso[nEtaMuI][nRunMuI][nIdIso];
   
-  for(int iR=0 ; iR<nRunMuI ; iR++)
-    for(int iE=0 ; iE<nEtaMuI ; iE++)
-      for(int idiso=0 ; idiso<nIdIso ; idiso++)
-	turnOnMuIdIso[iE][iR][idiso] = (TF1*)corrections.Get("turnOnMuIdIso_"+nom_run_muI[iR]+"_"+nom_eta_muI[iE]+"_"+nom_idiso_muI[idiso]);
+  for(int iR=0 ; iR<nRunMuI ; iR++) {
+    for(int iE=0 ; iE<nEtaMuI ; iE++) {
+      for(int idiso=0 ; idiso<nIdIso ; idiso++) {
+	turnOnMuIdIso[iE][iR][idiso] = 
+	  (TF1*)corrections.Get("turnOnMuIdIso_"+nom_run_muI[iR]+"_"+nom_eta_muI[iE]+"_"+nom_idiso_muI[idiso]);
+	if(!turnOnMuIdIso[iE][iR][idiso]) 
+	  cout << "Missing turnOnMuIdIso_"+nom_run_muI[iR]+"_"+nom_eta_muI[iE]+"_"+nom_idiso_muI[idiso] << endl;
+      }
+    }
+  }
 
-  TF1 *ratioTauMuTauBL    = (TF1*)corrections.Get("ratioTauMuTauBL");  
-  TF1 *ratioTauMuTauEC    = (TF1*)corrections.Get("ratioTauMuTauEC"); 
-  TF1 *turnOnTauMuTauBL   = (TF1*)corrections.Get("turnOnTauMuTauBL");  
-  TF1 *turnOnTauMuTauEC   = (TF1*)corrections.Get("turnOnTauMuTauEC");  
+  // Tau trigger (mutau)
+  const int nEtaTauT=2; // EB / EE
+  const int nRunTauT=6; // ABC, MC-ABC, D, MC-D, ABCD, MC-ABCD
+  TString nom_run_tau[nRunTauT]={"ABC","MC-ABC","D","MC-D","ABCD","MC-ABCD"};
+  TString nom_eta_tau[nEtaTauT]={"EB","EE"};
 
-  TF1 *ratioTauMuTauRunABCBL    = (TF1*)corrections.Get("ratioTauMuTauRunABCBL");  
-  TF1 *ratioTauMuTauRunABCEC    = (TF1*)corrections.Get("ratioTauMuTauRunABCEC"); 
-  TF1 *turnOnTauMuTauRunABCBL   = (TF1*)corrections.Get("turnOnTauMuTauRunABCBL");  
-  TF1 *turnOnTauMuTauRunABCEC   = (TF1*)corrections.Get("turnOnTauMuTauRunABCEC");  
+  TF1 *turnOnTau[nEtaTauT][nRunTauT];
 
-  TF1 *ratioTauMuTauRunDBL    = (TF1*)corrections.Get("ratioTauMuTauRunDBL");  
-  TF1 *ratioTauMuTauRunDEC    = (TF1*)corrections.Get("ratioTauMuTauRunDEC"); 
-  TF1 *turnOnTauMuTauRunDBL   = (TF1*)corrections.Get("turnOnTauMuTauRunDBL");  
-  TF1 *turnOnTauMuTauRunDEC   = (TF1*)corrections.Get("turnOnTauMuTauRunDEC");  
-
-  //if(!turnOnMu)      cout << "Missing Mu trigger corrections" << endl;
-  //if(!turnOnMuIdIso) cout << "Missing Mu id+iso  corrections" << endl;
-
-  if(!ratioTauMuTauBL)    cout << "Missing corrections for tau HLT (BL)" << endl;
-  if(!ratioTauMuTauEC)    cout << "Missing corrections for tau HLT (EC)" << endl;
-  if(!turnOnTauMuTauBL)   cout << "Missing corrections for tau HLT (BL)" << endl;
-  if(!turnOnTauMuTauEC)   cout << "Missing corrections for tau HLT (EC)" << endl;
-
-  if(!ratioTauMuTauRunDBL)    cout << "Missing corrections for tau HLT (BL)" << endl;
-  if(!ratioTauMuTauRunDEC)    cout << "Missing corrections for tau HLT (EC)" << endl;
-  if(!turnOnTauMuTauRunDBL)   cout << "Missing corrections for tau HLT (BL)" << endl;
-  if(!turnOnTauMuTauRunDEC)   cout << "Missing corrections for tau HLT (EC)" << endl;
-
-  if(!ratioTauMuTauRunABCBL)    cout << "Missing corrections for tau HLT (BL)" << endl;
-  if(!ratioTauMuTauRunABCEC)    cout << "Missing corrections for tau HLT (EC)" << endl;
-  if(!turnOnTauMuTauRunABCBL)   cout << "Missing corrections for tau HLT (BL)" << endl;
-  if(!turnOnTauMuTauRunABCEC)   cout << "Missing corrections for tau HLT (EC)" << endl;
+  for(int iR=0 ; iR<nRunTauT ; iR++) {
+    for(int iE=0 ; iE<nEtaTauT ; iE++) {
+      turnOnTau[iE][iR] = (TF1*)corrections.Get("turnOnTau_mutau_"+nom_run_tau[iR]+"_"+nom_eta_tau[iE]);
+      if(!turnOnTau[iE][iR]) cout << "Missing turnOnTau_mutau_"+nom_run_tau[iR]+"_"+nom_eta_tau[iE] << endl;
+    }
+  }
 
   //////////////////////////////////////////////////////////
 
@@ -619,6 +610,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
 
   // Tau weights
   float HLTTau, HLTTauD, HLTTauABC;
+  float HLTTauMC, HLTTauMCD, HLTTauMCABC;
   float HLTweightTau, HLTweightTauD, HLTweightTauABC;
   float SFTau;
 
@@ -872,6 +864,9 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   outTreePtOrd->Branch("HLTTau",       &HLTTau,"HLTTau/F");
   outTreePtOrd->Branch("HLTTauD",      &HLTTauD,"HLTTauD/F");
   outTreePtOrd->Branch("HLTTauABC",    &HLTTauABC,"HLTTauABC/F");
+  outTreePtOrd->Branch("HLTTauMC",       &HLTTauMC,"HLTTauMC/F");
+  outTreePtOrd->Branch("HLTTauMCD",      &HLTTauMCD,"HLTTauMCD/F");
+  outTreePtOrd->Branch("HLTTauMCABC",    &HLTTauMCABC,"HLTTauMCABC/F");
   //
   outTreePtOrd->Branch("SFTau",        &SFTau,"SFTau/F");
 
@@ -1271,6 +1266,8 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   currentTree->SetBranchAddress("leadGenPartPt",        &leadGenPartPt);
 
   cout << "SetBranchAddress done" << endl;
+
+  RecoilCorrector* recoilCorr = 0;
 
   if(sample_.find("WJets")!=string::npos){
     recoilCorr = new RecoilCorrector("../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_wjets_njet.root");
@@ -1953,27 +1950,26 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
       // Weights for both MC and embedded
       // Tau
       SFTau  = 1.0;
-      if( TMath::Abs(etaL2)<1.5 ) {
-	HLTTau        = turnOnTauMuTauBL->Eval( ptL2 );
-	HLTweightTau  = ratioTauMuTauBL ->Eval( ptL2 );
-	HLTTauD       = turnOnTauMuTauRunDBL->Eval( ptL2 );
-	HLTweightTauD = ratioTauMuTauRunDBL ->Eval( ptL2 );
-	HLTTauABC       = turnOnTauMuTauRunABCBL->Eval( ptL2 );
-	HLTweightTauABC = ratioTauMuTauRunABCBL ->Eval( ptL2 );
-      }
-      else {
-	HLTTau        = turnOnTauMuTauEC->Eval( ptL2 );
-	HLTweightTau  = ratioTauMuTauEC ->Eval( ptL2 );
-	HLTTauD       = turnOnTauMuTauRunDEC->Eval( ptL2 );
-	HLTweightTauD = ratioTauMuTauRunDEC ->Eval( ptL2 );
-	HLTTauABC       = turnOnTauMuTauRunABCEC->Eval( ptL2 );
-	HLTweightTauABC = ratioTauMuTauRunABCEC ->Eval( ptL2 );
-      }
       
+      int iEtaTau;
+
+      if( TMath::Abs(etaL2)<1.5 ) iEtaTau=0;
+      else iEtaTau=1;
+
+      HLTTauABC   = turnOnTau[iEtaTau][0]->Eval( ptL2 ); // ABC
+      HLTTauMCABC = turnOnTau[iEtaTau][1]->Eval( ptL2 ); // MC ABC
+      HLTTauD     = turnOnTau[iEtaTau][2]->Eval( ptL2 ); // D
+      HLTTauMCD   = turnOnTau[iEtaTau][3]->Eval( ptL2 ); // MC D
+      HLTTau      = turnOnTau[iEtaTau][4]->Eval( ptL2 ); // ABCD
+      HLTTauMC    = turnOnTau[iEtaTau][5]->Eval( ptL2 ); // MC ABCD
+
+      HLTweightTau    = HLTTauMC    != 0 ? HLTTau    / HLTTauMC    : 0;
+      HLTweightTauD   = HLTTauMCD   != 0 ? HLTTauD   / HLTTauMCD   : 0;
+      HLTweightTauABC = HLTTauMCABC != 0 ? HLTTauABC / HLTTauMCABC : 0;      
+
       // Muon
-
       // trigger
-
+      //
       //choose iEta
       int iEta;
       if(etaL1 < -1.2)    iEta = 0;
@@ -1982,7 +1978,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
       else if(etaL1 < 0.8)  iEta = 3;
       else if(etaL1 < 1.2)  iEta = 4;
       else                  iEta = 5;
-      
+      //
       // compute efficiency
       HLTMuA     = turnOnMu[iEta][0]->Eval(ptL1);
       HLTMuB     = turnOnMu[iEta][1]->Eval(ptL1);
