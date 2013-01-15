@@ -575,7 +575,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   float sihih_, dEta_, dPhi_, HoE_;
 
   // event-related variables
-  float numPV_ , sampleWeight, puWeight, puWeightHCP, puWeightD, puWeight2, puWeight3D, embeddingWeight_,HqTWeight,ZeeWeight, weightHepNup;
+  float numPV_ , sampleWeight, puWeight, puWeightHCP, puWeightD, puWeight2, puWeight3D, embeddingWeight_,HqTWeight,ZeeWeight,ZeeWeightHCP, weightHepNup;
   int numOfLooseIsoDiTaus_;
   int nPUVertices_;
 
@@ -795,6 +795,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   outTreePtOrd->Branch("weightHepNup",       &weightHepNup,"weightHepNup/F");
   outTreePtOrd->Branch("HqTWeight",          &HqTWeight,"HqTWeight/F");
   outTreePtOrd->Branch("ZeeWeight",          &ZeeWeight,"ZeeWeight/F");
+  outTreePtOrd->Branch("ZeeWeightHCP",          &ZeeWeightHCP,"ZeeWeightHCP/F");
   outTreePtOrd->Branch("numOfLooseIsoDiTaus",&numOfLooseIsoDiTaus_,"numOfLooseIsoDiTaus/I");
   outTreePtOrd->Branch("nPUVertices",        &nPUVertices_, "nPUVertices/I");
 
@@ -1961,16 +1962,30 @@ void fillTrees_ElecTauStream( TChain* currentTree,
       SFEtoTau      = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ? ETOTAUEB : ETOTAUEE;
     }
 
- // Reweight for Zee
+    // Reweight for Zee
     ZeeWeight = 1;
     if( sample_.find("DYJets")!=string::npos ){
       if(decayMode==0 && leptFakeTau){
 	ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.479 ?
+	  0.85 : 
+	  0.94;
+      }
+      else if (decayMode==1 && leptFakeTau){
+	ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.479 ?
+	  1.52 : 
+	  0.32;
+      }
+    }
+
+    ZeeWeightHCP = 1;
+    if( sample_.find("DYJets")!=string::npos ){
+      if(decayMode==0 && leptFakeTau){
+	ZeeWeightHCP = TMath::Abs((*diTauLegsP4)[1].Eta())<1.479 ?
 	  0.82 : 
 	  0.76;
       }
       else if (decayMode==1 && leptFakeTau){
-	ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.479 ?
+	ZeeWeightHCP = TMath::Abs((*diTauLegsP4)[1].Eta())<1.479 ?
 	  1.65 : 
 	  0.24;
       }
