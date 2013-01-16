@@ -1896,20 +1896,49 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
       L1etmWeight_ = 1;    //no correction for data
       L1etmCorr_ = L1etm_; //no correction for data
 
-      HLTweightTau  = 1.0;
-      HLTweightMu   = 1.0;
-      HLTweightTauD = 1.0;
-      HLTweightMuD  = 1.0;
-      HLTweightMuSoft = 1.0;
-      HLTMu   = 1.0;
-      HLTTau  = 1.0;
-      HLTMuD  = 1.0;
-      HLTTauD = 1.0;
-      HLTMuSoft = 1.0;
       SFTau  = 1.0;
-      SFMu   = 1.0;
-      SFMuID = 1.0;
-      SFMuIso= 1.0;
+
+      HLTTauABC   = 1.0;
+      HLTTauMCABC = 1.0;
+      HLTTauD     = 1.0;
+      HLTTauMCD   = 1.0;
+      HLTTau      = 1.0;
+      HLTTauMC    = 1.0;
+      HLTweightTau    = 1.0;
+      HLTweightTauD   = 1.0;
+      HLTweightTauABC = 1.0;
+      HLTMuA     = 1.0;
+      HLTMuB     = 1.0;
+      HLTMuC     = 1.0;
+      HLTMuD     = 1.0;
+      HLTMuMCold = 1.0;
+      HLTMuABCD  = 1.0;
+      HLTMuMCnew = 1.0;
+      HLTMuSoft   = 1.0;
+      HLTMuSoftMC = 1.0;
+      HLTMuABC       = 1.0;
+      HLTweightMuA    = 1.0;
+      HLTweightMuB    = 1.0;
+      HLTweightMuC    = 1.0;
+      HLTweightMuD    = 1.0;
+      HLTweightMuABC  = 1.0;
+      HLTweightMuABCD = 1.0;
+      HLTweightMuSoft = 1.0;
+      HLTMu = 1.0;
+      HLTweightMu = 1.0;
+      SFMuID_ABCD  = 1.0;
+      SFMuIso_ABCD = 1.0;
+      SFMu_ABCD    = 1.0;
+      SFMuID_ABC  = 1.0;
+      SFMuIso_ABC = 1.0;
+      SFMu_ABC    = 1.0;
+      SFMuID_D  = 1.0;
+      SFMuIso_D = 1.0;
+      SFMu_D    = 1.0;
+      SFMu    = 1.0;
+      SFMuID  = 1.0;
+      SFMuIso = 1.0;
+
     } // end if Data
 
     else { // MC or embedded
@@ -1997,7 +2026,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
       HLTweightMuA    = HLTMuMCold!=0 ?  HLTMuA / HLTMuMCold : 0;
       HLTweightMuB    = HLTMuMCold!=0 ?  HLTMuB / HLTMuMCold : 0;
       HLTweightMuC    = HLTMuMCold!=0 ?  HLTMuC / HLTMuMCold : 0;
-      HLTweightMuD    = HLTMuMCold!=0 ?  HLTMuD / HLTMuMCnew : 0;
+      HLTweightMuD    = HLTMuMCnew!=0 ?  HLTMuD / HLTMuMCnew : 0;
       HLTweightMuABC  = HLTMuMCold!=0 ?  HLTMuABC / HLTMuMCold : 0;
       HLTweightMuABCD = HLTMuMCnew!=0 ?  HLTMuABCD / HLTMuMCnew : 0;
       HLTweightMuSoft = HLTMuSoftMC!=0 ? HLTMuSoft / HLTMuSoftMC : 0;
@@ -2033,15 +2062,15 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
       // compute D/MC weights
       SFMuID_ABCD  = EffMuID_ABCD_MC !=0 ? EffMuID_ABCD  / EffMuID_ABCD_MC  : 0;
       SFMuIso_ABCD = EffMuIso_ABCD_MC!=0 ? EffMuIso_ABCD / EffMuIso_ABCD_MC : 0;
-      SFMu_ABCD = SFMuID_ABCD*SFMuIso_ABCD;
+      SFMu_ABCD    = SFMuID_ABCD*SFMuIso_ABCD;
 
       SFMuID_ABC  = EffMuID_ABC_MC !=0 ? EffMuID_ABC  / EffMuID_ABC_MC  : 0;
       SFMuIso_ABC = EffMuIso_ABC_MC!=0 ? EffMuIso_ABC / EffMuIso_ABC_MC : 0;
-      SFMu_ABC = SFMuID_ABC*SFMuIso_ABC;
+      SFMu_ABC    = SFMuID_ABC*SFMuIso_ABC;
 
       SFMuID_D  = EffMuID_D_MC !=0 ? EffMuID_D  / EffMuID_D_MC  : 0;
       SFMuIso_D = EffMuIso_D_MC!=0 ? EffMuIso_D / EffMuIso_D_MC : 0;
-      SFMu_D = SFMuID_D*SFMuIso_D;
+      SFMu_D    = SFMuID_D*SFMuIso_D;
       
       SFMu    = SFMu_ABCD;
       SFMuID  = SFMuID_ABCD;
