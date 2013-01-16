@@ -1297,8 +1297,8 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   map < vector<double> , vector<double> > mapRunsEvts;
   map < vector<double> , vector<double> >::iterator mapIter;
   pair<int,int> runEvt;
-  vector<double> DiTauID;
-  vector<double> ID;
+//   vector<double> DiTauID;
+//   vector<double> ID;
 
   for (int n = 0; n <nEntries  ; n++) {
 
@@ -1314,39 +1314,39 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     if(!isGoodRun) continue;
     /////////////////////////
     
-    isDoubleCount = false;
-    DiTauID.push_back(run);
-    DiTauID.push_back(lumi);
-    DiTauID.push_back(event);
-//     DiTauID.push_back((*diTauLegsP4)[0].Pt());
-//     DiTauID.push_back((*diTauLegsP4)[0].Eta());
-//     DiTauID.push_back((*diTauLegsP4)[1].Pt());
-//     DiTauID.push_back((*diTauLegsP4)[1].Eta());
+//     isDoubleCount = false;
+//     DiTauID.push_back(run);
+//     DiTauID.push_back(lumi);
+//     DiTauID.push_back(event);
+// //     DiTauID.push_back((*diTauLegsP4)[0].Pt());
+// //     DiTauID.push_back((*diTauLegsP4)[0].Eta());
+// //     DiTauID.push_back((*diTauLegsP4)[1].Pt());
+// //     DiTauID.push_back((*diTauLegsP4)[1].Eta());
     
-    runEvt = make_pair(run,event);
-    mapIter = mapRunsEvts.find( DiTauID );
-    ID.clear();
+//     runEvt = make_pair(run,event);
+//     mapIter = mapRunsEvts.find( DiTauID );
+//     ID.clear();
 
-    if( mapIter==mapRunsEvts.end() ){
-      ID.push_back((*diTauLegsP4)[0].Pt());
-      ID.push_back((*diTauLegsP4)[0].Eta());
-      ID.push_back((*diTauLegsP4)[1].Pt());
-      ID.push_back((*diTauLegsP4)[1].Eta());
-      mapRunsEvts[ DiTauID ] = ID;
-    }
-    else {
-      ID.push_back((*diTauLegsP4)[0].Pt());
-      ID.push_back((*diTauLegsP4)[0].Eta());
-      ID.push_back((*diTauLegsP4)[1].Pt());
-      ID.push_back((*diTauLegsP4)[1].Eta());
-//       cout<<"Event double counted !! Run : "<<run<<" Event "<<event<<" LumiSection "<<lumi<<endl;
-//       cout<<" current  ptL1     = "<<(*diTauLegsP4)[0].Pt()<<" previous  ptL1     = "<<mapRunsEvts[ DiTauID ][0]<<endl;
-//       cout<<" current  etaL1    = "<<(*diTauLegsP4)[0].Eta()<<" previous  etaL1     = "<<mapRunsEvts[ DiTauID ][1]<<endl;
-//       cout<<" current  ptL2     = "<<(*diTauLegsP4)[1].Pt()<<" previous  ptL2     = "<<mapRunsEvts[ DiTauID ][2]<<endl;
-//       cout<<" current  etaL2    = "<<(*diTauLegsP4)[1].Eta()<<" previous  etaL2     = "<<mapRunsEvts[ DiTauID ][3]<<endl;
-      mapRunsEvts[ DiTauID ] = ID;
-//       isDoubleCount = true;
-    }
+//     if( mapIter==mapRunsEvts.end() ){
+//       ID.push_back((*diTauLegsP4)[0].Pt());
+//       ID.push_back((*diTauLegsP4)[0].Eta());
+//       ID.push_back((*diTauLegsP4)[1].Pt());
+//       ID.push_back((*diTauLegsP4)[1].Eta());
+//       mapRunsEvts[ DiTauID ] = ID;
+//     }
+//     else {
+//       ID.push_back((*diTauLegsP4)[0].Pt());
+//       ID.push_back((*diTauLegsP4)[0].Eta());
+//       ID.push_back((*diTauLegsP4)[1].Pt());
+//       ID.push_back((*diTauLegsP4)[1].Eta());
+// //       cout<<"Event double counted !! Run : "<<run<<" Event "<<event<<" LumiSection "<<lumi<<endl;
+// //       cout<<" current  ptL1     = "<<(*diTauLegsP4)[0].Pt()<<" previous  ptL1     = "<<mapRunsEvts[ DiTauID ][0]<<endl;
+// //       cout<<" current  etaL1    = "<<(*diTauLegsP4)[0].Eta()<<" previous  etaL1     = "<<mapRunsEvts[ DiTauID ][1]<<endl;
+// //       cout<<" current  ptL2     = "<<(*diTauLegsP4)[1].Pt()<<" previous  ptL2     = "<<mapRunsEvts[ DiTauID ][2]<<endl;
+// //       cout<<" current  etaL2    = "<<(*diTauLegsP4)[1].Eta()<<" previous  etaL2     = "<<mapRunsEvts[ DiTauID ][3]<<endl;
+//       mapRunsEvts[ DiTauID ] = ID;
+// //       isDoubleCount = true;
+//     }
     
   
 //     if (!isDoubleCount) continue;
@@ -2055,7 +2055,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 int main(int argc, const char* argv[])
 {
   
-  std::cout << "treeSkimmerElecTau_HCP" << std::endl;
+  std::cout << "treeSkimmerElecTau_Moriond" << std::endl;
   gROOT->SetBatch(true);
   
   gSystem->Load("libFWCoreFWLite");
