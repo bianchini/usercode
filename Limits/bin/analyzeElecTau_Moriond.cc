@@ -37,10 +37,10 @@
 #define LOOSEISO         true
 #define kFactorSM         1.0
 #define DOHCP            false
-#define DO_D_ONLY        false
+#define DO_D_ONLY        true
 
 #define USESSBKG         false
-#define scaleByBinWidth  false
+#define scaleByBinWidth  true
 #define DOSPLIT          true
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -150,7 +150,16 @@ void drawHistogramMC(TTree* tree = 0,
 		     int verbose = 0 ){
   if(tree!=0 && h!=0){
     h->Reset();
-    tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup*ZeeWeight)"*cut);
+
+    if(DOHCP)
+      tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeightHCP*HLTweightTauABC*HLTweightEleABC*SFTau*SFEle_ABC*HqTWeight*weightHepNup*ZeeWeightHCP)"*cut);
+
+    else if(DO_D_ONLY)
+      tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*HqTWeight*weightHepNup*ZeeWeight)"*cut);
+
+    else
+      tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup*ZeeWeight)"*cut);
+
 //     tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup)"*cut);
     h->Scale(scaleFactor);
     normalization      = h->Integral();
@@ -180,7 +189,16 @@ void drawHistogramEmbed(TTree* tree = 0,
 			int verbose = 0 ){
   if(tree!=0 && h!=0){
     h->Reset();
-    tree->Draw(variable+">>"+TString(h->GetName()),"(HLTTau*HLTElec*embeddingWeight)"*cut);
+
+    if(DOHCP)
+      tree->Draw(variable+">>"+TString(h->GetName()),"(HLTTauABC*HLTEleABC*embeddingWeight)"*cut);
+
+    else if(DO_D_ONLY)
+      tree->Draw(variable+">>"+TString(h->GetName()),"(HLTTauD*HLTEleD*embeddingWeight)"*cut);
+
+    else
+      tree->Draw(variable+">>"+TString(h->GetName()),"(HLTTau*HLTElec*embeddingWeight)"*cut);
+
     h->Scale(scaleFactor);
     normalization      = h->Integral();
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
@@ -260,9 +278,20 @@ void drawHistogramMCFakeRate(TTree* tree = 0,
 			     TCut cut = TCut(""),
 			     string scaleFact = "",
 			     int verbose = 0 ){
+  TString cutWeight;
+
   if(tree!=0 && h!=0){
     h->Reset();
-    TString cutWeight = "(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup)*"+scaleFact;
+
+    if(DOHCP)
+      cutWeight = "(sampleWeight*puWeightHCP*HLTweightTauABC*HLTweightEleABC*SFTau*SFEle_ABC*HqTWeight*weightHepNup)*"+scaleFact;
+
+    else if(DO_D_ONLY)
+      cutWeight = "(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*HqTWeight*weightHepNup)*"+scaleFact;
+
+    else
+      cutWeight = "(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup)*"+scaleFact;      
+
     tree->Draw(variable+">>"+TString(h->GetName()),TCut(cutWeight.Data())*cut);
     normalization      = h->Integral()*scaleFactor;
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
@@ -784,9 +813,14 @@ void plotElecTau( Int_t mH_           = 120,
   TArrayF bins = createBins(nBins_, xMin_, xMax_, nBins, selection_, variable_);
   cout<<"Bins : "<<endl;
   for(int i=0 ; i<bins.GetSize() ; i++)cout<<"bin "<<i<<"   "<<bins[i]<<endl;
-//   float Lumi                               = 808.472 + 4398.0 + 495.003 + 5719.0 + 652.755 + 31.099; //last 2 are residual json from RunB and RunC prompt
-  float Lumi                               = 791.872 + 4434.0 + 495.003 + 6174 + 206.196 /*+ 412.610*/;
-  Lumi +=  7274; // 2012D
+
+  // LUMINOSITY //
+  float Lumi = 791.872 + 4434.0 + 495.003 + 6174 + 206.196; //2012ABC  
+
+  if(DOHCP)          Lumi = 791.872 + 4434.0 + 495.003 + 6174 + 206.196 ;       // 2012ABC  
+  else if(DO_D_ONLY) Lumi = 7274;                                               // 2012D  
+  else               Lumi = 791.872 + 4434.0 + 495.003 + 6174 + 206.196 + 7274; // 2012ABCD
+  /////////////////
 
   float lumiCorrFactor                     = 1 ;    //= (1-0.056);
   float TTxsectionRatio                    = 0.92; //lumiCorrFactor*(165.8/157.5) ;
