@@ -42,6 +42,7 @@
 #define USESSBKG         false
 #define scaleByBinWidth  true
 #define DOSPLIT          true
+#define DEBUG            true
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 void makeHistoFromDensity(TH1* hDensity, TH1* hHistogram){
@@ -155,6 +156,7 @@ void drawHistogramMC(TTree* tree = 0,
       tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeightHCP*HLTweightTauABC*HLTweightEleABC*SFTau*SFEle_ABC*HqTWeight*weightHepNup*ZeeWeightHCP)"*cut);
 
     else if(DO_D_ONLY)
+      //tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*HqTWeight*weightHepNup*ZeeWeight)");
       tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*HqTWeight*weightHepNup*ZeeWeight)"*cut);
 
     else
@@ -278,6 +280,7 @@ void drawHistogramMCFakeRate(TTree* tree = 0,
 			     TCut cut = TCut(""),
 			     string scaleFact = "",
 			     int verbose = 0 ){
+  TString tscaleFact(scaleFact);
   TString cutWeight;
 
   if(tree!=0 && h!=0){
@@ -287,12 +290,13 @@ void drawHistogramMCFakeRate(TTree* tree = 0,
       cutWeight = "(sampleWeight*puWeightHCP*HLTweightTauABC*HLTweightEleABC*SFTau*SFEle_ABC*HqTWeight*weightHepNup)*"+scaleFact;
 
     else if(DO_D_ONLY)
-      cutWeight = "(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*HqTWeight*weightHepNup)*"+scaleFact;
+      cutWeight = "(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*HqTWeight*weightHepNup)";
+      //cutWeight = "(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*HqTWeight*weightHepNup)*"+scaleFact;
 
     else
       cutWeight = "(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup)*"+scaleFact;      
 
-    tree->Draw(variable+">>"+TString(h->GetName()),TCut(cutWeight.Data())*cut);
+    tree->Draw(variable+">>"+TString(h->GetName()),TCut(cutWeight.Data())*cut*TCut(tscaleFact));
     normalization      = h->Integral()*scaleFactor;
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
      if(verbose==0) h->Reset();
@@ -404,14 +408,17 @@ void evaluateWextrapolation(string sign = "OS", bool useFakeRate = false, string
     cout << "Extrap. factor for W " << sign << " : P(pZeta<- "<< antiWsdb << ")/P(pZeta>"<< antiWsgn << ") ==> " << scaleFactorOS << " +/- " << scaleFactorOSError << endl;    
 
   // restore with full cut
+  if(DEBUG) cout << "launch it" << endl;
   drawHistogramMC(backgroundWJets,variable, OSWinSignalRegionMC,   ErrorW1, scaleFactor, hWMt, sbinPZetaRel&&pZ);
+  if(DEBUG) cout << "launched." << endl;
   // restore with full cut
   drawHistogramMC(backgroundWJets,variable, OSWinSidebandRegionMC, ErrorW2, scaleFactor, hWMt, sbinPZetaRel&&apZ);
- 
+  if(DEBUG) cout << "ok" << endl;
 
   float OSTTbarinSidebandRegionMC = 0.;
+  if(DEBUG) cout << "compute OSTTbarinSidebandRegionMC" << endl;
   drawHistogramMC(backgroundTTbar,  variable,  OSTTbarinSidebandRegionMC,     Error, scaleFactor*TTxsectionRatio , hWMt, sbinPZetaRel&&apZ);
-
+  if(DEBUG) cout << "computed" << endl;
 
   TCut bTagCut; TCut bTagCutaIso;
   if(selection_.find("novbf")!=string::npos){
@@ -431,18 +438,31 @@ void evaluateWextrapolation(string sign = "OS", bool useFakeRate = false, string
     bTagCutaIso = sbinPZetaRelaIso         &&apZ&&TCut("nJets20BTagged>1");
   }
 
+  if(DEBUG) cout << "compute OSTTbarinSidebandRegionBtagMC" << endl;
   float OSTTbarinSidebandRegionBtagMC = 0.;
   drawHistogramMC(backgroundTTbar, variable, OSTTbarinSidebandRegionBtagMC,  Error, scaleFactor*TTxsectionRatio, hWMt, bTagCut);
+
+  if(DEBUG) cout << "compute OSWinSidebandRegionBtagMC" << endl;
   float OSWinSidebandRegionBtagMC = 0.;
   drawHistogramMC(backgroundWJets, variable, OSWinSidebandRegionBtagMC,      Error, scaleFactor                , hWMt, bTagCut);
+
+  if(DEBUG) cout << "compute OSOthersinSidebandRegionBtagMC" << endl;
   float OSOthersinSidebandRegionBtagMC = 0.;
   drawHistogramMC(backgroundOthers, variable, OSOthersinSidebandRegionBtagMC,Error, scaleFactor                , hWMt, bTagCut);
+
+  if(DEBUG) cout << "compute OSQCDinSidebandRegionBtag" << endl;
   float OSQCDinSidebandRegionBtag = 0.;
   drawHistogramDataFakeRate(data, variable, OSQCDinSidebandRegionBtag,       Error, 1.0                        , hWMt, bTagCutaIso, scaleFactElec);
+
+  if(DEBUG) cout << "compute OSWinSidebandRegionBtagAIsoMC" << endl;
   float OSWinSidebandRegionBtagAIsoMC = 0.;
   drawHistogramMCFakeRate(backgroundWJets, variable, OSWinSidebandRegionBtagAIsoMC,  Error, scaleFactor        , hWMt, bTagCutaIso, scaleFactElec);
+
+  if(DEBUG) cout << "compute OSDatainSidebandRegionBtag" << endl;
   float OSDatainSidebandRegionBtag = 0.;
   drawHistogramData(data, variable, OSDatainSidebandRegionBtag,  Error, 1.0 , hWMt, bTagCut);
+
+  if(DEBUG) cout << "Deduce scaleFactorTTOS" << endl;
 
   scaleFactorTTOS = OSTTbarinSidebandRegionBtagMC>0 ? 
     (OSDatainSidebandRegionBtag-
