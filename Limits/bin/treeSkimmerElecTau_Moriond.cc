@@ -2137,7 +2137,7 @@ int main(int argc, const char* argv[])
   TString dirOut_ = "/data_CMS/cms/ivo/HTauTauAnalysis/Trees/ElecTauStream_HCP2012/ntuples/";
   TTree* backgroundDYTauTau, *backgroundDYEtoTau, *backgroundDYJtoTau;
   TString outName ="";
-  TFile *outFile = new TFile(outName,"UPDATE");
+  TFile *outFile;// = new TFile(outName,"UPDATE");
 
   if(sample=="DYJets") {
     backgroundDYTauTau  = outTreePtOrd->CopyTree("abs(genDecay)==(23*15)"); // g/Z -> tau+ tau-
