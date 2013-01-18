@@ -36,8 +36,8 @@
 #define W3JETS           true
 #define LOOSEISO         true
 #define kFactorSM         1.0
-#define DOHCP            true
-#define DO_D_ONLY        false
+#define DOHCP            false
+#define DO_D_ONLY        true
 
 #define USESSBKG         false
 #define scaleByBinWidth  true
@@ -152,8 +152,8 @@ void drawHistogramMC(TTree* tree = 0,
     h->Reset();
 
     if(DOHCP)
-      tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup*ZeeWeight)"*cut);
-  
+    tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeightHCP*HLTweightTauABC*HLTweightEleABC*SFTau*SFEle_ABC*HqTWeight*weightHepNup*ZeeWeightHCP)"*cut);
+
     else if(DO_D_ONLY)
       tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*HqTWeight*weightHepNup*ZeeWeight)"*cut);
 
@@ -277,20 +277,22 @@ void drawHistogramMCFakeRate(TTree* tree = 0,
 			     TCut cut = TCut(""),
 			     string scaleFact = "",
 			     int verbose = 0 ){
+  TString tscaleFact(scaleFact);
+  TString cutWeight;
+
   if(tree!=0 && h!=0){
     h->Reset();
-    TString cutWeight = "(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup)*"+scaleFact;
     if(DOHCP)
-      cutWeight = "(sampleWeight*puWeightHCP*HLTweightTauABC*HLTweightEleABC*SFTau*SFEle_ABC*HqTWeight*weightHepNup)*"+scaleFact;
+      cutWeight = "(sampleWeight*puWeightHCP*HLTweightTauABC*HLTweightEleABC*SFTau*SFEle_ABC*HqTWeight*weightHepNup)";
 
     else if(DO_D_ONLY)
       cutWeight = "(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*HqTWeight*weightHepNup)";
-      //cutWeight = "(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*HqTWeight*weightHepNup)*"+scaleFact;
+      //cutWeight = "(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*HqTWeight*weightHepNup)";
 
     else
-      cutWeight = "(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup)*"+scaleFact;      
+      cutWeight = "(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup)";      
     
-    tree->Draw(variable+">>"+TString(h->GetName()),TCut(cutWeight.Data())*cut);
+    tree->Draw(variable+">>"+TString(h->GetName()),TCut(cutWeight.Data())*cut*TCut(tscaleFact));
     normalization      = h->Integral()*scaleFactor;
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
      if(verbose==0) h->Reset();
@@ -785,7 +787,7 @@ void plotElecTau( Int_t mH_           = 120,
 		  TString variable_   = "diTauVisMass",
 		  TString XTitle_     = "full mass",
 		  TString Unities_    = "GeV",
-		  TString outputDir   = "test",
+		  TString outputDir   = "iter1",
 		  Int_t nBins_ = 80, Float_t xMin_=0, Float_t xMax_=400,
 		  Float_t magnifySgn_ = 1.0,
 		  Float_t hltEff_     = 1.0,
@@ -813,9 +815,9 @@ void plotElecTau( Int_t mH_           = 120,
   for(int i=0 ; i<bins.GetSize() ; i++)cout<<"bin "<<i<<"   "<<bins[i]<<endl;
   
   // LUMINOSITY //
-  float Lumi = 791.872 + 4434.0 + 495.003 /*+ 6174*/ + 206.196; //2012ABC 
+  float Lumi = 0.; 
 
-  if(DOHCP)          Lumi = 791.872 + 4434.0 + 495.003 + 6174 + 206.196 ;       // 2012ABC 
+  if(DOHCP)          Lumi = 791.872 + 4434.0 + 495.003 /*+ 6174*/ + 206.196 ;       // 2012ABC 
   else if(DO_D_ONLY) Lumi = 7274;                                               // 2012D 
   else               Lumi = 791.872 + 4434.0 + 495.003 + 6174 + 206.196 + 7274; // 2012ABCD
   /////////////////
@@ -1176,6 +1178,7 @@ void plotElecTau( Int_t mH_           = 120,
   TCut apZ2(Form("((%s)>60 && (%s)<120)",antiWcut.c_str(),antiWcut.c_str()));
   TCut hltevent("pairIndex<1 && HLTx==1 && ( run>=163269 || run==1)");
   TCut hltmatch("HLTmatch==1");
+//   TCut hltmatch("");
 
 
   ////// CATEGORIES ///
@@ -2395,7 +2398,7 @@ void plotElecTau( Int_t mH_           = 120,
 
 
 
-void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "test"){
+void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "iter1"){
       
   vector<string> variables;
   vector<int> mH;
@@ -2420,7 +2423,7 @@ void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "test"){
 //   plotElecTau(125,1,"inclusive",""   ,"MEtMVAPhi","MET #phi","units"              ,outputDir,32,-3.2,3.2,   5.0,1.0,0,1.5);
 //   plotElecTau(125,1,"inclusiveNoMt",""   ,"MtLeg1MVA","M_{T}(#e#nu)","GeV" ,                  outputDir,40,0,160,5.0,1.0,0,1.2);
 //   plotElecTau(125,1,"inclusive",""   ,"diTauVisMass","visible mass","GeV"      ,outputDir,50,0,200,5.0,1.0,0,1.2); 
-//   plotElecTau(125,1,"inclusive",""   ,"diTauNSVfitMass","SVfit mass","GeV"     ,outputDir,60,0,360,5.0,1.0,0,1.2);
+  plotElecTau(125,1,"inclusive",""   ,"diTauNSVfitMass","SVfit mass","GeV"     ,outputDir,60,0,360,5.0,1.0,0,1.2);
 //   plotElecTau(125,1,"inclusive",""   ,"etaL1","#e #eta", "units"              ,outputDir,25,-2.5, 2.5,5.0,1.0,0,2.);
 //   plotElecTau(125,1,"inclusive",""   ,"ptL1","#e p_{T}", "GeV"                ,outputDir,27,11, 92,5.0,1.0,0,1.2);
 //   plotElecTau(125,1,"inclusive",""   ,"ptL2","#tau p_{T}","GeV"           ,outputDir,27,11, 92,5.0,1.0,0,1.2);
