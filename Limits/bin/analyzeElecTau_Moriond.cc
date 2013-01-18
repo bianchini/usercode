@@ -787,7 +787,7 @@ void plotElecTau( Int_t mH_           = 120,
 		  TString variable_   = "diTauVisMass",
 		  TString XTitle_     = "full mass",
 		  TString Unities_    = "GeV",
-		  TString outputDir   = "iter1",
+		  TString outputDir   = "",
 		  Int_t nBins_ = 80, Float_t xMin_=0, Float_t xMax_=400,
 		  Float_t magnifySgn_ = 1.0,
 		  Float_t hltEff_     = 1.0,
@@ -1177,8 +1177,8 @@ void plotElecTau( Int_t mH_           = 120,
   //TCut apZ2(Form("((%s)>%f && (%s)<120)",antiWcut.c_str(),antiWsdb,antiWcut.c_str()));
   TCut apZ2(Form("((%s)>60 && (%s)<120)",antiWcut.c_str(),antiWcut.c_str()));
   TCut hltevent("pairIndex<1 && HLTx==1 && ( run>=163269 || run==1)");
-  TCut hltmatch("HLTmatch==1");
-//   TCut hltmatch("");
+//   TCut hltmatch("HLTmatch==1");
+  TCut hltmatch("");
 
 
   ////// CATEGORIES ///
@@ -2240,7 +2240,7 @@ void plotElecTau( Int_t mH_           = 120,
   
   TH1F* hStack = (TH1F*)aStack->GetHistogram();
   hStack->SetXTitle(XTitle_+" ("+Unities_+")");
-  if(scaleByBinWidth && variable_.Contains("diTauNSVfitMass") && selection_!="inclusive"){
+  if(scaleByBinWidth && variable_.Contains("diTauNSVfitMass")){
     hStack->SetYTitle(Form(" dN/dm_{#tau#tau}(1/%s)", Unities_.Data() ) );
     hData->SetYTitle(Form(" dN/dm_{#tau#tau}(1/%s)", Unities_.Data() ) );
   }
@@ -2398,7 +2398,7 @@ void plotElecTau( Int_t mH_           = 120,
 
 
 
-void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = "iter1"){
+void plotElecTauAll( Int_t useEmbedded = 1, TString outputDir = ""){
       
   vector<string> variables;
   vector<int> mH;
