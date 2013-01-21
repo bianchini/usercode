@@ -609,6 +609,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   int index_;
   int pairIndex_;
 
+  float uParl, uPerp, metParl, metPerp, metSigmaParl, metSigmaPerp;
 
   outTreePtOrd->Branch("pt1",  &pt1,"pt1/F");
   outTreePtOrd->Branch("pt2",  &pt2,"pt2/F");
@@ -1667,6 +1668,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     (*metsig)[1][1] = (*metSgnMatrix)[2]; 
 
     //add additional variables to test MVA Met (from Christian)
+    /*
     if( !isData && genVP4->size() > 0){
       int errorFlag = 0;
       std::pair<double, double> uT = compMEtProjU((*genVP4)[0], recoilCorrecMET.Px() - (*genMETP4)[0].px(), recoilCorrecMET.py() - (*genMETP4)[0].py(), errorFlag);
@@ -1681,7 +1683,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
       metSigmaParl = TMath::Sqrt(TMath::Abs(metCov_rotated(0, 0)));
       metSigmaPerp = TMath::Sqrt(TMath::Abs(metCov_rotated(1, 1)));
     }
-
+    */
     //NSVfitStandalone::Vector measuredMET( (*METP4)[1].Px(), (*METP4)[1].Py(), 0);
     NSVfitStandalone::Vector measuredMET( recoilCorrecMET.Px(), recoilCorrecMET.Py(), 0);
 
@@ -1696,8 +1698,8 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     algo.addLogM(false);
     if(DOSVFITSTANDALONE) {
       //algo.fit();
-      //algo.integrate();
-      algo.integrateMarkovChain();
+      algo.integrate();
+      //algo.integrateMarkovChain();
     }
     if(DOSVFITSTANDALONE){
       diTauSVFitMassSA    =  algo.getMass();//algo.fittedDiTauSystem().mass();
