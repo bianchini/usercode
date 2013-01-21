@@ -533,7 +533,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   int isVetoInJets; float chFracPVVeto;
 
   // diTau related variables
-  float diTauNSVfitMass_,diTauNSVfitMassErrUp_,diTauNSVfitMassErrDown_, diTauNSVfitMass_, 
+  float diTauNSVfitMass_,diTauNSVfitMassErrUp_,diTauNSVfitMassErrDown_, diTauNSVfitMassOld_, 
     diTauSVFitMass, diTauSVFitPt, diTauSVFitEta , diTauSVFitPhi ;
   float diTauSVFitMassSA, diTauSVFitMassErrSA; 
   float diTauCAMass, diTauCAPt, diTauCAEta, diTauCAPhi;
