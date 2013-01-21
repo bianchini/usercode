@@ -533,7 +533,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   int isVetoInJets; float chFracPVVeto;
 
   // diTau related variables
-  float diTauNSVfitMass_,diTauNSVfitMassErrUp_,diTauNSVfitMassErrDown_, 
+  float diTauNSVfitMass_,diTauNSVfitMassErrUp_,diTauNSVfitMassErrDown_, diTauNSVfitMass_, 
     diTauSVFitMass, diTauSVFitPt, diTauSVFitEta , diTauSVFitPhi ;
   float diTauSVFitMassSA, diTauSVFitMassErrSA; 
   float diTauCAMass, diTauCAPt, diTauCAEta, diTauCAPhi;
@@ -546,11 +546,11 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   // taus/MET related variables
   float ptL1,ptL2,etaL1,etaL2,phiL1,phiL2,dPhiL1L2,dxy1_, dz1_, scEtaL1;
   float diTauCharge_,
-    MtLeg1_,MtLeg1Corr_,MtLeg1MVA_,
-    MtLeg2_,MtLeg2Corr_,MtLeg2MVA_,
-    pZeta_,pZetaCorr_,pZetaMVA_,
-    pZetaVis_,pZetaVisCorr_,pZetaVisMVA_,pZetaSig_;
-  float MEt,MEtPhi,MEtCorr,MEtCorrPhi, MEtMVA, MEtMVAPhi;
+    MtLeg1_,MtLeg1Corr_,MtLeg1MVA_,MtLeg1MVAOld_,
+    MtLeg2_,MtLeg2Corr_,MtLeg2MVA_,MtLeg2MVAOld_,
+    pZeta_,pZetaCorr_,pZetaMVA_,pZetaMVAOld_,
+    pZetaVis_,pZetaVisCorr_,pZetaVisMVA_,pZetaVisMVAOld_,pZetaSig_;
+  float MEt,MEtPhi,MEtCorr,MEtCorrPhi, MEtMVA, MEtMVAPhi, MEtMVAOld, MEtMVAPhiOld;
   float MEtCov00,MEtCov01,MEtCov10,MEtCov11;
   float combRelIsoLeg1,combRelIsoLeg1Beta,combRelIsoLeg1DBeta,combRelIsoLeg1DBetav2,
     combRelIsoLeg1Rho, combIsoLeg2;
@@ -677,6 +677,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   outTreePtOrd->Branch("chFracPVVeto", &chFracPVVeto,"chFracPVVeto/F"); 
 
   outTreePtOrd->Branch("diTauNSVfitMass",       &diTauNSVfitMass_,       "diTauNSVfitMass/F");
+  outTreePtOrd->Branch("diTauNSVfitMassOld",    &diTauNSVfitMassOld_,    "diTauNSVfitMassOld/F");
   outTreePtOrd->Branch("diTauNSVfitMassErrUp",  &diTauNSVfitMassErrUp_,  "diTauNSVfitMassErrUp/F");
   outTreePtOrd->Branch("diTauNSVfitMassErrDown",&diTauNSVfitMassErrDown_,"diTauNSVfitMassErrDown/F");
   
@@ -731,15 +732,19 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   outTreePtOrd->Branch("MtLeg1",      &MtLeg1_,"MtLeg1/F");
   outTreePtOrd->Branch("MtLeg1Corr",  &MtLeg1Corr_,"MtLeg1Corr/F");
   outTreePtOrd->Branch("MtLeg1MVA",   &MtLeg1MVA_,"MtLeg1MVA/F");
+  outTreePtOrd->Branch("MtLeg1MVAOld",   &MtLeg1MVAOld_,"MtLeg1MVAOld/F");
   outTreePtOrd->Branch("MtLeg2",      &MtLeg2_,"MtLeg2/F");
   outTreePtOrd->Branch("MtLeg2Corr",  &MtLeg2Corr_,"MtLeg2Corr/F");
   outTreePtOrd->Branch("MtLeg2MVA",   &MtLeg2MVA_,"MtLeg2MVA/F");
+  outTreePtOrd->Branch("MtLeg2MVAOld",   &MtLeg2MVAOld_,"MtLeg2MVAOld/F"); 
   outTreePtOrd->Branch("pZeta",       &pZeta_,"pZeta/F");
   outTreePtOrd->Branch("pZetaCorr",   &pZetaCorr_,"pZetaCorr/F");
   outTreePtOrd->Branch("pZetaMVA",    &pZetaMVA_,"pZetaMVA/F");
+  outTreePtOrd->Branch("pZetaMVAOld",    &pZetaMVAOld_,"pZetaMVAOld/F");
   outTreePtOrd->Branch("pZetaVis",    &pZetaVis_,"pZetaVis/F");
   outTreePtOrd->Branch("pZetaVisCorr",&pZetaVisCorr_,"pZetaVisCorr/F");
   outTreePtOrd->Branch("pZetaVisMVA", &pZetaVisMVA_,"pZetaVisMVA/F");
+  outTreePtOrd->Branch("pZetaVisMVAOld", &pZetaVisMVAOld_,"pZetaVisMVAOld/F");
   outTreePtOrd->Branch("pZetaSig",    &pZetaSig_,"pZetaSig/F");
 
   outTreePtOrd->Branch("MEt",         &MEt,        "MEt/F");
@@ -748,6 +753,8 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   outTreePtOrd->Branch("MEtCorrPhi",  &MEtCorrPhi, "MEtCorrPhi/F");
   outTreePtOrd->Branch("MEtMVA",      &MEtMVA,     "MEtMVA/F");
   outTreePtOrd->Branch("MEtMVAPhi",   &MEtMVAPhi,  "MEtMVAPhi/F");
+  outTreePtOrd->Branch("MEtMVAOld",      &MEtMVAOld,     "MEtMVAOld/F"); 
+  outTreePtOrd->Branch("MEtMVAPhiOld",   &MEtMVAPhiOld,  "MEtMVAPhiOld/F"); 
 
   outTreePtOrd->Branch("MEtCov00",    &MEtCov00,   "MEtCov00/F");
   outTreePtOrd->Branch("MEtCov01",    &MEtCov01,   "MEtCov01/F");
@@ -1248,20 +1255,24 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   
   RecoilCorrector* recoilCorr = 0;
 
-  if(sample_.find("WJets")!=string::npos){
-    recoilCorr = new RecoilCorrector("../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_wjets_njet.root");
-    recoilCorr->addMCFile(           "../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
-    recoilCorr->addDataFile(         "../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
+  //if(sample_.find("WJets")!=string::npos){
+  if( sample_.find("WJets")!=string::npos || sample_.find("W1Jets")!=string::npos ||  
+      sample_.find("W2Jets")!=string::npos || sample_.find("W3Jets")!=string::npos ||  
+      sample_.find("W4Jets")!=string::npos  
+      ){
+    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_wjets_njet.root");
+    recoilCorr->addMCFile(           "../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
+    recoilCorr->addDataFile(         "../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
   }
   else if(sample_.find("DYJets")!=string::npos){
-    recoilCorr = new RecoilCorrector("../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zjets_ltau_njet.root");
-    recoilCorr->addMCFile(           "../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
-    recoilCorr->addDataFile(         "../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
+    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_zjets_ltau_njet.root");
+    recoilCorr->addMCFile(           "../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
+    recoilCorr->addDataFile(         "../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
   }
   else if(sample_.find("H1")!=string::npos){
-    recoilCorr = new RecoilCorrector("../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_higgs_njet.root");
-    recoilCorr->addMCFile(           "../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
-    recoilCorr->addDataFile(         "../../Utilities/data_arch/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
+    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_higgs_njet.root");
+    recoilCorr->addMCFile(           "../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
+    recoilCorr->addDataFile(         "../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
   }
   
 
@@ -1522,7 +1533,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 	isVetoInJets = 1;
     }
 
-    diTauNSVfitMass_        = diTauNSVfitMass;
+    diTauNSVfitMassOld_     = diTauNSVfitMass;
     diTauNSVfitMassErrUp_   = diTauNSVfitMassErrUp;
     diTauNSVfitMassErrDown_ = diTauNSVfitMassErrDown;
 
@@ -1571,11 +1582,19 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     double u1 = 0.; double u2 = 0.;
     double err1 = 0; double err2 = 0;
 
+
     if(genVP4->size() && recoilCorr!=0){
-      if(sample_.find("WJets")  !=string::npos)      
+      //if(sample_.find("WJets")  !=string::npos)      
+      if( sample_.find("WJets")!=string::npos || sample_.find("W1Jets")!=string::npos || 
+	  sample_.find("W2Jets")!=string::npos || sample_.find("W3Jets")!=string::npos || 
+	  sample_.find("W4Jets")!=string::npos 
+	  )  
 	recoilCorr->CorrectType1(corrPt,corrPhi,(*genVP4)[0].Pt() ,(*genVP4)[0].Phi() , 
 				 ((*diTauLegsP4)[0]).Pt(),((*diTauLegsP4)[0]).Phi(), u1, u2 , err1,err2, TMath::Min(nJets30,2) );
-      else if(sample_.find("DYJets")!=string::npos || sample_.find("H1")!=string::npos)  
+      //else if(sample_.find("DYJets")!=string::npos || sample_.find("H1")!=string::npos)  
+      else if((sample_.find("DYJets")!=string::npos && abs(genDecay)==(23*15)) //only Z->tautau
+	      || (sample_.find("DYJets")!=string::npos && abs(genDecay)!=(23*15) && isTauLegMatched==0 && (*genDiTauLegsP4)[1].E()>0) //Zmm, m->tau
+	      || sample_.find("HToTauTau")!=string::npos)
 	recoilCorr->CorrectType1(corrPt,corrPhi,(*genVP4)[0].Pt() ,(*genVP4)[0].Phi() , 
 				 ((*diTauLegsP4)[0]+(*diTauLegsP4)[1]).Pt(),((*diTauLegsP4)[0]+(*diTauLegsP4)[1]).Phi(), u1, u2, err1,err2, TMath::Min(nJets30,2)  );
     }
@@ -1603,29 +1622,36 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     float scalarSumPtLeg2MVA  = ( *diTauLegsP4)[1].Pt() + (*METP4)[1].Pt(); // index 3->1
     float vectorSumPtLeg2MVA  = ((*diTauLegsP4)[1] +      (*METP4)[1]).Pt() ; // index 3->1
 
-    MtLeg1_     = TMath::Sqrt( scalarSumPtLeg1*scalarSumPtLeg1 - vectorSumPtLeg1*vectorSumPtLeg1 ) ;
-    MtLeg1Corr_ = TMath::Sqrt( scalarSumPtLeg1Corr*scalarSumPtLeg1Corr - vectorSumPtLeg1Corr*vectorSumPtLeg1Corr ) ;
-    MtLeg1MVA_  = TMath::Sqrt( scalarSumPtLeg1MVA*scalarSumPtLeg1MVA - vectorSumPtLeg1MVA*vectorSumPtLeg1MVA ) ;
+    MtLeg1_       = TMath::Sqrt( scalarSumPtLeg1*scalarSumPtLeg1 - vectorSumPtLeg1*vectorSumPtLeg1 ) ;
+    MtLeg1Corr_   = TMath::Sqrt( scalarSumPtLeg1Corr*scalarSumPtLeg1Corr - vectorSumPtLeg1Corr*vectorSumPtLeg1Corr ) ;
+    MtLeg1MVAOld_ = TMath::Sqrt( scalarSumPtLeg1MVA*scalarSumPtLeg1MVA - vectorSumPtLeg1MVA*vectorSumPtLeg1MVA ) ;
+    MtLeg1MVA_    = TMath::Sqrt( scalarSumPtLeg1Corr*scalarSumPtLeg1Corr - vectorSumPtLeg1Corr*vectorSumPtLeg1Corr ) ; //new Recoil correction with MVA MET
 
-    MtLeg2_     = TMath::Sqrt( scalarSumPtLeg2*scalarSumPtLeg2 - vectorSumPtLeg2*vectorSumPtLeg2 ) ;
-    MtLeg2Corr_ = TMath::Sqrt( scalarSumPtLeg2Corr*scalarSumPtLeg2Corr - vectorSumPtLeg2Corr*vectorSumPtLeg2Corr ) ;
-    MtLeg2MVA_  = TMath::Sqrt( scalarSumPtLeg2MVA*scalarSumPtLeg2MVA - vectorSumPtLeg2MVA*vectorSumPtLeg2MVA ) ;
+    MtLeg2_       = TMath::Sqrt( scalarSumPtLeg2*scalarSumPtLeg2 - vectorSumPtLeg2*vectorSumPtLeg2 ) ;
+    MtLeg2Corr_   = TMath::Sqrt( scalarSumPtLeg2Corr*scalarSumPtLeg2Corr - vectorSumPtLeg2Corr*vectorSumPtLeg2Corr ) ;
+    MtLeg2MVAOld_ = TMath::Sqrt( scalarSumPtLeg2MVA*scalarSumPtLeg2MVA - vectorSumPtLeg2MVA*vectorSumPtLeg2MVA ) ;
+    MtLeg2MVA_    = TMath::Sqrt( scalarSumPtLeg2Corr*scalarSumPtLeg2Corr - vectorSumPtLeg2Corr*vectorSumPtLeg2Corr ) ; //new Recoil correction with MVA MET
 
-    pZeta_        = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[0]))[1];
-    pZetaCorr_    = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], recoilCorrecMET))[1];
-    pZetaMVA_     = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[1]))[1]; // index 3->1
-    pZetaVis_     = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[0]))[0];
-    pZetaVisCorr_ = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], recoilCorrecMET))[0];
-    pZetaVisMVA_  = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[1]))[0]; // index 3->1
+    pZeta_          = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[0]))[1];
+    pZetaCorr_      = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], recoilCorrecMET))[1];
+    pZetaMVAOld_    = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[1]))[1]; // index 3->1
+    pZetaMVA_       = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], recoilCorrecMET))[1]; //new Recoil correction with MVA MET
+
+    pZetaVis_       = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[0]))[0];
+    pZetaVisCorr_   = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], recoilCorrecMET))[0];
+    pZetaVisMVAOld_ = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[1]))[0]; // index 3->1
+    pZetaVisMVA_    = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], recoilCorrecMET))[0];//new Recoil correction with MVA MET 
 
     pZetaSig_     = pZetaSig;
 
-    MEt        = (*METP4)[0].Et();
-    MEtPhi     = (*METP4)[0].Phi();
-    MEtCorr    = recoilCorrecMET.Et();
-    MEtCorrPhi = recoilCorrecMET.Phi();
-    MEtMVA     = (*METP4)[1].Et();
-    MEtMVAPhi  = (*METP4)[1].Phi();
+    MEt          = (*METP4)[0].Et();
+    MEtPhi       = (*METP4)[0].Phi();
+    MEtCorr      = recoilCorrecMET.Et();
+    MEtCorrPhi   = recoilCorrecMET.Phi();
+    MEtMVAOld    = (*METP4)[1].Et();
+    MEtMVAPhiOld = (*METP4)[1].Phi();
+    MEtMVA    = recoilCorrecMET.Et(); 
+    MEtMVAPhi = recoilCorrecMET.Phi(); 
 
     ////////////////////////////////////////////////
     
@@ -1639,7 +1665,26 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     (*metsig)[0][1] = (*metSgnMatrix)[1]; 
     (*metsig)[1][0] = (*metSgnMatrix)[1]; 
     (*metsig)[1][1] = (*metSgnMatrix)[2]; 
-    NSVfitStandalone::Vector measuredMET( (*METP4)[1].Px(), (*METP4)[1].Py(), 0);
+
+    //add additional variables to test MVA Met (from Christian)
+    if( !isData && genVP4->size() > 0){
+      int errorFlag = 0;
+      std::pair<double, double> uT = compMEtProjU((*genVP4)[0], recoilCorrecMET.Px() - (*genMETP4)[0].px(), recoilCorrecMET.py() - (*genMETP4)[0].py(), errorFlag);
+      if ( !errorFlag ) {
+	uParl = uT.first;
+	uPerp = uT.second;
+      }
+      reco::Candidate::LorentzVector met_rotated = compP4inZetaFrame(recoilCorrecMET - (*genMETP4)[0], (*genVP4)[0].Phi());
+      metParl = met_rotated.px();
+      metPerp = met_rotated.py();
+      TMatrixD metCov_rotated = compCovMatrixInZetaFrame(*metsig, (*genVP4)[0].Phi());
+      metSigmaParl = TMath::Sqrt(TMath::Abs(metCov_rotated(0, 0)));
+      metSigmaPerp = TMath::Sqrt(TMath::Abs(metCov_rotated(1, 1)));
+    }
+
+    //NSVfitStandalone::Vector measuredMET( (*METP4)[1].Px(), (*METP4)[1].Py(), 0);
+    NSVfitStandalone::Vector measuredMET( recoilCorrecMET.Px(), recoilCorrecMET.Py(), 0);
+
     std::vector<NSVfitStandalone::MeasuredTauLepton> measuredTauLeptons;
     NSVfitStandalone::LorentzVector p1( (*diTauLegsP4)[1] );
     measuredTauLeptons.push_back(NSVfitStandalone::MeasuredTauLepton(NSVfitStandalone::kHadDecay,p1));    
@@ -1651,10 +1696,12 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     algo.addLogM(false);
     if(DOSVFITSTANDALONE) {
       //algo.fit();
-      algo.integrate();
+      //algo.integrate();
+      algo.integrateMarkovChain();
     }
     if(DOSVFITSTANDALONE){
       diTauSVFitMassSA    =  algo.getMass();//algo.fittedDiTauSystem().mass();
+      diTauNSVfitMass_    =  algo.getMass(); //new Recoil correction with MVA MET
       diTauSVFitMassErrSA = -99;//algo.massUncert();
       etaTau1Fit          = -99;//((algo.fittedTauLeptons())[1]).Eta();
       etaTau2Fit          = -99;//((algo.fittedTauLeptons())[0]).Eta();
