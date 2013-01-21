@@ -132,6 +132,15 @@ void smear( float& reco, float gen = float(0.), float dM = float(0.), float dRMS
 
 }
 
+double deltaR(LV v1, LV v2) {
+
+  double deta = v1.Eta() - v2.Eta();
+  double dphi = v1.Phi() - v2.Phi();
+  return TMath::Sqrt( TMath::Power(deta,2) + TMath::Power(dphi,2) );
+
+}
+
+
 float reweightHEPNUP(int hepNUP) {
 
   int nJets = hepNUP-5;
