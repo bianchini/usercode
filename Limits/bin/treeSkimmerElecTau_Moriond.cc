@@ -350,7 +350,8 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 			      string sample_ = "",
 			      float xsec_ = 0., 
 			      float skimEff_ = 0., 
-			      int iJson_=-1
+			      int iJson_=-1,
+			      bool doLepVeto=true
 			      )
 {
   TMVA::Tools::Instance();
@@ -1009,6 +1010,13 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   currentTree->SetBranchStatus("elecFlag"              ,1);
   currentTree->SetBranchStatus("vetoEvent"             ,1);
   
+  // leptons for veto
+  if(doLepVeto) {
+    currentTree->SetBranchStatus("vetoMuonsP4"        ,1);
+    currentTree->SetBranchStatus("vetoElectronsP4"    ,1);
+  // currentTree->SetBranchStatus("vetoTausP4"         ,1);
+  }
+
   // event-dependent variables
   currentTree->SetBranchStatus("rhoFastJet"            ,1);
   currentTree->SetBranchStatus("rhoNeutralFastJet"     ,0);
@@ -1114,6 +1122,15 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 
   std::vector< float >* metSgnMatrix = new std::vector< float >();
   currentTree->SetBranchAddress("metSgnMatrix", &metSgnMatrix);
+
+  // leptons for veto
+  std::vector< LV >* vetoElectronsP4 = new std::vector< LV >();
+  std::vector< LV >* vetoMuonsP4 = new std::vector< LV >();
+  if(doLepVeto) {
+    currentTree->SetBranchAddress("vetoElectronsP4", &vetoElectronsP4);
+    currentTree->SetBranchAddress("vetoMuonsP4",     &vetoMuonsP4); 
+    //std::vector< LV >* vetoTausP4 = new std::vector< LV >();
+  }
 
   // auxiliary float to store branch values
   float diTauNSVfitMass,diTauNSVfitMassErrUp,diTauNSVfitMassErrDown,mTauTauMin;
@@ -1779,8 +1796,9 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 
       //bool isTriggMatched = (((*tauXTriggers)[0] && (*tauXTriggers)[4])  ||
       //		     ((*tauXTriggers)[1] && (*tauXTriggers)[5]));
-      bool isTriggMatched = (((*tauXTriggers)[0] && (*tauXTriggers)[8])  ||
-			     ((*tauXTriggers)[1] && (*tauXTriggers)[9]));
+      //bool isTriggMatched = (((*tauXTriggers)[0] && (*tauXTriggers)[8])  ||
+      //		     ((*tauXTriggers)[1] && (*tauXTriggers)[9]));
+      bool isTriggMatched = (*tauXTriggers)[1] && (*tauXTriggers)[9] ;
       HLTmatch = isTriggMatched ? 1.0 : 0.0 ;
 
       bool isTriggMatchedQCD = (((*tauXTriggers)[2] && (*tauXTriggers)[6])  || 
@@ -1956,6 +1974,21 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     fakeRateWMC     = (hfakeRateWJets!=0)   ? hfakeRateWJets->GetBinContent(   hfakeRateWJets->FindBin(  pfJetPt, ptL2, 0) ) : -99;
     effDYMC         = (hfakeRateDYJets!=0)  ? hfakeRateDYJets->GetBinContent(  hfakeRateDYJets->FindBin( pfJetPt, ptL2, 0) ) : -99;
 
+    // Third lepton veto
+    if(DEBUG) cout << "Third lepton veto" << endl;
+    int nVetoLepton = 0;
+    for(size_t imu = 0; imu < vetoMuonsP4->size(); imu++){
+      if(deltaR((*diTauLegsP4)[0], (*vetoMuonsP4)[imu]) > 0.3 && 
+	 deltaR((*diTauLegsP4)[1], (*vetoMuonsP4)[imu]) > 0.3 )
+	nVetoLepton++;
+    }
+    for(size_t imu = 0; imu < vetoElectronsP4->size(); imu++){ 
+      if(deltaR((*diTauLegsP4)[0], (*vetoElectronsP4)[imu]) > 0.3 &&  
+         deltaR((*diTauLegsP4)[1], (*vetoElectronsP4)[imu]) > 0.3 ) 
+        nVetoLepton++; 
+    }    
+    if(DEBUG) cout << "End 3rd lepton veto" << endl;
+
     if(leptFakeTau==1){
       //float extraSmearing = ran->Gaus( -0.373, 1.18 );
       //diTauVisMass += extraSmearing;
@@ -1994,7 +2027,8 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 
     elecFlag_        = elecFlag;
     genDecay_        = genDecay ;
-    vetoEvent_       = vetoEvent; 
+    //vetoEvent_       = vetoEvent; 
+    vetoEvent_       = (nVetoLepton > 0) ? 1 : 0; //vetoEvent; 
     parton_          = parton;
     genPartMult_     = genPartMult;
     leadGenPartPdg_  = leadGenPartPdg;
