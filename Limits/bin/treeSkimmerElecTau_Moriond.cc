@@ -1543,6 +1543,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 	isVetoInJets = 1;
     }
 
+    diTauNSVfitMass_        = diTauNSVfitMass;
     diTauNSVfitMassOld_     = diTauNSVfitMass;
     diTauNSVfitMassErrUp_   = diTauNSVfitMassErrUp;
     diTauNSVfitMassErrDown_ = diTauNSVfitMassErrDown;
