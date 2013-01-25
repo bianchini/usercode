@@ -64,7 +64,7 @@
 
 #define USERECOILALGO true
 #define USEFAKERATE false
-#define DOSVFITSTANDALONE false
+#define DOSVFITSTANDALONE true
 #define DOVBFMVA true
 #define DEBUG false
 
@@ -1265,25 +1265,25 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   
   RecoilCorrector* recoilCorr = 0;
 
-  //if(sample_.find("WJets")!=string::npos){
+  //if(sample_.find("WJets")!=string::npos){ 
   if( sample_.find("WJets")!=string::npos || sample_.find("W1Jets")!=string::npos ||  
       sample_.find("W2Jets")!=string::npos || sample_.find("W3Jets")!=string::npos ||  
       sample_.find("W4Jets")!=string::npos  
-      ){
-    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_wjets_njet.root");
-    recoilCorr->addMCFile(           "../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
-    recoilCorr->addDataFile(         "../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
-  }
-  else if(sample_.find("DYJets")!=string::npos){
-    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_zjets_ltau_njet.root");
-    recoilCorr->addMCFile(           "../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
-    recoilCorr->addDataFile(         "../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
-  }
-  else if(sample_.find("H1")!=string::npos){
-    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_higgs_njet.root");
-    recoilCorr->addMCFile(           "../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
-    recoilCorr->addDataFile(         "../../Utilities/data/recoilv7/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
-  }
+      ){ 
+    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_wjets53X_20pv_njet.root"); 
+    recoilCorr->addMCFile(           "../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_zmm53X_2012_njet.root"); 
+    recoilCorr->addDataFile(         "../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_datamm53X_2012_njet.root"); 
+  } 
+  else if(sample_.find("DYJets")!=string::npos){ 
+    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_zmm53X_2012_njet.root"); 
+    recoilCorr->addMCFile(           "../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_zmm53X_2012_njet.root");  
+    recoilCorr->addDataFile(         "../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_datamm53X_2012_njet.root");  
+  } 
+  else if(sample_.find("VBFH")!=string::npos){ 
+    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_higgs53X_20pv_njet.root"); 
+    recoilCorr->addMCFile(           "../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_zmm53X_2012_njet.root");   
+    recoilCorr->addDataFile(         "../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_datamm53X_2012_njet.root");   
+  } 
   
 
   TFile* HqT      = 0;
@@ -1543,7 +1543,6 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 	isVetoInJets = 1;
     }
 
-    diTauNSVfitMass_        = diTauNSVfitMass;
     diTauNSVfitMassOld_     = diTauNSVfitMass;
     diTauNSVfitMassErrUp_   = diTauNSVfitMassErrUp;
     diTauNSVfitMassErrDown_ = diTauNSVfitMassErrDown;
@@ -1589,7 +1588,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 
     TLorentzVector corrMET_tmp;
     LV corrMET(1,0,0,1);
-    double corrPt = (*METP4)[0].Et(); double corrPhi = (*METP4)[0].Phi();
+    double corrPt = (*METP4)[3].Et(); double corrPhi = (*METP4)[3].Phi();
     double u1 = 0.; double u2 = 0.;
     double err1 = 0; double err2 = 0;
 
@@ -1605,7 +1604,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
       //else if(sample_.find("DYJets")!=string::npos || sample_.find("H1")!=string::npos)  
       else if((sample_.find("DYJets")!=string::npos && abs(genDecay)==(23*15)) //only Z->tautau
 	      || (sample_.find("DYJets")!=string::npos && abs(genDecay)!=(23*15) && isTauLegMatched==0 && (*genDiTauLegsP4)[1].E()>0) //Zmm, m->tau
-	      || sample_.find("HToTauTau")!=string::npos)
+	      || sample_.find("VBFH")!=string::npos)
 	recoilCorr->CorrectType1(corrPt,corrPhi,(*genVP4)[0].Pt() ,(*genVP4)[0].Phi() , 
 				 ((*diTauLegsP4)[0]+(*diTauLegsP4)[1]).Pt(),((*diTauLegsP4)[0]+(*diTauLegsP4)[1]).Phi(), u1, u2, err1,err2, TMath::Min(nJets30,2)  );
     }
@@ -1708,8 +1707,8 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     algo.addLogM(false);
     if(DOSVFITSTANDALONE) {
       //algo.fit();
-      algo.integrate();
-      //algo.integrateMarkovChain();
+      //algo.integrate();
+      algo.integrateMarkovChain();
     }
     if(DOSVFITSTANDALONE){
       diTauSVFitMassSA    =  algo.getMass();//algo.fittedDiTauSystem().mass();
