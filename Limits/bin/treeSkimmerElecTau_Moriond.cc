@@ -61,6 +61,7 @@
 #define MINJetID 0.5
 #define ETOTAUEB 0.85
 #define ETOTAUEE 0.65
+#define tauLowHigh 40.0
 
 #define USERECOILALGO true
 #define USEFAKERATE false
@@ -544,9 +545,11 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   // diTau related variables
   float diTauNSVfitMass_,diTauNSVfitMassErrUp_,diTauNSVfitMassErrDown_, 
     diTauSVFitMass, diTauSVFitPt, diTauSVFitEta , diTauSVFitPhi ;
+  float diTauNSVfitMassCorr_;
   float diTauSVFitMassSA, diTauSVFitMassErrSA; 
   float diTauCAMass, diTauCAPt, diTauCAEta, diTauCAPhi;
   float diTauVisMass,diTauVisPt,diTauVisEta,diTauVisPhi;
+  float diTauVisMassCorr;
   float diTauRecoPt,diTauRecoPhi;
   float diTauMinMass;
 
@@ -689,7 +692,8 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   outTreePtOrd->Branch("diTauNSVfitMass",       &diTauNSVfitMass_,       "diTauNSVfitMass/F");
   outTreePtOrd->Branch("diTauNSVfitMassErrUp",  &diTauNSVfitMassErrUp_,  "diTauNSVfitMassErrUp/F");
   outTreePtOrd->Branch("diTauNSVfitMassErrDown",&diTauNSVfitMassErrDown_,"diTauNSVfitMassErrDown/F");
-  
+  outTreePtOrd->Branch("diTauNSVfitMassCorr",   &diTauNSVfitMassCorr_,   "diTauNSVfitMassCorr/F");
+
   outTreePtOrd->Branch("diTauSVFitMass",&diTauSVFitMass,"diTauSVFitMass/F");
   outTreePtOrd->Branch("diTauSVFitPt",  &diTauSVFitPt,  "diTauSVFitPt/F");
   outTreePtOrd->Branch("diTauSVFitEta", &diTauSVFitEta, "diTauSVFitEta/F");
@@ -706,6 +710,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   outTreePtOrd->Branch("diTauVisPt",  &diTauVisPt,"diTauVisPt/F");
   outTreePtOrd->Branch("diTauVisEta", &diTauVisEta,"diTauVisEta/F");
   outTreePtOrd->Branch("diTauVisPhi", &diTauVisPhi,"diTauVisPhi/F");
+  outTreePtOrd->Branch("diTauVisMassCorr",&diTauVisMassCorr,"diTauVisMassCorr/F");
 
   outTreePtOrd->Branch("diTauMinMass",&diTauMinMass,"diTauMisMass/F");
 
@@ -1539,6 +1544,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     diTauNSVfitMass_        = diTauNSVfitMass;
     diTauNSVfitMassErrUp_   = diTauNSVfitMassErrUp;
     diTauNSVfitMassErrDown_ = diTauNSVfitMassErrDown;
+    diTauNSVfitMassCorr_    = diTauNSVfitMass;
 
     diTauSVFitMass = (*diTauSVfitP4)[0].M();
     diTauSVFitPt   = (*diTauSVfitP4)[0].Pt();
@@ -1554,6 +1560,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     diTauVisPt    = (*diTauVisP4)[0].Pt();
     diTauVisEta   = (*diTauVisP4)[0].Eta();
     diTauVisPhi   = (*diTauVisP4)[0].Phi();
+    diTauVisMassCorr  = (*diTauVisP4)[0].M();
 
     diTauRecoPt  = ((*diTauVisP4)[0]+(*METP4)[0]).Pt();
     diTauRecoPhi = ((*diTauVisP4)[0]+(*METP4)[0]).Phi();
@@ -2043,15 +2050,46 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     // Reweight for Zee
     ZeeWeight = 1;
     if( sample_.find("DYJets")!=string::npos ){
-      if(decayMode==0 && leptFakeTau){
-	ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.479 ?
-	  0.85 : 
-	  0.94;
+
+      if(ptL2<tauLowHigh) { // Low pT Tau
+	if(decayMode==0 && leptFakeTau){
+	  ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
+	    0.80 : 
+	    0.70;
+	}
+	else if (decayMode==1 && leptFakeTau){
+	  ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
+	    1.80 : 
+	    0.28;
+	}
       }
-      else if (decayMode==1 && leptFakeTau){
-	ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.479 ?
-	  1.52 : 
-	  0.32;
+      else { // High pT Tau
+	if(decayMode==0 && leptFakeTau){
+	  ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
+	    1.02 : 
+	    0.70;
+	  
+	  // shift mass
+	  diTauNSVfitMassCorr_ *= 1.007;
+	  diTauVisMassCorr     *= 1.004;
+
+	  // smear mass
+	  diTauNSVfitMassCorr_ = ran->Gaus( diTauNSVfitMassCorr_ , 3.5 );
+	  diTauVisMassCorr     = ran->Gaus( diTauVisMassCorr     , 1.9 );
+	}
+	else if (decayMode==1 && leptFakeTau){
+	  ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
+	    1.85 : 
+	    0.28;
+
+	  // shift mass
+	  diTauNSVfitMassCorr_ *= 1.002;
+	  diTauVisMassCorr     *= 1.002;
+
+	  // smear mass
+	  diTauNSVfitMassCorr_ = ran->Gaus( diTauNSVfitMassCorr_ , 3.2 );
+	  diTauVisMassCorr     = ran->Gaus( diTauVisMassCorr     , 3.2 );
+	}
       }
     }
 //     ZeeWeight = 1;
