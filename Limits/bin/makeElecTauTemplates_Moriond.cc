@@ -69,7 +69,7 @@ void produce(
   TFile* fin = 0;
   string analysisFile = analysis_;
 
-  fin = new TFile(Form("/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/histograms/%s/eTau_mH%d_%s_%s_%s.root", outputDir.Data(), mH_, bin_.c_str() , analysisFile.c_str(), variable_.c_str()), "READ");
+  fin = new TFile(Form("/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/histograms/%s/eTau_mH%d_%s_%s_%s.root", outputDir.Data(), 125, bin_.c_str() , analysisFile.c_str(), variable_.c_str()), "READ");
 
   ///////////////////////////////////////////////
   TFile* fin_jUp     = new TFile(Form("/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/histograms/%s/eTau_mH%d_%s_JetUp_%s.root",   outputDir.Data(), 125, bin_.c_str() , variable_.c_str()), "READ");
@@ -131,7 +131,7 @@ void produce(
     suffix = "_CMS_scale_fakeDown";
   
   cout << "Adding histos with suffix " << suffix << endl;
-  TString dirName( Form("eTau_%s",binNameSpace.c_str()) );
+  TString dirName( Form("eleTau_%s",binNameSpace.c_str()) );
   
   if(! (fTemplOut->cd( dirName.Data()  ) ) ){
     cout << "Editing the directory for bin and variable " << binNameSpace << ", " << variable_ << endl;
@@ -1357,14 +1357,14 @@ void produceAll(  TString outputDir = "2DFit/WithoutZFakes" ){
   //variables.push_back("diTauVisMass");
   variables.push_back("diTauNSVfitMass");
 
-//   mH.push_back(110);
-//   mH.push_back(115);
-//   mH.push_back(120);
+  mH.push_back(110);
+  mH.push_back(115);
+  mH.push_back(120);
   mH.push_back(125);
-//   mH.push_back(130);
-//   mH.push_back(135);
-//   mH.push_back(140);
-//   mH.push_back(145);
+  mH.push_back(130);
+  mH.push_back(135);
+  mH.push_back(140);
+  mH.push_back(145);
 
   //mH.push_back(90);
   //mH.push_back(100);
@@ -1390,9 +1390,9 @@ void produceAll(  TString outputDir = "2DFit/WithoutZFakes" ){
        produce(mH[j],variables[i], "JetUp"   , "inclusive", outputDir);
        produce(mH[j],variables[i], "JetDown" , "inclusive", outputDir);
 
-//        produce(mH[j],variables[i], ""        , "novbfLow", outputDir);
-//        produce(mH[j],variables[i], "TauUp"   , "novbfLow", outputDir);
-//        produce(mH[j],variables[i], "TauDown" , "novbfLow", outputDir);
+       produce(mH[j],variables[i], ""        , "novbfLow", outputDir);
+       produce(mH[j],variables[i], "TauUp"   , "novbfLow", outputDir);
+       produce(mH[j],variables[i], "TauDown" , "novbfLow", outputDir);
        produce(mH[j],variables[i], "JetUp"   , "novbfLow", outputDir);
        produce(mH[j],variables[i], "JetDown" , "novbfLow", outputDir);
 
@@ -1414,9 +1414,9 @@ void produceAll(  TString outputDir = "2DFit/WithoutZFakes" ){
        produce(mH[j],variables[i], "JetUp"   , "boostHigh", outputDir);
        produce(mH[j],variables[i], "JetDown" , "boostHigh", outputDir);
 
-//        produce(mH[j],variables[i], ""        , "vbf", outputDir);
+       produce(mH[j],variables[i], ""        , "vbf", outputDir);
        produce(mH[j],variables[i], "TauUp"   , "vbf", outputDir);
-//        produce(mH[j],variables[i], "TauDown" , "vbf", outputDir);
+       produce(mH[j],variables[i], "TauDown" , "vbf", outputDir);
        produce(mH[j],variables[i], "JetUp"   , "vbf", outputDir);
        produce(mH[j],variables[i], "JetDown" , "vbf", outputDir);
       }//!DO2DFIT
