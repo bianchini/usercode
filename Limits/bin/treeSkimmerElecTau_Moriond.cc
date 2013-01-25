@@ -578,6 +578,8 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   float hasGsf_, signalPFGammaCands_, signalPFChargedHadrCands_;
   float etaMom2,phiMom2,gammaFrac,visibleTauMass_;
   float fakeRateRun2011, fakeRateWMC, effDYMC, CDFWeight;
+  float leadPFChHadTrackPt_, leadPFChHadTrackEta_,leadPFChHadPt_, leadPFChHadEta_;
+  float leadPFCandPt_, leadPFCandEta_;
 
   // electron related variables
   int tightestCutBasedWP_, tightestMVAWP_;
@@ -734,6 +736,13 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   outTreePtOrd->Branch("etaMom2",                 &etaMom2,"etaMom2/F");
   outTreePtOrd->Branch("phiMom2",                 &phiMom2,"phiMom2/F");
   outTreePtOrd->Branch("gammaFrac",               &gammaFrac,"gammaFrac/F");
+
+  outTreePtOrd->Branch("leadPFChHadTrackPt",      &leadPFChHadTrackPt_,"leadPFChHadPt/F");
+  outTreePtOrd->Branch("leadPFChHadTrackEta",     &leadPFChHadTrackEta_,"leadPFChHadEta/F");
+  outTreePtOrd->Branch("leadPFChHadPt",           &leadPFChHadPt_,"leadPFChHadPt/F");
+  outTreePtOrd->Branch("leadPFChHadEta",          &leadPFChHadEta_,"leadPFChHadEta/F");
+  outTreePtOrd->Branch("leadPFCandPt",            &leadPFCandPt_,"leadPFCandPt/F");
+  outTreePtOrd->Branch("leadPFCandEta",           &leadPFCandEta_,"leadPFCandEta/F");
 
   outTreePtOrd->Branch("pfJetPt",                 &pfJetPt_,"pfJetPt/F");
   outTreePtOrd->Branch("fakeRateRun2011",         &fakeRateRun2011,"fakeRateRun2011/F");
@@ -966,10 +975,12 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   currentTree->SetBranchStatus("isTauLegMatched"       ,1);
   currentTree->SetBranchStatus("isElecLegMatched"      ,1);
   currentTree->SetBranchStatus("hasKft"                ,0);
-  currentTree->SetBranchStatus("leadPFChargedHadrPt"   ,0);
+  currentTree->SetBranchStatus("leadPFCandPt"          ,1);
+  currentTree->SetBranchStatus("leadPFCandP"           ,1);
+  currentTree->SetBranchStatus("leadPFChargedHadrPt"   ,1);
   currentTree->SetBranchStatus("leadPFChargedHadrP"    ,1);
-  currentTree->SetBranchStatus("leadPFChargedHadrTrackPt"    ,0);
-  currentTree->SetBranchStatus("leadPFChargedHadrTrackP"     ,0);
+  currentTree->SetBranchStatus("leadPFChargedHadrTrackPt"    ,1);
+  currentTree->SetBranchStatus("leadPFChargedHadrTrackP"     ,1);
   currentTree->SetBranchStatus("leadPFChargedHadrMva"  ,1);
   currentTree->SetBranchStatus("emFraction"            ,1);
   currentTree->SetBranchStatus("hasGsf"                ,1);
@@ -1163,7 +1174,12 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   int numOfLooseIsoDiTaus;
   int isTauLegMatched,isElecLegMatched,elecFlag,genDecay, vetoEvent;
   float nPUVertices, nPUVerticesM1,nPUVerticesP1;
+  float leadPFChargedHadrCandTrackPt;
+  float leadPFChargedHadrCandTrackP;
+  float leadPFChargedHadrCandPt;
   float leadPFChargedHadrCandP;
+  float leadPFCandPt;
+  float leadPFCandP;
   float leadPFChargedHadrMva;
   float pfJetPt;
   float emFraction, hasGsf, leadPFChargedHadrHcalEnergy, leadPFChargedHadrEcalEnergy;
@@ -1244,7 +1260,12 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   currentTree->SetBranchAddress("isElecLegMatched",     &isElecLegMatched);
   currentTree->SetBranchAddress("vetoEvent",            &vetoEvent);
   currentTree->SetBranchAddress("visibleTauMass",       &visibleTauMass);
+  currentTree->SetBranchAddress("leadPFChargedHadrTrackPt",  &leadPFChargedHadrCandTrackPt);
+  currentTree->SetBranchAddress("leadPFChargedHadrTrackP",   &leadPFChargedHadrCandTrackP);
+  currentTree->SetBranchAddress("leadPFChargedHadrPt",  &leadPFChargedHadrCandPt);
   currentTree->SetBranchAddress("leadPFChargedHadrP",   &leadPFChargedHadrCandP);
+  currentTree->SetBranchAddress("leadPFCandPt",         &leadPFCandPt);
+  currentTree->SetBranchAddress("leadPFCandP",          &leadPFCandP);
   currentTree->SetBranchAddress("leadPFChargedHadrMva" ,&leadPFChargedHadrMva);
   currentTree->SetBranchAddress("emFraction"           ,&emFraction);
   currentTree->SetBranchAddress("hasGsf"               ,&hasGsf);
@@ -1790,6 +1811,12 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     EoP                       = leadPFChargedHadrEcalEnergy/leadPFChargedHadrCandP;
     emFraction_               = emFraction;
     leadPFChargedHadrMva_     = leadPFChargedHadrMva;
+    leadPFChHadTrackPt_       = leadPFChargedHadrCandTrackPt;
+    leadPFChHadTrackEta_      = TMath::ACosH(leadPFChargedHadrCandTrackP/leadPFChargedHadrCandTrackPt);
+    leadPFChHadPt_            = leadPFChargedHadrCandPt;
+    leadPFChHadEta_           = TMath::ACosH(leadPFChargedHadrCandP/leadPFChargedHadrCandPt);
+    leadPFCandPt_             = leadPFCandPt;
+    leadPFCandEta_            = TMath::ACosH(leadPFCandP/leadPFCandPt);
     visibleTauMass_           = visibleTauMass;
     hasGsf_                   = hasGsf; 
     signalPFGammaCands_       = signalPFGammaCands; 
