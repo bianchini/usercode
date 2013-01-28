@@ -1874,9 +1874,9 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 
       //bool isTriggMatched = (((*tauXTriggers)[0] && (*tauXTriggers)[4])  ||
       //		     ((*tauXTriggers)[1] && (*tauXTriggers)[5]));
-      //bool isTriggMatched = (((*tauXTriggers)[0] && (*tauXTriggers)[8])  ||
-      //		     ((*tauXTriggers)[1] && (*tauXTriggers)[9]));
-      bool isTriggMatched = (*tauXTriggers)[1] && (*tauXTriggers)[9] ;
+      bool isTriggMatched = (((*tauXTriggers)[0] && (*tauXTriggers)[8])  ||
+      		     ((*tauXTriggers)[1] && (*tauXTriggers)[9]));
+//       bool isTriggMatched = (*tauXTriggers)[1] && (*tauXTriggers)[9] ;
       HLTmatch = isTriggMatched ? 1.0 : 0.0 ;
 
       bool isTriggMatchedQCD = (((*tauXTriggers)[2] && (*tauXTriggers)[6])  || 
@@ -2077,60 +2077,61 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     ZeeWeight = 1;
     if( sample_.find("DYJets")!=string::npos ){
 
-      if(ptL2<tauLowHigh) { // Low pT Tau
-	if(decayMode==0 && leptFakeTau){
-	  ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
-	    0.85 : 
-	    0.94;
-	}
-	else if (decayMode==1 && leptFakeTau){
-	  ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
-	    1.52 : 
-	    0.32;
-	}
-      }
-      else { // High pT Tau
-	if(decayMode==0 && leptFakeTau){
-	  ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
-	    1.02 : 
-	    0.70;
-	  
-	  // shift mass
-	  diTauNSVfitMassCorr_ *= 1.007;
-	  diTauVisMassCorr     *= 1.004;
-
-	  // smear mass
-	  diTauNSVfitMassCorr_ = ran->Gaus( diTauNSVfitMassCorr_ , 3.5 );
-	  diTauVisMassCorr     = ran->Gaus( diTauVisMassCorr     , 1.9 );
-	}
-	else if (decayMode==1 && leptFakeTau){
-	  ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
-	    1.85 : 
-	    0.28;
-
-	  // shift mass
-	  diTauNSVfitMassCorr_ *= 1.002;
-	  diTauVisMassCorr     *= 1.002;
-
-	  // smear mass
-	  diTauNSVfitMassCorr_ = ran->Gaus( diTauNSVfitMassCorr_ , 3.2 );
-	  diTauVisMassCorr     = ran->Gaus( diTauVisMassCorr     , 3.2 );
-	}
-      }
-    }
-//     ZeeWeight = 1;
-//     if( sample_.find("DYJets")!=string::npos ){
-//       if(decayMode==0 && leptFakeTau){
-// 	ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.479 ?
-// 	  0.85 : 
-// 	  0.94;
+//       if(ptL2<tauLowHigh) { // Low pT Tau
+// 	if(decayMode==0 && leptFakeTau){
+// 	  ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
+// 	    0.85 : 
+// 	    0.94;
+// 	}
+// 	else if (decayMode==1 && leptFakeTau){
+// 	  ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
+// 	    1.52 : 
+// 	    0.32;
+// 	}
 //       }
-//       else if (decayMode==1 && leptFakeTau){
-// 	ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.479 ?
-// 	  1.52 : 
-// 	  0.32;
+//       else { // High pT Tau
+// 	if(decayMode==0 && leptFakeTau){
+// 	  ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
+// 	    1.02 : 
+// 	    0.70;
+	  
+// 	  // shift mass
+// 	  diTauNSVfitMassCorr_ *= 1.007;
+// 	  diTauVisMassCorr     *= 1.004;
+
+// 	  // smear mass
+// 	  diTauNSVfitMassCorr_ = ran->Gaus( diTauNSVfitMassCorr_ , 3.5 );
+// 	  diTauVisMassCorr     = ran->Gaus( diTauVisMassCorr     , 1.9 );
+// 	}
+// 	else if (decayMode==1 && leptFakeTau){
+// 	  ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
+// 	    1.85 : 
+// 	    0.28;
+
+// 	  // shift mass
+// 	  diTauNSVfitMassCorr_ *= 1.002;
+// 	  diTauVisMassCorr     *= 1.002;
+
+// 	  // smear mass
+// 	  diTauNSVfitMassCorr_ = ran->Gaus( diTauNSVfitMassCorr_ , 3.2 );
+// 	  diTauVisMassCorr     = ran->Gaus( diTauVisMassCorr     , 3.2 );
+// 	}
 //       }
 //     }
+
+      if(decayMode==0 && leptFakeTau){
+	ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.479 ?
+	  0.85 : 
+	  1.85;
+      }
+      else if (decayMode==1 && leptFakeTau){
+	ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.479 ?
+	  1.64 : 
+	  0.28;
+	diTauNSVfitMass_ *= 1.015;
+	diTauVisMass *= 1.015;
+      }
+    }
 
     ZeeWeightHCP = 1;
     if( sample_.find("DYJets")!=string::npos ){
