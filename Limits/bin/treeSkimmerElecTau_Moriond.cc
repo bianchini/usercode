@@ -2080,13 +2080,13 @@ void fillTrees_ElecTauStream( TChain* currentTree,
       if(ptL2<tauLowHigh) { // Low pT Tau
 	if(decayMode==0 && leptFakeTau){
 	  ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
-	    0.80 : 
-	    0.70;
+	    0.85 : 
+	    0.94;
 	}
 	else if (decayMode==1 && leptFakeTau){
 	  ZeeWeight = TMath::Abs((*diTauLegsP4)[1].Eta())<1.5 ?
-	    1.80 : 
-	    0.28;
+	    1.52 : 
+	    0.32;
 	}
       }
       else { // High pT Tau
