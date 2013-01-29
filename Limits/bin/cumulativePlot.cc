@@ -267,8 +267,8 @@ void produce(int mH                     = 120,
   categoriesLT.push_back("0jet_low");   categoriesIndexLT.push_back("0");
   categoriesLT.push_back("0jet_high");  categoriesIndexLT.push_back("1");
   categoriesLT.push_back("boost_low");  categoriesIndexLT.push_back("2");
-  //categoriesLT.push_back("boost_high"); categoriesIndexLT.push_back("3");
-  //categoriesLT.push_back("vbf");        categoriesIndexLT.push_back("5");
+  categoriesLT.push_back("boost_high"); categoriesIndexLT.push_back("3");
+  categoriesLT.push_back("vbf");        categoriesIndexLT.push_back("5");
 
   categoriesTT.push_back("boost");      categoriesIndexTT.push_back("0");
   categoriesTT.push_back("vbf");        categoriesIndexTT.push_back("1");
