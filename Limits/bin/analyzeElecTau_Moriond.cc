@@ -1115,24 +1115,24 @@ void plotElecTau( Int_t mH_           = 120,
     cout << "USE DY SEPARATE SUB-SAMPLES" << endl;
     cout<<tree<<endl;
     //
-    fBackgroundDYTauTau   = new TFile(pathToFile+"/SplitDY/nTupleDYJ_TauTau_ElecTau.root"  ,"READ");
+    fBackgroundDYTauTau   = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_TauTau_ElecTau.root"  ,"READ");
     cout<<tree<<endl;
-    fBackgroundDYElecToTau  = new TFile(pathToFile+"/SplitDY/nTupleDYJ_EToTau_ElecTau.root" ,"READ");
+    fBackgroundDYElecToTau  = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_EToTau_ElecTau.root" ,"READ");
     cout<<tree<<endl;
-    fBackgroundDYJetToTau = new TFile(pathToFile+"/SplitDY/nTupleDYJ_JetToTau_ElecTau.root","READ");
+    fBackgroundDYJetToTau = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_JetToTau_ElecTau.root","READ");
     // 
     cout<<tree<<endl;
-    backgroundDYTauTau    = (TTree*)(fBackgroundDYTauTau  ->Get(tree));
+    backgroundDYTauTau    = fBackgroundDYTauTau    ? (TTree*)(fBackgroundDYTauTau    -> Get(tree)) : 0 ;
     cout<<tree<<endl;
-    backgroundDYElectoTau   = (TTree*)(fBackgroundDYElecToTau ->Get(tree));
+    backgroundDYElectoTau = fBackgroundDYElecToTau ? (TTree*)(fBackgroundDYElecToTau -> Get(tree)) : 0;
     cout<<tree<<endl;
-    backgroundDYJtoTau    = (TTree*)(fBackgroundDYJetToTau->Get(tree));
+    backgroundDYJtoTau    = fBackgroundDYJetToTau  ? (TTree*)(fBackgroundDYJetToTau  -> Get(tree)) : 0;
     cout<<tree<<endl;
   }
 
-  cout << backgroundDYTauTau->GetEntries()  << " come from DY->tautau"         << endl;
-  cout << backgroundDYElectoTau->GetEntries() << " come from DY->ee, e->tau"  << endl;
-  cout << backgroundDYJtoTau->GetEntries()  << " come from DY->ee, jet->tau" << endl;
+  cout << backgroundDYTauTau->GetEntries()    << " come from DY->tautau"       << endl;
+  cout << backgroundDYElectoTau->GetEntries() << " come from DY->ee, e->tau"   << endl;
+  cout << backgroundDYJtoTau->GetEntries()    << " come from DY->ee, jet->tau" << endl;
 
   TTree *backgroundTTbar     = (TTree*)fBackgroundTTbar->Get(tree);
   TTree *backgroundWJets     = (TTree*)fBackgroundWJets->Get(tree);
