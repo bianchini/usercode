@@ -1034,19 +1034,16 @@ void plotElecTau( Int_t mH_           = 120,
   ///////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////
 
-//   TString pathToFile = "/data_CMS/cms/htautau/HCP12/ntuples/ElecTau/";
-//   TString pathToFile = "/data_CMS/cms/ivo/HTauTauAnalysis/Trees/ElecTauStream_HCP2012/ntuples/NewIter12Dec2012/";
+  //   TString pathToFile = "/data_CMS/cms/htautau/HCP12/ntuples/ElecTau/";
+  //   TString pathToFile = "/data_CMS/cms/ivo/HTauTauAnalysis/Trees/ElecTauStream_HCP2012/ntuples/NewIter12Dec2012/";
+
   TString pathToFile = "/data_CMS/cms/htautau/Moriond/ntuples/EleTau/";
 
   // Open the files
   TFile *fData;
-  //if(DOHCP)          fData = new TFile(pathToFile+"/nTuple_Run2012ABC_Data_ElecTau.root", "READ");
-  //if(DOHCP)          fData = new TFile(pathToFile+"/nTuple_2012ABC_withoutCPRV2.root", "READ");
   if(RUN=="ABC")   fData = new TFile(pathToFile+"/nTuple_Run2012ABC_Data_ElecTau.root", "READ");
-  //else if(RUN=="D")fData = new TFile(pathToFile+"/nTuple_Run2012D_Data_ElecTau.root", "READ");
-  else if(RUN=="D")fData = new TFile(pathToFile+"/nTuple_Run2012D_Data_ElecTau_MatchHLTTauOnly.root", "READ");
-  //else             fData = new TFile(pathToFile+"/nTuple_Run2012ABCD_Data_ElecTau.root", "READ");
-  else             fData = new TFile(pathToFile+"/nTuple_Run2012ABCD_Data_ElecTau_MatchHLTTauOnly.root", "READ");
+  else if(RUN=="D")fData = new TFile(pathToFile+"/nTuple_Run2012D_Data_ElecTau.root", "READ");
+  else             fData = new TFile(pathToFile+"/nTuple_Run2012ABCD_Data_ElecTau.root", "READ");
 
   TFile *fDataEmbedded;
   if(RUN=="ABC")   fDataEmbedded = new TFile(pathToFile+"/nTuple_Run2012ABC_Embedded_ElecTau.root", "READ");
@@ -1118,11 +1115,11 @@ void plotElecTau( Int_t mH_           = 120,
     cout << "USE DY SEPARATE SUB-SAMPLES" << endl;
     cout<<tree<<endl;
     //
-    fBackgroundDYTauTau   = new TFile(pathToFile+"/nTupleDYJ_TauTau_ElecTau.root"  ,"READ");
+    fBackgroundDYTauTau   = new TFile(pathToFile+"/SplitDY/nTupleDYJ_TauTau_ElecTau.root"  ,"READ");
     cout<<tree<<endl;
-    fBackgroundDYElecToTau  = new TFile(pathToFile+"/nTupleDYJ_EToTau_ElecTau.root" ,"READ");
+    fBackgroundDYElecToTau  = new TFile(pathToFile+"/SplitDY/nTupleDYJ_EToTau_ElecTau.root" ,"READ");
     cout<<tree<<endl;
-    fBackgroundDYJetToTau = new TFile(pathToFile+"/nTupleDYJ_JetToTau_ElecTau.root","READ");
+    fBackgroundDYJetToTau = new TFile(pathToFile+"/SplitDY/nTupleDYJ_JetToTau_ElecTau.root","READ");
     // 
     cout<<tree<<endl;
     backgroundDYTauTau    = (TTree*)(fBackgroundDYTauTau  ->Get(tree));
