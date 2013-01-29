@@ -2056,13 +2056,13 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     if(DEBUG) cout << "Third lepton veto" << endl;
     int nVetoLepton = 0;
     for(size_t imu = 0; imu < vetoMuonsP4->size(); imu++){
-      if(deltaR((*diTauLegsP4)[0], (*vetoMuonsP4)[imu]) > 0.3 && 
-	 deltaR((*diTauLegsP4)[1], (*vetoMuonsP4)[imu]) > 0.3 )
-	nVetoLepton++;
+      //if(deltaR((*diTauLegsP4)[0], (*vetoMuonsP4)[imu]) > 0.3 && 
+      // deltaR((*diTauLegsP4)[1], (*vetoMuonsP4)[imu]) > 0.3 )
+      nVetoLepton++;
     }
     for(size_t imu = 0; imu < vetoElectronsP4->size(); imu++){ 
-      if(deltaR((*diTauLegsP4)[0], (*vetoElectronsP4)[imu]) > 0.3 &&  
-         deltaR((*diTauLegsP4)[1], (*vetoElectronsP4)[imu]) > 0.3 ) 
+      if(deltaR((*diTauLegsP4)[0], (*vetoElectronsP4)[imu]) > 0.3 ) //&&  
+	//deltaR((*diTauLegsP4)[1], (*vetoElectronsP4)[imu]) > 0.3 ) 
         nVetoLepton++; 
     }    
     if(DEBUG) cout << "End 3rd lepton veto" << endl;
