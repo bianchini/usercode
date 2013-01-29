@@ -116,7 +116,7 @@ double myIntegrator(double sqrtS, double pt2){
   integrator_->SetRelTolerance(1e-06);
   integrator_->SetFunction(*myIntegrand);
 
-  double xMin[2] = {0.001, 0.001};
+  double xMin[2] = {0.0001, 0.0001};
   double xMax[2] = {0.99, 0.99};
   double integral  = integrator_->Integral(xMin,xMax);
 
@@ -157,7 +157,7 @@ void plot(){
   float x[30] ; float y[30] ;
 
   for(unsigned int k = 0 ; k < 30 ; k++){
-    x[k] = 0.020 + 0.010 * k;
+    x[k] = 0.020 + 0.030 * k;
     y[k] = myIntegrator( 8, x[k]*x[k] );
     x[k] *= 1000;
   }
