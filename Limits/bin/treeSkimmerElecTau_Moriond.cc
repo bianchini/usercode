@@ -1407,7 +1407,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   for (int n = 0; n <nEntries  ; n++) {
 
     currentTree->GetEntry(n);
-    if(n%1000==0) cout << n << endl;
+    if(n%1000==0) cout << n <<"/"<<nEntries<< endl;
     
     // APPLY JSON SELECTION //
     isGoodRun=true;
@@ -2184,8 +2184,9 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 
 
     int pairIndex = -1;
-    bool passQualityCuts = tightestHPSMVAWP>=0 && ptL1>24 && ptL2>20 && TMath::Abs(scEtaL1)<2.1 && combRelIsoLeg1DBetav2<0.1 && HLTmatch
-      && ((mvaPOGNonTrig>0.925 && TMath::Abs(scEtaL1)<0.8) || (mvaPOGNonTrig>0.975 && TMath::Abs(scEtaL1)>0.8 && TMath::Abs(scEtaL1)<1.479) ||  (mvaPOGNonTrig>0.985 &&  TMath::Abs(scEtaL1)>1.479) );
+    bool passQualityCuts = tightestHPSMVAWP>=0 && ptL1>24 && ptL2>20 && TMath::Abs(scEtaL1)<2.1 && combRelIsoLeg1DBetav2<0.1 && HLTmatch && (tightestAntiEMVAWP == 3 || tightestAntiEMVAWP > 4) && tightestAntiECutWP > 1 
+      && ((mvaPOGNonTrig>0.925 && TMath::Abs(scEtaL1)<0.8) || (mvaPOGNonTrig>0.975 && TMath::Abs(scEtaL1)>0.8 && TMath::Abs(scEtaL1)<1.479) ||  (mvaPOGNonTrig>0.985 &&  TMath::Abs(scEtaL1)>1.479) ); 
+
     if( !(run==lastRun && lumi==lastLumi && event==lastEvent) ){
 
       lastEvent = event;
