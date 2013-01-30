@@ -21,6 +21,76 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
+    name     = cms.string('DY1JetsToLL_M-50_TuneZ2Star_8TeV-madgraph'),
+    nickName = cms.string('DYJets1'),
+    color    = cms.int32(18),
+    xSec     = cms.double(3503.71*3)
+    ),
+
+     cms.PSet(
+    name     = cms.string('DY2JetsToLL_M-50_TuneZ2Star_8TeV-madgraph'),
+    nickName = cms.string('DYJets2'),
+    color    = cms.int32(18),
+    xSec     = cms.double(3503.71*3)
+    ),
+
+     cms.PSet(
+    name     = cms.string('DY3JetsToLL_M-50_TuneZ2Star_8TeV-madgraph'),
+    nickName = cms.string('DYJets3'),
+    color    = cms.int32(18),
+    xSec     = cms.double(3503.71*3)
+    ),
+
+     cms.PSet(
+    name     = cms.string('DY4JetsToLL_M-50_TuneZ2Star_8TeV-madgraph'),
+    nickName = cms.string('DYJets4'),
+    color    = cms.int32(18),
+    xSec     = cms.double(3503.71*3)
+    ),
+
+    cms.PSet(
+    name     = cms.string('DYJetsToLL_HT-200To400_TuneZ2Star_8TeV-madgraph'),
+    nickName = cms.string('DYJetsHT1'),
+    color    = cms.int32(18),
+    xSec     = cms.double(3503.71*3)
+    ),
+
+     cms.PSet(
+    name     = cms.string('DYJetsToLL_HT-400ToInf_TuneZ2Star_8TeV-madgraph'),
+    nickName = cms.string('DYJetsHT2'),
+    color    = cms.int32(18),
+    xSec     = cms.double(3503.71*3)
+    ),
+
+    #cms.PSet(
+    #name     = cms.string('DYJetsToLL_PtZ-180_TuneZ2star_8TeV-madgraph'),
+    #nickName = cms.string('DYJetsPt4'),
+    #color    = cms.int32(18),
+    #xSec     = cms.double(3503.71*3)
+    #),
+    
+    cms.PSet(
+    name     = cms.string('DYJetsToLL_PtZ-100_TuneZ2star_8TeV-madgraph'),
+    nickName = cms.string('DYJetsPt3'),
+    color    = cms.int32(18),
+    xSec     = cms.double(3503.71*3)
+    ),
+    
+    cms.PSet(
+    name     = cms.string('DYJetsToLL_PtZ-70To100_TuneZ2star_8TeV-madgraph-tarball'),
+    nickName = cms.string('DYJetsPt2'),
+    color    = cms.int32(18),
+    xSec     = cms.double(3503.71*3)
+    ),
+
+    cms.PSet(
+    name     = cms.string('DYJetsToLL_PtZ-50To70_TuneZ2star_8TeV-madgraph-tarball'),
+    nickName = cms.string('DYJetsPt1'),
+    color    = cms.int32(18),
+    xSec     = cms.double(3503.71*3)
+    ),
+
+    cms.PSet(
     name     = cms.string('TTJets_Merged'),
     nickName = cms.string('TTJets'),
     color    = cms.int32(5),

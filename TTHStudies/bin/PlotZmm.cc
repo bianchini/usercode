@@ -39,7 +39,7 @@
 
 #include "PhysicsTools/FWLite/interface/TFileService.h"
 
-#define VERBOSE 0
+#define VERBOSE 1
 
 using namespace std;
 
@@ -247,8 +247,7 @@ int main(int argc, const char* argv[])
     for(  std::map<string,TH1F*>::iterator it = mapHist.begin(); it!= mapHist.end() ; it++){
       if( (it->first).find("Data")==string::npos  ){
 	if( (it->first).find("ZH")==string::npos ||
-	    ((it->first).find("ZH")!=string::npos && 
-	     (it->first).find("125")!=string::npos )  ){
+	    ((it->first).find("ZH")!=string::npos && (it->first).find("125")!=string::npos )  ){
 	  aStack->Add((it->second));
 
 	  bool isSingleTop = ((it->first).find("Tt")!=string::npos || (it->first).find("TtW")!=string::npos  || (it->first).find("Ts")!=string::npos ||
@@ -274,10 +273,13 @@ int main(int argc, const char* argv[])
     aStack->Draw("HISTSAME");
     mapHist["DataZmm"]->Draw("PSAME");
     leg->Draw();
-    c1->SaveAs(("plots/"+histoName+".png").c_str());
-    c1->SaveAs(("plots/"+histoName+".root").c_str());
+    c1->SaveAs(("Plots/"+histoName+".png").c_str());
+    c1->SaveAs(("Plots/"+histoName+".root").c_str());
    
-    ClearAllHisto(mapHist);
+
+
+    /// clear
+    ClearAllHisto(mapHist); delete c1; delete leg;
 
   }
 
