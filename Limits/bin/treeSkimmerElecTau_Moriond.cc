@@ -81,6 +81,14 @@
 using namespace ROOT::Math;
 using namespace std;
 
+typedef map< float , int > MAPDITAU_etaL2;
+typedef map< float , MAPDITAU_etaL2 > MAPDITAU_etaL1;
+typedef map< float , MAPDITAU_etaL1 > MAPDITAU_ptL2;
+typedef map< float , MAPDITAU_ptL2 > MAPDITAU_ptL1;
+typedef map< int , MAPDITAU_ptL1 > MAPDITAU_event;
+typedef map< int , MAPDITAU_event > MAPDITAU_lumi;
+typedef map< int , MAPDITAU_lumi > MAPDITAU_run;
+
 typedef std::vector<std::string> vstring;
 typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LV;
 edm::LumiReWeighting LumiWeights_("/data_CMS/cms/htautau/Moriond/tools/MC_Summer12_PU_S10-600bins.root","/data_CMS/cms/htautau/Moriond/tools/Data_Pileup_2012_Moriond-600bins.root","pileup","pileup");
@@ -353,6 +361,44 @@ int getJetIDMVALoose(double pt, double eta, double rawMVA)
   return passId;
 }
 
+bool checkEventIsDuplicated(MAPDITAU_run &mapDiTau, int run, int lumi, int event, float ptL1, float ptL2, float etaL1, float etaL2)
+{
+  
+  MAPDITAU_run::const_iterator iter_run = mapDiTau.find(run) ;
+
+  if( iter_run != mapDiTau.end() ) {
+    MAPDITAU_lumi::const_iterator iter_lumi = iter_run->second.find(lumi) ;
+    
+    if( iter_lumi != iter_run->second.end() ) {
+      MAPDITAU_event::const_iterator iter_event = iter_lumi->second.find(event) ;
+      
+      if( iter_event != iter_lumi->second.end() ) {
+	MAPDITAU_ptL1::const_iterator iter_ptL1 = iter_event->second.find(ptL1) ;
+	
+	if( iter_ptL1 != iter_event->second.end() ) {
+	  MAPDITAU_ptL2::const_iterator iter_ptL2 = iter_ptL1->second.find(ptL2) ;
+	  
+	  if( iter_ptL2 != iter_ptL1->second.end() ) {
+	    MAPDITAU_etaL1::const_iterator iter_etaL1 = iter_ptL2->second.find(etaL1) ;
+	    
+	    if( iter_etaL1 != iter_ptL2->second.end() ) {
+	      MAPDITAU_etaL2::const_iterator iter_etaL2 = iter_etaL1->second.find(etaL2) ;
+
+	      if( iter_etaL2 != iter_etaL1->second.end() ) {
+		return true;
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
+
+  mapDiTau[run][lumi][event][ptL1][ptL2][etaL1][etaL2] = 1;
+
+  return false;
+}
+
 void fillTrees_ElecTauStream( TChain* currentTree,
 			      TTree* outTreePtOrd,
 			      double nEventsRead =0.,
@@ -591,6 +637,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 
   // event-related variables
   float numPV_ , sampleWeight, puWeight, puWeightHCP, puWeightD, puWeight2, puWeight3D, embeddingWeight_,HqTWeight,ZeeWeight,ZeeWeightHCP, weightHepNup;
+  float nHits;
   int numOfLooseIsoDiTaus_;
   int nPUVertices_;
 
@@ -650,6 +697,8 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   outTreePtOrd->Branch("dPhiHjet", &dPhiHjet ,"dPhiHjet/F");
   outTreePtOrd->Branch("c1",       &c1 , "c1/F");
   outTreePtOrd->Branch("c2",       &c2 , "c2/F");
+
+  outTreePtOrd->Branch("nHits",       &nHits, "nHits/F");
 
   outTreePtOrd->Branch("ptB1",  &ptB1, "ptB1/F");
   outTreePtOrd->Branch("etaB1", &etaB1,"etaB1/F");
@@ -997,7 +1046,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   //electron specific
   currentTree->SetBranchStatus("nBrehm"                ,0);
   currentTree->SetBranchStatus("likelihood"            ,0);
-  currentTree->SetBranchStatus("nHits"                 ,0);
+  currentTree->SetBranchStatus("nHits"                 ,1);
   currentTree->SetBranchStatus("sihih"                 ,1);
   currentTree->SetBranchStatus("dPhi"                  ,1);
   currentTree->SetBranchStatus("dEta"                  ,1);
@@ -1231,6 +1280,8 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   currentTree->SetBranchAddress("dxy2",                 &dxy2);
   currentTree->SetBranchAddress("scEta1",               &scEta1);
   
+  currentTree->SetBranchAddress("nHits", &nHits);
+
   currentTree->SetBranchAddress("sihih",                &sihih);
   currentTree->SetBranchAddress("dEta",                 &dEta);
   currentTree->SetBranchAddress("dPhi",                 &dPhi);
@@ -1348,13 +1399,10 @@ void fillTrees_ElecTauStream( TChain* currentTree,
   for(int iJ=0 ; iJ<nJson ; iJ++)
     jsonMap[iJ] = readJSONFile(jsonFile[iJ]);
   bool isGoodRun=false;
-  bool isDoubleCount=false;
+  bool isDuplicated=false;
   //////////////////////////
-  map < vector<double> , vector<double> > mapRunsEvts;
-  map < vector<double> , vector<double> >::iterator mapIter;
-  pair<int,int> runEvt;
-//   vector<double> DiTauID;
-//   vector<double> ID;
+
+  MAPDITAU_run mapDiTau;
 
   for (int n = 0; n <nEntries  ; n++) {
 
@@ -1368,44 +1416,16 @@ void fillTrees_ElecTauStream( TChain* currentTree,
       isGoodRun = AcceptEventByRunAndLumiSection(run, lumi, jsonMap[iJson_]);
     
     if(!isGoodRun) continue;
-    /////////////////////////
-    
-//     isDoubleCount = false;
-//     DiTauID.push_back(run);
-//     DiTauID.push_back(lumi);
-//     DiTauID.push_back(event);
-// //     DiTauID.push_back((*diTauLegsP4)[0].Pt());
-// //     DiTauID.push_back((*diTauLegsP4)[0].Eta());
-// //     DiTauID.push_back((*diTauLegsP4)[1].Pt());
-// //     DiTauID.push_back((*diTauLegsP4)[1].Eta());
-    
-//     runEvt = make_pair(run,event);
-//     mapIter = mapRunsEvts.find( DiTauID );
-//     ID.clear();
 
-//     if( mapIter==mapRunsEvts.end() ){
-//       ID.push_back((*diTauLegsP4)[0].Pt());
-//       ID.push_back((*diTauLegsP4)[0].Eta());
-//       ID.push_back((*diTauLegsP4)[1].Pt());
-//       ID.push_back((*diTauLegsP4)[1].Eta());
-//       mapRunsEvts[ DiTauID ] = ID;
-//     }
-//     else {
-//       ID.push_back((*diTauLegsP4)[0].Pt());
-//       ID.push_back((*diTauLegsP4)[0].Eta());
-//       ID.push_back((*diTauLegsP4)[1].Pt());
-//       ID.push_back((*diTauLegsP4)[1].Eta());
-// //       cout<<"Event double counted !! Run : "<<run<<" Event "<<event<<" LumiSection "<<lumi<<endl;
-// //       cout<<" current  ptL1     = "<<(*diTauLegsP4)[0].Pt()<<" previous  ptL1     = "<<mapRunsEvts[ DiTauID ][0]<<endl;
-// //       cout<<" current  etaL1    = "<<(*diTauLegsP4)[0].Eta()<<" previous  etaL1     = "<<mapRunsEvts[ DiTauID ][1]<<endl;
-// //       cout<<" current  ptL2     = "<<(*diTauLegsP4)[1].Pt()<<" previous  ptL2     = "<<mapRunsEvts[ DiTauID ][2]<<endl;
-// //       cout<<" current  etaL2    = "<<(*diTauLegsP4)[1].Eta()<<" previous  etaL2     = "<<mapRunsEvts[ DiTauID ][3]<<endl;
-//       mapRunsEvts[ DiTauID ] = ID;
-// //       isDoubleCount = true;
-//     }
-    
-  
-//     if (!isDoubleCount) continue;
+    /////////////////////////    
+    ptL1     = (*diTauLegsP4)[0].Pt();
+    ptL2     = (*diTauLegsP4)[1].Pt();
+    etaL1    = (*diTauLegsP4)[0].Eta();
+    etaL2    = (*diTauLegsP4)[1].Eta();
+    //
+    isDuplicated = checkEventIsDuplicated(mapDiTau, run, lumi, event, ptL1, ptL2, etaL1, etaL2);
+    if(isDuplicated) continue;
+    ///////////////////////
 
     // initialize variables filled only in the two jet case
     pt1=-99;pt2=-99;eta1=-99,eta2=-99;Deta=-99;Dphi=-99;Mjj=-99;phi1=-99;phi2=-99;
@@ -1587,10 +1607,10 @@ void fillTrees_ElecTauStream( TChain* currentTree,
 
     diTauMinMass  = mTauTauMin;
   
-    ptL1     = (*diTauLegsP4)[0].Pt();
-    ptL2     = (*diTauLegsP4)[1].Pt();
-    etaL1    = (*diTauLegsP4)[0].Eta();
-    etaL2    = (*diTauLegsP4)[1].Eta();
+//     ptL1     = (*diTauLegsP4)[0].Pt();
+//     ptL2     = (*diTauLegsP4)[1].Pt();
+//     etaL1    = (*diTauLegsP4)[0].Eta();
+//     etaL2    = (*diTauLegsP4)[1].Eta();
     phiL1    = (*diTauLegsP4)[0].Phi();
     phiL2    = (*diTauLegsP4)[1].Phi();
     dPhiL1L2 =  abs((*diTauLegsP4)[0].Phi()-(*diTauLegsP4)[1].Phi()) > TMath::Pi() ? 
