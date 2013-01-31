@@ -29,7 +29,7 @@
 
 #include "HiggsAnalysis/CombinedLimit/interface/TH1Keys.h"
 
-#define VERBOSE          false
+#define VERBOSE          true
 #define SAVE             true
 #define addVH            true
 #define EMBEDDEDSAMPLES  true
@@ -40,7 +40,7 @@
 //#define DO_D_ONLY        false
 
 #define USESSBKG         false
-#define scaleByBinWidth  true
+#define scaleByBinWidth  false
 #define DOSPLIT          false
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -816,8 +816,8 @@ void plotElecTau( Int_t mH_           = 120,
 		  Float_t maxY_       = 1.2,
 		  TString RUN         = "ABCD",
 		  //TString location  = "/home/llr/cms/veelken/ArunAnalysis/CMSSW_5_3_4_Sep12/src/Bianchi/Limits/bin/results/"
-		  TString location    = "/home/llr/cms/ndaci/WorkArea/HTauTau/Analysis/CMSSW_534_TopUp/src/Bianchi/Limits/bin/results/"
-		  //TString location    = "/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/"
+		  //TString location    = "/home/llr/cms/ndaci/WorkArea/HTauTau/Analysis/CMSSW_534_TopUp/src/Bianchi/Limits/bin/results/"
+		  TString location    = "/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/"
 		  ) 
 {   
 
@@ -1114,13 +1114,11 @@ void plotElecTau( Int_t mH_           = 120,
   else {
     cout << "USE DY SEPARATE SUB-SAMPLES" << endl;
     cout<<tree<<endl;
-    //
-    fBackgroundDYTauTau    = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_TauTau_ElecTau.root"  ,"READ");
+    fBackgroundDYTauTau   = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_TauTau_ElecTau.root"  ,"READ");
     cout<<tree<<endl;
     fBackgroundDYElecToTau = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_EToTau_ElecTau.root"  ,"READ");
     cout<<tree<<endl;
     fBackgroundDYJetToTau  = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_JetToTau_ElecTau.root","READ");
-    // 
     cout<<tree<<endl;
     backgroundDYTauTau    = fBackgroundDYTauTau    ? (TTree*)(fBackgroundDYTauTau    -> Get(tree)) : 0 ;
     cout<<tree<<endl;
