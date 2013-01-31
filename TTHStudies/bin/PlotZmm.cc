@@ -29,6 +29,7 @@
 #include "TGraph.h"
 #include "TMultiGraph.h"
 #include "Bianchi/TTHStudies/interface/Samples.h"
+#include "Bianchi/TTHStudies/interface/Test.h"
 
 #include "PhysicsTools/FWLite/interface/TFileService.h"
 #include "FWCore/ParameterSet/interface/ProcessDesc.h"
@@ -140,6 +141,7 @@ int main(int argc, const char* argv[])
  
   gSystem->Load("libFWCoreFWLite");
   gSystem->Load("libDataFormatsFWLite");
+  gSystem->Load("../interface/Test_cxx.so");
   AutoLibraryLoader::enable();
 
   PythonProcessDesc builder(argv[1]);
@@ -283,7 +285,7 @@ int main(int argc, const char* argv[])
    
 
 
-    /// clear
+    ////  clear ////
     ClearAllHisto(mapHist); delete c1; delete leg;
 
   }

@@ -261,6 +261,7 @@ process.fwliteInput = cms.PSet(
     xHigh     = cms.double(250),
     nBins     = cms.int32(120),
     variable  = cms.string("vLepton_pt[0]"),
+    #variable  = cms.string("Test::maxPt5jet(hJet_pt[0], hJet_pt[1], aJet_pt[0], aJet_pt[1], aJet_pt[2])"),
     xTitle    = cms.string("p_{T} lead #mu"),
     yTitle    = cms.string("Events"),
     histoName = cms.string("Zmm_leadMuPt"),
@@ -268,7 +269,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(10),
     xHigh     = cms.double(250),
     nBins     = cms.int32(120),
@@ -280,7 +281,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(30),
     nBins     = cms.int32(30),
@@ -292,7 +293,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(200),
     nBins     = cms.int32(50),
@@ -304,7 +305,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(60),
     xHigh     = cms.double(200),
     nBins     = cms.int32(70),
@@ -316,7 +317,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-3),
     xHigh     = cms.double(3),
     nBins     = cms.int32(60),
@@ -329,7 +330,7 @@ process.fwliteInput = cms.PSet(
 
     
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-3),
     xHigh     = cms.double(3),
     nBins     = cms.int32(60),
@@ -341,7 +342,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(20),
     xHigh     = cms.double(420),
     nBins     = cms.int32(100),
@@ -353,7 +354,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(20),
     xHigh     = cms.double(420),
     nBins     = cms.int32(100),
@@ -365,7 +366,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(10),
     nBins     = cms.int32(10),
@@ -377,7 +378,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(10),
     nBins     = cms.int32(10),
