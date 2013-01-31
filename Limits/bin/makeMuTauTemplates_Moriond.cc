@@ -14,7 +14,7 @@
 #include <string>
 
 
-#define RESCALETO1PB false
+#define RESCALETO1PB true
 #define DOSUSY false
 
 
@@ -27,34 +27,34 @@ float higgsXsection(int mH = 125, string process = "ggH"){
   float xsection = 1.0;
 
   if(process.find("ggH")!=string::npos){
-    if(mH == 110) xsection = 8.02e-02*19.84;
-    if(mH == 115) xsection = 7.65e-02*18.13;
-    if(mH == 120) xsection = 7.10e-02*16.63;
-    if(mH == 125) xsection = 6.37e-02*15.31;
-    if(mH == 130) xsection = 5.48e-02*14.12;
-    if(mH == 135) xsection = 4.52e-02*13.08;
-    if(mH == 140) xsection = 3.54e-02*12.13;
-    if(mH == 145) xsection = 2.61e-02*11.27;
+    if(mH == 110) xsection = 7.95e-02*25.04;
+    if(mH == 115) xsection = 7.58e-02*22.96;
+    if(mH == 120) xsection = 7.04e-02*21.13;
+    if(mH == 125) xsection = 6.32e-02*19.52;
+    if(mH == 130) xsection = 5.45e-02*18.07;
+    if(mH == 135) xsection = 4.49e-02*16.79;
+    if(mH == 140) xsection = 3.52e-02*15.63;
+    if(mH == 145) xsection = 2.61e-02*14.59;
   }
   if(process.find("qqH")!=string::npos){
-    if(mH == 110) xsection = 8.02e-02*1.398;
-    if(mH == 115) xsection = 7.65e-02*1.332;
-    if(mH == 120) xsection = 7.10e-02*1.269;
-    if(mH == 125) xsection = 6.37e-02*1.211;
-    if(mH == 130) xsection = 5.48e-02*1.154;
-    if(mH == 135) xsection = 4.52e-02*1.100;
-    if(mH == 140) xsection = 3.54e-02*1.052;
-    if(mH == 145) xsection = 2.61e-02*1.004;
+    if(mH == 110) xsection = 7.95e-02*1.809;
+    if(mH == 115) xsection = 7.58e-02*1.729;
+    if(mH == 120) xsection = 7.04e-02*1.649;
+    if(mH == 125) xsection = 6.32e-02*1.578;
+    if(mH == 130) xsection = 5.45e-02*1.511;
+    if(mH == 135) xsection = 4.49e-02*1.448;
+    if(mH == 140) xsection = 3.52e-02*1.389;
+    if(mH == 145) xsection = 2.61e-02*1.333;
   }
   if(process.find("VH")!=string::npos){
-    if(mH == 110) xsection = 8.02e-02*(0.8754+0.4721+0.1257  );
-    if(mH == 115) xsection = 7.65e-02*(0.7546+0.4107+0.1106  );
-    if(mH == 120) xsection = 7.10e-02*(0.6561+0.3598+0.09756 );
-    if(mH == 125) xsection = 6.37e-02*(0.5729+0.3158+0.08634 );
-    if(mH == 130) xsection = 5.48e-02*(0.4942+0.2778+0.07658 );
-    if(mH == 135) xsection = 4.52e-02*(0.4390+0.2453+0.06810 );
-    if(mH == 140) xsection = 3.54e-02*(0.3857+0.2172+0.06072 );
-    if(mH == 145) xsection = 2.61e-02*(0.3406+0.1930+0.05435 );
+    if(mH == 110) xsection = 7.95e-02*(1.060+0.5869+0.1887  );
+    if(mH == 115) xsection = 7.58e-02*(0.9165+0.5117+0.1663  );
+    if(mH == 120) xsection = 7.04e-02*(0.7966+0.4483+0.1470 );
+    if(mH == 125) xsection = 6.32e-02*(0.6966+0.3943+0.1302 );
+    if(mH == 130) xsection = 5.45e-02*(0.6095+0.3473+0.1157 );
+    if(mH == 135) xsection = 4.49e-02*(0.5351+0.3074+0.1031 );
+    if(mH == 140) xsection = 3.52e-02*(0.4713+0.2728+0.09207 );
+    if(mH == 145) xsection = 2.61e-02*(0.4164+0.2424+0.08246 );
   }
 
   return xsection;
@@ -458,15 +458,38 @@ void produce(
     }
     else{
 
+      // ZTT: embedded sample 
+      TH1F* hDataEmb = ((TH1F*)fin->Get("hDataEmb")); 
+      hDataEmb->SetName(Form("ZTT%s",suffix.c_str()));  
+      hDataEmb->Write(Form("ZTT%s",suffix.c_str())); 
+ 
+      // ----- QCD ------ 
+      TH1F *hQCD = ((TH1F*)fin->Get("hQCD")); 
+      hQCD->SetName(Form("QCD%s"    ,suffix.c_str())); 
+      hQCD->Write(Form("QCD%s"    ,suffix.c_str())); 
+      
+      // ----- W ------ 
+      TH1F* hW = ((TH1F*)fin->Get("hW")); 
+      hW->SetName(Form("W%s"           ,suffix.c_str())); 
+      hW->Write(Form("W%s"           ,suffix.c_str())); 
 
-      ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s",suffix.c_str()));
-      ((TH1F*)fin->Get("hQCD"))->Write(Form("QCD%s"    ,suffix.c_str()));
-      ((TH1F*)fin->Get("hW"))->Write(Form("W%s"           ,suffix.c_str()));
-      ((TH1F*)fin->Get("hZmj"))->Write(Form("ZJ%s"        ,suffix.c_str()));
-      ((TH1F*)fin->Get("hZmm"))->Write(Form("ZL%s"        ,suffix.c_str()));
-      ((TH1F*)fin->Get("hZfakes"))->Write(Form("ZLL%s"        ,suffix.c_str()));
-      ((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
-      ((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
+      // ----- Fakes ------ 
+      TH1F* hZmj = ((TH1F*)fin->Get("hZmj")); 
+      hZmj->SetName(Form("ZJ%s"        ,suffix.c_str())); 
+      hZmj->Write(Form("ZJ%s"        ,suffix.c_str())); 
+      TH1F* hZmm = ((TH1F*)fin->Get("hZmm")); 
+      hZmm->SetName(Form("ZL%s"        ,suffix.c_str())); 
+      hZmm->Write(Form("ZL%s"        ,suffix.c_str())); 
+      TH1F* hZfakes = ((TH1F*)fin->Get("hZfakes")); 
+      hZfakes->SetName(Form("ZLL%s"    ,suffix.c_str()));  
+      hZfakes->Write(Form("ZLL%s"    ,suffix.c_str())); 
+       
+      TH1F* hTTb = ((TH1F*)fin->Get("hTTb")); 
+      hTTb->SetName(Form("TT%s"        ,suffix.c_str())); 
+      hTTb->Write(Form("TT%s"        ,suffix.c_str())); 
+      TH1F* hVV = ((TH1F*)fin->Get("hVV")); 
+      hVV->SetName(Form("VV%s"         ,suffix.c_str())); 
+      hVV->Write(Form("VV%s"         ,suffix.c_str())); 
     }
 
 
@@ -820,23 +843,49 @@ void produce(
 	((TH1F*)fin->Get("hVVKeys"))->Write(Form("VV%s"         ,suffix.c_str()));
     }
     else{
-      if(dir->FindObjectAny(Form("ZTT%s"       ,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s"       ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("QCD%s"       ,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hAntiIso"))->Write(Form("QCD%s"       ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("W%s"       ,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hW"))->Write(Form("W%s"           ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("ZJ%s"       ,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hZmj"))->Write(Form("ZJ%s"        ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("ZL%s"       ,suffix.c_str()))==0 ) 
-	((TH1F*)fin->Get("hZmm"))->Write(Form("ZL%s"        ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("ZLL%s"       ,suffix.c_str()))==0 ) 
-	((TH1F*)fin->Get("hZfakes"))->Write(Form("ZLL%s"        ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("TT%s"       ,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
 
+      if(dir->FindObjectAny(Form("ZTT%s"       ,suffix.c_str()))==0 ){ 
+        TH1F* hDataEmb = ((TH1F*)fin->Get("hDataEmb")); 
+        hDataEmb->SetName(Form("ZTT%s",suffix.c_str()));  
+        hDataEmb->Write(Form("ZTT%s",suffix.c_str())); 
+      } 
+      if(dir->FindObjectAny(Form("QCD%s"       ,suffix.c_str()))==0 ){ 
+	TH1F *hQCD = ((TH1F*)fin->Get("hQCD")); 
+	hQCD->SetName(Form("QCD%s"    ,suffix.c_str())); 
+	hQCD->Write(Form("QCD%s"    ,suffix.c_str())); 
+      } 
+      if(dir->FindObjectAny(Form("W%s"       ,suffix.c_str()))==0 ){ 
+        TH1F* hW = ((TH1F*)fin->Get("hW")); 
+        hW->SetName(Form("W%s"           ,suffix.c_str())); 
+        hW->Write(Form("W%s"           ,suffix.c_str())); 
+      } 
+      if(dir->FindObjectAny(Form("ZJ%s"       ,suffix.c_str()))==0 ){ 
+        TH1F* hZmj = ((TH1F*)fin->Get("hZmj")); 
+        hZmj->SetName(Form("ZJ%s"        ,suffix.c_str())); 
+        hZmj->Write(Form("ZJ%s"        ,suffix.c_str())); 
+      } 
+      if(dir->FindObjectAny(Form("ZL%s"       ,suffix.c_str()))==0 ) { 
+        TH1F* hZmm = ((TH1F*)fin->Get("hZmm")); 
+        hZmm->SetName(Form("ZL%s"        ,suffix.c_str())); 
+        hZmm->Write(Form("ZL%s"        ,suffix.c_str())); 
+      } 
+      if(dir->FindObjectAny(Form("ZLL%s"       ,suffix.c_str()))==0 ) { 
+        TH1F* hZfakes = ((TH1F*)fin->Get("hZfakes")); 
+        hZfakes->SetName(Form("ZLL%s"    ,suffix.c_str()));  
+        hZfakes->Write(Form("ZLL%s"    ,suffix.c_str())); 
+      } 
+      if(dir->FindObjectAny(Form("TT%s"       ,suffix.c_str()))==0 ){ 
+        TH1F* hTTb = ((TH1F*)fin->Get("hTTb")); 
+        hTTb->SetName(Form("TT%s"        ,suffix.c_str())); 
+        hTTb->Write(Form("TT%s"        ,suffix.c_str())); 
+      } 
+      if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 ){ 
+        TH1F* hVV = ((TH1F*)fin->Get("hVV")); 
+        hVV->SetName(Form("VV%s"         ,suffix.c_str())); 
+        hVV->Write(Form("VV%s"         ,suffix.c_str())); 
+      } 
+
+      
     }
 
 
@@ -1173,13 +1222,13 @@ void produce(
 
 
 
-void produceAll(  TString outputDir = "MoriondNewRecoil2012DV3" ){
+void produceAll(  TString outputDir = "MoriondNewRecoilV4" ){
 
   vector<string> variables;
   vector<int> mH;
 
-  //variables.push_back("diTauVisMass");
-  variables.push_back("diTauNSVfitMass");
+  variables.push_back("diTauVisMass");
+  //variables.push_back("diTauNSVfitMass");
   //variables.push_back("diTauSVFitMassCal0");
   //variables.push_back("diTauSVFitMassCal1");
   //variables.push_back("diTauSVFitMassCal2");
@@ -1270,7 +1319,14 @@ void produceAll(  TString outputDir = "MoriondNewRecoil2012DV3" ){
 //       produce(mH[j],variables[i], "JetUp"   , "vh", outputDir);
 //       produce(mH[j],variables[i], "JetDown" , "vh", outputDir);
 
-     
+       produce(mH[j],variables[i], ""        , "inclusive", outputDir); 
+       produce(mH[j],variables[i], "TauUp"   , "inclusive", outputDir); 
+       produce(mH[j],variables[i], "TauDown" , "inclusive", outputDir); 
+       produce(mH[j],variables[i], "JetUp"   , "inclusive", outputDir); 
+       produce(mH[j],variables[i], "JetDown" , "inclusive", outputDir); 
+       //produce(mH[j],variables[i], "FakeUp"  , "inclusive", outputDir); 
+       //produce(mH[j],variables[i], "FakeDown", "inclusive", outputDir); 
+       
   
       //produce(mH[j],variables[i], ""        , "novbf", outputDir);
       //produce(mH[j],variables[i], "TauUp"   , "novbf", outputDir);
