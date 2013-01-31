@@ -1159,7 +1159,7 @@ void plotElecTau( Int_t mH_           = 120,
 
   ///// LEPT PT ///////
   TCut lpt("ptL1>24 && TMath::Abs(etaL1)<2.1");
-  TCut lID("((TMath::Abs(scEtaL1)<0.80 && mvaPOGNonTrig>0.925) || (TMath::Abs(scEtaL1)<1.479 && TMath::Abs(scEtaL1)>0.80 && mvaPOGNonTrig>0.975) || (TMath::Abs(scEtaL1)>1.479 && mvaPOGNonTrig>0.985))");
+  TCut lID("((TMath::Abs(scEtaL1)<0.80 && mvaPOGNonTrig>0.925) || (TMath::Abs(scEtaL1)<1.479 && TMath::Abs(scEtaL1)>0.80 && mvaPOGNonTrig>0.975) || (TMath::Abs(scEtaL1)>1.479 && mvaPOGNonTrig>0.985)) && nHits<0.5");
   lpt = lpt && lID;
   TCut tpt("ptL2>20 && TMath::Abs(etaL2)<2.3");
 
