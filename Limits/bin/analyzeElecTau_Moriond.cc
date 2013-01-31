@@ -1691,18 +1691,25 @@ void plotElecTau( Int_t mH_           = 120,
 	}
 	else if((it->first).find("DYElectoTau")!=string::npos){
 	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){  
+
+	    // Extract shape from MC (h1)
             float NormDYElectoTau = 0.;
-            TCut sbinVBFLoose = sbinInclusive && vbfLoose;  
-	    drawHistogramMC(RUN, currentTree, variable, NormDYElectoTau, Error,Lumi*lumiCorrFactor*ElectoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., hCleaner, sbinVBFLoose, 1);
-            NormDYElectoTau = 0.; 
+            TCut sbinVBFLoose = sbinInclusive && twoJets;  
+	    drawHistogramMC(RUN, currentTree, variable, NormDYElectoTau, Error,Lumi*lumiCorrFactor*ElectoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., h1, sbinVBFLoose, 1);
 
-	    drawHistogramMC(RUN, currentTree, variable, NormDYElectoTau, Error,Lumi*lumiCorrFactor*ElectoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., h1, sbin, 1); // TO BE CHANGED : 
-	    // "Take MC yield after requiring two jets, and apply efficiency from the embedded for twojets ->  full vbf"
+	    // Compute efficiency of sbin wrt sbinVBFLoose in the embedded sample
+            float NormDYElectoTauEmbdLoose = 0.; 
+	    drawHistogramEmbed(RUN, dataEmbedded, variable, NormDYElectoTauEmbdLoose,  Error, 1.0 , hCleaner,  sbinVBFLoose  ,1);
+	    hCleaner->Reset();
+	    float NormDYElectoTauEmbd = 0.;
+	    drawHistogramEmbed(RUN, dataEmbedded, variable, NormDYElectoTauEmbd,  Error, 1.0 , hCleaner,  sbin  ,1);
 
-            hCleaner->Scale(h1->Integral()/hCleaner->Integral());  
-	    hZmm->Add(hCleaner, 1.0); 
-	    hZfakes->Add(hCleaner,1.0); 
-	    //hEWK->Add(hCleaner,1.0);
+	    // Apply to h1 efficiency of 
+            h1->Scale(NormDYElectoTauEmbd/NormDYElectoTauEmbdLoose); // Norm = DYMC(sbinIncl && twoJets)*( Emb(sbin) / Emb(sbinIncl && twoJets) )
+
+	    hZmm->Add(h1, 1.0); 
+	    hZfakes->Add(h1,1.0); 
+	    //hEWK->Add(h1,1.0);
           }  
 	  else{
 	    float NormDYElectoTau = 0.;
