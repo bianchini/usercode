@@ -1115,11 +1115,11 @@ void plotElecTau( Int_t mH_           = 120,
     cout << "USE DY SEPARATE SUB-SAMPLES" << endl;
     cout<<tree<<endl;
     //
-    fBackgroundDYTauTau   = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_TauTau_ElecTau.root"  ,"READ");
+    fBackgroundDYTauTau    = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_TauTau_ElecTau.root"  ,"READ");
     cout<<tree<<endl;
-    fBackgroundDYElecToTau  = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_EToTau_ElecTau.root" ,"READ");
+    fBackgroundDYElecToTau = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_EToTau_ElecTau.root"  ,"READ");
     cout<<tree<<endl;
-    fBackgroundDYJetToTau = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_JetToTau_ElecTau.root","READ");
+    fBackgroundDYJetToTau  = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_JetToTau_ElecTau.root","READ");
     // 
     cout<<tree<<endl;
     backgroundDYTauTau    = fBackgroundDYTauTau    ? (TTree*)(fBackgroundDYTauTau    -> Get(tree)) : 0 ;
@@ -1198,7 +1198,7 @@ void plotElecTau( Int_t mH_           = 120,
   TCut apZ(Form("((%s)>%f)",antiWcut.c_str(),antiWsdb));
   //TCut apZ2(Form("((%s)>%f && (%s)<120)",antiWcut.c_str(),antiWsdb,antiWcut.c_str()));
   TCut apZ2(Form("((%s)>60 && (%s)<120)",antiWcut.c_str(),antiWcut.c_str()));
-  TCut hltevent("pairIndex<1 && HLTx==1 && ( run>=163269 || run==1)");
+  TCut hltevent("vetoEvent==0 && pairIndex<1 && HLTx==1 && ( run>=163269 || run==1)");
   //TCut hltmatch("(HLTmatch==1 || run>=203773)");
   TCut hltmatch("HLTmatch==1");
   //TCut hltmatch("");
@@ -1695,7 +1695,10 @@ void plotElecTau( Int_t mH_           = 120,
             TCut sbinVBFLoose = sbinInclusive && vbfLoose;  
 	    drawHistogramMC(RUN, currentTree, variable, NormDYElectoTau, Error,Lumi*lumiCorrFactor*ElectoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., hCleaner, sbinVBFLoose, 1);
             NormDYElectoTau = 0.; 
-	    drawHistogramMC(RUN, currentTree, variable, NormDYElectoTau, Error,Lumi*lumiCorrFactor*ElectoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., h1, sbin, 1);
+
+	    drawHistogramMC(RUN, currentTree, variable, NormDYElectoTau, Error,Lumi*lumiCorrFactor*ElectoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., h1, sbin, 1); // TO BE CHANGED : 
+	    // "Take MC yield after requiring two jets, and apply efficiency from the embedded for twojets ->  full vbf"
+
             hCleaner->Scale(h1->Integral()/hCleaner->Integral());  
 	    hZmm->Add(hCleaner, 1.0); 
 	    hZfakes->Add(hCleaner,1.0); 
@@ -1773,10 +1776,12 @@ void plotElecTau( Int_t mH_           = 120,
 	    drawHistogramData(currentTree, variable, NormData,  Error, 1.0 , hCleaner, sbinSSaIso ,1);
 	    hDataAntiIsoLooseTauIso->Add(hCleaner);
 	    float NormDYElectoTau = 0;
-	    drawHistogramMC(RUN, backgroundDYElectoTau, variable, NormDYElectoTau, Error,   Lumi*lumiCorrFactor*ElectoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., hCleaner, sbinSSaIso, 1);
+	    //drawHistogramMC(RUN, backgroundDYElectoTau, variable, NormDYElectoTau, Error,   Lumi*lumiCorrFactor*ElectoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., hCleaner, sbinSSaIso, 1);
+	    drawHistogramMC(RUN, backgroundDYElectoTau, variable, NormDYElectoTau, Error,   Lumi*lumiCorrFactor*ElectoTauCorrectionFactor*hltEff_/1000., hCleaner, sbinSSaIso, 1);
 	    hDataAntiIsoLooseTauIso->Add(hCleaner, -1.0);
 	    float NormDYJtoTau = 0.; 
-            drawHistogramMC(RUN, backgroundDYJtoTau, variable, NormDYJtoTau, Error,    Lumi*lumiCorrFactor*JtoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., hCleaner, sbinSSaIso, 1);
+            //drawHistogramMC(RUN, backgroundDYJtoTau, variable, NormDYJtoTau, Error,    Lumi*lumiCorrFactor*JtoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., hCleaner, sbinSSaIso, 1);
+            drawHistogramMC(RUN, backgroundDYJtoTau, variable, NormDYJtoTau, Error,    Lumi*lumiCorrFactor*JtoTauCorrectionFactor*hltEff_/1000., hCleaner, sbinSSaIso, 1);
 	    hDataAntiIsoLooseTauIso->Add(hCleaner, -1.0);
 	    float NormTTjets = 0.; 
             drawHistogramMC(RUN, backgroundTTbar, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio*scaleFactorTTSS*hltEff_/1000., hCleaner, sbinSSaIso, 1);
