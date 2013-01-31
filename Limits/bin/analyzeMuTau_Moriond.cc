@@ -1626,14 +1626,17 @@ void plotMuTau( Int_t mH_           = 120,
 	else if((it->first).find("DYMutoTau")!=string::npos){
 	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){  
             float NormDYMutoTau = 0.;
-            TCut sbinVBFLoose = sbinInclusive && vbfLoose;  
-	    drawHistogramMC(currentTree, variable, NormDYMutoTau, Error,   Lumi*lumiCorrFactor*MutoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., hCleaner, sbinVBFLoose, 1);
-            NormDYMutoTau = 0.; 
-	    drawHistogramMC(currentTree, variable, NormDYMutoTau, Error,   Lumi*lumiCorrFactor*MutoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., h1, sbin, 1);
-            hCleaner->Scale(h1->Integral()/hCleaner->Integral());  
-	    hZmm->Add(hCleaner, 1.0); //hZmm->Sumw2(); 
-	    hZfakes->Add(hCleaner,1.0); //hZfakes->Sumw2();
-	    hEWK->Add(hCleaner,1.0); 
+            TCut sbinVBFLoose = sbinInclusive && twoJets;  
+	    drawHistogramMC(currentTree, variable, NormDYMutoTau, Error,   Lumi*lumiCorrFactor*MutoTauCorrectionFactor*ExtrapolationFactorZDataMC*hltEff_/1000., h1, sbinVBFLoose, 1);
+            float NormDYMutoTauEmbdLoose = 0.; 
+	    drawHistogramEmbed(dataEmbedded, variable, NormDYMutoTauEmbdLoose,  Error, 1.0 , hCleaner,  sbinVBFLoose  ,1);
+	    hCleaner->Reset();
+	    float NormDYMutoTauEmbd = 0.;
+	    drawHistogramEmbed(dataEmbedded, variable, NormDYMutoTauEmbd,  Error, 1.0 , hCleaner,  sbin  ,1);
+            h1->Scale(NormDYMutoTauEmbd/NormDYMutoTauEmbdLoose);
+	    hZmm->Add(h1, 1.0); //hZmm->Sumw2(); 
+	    hZfakes->Add(h1,1.0); //hZfakes->Sumw2();
+	    hEWK->Add(h1,1.0); 
           }  
 	  else if(selection_.find("bTag")!=string::npos && selection_.find("nobTag")==string::npos){
 	    float NormDYMutoTau = 0.; 
