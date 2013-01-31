@@ -96,7 +96,7 @@ void DrawHistogramMC(TTree* tree = 0,
  
   if(tree!=0 && h!=0){
     h->Reset();
-    tree->Draw(variable+">>"+TString(h->GetName()),"(PUweight*weightTrig2012*lheWeight)"*cut);
+    tree->Draw(variable+">>"+TString(h->GetName()),"(PUweight*weightTrig2012)"*cut); //lheWeight
     h->Scale(scaleFactor);
     normalization      = h->Integral();
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
@@ -165,6 +165,7 @@ int main(int argc, const char* argv[])
 
     for( unsigned int i = 0 ; i < mySampleFiles.size(); i++){
       string sampleName       = mySampleFiles[i];
+
       if(VERBOSE){
 	cout << mySampleFiles[i] << " ==> " << mySamples->GetXSec(sampleName) 
 	     << " pb, Num. events  "        << mySamples->GetTree(sampleName, "tree")->GetEntries() 
@@ -186,6 +187,7 @@ int main(int argc, const char* argv[])
     float normalization      = 0;
     float normalizationError = 0;
 
+    bool skip        = pset.getParameter<bool>("skip");
     float xLow       = pset.getParameter<double>("xLow");
     float xHigh      = pset.getParameter<double>("xHigh");
     int nBins        = pset.getParameter<int>("nBins");
@@ -194,6 +196,8 @@ int main(int argc, const char* argv[])
     string yTitle    = pset.getParameter<string>("yTitle");
     string histoName = pset.getParameter<string>("histoName");
     int logy         = pset.getParameter<int>("logy");
+
+    if(skip) continue;
 
     for(unsigned int i = 0 ; i < mySampleFiles.size(); i++){
 
@@ -217,7 +221,8 @@ int main(int argc, const char* argv[])
       TString variable(var.c_str());
      
       float scaleFactor        = mySamples->GetWeight(currentName);
-      TCut myCut("Vtype==0 && H.HiggsFlag==1 && vLepton_pt[0]>24 && vLepton_pt[1]>20 && vLepton_charge[0]*vLepton_charge[1]<0 && vLepton_pfCombRelIso[0]<0.10 && vLepton_pfCombRelIso[1]<0.30");
+
+      TCut myCut("Vtype==0 && H.HiggsFlag==1 && vLepton_pt[0]>24 && vLepton_pt[1]>20 && vLepton_charge[0]*vLepton_charge[1]<0 && vLepton_pfCombRelIso[0]<0.10 && vLepton_pfCombRelIso[1]<0.30 && V.mass>60 && hJet_pt[0]>30 && hJet_pt[1]>30");
       
       if( currentName.find("Data")==string::npos ){
 	DrawHistogramMC(    currentTree, variable, normalization, normalizationError, scaleFactor, currentHisto, myCut, 1);

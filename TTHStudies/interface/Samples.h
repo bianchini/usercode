@@ -62,13 +62,15 @@ Samples::Samples(string pathToFile, string ordering,
 
   BOOST_FOREACH(edm::ParameterSet p, vpset) {
 
+    bool skip       = p.getParameter<bool>("skip");
     string fileName = p.getParameter<string>("name");
     string nickName = p.getParameter<string>("nickName");
     int color       = p.getParameter<int>("color");
+    double xSec     = p.getParameter<double>("xSec");
 
-    TString TfileName( fileName.c_str() );
-    double xSec = p.getParameter<double>("xSec");
+    if(skip) continue;
     
+    TString TfileName( fileName.c_str() );   
     TString pfn = "dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/"+pathToFile+"/"+ordering+TfileName+".root";
     if(verbose_) std::cout << string(pfn.Data()) << std::endl;
 
@@ -84,8 +86,8 @@ Samples::Samples(string pathToFile, string ordering,
       double weight = 1.0;
 
       if(xSec<0) weight = 1.0;
-      else if(this->GetHisto(nickName, "Count") != 0){
-	double counter = this->GetHisto(nickName, "Count")->GetBinContent(1);
+      else if(this->GetHisto(nickName, "CountWithPU") != 0){
+	double counter = this->GetHisto(nickName, "CountWithPU")->GetBinContent(1);
 	weight = counter>0 ? lumi*1000/(counter/xSec) : 1.0;
       }
 	
