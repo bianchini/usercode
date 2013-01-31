@@ -15,7 +15,7 @@
 #include <map>
 #include <string>
 
-#define RESCALETO1PB false
+#define RESCALETO1PB true
 #define DOSUSY false
 #define DO2DFIT false
 
@@ -61,7 +61,7 @@ void produce(
 	     string variable_  = "diTauVisMass",
 	     string analysis_  = "",
 	     string bin_       = "inclusive",
-	     TString outputDir = "2DFit"
+	     TString outputDir = "ABC"
 	     )
 {
   cout << "Now doing mass mH=" << mH_ << ", for variable " << variable_ 
@@ -190,7 +190,7 @@ void produce(
 	hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
       }
       else {
-	TH1F *hQCD = ((TH1F*)fin->Get("hQCD"));
+	TH1F *hQCD = ((TH1F*)fin->Get("hDataAntiIsoLooseTauIsoQCD"));
 	hQCD->SetName(Form("QCD%s"  ,suffix.c_str()));
 	hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
       }
@@ -230,7 +230,7 @@ void produce(
         hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
       }
       else {
-	TH1F *hQCD = ((TH1F*)fin->Get("hQCD"));
+	TH1F *hQCD = ((TH1F*)fin->Get("hDataAntiIsoLooseTauIsoQCD"));
         hQCD->SetName(Form("QCD%s"  ,suffix.c_str()));
         hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
       }
@@ -420,10 +420,24 @@ void produce(
 	  hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
 	}
 	else {
-	  TH1F *hQCD = ((TH1F*)fin->Get("hQCD"));
+	  TH1F *hQCD = ((TH1F*)fin->Get("hDataAntiIsoLooseTauIsoQCD"));
 	  hQCD->SetName(Form("QCD%s"    ,suffix.c_str()));
 	  hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
-	}
+	  //for 1Jet_low, need to scale by 15% below 60 GeV and add a shape systematic for QCD  
+	  // if(suffix == ""){ 
+// 	    TH1F* hQCDUp=(TH1F*)hQCD->Clone("QCD_CMS_htt_QCDShape_etau_boost_low_8TeVUp"); 
+// 	    TH1F* hQCDDown=(TH1F*)hQCD->Clone("QCD_CMS_htt_QCDShape_etau_boost_low_8TeVDown"); 
+// 	    for(Int_t b=1;b<=hQCD->GetNbinsX();b++){ 
+// 	      if(hQCD->GetBinCenter(b)<=60.){ 
+// 		hQCDUp->SetBinContent(b,1.15*hQCDUp->GetBinContent(b)); 
+// 		hQCDDown->SetBinContent(b,0.85*hQCDDown->GetBinContent(b)); 
+// 	      } 
+// 	    } 
+// 	    hQCDUp->Write("QCD_CMS_htt_QCDShape_etau_boost_low_8TeVUp"); 
+// 	    hQCDDown->Write("QCD_CMS_htt_QCDShape_etau_boost_low_8TeVDown");
+// 	  }
+	  //suffix	  
+	}//low
       }
       // ----- W ------ 
       if(dir->FindObjectAny(Form("W%s"       ,suffix.c_str()))==0 ){
