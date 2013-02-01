@@ -58,6 +58,7 @@
   <use   name="FWCore/ParameterSet"/>
   <use   name="PhysicsTools/FWLite"/>
   <use   name="PhysicsTools/Utilities"/>
+  <use   name="PhysicsTools/CandUtils"/>
   <use   name="PhysicsTools/SelectorUtils"/>
   <use   name="CommonTools/Utils"/>
   <use   name="root"/>

@@ -32,6 +32,7 @@
 #include "TMultiGraph.h"
 #include "Bianchi/TTHStudies/interface/Samples.h"
 #include "Bianchi/TTHStudies/interface/Test.h"
+#include "Math/GenVector/LorentzVector.h"
 
 #include <algorithm>
 
@@ -43,10 +44,13 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include "PhysicsTools/FWLite/interface/TFileService.h"
+#include "PhysicsTools/CandUtils/interface/EventShapeVariables.h"
 
 #define VERBOSE 1
 
 using namespace std;
+
+typedef  ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > LV;
 
 struct sorterByPt {
   bool operator() (float i,float j) const { return (i>j);}
@@ -129,11 +133,22 @@ int main(int argc, const char* argv[])
     float eta1_, eta2_, eta3_, eta4_, eta5_, eta6_;
     float phi1_, phi2_, phi3_, phi4_, phi5_, phi6_;
     float csv1_, csv2_, csv3_, csv4_, csv5_, csv6_;
-    int numJets30_;
-    int numJets20_;
+    int numJets30_; int numJets30bTag_;
+    int numJets20_; int numJets20bTag_;
+    float isotropy_, circularity_, sphericity_, aplanarity_, Cparam_, Dparam_;
+    float aveCsv_;
+    float aveDeltaRbTag_;
+    float aveMbTag_, aveMunTag_;
+    float closestJJbTagMass_;
+    float varCsv_;
+    float maxCsv_;  float minCsv_;
+    float sumAllPt_;
+    float massAll_;
+    float massLJ_;
+    float M3_;
 
-    TBranch *numJets30BR = outTree->Branch("numJets30",&numJets30_,"numJets30/I");
-    TBranch *numJets20BR = outTree->Branch("numJets20",&numJets20_,"numJets20/I");
+    TBranch *hJetRankBR = outTree->Branch("hJetRank",hJetRank_,"jhJetRank[nhJets]/I");
+    TBranch *aJetRankBR = outTree->Branch("aJetRank",aJetRank_,"ahJetRank[naJets]/I");
 
     TBranch *pt1BR = outTree->Branch("pt1",&pt1_,"pt1/F");
     TBranch *pt2BR = outTree->Branch("pt2",&pt2_,"pt2/F");
@@ -163,8 +178,34 @@ int main(int argc, const char* argv[])
     TBranch *csv5BR = outTree->Branch("csv5",&csv5_,"csv5/F");
     TBranch *csv6BR = outTree->Branch("csv6",&csv6_,"csv6/F");
 
-    TBranch *hJetRankBR = outTree->Branch("hJetRank",hJetRank_,"jhJetRank[nhJets]/I");
-    TBranch *aJetRankBR = outTree->Branch("aJetRank",aJetRank_,"ahJetRank[naJets]/I");
+    TBranch *numJets30BR     = outTree->Branch("numJets30",&numJets30_,"numJets30/I");
+    TBranch *numJets20BR     = outTree->Branch("numJets20",&numJets20_,"numJets20/I");
+    TBranch *numJets30bTagBR = outTree->Branch("numJets30bTag",&numJets30bTag_,"numJets30bTag/I");
+    TBranch *numJets20bTagBR = outTree->Branch("numJets20bTag",&numJets20bTag_,"numJets20bTag/I");
+
+    TBranch *isotropyBR      = outTree->Branch("isotropy",&isotropy_,"isotropy/F");
+    TBranch *circularityBR   = outTree->Branch("circularity",&circularity_,"circularity/F");
+    TBranch *sphericityBR    = outTree->Branch("sphericity",&sphericity_,"sphericity/F");
+    TBranch *aplanarityBR    = outTree->Branch("aplanarity",&aplanarity_,"aplanarity/F");
+    TBranch *CparamBR        = outTree->Branch("Cparam",&Cparam_,"Cparam/F");
+    TBranch *DparamBR        = outTree->Branch("Dparam",&Dparam_,"Dparam/F");
+
+    TBranch *aveCsvBR            = outTree->Branch("aveCsv",&aveCsv_,"aveCsv/F");
+    TBranch *aveDeltaRbTagBR     = outTree->Branch("aveDeltaRbTag",&aveDeltaRbTag_,"aveDeltaRbTag/F");
+    TBranch *aveMbTagBR          = outTree->Branch("aveMbTag",&aveMbTag_,"aveMbTag/F");
+    TBranch *aveMunTagBR         = outTree->Branch("aveMunTag",&aveMunTag_,"aveMunTag/F");
+    TBranch *closestJJbTagMassBR = outTree->Branch("closestJJbTagMass",&closestJJbTagMass_,"closestJJbTagMass/F");
+
+    TBranch *varCsvBR            = outTree->Branch("varCsv",&varCsv_,"varCsv/F");
+    TBranch *maxCsvBR            = outTree->Branch("maxCsv",&maxCsv_,"maxCsv/F");
+    TBranch *minCsvBR            = outTree->Branch("minCsv",&minCsv_,"minCsv/F");
+
+    TBranch *sumAllPtBR          = outTree->Branch("sumAllPt",&sumAllPt_,"sumAllPt/F");
+
+    TBranch *massAllBR           = outTree->Branch("massAll",&massAll_,"massAll/F");
+    TBranch *massLJBR            = outTree->Branch("massLJ",&massLJ_,"massLJ/F");
+    TBranch *M3BR                = outTree->Branch("M3",&M3_,"M3/F");
+    //TBranch *BR = outTree->Branch("",&_,"/F");
 
     //////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
@@ -178,8 +219,11 @@ int main(int argc, const char* argv[])
    
     int nhJets;
     int naJets;
-    float hJetspt[999]; float hJetseta[999]; float hJetsphi[999]; float hJetscsv[999]; 
-    float aJetspt[999]; float aJetseta[999]; float aJetsphi[999]; float aJetscsv[999]; 
+    int nvlep;
+    float met[999];
+    float hJetspt[999]; float hJetseta[999]; float hJetsphi[999]; float hJetse[999]; float hJetscsv[999]; 
+    float aJetspt[999]; float aJetseta[999]; float aJetsphi[999]; float aJetse[999]; float aJetscsv[999]; 
+    float vLeptonpt[999]; float vLeptoneta[999]; float vLeptonphi[999];
 
     outTree->SetBranchAddress("nhJets",   &nhJets);
     outTree->SetBranchAddress("naJets",   &naJets);
@@ -187,18 +231,23 @@ int main(int argc, const char* argv[])
     outTree->SetBranchAddress("hJet_pt",   hJetspt);
     outTree->SetBranchAddress("hJet_eta",  hJetseta);
     outTree->SetBranchAddress("hJet_phi",  hJetsphi);
+    outTree->SetBranchAddress("hJet_e",    hJetse);
     outTree->SetBranchAddress("hJet_csv",  hJetscsv);
 
     outTree->SetBranchAddress("aJet_pt",   aJetspt);
     outTree->SetBranchAddress("aJet_eta",  aJetseta);
     outTree->SetBranchAddress("aJet_phi",  aJetsphi);
+    outTree->SetBranchAddress("aJet_e",    aJetse);
     outTree->SetBranchAddress("aJet_csv",  aJetscsv);
 
+    outTree->SetBranchAddress("vLepton_pt", vLeptonpt);
+    outTree->SetBranchAddress("vLepton_phi",vLeptonphi);
+    outTree->SetBranchAddress("vLepton_eta",vLeptoneta);
+    outTree->SetBranchAddress("nvlep",      &nvlep);
+
+    outTree->SetBranchAddress("METtype1p2corr",  met);
     //////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
-
-
-
 
 
 
@@ -212,34 +261,190 @@ int main(int argc, const char* argv[])
       eta1_ = -99; eta2_ = -99; eta3_ = -99; eta4_ = -99; eta5_ = -99; eta6_ = -99;
       phi1_ = -99; phi2_ = -99; phi3_ = -99; phi4_ = -99; phi5_ = -99; phi6_ = -99;
       csv1_ = -99; csv2_ = -99; csv3_ = -99; csv4_ = -99; csv5_ = -99; csv6_ = -99;
+      sumAllPt_ = 0.; massLJ_ = 0.; varCsv_ = 0.;
 
       outTree->GetEntry(i);
+
+      std::vector<math::RhoEtaPhiVector> allJetsForShapeVar;
+
+      std::vector<LV> allLeptons;
+      std::vector<LV> allBtagJetsForShapeVar;
+      std::vector<LV> allUntagJetsForShapeVar;
+      std::vector<float> csvBtag;
 
       std::map<float, int, sorterByPt> hMapPt;
       std::map<float, int, sorterByPt> aMapPt;
       std::map<float, int, sorterByPt> allMapPt30;
 
-      numJets20_ = 0; numJets30_ = 0;
+      numJets20_     = 0;  numJets30_     = 0;
+      numJets30bTag_ = 0;  numJets20bTag_ = 0;
+      float sumBtag  = 0.;
+
 
       for(int i = 0; i < nhJets; i++){
 	hMapPt[ hJetspt[i]]   = i;
 
-	if( hJetspt[i] > 20.) numJets20_++;
+	if( hJetspt[i] > 20.){
+	  numJets20_++;
+	  if( hJetscsv[i] > 0.898) numJets20bTag_++;
+	}
 	if( hJetspt[i]>30.){
 	  numJets30_++;
+	  float jetMass2 = hJetse[i]*hJetse[i] -  TMath::Power(hJetspt[i]*TMath::CosH(hJetseta[i]) ,2);
+	  if( hJetscsv[i] > 0.898){
+	    numJets30bTag_++;
+	    sumBtag += hJetscsv[i];
+	    allBtagJetsForShapeVar.push_back( LV(hJetspt[i], hJetseta[i], hJetsphi[i], TMath::Sqrt(jetMass2)) );
+	    csvBtag.push_back( hJetscsv[i] );
+	  }
+	  else{
+	    allUntagJetsForShapeVar.push_back( LV(hJetspt[i], hJetseta[i], hJetsphi[i], TMath::Sqrt(jetMass2)) );
+	  }
 	  allMapPt30[ hJetspt[i]] = i;
+
+	  allJetsForShapeVar.push_back( math::RhoEtaPhiVector(hJetspt[i], hJetseta[i], hJetsphi[i]) );
+
 	}
       }
+
 
       for(int i = 0; i < naJets; i++){
 	aMapPt[ aJetspt[i]] = i;
 
-	if( aJetspt[i] > 20.) numJets20_++;
+	if( aJetspt[i] > 20.){
+	  numJets20_++;
+	  if( aJetscsv[i] > 0.898) numJets20bTag_++;
+	}
 	if( aJetspt[i]>30.){
 	  numJets30_++;
+	  float jetMass2 = aJetse[i]*aJetse[i] -  TMath::Power(aJetspt[i]*TMath::CosH(aJetseta[i]),2);
+	  if( aJetscsv[i] > 0.898){
+	    numJets30bTag_++;
+	    sumBtag += aJetscsv[i];
+	    allBtagJetsForShapeVar.push_back( LV(aJetspt[i], aJetseta[i], aJetsphi[i],  TMath::Sqrt(jetMass2)) );
+	    csvBtag.push_back( aJetscsv[i] );
+	  }
+	  else{
+	    allUntagJetsForShapeVar.push_back( LV(aJetspt[i], aJetseta[i], aJetsphi[i],  TMath::Sqrt(jetMass2)) );
+	  }
 	  allMapPt30[ aJetspt[i]] = -i-1; // distinguish jet collection
+
+	  allJetsForShapeVar.push_back( math::RhoEtaPhiVector(aJetspt[i], aJetseta[i], aJetsphi[i]) );
+
 	}
       }
+
+
+
+      aveCsv_ = numJets30bTag_>0 ? sumBtag/numJets30bTag_ : -99;
+
+      float sumDeltaRbTag = 0.;
+      float sumMassBtag   = 0.;
+      float sumMassUntag  = 0.;
+      float minDeltaRBtag = 999.;
+
+      if(allBtagJetsForShapeVar.size()>1){
+	for(unsigned k = 0; k< allBtagJetsForShapeVar.size()-1 ; k++){
+	  for(unsigned l = k+1; l<allBtagJetsForShapeVar.size() ; l++){
+	    LV first  = allBtagJetsForShapeVar[k];
+	    LV second = allBtagJetsForShapeVar[l];
+	    float deltaR = TMath::Sqrt( TMath::Power(first.Eta()-second.Eta(),2) + TMath::Power(first.Phi()-second.Phi(),2)  );
+	    sumDeltaRbTag += deltaR;
+	    if(deltaR < minDeltaRBtag){
+	      minDeltaRBtag = deltaR;
+	      closestJJbTagMass_ = (first+second).M();
+	    }
+	    sumMassBtag   += (first+second).M();
+	  }
+	}
+      }
+
+      aveDeltaRbTag_ = numJets30bTag_>1 ? sumDeltaRbTag/(numJets30bTag_/2*(numJets30bTag_-1)) : -99;
+      aveMbTag_      = numJets30bTag_>1 ? sumMassBtag/(numJets30bTag_/2*(numJets30bTag_-1))   : -99;
+
+
+      float maxCsv = -999.; float minCsv = 999.;
+      for(unsigned k = 0; k< csvBtag.size() ; k++){
+	varCsv_ +=  TMath::Power(csvBtag[k]-aveCsv_,2);
+	if( csvBtag[k]>maxCsv ) maxCsv = csvBtag[k];
+	if( csvBtag[k]<minCsv ) minCsv = csvBtag[k];
+      }
+      maxCsv_ = maxCsv;
+      minCsv_ = minCsv;
+      varCsv_ = numJets30bTag_>1 ? varCsv_/(numJets30bTag_-1) : -99;
+  
+      if(allUntagJetsForShapeVar.size()>1){
+	for(unsigned k = 0; k< allUntagJetsForShapeVar.size()-1 ; k++){
+	  for(unsigned l = k+1; l<allUntagJetsForShapeVar.size() ; l++){
+	    LV first  = allUntagJetsForShapeVar[k];
+	    LV second = allUntagJetsForShapeVar[l];
+	    sumMassUntag   += (first+second).M();
+	  }
+	}
+      }
+      aveMunTag_     = (numJets30_-numJets30bTag_)>1 ? sumMassUntag/((numJets30_-numJets30bTag_)/2*((numJets30_-numJets30bTag_)-1)) : -99;
+      
+
+      LV allP4(0,0,0,0);
+      LV MEtP4(met[0], 0., met[3] , 0.);      
+    
+      for(int k = 0; k<nvlep ; k++){
+	sumAllPt_ += vLeptonpt[k];
+	allLeptons.push_back( LV(vLeptonpt[k], vLeptoneta[k], vLeptonphi[k], 0.) );
+      }
+
+
+      if(allBtagJetsForShapeVar.size()>1){
+	float minDeltaR = 999.;
+	for(unsigned k = 0; k< allBtagJetsForShapeVar.size() ; k++){
+	  for(unsigned l = 0; l<allLeptons.size() ; l++){
+	    LV first  = allBtagJetsForShapeVar[k];
+	    LV second = allLeptons[l];
+	    float deltaR = TMath::Sqrt( TMath::Power(first.Eta()-second.Eta(),2) + TMath::Power(first.Phi()-second.Phi(),2)  );
+	    if(deltaR < minDeltaR){
+	      massLJ_ = (first+second).M();
+	      minDeltaR = deltaR;
+	    }
+	  }
+	}
+      }
+
+      if(allBtagJetsForShapeVar.size()>0 && allUntagJetsForShapeVar.size()>1){
+	float highestPt = -999;
+	for(unsigned k = 0; k< allBtagJetsForShapeVar.size() ; k++){
+	  LV zero = allBtagJetsForShapeVar[k];
+	  for(unsigned l = 0; l<allUntagJetsForShapeVar.size()-1 ; l++){
+	    for(unsigned m = l+1; m<allUntagJetsForShapeVar.size() ; m++){
+	      LV first  = allUntagJetsForShapeVar[l];
+	      LV second = allUntagJetsForShapeVar[m];
+	      if( (zero+first+second).Pt()> highestPt){
+		highestPt = (zero+first+second).Pt();
+		M3_ = (zero+first+second).M();
+	      }
+	    }
+	  }
+
+	}
+      }
+
+
+      for(unsigned k = 0; k< allLeptons.size() ; k++){
+	allP4 += allLeptons[k];
+      }
+      for(unsigned k = 0; k< allUntagJetsForShapeVar.size() ; k++){
+	sumAllPt_ += allUntagJetsForShapeVar[k].Pt();
+	allP4     += allUntagJetsForShapeVar[k];
+      }
+      for(unsigned k = 0; k< allBtagJetsForShapeVar.size() ; k++){
+	sumAllPt_ += allBtagJetsForShapeVar[k].Pt();
+	allP4     += allBtagJetsForShapeVar[k];
+      }
+
+      sumAllPt_ += MEtP4.Pt();
+      allP4     += MEtP4;
+
+      massAll_ = allP4.M();
+
 
       int h = 0; int a = 0;
       for(std::map<float, int>::iterator it = hMapPt.begin(); it!=hMapPt.end(); it++, h++) hJetRank_[h] = it->second ;
@@ -292,21 +497,24 @@ int main(int argc, const char* argv[])
 
       }
 
-
-
-
-
-
+      EventShapeVariables* eventShapes = new EventShapeVariables(allJetsForShapeVar);
+      isotropy_   = eventShapes->isotropy();
+      circularity_= eventShapes->circularity();
+      sphericity_ = eventShapes->sphericity();
+      aplanarity_ = eventShapes->aplanarity();
+      Cparam_     = eventShapes->C();
+      Dparam_     = eventShapes->D();
 
 
       //////////////////////////////////FILL////////////////////////////////////////
       //////////////////////////////////////////////////////////////////////////////
 
-
       hJetRankBR->Fill();
       aJetRankBR->Fill();
       numJets30BR->Fill();
       numJets20BR->Fill();
+      numJets30bTagBR->Fill();
+      numJets20bTagBR->Fill();
       pt1BR->Fill();
       pt2BR->Fill();
       pt3BR->Fill();
@@ -331,6 +539,27 @@ int main(int argc, const char* argv[])
       csv4BR->Fill();
       csv5BR->Fill();
       csv6BR->Fill();
+      isotropyBR->Fill();
+      circularityBR->Fill();
+      sphericityBR->Fill();
+      aplanarityBR->Fill();
+      CparamBR->Fill();
+      DparamBR->Fill();
+      aveCsvBR->Fill();
+      aveDeltaRbTagBR->Fill();
+      aveMbTagBR->Fill();
+      aveMunTagBR->Fill();
+      closestJJbTagMassBR->Fill();
+      varCsvBR->Fill();
+      maxCsvBR->Fill();
+      minCsvBR->Fill();
+      sumAllPtBR->Fill();
+      massAllBR->Fill();
+      massLJBR->Fill();
+      M3BR->Fill();
+
+
+      delete eventShapes;
 
     }
 
