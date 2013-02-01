@@ -72,7 +72,7 @@ int main(int argc, const char* argv[])
 
   std::string pathToFile( in.getParameter<std::string>("pathToFile" ) );
   std::string ordering(   in.getParameter<std::string>("ordering" ) );
-  double lumi(       in.getParameter<double>("lumi" ) );
+  double lumi(            in.getParameter<double>("lumi" ) );
 
   Samples* mySamples = new Samples(pathToFile, ordering, samples, lumi, VERBOSE);
   map<string, TH1F*> mapHist;
@@ -103,24 +103,21 @@ int main(int argc, const char* argv[])
     
     string currentName       = mySampleFiles[i];
     
-    fwlite::TFileService fs = fwlite::TFileService( ("TThNTuples_"+currentName+".root").c_str());
+    //fwlite::TFileService fs = fwlite::TFileService( ("TThNTuples_"+currentName+".root").c_str());
     //TTree* outTree = fs.make<TTree>("outTree","TTH Tree");
-
-    TIter nextkey((mySamples->GetFile( currentName ))->GetListOfKeys());
-    TH1F *key;
-    while ( (key = (TH1F*)nextkey()) ) {
-      string name(key->GetName());
-      if( name.find("tree")!=string::npos) continue;
-      TH1F* h = (TH1F*)(mySamples->GetFile( currentName ))->FindObjectAny( key->GetName());
-     
-      h->Write(key->GetName());
-    }
-
+    //TIter nextkey((mySamples->GetFile( currentName ))->GetListOfKeys());
+    //TH1F *key;
+    //while ( (key = (TH1F*)nextkey()) ) {
+    //string name(key->GetName());
+    //if( name.find("tree")!=string::npos) continue;
+    //TH1F* h = (TH1F*)(mySamples->GetFile( currentName ))->FindObjectAny( key->GetName());
+    //h->Write(key->GetName());
+    //}
+    //outTree = (mySamples->GetTree( currentName, "tree"))->CopyTree("","");
 
 
     cout << "Start copying..." << endl;
-    //TTree* outTree = (mySamples->GetTree( currentName, "tree"))->CopyTree("","");
-    TTree* outTree = mySamples->GetTree( currentName, "tree"); 
+    TTree* outTree = mySamples->GetTree( currentName, "tree");
     cout << "Done!!" << endl;
 
     //////////////////////////////////NEW VARIABLES///////////////////////////////
@@ -209,7 +206,13 @@ int main(int argc, const char* argv[])
  
     for (Long64_t i = 0; i < nentries; i++){
 
-      if(i%100==0) cout << i << endl;
+      if(i%5000==0) cout << i << endl;
+
+      pt1_  = -99; pt2_  = -99; pt3_  = -99; pt4_  = -99; pt5_  = -99; pt6_  = -99;
+      eta1_ = -99; eta2_ = -99; eta3_ = -99; eta4_ = -99; eta5_ = -99; eta6_ = -99;
+      phi1_ = -99; phi2_ = -99; phi3_ = -99; phi4_ = -99; phi5_ = -99; phi6_ = -99;
+      csv1_ = -99; csv2_ = -99; csv3_ = -99; csv4_ = -99; csv5_ = -99; csv6_ = -99;
+
       outTree->GetEntry(i);
 
       std::map<float, int, sorterByPt> hMapPt;
@@ -241,12 +244,6 @@ int main(int argc, const char* argv[])
       int h = 0; int a = 0;
       for(std::map<float, int>::iterator it = hMapPt.begin(); it!=hMapPt.end(); it++, h++) hJetRank_[h] = it->second ;
       for(std::map<float, int>::iterator it = aMapPt.begin(); it!=aMapPt.end(); it++, a++) aJetRank_[a] = it->second ;
-
-
-      pt1_  = -99; pt2_  = -99; pt3_  = -99; pt4_  = -99; pt5_  = -99; pt6_  = -99;
-      eta1_ = -99; eta2_ = -99; eta3_ = -99; eta4_ = -99; eta5_ = -99; eta6_ = -99;
-      phi1_ = -99; phi2_ = -99; phi3_ = -99; phi4_ = -99; phi5_ = -99; phi6_ = -99;
-      csv1_ = -99; csv2_ = -99; csv3_ = -99; csv4_ = -99; csv5_ = -99; csv6_ = -99;
 
       int all = 0;
       for(std::map<float, int>::iterator it = allMapPt30.begin(); it!=allMapPt30.end(); it++, all++){
@@ -338,7 +335,7 @@ int main(int argc, const char* argv[])
     }
 
 
-    outTree->Write("",TObject::kOverwrite);
+    outTree->Write("",TObject::kOverwrite );
 
    }
 

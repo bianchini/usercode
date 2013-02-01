@@ -30,7 +30,7 @@ class Samples {
     }
   }
 
-
+  TFile* GetFile(string);
   TH1F* GetHisto(string, string);
   TTree* GetTree(string, string);
   double GetXSec(string);
@@ -67,14 +67,15 @@ Samples::Samples(string pathToFile, string ordering,
     string nickName = p.getParameter<string>("nickName");
     int color       = p.getParameter<int>("color");
     double xSec     = p.getParameter<double>("xSec");
+    bool update     = p.exists("update") ?  p.getParameter<bool>("update") : false;
 
     if(skip) continue;
     
     TString TfileName( fileName.c_str() );   
-    TString pfn = "dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/"+pathToFile+"/"+ordering+TfileName+".root";
+    TString pfn = pathToFile+"/"+ordering+TfileName+".root";
     if(verbose_) std::cout << string(pfn.Data()) << std::endl;
 
-    TFile *f = TFile::Open(pfn,"READ");
+    TFile *f = update ?  TFile::Open(pfn,"UPDATE") :  TFile::Open(pfn,"READ");
     
     if(!f || f->IsZombie()){
       err_ = 1;
@@ -140,6 +141,19 @@ Samples::Samples(string pathToFile, string ordering,
   }
   
 }
+
+TFile* Samples::GetFile(string sampleName){
+
+  TFile *file = 0;
+  if(mapFile_[sampleName]!=0) file = mapFile_[sampleName] ;
+  if(!file){
+    err_ = 1;
+    if(verbose_) cout << "Could not find file pointer in sample " << sampleName << endl;
+  }
+  return file;
+
+}
+
 
 TH1F* Samples::GetHisto(string sampleName, string histoName){
 
