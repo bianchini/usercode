@@ -40,7 +40,7 @@
 //#define DO_D_ONLY        false
 
 #define USESSBKG         false
-#define scaleByBinWidth  false
+#define scaleByBinWidth  true
 #define DOSPLIT          false
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -2192,7 +2192,6 @@ void plotElecTau( Int_t mH_           = 120,
     hSgn->Scale(1.0, "width");
   }
 
-  hSiml->Add(hTTb,1.0);
   if(useEmbedding_)
     hSiml->Add(hDataEmb,1.0);
   else 
@@ -2218,10 +2217,11 @@ void plotElecTau( Int_t mH_           = 120,
 
   hSiml->Add(hEWK,1.0);
   hSiml->Add(hZmm,1.0);
+  hSiml->Add(hTTb,1.0);
+
   if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos)
     hSiml->Add(hZmj,1.0);
 
-  aStack->Add(hTTb);
   if(!USESSBKG){
     if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
       aStack->Add(hDataAntiIsoLooseTauIsoQCD);
@@ -2242,8 +2242,11 @@ void plotElecTau( Int_t mH_           = 120,
   
   aStack->Add(hEWK);
   aStack->Add(hZmm);
+
   if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos)
     aStack->Add(hZmj);
+
+  aStack->Add(hTTb);
 
   if(useEmbedding_)
     aStack->Add(hDataEmb);
