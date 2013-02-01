@@ -61,7 +61,9 @@ void produce(
 	     string variable_  = "diTauVisMass",
 	     string analysis_  = "",
 	     string bin_       = "inclusive",
-	     TString outputDir = "ABC"
+	     TString outputDir = "ABC",
+	     //TString location  = "/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/"
+	     TString location  = "/home/llr/cms/ndaci/WorkArea/HTauTau/Analysis/CMSSW_534_TopUp/src/Bianchi/Limits/bin/results/"
 	     )
 {
   cout << "Now doing mass mH=" << mH_ << ", for variable " << variable_ 
@@ -69,14 +71,14 @@ void produce(
   TFile* fin = 0;
   string analysisFile = analysis_;
 
-  fin = new TFile(Form("/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/%s/histograms/eTau_mH%d_%s_%s_%s.root", outputDir.Data(), 125, bin_.c_str() , analysisFile.c_str(), variable_.c_str()), "READ");
+  fin = new TFile(Form(location+"/%s/histograms/eTau_mH%d_%s_%s_%s.root", outputDir.Data(), 125, bin_.c_str() , analysisFile.c_str(), variable_.c_str()), "READ");
 
   ///////////////////////////////////////////////
-  TFile* fin_jUp     = new TFile(Form("/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/%s/histograms/eTau_mH%d_%s_JetUp_%s.root",   outputDir.Data(), 125, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_jDown   = new TFile(Form("/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/%s/histograms/eTau_mH%d_%s_JetDown_%s.root", outputDir.Data(), 125, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_tUp     = new TFile(Form("/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/%s/histograms/eTau_mH%d_%s_TauUp_%s.root",   outputDir.Data(), 125, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_tDown   = new TFile(Form("/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/%s/histograms/eTau_mH%d_%s_TauDown_%s.root", outputDir.Data(), 125, bin_.c_str() , variable_.c_str()), "READ");
-  TFile* fin_nominal = new TFile(Form("/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/%s/histograms/eTau_mH%d_%s__%s.root",        outputDir.Data(), 125, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_jUp     = new TFile(Form(location+"%s/histograms/eTau_mH%d_%s_JetUp_%s.root",   outputDir.Data(), 125, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_jDown   = new TFile(Form(location+"%s/histograms/eTau_mH%d_%s_JetDown_%s.root", outputDir.Data(), 125, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_tUp     = new TFile(Form(location+"%s/histograms/eTau_mH%d_%s_TauUp_%s.root",   outputDir.Data(), 125, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_tDown   = new TFile(Form(location+"%s/histograms/eTau_mH%d_%s_TauDown_%s.root", outputDir.Data(), 125, bin_.c_str() , variable_.c_str()), "READ");
+  TFile* fin_nominal = new TFile(Form(location+"%s/histograms/eTau_mH%d_%s__%s.root",        outputDir.Data(), 125, bin_.c_str() , variable_.c_str()), "READ");
   ///////////////////////////////////////////////
 
   float rescaleggH = RESCALETO1PB ? higgsXsection(mH_,"ggH") : 1.0;
@@ -110,7 +112,7 @@ void produce(
 
   string theory =  !DOSUSY ? "SM" : "MSSM" ;
 
-  TFile* fTemplOut = new TFile(Form("/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/%s/datacards/eTau%s.root",outputDir.Data(), theory.c_str()),"UPDATE");
+  TFile* fTemplOut = new TFile(Form(location+"%s/datacards/eTau%s.root",outputDir.Data(), theory.c_str()),"UPDATE");
   
   string suffix = "";
   if(analysis_.find("TauUp")!=string::npos)
@@ -570,10 +572,10 @@ void produce(
   ifstream in;
 
   char* c = new char[1000];
-  in.open(Form("/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/templates/eTau_%s_template_v3.txt",binNameSpace.c_str()));
+  in.open(Form(location+"templates/eTau_%s_template_v3.txt",binNameSpace.c_str()));
   string resonance = !DOSUSY ? "H" : "A";
 
-  ofstream out(Form("/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/%s/datacards/eTau_%s_m%s%d.txt", outputDir.Data(), binNameSpace.c_str(), resonance.c_str(), mH_ ));
+  ofstream out(Form(location+"%s/datacards/eTau_%s_m%s%d.txt", outputDir.Data(), binNameSpace.c_str(), resonance.c_str(), mH_ ));
   out.precision(8);
 
   float QCDyield = 0;
@@ -841,7 +843,9 @@ void produce2DFit(
 	     string variable_  = "diTauVisMass",
 	     string analysis_  = "",
 	     string bin_       = "inclusive",
-	     TString outputDir = "2DFit"
+	     TString outputDir = "2DFit",
+	     //TString location  = "/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/"
+	     TString location  = "/home/llr/cms/ndaci/WorkArea/HTauTau/Analysis/CMSSW_534_TopUp/src/Bianchi/Limits/bin/results/"	     
 	     )
 {
   cout << "2DFit :" <<endl; 
@@ -850,7 +854,7 @@ void produce2DFit(
   TFile* fin = 0;
   string analysisFile = analysis_;
 
-  fin = new TFile(Form("/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/%s/histograms/eTau_mH%d_%s_%s_%s.root", outputDir.Data(), mH_, bin_.c_str() , analysisFile.c_str(), variable_.c_str()), "READ");
+  fin = new TFile(Form(location+"%s/histograms/eTau_mH%d_%s_%s_%s.root", outputDir.Data(), mH_, bin_.c_str() , analysisFile.c_str(), variable_.c_str()), "READ");
 
   float rescaleggH = RESCALETO1PB ? higgsXsection(mH_,"ggH") : 1.0;
   float rescaleqqH = RESCALETO1PB ? higgsXsection(mH_,"qqH") : 1.0;
@@ -883,7 +887,7 @@ void produce2DFit(
 
   string theory =  !DOSUSY ? "SM" : "MSSM" ;
 
-  TFile* fTemplOut = new TFile(Form("/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/datacards/%s/eTau2DFit%s.root",outputDir.Data(), theory.c_str()),"UPDATE");
+  TFile* fTemplOut = new TFile(Form(location+"datacards/%s/eTau2DFit%s.root",outputDir.Data(), theory.c_str()),"UPDATE");
   
   string suffix = "";
   if(analysis_.find("TauUp")!=string::npos)
@@ -1487,5 +1491,7 @@ int main(int argc, const char* argv[])
   gSystem->Load("libFWCoreFWLite");
   AutoLibraryLoader::enable();
 
-  produceAll();
+  if(argc==1)      produceAll();
+  else if(argc==2) produceAll(argv[1]);
+  else return -1;
 }
