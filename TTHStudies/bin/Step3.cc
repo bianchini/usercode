@@ -26,6 +26,8 @@
 #include "THStack.h"
 #include "TCut.h"
 #include "TArrayF.h"
+#include "TObjArray.h"
+#include "TVector3.h"
 #include "TStyle.h"
 #include "TGraph.h"
 #include "TKey.h"
@@ -44,9 +46,13 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include "PhysicsTools/FWLite/interface/TFileService.h"
+
+// event shapes
 #include "PhysicsTools/CandUtils/interface/EventShapeVariables.h"
+#include "TopQuarkAnalysis/TopTools/interface/TopologyWorker.h"
 
 #define VERBOSE 1
+#define BTAGTHR 0.679
 
 using namespace std;
 
@@ -133,9 +139,13 @@ int main(int argc, const char* argv[])
     float eta1_, eta2_, eta3_, eta4_, eta5_, eta6_;
     float phi1_, phi2_, phi3_, phi4_, phi5_, phi6_;
     float csv1_, csv2_, csv3_, csv4_, csv5_, csv6_;
+    int numJets40_; int numJets40bTag_;
     int numJets30_; int numJets30bTag_;
     int numJets20_; int numJets20bTag_;
     float isotropy_, circularity_, sphericity_, aplanarity_, Cparam_, Dparam_;
+    float thrust0_, thrust1_, thrust2_;
+    float sphericity2_, aplanarity2_; 
+    float h10_,h20_,h30_,h40_,h50_,h60_;
     float aveCsv_;
     float aveDeltaRbTag_;
     float aveMbTag_, aveMunTag_;
@@ -146,6 +156,9 @@ int main(int argc, const char* argv[])
     float massAll_;
     float massLJ_;
     float M3_;
+    float MHT30_, MHT20_, MHT40_;
+    float minDeltaRLJ_, minDeltaRBtag_;
+    float firstBtag_, secondBtag_, thirdBtag_, fourthBtag_;
 
     TBranch *hJetRankBR = outTree->Branch("hJetRank",hJetRank_,"jhJetRank[nhJets]/I");
     TBranch *aJetRankBR = outTree->Branch("aJetRank",aJetRank_,"ahJetRank[naJets]/I");
@@ -178,8 +191,10 @@ int main(int argc, const char* argv[])
     TBranch *csv5BR = outTree->Branch("csv5",&csv5_,"csv5/F");
     TBranch *csv6BR = outTree->Branch("csv6",&csv6_,"csv6/F");
 
+    TBranch *numJets40BR     = outTree->Branch("numJets40",&numJets40_,"numJets40/I");
     TBranch *numJets30BR     = outTree->Branch("numJets30",&numJets30_,"numJets30/I");
     TBranch *numJets20BR     = outTree->Branch("numJets20",&numJets20_,"numJets20/I");
+    TBranch *numJets40bTagBR = outTree->Branch("numJets40bTag",&numJets40bTag_,"numJets40bTag/I");
     TBranch *numJets30bTagBR = outTree->Branch("numJets30bTag",&numJets30bTag_,"numJets30bTag/I");
     TBranch *numJets20bTagBR = outTree->Branch("numJets20bTag",&numJets20bTag_,"numJets20bTag/I");
 
@@ -189,6 +204,18 @@ int main(int argc, const char* argv[])
     TBranch *aplanarityBR    = outTree->Branch("aplanarity",&aplanarity_,"aplanarity/F");
     TBranch *CparamBR        = outTree->Branch("Cparam",&Cparam_,"Cparam/F");
     TBranch *DparamBR        = outTree->Branch("Dparam",&Dparam_,"Dparam/F");
+
+    TBranch *thrust0BR = outTree->Branch("thrust0",&thrust0_,"thrust0/F");
+    TBranch *thrust1BR = outTree->Branch("thrust1",&thrust1_,"thrust1/F");
+    TBranch *thrust2BR = outTree->Branch("thrust2",&thrust2_,"thrust2/F");
+    TBranch *sphericity2BR = outTree->Branch("sphericity2",&sphericity2_,"sphericity2/F");
+    TBranch *aplanarity2BR = outTree->Branch("aplanarity2",&aplanarity2_,"aplanarity2/F");
+    TBranch *h10BR = outTree->Branch("h10",&h10_,"h10/F");
+    TBranch *h20BR = outTree->Branch("h20",&h20_,"h20/F");
+    TBranch *h30BR = outTree->Branch("h30",&h30_,"h30/F");
+    TBranch *h40BR = outTree->Branch("h40",&h40_,"h40/F");
+    TBranch *h50BR = outTree->Branch("h50",&h50_,"h50/F");
+    TBranch *h60BR = outTree->Branch("h60",&h60_,"h60/F");
 
     TBranch *aveCsvBR            = outTree->Branch("aveCsv",&aveCsv_,"aveCsv/F");
     TBranch *aveDeltaRbTagBR     = outTree->Branch("aveDeltaRbTag",&aveDeltaRbTag_,"aveDeltaRbTag/F");
@@ -205,8 +232,20 @@ int main(int argc, const char* argv[])
     TBranch *massAllBR           = outTree->Branch("massAll",&massAll_,"massAll/F");
     TBranch *massLJBR            = outTree->Branch("massLJ",&massLJ_,"massLJ/F");
     TBranch *M3BR                = outTree->Branch("M3",&M3_,"M3/F");
-    //TBranch *BR = outTree->Branch("",&_,"/F");
 
+    TBranch *MHT20BR = outTree->Branch("MHT20",&MHT20_,"MHT20/F");
+    TBranch *MHT30BR = outTree->Branch("MHT30",&MHT30_,"MHT30/F");
+    TBranch *MHT40BR = outTree->Branch("MHT40",&MHT40_,"MHT40/F");
+
+    TBranch *minDeltaRLJBR   = outTree->Branch("minDeltaRLJ",&minDeltaRLJ_,"minDeltaRLJ/F");
+    TBranch *minDeltaRBtagBR = outTree->Branch("minDeltaRBtag",&minDeltaRBtag_,"minDeltaRBtag/F");
+    
+    TBranch *firstBtagBR  = outTree->Branch("firstBtag", &firstBtag_,"firstBtag/F");
+    TBranch *secondBtagBR = outTree->Branch("secondBtag",&secondBtag_,"secondBtag/F");
+    TBranch *thirdBtagBR  = outTree->Branch("thirdBtag", &thirdBtag_,"thirdBtag/F");
+    TBranch *fourthBtagBR = outTree->Branch("fourthBtag",&fourthBtag_,"fourthBtag/F");
+
+    //TBranch *BR = outTree->Branch("",&_,"/F");
     //////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
 
@@ -261,11 +300,19 @@ int main(int argc, const char* argv[])
       eta1_ = -99; eta2_ = -99; eta3_ = -99; eta4_ = -99; eta5_ = -99; eta6_ = -99;
       phi1_ = -99; phi2_ = -99; phi3_ = -99; phi4_ = -99; phi5_ = -99; phi6_ = -99;
       csv1_ = -99; csv2_ = -99; csv3_ = -99; csv4_ = -99; csv5_ = -99; csv6_ = -99;
+      thrust0_ = -99; thrust1_ = -99; thrust2_ = -99; 
+      sphericity2_ = -99; aplanarity2_ = -99;
+      h10_ = -99; h20_ = -99; h30_ = -99; h40_ = -99; h50_ = -99; h60_ = -99;
       sumAllPt_ = 0.; massLJ_ = 0.; varCsv_ = 0.;
+      firstBtag_ = -99; secondBtag_ = -99; thirdBtag_ = -99; fourthBtag_ = -99;
 
       outTree->GetEntry(i);
 
       std::vector<math::RhoEtaPhiVector> allJetsForShapeVar;
+      TObjArray jetArrayForShapeVar;
+      TObjArray leptArrayForShapeVar;
+      jetArrayForShapeVar.SetOwner();
+      leptArrayForShapeVar.SetOwner();
 
       std::vector<LV> allLeptons;
       std::vector<LV> allBtagJetsForShapeVar;
@@ -275,35 +322,54 @@ int main(int argc, const char* argv[])
       std::map<float, int, sorterByPt> hMapPt;
       std::map<float, int, sorterByPt> aMapPt;
       std::map<float, int, sorterByPt> allMapPt30;
+      std::map<float, int, sorterByPt> bTagMap30;
 
-      numJets20_     = 0;  numJets30_     = 0;
-      numJets30bTag_ = 0;  numJets20bTag_ = 0;
+      numJets20_     = 0;  numJets30_     = 0; numJets40_     = 0;
+      numJets30bTag_ = 0;  numJets20bTag_ = 0; numJets40bTag_ = 0;
+      minDeltaRLJ_   = -99; massLJ_ = -99;  M3_ = -99;
+      minDeltaRBtag_ = 999.;
+
+
       float sumBtag  = 0.;
-
+      LV MHT20LV(0.,0.,0.,0.);
+      LV MHT30LV(0.,0.,0.,0.);
+      LV MHT40LV(0.,0.,0.,0.);
 
       for(int i = 0; i < nhJets; i++){
+
 	hMapPt[ hJetspt[i]]   = i;
+
+	float jetMass2 = hJetse[i]*hJetse[i] -  TMath::Power(hJetspt[i]*TMath::CosH(hJetseta[i]) ,2);
+	LV jetLV(hJetspt[i], hJetseta[i], hJetsphi[i], TMath::Sqrt(jetMass2));
 
 	if( hJetspt[i] > 20.){
 	  numJets20_++;
-	  if( hJetscsv[i] > 0.898) numJets20bTag_++;
+	  if( hJetscsv[i] > BTAGTHR) numJets20bTag_++;
+	  MHT20LV += jetLV;
 	}
 	if( hJetspt[i]>30.){
 	  numJets30_++;
-	  float jetMass2 = hJetse[i]*hJetse[i] -  TMath::Power(hJetspt[i]*TMath::CosH(hJetseta[i]) ,2);
-	  if( hJetscsv[i] > 0.898){
+	  MHT30LV += jetLV;
+	  if( hJetscsv[i] > BTAGTHR){
 	    numJets30bTag_++;
 	    sumBtag += hJetscsv[i];
-	    allBtagJetsForShapeVar.push_back( LV(hJetspt[i], hJetseta[i], hJetsphi[i], TMath::Sqrt(jetMass2)) );
+	    allBtagJetsForShapeVar.push_back(  jetLV );
 	    csvBtag.push_back( hJetscsv[i] );
 	  }
 	  else{
-	    allUntagJetsForShapeVar.push_back( LV(hJetspt[i], hJetseta[i], hJetsphi[i], TMath::Sqrt(jetMass2)) );
+	    allUntagJetsForShapeVar.push_back( jetLV );
 	  }
 	  allMapPt30[ hJetspt[i]] = i;
 
 	  allJetsForShapeVar.push_back( math::RhoEtaPhiVector(hJetspt[i], hJetseta[i], hJetsphi[i]) );
+	  TVector3 *tv3 = new TVector3(jetLV.Px(),jetLV.Py(),jetLV.Pz());
+	  jetArrayForShapeVar.Add( tv3 );
 
+	}
+	if( hJetspt[i]>40.){
+	  numJets40_++;
+	  if( hJetscsv[i] > BTAGTHR) numJets40bTag_++;
+	  MHT40LV += jetLV;
 	}
       }
 
@@ -311,37 +377,49 @@ int main(int argc, const char* argv[])
       for(int i = 0; i < naJets; i++){
 	aMapPt[ aJetspt[i]] = i;
 
+	float jetMass2 = aJetse[i]*aJetse[i] -  TMath::Power(aJetspt[i]*TMath::CosH(aJetseta[i]),2);
+	LV jetLV(aJetspt[i], aJetseta[i], aJetsphi[i],  TMath::Sqrt(jetMass2));
+
 	if( aJetspt[i] > 20.){
 	  numJets20_++;
-	  if( aJetscsv[i] > 0.898) numJets20bTag_++;
+	  if( aJetscsv[i] > BTAGTHR) numJets20bTag_++;
+	  MHT20LV += jetLV;
 	}
 	if( aJetspt[i]>30.){
 	  numJets30_++;
-	  float jetMass2 = aJetse[i]*aJetse[i] -  TMath::Power(aJetspt[i]*TMath::CosH(aJetseta[i]),2);
-	  if( aJetscsv[i] > 0.898){
+	  MHT30LV += jetLV;
+	  if( aJetscsv[i] > BTAGTHR){
 	    numJets30bTag_++;
 	    sumBtag += aJetscsv[i];
-	    allBtagJetsForShapeVar.push_back( LV(aJetspt[i], aJetseta[i], aJetsphi[i],  TMath::Sqrt(jetMass2)) );
+	    allBtagJetsForShapeVar.push_back( jetLV );
 	    csvBtag.push_back( aJetscsv[i] );
 	  }
 	  else{
-	    allUntagJetsForShapeVar.push_back( LV(aJetspt[i], aJetseta[i], aJetsphi[i],  TMath::Sqrt(jetMass2)) );
+	    allUntagJetsForShapeVar.push_back( jetLV );
 	  }
 	  allMapPt30[ aJetspt[i]] = -i-1; // distinguish jet collection
 
 	  allJetsForShapeVar.push_back( math::RhoEtaPhiVector(aJetspt[i], aJetseta[i], aJetsphi[i]) );
-
+	  TVector3 *tv3 = new TVector3(jetLV.Px(),jetLV.Py(),jetLV.Pz());
+	  jetArrayForShapeVar.Add( tv3 );
+	  
+	}
+	if( hJetspt[i]>40.){
+	  numJets40_++;
+	  if( aJetscsv[i] > BTAGTHR) numJets40bTag_++;
+	  MHT40LV += jetLV;
 	}
       }
 
 
-
+      MHT20_ = MHT20LV.Pt();
+      MHT30_ = MHT30LV.Pt();
+      MHT40_ = MHT40LV.Pt();
       aveCsv_ = numJets30bTag_>0 ? sumBtag/numJets30bTag_ : -99;
 
       float sumDeltaRbTag = 0.;
       float sumMassBtag   = 0.;
       float sumMassUntag  = 0.;
-      float minDeltaRBtag = 999.;
 
       if(allBtagJetsForShapeVar.size()>1){
 	for(unsigned k = 0; k< allBtagJetsForShapeVar.size()-1 ; k++){
@@ -350,8 +428,8 @@ int main(int argc, const char* argv[])
 	    LV second = allBtagJetsForShapeVar[l];
 	    float deltaR = TMath::Sqrt( TMath::Power(first.Eta()-second.Eta(),2) + TMath::Power(first.Phi()-second.Phi(),2)  );
 	    sumDeltaRbTag += deltaR;
-	    if(deltaR < minDeltaRBtag){
-	      minDeltaRBtag = deltaR;
+	    if(deltaR < minDeltaRBtag_){
+	      minDeltaRBtag_ = deltaR;
 	      closestJJbTagMass_ = (first+second).M();
 	    }
 	    sumMassBtag   += (first+second).M();
@@ -390,7 +468,10 @@ int main(int argc, const char* argv[])
     
       for(int k = 0; k<nvlep ; k++){
 	sumAllPt_ += vLeptonpt[k];
-	allLeptons.push_back( LV(vLeptonpt[k], vLeptoneta[k], vLeptonphi[k], 0.) );
+	LV lepLV(vLeptonpt[k], vLeptoneta[k], vLeptonphi[k], 0.);
+	allLeptons.push_back( lepLV );
+	TVector3 *tv3 = new TVector3(lepLV.Px(),lepLV.Py(),lepLV.Pz());
+	leptArrayForShapeVar.Add( tv3 );
       }
 
 
@@ -409,6 +490,7 @@ int main(int argc, const char* argv[])
 	}
       }
 
+
       if(allBtagJetsForShapeVar.size()>0 && allUntagJetsForShapeVar.size()>1){
 	float highestPt = -999;
 	for(unsigned k = 0; k< allBtagJetsForShapeVar.size() ; k++){
@@ -424,6 +506,21 @@ int main(int argc, const char* argv[])
 	    }
 	  }
 
+	}
+      }
+
+
+
+      if(allLeptons.size()>0){
+	LV first = allLeptons[0];
+	float minDeltaR = 999.;
+	for(unsigned k = 0; k< allJetsForShapeVar.size() ; k++){
+	  LV second( allJetsForShapeVar[k].X(), allJetsForShapeVar[k].Y(), allJetsForShapeVar[k].Z(), 0.0 );
+	  float deltaR = TMath::Sqrt( TMath::Power(first.Eta()-second.Eta(),2) + TMath::Power(first.Phi()-second.Phi(),2)  );
+	  if( deltaR < minDeltaR){
+	    minDeltaRLJ_ = minDeltaR;
+	    minDeltaR = deltaR;
+	  }
 	}
       }
 
@@ -497,6 +594,19 @@ int main(int argc, const char* argv[])
 
       }
 
+
+      for(unsigned k = 0; k< csvBtag.size() ; k++){
+	bTagMap30[ csvBtag[k] ] = k;
+      }
+      int count=0;
+      for(std::map<float, int>::iterator it = bTagMap30.begin(); it!=bTagMap30.end(); it++, count++){
+	if(count==0) firstBtag_  = it->first;
+	if(count==1) secondBtag_ = it->first;
+	if(count==2) thirdBtag_  = it->first;
+	if(count==3) fourthBtag_ = it->first;
+      }
+
+
       EventShapeVariables* eventShapes = new EventShapeVariables(allJetsForShapeVar);
       isotropy_   = eventShapes->isotropy();
       circularity_= eventShapes->circularity();
@@ -505,14 +615,33 @@ int main(int argc, const char* argv[])
       Cparam_     = eventShapes->C();
       Dparam_     = eventShapes->D();
 
+      TopologyWorker* topologicalWorker = new  TopologyWorker();
 
+      if(jetArrayForShapeVar.GetEntries()>0 && false){
+	topologicalWorker->setPartList(&jetArrayForShapeVar, &jetArrayForShapeVar);
+	thrust0_ = (topologicalWorker->thrust())[0] ;
+	thrust1_ = (topologicalWorker->thrust())[1] ;
+	thrust2_ = (topologicalWorker->thrust())[2] ;
+	sphericity2_ = topologicalWorker->get_sphericity();
+	aplanarity2_ = topologicalWorker->get_aplanarity();
+	h10_ = topologicalWorker->get_h10();
+	h20_ = topologicalWorker->get_h20();
+	h30_ = topologicalWorker->get_h30();
+	h40_ = topologicalWorker->get_h40();
+	h50_ = topologicalWorker->get_h50();
+	h60_ = topologicalWorker->get_h60();
+      } 
+      jetArrayForShapeVar.Clear(); 
+      leptArrayForShapeVar.Clear();
       //////////////////////////////////FILL////////////////////////////////////////
       //////////////////////////////////////////////////////////////////////////////
 
       hJetRankBR->Fill();
       aJetRankBR->Fill();
+      numJets40BR->Fill();
       numJets30BR->Fill();
       numJets20BR->Fill();
+      numJets40bTagBR->Fill();
       numJets30bTagBR->Fill();
       numJets20bTagBR->Fill();
       pt1BR->Fill();
@@ -545,6 +674,18 @@ int main(int argc, const char* argv[])
       aplanarityBR->Fill();
       CparamBR->Fill();
       DparamBR->Fill();
+      thrust0BR->Fill();
+      thrust1BR->Fill();
+      thrust2BR->Fill();
+      sphericity2BR->Fill();
+      aplanarity2BR->Fill();
+      h10BR->Fill();
+      h20BR->Fill();
+      h30BR->Fill();
+      h40BR->Fill();
+      h50BR->Fill();
+      h60BR->Fill();
+
       aveCsvBR->Fill();
       aveDeltaRbTagBR->Fill();
       aveMbTagBR->Fill();
@@ -557,9 +698,20 @@ int main(int argc, const char* argv[])
       massAllBR->Fill();
       massLJBR->Fill();
       M3BR->Fill();
+      MHT20BR->Fill();
+      MHT30BR->Fill();
+      MHT40BR->Fill();
 
+      minDeltaRLJBR->Fill();
+      minDeltaRBtagBR->Fill();
+
+      firstBtagBR->Fill();
+      secondBtagBR->Fill();
+      thirdBtagBR->Fill();
+      fourthBtagBR->Fill();
 
       delete eventShapes;
+      delete topologicalWorker;
 
     }
 
