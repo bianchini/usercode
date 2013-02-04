@@ -1227,8 +1227,8 @@ void produceAll(  TString outputDir = "MoriondNewRecoilV4" ){
   vector<string> variables;
   vector<int> mH;
 
-  variables.push_back("diTauVisMass");
-  //variables.push_back("diTauNSVfitMass");
+  //variables.push_back("diTauVisMass");
+  variables.push_back("diTauNSVfitMass");
   //variables.push_back("diTauSVFitMassCal0");
   //variables.push_back("diTauSVFitMassCal1");
   //variables.push_back("diTauSVFitMassCal2");

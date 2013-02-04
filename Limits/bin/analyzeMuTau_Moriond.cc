@@ -695,7 +695,7 @@ void evaluateWusingSSEvents(TH1F* hCleaner = 0, int bin_low = 0, int bin_high = 
 
   float Error = 0.;
   hCleaner->Reset();
-  hCleaner->Sumw2();
+  if ( !hCleaner->GetSumw2N() )hCleaner->Sumw2();
 
   cout << "Extrapolation from bin [1," <<  bin_low << "] and [" <<  bin_high << ",inf]" << endl;
 
@@ -1434,7 +1434,7 @@ void plotMuTau( Int_t mH_           = 120,
     TString h1Name = "h1_"+it->first;
     TH1F* h1       = new TH1F( h1Name ,"" , nBins , bins.GetArray());
     TH1F* hCleaner = new TH1F("hCleaner","",nBins , bins.GetArray());
-    h1->Sumw2(); hCleaner->Sumw2();
+    if ( !h1->GetSumw2N() )h1->Sumw2(); if ( !hCleaner->GetSumw2N() )hCleaner->Sumw2();
     TTree* currentTree = 0;
     
     if((it->first).find("SS")!=string::npos){
@@ -1711,7 +1711,7 @@ void plotMuTau( Int_t mH_           = 120,
 	  float NormData = 0.;
 	  drawHistogramData(currentTree, variable, NormData,  Error, 1.0 , h1, sbin, 1);
 	  hData->Add(h1, 1.0);
-	  hData->Sumw2();
+	  if ( !hData->GetSumw2N() )hData->Sumw2();
 	  
 	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
 	    drawHistogramData(currentTree, variable, NormData,  Error, 1.0 , hCleaner, sbinSSaIsoMtiso ,1);
