@@ -248,39 +248,32 @@ void findGenMatch(int& genMatch, LV genJet, LV topBLV, LV topW1LV, LV topW2LV, L
     return;
   }
 
-  genMatch = -1; 
-
-  if( topBLV.Pt()>0 && Geom::deltaR(genJet, topBLV) < GENJETDR ){
+  if( topBLV.Pt()>0 && Geom::deltaR(genJet, topBLV)            < GENJETDR ){
     genMatch = 1;
-    //return;
   }
-  if( topW1LV.Pt()>0 && Geom::deltaR(genJet, topW1LV) < GENJETDR ){
+  else if( topW1LV.Pt()>0 && Geom::deltaR(genJet, topW1LV)     < GENJETDR ){
     genMatch = 2;
-    //return;
   }
-  if( topW2LV.Pt()>0 && Geom::deltaR(genJet, topW2LV) < GENJETDR ){
+  else if( topW2LV.Pt()>0 && Geom::deltaR(genJet, topW2LV)     < GENJETDR ){
     genMatch = 2;
-    //return;
   }
-  if( atopBLV.Pt()>0 && Geom::deltaR(genJet, atopBLV) < GENJETDR ){
+  else if( atopBLV.Pt()>0 && Geom::deltaR(genJet, atopBLV)     < GENJETDR ){
     genMatch = 1;
-    //return;
   }
-  if( atopW1LV.Pt()>0 && Geom::deltaR(genJet, atopW1LV) < GENJETDR ){
+  else if( atopW1LV.Pt()>0 && Geom::deltaR(genJet, atopW1LV)   < GENJETDR ){
     genMatch = 2;
-    //return;
   }
-  if( atopW2LV.Pt()>0 && Geom::deltaR(genJet, atopW2LV) < GENJETDR ){
+  else if( atopW2LV.Pt()>0 && Geom::deltaR(genJet, atopW2LV)   < GENJETDR ){
     genMatch = 2;
-    //return;
   }
-  if( genBLV.Pt()>0 && Geom::deltaR(genJet, genBLV) < GENJETDR ){
+  else if( genBLV.Pt()>0 && Geom::deltaR(genJet, genBLV)       < GENJETDR ){
     genMatch = 0;
-    //return;
   }
-  if( genBbarLV.Pt()>0 && Geom::deltaR(genJet, genBbarLV) < GENJETDR ){
+  else if( genBbarLV.Pt()>0 && Geom::deltaR(genJet, genBbarLV) < GENJETDR ){
     genMatch = 0;
-    //return;
+  }
+  else{
+    genMatch = -1; 
   }
 
   return;
@@ -973,7 +966,7 @@ int main(int argc, const char* argv[])
 	  float deltaR = TMath::Sqrt( TMath::Power(first.Eta()-second.Eta(),2) + TMath::Power(first.Phi()-second.Phi(),2)  );
 	  if( deltaR < minDeltaR){
 	    minDeltaRLJ_ = deltaR;
-	    minDeltaR = deltaR;
+	    minDeltaR    = deltaR;
 	  }
 	}
 
@@ -981,8 +974,8 @@ int main(int argc, const char* argv[])
 	  LV second = allUntagJetsForShapeVar[k];
 	  float deltaR = TMath::Sqrt( TMath::Power(first.Eta()-second.Eta(),2) + TMath::Power(first.Phi()-second.Phi(),2)  );
 	  if( deltaR < minDeltaR){
-	    minDeltaRLJ_ = minDeltaR;
-	    minDeltaR = deltaR;
+	    minDeltaRLJ_ = deltaR;
+	    minDeltaR    = deltaR;
 	  }
 	}
       }
@@ -1025,12 +1018,12 @@ int main(int argc, const char* argv[])
 
 	LV genJet;
 	if( index >= 0 ){
-	  genJet.SetPt(  hJetsgenpt[index] );
+	  genJet.SetPt(  hJetsgenpt[ index] );
 	  genJet.SetEta( hJetsgeneta[index] );
 	  genJet.SetPhi( hJetsgenphi[index] );
 	  genJet.SetM( 0.0 );
 	}else{
-	  genJet.SetPt(  aJetsgenpt[-index-1] );
+	  genJet.SetPt(  aJetsgenpt[ -index-1] );
 	  genJet.SetEta( aJetsgeneta[-index-1] );
 	  genJet.SetPhi( aJetsgenphi[-index-1] );
 	  genJet.SetM( 0.0 );
@@ -1058,8 +1051,8 @@ int main(int argc, const char* argv[])
 	  csv2_   = (index >= 0 ) ?  hJetscsv[index] : aJetscsv[-index-1];
 	  flavor2_= (index >= 0 ) ?  hJetsflavor[index] : aJetsflavor[-index-1];
 	  topB2_  = int(genMatch==1);
-	  topW3_  = int(genMatch==2);
-	  higgsB3_= int(genMatch==0); 
+	  topW2_  = int(genMatch==2);
+	  higgsB2_= int(genMatch==0); 
 	}
 	else if(all==2){
 	  index3_ = index;

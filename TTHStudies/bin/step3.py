@@ -10,7 +10,7 @@ process.fwliteInput = cms.PSet(
     pathToFile    = cms.string("."),
     ordering      = cms.string("ZllH.DiJetPt.Oct22."),
     lumi          = cms.double(12.1),
-    verbose       = cms.bool(True),
+    verbose       = cms.bool(False),
     
 
     samples       = cms.VPSet(
@@ -104,11 +104,12 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('TTJets_Merged'),
     nickName = cms.string('TTJets'),
     color    = cms.int32(5),
-    xSec     = cms.double(234)
+    xSec     = cms.double(234),
+    update   = cms.bool(True)
     ),
 
     cms.PSet(
@@ -192,7 +193,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('ZH_ZToLL_HToBB_M-115_8TeV-powheg-herwigpp'),
     nickName = cms.string('ZH115'),
     color    = cms.int32(2),
