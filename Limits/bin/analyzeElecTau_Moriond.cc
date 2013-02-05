@@ -535,7 +535,7 @@ void evaluateQCD(TString RUN = "ABCD",
 		 TCut sbinPZetaRel ="", TCut pZ="", TCut apZ="", TCut sbinPZetaRelInclusive="", 
 		 TCut sbinPZetaRelaIsoInclusive="", TCut sbinPZetaRelaIso="", TCut sbinPZetaRelaIsoSideband = "", 
 		 TCut vbf="", TCut boost="", TCut zeroJet="",
-		 bool substractTT=true, bool substractVV=true){
+		 bool substractTT=true, bool substractVV=true, bool substractDYTT=true){
 
   if(evaluateWSS)
     evaluateWextrapolation(RUN, sign, useFakeRate, selection_ , 
@@ -590,9 +590,11 @@ void evaluateQCD(TString RUN = "ABCD",
   if(ssHisto !=0) ssHisto->Add( hExtrap, -1.0);
 
   float SSDYtoTauinSidebandRegionMCIncl = 0.;
-  drawHistogramMC(RUN, backgroundDYTauTau,  variable, SSDYtoTauinSidebandRegionMCIncl,    Error, lumiCorrFactor*scaleFactor*ExtrapolationFactorZDataMC, hExtrap, sbin,1);
-  if(qcdHisto!=0) qcdHisto->Add(hExtrap, -1.0);
-  if(ssHisto !=0) ssHisto->Add( hExtrap, -1.0);
+  if(substractDYTT) {
+    drawHistogramMC(RUN, backgroundDYTauTau,  variable, SSDYtoTauinSidebandRegionMCIncl,    Error, lumiCorrFactor*scaleFactor*ExtrapolationFactorZDataMC, hExtrap, sbin,1);
+    if(qcdHisto!=0) qcdHisto->Add(hExtrap, -1.0);
+    if(ssHisto !=0) ssHisto->Add( hExtrap, -1.0);
+  }
 
   float SSDYJtoTauinSidebandRegionMCIncl = 0.;
   drawHistogramMC(RUN, backgroundDYJtoTau,  variable, SSDYJtoTauinSidebandRegionMCIncl,   Error, lumiCorrFactor*scaleFactor*JtoTauCorrectionFactor,     hExtrap, sbin,1);
@@ -744,7 +746,7 @@ void evaluateWusingSSEvents(TString RUN = "ABCD",
 
   float Error = 0.;
   hCleaner->Reset();
-  hCleaner->Sumw2();
+  if ( !hCleaner->GetSumw2N() ) hCleaner->Sumw2();
 
   if(VERBOSE) cout << "Extrapolation from bin [1," <<  bin_low << "] and [" <<  bin_high << ",inf]" << endl;
 
@@ -816,8 +818,8 @@ void plotElecTau( Int_t mH_           = 120,
 		  Float_t maxY_       = 1.2,
 		  TString RUN         = "ABCD",
 		  //TString location  = "/home/llr/cms/veelken/ArunAnalysis/CMSSW_5_3_4_Sep12/src/Bianchi/Limits/bin/results/"
-		  //TString location    = "/home/llr/cms/ndaci/WorkArea/HTauTau/Analysis/CMSSW_534_TopUp/src/Bianchi/Limits/bin/results/"
-		  TString location    = "/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/"
+		  TString location    = "/home/llr/cms/ndaci/WorkArea/HTauTau/Analysis/CMSSW_534_TopUp/src/Bianchi/Limits/bin/results/"
+		  //TString location    = "/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/"
 		  ) 
 {   
 
@@ -1053,6 +1055,7 @@ void plotElecTau( Int_t mH_           = 120,
   TFile *fBackgroundDY    = new TFile(pathToFile+"/nTuple_DYJets_ElecTau.root","READ");
   //TFile *fBackgroundWJets = new TFile(pathToFile+"/nTupleWJets-ElecTau-madgraph-PUS10_run_Open_ElecTauStream.root","READ");
   TFile *fBackgroundWJets = new TFile(pathToFile+"/nTuple_WJetsAllBins_ElecTau.root","READ"); // AllBins
+  //TFile *fBackgroundWJets = new TFile(pathToFile+"/nTuple_WJetsNJets_ElecTau.root","READ"); // W+NJets only (no inclusive)
   TFile *fBackgroundW3Jets= new TFile(pathToFile+"/nTuple_WJets3Jets_ElecTau.root","READ"); // W3J
   TFile *fBackgroundTTbar = new TFile(pathToFile+"/nTuple_TTJets_ElecTau.root","READ");
   TFile *fBackgroundOthers= new TFile(pathToFile+"/nTuple_Others_ElecTau.root","READ");
@@ -1114,11 +1117,13 @@ void plotElecTau( Int_t mH_           = 120,
   else {
     cout << "USE DY SEPARATE SUB-SAMPLES" << endl;
     cout<<tree<<endl;
-    fBackgroundDYTauTau   = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_TauTau_ElecTau.root"  ,"READ");
+    //
+    fBackgroundDYTauTau    = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_TauTau_ElecTau.root"  ,"READ");
     cout<<tree<<endl;
     fBackgroundDYElecToTau = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_EToTau_ElecTau.root"  ,"READ");
     cout<<tree<<endl;
     fBackgroundDYJetToTau  = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_JetToTau_ElecTau.root","READ");
+    // 
     cout<<tree<<endl;
     backgroundDYTauTau    = fBackgroundDYTauTau    ? (TTree*)(fBackgroundDYTauTau    -> Get(tree)) : 0 ;
     cout<<tree<<endl;
@@ -1416,7 +1421,7 @@ void plotElecTau( Int_t mH_           = 120,
  	      sbinPZetaRelSSInclusive, pZ, apZ, sbinPZetaRelSSInclusive, 
  	      sbinPZetaRelSSaIsoInclusive, sbinPZetaRelSSaIsoInclusive, sbinPZetaRelSSaIsoMtisoInclusive, 
 	      vbf, oneJet, zeroJet,
-	      true,true);
+	      true,true,true);
 
   delete hExtrap;
 
@@ -1505,6 +1510,8 @@ void plotElecTau( Int_t mH_           = 120,
     TString h1Name = "h1_"+it->first;
     TH1F* h1       = new TH1F( h1Name ,"" , nBins , bins.GetArray());
     TH1F* hCleaner = new TH1F("hCleaner","",nBins , bins.GetArray());
+    if ( !h1->GetSumw2N() ) h1->Sumw2();
+    if ( !hCleaner->GetSumw2N() ) hCleaner->Sumw2();
 
     TTree* currentTree = 0;
     
@@ -1541,7 +1548,7 @@ void plotElecTau( Int_t mH_           = 120,
 		  sbinPZetaRelSS, pZ, apZ, sbinPZetaRelSSInclusive, 
 		  sbinPZetaRelSSaIsoInclusive, sbinPZetaRelSSaIso, sbinPZetaRelSSaIsoMtiso, 
 		  vbfLoose, oneJet, zeroJet,
-		  true,true);
+		  true,true,false);
 
       cout << "************** END QCD evaluation using SS events *******************" << endl;
 
@@ -1760,7 +1767,7 @@ void plotElecTau( Int_t mH_           = 120,
 	  float NormData = 0.;
 	  drawHistogramData(currentTree, variable, NormData,  Error, 1.0 , h1, sbin, 1);
 	  hData->Add(h1, 1.0);
-	  hData->Sumw2();
+	  if ( !hData->GetSumw2N() ) hData->Sumw2();
 	  
 	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
 	    drawHistogramData(currentTree, variable, NormData,  Error, 1.0 , hCleaner, sbinSSaIsoMtiso ,1);
@@ -1816,7 +1823,7 @@ void plotElecTau( Int_t mH_           = 120,
 			sbinPZetaRelSS, pZ, apZ, sbinPZetaRelSSInclusive, 
 			sbinPZetaRelSSaIsoInclusive, sbinPZetaRelSSaIso, sbinPZetaRelSSaIsoMtiso, 
 			vbfLoose, oneJet, zeroJet, 
-			true, true);
+			true, true, true);
 	    
 	    hDataAntiIsoLooseTauIsoQCD->Add(hDataAntiIsoLooseTauIso, hQCD->Integral()/hDataAntiIsoLooseTauIso->Integral());
 	    delete hExtrapSS;
@@ -2216,11 +2223,12 @@ void plotElecTau( Int_t mH_           = 120,
   }
 
   hSiml->Add(hEWK,1.0);
-  hSiml->Add(hZmm,1.0);
-  hSiml->Add(hTTb,1.0);
 
+  hSiml->Add(hZmm,1.0);
   if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos)
     hSiml->Add(hZmj,1.0);
+
+  hSiml->Add(hTTb,1.0);
 
   if(!USESSBKG){
     if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
@@ -2242,7 +2250,6 @@ void plotElecTau( Int_t mH_           = 120,
   
   aStack->Add(hEWK);
   aStack->Add(hZmm);
-
   if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos)
     aStack->Add(hZmj);
 
