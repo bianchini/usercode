@@ -10,7 +10,8 @@ process.fwliteInput = cms.PSet(
     pathToFile    = cms.string("."),
     ordering      = cms.string("ZllH.DiJetPt.Oct22."),
     lumi          = cms.double(12.1),
-    overwrite     = cms.bool(True),
+    verbose       = cms.bool(True),
+    
 
     samples       = cms.VPSet(
 
@@ -23,7 +24,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('DY1JetsToLL_M-50_TuneZ2Star_8TeV-madgraph'),
     nickName = cms.string('DYJets1'),
     color    = cms.int32(18),
@@ -191,11 +192,12 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('ZH_ZToLL_HToBB_M-115_8TeV-powheg-herwigpp'),
     nickName = cms.string('ZH115'),
     color    = cms.int32(2),
-    xSec     = cms.double(0.036375)
+    xSec     = cms.double(0.036375),
+    update   = cms.bool(True)
     ),
 
     cms.PSet(
