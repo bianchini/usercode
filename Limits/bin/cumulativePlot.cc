@@ -179,13 +179,14 @@ void blindHisto(TH1F* histo=0){
 
 
 void produce(int mH                     = 125,
-	     float signalRescale        = 0.20, 
+	     float signalRescale        = 1.0, //MB signal scaling factor: 0.2=1/5
 	     vector<string>& channels   = *(new  vector<string>()),
 	     vector<string>& com        = *(new  vector<string>()),
 	     Int_t nBins_ = 80, 
 	     Float_t xMin_=  0, Float_t xMax_=400,
 	     string binFile             = "",
-	     bool verbose               = false
+	     bool verbose               = false,
+	     bool splitBkg              = false
 	     ){
 
   TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
@@ -264,8 +265,8 @@ void produce(int mH                     = 125,
   vector<string> categoriesTT; vector<string> categoriesIndexTT;
   vector<string> categoriesMM; vector<string> categoriesIndexMM;
 
-  categoriesLT.push_back("0jet_low");   categoriesIndexLT.push_back("0");
-  categoriesLT.push_back("0jet_high");  categoriesIndexLT.push_back("1");
+  //MBcategoriesLT.push_back("0jet_low");   categoriesIndexLT.push_back("0");
+  //MBcategoriesLT.push_back("0jet_high");  categoriesIndexLT.push_back("1");
   categoriesLT.push_back("boost_low");  categoriesIndexLT.push_back("2");
   categoriesLT.push_back("boost_high"); categoriesIndexLT.push_back("3");
   categoriesLT.push_back("vbf");        categoriesIndexLT.push_back("5");
@@ -273,7 +274,12 @@ void produce(int mH                     = 125,
   categoriesTT.push_back("boost");      categoriesIndexTT.push_back("0");
   categoriesTT.push_back("vbf");        categoriesIndexTT.push_back("1");
 
-  categoriesMM.push_back("dummy");      categoriesIndexMM.push_back("0");
+  //MBcategoriesMM.push_back("dummy");      categoriesIndexMM.push_back("0");
+  //MB2categoriesMM.push_back("0jet_low");   categoriesIndexMM.push_back("0");
+  //MB2categoriesMM.push_back("0jet_high");  categoriesIndexMM.push_back("1");
+  categoriesMM.push_back("boost_low");  categoriesIndexMM.push_back("2");
+  categoriesMM.push_back("boost_high"); categoriesIndexMM.push_back("3");
+  categoriesMM.push_back("vbf");        categoriesIndexMM.push_back("5");
 
   vector<string> channelsDir;
   for(unsigned int ch = 0; ch<channels.size(); ch++){
@@ -362,15 +368,26 @@ void produce(int mH                     = 125,
   THStack* aStack  = new THStack("aStack","");
   THStack* aStackW = new THStack("aStackW","");
   THStack* aStackP = new THStack("aStackP","");
+  float yMin=0.1;//MB
 
   TH1F* hData  = new TH1F( "hData" ,"Data; mass (GeV); events/ 1 GeV"                             , nBins , bins.GetArray());
+  hData->SetMinimum(yMin);//MB
   TH1F* hDataW = new TH1F( "hDataW","Data weighted; mass (GeV); S/(S+B) weighted events/ 1 GeV"   , nBins , bins.GetArray());
-  TH1F* hBkg   = new TH1F( "hBkg"   ,"MC"             , nBins , bins.GetArray());
-  TH1F* hBkgW  = new TH1F( "hBkgW"  ,"MC weighted"    , nBins , bins.GetArray());
-  TH1F* hSgn   = new TH1F( "hSgn"  ,"Signal"          , nBins , bins.GetArray());
-  TH1F* hSgnW  = new TH1F( "hSgnW" ,"Signal weightes" , nBins , bins.GetArray());
-  TH1F* hErr   = new TH1F( "hErr"  ,"Signal"          , nBins , bins.GetArray());
-  TH1F* hErrW  = new TH1F( "hErrW" ,"Signal weightes" , nBins , bins.GetArray());
+  hDataW->SetMinimum(yMin);//MB
+  TH1F* hBkg   = new TH1F( "hBkg"  ,"MC"                , nBins , bins.GetArray());
+  TH1F* hBkgW  = new TH1F( "hBkgW" ,"MC weighted"       , nBins , bins.GetArray());
+  TH1F* hSgn   = new TH1F( "hSgn"  ,"Signal"            , nBins , bins.GetArray());
+  TH1F* hSgnW  = new TH1F( "hSgnW" ,"Signal weightes"   , nBins , bins.GetArray());
+  TH1F* hErr   = new TH1F( "hErr"  ,"Signal"            , nBins , bins.GetArray());
+  TH1F* hErrW  = new TH1F( "hErrW" ,"Signal weightes"   , nBins , bins.GetArray());
+  //MB->
+  TH1F* hTt    = new TH1F( "hTt"   ,"ttbar MC"          , nBins , bins.GetArray());
+  TH1F* hTtW   = new TH1F( "hTtW"  ,"ttbar MC weighted" , nBins , bins.GetArray());
+  TH1F* hEwk   = new TH1F( "hEwk"  ,"EWK MC"            , nBins , bins.GetArray());
+  TH1F* hEwkW  = new TH1F( "hEwkW" ,"EWK MC weighted"   , nBins , bins.GetArray());
+  TH1F* hQcd   = new TH1F( "hQcd"  ,"QCD MC"            , nBins , bins.GetArray());
+  TH1F* hQcdW  = new TH1F( "hQcdW" ,"QCD MC weighted"   , nBins , bins.GetArray());
+  //MB<-
 
   TH1F* hPuritySgn  =  new TH1F( "hPuritySgn" ,"Signal purity; S/(S+B); events" , 7 , 0, 0.28);
   TH1F* hPurityBkg  =  new TH1F( "hPurityBkg" ,"Bkg purity; S/(S+B); events" ,    7 , 0, 0.28);
@@ -430,12 +447,14 @@ void produce(int mH                     = 125,
 
   hSgn->SetFillColor(kRed);
   hSgn->SetLineColor(kRed);
+  //hSgn->SetLineColor(kBlack);//MB
   hSgn->SetFillStyle(1001);
   hSgn->SetLineWidth(1);
   hSgn->SetLineStyle(kSolid);
   hSgnW->SetFillColor(kRed);
-  hSgnW->SetFillStyle(1001);
   hSgnW->SetLineColor(kRed);
+  //hSgnW->SetLineColor(kBlack);//MB
+  hSgnW->SetFillStyle(1001);
   hSgnW->SetLineWidth(1);
   hSgnW->SetLineStyle(kSolid);
 
@@ -445,10 +464,60 @@ void produce(int mH                     = 125,
   hErrW->SetMarkerSize(0);
   hErrW->SetFillColor(1);
   hErrW->SetFillStyle(3013);
+  //MB->
+  hTt->SetFillColor(kBlue-8);
+  hTt->SetLineColor(kBlack);
+  hTt->SetFillStyle(1001);
+  hTt->SetLineWidth(1);
+  hTt->SetLineStyle(kSolid);
+  hTtW->SetFillColor(kBlue-8);
+  hTtW->SetLineColor(kBlack);
+  hTtW->SetFillStyle(1001);
+  hTtW->SetLineWidth(1);
+  hTtW->SetLineStyle(kSolid);
+
+  hEwk->SetFillColor(kRed+2);
+  hEwk->SetLineColor(kBlack);
+  hEwk->SetFillStyle(1001);
+  hEwk->SetLineWidth(1);
+  hEwk->SetLineStyle(kSolid);
+  hEwkW->SetFillColor(kRed+2);
+  hEwkW->SetLineColor(kBlack);
+  hEwkW->SetFillStyle(1001);
+  hEwkW->SetLineWidth(1);
+  hEwkW->SetLineStyle(kSolid);
+
+  hQcd->SetFillColor(kMagenta-10);
+  hQcd->SetLineColor(kBlack);
+  hQcd->SetFillStyle(1001);
+  hQcd->SetLineWidth(1);
+  hQcd->SetLineStyle(kSolid);
+  hQcdW->SetFillColor(kMagenta-10);
+  hQcdW->SetLineColor(kBlack);
+  hQcdW->SetFillStyle(1001);
+  hQcdW->SetLineWidth(1);
+  hQcdW->SetLineStyle(kSolid);
+  //MB<-
 
   leg->AddEntry(hSgn,Form("SM Higgs (m_{H}=%d GeV)",mH),"F");
-  leg->AddEntry(hData,"Observed","PE");
-  leg->AddEntry(hBkg,"Background","F");
+  leg->AddEntry(hData,"Observed","PEL");
+  if(!splitBkg){
+    leg->AddEntry(hBkg,"Background","F");
+  }
+  else{
+    hBkg->SetFillColor(kOrange-4);
+    //hBkg->SetLineColor(kBlack);
+    hBkg->SetLineColor(kOrange-4);
+    hBkg->SetFillStyle(3001);
+    hBkgW->SetFillColor(kOrange-4);
+    //hBkgW->SetLineColor(kBlack);
+    hBkgW->SetLineColor(kOrange-4);
+    hBkgW->SetFillStyle(3001);
+    leg->AddEntry(hBkg,"Z#rightarrow#tau#tau","F");
+    leg->AddEntry(hTt, "t#bar{t}"            ,"F");
+    leg->AddEntry(hEwk,"electroweak"         ,"F");
+    leg->AddEntry(hQcd,"QCD"                 ,"F");
+  }
   leg->AddEntry(hErr,"#pm 1#sigma","F");
   leg->SetHeader(title.c_str());
 
@@ -473,11 +542,14 @@ void produce(int mH                     = 125,
 
 	cout << "Now doing " << string(Form("%s_%s_rescaled_%s_.root", iChIn.c_str(),iCat.c_str(),iEn.c_str() )) << endl;
 	
-	TFile* fInput = new TFile(Form("../test/histos/v2/%s_%s_rescaled_%s_.root", iChIn.c_str(),iCat.c_str(),iEn.c_str() ),"READ");
+	//TFile* fInput = new TFile(Form("../test/histos/v2/%s_%s_rescaled_%s_.root", iChIn.c_str(),iCat.c_str(),iEn.c_str() ),"READ");
+	//TFile* fInput = new TFile(Form("../histos/%s_%s_rescaled_%s_.root", iChIn.c_str(),iCat.c_str(),iEn.c_str() ),"READ");
+	TFile* fInput = new TFile(Form("./histos/%s_%s_rescaled_%s_.root", iChIn.c_str(),iCat.c_str(),iEn.c_str() ),"READ");
 	if(!fInput || fInput->IsZombie() ) continue;
 	
 	TH1F* ihSgn = 0;  TH1F* ihBkg  = 0; TH1F* ihData  = 0; TH1F* ihErr  = 0;
 	TH1F* ihSgnW = 0; TH1F* ihBkgW = 0; TH1F* ihDataW = 0; TH1F* ihErrW = 0;
+	TH1F* ihTt = 0; TH1F* ihTtW = 0; TH1F* ihEwk = 0; TH1F* ihEwkW = 0; TH1F* ihQcd = 0; TH1F* ihQcdW = 0; //MB
 
 	TIter nextkey(gDirectory->GetListOfKeys());
 	TH1F *key;
@@ -500,7 +572,8 @@ void produce(int mH                     = 125,
 	      ihSgnW->Add(h);
 	    }
 	  }
-	  else if(  name.find("data_obs")==string::npos &&  name.find("Ztt")!=string::npos) {
+	  else if(  name.find("data_obs")==string::npos 
+		    &&  name.find("Ztt")!=string::npos ) {
 	    if(verbose) cout << "... This is background ... " << name << endl;
 	    if( !ihBkg ){
 	      ihBkg  = (TH1F*)h->Clone("ihBkg");
@@ -543,6 +616,41 @@ void produce(int mH                     = 125,
 	  //    ihErrW->Add(h);
 	  //  }
 	  //}
+	  //MB->
+	  else if( name.find("ttbar")!=string::npos ){
+	    if(verbose) cout << "... This is background up to tt... " << name << endl;
+	    if( !ihTt ){
+	      ihTt  = (TH1F*)h->Clone("ihTt");
+	      ihTtW = (TH1F*)h->Clone("ihTtW");
+	    }
+	    else{
+	      ihTt->Add(h);
+	      ihTtW->Add(h);
+	    }
+	  }
+	  else if( name.find("EWK")!=string::npos ){
+	    if(verbose) cout << "... This is background up to EWK... " << name << endl;
+	    if( !ihEwk ){
+	      ihEwk  = (TH1F*)h->Clone("ihEwk");
+	      ihEwkW = (TH1F*)h->Clone("ihEwkW");
+	    }
+	    else{
+	      ihEwk->Add(h);
+	      ihEwkW->Add(h);
+	    }
+	  }
+	  else if( name.find("Fakes")!=string::npos ){
+	    if(verbose) cout << "... This is background up to Fakes... " << name << endl;
+	    if( !ihQcd ){
+	      ihQcd  = (TH1F*)h->Clone("ihQcd");
+	      ihQcdW = (TH1F*)h->Clone("ihQcd");
+	    }
+	    else{
+	      ihQcd->Add(h);
+	      ihQcdW->Add(h);
+	    }
+	  }
+	  //MB<-
 	  else{
 	    if(verbose) cout << "This histo will not be considered!" << endl;
 	  }
@@ -620,13 +728,16 @@ void produce(int mH                     = 125,
 	float SoSqrtB   = totalSig/TMath::Sqrt(totalBkg);
 	float SoSqrtBdB = totalSig/TMath::Sqrt(totalBkg+errorBkg2);
 	float SoBpS     = totalSig/(totalBkg+totalSig);
+	float SoSqrtBpS = totalSig/TMath::Sqrt(totalBkg+totalSig);
 
 	cout << "Weight S/B          = " << totalSig << "/"      << totalBkg          << " = "  << SoB       << endl;
 	cout << "Weight S/(S+B)      = " << totalSig << "/"      << totalBkg+totalSig << " = "  << SoBpS     << endl;
 	cout << "Weight S/sqrt(B)    = " << totalSig << "/sqrt(" << totalBkg          << ") = " << SoSqrtB   << endl;
 	cout << "Weight S/sqrt(B+dB) = " << totalSig << "/sqrt(" << totalBkg          << "+"    << errorBkg2 << ") = " << SoSqrtBdB << endl;
+	cout << "Weight S/sqrt(S+B) = " << totalSig << "/sqrt(" << totalSig          << "+"    << totalBkg << ") = " << SoSqrtBpS << endl;
 
-	float weight = SoBpS; 
+	float weight = SoBpS;
+	//float weight = SoSqrtBpS; hDataW->SetYTitle("S/#sqrt{S+B} weighted events/ 1 GeV");
 
 	mapOfWeights.insert(  make_pair(weight, string(Form("%s_%s_%s", iChIn.c_str(),iCat.c_str(),iEn.c_str() )) ) );
 
@@ -638,7 +749,14 @@ void produce(int mH                     = 125,
 	mergeDifferentHistos(hDataW,ihDataW, weight, verbose);
 	mergeDifferentHistos(hErr,  ihErr,   1.0,    verbose);
 	mergeDifferentHistos(hErrW, ihErrW,  weight, verbose);
-
+	//MB->	
+	mergeDifferentHistos(hTt,   ihTt,    1.0,    verbose);
+	mergeDifferentHistos(hTtW,  ihTtW,   weight, verbose);
+	mergeDifferentHistos(hEwk,  ihEwk,   1.0,    verbose);
+	mergeDifferentHistos(hEwkW, ihEwkW,  weight, verbose);
+	mergeDifferentHistos(hQcd,  ihQcd,   1.0,    verbose);
+	mergeDifferentHistos(hQcdW, ihQcdW,  weight, verbose);
+	//MB<-
 
       }
       
@@ -653,6 +771,12 @@ void produce(int mH                     = 125,
   hErrW->Scale(normWeights);
   hBkgW->Scale(normWeights);
   hSgnW->Scale(normWeights);
+  //MB->
+  hTtW->Scale(normWeights);
+  hEwkW->Scale(normWeights);
+  hQcdW->Scale(normWeights);
+  //MB<-
+  
 
   float maxData   = hData->GetBinContent(hData->GetMaximumBin());
   float maxDataW  = hDataW->GetBinContent(hDataW->GetMaximumBin());;
@@ -710,6 +834,13 @@ void produce(int mH                     = 125,
   hData->SetAxisRange(0,1.2*maxData,"Y");
   hData->Draw("P");
   aStack->Draw("HISTSAME");
+  /*MB->*/
+  if(splitBkg){
+    hTt->Draw("HISTSAME");
+    hEwk->Draw("HISTSAME");
+    hQcd->Draw("HISTSAME");
+  }
+  /*MB<-*/
   hErr->Draw("e2SAME");
   hData->Draw("PSAME");
   leg->Draw();
@@ -755,6 +886,13 @@ void produce(int mH                     = 125,
   hDataW->Draw("P");
   hDataW->SetAxisRange(0,1.2*maxDataW,"Y");
   aStackW->Draw("HISTSAME");
+  /*MB->*/
+  if(splitBkg){
+    hTtW->Draw("HISTSAME");
+    hEwkW->Draw("HISTSAME");
+    hQcdW->Draw("HISTSAME");
+  }
+  /*MB<-*/
   hErrW->Draw("e2SAME");
   hDataW->Draw("PSAME");
   leg->Draw();
@@ -838,6 +976,8 @@ void produce(int mH                     = 125,
 
   delete hData; delete hDataW; delete hBkg; delete hErr;
   delete hBkgW; delete hSgn; delete hSgnW;  delete hErrW;
+  delete hTt;  delete hQcd;  delete hEwk;//MB
+  delete hTtW; delete hQcdW; delete hEwkW;//MB
   delete hPurityBkg; delete hPuritySgn; delete hPurityData; delete hPurityErr;
 
   return;
@@ -848,7 +988,8 @@ void produce(int mH                     = 125,
 
 void produceAll( vector<string>& channels = *(new vector<string>) ,
 		 vector<string>& com      = *(new vector<string>),
-		 string binFile = ""
+		 string binFile = "",
+		 bool splitBkg = false
 		 ){
 
   vector<string> sevenTeV;
@@ -886,7 +1027,7 @@ void produceAll( vector<string>& channels = *(new vector<string>) ,
   vector<string> xx;
   xx.push_back("mt"); xx.push_back("et");  xx.push_back("tt");  xx.push_back("em"); 
 
-  produce(125, 0.20, channels , com , -1, 0, 400, binFile, false);
+  produce(125, 0.7, channels , com , -1, 0, 400, binFile, false, splitBkg);
 
   return;
 
@@ -905,11 +1046,12 @@ int main(int argc, const char* argv[])
   AutoLibraryLoader::enable();
 
   if ( argc < 3 ) {
-    std::cout << "Usage: " << argv[0] << " <channel> <period>" << std::endl;
+    std::cout << "Usage: " << argv[0] << " <channel> <period> [bin_file]" << std::endl;
     return 0;
   }
 
   vector<string> channels; vector<string> com; string binFile = "dummy";
+  bool splitBkg=false;//MB
 
   for(int i = 1; i < argc; i++){
     string input(argv[i]);
@@ -924,12 +1066,14 @@ int main(int argc, const char* argv[])
       com.push_back(input);
     else if( input.find("txt")!=string::npos )
       binFile = input;
+    else if( input.find("split")!=string::npos )
+      splitBkg=true;
     else
       cout << input << ": invalid input" << endl;
   }
 
   if( binFile.find("dummy")!=string::npos )  binFile="bins_coarse.txt";
 
-  produceAll( channels, com, binFile);
+  produceAll( channels, com, binFile, splitBkg);
 
 }
