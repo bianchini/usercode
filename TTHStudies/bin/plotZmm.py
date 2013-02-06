@@ -3,6 +3,23 @@ import FWCore.ParameterSet.Config as cms
 
 stitchDY = False
 
+# trigger matching? ID? ISO?
+
+mmBasic = "Vtype==0 && H.HiggsFlag==1 && vLepton_charge[0]*vLepton_charge[1]<0"
+mmKin   = "vLepton_pt[0]>30 && vLepton_pt[1]>20 && abs(vLepton_eta[0])<2.1 && abs(vLepton_eta[1])<2.4"
+mmId    = "vLepton_pfCorrIso[0]<0.10 && vLepton_pfCorrIso[1]<0.20"
+#mmId   =
+#"(vLepton_chargedHadIso[0]+TMath::Max((vLepton_neutralHadIso[0])+(vLepton_photonIso[0])-0.5*(vLepton_chargedPUIso[0]) ,0.0))/vLepton_pt[0]<0.1 &&" +
+#"(vLepton_chargedHadIso[1]+TMath::Max((vLepton_neutralHadIso[1])+(vLepton_photonIso[1])-0.5*(vLepton_chargedPUIso[1]) ,0.0))/vLepton_pt[1]<0.2" 
+
+
+
+eeBasic = "Vtype==1 && H.HiggsFlag==1 && vLepton_charge[0]*vLepton_charge[1]<0"
+eeKin   = "vLepton_pt[0]>30 && vLepton_pt[1]>20 && abs(vLepton_eta[0])<2.5 && abs(vLepton_eta[1])<2.5"
+eeId    = "vLepton_pfCorrIso[0]<0.10 && vLepton_pfCorrIso[1]<0.20"
+#eeId   =
+#"(vLepton_chargedHadIso[0]+TMath::Max((vLepton_neutralHadIso[0])+(vLepton_photonIso[0])-0.5*(vLepton_chargedPUIso[0]) ,0.0))/vLepton_pt[0]<0.1 &&" +
+#"(vLepton_chargedHadIso[1]+TMath::Max((vLepton_neutralHadIso[1])+(vLepton_photonIso[1])-0.5*(vLepton_chargedPUIso[1]) ,0.0))/vLepton_pt[1]<0.2" 
 
 
 
@@ -10,7 +27,8 @@ process = cms.Process("FWLitePlots")
 
 process.fwliteInput = cms.PSet(
 
-    pathToFile    = cms.string("/store/HBB_EDMNtuple/V42/Oct22/env/sys/MVAout/"),
+    #pathToFile    = cms.string("dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/store/HBB_EDMNtuple/V42/Oct22/env/sys/MVAout/"),
+    pathToFile    = cms.string("."),
     ordering      = cms.string("ZllH.DiJetPt.Oct22."),
     lumi          = cms.double(12.1),
 
@@ -18,7 +36,7 @@ process.fwliteInput = cms.PSet(
     samples       = cms.VPSet(
 
     cms.PSet(
-    skip     = cms.bool(False),
+    skip     = cms.bool(True),
     name     = cms.string('DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball'),
     nickName = cms.string('DYJets'),
     color    = cms.int32(18),
@@ -26,7 +44,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(not stitchDY),  
+    skip     = cms.bool(not stitchDY),
     name     = cms.string('DY1JetsToLL_M-50_TuneZ2Star_8TeV-madgraph'),
     nickName = cms.string('DYJets1'),
     color    = cms.int32(18),
@@ -34,7 +52,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(not stitchDY),  
+    skip     = cms.bool(not stitchDY),
     name     = cms.string('DY2JetsToLL_M-50_TuneZ2Star_8TeV-madgraph'),
     nickName = cms.string('DYJets2'),
     color    = cms.int32(18),
@@ -113,7 +131,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('T_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola'),
     nickName = cms.string('TtW'),
     color    = cms.int32(6),
@@ -121,7 +139,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('T_t-channel_TuneZ2star_8TeV-powheg-tauola'),
     nickName = cms.string('Tt'),
     color    = cms.int32(6),
@@ -129,7 +147,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('T_s-channel_TuneZ2star_8TeV-powheg-tauola'),
     nickName = cms.string('Ts'),
     color    = cms.int32(6),
@@ -137,7 +155,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('Tbar_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola'),
     nickName = cms.string('TbartW'),
     color    = cms.int32(6),
@@ -145,7 +163,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('Tbar_t-channel_TuneZ2star_8TeV-powheg-tauola'),
     nickName = cms.string('Tbart'),
     color    = cms.int32(6),
@@ -153,7 +171,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('Tbar_s-channel_TuneZ2star_8TeV-powheg-tauola'),
     nickName = cms.string('Tbars'),
     color    = cms.int32(6),
@@ -161,7 +179,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('WW_TuneZ2star_8TeV_pythia6_tauola'),
     nickName = cms.string('WW'),
     color    = cms.int32(4),
@@ -169,7 +187,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('WZ_TuneZ2star_8TeV_pythia6_tauola'),
     nickName = cms.string('WZ'),
     color    = cms.int32(3),
@@ -177,7 +195,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('ZZ_TuneZ2star_8TeV_pythia6_tauola'),
     nickName = cms.string('ZZ'),
     color    = cms.int32(8),
@@ -209,7 +227,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('ZH_ZToLL_HToBB_M-125_8TeV-powheg-herwigpp'),
     nickName = cms.string('ZH125'),
     color    = cms.int32(2),
@@ -233,7 +251,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('DataZmm'),
     nickName = cms.string('DataZmm'),
     color    = cms.int32(1),
@@ -261,10 +279,10 @@ process.fwliteInput = cms.PSet(
     xHigh     = cms.double(250),
     nBins     = cms.int32(120),
     variable  = cms.string("vLepton_pt[0]"),
-    #variable  = cms.string("Test::maxPt5jet(hJet_pt[0], hJet_pt[1], aJet_pt[0], aJet_pt[1], aJet_pt[2])"),
     xTitle    = cms.string("p_{T} lead #mu"),
     yTitle    = cms.string("Events"),
     histoName = cms.string("Zmm_leadMuPt"),
+    cut       = cms.string(mmBasic+" && "+mmKin+" && "+mmId+" && "+"pt1>30 && pt2>30"),
     logy      = cms.int32(0),
     ),
 

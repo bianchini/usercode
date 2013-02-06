@@ -363,6 +363,8 @@ int main(int argc, const char* argv[])
     float topW1_,  topW2_,  topW3_,  topW4_,  topW5_,  topW6_;
     float higgsB1_,  higgsB2_,  higgsB3_,  higgsB4_,  higgsB5_,  higgsB6_;
     float flavor1_, flavor2_, flavor3_, flavor4_, flavor5_, flavor6_;
+    int nLF_,    nC_,    nB_;
+    int nLFTop_, nCTop_, nBTop_;
 
     int numJets40_; int numJets40bTag_;
     int numJets30_; int numJets30bTag_;
@@ -452,6 +454,13 @@ int main(int argc, const char* argv[])
     TBranch *flavor4BR = outTree->Branch("flavor4",&flavor4_,"flavor4/F");
     TBranch *flavor5BR = outTree->Branch("flavor5",&flavor5_,"flavor5/F");
     TBranch *flavor6BR = outTree->Branch("flavor6",&flavor6_,"flavor6/F");
+
+    TBranch *nLFBR     = outTree->Branch("nLF",   &nLF_,   "nLF/I");
+    TBranch *nCBR      = outTree->Branch("nC",    &nC_,    "nC/I");
+    TBranch *nBBR      = outTree->Branch("nB",    &nB_,    "nB/I");
+    TBranch *nLFTopBR  = outTree->Branch("nLFTop",&nLFTop_,"nLFTop/I");
+    TBranch *nCTopBR   = outTree->Branch("nCTop", &nCTop_, "nCTop/I");
+    TBranch *nBTopBR   = outTree->Branch("nBTop", &nBTop_, "nBTop/I");
 
     TBranch *numJets40BR     = outTree->Branch("numJets40",&numJets40_,"numJets40/I");
     TBranch *numJets30BR     = outTree->Branch("numJets30",&numJets30_,"numJets30/I");
@@ -625,6 +634,9 @@ int main(int argc, const char* argv[])
       topW1_  = -99; topW2_  = -99; topW3_  = -99; topW4_  = -99; topW5_  = -99; topW6_  = -99;
       higgsB1_= -99; higgsB2_= -99; higgsB3_= -99; higgsB4_= -99; higgsB5_= -99; higgsB6_= -99;
       flavor1_= -99; flavor2_= -99; flavor3_= -99; flavor4_= -99; flavor5_= -99; flavor6_= -99;
+
+      nLF_    = 0; nC_    = 0; nB_    = 0;
+      nLFTop_ = 0; nCTop_ = 0; nBTop_ = 0;
 
       thrust0_       = -99;  thrust1_ = -99; thrust2_ = -99; 
       sphericity2_   = -99;  aplanarity2_ = -99;
@@ -1041,7 +1053,19 @@ int main(int argc, const char* argv[])
 	  flavor1_= (index >= 0 ) ?  hJetsflavor[index] : aJetsflavor[-index-1];
 	  topB1_  = int(genMatch==1);
 	  topW1_  = int(genMatch==2);
-	  higgsB1_= int(genMatch==0); 
+	  higgsB1_= int(genMatch==0);
+	  if(TMath::Abs(flavor1_) == 21 || (TMath::Abs(flavor1_) > 0 && TMath::Abs(flavor1_)<4) ){
+	    nLF_++;
+	    if( topW1_ ) nLFTop_++;
+	  }
+	  if(TMath::Abs(flavor1_) == 4 ){
+	    nC_++;
+	    if( topW1_ ) nCTop_++;
+	  }
+	  if(TMath::Abs(flavor1_) == 5 ){
+	    nB_++;
+	    if( topB1_ ) nBTop_++;
+	  }
 	}
 	else if(all==1){
 	  index2_ = index;
@@ -1052,7 +1076,19 @@ int main(int argc, const char* argv[])
 	  flavor2_= (index >= 0 ) ?  hJetsflavor[index] : aJetsflavor[-index-1];
 	  topB2_  = int(genMatch==1);
 	  topW2_  = int(genMatch==2);
-	  higgsB2_= int(genMatch==0); 
+	  higgsB2_= int(genMatch==0);
+	  if(TMath::Abs(flavor2_) == 21 || (TMath::Abs(flavor2_) > 0 && TMath::Abs(flavor2_)<4) ){
+	    nLF_++;
+	    if( topW2_ ) nLFTop_++;
+	  }
+	  if(TMath::Abs(flavor2_) == 4 ){
+	    nC_++;
+	    if( topW2_ ) nCTop_++;
+	  }
+	  if(TMath::Abs(flavor2_) == 5 ){
+	    nB_++;
+	    if( topB2_ ) nBTop_++;
+	  }
 	}
 	else if(all==2){
 	  index3_ = index;
@@ -1063,7 +1099,19 @@ int main(int argc, const char* argv[])
 	  flavor3_= (index >= 0 ) ?  hJetsflavor[index] : aJetsflavor[-index-1];
 	  topB3_  = int(genMatch==1);
 	  topW3_  = int(genMatch==2);
-	  higgsB3_= int(genMatch==0); 
+	  higgsB3_= int(genMatch==0);
+	  if(TMath::Abs(flavor3_) == 21 || (TMath::Abs(flavor3_) > 0 && TMath::Abs(flavor3_)<4) ){
+	    nLF_++;
+	    if( topW3_ ) nLFTop_++;
+	  }
+	  if(TMath::Abs(flavor3_) == 4 ){
+	    nC_++;
+	    if( topW3_ ) nCTop_++;
+	  }
+	  if(TMath::Abs(flavor3_) == 5 ){
+	    nB_++;
+	    if( topB3_ ) nBTop_++;
+	  }
 	}
 	else if(all==3){
 	  index4_ = index;
@@ -1074,7 +1122,19 @@ int main(int argc, const char* argv[])
 	  flavor4_= (index >= 0 ) ?  hJetsflavor[index] : aJetsflavor[-index-1];
 	  topB4_  = int(genMatch==1);
 	  topW4_  = int(genMatch==2);
-	  higgsB4_= int(genMatch==0); 
+	  higgsB4_= int(genMatch==0);
+	  if(TMath::Abs(flavor4_) == 21 || (TMath::Abs(flavor4_) > 0 && TMath::Abs(flavor4_)<4) ){
+	    nLF_++;
+	    if( topW4_ ) nLFTop_++;
+	  }
+	  if(TMath::Abs(flavor4_) == 4 ){
+	    nC_++;
+	    if( topW4_ ) nCTop_++;
+	  }
+	  if(TMath::Abs(flavor4_) == 5 ){
+	    nB_++;
+	    if( topB4_ ) nBTop_++;
+	  }
 	}
 	else if(all==4){
 	  index5_ = index;
@@ -1086,6 +1146,18 @@ int main(int argc, const char* argv[])
 	  topB5_  = int(genMatch==1);
 	  topW5_  = int(genMatch==2);
 	  higgsB5_= int(genMatch==0); 
+	  if(TMath::Abs(flavor5_) == 21 || (TMath::Abs(flavor5_) > 0 && TMath::Abs(flavor5_)<4) ){
+	    nLF_++;
+	    if( topW5_ ) nLFTop_++;
+	  }
+	  if(TMath::Abs(flavor5_) == 4 ){
+	    nC_++;
+	    if( topW5_ ) nCTop_++;
+	  }
+	  if(TMath::Abs(flavor5_) == 5 ){
+	    nB_++;
+	    if( topB5_ ) nBTop_++;
+	  }
 	}
 	else if(all==5){
 	  index6_ = index;
@@ -1096,7 +1168,19 @@ int main(int argc, const char* argv[])
 	  flavor6_= (index >= 0 ) ?  hJetsflavor[index] : aJetsflavor[-index-1];
 	  topB6_  = int(genMatch==1);
 	  topW6_  = int(genMatch==2);
-	  higgsB6_= int(genMatch==0); 
+	  higgsB6_= int(genMatch==0);
+	  if(TMath::Abs(flavor6_) == 21 || (TMath::Abs(flavor6_) > 0 && TMath::Abs(flavor6_)<4) ){
+	    nLF_++;
+	    if( topW6_ ) nLFTop_++;
+	  }
+	  if(TMath::Abs(flavor6_) == 4 ){
+	    nC_++;
+	    if( topW6_ ) nCTop_++;
+	  }
+	  if(TMath::Abs(flavor6_) == 5 ){
+	    nB_++;
+	    if( topB6_ ) nBTop_++;
+	  }
 	}
 	else{}
 
@@ -1210,6 +1294,13 @@ int main(int argc, const char* argv[])
       flavor4BR->Fill();
       flavor5BR->Fill();
       flavor6BR->Fill();
+
+      nLFBR->Fill();
+      nCBR->Fill();
+      nBBR->Fill();
+      nLFTopBR->Fill();
+      nCTopBR->Fill();
+      nBTopBR->Fill();
 
       isotropyBR->Fill();
       circularityBR->Fill();

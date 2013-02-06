@@ -29,7 +29,7 @@
 #include "TGraph.h"
 #include "TMultiGraph.h"
 #include "Bianchi/TTHStudies/interface/Samples.h"
-#include "Bianchi/TTHStudies/interface/Test.h"
+//#include "Bianchi/TTHStudies/interface/Test.h"
 
 #include "PhysicsTools/FWLite/interface/TFileService.h"
 #include "FWCore/ParameterSet/interface/ProcessDesc.h"
@@ -120,7 +120,7 @@ void DrawHistogramData(TTree* tree = 0,
  
   if(tree!=0 && h!=0){
     h->Reset();
-    tree->Draw(variable+">>"+TString(h->GetName()),"((EVENT.json == 1 || EVENT.run < 196532) && H.HiggsFlag==1 && (triggerFlags[14]>0 || triggerFlags[21]>0 || triggerFlags[22]>0 || triggerFlags[23]>0))"*cut);
+    tree->Draw(variable+">>"+TString(h->GetName()),"((EVENT.json == 1 || EVENT.run < 196532) && (triggerFlags[14]>0 || triggerFlags[21]>0 || triggerFlags[22]>0 || triggerFlags[23]>0))"*cut);
     h->Scale(scaleFactor);
     normalization      = h->Integral();
     normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
@@ -141,7 +141,7 @@ int main(int argc, const char* argv[])
  
   gSystem->Load("libFWCoreFWLite");
   gSystem->Load("libDataFormatsFWLite");
-  gSystem->Load("../interface/Test_cxx.so");
+  //gSystem->Load("../interface/Test_cxx.so");
   AutoLibraryLoader::enable();
 
   PythonProcessDesc builder(argv[1]);
@@ -190,6 +190,8 @@ int main(int argc, const char* argv[])
     float normalizationError = 0;
 
     bool skip        = pset.getParameter<bool>("skip");
+    if(skip) continue;
+
     float xLow       = pset.getParameter<double>("xLow");
     float xHigh      = pset.getParameter<double>("xHigh");
     int nBins        = pset.getParameter<int>("nBins");
@@ -197,9 +199,9 @@ int main(int argc, const char* argv[])
     string xTitle    = pset.getParameter<string>("xTitle");
     string yTitle    = pset.getParameter<string>("yTitle");
     string histoName = pset.getParameter<string>("histoName");
+    string cut       = pset.getParameter<string>("cut");
+    int normalize    = pset.exists("normalize") ? pset.getParameter<int>("normalize") : 0;
     int logy         = pset.getParameter<int>("logy");
-
-    if(skip) continue;
 
     for(unsigned int i = 0 ; i < mySampleFiles.size(); i++){
 
@@ -224,7 +226,7 @@ int main(int argc, const char* argv[])
      
       float scaleFactor        = mySamples->GetWeight(currentName);
 
-      TCut myCut("Vtype==0 && H.HiggsFlag==1 && vLepton_pt[0]>24 && vLepton_pt[1]>20 && vLepton_charge[0]*vLepton_charge[1]<0 && vLepton_pfCombRelIso[0]<0.10 && vLepton_pfCombRelIso[1]<0.30 && V.mass>60 && hJet_pt[0]>30 && hJet_pt[1]>30");
+      TCut myCut( cut.c_str() );
       
       if( currentName.find("Data")==string::npos ){
 	DrawHistogramMC(    currentTree, variable, normalization, normalizationError, scaleFactor, currentHisto, myCut, 1);
@@ -275,10 +277,37 @@ int main(int argc, const char* argv[])
     c1->cd();
     if(mapHist["DataZmm"]!=0){
       leg->AddEntry(mapHist["DataZmm"], "Data", "P");
-      mapHist["DataZmm"]->Draw("P");
+      if(normalize){
+	mapHist["DataZmm"]->DrawNormalized("P");
+	for( int k = 0 ; k < (aStack->GetStack())->GetEntries() ; k++){
+	  if(totalMC>0) ((TH1F*)(aStack->GetStack())->At(k))->Scale(1./totalMC);
+	}
+	aStack->Draw("HISTSAME");
+	mapHist["DataZmm"]->DrawNormalized("PSAME");
+      }
+      else{
+	mapHist["DataZmm"]->Draw("P");
+	aStack->Draw("HISTSAME");
+	mapHist["DataZmm"]->Draw("PSAME");
+      }
     }
-    aStack->Draw("HISTSAME");
-    mapHist["DataZmm"]->Draw("PSAME");
+    else{
+      if(normalize){
+	for( int k = 0 ; k < (aStack->GetStack())->GetEntries() ; k++){
+	  if(totalMC>0) ((TH1F*)(aStack->GetStack())->At(k))->Scale(1./totalMC);
+	}
+	aStack->Draw("HIST");
+      }
+      else{
+	aStack->Draw("HIST");
+      }
+      TH1F* hStack = (TH1F*)aStack->GetHistogram();
+      hStack->SetXTitle(xTitle.c_str());
+      hStack->SetYTitle(yTitle.c_str());
+      hStack->SetTitleSize(  0.04,"X");
+      hStack->SetTitleSize(  0.05,"Y");
+      hStack->SetTitleOffset(0.95,"Y");
+    }
     leg->Draw();
     c1->SaveAs(("Plots/"+histoName+".png").c_str());
     c1->SaveAs(("Plots/"+histoName+".root").c_str());
