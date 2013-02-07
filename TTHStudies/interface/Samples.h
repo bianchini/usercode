@@ -22,7 +22,7 @@ class Samples {
  public:
 
   Samples(string, string, vector<string>, vector<double>, double, int) ;
-  Samples(string, string, const edm::VParameterSet&, double, int);
+  Samples(bool, string, string, const edm::VParameterSet&, double, int);
 
   ~Samples(){ 
     for(  std::map<string,TFile*>::iterator it = mapFile_.begin(); it!= mapFile_.end() ; it++){
@@ -30,6 +30,7 @@ class Samples {
     }
   }
 
+  void OpenFile(string);
   TFile* GetFile(string);
   TH1F* GetHisto(string, string);
   TTree* GetTree(string, string);
@@ -42,7 +43,9 @@ class Samples {
 
  private:
 
-  map<string, TFile*> mapFile_;
+  map<string, TString> mapPfn_;
+  map<string, bool>    mapUpdate_;
+  map<string, TFile*>  mapFile_;
   map<string, double>  mapXSec_;
   map<string, double>  mapWeight_;
   map<string, double>  mapColor_;
@@ -52,13 +55,16 @@ class Samples {
 
 };
 
-Samples::Samples(string pathToFile, string ordering, 
+
+Samples::Samples(bool openAllFiles, string pathToFile, string ordering, 
 		 const edm::VParameterSet& vpset,
 		 double lumi,
 		 int verbose){
 
   err_     = 0; 
   verbose_ = verbose;
+
+  if(verbose_ && !openAllFiles) cout << "WARNING: Files must be opened once at the time via Samples::OpenFile()" << endl;
 
   BOOST_FOREACH(edm::ParameterSet p, vpset) {
 
@@ -75,26 +81,33 @@ Samples::Samples(string pathToFile, string ordering,
     TString pfn = pathToFile+"/"+ordering+TfileName+".root";
     if(verbose_) std::cout << string(pfn.Data()) << std::endl;
 
-    TFile *f = update ?  TFile::Open(pfn,"UPDATE") :  TFile::Open(pfn,"READ");
+    TFile *f = 0;
+
+    if(openAllFiles) f = update ?  TFile::Open(pfn,"UPDATE") :  TFile::Open(pfn,"READ");
+    else f = TFile::Open(pfn,"READ");
     
     if(!f || f->IsZombie()){
       err_ = 1;
     }else{
-      mapFile_[nickName]  = f;
+      mapFile_[nickName]  = openAllFiles ? f : 0;
       mapXSec_[nickName]  = xSec ;
       mapColor_[nickName] = color;
+      mapPfn_[nickName]   = pfn;
+      mapUpdate_[nickName]= update;
 
       double weight = 1.0;
 
       if(xSec<0) weight = 1.0;
-      else if(this->GetHisto(nickName, "CountWithPU") != 0){
-	double counter = this->GetHisto(nickName, "CountWithPU")->GetBinContent(1);
+      else if( (TH1F*)f->Get("CountWithPU") != 0){
+	double counter = ((TH1F*)f->Get("CountWithPU"))->GetBinContent(1);
 	weight = counter>0 ? lumi*1000/(counter/xSec) : 1.0;
       }
 	
       mapWeight_[nickName] = weight;
+
+      if(!openAllFiles) f->Close();
     }
-    
+
   }
 }
 
@@ -132,7 +145,6 @@ Samples::Samples(string pathToFile, string ordering,
 	  double counter = this->GetHisto(fileList[k], "Count")->GetBinContent(1);
 	  weight = counter>0 ? lumi*1000./(counter/xsection[k]) : 1.0;
 	}
-	
 	mapWeight_[fileList[k]] = weight;
 	
       }
@@ -142,9 +154,26 @@ Samples::Samples(string pathToFile, string ordering,
   
 }
 
+void Samples::OpenFile(string sampleName){
+
+  TFile *file = 0;
+  if(mapPfn_[ sampleName] !=0 ){
+    TString pfn = mapPfn_[sampleName];
+    file = mapUpdate_[sampleName] ?  TFile::Open(pfn,"UPDATE") :  TFile::Open(pfn,"READ");
+    mapFile_[sampleName]  = file;
+  }
+  if(!file){
+    err_ = 1;
+    if(verbose_) cout << "Could not find file pointer in sample " << sampleName << endl;
+  }
+  return;
+
+}
+
 TFile* Samples::GetFile(string sampleName){
 
   TFile *file = 0;
+  this->OpenFile(sampleName);
   if(mapFile_[sampleName]!=0) file = mapFile_[sampleName] ;
   if(!file){
     err_ = 1;

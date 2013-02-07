@@ -28,6 +28,7 @@
 #include "TStyle.h"
 #include "TGraph.h"
 #include "TMultiGraph.h"
+#include "TObjArray.h"
 #include "Bianchi/TTHStudies/interface/Samples.h"
 //#include "Bianchi/TTHStudies/interface/Test.h"
 
@@ -43,6 +44,11 @@
 #define VERBOSE 1
 
 using namespace std;
+
+
+struct sorterByIntegral {
+  bool operator() (float i,float j) const { return (i<j);}
+};
 
 
 void ClearAllHisto(map<string, TH1F*> aMap){
@@ -100,7 +106,7 @@ void DrawHistogramMC(TTree* tree = 0,
     tree->Draw(variable+">>"+TString(h->GetName()),"(PUweight*weightTrig2012)"*cut); //lheWeight
     h->Scale(scaleFactor);
     normalization      = h->Integral();
-    normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
+    normalizationError = h->GetEntries()>0 ? TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries()) : 0.0;
     if(verbose==0) h->Reset();
   }
   else{
@@ -109,21 +115,21 @@ void DrawHistogramMC(TTree* tree = 0,
   }
 }
 
-void DrawHistogramData(TTree* tree = 0, 
-		       TString variable = "", 
-		       float& normalization      = *(new float()), 
-		       float& normalizationError = *(new float()), 
-		       float scaleFactor = 0., 
-		       TH1F* h = 0, 
-		       TCut cut = TCut(""),
-		       int verbose = 0 ){
- 
+void DrawHistogramDataVType0(TTree* tree = 0, 
+			     TString variable = "", 
+			     float& normalization      = *(new float()), 
+			     float& normalizationError = *(new float()), 
+			     float scaleFactor = 0., 
+			     TH1F* h = 0, 
+			     TCut cut = TCut(""),
+			     int verbose = 0 ){
+  
   if(tree!=0 && h!=0){
     h->Reset();
     tree->Draw(variable+">>"+TString(h->GetName()),"((EVENT.json == 1 || EVENT.run < 196532) && (triggerFlags[14]>0 || triggerFlags[21]>0 || triggerFlags[22]>0 || triggerFlags[23]>0))"*cut);
     h->Scale(scaleFactor);
     normalization      = h->Integral();
-    normalizationError = TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries());
+    normalizationError = h->GetEntries()>0 ? TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries()) : 0.0;
     if(verbose==0) h->Reset();
   }
   else{
@@ -131,6 +137,30 @@ void DrawHistogramData(TTree* tree = 0,
     return;
   }
 }
+
+void DrawHistogramDataVType1(TTree* tree = 0, 
+			     TString variable = "", 
+			     float& normalization      = *(new float()), 
+			     float& normalizationError = *(new float()), 
+			     float scaleFactor = 0., 
+			     TH1F* h = 0, 
+			     TCut cut = TCut(""),
+			     int verbose = 0 ){
+  
+  if(tree!=0 && h!=0){
+    h->Reset();
+    tree->Draw(variable+">>"+TString(h->GetName()),"((EVENT.json == 1 || EVENT.run < 196532) && (triggerFlags[5]>0 || triggerFlags[6]>0))"*cut);
+    h->Scale(scaleFactor);
+    normalization      = h->Integral();
+    normalizationError = h->GetEntries()>0 ? TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries()) : 0.0;
+    if(verbose==0) h->Reset();
+  }
+  else{
+    cout << "Function DrawHistogramData has raised an error" << endl;
+    return;
+  }
+}
+
 
 
 int main(int argc, const char* argv[])
@@ -155,10 +185,12 @@ int main(int argc, const char* argv[])
   std::string ordering(   in.getParameter<std::string>("ordering" ) );
   double lumi(       in.getParameter<double>("lumi" ) );
 
-
-  Samples* mySamples = new Samples(pathToFile, ordering, samples, lumi, VERBOSE);
+  bool openAllFiles = true;
+  Samples* mySamples = new Samples(openAllFiles, pathToFile, ordering, samples, lumi, VERBOSE);
   map<string, TH1F*> mapHist;
   vector<string> mySampleFiles;
+
+  string dataName = "pippo";
 
   if(mySamples->IsOk()){
 
@@ -168,9 +200,11 @@ int main(int argc, const char* argv[])
     for( unsigned int i = 0 ; i < mySampleFiles.size(); i++){
       string sampleName       = mySampleFiles[i];
 
+      if(sampleName.find("Data")!=string::npos) dataName = sampleName;
+
       if(VERBOSE){
 	cout << mySampleFiles[i] << " ==> " << mySamples->GetXSec(sampleName) 
-	     << " pb, Num. events  "        << mySamples->GetTree(sampleName, "tree")->GetEntries() 
+	     << " pb,"
 	     << " ==> weight = "            << mySamples->GetWeight(sampleName) << endl;
       }
     }
@@ -180,11 +214,15 @@ int main(int argc, const char* argv[])
     return 0;
   }
 
- 
+
+
 
   BOOST_FOREACH(edm::ParameterSet pset, plots){
 
+    mapHist.clear();
+
     float totalMC   = 0.;
+    float totalMCError2 = 0.;
     float totalData = 0.;
     float normalization      = 0;
     float normalizationError = 0;
@@ -206,6 +244,7 @@ int main(int argc, const char* argv[])
     for(unsigned int i = 0 ; i < mySampleFiles.size(); i++){
 
       string currentName       = mySampleFiles[i];
+
 
       TH1F* h1 = new TH1F( ("h1_"+currentName).c_str(), (" ;"+xTitle+";"+yTitle).c_str(), nBins, xLow, xHigh );
       h1->SetLineColor( mySamples->GetColor(currentName) );
@@ -231,10 +270,17 @@ int main(int argc, const char* argv[])
       if( currentName.find("Data")==string::npos ){
 	DrawHistogramMC(    currentTree, variable, normalization, normalizationError, scaleFactor, currentHisto, myCut, 1);
 	totalMC += normalization;
+	totalMCError2 += (normalizationError*normalizationError);
 	if(VERBOSE) cout << "Histo for " << currentName << " has integral " << currentHisto->Integral() << endl;
       }
       else{
-	DrawHistogramData(  currentTree, variable, normalization, normalizationError, scaleFactor, currentHisto, myCut, 1);
+	if(dataName.find("Zmm")!=string::npos)
+	  DrawHistogramDataVType0(  currentTree, variable, normalization, normalizationError, scaleFactor, currentHisto, myCut, 1);
+	else if(dataName.find("Zee")!=string::npos)
+	  DrawHistogramDataVType1(  currentTree, variable, normalization, normalizationError, scaleFactor, currentHisto, myCut, 1);
+	else{
+	  cout << "Unsupported data type" << endl;
+	}
 	totalData += normalization;
 	if(VERBOSE) cout << "Histo for " << currentName << " has integral " << currentHisto->Integral() << endl;
       }
@@ -242,53 +288,91 @@ int main(int argc, const char* argv[])
     }
     
     
-    if(VERBOSE) cout << "Toatl MC = "   << totalMC << endl;
-    if(VERBOSE) cout << "Toatl Data = " << totalData << endl;
+    if(VERBOSE) cout << "Toatl MC = "   << totalMC   << " +/- " << TMath::Sqrt(totalMCError2) << endl;
+    if(VERBOSE) cout << "Toatl Data = " << totalData << " +/- " << TMath::Sqrt(totalData)     << endl;
     
     
     TCanvas *c1  = new TCanvas("c1","",5,30,650,600);
     TLegend* leg = new TLegend(0.65,0.45,0.90,0.90,NULL,"brNDC");
+    leg->SetHeader(Form("#sqrt{s}=8 TeV  L=%.1f fb^{-1} ",lumi));
     
     CanvasAndLegend(c1, leg, logy);
+   
     THStack* aStack = new THStack("aStack","");
+    vector<TH1F*> mcHistoArray;
 
-    bool flagSingleTop = false;    
+    bool flagSingleTop = false;   bool flagTTbar = false;
+    TH1F* top = 0; TH1F* singleTop = 0;
+     
     for(  std::map<string,TH1F*>::iterator it = mapHist.begin(); it!= mapHist.end() ; it++){
       if( (it->first).find("Data")==string::npos  ){
 	if( (it->first).find("ZH")==string::npos ||
 	    ((it->first).find("ZH")!=string::npos && (it->first).find("125")!=string::npos )  ){
-	  aStack->Add((it->second));
+
 
 	  bool isSingleTop = ((it->first).find("Tt")!=string::npos || (it->first).find("TtW")!=string::npos  || (it->first).find("Ts")!=string::npos ||
 			      (it->first).find("Tbar")!=string::npos );
+
+	  bool isTTbar     = ((it->first).find("TTJets")!=string::npos);
+
+	  if(      isTTbar     && !top)       top = (it->second);
+	  else if( isTTbar     &&  top)	      top->Add(it->second);
+	  else if( isSingleTop && !singleTop) singleTop = (it->second);
+	  else if( isSingleTop &&  singleTop) singleTop->Add(it->second);
+	  else {
+	    mcHistoArray.push_back((it->second));
+	  }
+
+	  //aStack->Add((it->second));
+	  //mcHistoArray.Add((it->second));
 
 	  if( isSingleTop && !flagSingleTop){
 	    leg->AddEntry(it->second, "Single top", "F");
 	    flagSingleTop = true;
 	  }
-	  else if(!isSingleTop){
+	  else if(isTTbar  && !flagTTbar){
+	    leg->AddEntry(it->second, "Top", "F");
+	    flagTTbar = true;
+	  }
+	  else if(!isSingleTop && !isTTbar){
 	    leg->AddEntry(it->second, (it->first).c_str(), "F");
 	  }
-
+	  else{}
 	}
       }
     }
+    if(top)       mcHistoArray.push_back(top);
+    if(singleTop) mcHistoArray.push_back(singleTop);
+
+
+    std::map<float, TH1F*, sorterByIntegral> hMapIntegral;
+    for( unsigned int k = 0 ; k < mcHistoArray.size() ; k++){
+      //cout << mcHistoArray[k]->GetName() << endl;
+      hMapIntegral[ mcHistoArray[k]->Integral() ] = mcHistoArray[k];
+      //cout << "done" << endl;
+     }
     
+    for(std::map<float, TH1F*>::iterator it = hMapIntegral.begin(); it!=hMapIntegral.end(); it++){
+      aStack->Add( it->second );
+    }
+
+
     c1->cd();
-    if(mapHist["DataZmm"]!=0){
-      leg->AddEntry(mapHist["DataZmm"], "Data", "P");
+    if(mapHist[dataName]!=0){
+      leg->AddEntry(mapHist[dataName], "Data", "P");
+      mapHist[dataName]->Sumw2();
       if(normalize){
-	mapHist["DataZmm"]->DrawNormalized("P");
+	mapHist[dataName]->DrawNormalized("P");
 	for( int k = 0 ; k < (aStack->GetStack())->GetEntries() ; k++){
 	  if(totalMC>0) ((TH1F*)(aStack->GetStack())->At(k))->Scale(1./totalMC);
 	}
 	aStack->Draw("HISTSAME");
-	mapHist["DataZmm"]->DrawNormalized("PSAME");
+	mapHist[dataName]->DrawNormalized("PSAME");
       }
       else{
-	mapHist["DataZmm"]->Draw("P");
+	mapHist[dataName]->Draw("PE");
 	aStack->Draw("HISTSAME");
-	mapHist["DataZmm"]->Draw("PSAME");
+	mapHist[dataName]->Draw("PSAME");
       }
     }
     else{
@@ -308,14 +392,15 @@ int main(int argc, const char* argv[])
       hStack->SetTitleSize(  0.05,"Y");
       hStack->SetTitleOffset(0.95,"Y");
     }
+
+
     leg->Draw();
     c1->SaveAs(("Plots/"+histoName+".png").c_str());
     c1->SaveAs(("Plots/"+histoName+".root").c_str());
    
 
-
-    ////  clear ////
-    ClearAllHisto(mapHist); delete c1; delete leg;
+    ///////////////////  clear /////////////////////////////////
+    ClearAllHisto(mapHist); delete c1; delete leg; delete aStack;
 
   }
 

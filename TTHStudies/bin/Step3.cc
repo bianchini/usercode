@@ -303,7 +303,8 @@ int main(int argc, const char* argv[])
   double lumi(            in.getParameter<double>("lumi" ) );
   bool verbose(           in.getParameter<bool>("verbose" ) );
 
-  Samples* mySamples = new Samples(pathToFile, ordering, samples, lumi, verbose);
+  bool openAllFiles = false;
+  Samples* mySamples = new Samples(openAllFiles, pathToFile, ordering, samples, lumi, verbose);
   map<string, TH1F*> mapHist;
   vector<string> mySampleFiles;
 
@@ -317,7 +318,7 @@ int main(int argc, const char* argv[])
 
       if(verbose){
 	cout << mySampleFiles[i] << " ==> " << mySamples->GetXSec(sampleName) 
-	     << " pb, Num. events  "        << mySamples->GetTree(sampleName, "tree")->GetEntries() 
+	     << " pb,"
 	     << " ==> weight = "            << mySamples->GetWeight(sampleName) << endl;
       }
     }
@@ -344,8 +345,8 @@ int main(int argc, const char* argv[])
     //}
     //outTree = (mySamples->GetTree( currentName, "tree"))->CopyTree("","");
 
-
-    cout << "Start copying..." << endl;
+    mySamples->OpenFile( currentName );
+    cout << "Opening file " << currentName << endl;
     TTree* outTree = mySamples->GetTree( currentName, "tree");
     cout << "Done!!" << endl;
 
@@ -1356,6 +1357,8 @@ int main(int argc, const char* argv[])
 
 
     outTree->Write("",TObject::kOverwrite );
+
+    mySamples->GetFile( currentName )->Close();
 
    }
 
