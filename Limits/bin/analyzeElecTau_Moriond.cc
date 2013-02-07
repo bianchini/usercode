@@ -154,13 +154,13 @@ void drawHistogramMC(TString RUN = "ABCD",
     h->Reset();
 
     if(RUN=="ABC")
-    tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeightHCP*HLTweightTauABC*HLTweightEleABC*SFTau*SFEle_ABC*HqTWeight*weightHepNup*ZeeWeightHCP)"*cut);
+    tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeightHCP*HLTweightTauABC*HLTweightEleABC*SFTau*SFEle_ABC*weightHepNup*ZeeWeightHCP)"*cut);
 
     else if(RUN=="D")
-      tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*HqTWeight*weightHepNup*ZeeWeight)"*cut);
+      tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*weightHepNup*ZeeWeight)"*cut);
 
     else
-      tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup*ZeeWeight)"*cut);
+      tree->Draw(variable+">>"+TString(h->GetName()),"(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*weightHepNup*ZeeWeight)"*cut);
 
     h->Scale(scaleFactor);
     normalization      = h->Integral();
@@ -289,14 +289,14 @@ void drawHistogramMCFakeRate(TString RUN = "ABCD",
   if(tree!=0 && h!=0){
     h->Reset();
     if(RUN=="ABC")
-      cutWeight = "(sampleWeight*puWeightHCP*HLTweightTauABC*HLTweightEleABC*SFTau*SFEle_ABC*HqTWeight*weightHepNup)";
+      cutWeight = "(sampleWeight*puWeightHCP*HLTweightTauABC*HLTweightEleABC*SFTau*SFEle_ABC*weightHepNup)";
 
     else if(RUN=="D")
-      cutWeight = "(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*HqTWeight*weightHepNup)";
-      //cutWeight = "(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*HqTWeight*weightHepNup)";
+      cutWeight = "(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*weightHepNup)";
+      //cutWeight = "(sampleWeight*puWeightD*HLTweightTauD*HLTweightEleD*SFTau*SFEle_D*weightHepNup)";
 
     else
-      cutWeight = "(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*HqTWeight*weightHepNup)";      
+      cutWeight = "(sampleWeight*puWeight*HLTweightTau*HLTweightElec*SFTau*SFElec*weightHepNup)";      
     
     tree->Draw(variable+">>"+TString(h->GetName()),TCut(cutWeight.Data())*cut*TCut(tscaleFact));
     normalization      = h->Integral()*scaleFactor;
@@ -1548,7 +1548,7 @@ void plotElecTau( Int_t mH_           = 120,
 		  sbinPZetaRelSS, pZ, apZ, sbinPZetaRelSSInclusive, 
 		  sbinPZetaRelSSaIsoInclusive, sbinPZetaRelSSaIso, sbinPZetaRelSSaIsoMtiso, 
 		  vbfLoose, oneJet, zeroJet,
-		  true,true,false);
+		  true,true,true);
 
       cout << "************** END QCD evaluation using SS events *******************" << endl;
 
