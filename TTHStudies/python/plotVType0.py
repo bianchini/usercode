@@ -5,30 +5,67 @@ stitchDY = False
 
 # trigger matching? ID? ISO?
 
-mmBasic      = "(Vtype==0 && H.HiggsFlag==1 && vLepton_charge[0]*vLepton_charge[1]<0)"
+mmBasic      = "(Vtype==0 && H.HiggsFlag==1 && vLepton_charge[0]*vLepton_charge[1]<0 && V.mass>60)"
 mmKin        = "(vLepton_pt[0]>30 && vLepton_pt[1]>20 && abs(vLepton_eta[0])<2.1 && abs(vLepton_eta[1])<2.4)"
 mmId         = "(vLepton_pfCorrIso[0]<0.10 && vLepton_pfCorrIso[1]<0.20)"
 mmJetBasic   = "(numJets30>=2 && pt1>30 && pt2>30)"
 common = mmBasic+" && "+mmKin+" && "+mmId+" && "+mmJetBasic
 
 
+#ttjetsLF = \
+#         "(lheNj - 2 - (abs(genTop.wdau1id)<6 + abs(genTop.wdau2id)<6 + abs(genTbar.wdau1id)<6 + abs(genTbar.wdau2id)<6 ) )==0 "+ \
+#         " || ((lheNj - 2 - (abs(genTop.wdau1id)<6 + abs(genTop.wdau2id)<6 + abs(genTbar.wdau1id)<6 + abs(genTbar.wdau2id)<6 ) )>0 && "+ \
+#         " ( nC-nCTop == 0 && nB-nBTop == 0)" + \
+#         ")"
+ttjetsLF = \
+         "nSimBs==2 && nC-nCTop==0"
 
+
+#ttjetsC = \
+#        "((lheNj - 2 - (abs(genTop.wdau1id)<6 + abs(genTop.wdau2id)<6 + abs(genTbar.wdau1id)<6 + abs(genTbar.wdau2id)<6 ) )>0 && "+ \
+#        " ( nC-nCTop > 0 && nB-nBTop == 0)" + \
+#        ")"
+ttjetsC  = \
+        "nSimBs==2 && nC-nCTop>0"
+
+
+#ttjetsB = \
+#        "((lheNj - 2 - (abs(genTop.wdau1id)<6 + abs(genTop.wdau2id)<6 + abs(genTbar.wdau1id)<6 + abs(genTbar.wdau2id)<6 ) )>0 && "+ \
+#        " ( nC-nCTop >= 0 && nB-nBTop > 0)" + \
+#        ")"
+ttjetsB  = \
+        "nSimBs>2"
+
+#zjetsLF = \
+#        "lheNj==0 || (lheNj>0 && nC==0 && nB==0)"
+zjetsLF = \
+        "nSimBs==0 && nC==0"
+
+#zjetsC  = \
+#       "lheNj>0 && nC>0 && nB==0"
+zjetsC  = \
+       "nSimBs==0 && nC>0"
+
+#zjetsB  = \
+#       "lheNj>0 && nC>=0 && nB>0"
+zjetsB  = \
+       "nSimBs>0"
 
 
 process = cms.Process("FWLitePlots")
 
 process.fwliteInput = cms.PSet(
 
-    #pathToFile    = cms.string("dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/store/HBB_EDMNtuple/V42/Oct22/env/sys/MVAout/"),
-    pathToFile    = cms.string("."),
+    #pathToFile    = cms.string("dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/store//user/bianchi/HBB_EDMNtuple/ZllHDiJetPt/"),
+    pathToFile    = cms.string("/scratch/bianchi/HBB_EDMNtuple/Zll.H.DiJetPt/"),
     ordering      = cms.string("ZllH.DiJetPt.Oct22."),
     lumi          = cms.double(12.1),
-
+    debug         = cms.bool(True),
 
     samples       = cms.VPSet(
 
     cms.PSet(
-    skip     = cms.bool(True),
+    skip     = cms.bool(False),
     name     = cms.string('DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball'),
     nickName = cms.string('DYJets'),
     color    = cms.int32(18),
@@ -115,15 +152,123 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('TTJets_Merged'),
     nickName = cms.string('TTJets'),
     color    = cms.int32(5),
-    xSec     = cms.double(234)
+    xSec     = cms.double(234),
+    ),
+   
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsFullHad'),
+    color    = cms.int32(41),
+    xSec     = cms.double(133.62),
+    ),
+    
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsFullHad_LF'),
+    color    = cms.int32(41),
+    xSec     = cms.double(133.62),
+    cut      = cms.string(ttjetsLF),
     ),
 
     cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsFullHad_C'),
+    color    = cms.int32(44),
+    xSec     = cms.double(133.62),
+    cut      = cms.string(ttjetsC),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsFullHad_B'),
+    color    = cms.int32(46),
+    xSec     = cms.double(133.62),
+    cut      = cms.string(ttjetsB),
+    ),
+    
+
+    cms.PSet(
     skip     = cms.bool(True),  
+    name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsFullLept'),
+    color    = cms.int32(41),
+    xSec     = cms.double(24.56),
+    ),
+    
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsFullLept_LF'),
+    color    = cms.int32(41),
+    xSec     = cms.double(24.56),
+    cut      = cms.string(ttjetsLF),
+    ),
+    
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsFullLept_C'),
+    color    = cms.int32(44),
+    xSec     = cms.double(24.56),
+    cut      = cms.string(ttjetsC)
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsFullLept_B'),
+    color    = cms.int32(46),
+    xSec     = cms.double(24.56),
+    cut      = cms.string(ttjetsB)
+    ),
+    
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsSemiLept'),
+    color    = cms.int32(41),
+    xSec     = cms.double(75.82),
+    ),
+    
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsSemiLept_LF'),
+    color    = cms.int32(41),
+    xSec     = cms.double(75.82),
+    cut      = cms.string(ttjetsLF),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsSemiLept_C'),
+    color    = cms.int32(44),
+    xSec     = cms.double(75.82),
+    cut      = cms.string(ttjetsC),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsSemiLept_B'),
+    color    = cms.int32(46),
+    xSec     = cms.double(75.82),
+    cut      = cms.string(ttjetsB),
+    ),
+
+
+    
+    cms.PSet(
+    skip     = cms.bool(False),  
     name     = cms.string('T_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola'),
     nickName = cms.string('TtW'),
     color    = cms.int32(6),
@@ -131,7 +276,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('T_t-channel_TuneZ2star_8TeV-powheg-tauola'),
     nickName = cms.string('Tt'),
     color    = cms.int32(6),
@@ -139,7 +284,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('T_s-channel_TuneZ2star_8TeV-powheg-tauola'),
     nickName = cms.string('Ts'),
     color    = cms.int32(6),
@@ -147,7 +292,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('Tbar_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola'),
     nickName = cms.string('TbartW'),
     color    = cms.int32(6),
@@ -155,7 +300,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('Tbar_t-channel_TuneZ2star_8TeV-powheg-tauola'),
     nickName = cms.string('Tbart'),
     color    = cms.int32(6),
@@ -163,7 +308,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('Tbar_s-channel_TuneZ2star_8TeV-powheg-tauola'),
     nickName = cms.string('Tbars'),
     color    = cms.int32(6),
@@ -171,7 +316,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('WW_TuneZ2star_8TeV_pythia6_tauola'),
     nickName = cms.string('WW'),
     color    = cms.int32(4),
@@ -179,18 +324,18 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('WZ_TuneZ2star_8TeV_pythia6_tauola'),
     nickName = cms.string('WZ'),
-    color    = cms.int32(3),
+    color    = cms.int32(4),
     xSec     = cms.double(33.85)
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('ZZ_TuneZ2star_8TeV_pythia6_tauola'),
     nickName = cms.string('ZZ'),
-    color    = cms.int32(8),
+    color    = cms.int32(4),
     xSec     = cms.double(8.297)
     ),
 
@@ -219,7 +364,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('ZH_ZToLL_HToBB_M-125_8TeV-powheg-herwigpp'),
     nickName = cms.string('ZH125'),
     color    = cms.int32(2),
@@ -266,7 +411,7 @@ process.fwliteInput = cms.PSet(
     plots      = cms.VPSet(
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(10),
     xHigh     = cms.double(250),
     nBins     = cms.int32(120),
@@ -279,7 +424,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(10),
     xHigh     = cms.double(250),
     nBins     = cms.int32(120),
@@ -292,7 +437,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(30),
     nBins     = cms.int32(30),
@@ -305,7 +450,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(200),
     nBins     = cms.int32(50),
@@ -318,7 +463,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(400),
     nBins     = cms.int32(100),
@@ -327,11 +472,11 @@ process.fwliteInput = cms.PSet(
     yTitle    = cms.string("Events"),
     histoName = cms.string("VType0_diMuMass"),
     cut       = cms.string(common),
-    logy      = cms.int32(0),
+    logy      = cms.int32(1),
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-3),
     xHigh     = cms.double(3),
     nBins     = cms.int32(60),
@@ -345,7 +490,7 @@ process.fwliteInput = cms.PSet(
 
     
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-3),
     xHigh     = cms.double(3),
     nBins     = cms.int32(60),
@@ -361,7 +506,7 @@ process.fwliteInput = cms.PSet(
     ########################## JETS ###############################
     
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(10),
     nBins     = cms.int32(10),
@@ -387,7 +532,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(1.1),
     nBins     = cms.int32(55),
@@ -400,7 +545,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(1.1),
     nBins     = cms.int32(55),
@@ -413,7 +558,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-5.5),
     xHigh     = cms.double(5.5),
     nBins     = cms.int32(55),
@@ -426,7 +571,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-5.5),
     xHigh     = cms.double(5.5),
     nBins     = cms.int32(55),
@@ -439,7 +584,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(30),
     xHigh     = cms.double(300),
     nBins     = cms.int32(90),
@@ -452,7 +597,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(30),
     xHigh     = cms.double(300),
     nBins     = cms.int32(90),
@@ -469,7 +614,7 @@ process.fwliteInput = cms.PSet(
 
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(10),
     nBins     = cms.int32(10),
@@ -482,7 +627,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(10),
     nBins     = cms.int32(10),
@@ -495,7 +640,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(1.1),
     nBins     = cms.int32(55),
@@ -508,20 +653,20 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(1.1),
     nBins     = cms.int32(55),
     variable  = cms.string("csv2"),
     xTitle    = cms.string("CSV jet 2"),
     yTitle    = cms.string("Events"),
-    histoName = cms.string("VType0_csvTrail_2j2b"),
+    histoName = cms.string("VType0_csv3_2j2b"),
     cut       = cms.string(common+" && numJets30bTag==2"),
     logy      = cms.int32(0),
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-5.5),
     xHigh     = cms.double(5.5),
     nBins     = cms.int32(55),
@@ -534,23 +679,23 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-5.5),
     xHigh     = cms.double(5.5),
     nBins     = cms.int32(55),
     variable  = cms.string("eta2"),
     xTitle    = cms.string("#eta jet 2"),
     yTitle    = cms.string("Events"),
-    histoName = cms.string("VType0_etaTrail_2j2b"),
+    histoName = cms.string("VType0_eta2_2j2b"),
     cut       = cms.string(common+" && numJets30bTag==2"),
     logy      = cms.int32(0),
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(30),
-    xHigh     = cms.double(300),
-    nBins     = cms.int32(90),
+    xHigh     = cms.double(390),
+    nBins     = cms.int32(60),
     variable  = cms.string("pt1"),
     xTitle    = cms.string("p_{T} jet 1"),
     yTitle    = cms.string("Events"),
@@ -560,20 +705,34 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(30),
-    xHigh     = cms.double(300),
-    nBins     = cms.int32(90),
+    xHigh     = cms.double(390),
+    nBins     = cms.int32(60),
     variable  = cms.string("pt2"),
     xTitle    = cms.string("p_{T} jet 2"),
     yTitle    = cms.string("Events"),
-    histoName = cms.string("VType0_ptTrail_2j2b"),
+    histoName = cms.string("VType0_pt2_2j2b"),
     cut       = cms.string(common+" && numJets30bTag==2"),
     logy      = cms.int32(1),
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
+    xLow      = cms.double(0),
+    xHigh     = cms.double(8),
+    nBins     = cms.int32(8),
+    variable  = cms.string("(lheNj - 2 - (abs(genTop.wdau1id)<6 + abs(genTop.wdau2id)<6 + abs(genTbar.wdau1id)<6 + abs(genTbar.wdau2id)<6 ) )"),
+    xTitle    = cms.string("LHE N_{j}"),
+    yTitle    = cms.string("Events"),
+    histoName = cms.string("VType0_lheNj_2j2b"),
+    cut       = cms.string(common+" && numJets30bTag==2"),
+    normalize = cms.int32(1),
+    logy      = cms.int32(0),
+    ),
+
+    cms.PSet(
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(3),
     nBins     = cms.int32(3),
@@ -587,7 +746,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(3),
     nBins     = cms.int32(3),
@@ -601,7 +760,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(3),
     nBins     = cms.int32(3),
@@ -615,7 +774,7 @@ process.fwliteInput = cms.PSet(
     ),
     
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(3),
     nBins     = cms.int32(3),
@@ -629,7 +788,7 @@ process.fwliteInput = cms.PSet(
     ),
     
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(3),
     nBins     = cms.int32(3),
@@ -643,7 +802,7 @@ process.fwliteInput = cms.PSet(
     ),
     
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(3),
     nBins     = cms.int32(3),
@@ -657,7 +816,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-10),
     xHigh     = cms.double(25),
     nBins     = cms.int32(35),
@@ -671,7 +830,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-10),
     xHigh     = cms.double(25),
     nBins     = cms.int32(35),
@@ -685,7 +844,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(2),
     nBins     = cms.int32(2),
@@ -699,7 +858,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(2),
     nBins     = cms.int32(2),
@@ -717,7 +876,7 @@ process.fwliteInput = cms.PSet(
 
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(10),
     nBins     = cms.int32(10),
@@ -730,7 +889,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(10),
     nBins     = cms.int32(10),
@@ -743,10 +902,10 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(1.1),
-    nBins     = cms.int32(55),
+    nBins     = cms.int32(22),
     variable  = cms.string("csv1"),
     xTitle    = cms.string("CSV jet 1"),
     yTitle    = cms.string("Events"),
@@ -756,10 +915,10 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(1.1),
-    nBins     = cms.int32(55),
+    nBins     = cms.int32(22),
     variable  = cms.string("csv2"),
     xTitle    = cms.string("CSV jet 2"),
     yTitle    = cms.string("Events"),
@@ -769,10 +928,10 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(1.1),
-    nBins     = cms.int32(55),
+    nBins     = cms.int32(22),
     variable  = cms.string("csv3"),
     xTitle    = cms.string("CSV jet 3"),
     yTitle    = cms.string("Events"),
@@ -782,10 +941,10 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-5.5),
     xHigh     = cms.double(5.5),
-    nBins     = cms.int32(55),
+    nBins     = cms.int32(22),
     variable  = cms.string("eta1"),
     xTitle    = cms.string("#eta jet 1"),
     yTitle    = cms.string("Events"),
@@ -795,10 +954,10 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-5.5),
     xHigh     = cms.double(5.5),
-    nBins     = cms.int32(55),
+    nBins     = cms.int32(22),
     variable  = cms.string("eta2"),
     xTitle    = cms.string("#eta jet 2"),
     yTitle    = cms.string("Events"),
@@ -808,10 +967,10 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-5.5),
     xHigh     = cms.double(5.5),
-    nBins     = cms.int32(55),
+    nBins     = cms.int32(22),
     variable  = cms.string("eta3"),
     xTitle    = cms.string("#eta jet 3"),
     yTitle    = cms.string("Events"),
@@ -821,10 +980,10 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(30),
-    xHigh     = cms.double(300),
-    nBins     = cms.int32(90),
+    xHigh     = cms.double(390),
+    nBins     = cms.int32(30),
     variable  = cms.string("pt1"),
     xTitle    = cms.string("p_{T} jet 1"),
     yTitle    = cms.string("Events"),
@@ -834,10 +993,10 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(30),
-    xHigh     = cms.double(300),
-    nBins     = cms.int32(90),
+    xHigh     = cms.double(390),
+    nBins     = cms.int32(30),
     variable  = cms.string("pt2"),
     xTitle    = cms.string("p_{T} jet 2"),
     yTitle    = cms.string("Events"),
@@ -847,10 +1006,10 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(30),
-    xHigh     = cms.double(300),
-    nBins     = cms.int32(90),
+    xHigh     = cms.double(390),
+    nBins     = cms.int32(30),
     variable  = cms.string("pt3"),
     xTitle    = cms.string("p_{T} jet 3"),
     yTitle    = cms.string("Events"),
@@ -860,7 +1019,21 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
+    xLow      = cms.double(0),
+    xHigh     = cms.double(8),
+    nBins     = cms.int32(8),
+    variable  = cms.string("(lheNj - 2 - (genTop.bpt>0.01)*(abs(genTop.wdau1id)<6 + abs(genTop.wdau2id)<6) - (genTbar.bpt>0.01)*(abs(genTbar.wdau1id)<6 + abs(genTbar.wdau2id)<6 ) )"),
+    xTitle    = cms.string("LHE N_{j}"),
+    yTitle    = cms.string("Events"),
+    histoName = cms.string("VType0_lheNj_3j3b"),
+    cut       = cms.string(common+" && numJets30bTag>=3 && pt3>30"),
+    normalize = cms.int32(1),
+    logy      = cms.int32(0),
+    ),
+    
+    cms.PSet(
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(6),
     nBins     = cms.int32(6),
@@ -874,7 +1047,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(6),
     nBins     = cms.int32(6),
@@ -888,7 +1061,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(6),
     nBins     = cms.int32(6),
@@ -902,7 +1075,7 @@ process.fwliteInput = cms.PSet(
     ),
     
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(6),
     nBins     = cms.int32(6),
@@ -916,7 +1089,7 @@ process.fwliteInput = cms.PSet(
     ),
     
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(6),
     nBins     = cms.int32(6),
@@ -930,7 +1103,7 @@ process.fwliteInput = cms.PSet(
     ),
     
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(6),
     nBins     = cms.int32(6),
@@ -944,7 +1117,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-10),
     xHigh     = cms.double(25),
     nBins     = cms.int32(35),
@@ -958,7 +1131,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-10),
     xHigh     = cms.double(25),
     nBins     = cms.int32(35),
@@ -972,7 +1145,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(-10),
     xHigh     = cms.double(25),
     nBins     = cms.int32(35),
@@ -986,7 +1159,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(2),
     nBins     = cms.int32(2),
@@ -1000,7 +1173,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(2),
     nBins     = cms.int32(2),
@@ -1015,7 +1188,7 @@ process.fwliteInput = cms.PSet(
 
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(2),
     nBins     = cms.int32(2),

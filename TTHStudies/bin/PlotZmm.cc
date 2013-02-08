@@ -183,7 +183,8 @@ int main(int argc, const char* argv[])
 
   std::string pathToFile( in.getParameter<std::string>("pathToFile" ) );
   std::string ordering(   in.getParameter<std::string>("ordering" ) );
-  double lumi(       in.getParameter<double>("lumi" ) );
+  double lumi(       in.getParameter<double>("lumi") );
+  bool debug(        in.getParameter<bool>("debug") );
 
   bool openAllFiles = true;
   Samples* mySamples = new Samples(openAllFiles, pathToFile, ordering, samples, lumi, VERBOSE);
@@ -264,8 +265,11 @@ int main(int argc, const char* argv[])
       TString variable(var.c_str());
      
       float scaleFactor        = mySamples->GetWeight(currentName);
+      TCut sampleCut           = (mySamples->GetCut(currentName)).find("DUMMY")==string::npos ?
+	TCut((mySamples->GetCut(currentName)).c_str()) : "H.HiggsFlag==1";
 
       TCut myCut( cut.c_str() );
+      myCut = myCut&&sampleCut;
       
       if( currentName.find("Data")==string::npos ){
 	DrawHistogramMC(    currentTree, variable, normalization, normalizationError, scaleFactor, currentHisto, myCut, 1);
@@ -301,55 +305,97 @@ int main(int argc, const char* argv[])
     THStack* aStack = new THStack("aStack","");
     vector<TH1F*> mcHistoArray;
 
-    bool flagSingleTop = false;   bool flagTTbar = false;
+    TH1F* DiBoson = 0;
     TH1F* top = 0; TH1F* singleTop = 0;
+    TH1F* topLF = 0; TH1F* topC = 0; TH1F* topB = 0;
      
     for(  std::map<string,TH1F*>::iterator it = mapHist.begin(); it!= mapHist.end() ; it++){
       if( (it->first).find("Data")==string::npos  ){
 	if( (it->first).find("ZH")==string::npos ||
 	    ((it->first).find("ZH")!=string::npos && (it->first).find("125")!=string::npos )  ){
 
+	  if(!(it->second)){
+	    cout << "Null pointer... skipping " << it->first <<  endl;
+	    continue;
+	  }
 
-	  bool isSingleTop = ((it->first).find("Tt")!=string::npos || (it->first).find("TtW")!=string::npos  || (it->first).find("Ts")!=string::npos ||
+	  bool isDiBoson   = ((it->first).find("ZZ")!=string::npos || 
+			      (it->first).find("WW")!=string::npos || 
+			      (it->first).find("WZ")!=string::npos);
+
+	  bool isSingleTop = ((it->first).find("Tt")!=string::npos || 
+			      (it->first).find("TtW")!=string::npos  || 
+			      (it->first).find("Ts")!=string::npos ||
 			      (it->first).find("Tbar")!=string::npos );
 
-	  bool isTTbar     = ((it->first).find("TTJets")!=string::npos);
+	  bool isTTbar     = ((it->first).find("TTJets")   !=string::npos);
+	  bool isTTbarLF   = ((it->first).find("TTJets")   !=string::npos && (it->first).find("_LF")!=string::npos);
+	  bool isTTbarC    = ((it->first).find("TTJets")   !=string::npos && (it->first).find("_C") !=string::npos);
+	  bool isTTbarB    = ((it->first).find("TTJets")   !=string::npos && (it->first).find("_B") !=string::npos);
 
-	  if(      isTTbar     && !top)       top = (it->second);
-	  else if( isTTbar     &&  top)	      top->Add(it->second);
-	  else if( isSingleTop && !singleTop) singleTop = (it->second);
-	  else if( isSingleTop &&  singleTop) singleTop->Add(it->second);
-	  else {
+	  if(isTTbar){
+	    if( !top && !isTTbarLF && !isTTbarC && !isTTbarB)    top = (it->second);
+	    else if(top && !isTTbarLF && !isTTbarC && !isTTbarB) top->Add(it->second);
+	    else if( isTTbarLF ){
+	      if(!topLF) topLF = (it->second);
+	      else topLF->Add(it->second);
+	    }
+	    else if( isTTbarC ){
+	      if(!topC) topC = (it->second);
+	      else topC->Add(it->second);
+	    }
+	    else if( isTTbarB ){
+	      if(!topB) topB = (it->second);
+	      else topB->Add(it->second);
+	    }
+	    else{}
+	  }
+	  else if( isSingleTop){
+	    if(!singleTop) singleTop = (it->second);
+	    else singleTop->Add(it->second);
+	  }
+	  else if(isDiBoson){
+	    if(!DiBoson) DiBoson = (it->second);
+	    else DiBoson->Add(it->second);
+	  }
+	  else{
 	    mcHistoArray.push_back((it->second));
+	    leg->AddEntry(it->second, (it->first).c_str(), "F");
 	  }
 
 	  //aStack->Add((it->second));
 	  //mcHistoArray.Add((it->second));
 
-	  if( isSingleTop && !flagSingleTop){
-	    leg->AddEntry(it->second, "Single top", "F");
-	    flagSingleTop = true;
-	  }
-	  else if(isTTbar  && !flagTTbar){
-	    leg->AddEntry(it->second, "Top", "F");
-	    flagTTbar = true;
-	  }
-	  else if(!isSingleTop && !isTTbar){
-	    leg->AddEntry(it->second, (it->first).c_str(), "F");
-	  }
-	  else{}
 	}
       }
     }
-    if(top)       mcHistoArray.push_back(top);
-    if(singleTop) mcHistoArray.push_back(singleTop);
+    if(top && (!topLF || !topC || !topB)){
+      mcHistoArray.push_back(top);
+      leg->AddEntry(top, "Top", "F");
+    }
+    else if( !top && topLF &&  topC && topB){
+      //cout << "LF " << topLF->Integral() << ", C " << topC->Integral() << ", B " << topB->Integral() << endl;
+      mcHistoArray.push_back(topLF);
+      mcHistoArray.push_back(topC);
+      mcHistoArray.push_back(topB);
+      leg->AddEntry(topLF, "t#bar{t}+LF", "F");
+      leg->AddEntry(topC,  "t#bar{t}+C", "F");
+      leg->AddEntry(topB,  "t#bar{t}+B", "F");
+    }
+    else{}
+    if(singleTop){
+      mcHistoArray.push_back(singleTop);
+      leg->AddEntry(singleTop, "Single top", "F");
+    }
+    if(DiBoson){
+      mcHistoArray.push_back(DiBoson);
+      leg->AddEntry(DiBoson, "Di-boson", "F");
+    }
 
 
     std::map<float, TH1F*, sorterByIntegral> hMapIntegral;
     for( unsigned int k = 0 ; k < mcHistoArray.size() ; k++){
-      //cout << mcHistoArray[k]->GetName() << endl;
       hMapIntegral[ mcHistoArray[k]->Integral() ] = mcHistoArray[k];
-      //cout << "done" << endl;
      }
     
     for(std::map<float, TH1F*>::iterator it = hMapIntegral.begin(); it!=hMapIntegral.end(); it++){
@@ -401,6 +447,8 @@ int main(int argc, const char* argv[])
 
     ///////////////////  clear /////////////////////////////////
     ClearAllHisto(mapHist); delete c1; delete leg; delete aStack;
+
+    if(debug) return 0;
 
   }
 

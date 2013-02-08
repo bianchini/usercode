@@ -11,7 +11,44 @@ mmId         = "(vLepton_pfCorrIso[0]<0.10 && vLepton_pfCorrIso[1]<0.20)"
 mmJetBasic   = "(numJets30>=2 && pt1>30 && pt2>30)"
 common = mmBasic+" && "+mmKin+" && "+mmId+" && "+mmJetBasic
 
+#ttjetsLF = \
+#         "(lheNj - 2 - (abs(genTop.wdau1id)<6 + abs(genTop.wdau2id)<6 + abs(genTbar.wdau1id)<6 + abs(genTbar.wdau2id)<6 ) )==0 "+ \
+#         " || ((lheNj - 2 - (abs(genTop.wdau1id)<6 + abs(genTop.wdau2id)<6 + abs(genTbar.wdau1id)<6 + abs(genTbar.wdau2id)<6 ) )>0 && "+ \
+#         " ( nC-nCTop == 0 && nB-nBTop == 0)" + \
+#         ")"
+ttjetsLF = \
+         "nSimBs==2 && nC-nCTop==0"
 
+
+#ttjetsC = \
+#        "((lheNj - 2 - (abs(genTop.wdau1id)<6 + abs(genTop.wdau2id)<6 + abs(genTbar.wdau1id)<6 + abs(genTbar.wdau2id)<6 ) )>0 && "+ \
+#        " ( nC-nCTop > 0 && nB-nBTop == 0)" + \
+#        ")"
+ttjetsC  = \
+        "nSimBs==2 && nC-nCTop>0"
+
+
+#ttjetsB = \
+#        "((lheNj - 2 - (abs(genTop.wdau1id)<6 + abs(genTop.wdau2id)<6 + abs(genTbar.wdau1id)<6 + abs(genTbar.wdau2id)<6 ) )>0 && "+ \
+#        " ( nC-nCTop >= 0 && nB-nBTop > 0)" + \
+#        ")"
+ttjetsB  = \
+        "nSimBs>2"
+
+#zjetsLF = \
+#        "lheNj==0 || (lheNj>0 && nC==0 && nB==0)"
+zjetsLF = \
+        "nSimBs==0 && nC==0"
+
+#zjetsC  = \
+#       "lheNj>0 && nC>0 && nB==0"
+zjetsC  = \
+       "nSimBs==0 && nC>0"
+
+#zjetsB  = \
+#       "lheNj>0 && nC>=0 && nB>0"
+zjetsB  = \
+       "nSimBs>0"
 
 
 
@@ -122,30 +159,114 @@ process.fwliteInput = cms.PSet(
     xSec     = cms.double(234)
     ),
 
-    cms.PSet(
-    skip     = cms.bool(False),  
+
+   cms.PSet(
+    skip     = cms.bool(True),  
     name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'),
     nickName = cms.string('TTJetsFullHad'),
-    color    = cms.int32(5),
+    color    = cms.int32(41),
     xSec     = cms.double(133.62),
     ),
     
     cms.PSet(
     skip     = cms.bool(False),  
+    name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsFullHad_LF'),
+    color    = cms.int32(41),
+    xSec     = cms.double(133.62),
+    cut      = cms.string(ttjetsLF),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsFullHad_C'),
+    color    = cms.int32(44),
+    xSec     = cms.double(133.62),
+    cut      = cms.string(ttjetsC),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsFullHad_B'),
+    color    = cms.int32(46),
+    xSec     = cms.double(133.62),
+    cut      = cms.string(ttjetsB),
+    ),
+    
+
+    cms.PSet(
+    skip     = cms.bool(True),  
     name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'),
     nickName = cms.string('TTJetsFullLept'),
-    color    = cms.int32(5),
+    color    = cms.int32(41),
     xSec     = cms.double(24.56),
+    ),
+    
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsFullLept_LF'),
+    color    = cms.int32(41),
+    xSec     = cms.double(24.56),
+    cut      = cms.string(ttjetsLF),
+    ),
+    
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsFullLept_C'),
+    color    = cms.int32(44),
+    xSec     = cms.double(24.56),
+    cut      = cms.string(ttjetsC)
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsFullLept_B'),
+    color    = cms.int32(46),
+    xSec     = cms.double(24.56),
+    cut      = cms.string(ttjetsB)
+    ),
+    
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsSemiLept'),
+    color    = cms.int32(41),
+    xSec     = cms.double(75.82),
+    ),
+    
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsSemiLept_LF'),
+    color    = cms.int32(41),
+    xSec     = cms.double(75.82),
+    cut      = cms.string(ttjetsLF),
     ),
 
     cms.PSet(
     skip     = cms.bool(False),  
     name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'),
-    nickName = cms.string('TTJetsSemiLept'),
-    color    = cms.int32(5),
+    nickName = cms.string('TTJetsSemiLept_C'),
+    color    = cms.int32(44),
     xSec     = cms.double(75.82),
+    cut      = cms.string(ttjetsC),
     ),
-    
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'),
+    nickName = cms.string('TTJetsSemiLept_B'),
+    color    = cms.int32(46),
+    xSec     = cms.double(75.82),
+    cut      = cms.string(ttjetsB),
+    ),
+
+
     cms.PSet(
     skip     = cms.bool(False),  
     name     = cms.string('T_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola'),
@@ -206,7 +327,7 @@ process.fwliteInput = cms.PSet(
     skip     = cms.bool(False),  
     name     = cms.string('WZ_TuneZ2star_8TeV_pythia6_tauola'),
     nickName = cms.string('WZ'),
-    color    = cms.int32(3),
+    color    = cms.int32(4),
     xSec     = cms.double(33.85)
     ),
 
@@ -214,7 +335,7 @@ process.fwliteInput = cms.PSet(
     skip     = cms.bool(False),  
     name     = cms.string('ZZ_TuneZ2star_8TeV_pythia6_tauola'),
     nickName = cms.string('ZZ'),
-    color    = cms.int32(8),
+    color    = cms.int32(4),
     xSec     = cms.double(8.297)
     ),
 
