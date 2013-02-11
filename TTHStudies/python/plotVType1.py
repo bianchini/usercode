@@ -11,6 +11,9 @@ mmId         = "(vLepton_pfCorrIso[0]<0.10 && vLepton_pfCorrIso[1]<0.20)"
 mmJetBasic   = "(numJets30>=2 && pt1>30 && pt2>30)"
 common = mmBasic+" && "+mmKin+" && "+mmId+" && "+mmJetBasic
 
+dataCut      = "((EVENT.json == 1 || EVENT.run < 196532) && (triggerFlags[5]>0 || triggerFlags[6]>0))"
+
+
 #ttjetsLF = \
 #         "(lheNj - 2 - (abs(genTop.wdau1id)<6 + abs(genTop.wdau2id)<6 + abs(genTbar.wdau1id)<6 + abs(genTbar.wdau2id)<6 ) )==0 "+ \
 #         " || ((lheNj - 2 - (abs(genTop.wdau1id)<6 + abs(genTop.wdau2id)<6 + abs(genTbar.wdau1id)<6 + abs(genTbar.wdau2id)<6 ) )>0 && "+ \
@@ -400,7 +403,8 @@ process.fwliteInput = cms.PSet(
     name     = cms.string('DataZee'),
     nickName = cms.string('DataZee'),
     color    = cms.int32(1),
-    xSec     = cms.double(-1)
+    xSec     = cms.double(-1),
+    cut      = cms.string(dataCut)
     ),
     
     
