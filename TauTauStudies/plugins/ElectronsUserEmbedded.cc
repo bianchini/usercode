@@ -135,6 +135,10 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
   iEvent.getByLabel(vertexTag_,vertexHandle);
   const reco::VertexCollection* vertexes = vertexHandle.product();
 
+  edm::Handle<reco::VertexCollection> stdVertexHandle;
+  iEvent.getByLabel("offlinePrimaryVertices",stdVertexHandle);
+  const reco::VertexCollection* stdVertexes = stdVertexHandle.product();
+
   edm::Handle<reco::BeamSpot> bsHandle;
   iEvent.getByLabel("offlineBeamSpot", bsHandle);
   const reco::BeamSpot &thebs = *bsHandle.product();
@@ -273,8 +277,8 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
       mva = fMVA_->MVAValue(aGsf, lazyTools);
     if(doMVADaniele_){
       //mva2 = fMVADaniele_->mva(*aGsf, vertexes->size());
-      mva2 = myMVATrig_->mvaValue( *aGsf , (*vertexes)[0], *transientTrackBuilder, lazyTools, false);
-      mva3 = myMVANonTrig_->mvaValue( *aGsf , (*vertexes)[0], *transientTrackBuilder, lazyTools, false);
+      mva2 = myMVATrig_->mvaValue( *aGsf , (*stdVertexes)[0], *transientTrackBuilder, lazyTools, false);
+      mva3 = myMVANonTrig_->mvaValue( *aGsf , (*stdVertexes)[0], *transientTrackBuilder, lazyTools, false);
       //cout << mva2 << endl; 
     }
 

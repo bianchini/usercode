@@ -1899,7 +1899,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
     if( leg2->tauID("againstElectronTightMVA3")>0.5)  tightestAntiEMVA3WP_  = 3;
     if( leg2->tauID("againstElectronVTightMVA3")>0.5) tightestAntiEMVA3WP_  = 4;
     AntiEMVA3raw_ = leg2->tauID("againstElectronMVA3raw");
-    //MB FIXME AntiEMVA3category_ = leg2->tauID("againstElectronMVA3category");
+    AntiEMVA3category_ = leg2->tauID("againstElectronMVA3category");
 
     diTauVisP4_->push_back( theDiTau->p4Vis() );
     diTauCAP4_->push_back(  theDiTau->p4CollinearApprox() );

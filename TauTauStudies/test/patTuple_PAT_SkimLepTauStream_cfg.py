@@ -202,9 +202,9 @@ process.printTree1 = cms.EDAnalyzer(
     )
 
 ################### jet sequence ####################
-'''
 #MB needed??
 process.load('RecoJets.Configuration.RecoPFJets_cff')
+'''
 
 process.kt6PFJetsForRhoComputationVoronoi = process.kt6PFJets.clone(
     doRhoFastjet = True,
@@ -1135,7 +1135,7 @@ process.commonOfflineSequence = cms.Sequence(
     process.electronIsoSequence*
     (process.ak5JetTracksAssociatorAtVertex*process.btagging)*
     process.patDefaultSequence*
-    process.puJetIdSqeuence *
+    #MB->to tree producer: process.puJetIdSqeuence *
     ##process.kt6PFJetsNeutral*
     process.patLeptonsUserEmbeddedSequnce*
     process.looseLeptonsSequence*
@@ -1149,8 +1149,8 @@ process.skimMuTau1 = cms.Sequence(
     process.commonOfflineSequence*
     process.atLeastOneMuTauSequence*
     process.muLegSequence*
-    process.tauLegForMuTauSequence*
-    (process.pfMEtMVAsequence*process.patPFMetByMVA)
+    process.tauLegForMuTauSequence
+    #MB->to tree producer *(process.pfMEtMVAsequence*process.patPFMetByMVA)
     ##+process.jetCleaningSequence
     +process.printTree1
     )
@@ -1161,8 +1161,8 @@ process.skimMuTau2 = cms.Sequence(
     process.commonOfflineSequence*
     process.atLeastOneMuTauSequence*
     process.muLegSequence*
-    process.tauLegForMuTauSequence*
-    (process.pfMEtMVAsequence*process.patPFMetByMVA)
+    process.tauLegForMuTauSequence
+    #MB->to tree producer *(process.pfMEtMVAsequence*process.patPFMetByMVA)
     ##+process.jetCleaningSequence
     ##+process.printTree1
     )
@@ -1173,8 +1173,8 @@ process.skimElecTau1 = cms.Sequence(
     process.commonOfflineSequence*
     process.atLeastOneElecTauSequence*
     process.elecLegSequence*
-    process.tauLegForElecTauSequence*
-    (process.pfMEtMVAsequence*process.patPFMetByMVA)
+    process.tauLegForElecTauSequence
+    #MB->to tree producer *(process.pfMEtMVAsequence*process.patPFMetByMVA)
     ##+process.jetCleaningSequence
     ##+process.printTree1
     )
@@ -1185,14 +1185,16 @@ process.skimElecTau2 = cms.Sequence(
     process.commonOfflineSequence*
     process.atLeastOneElecTauSequence*
     process.elecLegSequence*
-    process.tauLegForElecTauSequence*
-    (process.pfMEtMVAsequence*process.patPFMetByMVA)
+    process.tauLegForElecTauSequence
+    #MB->to tree producer *(process.pfMEtMVAsequence*process.patPFMetByMVA)
     ##+process.jetCleaningSequence
     ##+process.printTree1
     )
 
 
 
+'''
+#MB it is usually incorrect replace offlinePrimaryVertices by selectedPrimaryVertices
 massSearchReplaceAnyInputTag(process.skimMuTau1,
                              "offlinePrimaryVertices",
                              "selectedPrimaryVertices",
@@ -1215,6 +1217,11 @@ process.hltAK5PFJetTracksAssociatorAtVertex.pvSrc = "offlinePrimaryVertices"
 process.hltPFTauTagInfo.PVProducer = "offlinePrimaryVertices"
 process.hltPFTaus.PVProducer = "offlinePrimaryVertices"
 process.hltPFTauLooseIsolationDiscriminator.qualityCuts.primaryVertexSrc = "offlinePrimaryVertices"
+'''
+#MB use selectedPrimaryVertices only in pat-object embedding moduces
+process.selectedPatMuonsUserEmbedded.vertexTag = "selectedPrimaryVertices"
+process.selectedPatElectronsUserEmbedded.vertexTag = "selectedPrimaryVertices"
+process.selectedPatTausUserEmbedded.vertexTag = "selectedPrimaryVertices"
 
 
 if not runOnMC:
