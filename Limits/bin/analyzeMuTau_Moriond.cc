@@ -994,13 +994,16 @@ void plotMuTau( Int_t mH_           = 120,
   //TString pathToFile = "/data_CMS/cms/anayak/H2TauTauHCP/Moriond/MuTauStream/NtuplesHCPV2TestPU/";  
   TString pathToFile = "/data_CMS/cms/anayak/H2TauTauHCP/Moriond/MuTauStream/NtuplesMoriondNewRecoilV2/";  
   TString pathToFileData = "/data_CMS/cms/anayak/H2TauTauHCP/Moriond/MuTauStream/NtuplesMoriondNewRecoilV2_Run2012D/";
+  TString pathToFileNewtauES = "/data_CMS/cms/anayak/H2TauTauHCP/Moriond/MuTauStream/NtuplesNewRecoilNewTauES/";
 
   // Open the files
   TFile *fData            = new TFile(pathToFileData+"/nTuple_Data_2012ABCD_MuTau.root", "READ");
   //TFile *fData            = new TFile(pathToFile+"/nTuple_Data_2012ABC_MuTau.root", "READ");
-  TFile *fDataEmbedded    = new TFile(pathToFileData+"/nTuple_Embedded_2012ABCD_MuTau.root", "READ");
+  TFile *fDataEmbedded    = new TFile(pathToFileNewtauES+"/nTuple_Embedded_2012ABCD_MuTau.root", "READ");
+  //TFile *fDataEmbedded    = new TFile(pathToFileData+"/nTuple_Embedded_2012ABCD_MuTau.root", "READ");
   //TFile *fDataEmbedded    = new TFile(pathToFile+"/nTuple_Embedded_2012ABC_MuTau.root", "READ");
-  TFile *fBackgroundDY    = new TFile(pathToFile+"/nTupleDYJets-MuTau-50-madgraph-PUS10_run_Open_MuTauStream.root","READ");
+  //TFile *fBackgroundDY    = new TFile(pathToFile+"/nTupleDYJets-MuTau-50-madgraph-PUS10_run_Open_MuTauStream.root","READ");
+  TFile *fBackgroundDY    = new TFile(pathToFileNewtauES+"/nTupleDYJets-MuTau-50-madgraph-PUS10_run_Open_MuTauStream.root","READ");
   //TFile *fBackgroundWJets = new TFile(pathToFile+"/nTupleWJets-MuTau-madgraph-PUS10_run_Open_MuTauStream.root","READ");
   TFile *fBackgroundWJets = new TFile(pathToFile+"/nTupleWJetsAllBins-MuTau-madgraph-PUS10_run_Open_MuTauStream.root","READ");
   TFile *fBackgroundW3Jets= new TFile(pathToFile+"/nTupleW3Jets-MuTau-madgraph-PUS10_run_Open_MuTauStream.root","READ");
@@ -1020,7 +1023,7 @@ void plotMuTau( Int_t mH_           = 120,
 
   for(int iP=0 ; iP<nProd ; iP++)
     for(int iM=0 ; iM<nMasses ; iM++)
-      fSignal[iP][iM] = new TFile(pathToFile+"/nTuple"+nameProd[iP]+"_M-"+nameMasses[iM]+"_Open_MuTauStream.root","READ");
+      fSignal[iP][iM] = new TFile(pathToFileNewtauES+"/nTuple"+nameProd[iP]+"_M-"+nameMasses[iM]+"_Open_MuTauStream.root","READ");
        
   std::map<string,TFile*> mapSUSYfiles;
   for(unsigned int i = 0; i < SUSYhistos.size() ; i++){
@@ -1064,9 +1067,9 @@ void plotMuTau( Int_t mH_           = 120,
   else {
     cout << "USE DY SEPARATE SUB-SAMPLES" << endl;
     //
-    fBackgroundDYTauTau   = new TFile(pathToFile+"/nTuple_DYJ_TauTau_Open_MuTauStream.root"  ,"READ");
-    fBackgroundDYMuToTau  = new TFile(pathToFile+"/nTuple_DYJ_MuToTau_Open_MuTauStream.root" ,"READ");
-    fBackgroundDYJetToTau = new TFile(pathToFile+"/nTuple_DYJ_JetToTau_Open_MuTauStream.root","READ");
+    fBackgroundDYTauTau   = new TFile(pathToFileNewtauES+"/nTuple_DYJ_TauTau_Open_MuTauStream.root"  ,"READ");
+    fBackgroundDYMuToTau  = new TFile(pathToFileNewtauES+"/nTuple_DYJ_MuToTau_Open_MuTauStream.root" ,"READ");
+    fBackgroundDYJetToTau = new TFile(pathToFileNewtauES+"/nTuple_DYJ_JetToTau_Open_MuTauStream.root","READ");
     //
     backgroundDYTauTau    = (TTree*)(fBackgroundDYTauTau  ->Get(tree));
     backgroundDYMutoTau   = (TTree*)(fBackgroundDYMuToTau ->Get(tree));
