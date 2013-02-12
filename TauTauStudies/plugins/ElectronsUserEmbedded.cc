@@ -277,8 +277,10 @@ void ElectronsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup &
       mva = fMVA_->MVAValue(aGsf, lazyTools);
     if(doMVADaniele_){
       //mva2 = fMVADaniele_->mva(*aGsf, vertexes->size());
-      mva2 = myMVATrig_->mvaValue( *aGsf , (*stdVertexes)[0], *transientTrackBuilder, lazyTools, false);
-      mva3 = myMVANonTrig_->mvaValue( *aGsf , (*stdVertexes)[0], *transientTrackBuilder, lazyTools, false);
+      //MBmva2 = myMVATrig_->mvaValue( *aGsf , (*stdVertexes)[0], *transientTrackBuilder, lazyTools, false);
+      //MBmva3 = myMVANonTrig_->mvaValue( *aGsf , (*stdVertexes)[0], *transientTrackBuilder, lazyTools, false);
+      mva2 = myMVATrig_->mvaValue( *aGsf , (*vertexes)[0], *transientTrackBuilder, lazyTools, false);
+      mva3 = myMVANonTrig_->mvaValue( *aGsf , (*vertexes)[0], *transientTrackBuilder, lazyTools, false);
       //cout << mva2 << endl; 
     }
 

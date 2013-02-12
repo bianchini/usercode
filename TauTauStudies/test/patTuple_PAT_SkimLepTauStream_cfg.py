@@ -22,6 +22,7 @@ runOnEmbed  = False
 #from Configuration.PyReleaseValidation.autoCond import autoCond
 #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
+#FIXME -> consider to swith to new JEC. Compare with my privare configs
 if runOnMC:
     process.GlobalTag.globaltag = cms.string('START53_V10::All')
 else:
