@@ -296,12 +296,36 @@ int main(int argc, const char* argv[])
  
   const edm::ParameterSet& in = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("fwliteInput");
 
-  const edm::VParameterSet& samples = in.getParameter<edm::VParameterSet>("samples") ;
-
   std::string pathToFile( in.getParameter<std::string>("pathToFile" ) );
   std::string ordering(   in.getParameter<std::string>("ordering" ) );
   double lumi(            in.getParameter<double>("lumi" ) );
   bool verbose(           in.getParameter<bool>("verbose" ) );
+
+  //const edm::VParameterSet& samples = in.getParameter<edm::VParameterSet>("samples") ;
+  edm::VParameterSet samples;
+  if( in.exists("samples") && argc==2 ) samples = in.getParameter<edm::VParameterSet>("samples") ;
+  else{
+    if(argc==4){
+      string fName = string((argv[2])); 
+      string fNick = string((argv[3]));
+      string cut   = "DUMMY";
+      edm::ParameterSet pset;
+      pset.addParameter("skip",false);
+      pset.addParameter("name",    fName);
+      pset.addParameter("nickName",fNick);
+      pset.addParameter("color",1);
+      pset.addParameter("xSec",-1.);
+      pset.addParameter("update",true);
+      pset.addParameter("cut",cut);
+      samples.push_back( pset );
+    }
+    else{
+      cout << "You need to specify name and nickname for your sample" << endl;
+      return 0;
+    }
+  }
+
+ 
 
   bool openAllFiles = false;
   Samples* mySamples = new Samples(openAllFiles, pathToFile, ordering, samples, lumi, verbose);

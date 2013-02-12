@@ -37,6 +37,9 @@ class Samples {
   double GetXSec(string);
   double GetWeight(string);
   int GetColor(string);
+  string GetCut(string);
+  string GetPfn(string);
+  string GetFileName(string);
   int Size() { return mapFile_.size(); }
   bool IsOk(){ return (err_!=1); }
   vector<string> Files();
@@ -44,8 +47,10 @@ class Samples {
  private:
 
   map<string, TString> mapPfn_;
+  map<string, string>  mapFileName_;
   map<string, bool>    mapUpdate_;
   map<string, TFile*>  mapFile_;
+  map<string, string>  mapCut_;
   map<string, double>  mapXSec_;
   map<string, double>  mapWeight_;
   map<string, double>  mapColor_;
@@ -74,6 +79,7 @@ Samples::Samples(bool openAllFiles, string pathToFile, string ordering,
     int color       = p.getParameter<int>("color");
     double xSec     = p.getParameter<double>("xSec");
     bool update     = p.exists("update") ?  p.getParameter<bool>("update") : false;
+    string cut      = p.exists("cut")    ?  p.getParameter<string>("cut")  : "DUMMY";
 
     if(skip) continue;
     
@@ -89,11 +95,13 @@ Samples::Samples(bool openAllFiles, string pathToFile, string ordering,
     if(!f || f->IsZombie()){
       err_ = 1;
     }else{
-      mapFile_[nickName]  = openAllFiles ? f : 0;
-      mapXSec_[nickName]  = xSec ;
-      mapColor_[nickName] = color;
-      mapPfn_[nickName]   = pfn;
-      mapUpdate_[nickName]= update;
+      mapFile_[nickName]     = openAllFiles ? f : 0;
+      mapXSec_[nickName]     = xSec ;
+      mapColor_[nickName]    = color;
+      mapPfn_[nickName]      = pfn;
+      mapUpdate_[nickName]   = update;
+      mapCut_[nickName]      = cut;
+      mapFileName_[nickName] = ordering+fileName;
 
       double weight = 1.0;
 
@@ -218,6 +226,18 @@ double Samples::GetWeight(string sampleName){
 
 int Samples::GetColor(string sampleName){
   return ( mapColor_[sampleName] );
+}
+
+string Samples::GetCut(string sampleName){
+  return ( mapCut_[sampleName] );
+}
+
+string Samples::GetPfn(string sampleName){
+  return ( string(mapPfn_[sampleName].Data()) );
+}
+
+string Samples::GetFileName(string sampleName){
+  return ( mapFileName_[sampleName] );
 }
 
 

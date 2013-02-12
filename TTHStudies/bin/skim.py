@@ -11,10 +11,36 @@ process.fwliteInput = cms.PSet(
     #pathToFile    = cms.string("dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/store/HBB_EDMNtuple/V42/Oct22/env/sys/MVAout/"),
     #pathToFile    = cms.string("dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/store//user/bianchi/HBB_EDMNtuple/ZllHDiJetPt/")
     pathToFile    = cms.string("/scratch/bianchi/HBB_EDMNtuple/All.H.DiJetPt/"),
+    #pathToFile    = cms.string("./"),
     #ordering      = cms.string("ZllH.DiJetPt.Oct22."),
     ordering      = cms.string("DiJetPt_"),
     lumi          = cms.double(12.1),
     verbose       = cms.bool(False),
+
+    skims         = cms.VPSet(
+
+    cms.PSet(
+    name = cms.string("VType0"),
+    cut  = cms.string("numJets30bTag>=1 && Vtype==0 && numJets30>=2 && pt1>30 && pt2>30")
+    ),
+
+    cms.PSet(
+    name = cms.string("VType1"),
+    cut  = cms.string("numJets30bTag>=1 && Vtype==1 && numJets30>=2 && pt1>30 && pt2>30")
+    ),
+
+    cms.PSet(
+    name = cms.string("VType2"),
+    cut  = cms.string("numJets30bTag>=1 && Vtype==2 && numJets30>=3 && pt1>30 && pt2>30 && pt3>30")
+    ),
+
+    cms.PSet(
+    name = cms.string("VType3"),
+    cut  = cms.string(" numJets30bTag>=1 && Vtype==3 && numJets30>=3 && pt1>30 && pt2>30 && pt3>30")
+    ),
+
+
+    ),
     
 
     samples       = cms.VPSet(
@@ -26,7 +52,7 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('DYJets'),
     color    = cms.int32(18),
     xSec     = cms.double(3503.71),
-    update   = cms.bool(True)
+    update   = cms.bool(False)
     ),
 
     cms.PSet(
@@ -114,7 +140,6 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('TTJets'),
     color    = cms.int32(5),
     xSec     = cms.double(234),
-    update   = cms.bool(True),
     ),
 
     cms.PSet(
@@ -123,7 +148,7 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('TTJetsFullHad'),
     color    = cms.int32(5),
     xSec     = cms.double(133.62),
-    update   = cms.bool(True),
+    update   = cms.bool(False) 
     ),
     
     cms.PSet(
@@ -132,16 +157,16 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('TTJetsFullLept'),
     color    = cms.int32(5),
     xSec     = cms.double(24.56),
-    update   = cms.bool(True),
+    update   = cms.bool(False) 
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'),
     nickName = cms.string('TTJetsSemiLept'),
     color    = cms.int32(5),
     xSec     = cms.double(75.82),
-    update   = cms.bool(True),
+    update   = cms.bool(False) 
     ),
 
     cms.PSet(
@@ -150,7 +175,7 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('TtW'),
     color    = cms.int32(6),
     xSec     = cms.double(11.1),
-    update   = cms.bool(True)
+    update   = cms.bool(False)
     ),
 
     cms.PSet(
@@ -159,7 +184,7 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('Tt'),
     color    = cms.int32(6),
     xSec     = cms.double(56.4),
-    update   = cms.bool(True)
+    update   = cms.bool(False)
     ),
 
     cms.PSet(
@@ -168,7 +193,7 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('Ts'),
     color    = cms.int32(6),
     xSec     = cms.double(3.79),
-    update   = cms.bool(True)
+    update   = cms.bool(False)
     ),
 
     cms.PSet(
@@ -177,7 +202,7 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('TbartW'),
     color    = cms.int32(6),
     xSec     = cms.double(11.1),
-    update   = cms.bool(True)
+    update   = cms.bool(False)
     ),
 
     cms.PSet(
@@ -186,7 +211,7 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('Tbart'),
     color    = cms.int32(6),
     xSec     = cms.double(30.7),
-    update   = cms.bool(True)
+    update   = cms.bool(False)
     ),
 
     cms.PSet(
@@ -195,7 +220,7 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('Tbars'),
     color    = cms.int32(6),
     xSec     = cms.double(1.76),
-    update   = cms.bool(True),
+    update   = cms.bool(False) 
     ),
 
     cms.PSet(
@@ -204,7 +229,7 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('WW'),
     color    = cms.int32(4),
     xSec     = cms.double(56.75),
-    update   = cms.bool(True)
+    update   = cms.bool(False)
     ),
 
     cms.PSet(
@@ -213,7 +238,7 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('WZ'),
     color    = cms.int32(3),
     xSec     = cms.double(33.85),
-    update   = cms.bool(True)
+    update   = cms.bool(False)
     ),
 
     cms.PSet(
@@ -222,7 +247,7 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('ZZ'),
     color    = cms.int32(8),
     xSec     = cms.double(8.297),
-    update   = cms.bool(True)
+    update   = cms.bool(False)
     ),
 
     cms.PSet(
@@ -255,7 +280,7 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('ZH125'),
     color    = cms.int32(2),
     xSec     = cms.double(0.0229727058),
-    update   = cms.bool(True)
+    update   = cms.bool(False)
     ),
 
     cms.PSet(
@@ -305,7 +330,7 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('WH125'),
     color    = cms.int32(2),
     xSec     = cms.double(0.4019381),
-    update   = cms.bool(True)
+    update   = cms.bool(False)
     ),
 
     cms.PSet(
@@ -337,7 +362,7 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('DataZmm'),
     color    = cms.int32(1),
     xSec     = cms.double(-1),
-    update   = cms.bool(True)
+    update   = cms.bool(False)
     ),
 
     cms.PSet(
@@ -346,7 +371,7 @@ process.fwliteInput = cms.PSet(
     nickName = cms.string('DataZee'),
     color    = cms.int32(1),
     xSec     = cms.double(-1),
-    update   = cms.bool(True)
+    update   = cms.bool(False)
     ),
     
     

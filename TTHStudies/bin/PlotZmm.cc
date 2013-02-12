@@ -115,18 +115,18 @@ void DrawHistogramMC(TTree* tree = 0,
   }
 }
 
-void DrawHistogramDataVType0(TTree* tree = 0, 
-			     TString variable = "", 
-			     float& normalization      = *(new float()), 
-			     float& normalizationError = *(new float()), 
-			     float scaleFactor = 0., 
-			     TH1F* h = 0, 
-			     TCut cut = TCut(""),
-			     int verbose = 0 ){
+void DrawHistogramData(TTree* tree = 0, 
+		       TString variable = "", 
+		       float& normalization      = *(new float()), 
+		       float& normalizationError = *(new float()), 
+		       float scaleFactor = 0., 
+		       TH1F* h = 0, 
+		       TCut cut = TCut(""),
+		       int verbose = 0 ){
   
   if(tree!=0 && h!=0){
     h->Reset();
-    tree->Draw(variable+">>"+TString(h->GetName()),"((EVENT.json == 1 || EVENT.run < 196532) && (triggerFlags[14]>0 || triggerFlags[21]>0 || triggerFlags[22]>0 || triggerFlags[23]>0))"*cut);
+    tree->Draw(variable+">>"+TString(h->GetName()),cut);
     h->Scale(scaleFactor);
     normalization      = h->Integral();
     normalizationError = h->GetEntries()>0 ? TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries()) : 0.0;
@@ -138,28 +138,6 @@ void DrawHistogramDataVType0(TTree* tree = 0,
   }
 }
 
-void DrawHistogramDataVType1(TTree* tree = 0, 
-			     TString variable = "", 
-			     float& normalization      = *(new float()), 
-			     float& normalizationError = *(new float()), 
-			     float scaleFactor = 0., 
-			     TH1F* h = 0, 
-			     TCut cut = TCut(""),
-			     int verbose = 0 ){
-  
-  if(tree!=0 && h!=0){
-    h->Reset();
-    tree->Draw(variable+">>"+TString(h->GetName()),"((EVENT.json == 1 || EVENT.run < 196532) && (triggerFlags[5]>0 || triggerFlags[6]>0))"*cut);
-    h->Scale(scaleFactor);
-    normalization      = h->Integral();
-    normalizationError = h->GetEntries()>0 ? TMath::Sqrt(h->GetEntries())*(normalization/h->GetEntries()) : 0.0;
-    if(verbose==0) h->Reset();
-  }
-  else{
-    cout << "Function DrawHistogramData has raised an error" << endl;
-    return;
-  }
-}
 
 
 
@@ -278,13 +256,7 @@ int main(int argc, const char* argv[])
 	if(VERBOSE) cout << "Histo for " << currentName << " has integral " << currentHisto->Integral() << endl;
       }
       else{
-	if(dataName.find("Zmm")!=string::npos)
-	  DrawHistogramDataVType0(  currentTree, variable, normalization, normalizationError, scaleFactor, currentHisto, myCut, 1);
-	else if(dataName.find("Zee")!=string::npos)
-	  DrawHistogramDataVType1(  currentTree, variable, normalization, normalizationError, scaleFactor, currentHisto, myCut, 1);
-	else{
-	  cout << "Unsupported data type" << endl;
-	}
+	DrawHistogramData(  currentTree, variable, normalization, normalizationError, scaleFactor, currentHisto, myCut, 1);
 	totalData += normalization;
 	if(VERBOSE) cout << "Histo for " << currentName << " has integral " << currentHisto->Integral() << endl;
       }
@@ -305,9 +277,9 @@ int main(int argc, const char* argv[])
     THStack* aStack = new THStack("aStack","");
     vector<TH1F*> mcHistoArray;
 
-    TH1F* DiBoson = 0;
-    TH1F* top = 0; TH1F* singleTop = 0;
-    TH1F* topLF = 0; TH1F* topC = 0; TH1F* topB = 0;
+    TH1F* DiBoson = 0; TH1F* WJets = 0;
+    TH1F* top   = 0;   TH1F* singleTop = 0;
+    TH1F* topLF = 0;   TH1F* topC      = 0; TH1F* topB = 0;
      
     for(  std::map<string,TH1F*>::iterator it = mapHist.begin(); it!= mapHist.end() ; it++){
       if( (it->first).find("Data")==string::npos  ){
@@ -319,13 +291,15 @@ int main(int argc, const char* argv[])
 	    continue;
 	  }
 
+	  bool isWJets     =  (it->first).find("WJets")!=string::npos;
+
 	  bool isDiBoson   = ((it->first).find("ZZ")!=string::npos || 
 			      (it->first).find("WW")!=string::npos || 
 			      (it->first).find("WZ")!=string::npos);
 
-	  bool isSingleTop = ((it->first).find("Tt")!=string::npos || 
-			      (it->first).find("TtW")!=string::npos  || 
-			      (it->first).find("Ts")!=string::npos ||
+	  bool isSingleTop = ((it->first).find("Tt")!=string::npos  || 
+			      (it->first).find("TtW")!=string::npos || 
+			      (it->first).find("Ts")!=string::npos  ||
 			      (it->first).find("Tbar")!=string::npos );
 
 	  bool isTTbar     = ((it->first).find("TTJets")   !=string::npos);
@@ -357,6 +331,10 @@ int main(int argc, const char* argv[])
 	  else if(isDiBoson){
 	    if(!DiBoson) DiBoson = (it->second);
 	    else DiBoson->Add(it->second);
+	  }
+	  else if(isWJets){
+	    if(!WJets) WJets = (it->second);
+	    else WJets->Add(it->second);
 	  }
 	  else{
 	    mcHistoArray.push_back((it->second));
@@ -390,6 +368,10 @@ int main(int argc, const char* argv[])
     if(DiBoson){
       mcHistoArray.push_back(DiBoson);
       leg->AddEntry(DiBoson, "Di-boson", "F");
+    }
+    if(WJets){
+      mcHistoArray.push_back(WJets);
+      leg->AddEntry(WJets, "W+jets", "F");
     }
 
 
