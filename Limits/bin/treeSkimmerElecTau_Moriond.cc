@@ -154,12 +154,20 @@ float reweightHEPNUP(int hepNUP) {
 
   int nJets = hepNUP-5;
   
-  if(nJets==0)      return 1 ;
-  else if(nJets==1) return 0.368748897 ;
-  else if(nJets==2) return 0.114009944 ;
-  else if(nJets==3) return 0.077158785 ;
-  else if(nJets>=4) return 0.038490064 ;
+//   if(nJets==0)      return 1 ;
+//   else if(nJets==1) return 0.368748897 ;
+//   else if(nJets==2) return 0.114009944 ;
+//   else if(nJets==3) return 0.077158785 ;
+//   else if(nJets>=4) return 0.038490064 ;
+//   else return 1 ;
+
+  if(nJets==0)      return 0.723706428 ;
+  else if(nJets==1) return 0.210195224 ;
+  else if(nJets==2) return 0.060963485 ;
+  else if(nJets==3) return 0.091456958 ;
+  else if(nJets>=4) return 0.034384641 ;
   else return 1 ;
+
 }
 
 void createReWeighting3D(){
