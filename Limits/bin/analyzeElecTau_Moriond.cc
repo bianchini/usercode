@@ -40,7 +40,7 @@
 //#define DO_D_ONLY        false
 
 #define USESSBKG         false
-#define scaleByBinWidth  true
+#define scaleByBinWidth  false
 #define DOSPLIT          false
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -495,7 +495,8 @@ void evaluateWextrapolation(TString RUN = "ABCD",
   OSWinSignalRegionDATA -= OSDYtoTauinSidebandRegionMC;
   OSWinSignalRegionDATA -= OSDYJtoTauinSidebandRegionMC;
   OSWinSignalRegionDATA -= OSDYElectoTauinSidebandRegionMC;
-  if(useFakeRate) OSWinSignalRegionDATA -= (OSQCDinSidebandRegionData-OSWinSidebandRegionAIsoMC);
+  //   if(useFakeRate) OSWinSignalRegionDATA -= (OSQCDinSidebandRegionData-OSWinSidebandRegionAIsoMC);
+  OSWinSignalRegionDATA -= (OSQCDinSidebandRegionData-OSWinSidebandRegionAIsoMC);
   OSWinSignalRegionDATA /= scaleFactorOS;
   if(VERBOSE) {
     cout << "- expected from TTbar          " << OSTTbarinSidebandRegionMC << endl;
@@ -818,8 +819,8 @@ void plotElecTau( Int_t mH_           = 120,
 		  Float_t maxY_       = 1.2,
 		  TString RUN         = "ABCD",
 		  //TString location  = "/home/llr/cms/veelken/ArunAnalysis/CMSSW_5_3_4_Sep12/src/Bianchi/Limits/bin/results/"
-		  TString location    = "/home/llr/cms/ndaci/WorkArea/HTauTau/Analysis/CMSSW_534_TopUp/src/Bianchi/Limits/bin/results/"
-		  //TString location    = "/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/"
+		  //TString location    = "/home/llr/cms/ndaci/WorkArea/HTauTau/Analysis/CMSSW_534_TopUp/src/Bianchi/Limits/bin/results/"
+		  TString location    = "/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/"
 		  ) 
 {   
 
@@ -1055,6 +1056,7 @@ void plotElecTau( Int_t mH_           = 120,
   TFile *fBackgroundDY    = new TFile(pathToFile+"/nTuple_DYJets_ElecTau.root","READ");
   //TFile *fBackgroundWJets = new TFile(pathToFile+"/nTupleWJets-ElecTau-madgraph-PUS10_run_Open_ElecTauStream.root","READ");
   TFile *fBackgroundWJets = new TFile(pathToFile+"/nTuple_WJetsAllBins_ElecTau.root","READ"); // AllBins
+//   TFile *fBackgroundWJets = new TFile(pathToFile+"/nTuple_WJetsIncl_ElecTau.root","READ"); // AllBins
   //TFile *fBackgroundWJets = new TFile(pathToFile+"/nTuple_WJetsNJets_ElecTau.root","READ"); // W+NJets only (no inclusive)
   TFile *fBackgroundW3Jets= new TFile(pathToFile+"/nTuple_WJets3Jets_ElecTau.root","READ"); // W3J
   TFile *fBackgroundTTbar = new TFile(pathToFile+"/nTuple_TTJets_ElecTau.root","READ");
@@ -1116,21 +1118,14 @@ void plotElecTau( Int_t mH_           = 120,
   }
   else {
     cout << "USE DY SEPARATE SUB-SAMPLES" << endl;
-    cout<<tree<<endl;
     //
     fBackgroundDYTauTau    = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_TauTau_ElecTau.root"  ,"READ");
-    cout<<tree<<endl;
     fBackgroundDYElecToTau = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_EToTau_ElecTau.root"  ,"READ");
-    cout<<tree<<endl;
     fBackgroundDYJetToTau  = new TFile(pathToFile+"/SplitDY/nTuple_DYJ_JetToTau_ElecTau.root","READ");
     // 
-    cout<<tree<<endl;
     backgroundDYTauTau    = fBackgroundDYTauTau    ? (TTree*)(fBackgroundDYTauTau    -> Get(tree)) : 0 ;
-    cout<<tree<<endl;
     backgroundDYElectoTau = fBackgroundDYElecToTau ? (TTree*)(fBackgroundDYElecToTau -> Get(tree)) : 0;
-    cout<<tree<<endl;
     backgroundDYJtoTau    = fBackgroundDYJetToTau  ? (TTree*)(fBackgroundDYJetToTau  -> Get(tree)) : 0;
-    cout<<tree<<endl;
   }
 
   cout << backgroundDYTauTau->GetEntries()    << " come from DY->tautau"       << endl;
@@ -1199,6 +1194,7 @@ void plotElecTau( Int_t mH_           = 120,
   TCut OS("diTauCharge==0");
   TCut pZ( Form("((%s)<%f)",antiWcut.c_str(),antiWsgn));
   TCut apZ(Form("((%s)>%f)",antiWcut.c_str(),antiWsdb));
+
   //TCut apZ2(Form("((%s)>%f && (%s)<120)",antiWcut.c_str(),antiWsdb,antiWcut.c_str()));
   TCut apZ2(Form("((%s)>60 && (%s)<120)",antiWcut.c_str(),antiWcut.c_str()));
   TCut hltevent("vetoEvent==0 && pairIndex<1 && HLTx==1 && ( run>=163269 || run==1)");
@@ -1576,15 +1572,15 @@ void plotElecTau( Int_t mH_           = 120,
 	  if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){ 
 	    float NormTTjets = 0.; 
 	    TCut sbinVBFLoose = sbinInclusive && vbfLoose; 
-	    drawHistogramMC(RUN, currentTree, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio*scaleFactorTTOSWJets*hltEff_/1000., hCleaner, sbinVBFLoose, 1);
+	    drawHistogramMC(RUN, currentTree, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio/**scaleFactorTTOSWJets*/*hltEff_/1000., hCleaner, sbinVBFLoose, 1);
 	    hTTb->Add(hCleaner, 1.0);
 	    NormTTjets = 0.;
-	    drawHistogramMC(RUN, currentTree, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio*scaleFactorTTOSWJets*hltEff_/1000., h1, sbin, 1);
+	    drawHistogramMC(RUN, currentTree, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio/**scaleFactorTTOSWJets*/*hltEff_/1000., h1, sbin, 1);
 	    hTTb->Scale(h1->Integral()/hTTb->Integral()); 
 	  } 
 	  else{
 	    float NormTTjets = 0.;
-	    drawHistogramMC(RUN, currentTree, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio*scaleFactorTTOSWJets*hltEff_/1000., h1, sbin, 1);
+	    drawHistogramMC(RUN, currentTree, variable, NormTTjets,     Error,   Lumi*TTxsectionRatio/**scaleFactorTTOSWJets*/*hltEff_/1000., h1, sbin, 1);
 	    hTTb->Add(h1, 1.0);
 	  }
 	}
@@ -2057,13 +2053,14 @@ void plotElecTau( Int_t mH_           = 120,
       else{
 	if(selection_.find("vbf")!=string::npos && selection_.find("novbf")==string::npos){
 	  float NormEmbed = 0.;
-	  TCut sbinEmbeddingLoose = sbinEmbeddingInclusive && vbfLoose;
-	  drawHistogramEmbed(RUN, currentTree, variable, NormEmbed,  Error, 1.0 , hCleaner,  sbinEmbeddingLoose  ,1);
-	  hDataEmb->Add(hCleaner, 1.0);
-	  NormEmbed = 0.; 
+// 	  TCut sbinEmbeddingLoose = sbinEmbeddingInclusive && vbfLoose;
+// 	  drawHistogramEmbed(RUN, currentTree, variable, NormEmbed,  Error, 1.0 , hCleaner,  sbinEmbeddingLoose  ,1);
+// 	  hDataEmb->Add(hCleaner, 1.0);
+// 	  NormEmbed = 0.; 
 	  drawHistogramEmbed(RUN, currentTree, variable, NormEmbed,  Error, 1.0 , h1,  sbinEmbedding  ,1); 
 	  h1->Scale( (ExtrapolationFactorZ*ExtrapDYInclusivePZetaRel*ExtrapolationFactorZFromSideband)/h1->Integral()); 
-	  hDataEmb->Scale(h1->Integral()/hDataEmb->Integral());
+	  hDataEmb->Add(h1, 1.0);
+// 	  hDataEmb->Scale(h1->Integral()/hDataEmb->Integral());
 	}
 	else{
 	  float NormEmbed = 0.;
