@@ -62,8 +62,8 @@ void produce(
 	     string analysis_  = "",
 	     string bin_       = "inclusive",
 	     TString outputDir = "ABC",
-	     //TString location  = "/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/"
-	     TString location  = "/home/llr/cms/ndaci/WorkArea/HTauTau/Analysis/CMSSW_534_TopUp/src/Bianchi/Limits/bin/results/"
+	     TString location  = "/home/llr/cms/ivo/HTauTauAnalysis/CMSSW_5_3_4_Oct12/src/Bianchi/Limits/bin/results/"
+	     //TString location  = "/home/llr/cms/ndaci/WorkArea/HTauTau/Analysis/CMSSW_534_TopUp/src/Bianchi/Limits/bin/results/"
 	     )
 {
   cout << "Now doing mass mH=" << mH_ << ", for variable " << variable_ 
@@ -294,14 +294,36 @@ void produce(
       hVV->Write(Form("VV%s"        ,suffix.c_str()));
     }//vbf
     else{//inclusive,
-      ((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s"  ,suffix.c_str()));
-      ((TH1F*)fin->Get("hQCD"))->Write(Form("QCD%s"      ,suffix.c_str()));
-      ((TH1F*)fin->Get("hW"))->Write(Form("W%s"          ,suffix.c_str()));
-      ((TH1F*)fin->Get("hZmj"))->Write(Form("ZJ%s"       ,suffix.c_str()));
-      ((TH1F*)fin->Get("hZmm"))->Write(Form("ZL%s"       ,suffix.c_str()));
-      ((TH1F*)fin->Get("hZfakes"))->Write(Form("ZLL%s"   ,suffix.c_str()));
-      ((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"       ,suffix.c_str()));
-      ((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"        ,suffix.c_str()));
+      // ZTT: embedded sample
+      TH1F* hDataEmb = ((TH1F*)fin->Get("hDataEmb"));
+      hDataEmb->SetName(Form("ZTT%s",suffix.c_str())); 
+      hDataEmb->Write(Form("ZTT%s"  ,suffix.c_str()));
+      // ----- QCD ------
+      TH1F *hQCD = ((TH1F*)fin->Get("hQCD"));
+      hQCD->SetName(Form("QCD%s"  ,suffix.c_str()));
+      hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
+      // ----- W ------
+      TH1F* hW = ((TH1F*)fin->Get("hW"));
+      hW->SetName(Form("W%s"        ,suffix.c_str()));
+      hW->Write(Form("W%s"          ,suffix.c_str()));
+      // ----- Fakes ------
+      TH1F* hZmj = ((TH1F*)fin->Get("hZmj"));
+      hZmj->SetName(Form("ZJ%s"     ,suffix.c_str()));
+      hZmj->Write(Form("ZJ%s"       ,suffix.c_str()));
+      TH1F* hZmm = ((TH1F*)fin->Get("hZmm"));
+      hZmm->SetName(Form("ZL%s"     ,suffix.c_str()));
+      hZmm->Write(Form("ZL%s"       ,suffix.c_str()));
+      TH1F* hZfakes = ((TH1F*)fin->Get("hZfakes"));
+      hZfakes->SetName(Form("ZLL%s" ,suffix.c_str())); 
+      hZfakes->Write(Form("ZLL%s"   ,suffix.c_str()));
+      // ----- TTb ------
+      TH1F* hTTb = ((TH1F*)fin->Get("hTTb"));
+      hTTb->SetName(Form("TT%s"     ,suffix.c_str()));
+      hTTb->Write(Form("TT%s"       ,suffix.c_str()));
+      // ----- VV ------
+      TH1F* hVV = ((TH1F*)fin->Get("hVV"));
+      hVV->SetName(Form("VV%s"         ,suffix.c_str()));
+      hVV->Write(Form("VV%s"         ,suffix.c_str()));
     }
            
   }else{
@@ -366,7 +388,7 @@ void produce(
 	  hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
 	}
 	else {
-	  TH1F *hQCD = ((TH1F*)fin->Get("hQCD"));
+	  TH1F *hQCD = ((TH1F*)fin->Get("hDataAntiIsoLooseTauIsoQCD"));
 	  hQCD->SetName(Form("QCD%s"    ,suffix.c_str()));
 	  hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
 	}
@@ -527,22 +549,52 @@ void produce(
     }//vbf
 
     else{//inclusive
-      if(dir->FindObjectAny(Form("ZTT%s"       ,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hDataEmb"))->Write(Form("ZTT%s"       ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("QCD%s"       ,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hQCD"))->Write(Form("QCD%s"       ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("W%s"       ,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hW"))->Write(Form("W%s"           ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("ZJ%s"       ,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hZmj"))->Write(Form("ZJ%s"        ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("ZL%s"       ,suffix.c_str()))==0 ) 
-	((TH1F*)fin->Get("hZmm"))->Write(Form("ZL%s"        ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("ZLL%s"       ,suffix.c_str()))==0 ) 
-	((TH1F*)fin->Get("hZfakes"))->Write(Form("ZLL%s"        ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("TT%s"       ,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hTTb"))->Write(Form("TT%s"        ,suffix.c_str()));
-      if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 )
-	((TH1F*)fin->Get("hVV"))->Write(Form("VV%s"         ,suffix.c_str()));
+      // ZTT: embedded sample 
+      if(dir->FindObjectAny(Form("ZTT%s"       ,suffix.c_str()))==0 ){
+	TH1F* hDataEmb = ((TH1F*)fin->Get("hDataEmb"));
+	hDataEmb->SetName(Form("ZTT%s",suffix.c_str())); 
+	hDataEmb->Write(Form("ZTT%s"  ,suffix.c_str()));
+      }
+      // ----- QCD ------ 
+      if(dir->FindObjectAny(Form("QCD%s"       ,suffix.c_str()))==0 ){
+	TH1F *hQCD = ((TH1F*)fin->Get("hQCD"));
+	hQCD->SetName(Form("QCD%s"    ,suffix.c_str()));
+	hQCD->Write(Form("QCD%s"    ,suffix.c_str()));
+      }
+      // ----- W ------ 
+      if(dir->FindObjectAny(Form("W%s"       ,suffix.c_str()))==0 ){
+	TH1F* hW = ((TH1F*)fin->Get("hW"));
+	hW->SetName(Form("W%s"           ,suffix.c_str()));
+	hW->Write(Form("W%s"           ,suffix.c_str()));
+      }
+      // ----- Fakes ------ 
+      if(dir->FindObjectAny(Form("ZJ%s"       ,suffix.c_str()))==0 ){
+	TH1F* hZmj = ((TH1F*)fin->Get("hZmj"));
+	hZmj->SetName(Form("ZJ%s"        ,suffix.c_str()));
+	hZmj->Write(Form("ZJ%s"        ,suffix.c_str()));
+      }
+      if(dir->FindObjectAny(Form("ZL%s"       ,suffix.c_str()))==0 ) {
+	TH1F* hZmm = ((TH1F*)fin->Get("hZmm"));
+	hZmm->SetName(Form("ZL%s"        ,suffix.c_str()));
+	hZmm->Write(Form("ZL%s"        ,suffix.c_str()));
+      }
+      if(dir->FindObjectAny(Form("ZLL%s"       ,suffix.c_str()))==0 ) {
+	TH1F* hZfakes = ((TH1F*)fin->Get("hZfakes"));
+	hZfakes->SetName(Form("ZLL%s"    ,suffix.c_str())); 
+	hZfakes->Write(Form("ZLL%s"    ,suffix.c_str()));
+      }
+      // ----- TTb ------
+      if(dir->FindObjectAny(Form("TT%s"       ,suffix.c_str()))==0 ){
+	TH1F* hTTb = ((TH1F*)fin->Get("hTTb"));
+	hTTb->SetName(Form("TT%s"        ,suffix.c_str()));
+	hTTb->Write(Form("TT%s"        ,suffix.c_str()));
+      }
+      // ----- VV ------
+      if(dir->FindObjectAny(Form("VV%s"       ,suffix.c_str()))==0 ){
+	TH1F* hVV = ((TH1F*)fin->Get("hVV"));
+	hVV->SetName(Form("VV%s"         ,suffix.c_str()));
+	hVV->Write(Form("VV%s"         ,suffix.c_str()));
+      }
     }
   }//directory already there
 
@@ -1367,7 +1419,7 @@ void produce2DFit(
 
 
 
-void produceAll(  TString outputDir = "ABC" ){
+void produceAll(  TString outputDir = "ABCD" ){
 
   vector<string> variables;
   vector<int> mH;
