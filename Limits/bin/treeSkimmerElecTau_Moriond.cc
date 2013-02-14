@@ -1858,6 +1858,7 @@ void fillTrees_ElecTauStream( TChain* currentTree,
     decayMode_          = decayMode;
     numPV_              = numPV;
     sampleWeight        = scaleFactor; 
+    if( sample_.find("WJets")!=string::npos ) sampleWeight        = 1;
     puWeight            = isData ? 1.0 : pileupWeight(nPUVertices);
     puWeightHCP      = isData ? 1.0 : pileupWeightHCP( nPUVertices);   
     puWeightD        = isData ? 1.0 : pileupWeightD( nPUVertices);   
