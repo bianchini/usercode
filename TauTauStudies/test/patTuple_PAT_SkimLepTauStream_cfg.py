@@ -1,7 +1,7 @@
 ###############################################################################
 ## Pat-tuple for l+tau analysis
 ## 
-## Last modificaion: 5/12/2012 Michal
+## Last modificaion: 12/02/2013 Michal
 ## TODO: synch tests
 ##
 ##
@@ -22,11 +22,12 @@ runOnEmbed  = False
 #from Configuration.PyReleaseValidation.autoCond import autoCond
 #process.GlobalTag.globaltag = cms.string( autoCond[ 'startup' ] )
 
-#FIXME -> consider to swith to new JEC. Compare with my privare configs
 if runOnMC:
-    process.GlobalTag.globaltag = cms.string('START53_V10::All')
+    #process.GlobalTag.globaltag = cms.string('START53_V10::All')
+    process.GlobalTag.globaltag = cms.string('START53_V15::All')
 else:
-    process.GlobalTag.globaltag = cms.string('GR_P_V41_AN1::All')
+    #process.GlobalTag.globaltag = cms.string('GR_P_V41_AN1::All')
+    process.GlobalTag.globaltag = cms.string('GR_P_V39_AN3::All')
 
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True))
@@ -267,6 +268,7 @@ process.patPFMetByMVA = process.patMETs.clone(
 process.patPFMetByMVA.addGenMET = cms.bool(runOnMC)
 process.pfMEtMVA.srcVertices = cms.InputTag("offlinePrimaryVertices")
 
+
 ################### bTag ##############################
 
 if runOnEmbed:
@@ -314,6 +316,33 @@ addSelectedPFlowParticle(process)
 
 from PhysicsTools.PatAlgos.tools.metTools import *
 addPfMET(process, postfix)
+##MB standard corrections for PFMET
+##MB FIXME: check with Christian
+##MB FIXME: are the following corrections properly stacked??
+#type-0 + type-1
+process.pfType1CorrectedMet.applyType0Corrections = False #->added by other meas(see below). Is it taken by PatMEt as correction level which can be removed?
+process.pfType1CorrectedMet.applyType1Corrections = True
+process.pfType1CorrectedMet.applyType2Corrections = False
+#define type-1
+process.pfJetMETcorr.skipEM=False
+process.pfJetMETcorr.skipMuons=False
+process.pfJetMETcorr.skipMuonSelection='isGlobalMuon' #or default 'isGlobalMuon | isStandAloneMuon'?
+#define type-0
+process.load("JetMETCorrections.Type1MET.pfMETCorrectionType0_cfi")
+process.pfType1CorrectedMet.srcType1Corrections = cms.VInputTag(
+    cms.InputTag('pfMETcorrType0'),
+    cms.InputTag('pfJetMETcorr', 'type1')        
+)
+process.producePFMETCorrections.replace(process.pfType1CorrectedMet,
+                                        process.type0PFMEtCorrection+process.pfType1CorrectedMet)
+#MET x/y Shift Correction (for phi modulation)
+process.load("JetMETCorrections.Type1MET.pfMETsysShiftCorrections_cfi")
+if (not runOnMC) or runOnEmbed:
+    process.pfMEtSysShiftCorr.parameter = process.pfMEtSysShiftCorrParameters_2012runAvsNvtx_data
+process.pfType1CorrectedMet.srcType1Corrections.append(cms.InputTag('pfMEtSysShiftCorr') )
+process.producePFMETCorrections.replace(process.pfType1CorrectedMet,
+                                        process.pfMEtSysShiftCorrSequence+process.pfType1CorrectedMet)
+##
 
 from PhysicsTools.PatAlgos.tools.jetTools import *
 
@@ -704,7 +733,8 @@ process.tauPtEtaIDAgMu  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("selectedPatTausUserEmbedded"),
     cut = cms.string(process.tauPtEtaID.cut.value()+
-                     " && tauID('againstMuonTight')>0.5"),
+                     #" && tauID('againstMuonTight')>0.5"),
+                     " && ( tauID('againstMuonTight')>0.5 || tauID('againstMuonTight2')>0.5 )"),
     filter = cms.bool(False)
     )
 
@@ -952,7 +982,8 @@ process.tauPtEtaIDAgMuLAgElec  = cms.EDFilter(
     "PATTauSelector",
     src = cms.InputTag("selectedPatTausUserEmbedded"),
     cut = cms.string(process.tauPtEtaIDAgMuL.cut.value()+
-                     " && tauID('againstElectronLoose')>0.5"),
+                     #" && tauID('againstElectronLoose')>0.5"),
+                     " && ( tauID('againstElectronLoose')>0.5 || tauID('againstElectronLooseMVA3')>0.5 )"),
     filter = cms.bool(False)
     )
     
@@ -1316,7 +1347,13 @@ process.out.outputCommands.extend( cms.vstring(
     #MB'keep *_hybridSuperClusters_*_*',
     )
                                    )
-
+#MB
+if runOnEmbed:
+    process.out.outputCommands.extend( cms.vstring(
+        'keep *_towerMaker_*_*',
+        )
+                                       )
+          
 process.TFileService = cms.Service(
     "TFileService",
     fileName = cms.string("skimLepTauStream.root")
