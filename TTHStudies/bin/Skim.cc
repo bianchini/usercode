@@ -69,13 +69,34 @@ int main(int argc, const char* argv[])
   const edm::ParameterSet& in = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("fwliteInput");
 
   std::string pathToFile( in.getParameter<std::string>("pathToFile" ) );
+  std::string outPath( in.getParameter<std::string>("outPath" ) );
   std::string ordering(   in.getParameter<std::string>("ordering" ) );
   double lumi(            in.getParameter<double>("lumi" ) );
   bool verbose(           in.getParameter<bool>("verbose" ) );
 
 
   std::map<string,string> subsets;
-  const edm::VParameterSet& skims   = in.getParameter<edm::VParameterSet>("skims") ;
+  edm::VParameterSet skims;
+  if( in.exists("skims") && (argc==2 || argc==4) ) skims = in.getParameter<edm::VParameterSet>("skims") ;
+  else{
+    if(argc==6){
+      string fName = string((argv[4])); 
+      string fCut  = string((argv[5]));
+      edm::ParameterSet pset;
+      pset.addParameter("name",fName);
+      pset.addParameter("cut",fCut );
+      skims.push_back( pset );
+      if( verbose ){
+	TCut mycut(fCut.c_str());
+	cout << "Cut ==> " << string(mycut.GetTitle()) << endl;
+      }
+    }
+    else{
+      cout << "You need to specify name and cut for your sample" << endl;
+      return 0;
+    }
+  }
+
   BOOST_FOREACH(edm::ParameterSet p, skims) {
     string name = p.getParameter<string>("name");
     string cut  = p.getParameter<string>("cut");
@@ -86,7 +107,7 @@ int main(int argc, const char* argv[])
   edm::VParameterSet samples;
   if( in.exists("samples") && argc==2 ) samples = in.getParameter<edm::VParameterSet>("samples") ;
   else{
-    if(argc==4){
+    if(argc>=4){
       string fName = string((argv[2])); 
       string fNick = string((argv[3]));
       string cut   = "DUMMY";
@@ -146,10 +167,23 @@ int main(int argc, const char* argv[])
       
       string skim_it = it->first;
       TCut cut((it->second).c_str());
+
+      string cleanSE  = "srmrm srm://t3se01.psi.ch:8443/srm/managerv2?SFN=/pnfs/psi.ch/cms/trivcat/store/user/bianchi/HBB_EDMNtuple/AllHDiJetPt_"+skim_it+"/"+fileName+"_"+skim_it+".root"; 
+      cout << cleanSE << endl;
+      gSystem->Exec(cleanSE.c_str());
      
-      string outputName = pathToFile+"/"+fileName+"_"+skim_it+".root"; 
-      TFile* fs      = new TFile(outputName.c_str(), "RECREATE");
-      
+      //string outputName0 = pathToFile+"/"+fileName+"_"+skim_it+".root"; 
+      //TFile* fs0      = new TFile(outputName0.c_str(), "RECREATE");
+      //string copyToSE0 = " srmcp -2 file:///"+outputName0+
+      //" srm://t3se01.psi.ch:8443/srm/managerv2?SFN=/pnfs/psi.ch/cms/trivcat/store/user/bianchi/HBB_EDMNtuple/AllHDiJetPt_"+skim_it+"/"+fileName+"_"+skim_it+".root"; 
+      //cout << copyToSE0 << endl;
+      //gSystem->Exec(copyToSE0.c_str());
+      //fs0->Close();
+      //delete fs0;
+
+      string outputName = outPath+"/AllHDiJetPt_"+skim_it+"/"+fileName+"_"+skim_it+".root"; 
+      TFile* fs      = TFile::Open(outputName.c_str(), "RECREATE");
+     
       //fwlite::TFileService fs = fwlite::TFileService( ("TThNTuples_"+currentName+".root").c_str());
       //TTree* outTree = fs.make<TTree>("outTree","TTH Tree");
       //TTree* outTree = new TTree("tree","TTH tree");
@@ -186,13 +220,13 @@ int main(int argc, const char* argv[])
       //cout << moveToScratch << endl;
       //gSystem->Exec(moveToScratch.c_str());
 
-      string cleanSE  = "srmrm srm://t3se01.psi.ch:8443/srm/managerv2?SFN=/pnfs/psi.ch/cms/trivcat/store/user/bianchi/HBB_EDMNtuple/AllHDiJetPt_"+skim_it+"/"+fileName+"_"+skim_it+".root"; 
-      cout << cleanSE << endl;
-      gSystem->Exec(cleanSE.c_str());
-      string copyToSE = " srmcp -2 file:///"+outputName+
-	" srm://t3se01.psi.ch:8443/srm/managerv2?SFN=/pnfs/psi.ch/cms/trivcat/store/user/bianchi/HBB_EDMNtuple/AllHDiJetPt_"+skim_it+"/"+fileName+"_"+skim_it+".root"; 
-      cout << copyToSE << endl;
-      gSystem->Exec(copyToSE.c_str());
+      //string cleanSE  = "srmrm srm://t3se01.psi.ch:8443/srm/managerv2?SFN=/pnfs/psi.ch/cms/trivcat/store/user/bianchi/HBB_EDMNtuple/AllHDiJetPt_"+skim_it+"/"+fileName+"_"+skim_it+".root"; 
+      //cout << cleanSE << endl;
+      //gSystem->Exec(cleanSE.c_str());
+      //string copyToSE = " srmcp -2 file:///"+outputName+
+      //" srm://t3se01.psi.ch:8443/srm/managerv2?SFN=/pnfs/psi.ch/cms/trivcat/store/user/bianchi/HBB_EDMNtuple/AllHDiJetPt_"+skim_it+"/"+fileName+"_"+skim_it+".root"; 
+      //cout << copyToSE << endl;
+      //gSystem->Exec(copyToSE.c_str());
       
     }
 

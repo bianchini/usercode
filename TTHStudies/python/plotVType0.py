@@ -8,7 +8,7 @@ stitchDY = False
 mmBasic      = "(Vtype==0 && H.HiggsFlag==1 && vLepton_charge[0]*vLepton_charge[1]<0 && V.mass>60)"
 mmKin        = "(vLepton_pt[0]>30 && vLepton_pt[1]>20 && abs(vLepton_eta[0])<2.1 && abs(vLepton_eta[1])<2.4)"
 mmId         = "(vLepton_pfCorrIso[0]<0.10 && vLepton_pfCorrIso[1]<0.20)"
-mmJetBasic   = "(numJets30>=2 && pt1>30 && pt2>30)"
+mmJetBasic   = "(numJets30>=2 && pt1>30 && pt2>30 && numJets30bTag>=1)"
 common = mmBasic+" && "+mmKin+" && "+mmId+" && "+mmJetBasic
 
 dataCut      = "((EVENT.json == 1 || EVENT.run < 196532) && (triggerFlags[14]>0 || triggerFlags[21]>0 || triggerFlags[22]>0 || triggerFlags[23]>0))"
@@ -55,11 +55,14 @@ zjetsB  = \
 
 process = cms.Process("FWLitePlots")
 
+VType = "_VType0"
+
 process.fwliteInput = cms.PSet(
 
-    #pathToFile    = cms.string("dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/store//user/bianchi/HBB_EDMNtuple/ZllHDiJetPt/"),
-    pathToFile    = cms.string("/scratch/bianchi/HBB_EDMNtuple/Zll.H.DiJetPt/"),
-    ordering      = cms.string("ZllH.DiJetPt.Oct22."),
+    pathToFile    = cms.string("dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/store//user/bianchi/HBB_EDMNtuple/AllHDiJetPt"+VType),
+    #pathToFile    = cms.string("/scratch/bianchi/HBB_EDMNtuple/Zll.H.DiJetPt/"),
+    #ordering      = cms.string("ZllH.DiJetPt.Oct22."),
+    ordering      = cms.string("DiJetPt_"),
     lumi          = cms.double(12.1),
     debug         = cms.bool(True),
 
@@ -67,102 +70,15 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(False),
-    name     = cms.string('DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball'),
+    name     = cms.string('DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball'+VType),
     nickName = cms.string('DYJets'),
     color    = cms.int32(18),
     xSec     = cms.double(3503.71)
     ),
-
-    cms.PSet(
-    skip     = cms.bool(not stitchDY),
-    name     = cms.string('DY1JetsToLL_M-50_TuneZ2Star_8TeV-madgraph'),
-    nickName = cms.string('DYJets1'),
-    color    = cms.int32(18),
-    xSec     = cms.double(3503.71)
-    ),
-
-    cms.PSet(
-    skip     = cms.bool(not stitchDY),
-    name     = cms.string('DY2JetsToLL_M-50_TuneZ2Star_8TeV-madgraph'),
-    nickName = cms.string('DYJets2'),
-    color    = cms.int32(18),
-    xSec     = cms.double(3503.71)
-    ),
-
-    cms.PSet(
-    skip     = cms.bool(not stitchDY),  
-    name     = cms.string('DY3JetsToLL_M-50_TuneZ2Star_8TeV-madgraph'),
-    nickName = cms.string('DYJets3'),
-    color    = cms.int32(18),
-    xSec     = cms.double(3503.71)
-    ),
-
-    cms.PSet(
-    skip     = cms.bool(not stitchDY),  
-    name     = cms.string('DY4JetsToLL_M-50_TuneZ2Star_8TeV-madgraph'),
-    nickName = cms.string('DYJets4'),
-    color    = cms.int32(18),
-    xSec     = cms.double(3503.71)
-    ),
-
-    cms.PSet(
-    skip     = cms.bool(not stitchDY),  
-    name     = cms.string('DYJetsToLL_HT-200To400_TuneZ2Star_8TeV-madgraph'),
-    nickName = cms.string('DYJetsHT1'),
-    color    = cms.int32(18),
-    xSec     = cms.double(3503.71)
-    ),
-
-    cms.PSet(
-    skip     = cms.bool(not stitchDY),  
-    name     = cms.string('DYJetsToLL_HT-400ToInf_TuneZ2Star_8TeV-madgraph'),
-    nickName = cms.string('DYJetsHT2'),
-    color    = cms.int32(18),
-    xSec     = cms.double(3503.71)
-    ),
-
-    ##cms.PSet(
-    ##name     = cms.string('DYJetsToLL_PtZ-180_TuneZ2star_8TeV-madgraph'),
-    ##nickName = cms.string('DYJetsPt4'),
-    ##color    = cms.int32(18),
-    ##xSec     = cms.double(3503.71)
-    ##),
-    
-    cms.PSet(
-    skip     = cms.bool(not stitchDY),  
-    name     = cms.string('DYJetsToLL_PtZ-100_TuneZ2star_8TeV-madgraph'),
-    nickName = cms.string('DYJetsPt3'),
-    color    = cms.int32(18),
-    xSec     = cms.double(3503.71)
-    ),
-    
-    cms.PSet(
-    skip     = cms.bool(not stitchDY),  
-    name     = cms.string('DYJetsToLL_PtZ-70To100_TuneZ2star_8TeV-madgraph-tarball'),
-    nickName = cms.string('DYJetsPt2'),
-    color    = cms.int32(18),
-    xSec     = cms.double(3503.71)
-    ),
-
-    cms.PSet(
-    skip     = cms.bool(not stitchDY),  
-    name     = cms.string('DYJetsToLL_PtZ-50To70_TuneZ2star_8TeV-madgraph-tarball'),
-    nickName = cms.string('DYJetsPt1'),
-    color    = cms.int32(18),
-    xSec     = cms.double(3503.71)
-    ),
-
-    cms.PSet(
-    skip     = cms.bool(True),  
-    name     = cms.string('TTJets_Merged'),
-    nickName = cms.string('TTJets'),
-    color    = cms.int32(5),
-    xSec     = cms.double(234),
-    ),
    
     cms.PSet(
     skip     = cms.bool(True),  
-    name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'),
+    name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullHad'),
     color    = cms.int32(41),
     xSec     = cms.double(133.62),
@@ -170,7 +86,7 @@ process.fwliteInput = cms.PSet(
     
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'),
+    name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullHad_LF'),
     color    = cms.int32(41),
     xSec     = cms.double(133.62),
@@ -179,7 +95,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'),
+    name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullHad_C'),
     color    = cms.int32(44),
     xSec     = cms.double(133.62),
@@ -188,7 +104,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'),
+    name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullHad_B'),
     color    = cms.int32(46),
     xSec     = cms.double(133.62),
@@ -198,7 +114,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(True),  
-    name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'),
+    name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullLept'),
     color    = cms.int32(41),
     xSec     = cms.double(24.56),
@@ -206,7 +122,7 @@ process.fwliteInput = cms.PSet(
     
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'),
+    name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullLept_LF'),
     color    = cms.int32(41),
     xSec     = cms.double(24.56),
@@ -215,7 +131,7 @@ process.fwliteInput = cms.PSet(
     
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'),
+    name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullLept_C'),
     color    = cms.int32(44),
     xSec     = cms.double(24.56),
@@ -224,7 +140,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'),
+    name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullLept_B'),
     color    = cms.int32(46),
     xSec     = cms.double(24.56),
@@ -233,7 +149,7 @@ process.fwliteInput = cms.PSet(
     
     cms.PSet(
     skip     = cms.bool(True),  
-    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'),
+    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsSemiLept'),
     color    = cms.int32(41),
     xSec     = cms.double(75.82),
@@ -241,7 +157,7 @@ process.fwliteInput = cms.PSet(
     
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'),
+    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsSemiLept_LF'),
     color    = cms.int32(41),
     xSec     = cms.double(75.82),
@@ -250,7 +166,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'),
+    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsSemiLept_C'),
     color    = cms.int32(44),
     xSec     = cms.double(75.82),
@@ -259,7 +175,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'),
+    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsSemiLept_B'),
     color    = cms.int32(46),
     xSec     = cms.double(75.82),
@@ -270,7 +186,7 @@ process.fwliteInput = cms.PSet(
     
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('T_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola'),
+    name     = cms.string('T_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola'+VType),
     nickName = cms.string('TtW'),
     color    = cms.int32(6),
     xSec     = cms.double(11.1)
@@ -278,7 +194,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('T_t-channel_TuneZ2star_8TeV-powheg-tauola'),
+    name     = cms.string('T_t-channel_TuneZ2star_8TeV-powheg-tauola'+VType),
     nickName = cms.string('Tt'),
     color    = cms.int32(6),
     xSec     = cms.double(56.4)
@@ -286,7 +202,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('T_s-channel_TuneZ2star_8TeV-powheg-tauola'),
+    name     = cms.string('T_s-channel_TuneZ2star_8TeV-powheg-tauola'+VType),
     nickName = cms.string('Ts'),
     color    = cms.int32(6),
     xSec     = cms.double(3.79)
@@ -294,7 +210,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('Tbar_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola'),
+    name     = cms.string('Tbar_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola'+VType),
     nickName = cms.string('TbartW'),
     color    = cms.int32(6),
     xSec     = cms.double(11.1)
@@ -302,7 +218,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('Tbar_t-channel_TuneZ2star_8TeV-powheg-tauola'),
+    name     = cms.string('Tbar_t-channel_TuneZ2star_8TeV-powheg-tauola'+VType),
     nickName = cms.string('Tbart'),
     color    = cms.int32(6),
     xSec     = cms.double(30.7)
@@ -310,7 +226,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('Tbar_s-channel_TuneZ2star_8TeV-powheg-tauola'),
+    name     = cms.string('Tbar_s-channel_TuneZ2star_8TeV-powheg-tauola'+VType),
     nickName = cms.string('Tbars'),
     color    = cms.int32(6),
     xSec     = cms.double(1.76)
@@ -318,7 +234,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('WW_TuneZ2star_8TeV_pythia6_tauola'),
+    name     = cms.string('WW_TuneZ2star_8TeV_pythia6_tauola'+VType),
     nickName = cms.string('WW'),
     color    = cms.int32(4),
     xSec     = cms.double(56.75)
@@ -326,7 +242,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('WZ_TuneZ2star_8TeV_pythia6_tauola'),
+    name     = cms.string('WZ_TuneZ2star_8TeV_pythia6_tauola'+VType),
     nickName = cms.string('WZ'),
     color    = cms.int32(4),
     xSec     = cms.double(33.85)
@@ -334,7 +250,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('ZZ_TuneZ2star_8TeV_pythia6_tauola'),
+    name     = cms.string('ZZ_TuneZ2star_8TeV_pythia6_tauola'+VType),
     nickName = cms.string('ZZ'),
     color    = cms.int32(4),
     xSec     = cms.double(8.297)
@@ -342,7 +258,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(True),  
-    name     = cms.string('ZH_ZToLL_HToBB_M-110_8TeV-powheg-herwigpp'),
+    name     = cms.string('ZH_ZToLL_HToBB_M-110_8TeV-powheg-herwigpp'+VType),
     nickName = cms.string('ZH110'),
     color    = cms.int32(2),
     xSec     = cms.double(0.04414)
@@ -350,7 +266,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(True),  
-    name     = cms.string('ZH_ZToLL_HToBB_M-115_8TeV-powheg-herwigpp'),
+    name     = cms.string('ZH_ZToLL_HToBB_M-115_8TeV-powheg-herwigpp'+VType),
     nickName = cms.string('ZH115'),
     color    = cms.int32(2),
     xSec     = cms.double(0.036375)
@@ -358,7 +274,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(True),  
-    name     = cms.string('ZH_ZToLL_HToBB_M-120_8TeV-powheg-herwigpp'),
+    name     = cms.string('ZH_ZToLL_HToBB_M-120_8TeV-powheg-herwigpp'+VType),
     nickName = cms.string('ZH120'),
     color    = cms.int32(2),
     xSec     = cms.double(0.0293327854)
@@ -366,7 +282,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(False),  
-    name     = cms.string('ZH_ZToLL_HToBB_M-125_8TeV-powheg-herwigpp'),
+    name     = cms.string('ZH_ZToLL_HToBB_M-125_8TeV-powheg-herwigpp'+VType),
     nickName = cms.string('ZH125'),
     color    = cms.int32(2),
     xSec     = cms.double(0.0229727058)
@@ -374,7 +290,7 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(True),  
-    name     = cms.string('ZH_ZToLL_HToBB_M-130_8TeV-powheg-herwigpp'),
+    name     = cms.string('ZH_ZToLL_HToBB_M-130_8TeV-powheg-herwigpp'+VType),
     nickName = cms.string('ZH130'),
     color    = cms.int32(2),
     xSec     = cms.double(0.017288657)
@@ -382,12 +298,78 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     skip     = cms.bool(True),  
-    name     = cms.string('ZH_ZToLL_HToBB_M-135_8TeV-powheg-herwigpp'),
+    name     = cms.string('ZH_ZToLL_HToBB_M-135_8TeV-powheg-herwigpp'+VType),
     nickName = cms.string('ZH135'),
     color    = cms.int32(2),
     xSec     = cms.double(0.01250888)
     ),
 
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('SingleMuRun2012AAug06EdmV42'+VType),
+    nickName = cms.string('DataSingleMu_1'),
+    color    = cms.int32(1),
+    xSec     = cms.double(-1),
+    cut      = cms.string(dataCut),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('SingleMuRun2012AJul13EdmV42'+VType),
+    nickName = cms.string('DataSingleMu_2'),
+    color    = cms.int32(1),
+    xSec     = cms.double(-1),
+    cut      = cms.string(dataCut),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('SingleMuRun2012BJul13EdmV42'+VType),
+    nickName = cms.string('DataSingleMu_3'),
+    color    = cms.int32(1),
+    xSec     = cms.double(-1),
+    cut      = cms.string(dataCut),
+    ),
+
+     cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('SingleMuRun2012CAug24RerecoEdmV42'+VType),
+    nickName = cms.string('DataSingleMu_4'),
+    color    = cms.int32(1),
+    xSec     = cms.double(-1),
+    cut      = cms.string(dataCut),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('SingleMuRun2012CPromptv2EdmV42'+VType),
+    nickName = cms.string('DataSingleMu_5'),
+    color    = cms.int32(1),
+    xSec     = cms.double(-1),
+    cut      = cms.string(dataCut),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('SingleMuRun2012CPromptV2TopUpEdmV42'+VType),
+    nickName = cms.string('DataSingleMu_6'),
+    color    = cms.int32(1),
+    xSec     = cms.double(-1),
+    cut      = cms.string(dataCut),
+    ),
+    
+    
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('SingleMuRun2012'),
+    nickName = cms.string('DataSingleMu'),
+    color    = cms.int32(1),
+    xSec     = cms.double(-1),
+    cut      = cms.string(dataCut),
+    ),
+    
     cms.PSet(
     skip     = cms.bool(True),  
     name     = cms.string('DataZmm'),
@@ -413,7 +395,7 @@ process.fwliteInput = cms.PSet(
     plots      = cms.VPSet(
 
     cms.PSet(
-    skip      = cms.bool(True),
+    skip      = cms.bool(False),
     xLow      = cms.double(10),
     xHigh     = cms.double(250),
     nBins     = cms.int32(120),
@@ -508,7 +490,7 @@ process.fwliteInput = cms.PSet(
     ########################## JETS ###############################
     
     cms.PSet(
-    skip      = cms.bool(True),
+    skip      = cms.bool(False),
     xLow      = cms.double(0),
     xHigh     = cms.double(10),
     nBins     = cms.int32(10),
@@ -521,7 +503,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(False),
+    skip      = cms.bool(True),
     xLow      = cms.double(0),
     xHigh     = cms.double(10),
     nBins     = cms.int32(10),
