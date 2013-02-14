@@ -495,8 +495,8 @@ void evaluateWextrapolation(TString RUN = "ABCD",
   OSWinSignalRegionDATA -= OSDYtoTauinSidebandRegionMC;
   OSWinSignalRegionDATA -= OSDYJtoTauinSidebandRegionMC;
   OSWinSignalRegionDATA -= OSDYElectoTauinSidebandRegionMC;
-  //   if(useFakeRate) OSWinSignalRegionDATA -= (OSQCDinSidebandRegionData-OSWinSidebandRegionAIsoMC);
-  OSWinSignalRegionDATA -= (OSQCDinSidebandRegionData-OSWinSidebandRegionAIsoMC);
+  if(useFakeRate) OSWinSignalRegionDATA -= (OSQCDinSidebandRegionData-OSWinSidebandRegionAIsoMC);
+  //OSWinSignalRegionDATA -= (OSQCDinSidebandRegionData-OSWinSidebandRegionAIsoMC);
   OSWinSignalRegionDATA /= scaleFactorOS;
   if(VERBOSE) {
     cout << "- expected from TTbar          " << OSTTbarinSidebandRegionMC << endl;
