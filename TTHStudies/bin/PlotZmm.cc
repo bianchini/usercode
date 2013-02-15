@@ -169,8 +169,6 @@ int main(int argc, const char* argv[])
   map<string, TH1F*> mapHist;
   vector<string> mySampleFiles;
 
-  string dataName = "pippo";
-
   if(mySamples->IsOk()){
 
     cout << "Ok!" << endl;
@@ -178,8 +176,6 @@ int main(int argc, const char* argv[])
 
     for( unsigned int i = 0 ; i < mySampleFiles.size(); i++){
       string sampleName       = mySampleFiles[i];
-
-      if(sampleName.find("Data")!=string::npos) dataName = sampleName;
 
       if(VERBOSE){
 	cout << mySampleFiles[i] << " ==> " << mySamples->GetXSec(sampleName) 
@@ -217,6 +213,7 @@ int main(int argc, const char* argv[])
     string yTitle    = pset.getParameter<string>("yTitle");
     string histoName = pset.getParameter<string>("histoName");
     string cut       = pset.getParameter<string>("cut");
+    string cutName   = pset.exists("cutName") ? pset.getParameter<string>("cutName") : "";
     int normalize    = pset.exists("normalize") ? pset.getParameter<int>("normalize") : 0;
     int logy         = pset.getParameter<int>("logy");
 
@@ -224,10 +221,17 @@ int main(int argc, const char* argv[])
 
       string currentName       = mySampleFiles[i];
 
+      string header = string( Form("CMS Preliminary #sqrt{s}=8 TeV  L=%.1f fb^{-1} ",lumi) );
 
-      TH1F* h1 = new TH1F( ("h1_"+currentName).c_str(), (" ;"+xTitle+";"+yTitle).c_str(), nBins, xLow, xHigh );
+      TH1F* h1 = new TH1F( ("h1_"+currentName).c_str(), (header+" "+cutName+"; "+xTitle+";"+yTitle).c_str(), nBins, xLow, xHigh );
       h1->SetLineColor( mySamples->GetColor(currentName) );
       h1->SetFillColor( mySamples->GetColor(currentName) );
+      h1->GetXaxis()->SetLabelFont(63); //font in pixels
+      h1->GetXaxis()->SetLabelSize(16); //in pixels
+      h1->GetYaxis()->SetLabelFont(63); //font in pixels
+      h1->GetYaxis()->SetLabelSize(16); //in pixels
+      h1->GetYaxis()->SetTitleSize(0.05);
+      h1->GetXaxis()->SetTitleSize(0.05);
 
       if( currentName.find("Data")!=string::npos) 
 	h1->SetMarkerStyle(20);h1->SetMarkerSize(1.2);h1->SetMarkerColor(kBlack);h1->SetLineColor(kBlack);
@@ -269,14 +273,22 @@ int main(int argc, const char* argv[])
     
     
     TCanvas *c1  = new TCanvas("c1","",5,30,650,600);
-    TLegend* leg = new TLegend(0.65,0.45,0.90,0.90,NULL,"brNDC");
-    leg->SetHeader(Form("#sqrt{s}=8 TeV  L=%.1f fb^{-1} ",lumi));
+
+    //LEFT : 
+    //TLegend* leg = new TLegend(0.119195,0.5611888,0.369969,0.8968531,NULL,"brNDC");
+    //RIGHT: 
+    //TLegend* leg = new TLegend(0.6393189,0.5594406,0.8900929,0.8951049,NULL,"brNDC");
+
+    TLegend* leg = new TLegend(0.120,0.80,0.875,0.92,NULL,"brNDC");
+    leg->SetNColumns(4);
+
     
     CanvasAndLegend(c1, leg, logy);
    
     THStack* aStack = new THStack("aStack","");
     vector<TH1F*> mcHistoArray;
 
+    TH1F* Data = 0;
     TH1F* DiBoson = 0; TH1F* WJets = 0;
     TH1F* top   = 0;   TH1F* singleTop = 0;
     TH1F* topLF = 0;   TH1F* topC      = 0; TH1F* topB = 0;
@@ -346,7 +358,13 @@ int main(int argc, const char* argv[])
 
 	}
       }
+      else{
+	if(!Data)  Data = (it->second);
+	else Data->Add(it->second);
+      }
+
     }
+
     if(top && (!topLF || !topC || !topB)){
       mcHistoArray.push_back(top);
       leg->AddEntry(top, "Top", "F");
@@ -380,28 +398,82 @@ int main(int argc, const char* argv[])
       hMapIntegral[ mcHistoArray[k]->Integral() ] = mcHistoArray[k];
      }
     
+    TH1F* mcTotal = 0;
     for(std::map<float, TH1F*>::iterator it = hMapIntegral.begin(); it!=hMapIntegral.end(); it++){
+      if( mcTotal==0 ) mcTotal = (TH1F*)(it->second)->Clone("mcTotal");
+      else  mcTotal->Add(it->second);
       aStack->Add( it->second );
     }
 
 
     c1->cd();
-    if(mapHist[dataName]!=0){
-      leg->AddEntry(mapHist[dataName], "Data", "P");
-      mapHist[dataName]->Sumw2();
+    if(Data!=0){
+      leg->AddEntry(Data, "Data", "P");
+      if(mcTotal)
+	Data->SetMaximum( 1.3*TMath::Max(mcTotal->GetMaximum(), Data->GetMaximum()) );
+      else
+	Data->SetMaximum( 1.3*Data->GetMaximum() );
+
+      Data->Sumw2();
       if(normalize){
-	mapHist[dataName]->DrawNormalized("P");
+	Data->DrawNormalized("P");
 	for( int k = 0 ; k < (aStack->GetStack())->GetEntries() ; k++){
 	  if(totalMC>0) ((TH1F*)(aStack->GetStack())->At(k))->Scale(1./totalMC);
 	}
 	aStack->Draw("HISTSAME");
-	mapHist[dataName]->DrawNormalized("PSAME");
+	Data->DrawNormalized("PSAME");
       }
       else{
-	mapHist[dataName]->Draw("PE");
+
+	TPad *pad1 = new TPad("pad1","pad1",0,0.3,1,1);
+	pad1->SetBottomMargin(0);
+	pad1->Draw();
+	pad1->cd();
+
+	Data->Draw("PE");
 	aStack->Draw("HISTSAME");
-	mapHist[dataName]->Draw("PSAME");
+	Data->Draw("PSAME");
+
+	c1->cd();
+	TPad *pad2 = new TPad("pad2","pad2",0,0.05,1,0.3);
+	pad2->SetTitle("");
+	pad2->SetTopMargin(0);
+	pad2->Draw();
+	pad2->cd();
+
+	if(mcTotal){
+	  mcTotal->Sumw2();
+	  mcTotal->SetTitle("");
+	  mcTotal->SetMarkerStyle(20);mcTotal->SetMarkerSize(1.2);mcTotal->SetMarkerColor(kBlack);mcTotal->SetLineColor(kBlack);
+	  mcTotal->GetXaxis()->SetLabelFont(63); //font in pixels
+	  mcTotal->GetXaxis()->SetLabelSize(16); //in pixels
+	  mcTotal->GetYaxis()->SetLabelFont(63); //font in pixels
+	  mcTotal->GetYaxis()->SetLabelSize(16); //in pixels
+	  mcTotal->GetYaxis()->SetTitleSize(0.10);
+	  mcTotal->GetXaxis()->SetTitleSize(0.13);
+	  mcTotal->GetYaxis()->SetTitle("MC/data");
+	  mcTotal->Divide(Data);
+	  mcTotal->SetMinimum(0);  mcTotal->SetMaximum(3);
+	  mcTotal->Draw("EP");
+
+	  TF1* line = new TF1("line","1",mcTotal->GetXaxis()->GetXmin(),mcTotal->GetXaxis()->GetXmax());
+	  line->SetLineStyle(3);
+	  line->SetLineWidth(1.5);
+	  line->SetLineColor(kBlack);
+	  line->Draw("SAME");
+	}
+	c1->cd();
+
+	leg->Draw();
+
       }
+      TH1F* hStack = (TH1F*)aStack->GetHistogram();
+      //hStack->SetTitle(cutName.c_str());
+      //hStack->SetXTitle(xTitle.c_str());
+      //hStack->SetYTitle(yTitle.c_str());
+      //hStack->SetTitleSize(  0.04,"X");
+      //hStack->SetTitleSize(  0.05,"Y");
+      //hStack->SetTitleOffset(0.95,"Y");
     }
     else{
       if(normalize){
@@ -409,11 +481,14 @@ int main(int argc, const char* argv[])
 	  if(totalMC>0) ((TH1F*)(aStack->GetStack())->At(k))->Scale(1./totalMC);
 	}
 	aStack->Draw("HIST");
+	leg->Draw();;
       }
       else{
 	aStack->Draw("HIST");
+	leg->Draw();
       }
       TH1F* hStack = (TH1F*)aStack->GetHistogram();
+      hStack->SetTitle(cutName.c_str());
       hStack->SetXTitle(xTitle.c_str());
       hStack->SetYTitle(yTitle.c_str());
       hStack->SetTitleSize(  0.04,"X");
@@ -421,8 +496,6 @@ int main(int argc, const char* argv[])
       hStack->SetTitleOffset(0.95,"Y");
     }
 
-
-    leg->Draw();
     c1->SaveAs(("Plots/"+histoName+".png").c_str());
     c1->SaveAs(("Plots/"+histoName+".root").c_str());
    

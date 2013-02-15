@@ -1,15 +1,26 @@
 import FWCore.ParameterSet.Types as CfgTypes
 import FWCore.ParameterSet.Config as cms
 
+from Bianchi.TTHStudies.jetsBasic_cff import *
+from Bianchi.TTHStudies.aNNInputs_cff import *
 
 VType = "_VType2"
 
 mmBasic      = "(V.pt>0 && V.Mt>40 && H.pt>0 && Vtype==2 && H.HiggsFlag==1)"
 mmKin        = "(vLepton_pt[0]>30 && abs(vLepton_eta[0])<2.1)"
 mmId         = "(vLepton_pfCorrIso[0]<0.10)"
-mmJetBasic   = "(numJets30>=3 && pt1>30 && pt2>30 && pt4>30 && numJets30bTag>=2)"
-common       =  mmJetBasic + " && " + mmBasic+" && "+mmKin+" && "+mmId 
+mmJetBasic   = "(numJets30>=3 && numJets30bTag>=2)"
 
+common       =  mmJetBasic + " && " + mmBasic+" && "+mmKin+" && "+mmId
+cat4j2b      = "numJets40==4 && numJets30bTag==2"
+cat4j3b      = "numJets40==4 && numJets30bTag==3"
+cat4j4b      = "numJets40==4 && numJets30bTag==4"
+cat5j2b      = "numJets40==5 && numJets30bTag==2"
+cat5j3b      = "numJets40==5 && numJets30bTag==3"
+cat5j4b      = "numJets40==5 && numJets30bTag>=4"
+cat6j2b      = "numJets40>=6 && numJets30bTag==2"
+cat6j3b      = "numJets40>=6 && numJets30bTag==3"
+cat6j4b      = "numJets40>=6 && numJets30bTag>=4"
 
 
 dataCut      = "((EVENT.json == 1 || EVENT.run < 196532) && (triggerFlags[14] || triggerFlags[15]  || triggerFlags[21]  || triggerFlags[22] || triggerFlags[23]))"
@@ -69,7 +80,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullHad'),
     color    = cms.int32(41),
@@ -77,7 +88,7 @@ process.fwliteInput = cms.PSet(
     ),
     
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullHad_LF'),
     color    = cms.int32(41),
@@ -86,7 +97,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullHad_C'),
     color    = cms.int32(44),
@@ -95,7 +106,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullHad_B'),
     color    = cms.int32(46),
@@ -105,7 +116,7 @@ process.fwliteInput = cms.PSet(
     
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullLept'),
     color    = cms.int32(41),
@@ -113,7 +124,7 @@ process.fwliteInput = cms.PSet(
     ),
     
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullLept_LF'),
     color    = cms.int32(41),
@@ -122,7 +133,7 @@ process.fwliteInput = cms.PSet(
     ),
     
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullLept_C'),
     color    = cms.int32(44),
@@ -131,7 +142,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullLept_B'),
     color    = cms.int32(46),
@@ -140,7 +151,7 @@ process.fwliteInput = cms.PSet(
     ),
     
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsSemiLept'),
     color    = cms.int32(41),
@@ -148,7 +159,7 @@ process.fwliteInput = cms.PSet(
     ),
     
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsSemiLept_LF'),
     color    = cms.int32(41),
@@ -157,7 +168,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsSemiLept_C'),
     color    = cms.int32(44),
@@ -166,7 +177,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsSemiLept_B'),
     color    = cms.int32(46),
@@ -481,567 +492,6 @@ process.fwliteInput = cms.PSet(
     ),
 
 
-    ########################## JETS ###############################
-    
-    cms.PSet(
-    skip      = cms.bool(False),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(10),
-    nBins     = cms.int32(10),
-    variable  = cms.string("numJets30"),
-    xTitle    = cms.string("jet mult p_{T}>30 GeV"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_numJet30"),
-    cut       = cms.string(common),
-    logy      = cms.int32(1),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(False),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(10),
-    nBins     = cms.int32(10),
-    variable  = cms.string("numJets30bTag"),
-    xTitle    = cms.string("b-jet mult"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_numBJet30"),
-    cut       = cms.string(common),
-    logy      = cms.int32(1),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(False),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(1.1),
-    nBins     = cms.int32(55),
-    variable  = cms.string("csv1"),
-    xTitle    = cms.string("CSV jet 1"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_csv1"),
-    cut       = cms.string(common),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(False),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(1.1),
-    nBins     = cms.int32(55),
-    variable  = cms.string("csv2"),
-    xTitle    = cms.string("CSV jet 2"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_csv2"),
-    cut       = cms.string(common),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(False),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(1.1),
-    nBins     = cms.int32(55),
-    variable  = cms.string("csv3"),
-    xTitle    = cms.string("CSV jet 3"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_csv3"),
-    cut       = cms.string(common),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(False),
-    xLow      = cms.double(-5.5),
-    xHigh     = cms.double(5.5),
-    nBins     = cms.int32(55),
-    variable  = cms.string("eta1"),
-    xTitle    = cms.string("#eta jet 1"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_eta1"),
-    cut       = cms.string(common),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(False),
-    xLow      = cms.double(-5.5),
-    xHigh     = cms.double(5.5),
-    nBins     = cms.int32(55),
-    variable  = cms.string("eta2"),
-    xTitle    = cms.string("#eta jet 2"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_eta2"),
-    cut       = cms.string(common),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(False),
-    xLow      = cms.double(-5.5),
-    xHigh     = cms.double(5.5),
-    nBins     = cms.int32(55),
-    variable  = cms.string("eta3"),
-    xTitle    = cms.string("#eta jet 3"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_eta3"),
-    cut       = cms.string(common),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(False),
-    xLow      = cms.double(30),
-    xHigh     = cms.double(300),
-    nBins     = cms.int32(90),
-    variable  = cms.string("pt1"),
-    xTitle    = cms.string("p_{T} jet 1"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_pt1"),
-    cut       = cms.string(common),
-    logy      = cms.int32(1),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(False),
-    xLow      = cms.double(30),
-    xHigh     = cms.double(300),
-    nBins     = cms.int32(90),
-    variable  = cms.string("pt2"),
-    xTitle    = cms.string("p_{T} jet 2"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_pt2"),
-    cut       = cms.string(common),
-    logy      = cms.int32(1),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(False),
-    xLow      = cms.double(30),
-    xHigh     = cms.double(300),
-    nBins     = cms.int32(90),
-    variable  = cms.string("pt3"),
-    xTitle    = cms.string("p_{T} jet 3"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_pt3"),
-    cut       = cms.string(common),
-    logy      = cms.int32(1),
-    ),
-
-
-    ########################## 4j3b ###########################
-
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(10),
-    nBins     = cms.int32(10),
-    variable  = cms.string("numJets30"),
-    xTitle    = cms.string("jet mult p_{T}>30 GeV"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_numJet30_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    logy      = cms.int32(1),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(10),
-    nBins     = cms.int32(10),
-    variable  = cms.string("numJets30bTag"),
-    xTitle    = cms.string("b-jet mult"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_numBJet30_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    logy      = cms.int32(1),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(1.1),
-    nBins     = cms.int32(55),
-    variable  = cms.string("csv1"),
-    xTitle    = cms.string("CSV jet 1"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_csv1_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(1.1),
-    nBins     = cms.int32(55),
-    variable  = cms.string("csv2"),
-    xTitle    = cms.string("CSV jet 2"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_csv2_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(1.1),
-    nBins     = cms.int32(55),
-    variable  = cms.string("csv3"),
-    xTitle    = cms.string("CSV jet 3"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_csv3_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(1.1),
-    nBins     = cms.int32(55),
-    variable  = cms.string("csv4"),
-    xTitle    = cms.string("CSV jet 4"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_csv4_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(-5.5),
-    xHigh     = cms.double(5.5),
-    nBins     = cms.int32(55),
-    variable  = cms.string("eta1"),
-    xTitle    = cms.string("#eta jet 1"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_eta1_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(-5.5),
-    xHigh     = cms.double(5.5),
-    nBins     = cms.int32(55),
-    variable  = cms.string("eta2"),
-    xTitle    = cms.string("#eta jet 2"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_eta2_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(-5.5),
-    xHigh     = cms.double(5.5),
-    nBins     = cms.int32(55),
-    variable  = cms.string("eta3"),
-    xTitle    = cms.string("#eta jet 3"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_eta3_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(-5.5),
-    xHigh     = cms.double(5.5),
-    nBins     = cms.int32(55),
-    variable  = cms.string("eta4"),
-    xTitle    = cms.string("#eta jet 4"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_eta4_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    logy      = cms.int32(0),
-    ),
-
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(30),
-    xHigh     = cms.double(390),
-    nBins     = cms.int32(60),
-    variable  = cms.string("pt1"),
-    xTitle    = cms.string("p_{T} jet 1"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_pt1_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    logy      = cms.int32(1),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(30),
-    xHigh     = cms.double(390),
-    nBins     = cms.int32(60),
-    variable  = cms.string("pt2"),
-    xTitle    = cms.string("p_{T} jet 2"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_pt2_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    logy      = cms.int32(1),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(30),
-    xHigh     = cms.double(390),
-    nBins     = cms.int32(60),
-    variable  = cms.string("pt3"),
-    xTitle    = cms.string("p_{T} jet 3"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_pt3_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    logy      = cms.int32(1),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(30),
-    xHigh     = cms.double(390),
-    nBins     = cms.int32(60),
-    variable  = cms.string("pt4"),
-    xTitle    = cms.string("p_{T} jet 4"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_pt4_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    logy      = cms.int32(1),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(8),
-    nBins     = cms.int32(8),
-    variable  = cms.string("(lheNj - 2 - (abs(genTop.wdau1id)<6 + abs(genTop.wdau2id)<6 + abs(genTbar.wdau1id)<6 + abs(genTbar.wdau2id)<6 ) )"),
-    xTitle    = cms.string("LHE N_{j}"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_lheNj_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    normalize = cms.int32(1),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(3),
-    nBins     = cms.int32(3),
-    variable  = cms.string("nLF"),
-    xTitle    = cms.string("LF jets"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_nLF_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    normalize = cms.int32(1),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(3),
-    nBins     = cms.int32(3),
-    variable  = cms.string("nLFTop"),
-    xTitle    = cms.string("LF jets from W"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_nLFTop_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    normalize = cms.int32(1),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(3),
-    nBins     = cms.int32(3),
-    variable  = cms.string("nC"),
-    xTitle    = cms.string("charm jets"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_nC_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    normalize = cms.int32(1),
-    logy      = cms.int32(0),
-    ),
-    
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(3),
-    nBins     = cms.int32(3),
-    variable  = cms.string("nCTop"),
-    xTitle    = cms.string("charm jets from W"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_nCTop_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    normalize = cms.int32(1),
-    logy      = cms.int32(0),
-    ),
-    
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(3),
-    nBins     = cms.int32(3),
-    variable  = cms.string("nB"),
-    xTitle    = cms.string("bottom jets"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_nB_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    logy      = cms.int32(0),
-    normalize = cms.int32(1),
-    ),
-    
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(3),
-    nBins     = cms.int32(3),
-    variable  = cms.string("nBTop"),
-    xTitle    = cms.string("bottom jets from top"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_nBTop_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    normalize = cms.int32(1),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(-10),
-    xHigh     = cms.double(25),
-    nBins     = cms.int32(35),
-    variable  = cms.string("flavor1"),
-    xTitle    = cms.string("flavor jet 1"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_flavor1_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    normalize = cms.int32(1),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(-10),
-    xHigh     = cms.double(25),
-    nBins     = cms.int32(35),
-    variable  = cms.string("flavor2"),
-    xTitle    = cms.string("flavor jet 2"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_flavor2_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    normalize = cms.int32(1),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(-10),
-    xHigh     = cms.double(25),
-    nBins     = cms.int32(35),
-    variable  = cms.string("flavor3"),
-    xTitle    = cms.string("flavor jet 3"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_flavor3_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    normalize = cms.int32(1),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(-10),
-    xHigh     = cms.double(25),
-    nBins     = cms.int32(35),
-    variable  = cms.string("flavor4"),
-    xTitle    = cms.string("flavor jet 4"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_flavor4_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    normalize = cms.int32(1),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(2),
-    nBins     = cms.int32(2),
-    variable  = cms.string("(topB1 || topW1)"),
-    xTitle    = cms.string("jet 1 from top decay?"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_top1_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    normalize = cms.int32(1),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(2),
-    nBins     = cms.int32(2),
-    variable  = cms.string("(topB2 || topW2)"),
-    xTitle    = cms.string("jet 2 from top decay?"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_top2_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    normalize = cms.int32(1),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(2),
-    nBins     = cms.int32(2),
-    variable  = cms.string("(topB3 || topW3)"),
-    xTitle    = cms.string("jet 3 from top decay?"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_top3_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    normalize = cms.int32(1),
-    logy      = cms.int32(0),
-    ),
-
-    cms.PSet(
-    skip      = cms.bool(True),
-    xLow      = cms.double(0),
-    xHigh     = cms.double(2),
-    nBins     = cms.int32(2),
-    variable  = cms.string("(topB4 || topW4)"),
-    xTitle    = cms.string("jet 4 from top decay?"),
-    yTitle    = cms.string("Events"),
-    histoName = cms.string("VType2_top4_4j3b"),
-    cut       = cms.string(common+" && numJets30==4 && pt4>30 && numJets30bTag==3"),
-    normalize = cms.int32(1),
-    logy      = cms.int32(0),
-    ),
-
-
-    ########################## 4j4b ###########################
-
-    ########################## 5j3b ###########################
-
-    ########################## 5j4b ###########################
-
-    ########################## 5j5b ###########################
-
-    ########################## 6j2b ###########################
-
-    ########################## 6j3b ###########################
-
-    ########################## 6j4b ###########################
-
-
-
-
-    
     # cms.PSet(
     #xLow      = cms.double(),
     #xHigh     = cms.double(),
@@ -1055,3 +505,65 @@ process.fwliteInput = cms.PSet(
     ),
 
     )
+
+
+for plot in plots_jetsBasic:
+    newplot = plot.clone()
+    newplot.histoName = cms.string("VType2_"+(plot.histoName).value()+"_preselection")
+    newplot.cut       = cms.string(common)
+    oldVPset = process.fwliteInput.plots
+    oldVPset.append(newplot)
+
+for plot in plots_aNNInputs:
+
+    oldVPset = process.fwliteInput.plots
+
+    newplot = plot.clone()
+    newplot.histoName  = cms.string("VType2_"+(plot.histoName).value()+"_4j2b")
+    newplot.cut        = cms.string(common+" && "+cat4j2b)
+    oldVPset.append(plot)
+
+    newplot2 = plot.clone()
+    newplot2.histoName = cms.string("VType2_"+(plot.histoName).value()+"_4j3b")
+    newplot2.cut       = cms.string(common+" && "+cat4j3b)
+    oldVPset.append(newplot2)
+
+    newplot3 = plot.clone()
+    newplot3.histoName = cms.string("VType2_"+(plot.histoName).value()+"_4j4b")
+    newplot3.cut       = cms.string(common+" && "+cat4j4b)
+    oldVPset = process.fwliteInput.plots
+    oldVPset.append(newplot3)
+
+    newplot4 = plot.clone()
+    newplot4.histoName = cms.string("VType2_"+(plot.histoName).value()+"_5j2b")
+    newplot4.cut       = cms.string(common+" && "+cat5j2b)
+    oldVPset = process.fwliteInput.plots
+    oldVPset.append(newplot4)
+
+    newplot5 = plot.clone()
+    newplot5.histoName = cms.string("VType2_"+(plot.histoName).value()+"_5j3b")
+    newplot5.cut       = cms.string(common+" && "+cat5j3b)
+    oldVPset.append(newplot5)
+
+    newplot6 = plot.clone()
+    newplot6.histoName = cms.string("VType2_"+(plot.histoName).value()+"_5j4b")
+    newplot6.cut       = cms.string(common+" && "+cat5j4b)
+    oldVPset = process.fwliteInput.plots
+    oldVPset.append(newplot6)
+
+    newplot7 = plot.clone()
+    newplot7.histoName = cms.string("VType2_"+(plot.histoName).value()+"_6j2b")
+    newplot7.cut       = cms.string(common+" && "+cat6j2b)
+    oldVPset = process.fwliteInput.plots
+    oldVPset.append(newplot7)
+
+    newplot8 = plot.clone()
+    newplot8.histoName = cms.string("VType2_"+(plot.histoName).value()+"_6j3b")
+    newplot8.cut       = cms.string(common+" && "+cat6j3b)
+    oldVPset.append(newplot8)
+
+    newplot9 = plot.clone()
+    newplot9.histoName = cms.string("VType2_"+(plot.histoName).value()+"_6j4b")
+    newplot9.cut       = cms.string(common+" && "+cat6j4b)
+    oldVPset = process.fwliteInput.plots
+    oldVPset.append(newplot9)
