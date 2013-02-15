@@ -52,6 +52,10 @@ zjetsC  = \
 zjetsB  = \
        "nSimBs>0"
 
+xsecTT_FH = 106.9
+xsecTT_SL = 103.0
+xsecTT_FL = 24.8
+
 
 process = cms.Process("FWLitePlots")
 
@@ -81,7 +85,7 @@ process.fwliteInput = cms.PSet(
     name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullHad'),
     color    = cms.int32(41),
-    xSec     = cms.double(133.62),
+    xSec     = cms.double(xsecTT_FH),
     ),
     
     cms.PSet(
@@ -89,7 +93,7 @@ process.fwliteInput = cms.PSet(
     name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullHad_LF'),
     color    = cms.int32(41),
-    xSec     = cms.double(133.62),
+    xSec     = cms.double(xsecTT_FH),
     cut      = cms.string(ttjetsLF),
     ),
 
@@ -98,7 +102,7 @@ process.fwliteInput = cms.PSet(
     name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullHad_C'),
     color    = cms.int32(44),
-    xSec     = cms.double(133.62),
+    xSec     = cms.double(xsecTT_FH),
     cut      = cms.string(ttjetsC),
     ),
 
@@ -107,7 +111,7 @@ process.fwliteInput = cms.PSet(
     name     = cms.string('TTJets_HadronicMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullHad_B'),
     color    = cms.int32(46),
-    xSec     = cms.double(133.62),
+    xSec     = cms.double(xsecTT_FH),
     cut      = cms.string(ttjetsB),
     ),
     
@@ -117,7 +121,7 @@ process.fwliteInput = cms.PSet(
     name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullLept'),
     color    = cms.int32(41),
-    xSec     = cms.double(24.56),
+    xSec     = cms.double(xsecTT_FL),
     ),
     
     cms.PSet(
@@ -125,7 +129,7 @@ process.fwliteInput = cms.PSet(
     name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullLept_LF'),
     color    = cms.int32(41),
-    xSec     = cms.double(24.56),
+    xSec     = cms.double(xsecTT_FL),
     cut      = cms.string(ttjetsLF),
     ),
     
@@ -134,7 +138,7 @@ process.fwliteInput = cms.PSet(
     name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullLept_C'),
     color    = cms.int32(44),
-    xSec     = cms.double(24.56),
+    xSec     = cms.double(xsecTT_FL),
     cut      = cms.string(ttjetsC)
     ),
 
@@ -143,7 +147,7 @@ process.fwliteInput = cms.PSet(
     name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullLept_B'),
     color    = cms.int32(46),
-    xSec     = cms.double(24.56),
+    xSec     = cms.double(xsecTT_FL),
     cut      = cms.string(ttjetsB)
     ),
     
@@ -152,7 +156,7 @@ process.fwliteInput = cms.PSet(
     name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsSemiLept'),
     color    = cms.int32(41),
-    xSec     = cms.double(75.82),
+    xSec     = cms.double(xsecTT_SL),
     ),
     
     cms.PSet(
@@ -160,7 +164,7 @@ process.fwliteInput = cms.PSet(
     name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsSemiLept_LF'),
     color    = cms.int32(41),
-    xSec     = cms.double(75.82),
+    xSec     = cms.double(xsecTT_FL),
     cut      = cms.string(ttjetsLF),
     ),
 
@@ -169,7 +173,7 @@ process.fwliteInput = cms.PSet(
     name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsSemiLept_C'),
     color    = cms.int32(44),
-    xSec     = cms.double(75.82),
+    xSec     = cms.double(xsecTT_FL),
     cut      = cms.string(ttjetsC),
     ),
 
@@ -178,7 +182,7 @@ process.fwliteInput = cms.PSet(
     name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsSemiLept_B'),
     color    = cms.int32(46),
-    xSec     = cms.double(75.82),
+    xSec     = cms.double(xsecTT_FL),
     cut      = cms.string(ttjetsB),
     ),
 
@@ -332,7 +336,7 @@ process.fwliteInput = cms.PSet(
     cut      = cms.string(dataCut),
     ),
 
-     cms.PSet(
+    cms.PSet(
     skip     = cms.bool(False),  
     name     = cms.string('SingleMuRun2012CAug24RerecoEdmV42'+VType),
     nickName = cms.string('DataSingleMu_4'),
