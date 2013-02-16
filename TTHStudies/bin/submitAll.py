@@ -182,7 +182,7 @@ samples = [
     #['TTJets_SemiLeptMGDecays_8TeV-madgraph-part', 'TTJetsSemiLept'],
     #['WJetsToLNu_PtW-100_TuneZ2star_8TeV-madgraph',     'WJets100'],
     #['WJetsToLNu_PtW-70To100_TuneZ2star_8TeV-madgraph', 'WJets70100'],
-    ['ZH_ZToLL_HToBB_M-125_8TeV-powheg-herwigpp',  'ZH25'],
+    #['ZH_ZToLL_HToBB_M-125_8TeV-powheg-herwigpp',  'ZH25'],
     #['WH_WToLNu_HToBB_M-125_8TeV-powheg-herwigpp', 'WH25'],
     #['SingleElectronRun2012AJul13EdmV42b',  'SingleElectron_1'],
     #['SingleElectronRun2012AAug06EdmV42',   'SingleElectron_2'],
@@ -196,15 +196,21 @@ samples = [
     #['SingleMuRun2012CAug24RerecoEdmV42',  'SingleMu_4'],
     #['SingleMuRun2012CPromptv2EdmV42',     'SingleMu_5'],
     #['SingleMuRun2012CPromptV2TopUpEdmV42','SingleMu_6']
+    ['DoubleElectron_Run2012A-13Jul2012-v1_ProcFIXED',   'DoubleEle_1'],
+    ['DoubleElectron_Run2012A-recover-06Aug2012-v1_ProcV2','DoubleEle_2'],
+    ['DoubleElectron_Run2012B-13Jul2012-v1_ProcFIXED','DoubleEle_3'],
+    ['DoubleElectronRun2012CAug24RerecoEdmV42','DoubleEle_4'],
+    ['DoubleElectron_Run2012C-PromptReco-v2_HBB_EDMNtupleV42_ProcV1','DoubleEle_5'],
+    ['DoubleElectron_Run2012C-PromptReco-v2_HBB_EDMNtupleV42_ProcV2','DoubleEle_6'],
     ]
 
 skims = [
     #['VType0','numJets30bTag>=1&&Vtype==0&&numJets30>=2&&pt1>30&&pt2>30'],
     #['VType1','numJets30bTag>=1&&Vtype==1&&numJets30>=2&&pt1>30&&pt2>30'],
     #['VType2','numJets30bTag>=1&&Vtype==2&&numJets30>=3&&pt1>30&&pt2>30&&pt3>30'],
-    ['VType3','numJets30bTag>=1&&Vtype==3&&numJets30>=3&&pt1>30&&pt2>30&&pt3>30']
+    #['VType3','numJets30bTag>=1&&Vtype==3&&numJets30>=3&&pt1>30&&pt2>30&&pt3>30']
     ]
-#skims = []
+skims = []
 
 #processAll(samples)
 processAllBatch(samples, skims, False)

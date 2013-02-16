@@ -45,6 +45,10 @@
 #include "DataFormats/FWLite/interface/Handle.h"
 #include "DataFormats/GeometryVector/interface/VectorUtil.h"
 
+#include "DataFormats/FWLite/interface/LuminosityBlock.h"
+#include "DataFormats/FWLite/interface/Run.h"
+#include "DataFormats/Luminosity/interface/LumiSummary.h"
+
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include "PhysicsTools/FWLite/interface/TFileService.h"
@@ -281,6 +285,27 @@ void findGenMatch(int& genMatch, LV genJet, LV topBLV, LV topW1LV, LV topW2LV, L
 }
 
 
+bool jsonContainsEvent (const std::vector< edm::LuminosityBlockRange > &jsonVec,
+                        unsigned long run, unsigned long lumi
+			)
+{
+  // if the jsonVec is empty, then no JSON file was provided so all
+  // events should pass
+  if (jsonVec.empty())
+    {
+      return true;
+    }
+  bool (* funcPtr) (edm::LuminosityBlockRange const &,
+		    edm::LuminosityBlockID const &) = &edm::contains;
+  edm::LuminosityBlockID lumiID (run,lumi); 
+  std::vector< edm::LuminosityBlockRange >::const_iterator iter = 
+    std::find_if (jsonVec.begin(), jsonVec.end(),
+		  boost::bind(funcPtr, _1, lumiID) );
+  return jsonVec.end() != iter;
+
+}
+
+
 int main(int argc, const char* argv[])
 {
 
@@ -300,6 +325,17 @@ int main(int argc, const char* argv[])
   std::string ordering(   in.getParameter<std::string>("ordering" ) );
   double lumi(            in.getParameter<double>("lumi" ) );
   bool verbose(           in.getParameter<bool>("verbose" ) );
+
+
+  std::vector<edm::LuminosityBlockRange> jsonVector;
+  if ( in.exists("lumisToProcess") ) 
+    {
+      std::vector<edm::LuminosityBlockRange> const & lumisTemp =
+	in.getUntrackedParameter<std::vector<edm::LuminosityBlockRange> > ("lumisToProcess");
+      jsonVector.resize( lumisTemp.size() );
+      copy( lumisTemp.begin(), lumisTemp.end(), jsonVector.begin() );
+    }
+  
 
   //const edm::VParameterSet& samples = in.getParameter<edm::VParameterSet>("samples") ;
   edm::VParameterSet samples;
@@ -586,11 +622,21 @@ int main(int argc, const char* argv[])
       float momid;
     } genParticleInfo;
     
+    typedef struct 
+    {
+      int run;
+      int lumi;
+      int event;
+      int json;
+    } EventInfo;
 
     int nhJets;
     int naJets;
     int nvlep;
     int Vtype;
+    //int run, event, lumi;
+    EventInfo ev;
+
     float met[999];
     float hJetspt[999]; float hJetseta[999]; float hJetsphi[999]; float hJetse[999]; float hJetscsv[999]; float hJetsunc[999]; float hJetsflavor[999]; float hJetsgenpt[999];float hJetsgeneta[999];float hJetsgenphi[999];
     float aJetspt[999]; float aJetseta[999]; float aJetsphi[999]; float aJetse[999]; float aJetscsv[999]; float aJetsunc[999]; float aJetsflavor[999]; float aJetsgenpt[999];float aJetsgeneta[999];float aJetsgenphi[999];
@@ -638,16 +684,23 @@ int main(int argc, const char* argv[])
     outTree->SetBranchAddress("genTbar",&genTbar);
     outTree->SetBranchAddress("genB",   &genB);
     outTree->SetBranchAddress("genBbar",&genBbar);
+
+    // outTree->SetBranchAddress("EVENT.run",  &run);
+    //outTree->SetBranchAddress("EVENT.event",&event);
+    //outTree->SetBranchAddress("EVENT.lumi", &lumi);
+
+    outTree->SetBranchAddress("EVENT",  &ev);
     //////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
 
-
+    int counter  = 0;
+    int counterJ = 0;
 
     Long64_t nentries = outTree->GetEntries();
  
     for (Long64_t i = 0; i < nentries; i++){
 
-      if(i%5000==0) cout << i << endl;
+      if(i%10000==0) cout << i << endl;
 
       index1_  = -99; index2_  = -99; index3_  = -99; index4_  = -99; index5_  = -99; index6_  = -99;
       pt1_  = -99; pt2_  = -99; pt3_  = -99; pt4_  = -99; pt5_  = -99; pt6_  = -99;
@@ -1254,6 +1307,14 @@ int main(int argc, const char* argv[])
       jetArrayForShapeVar.Clear(); 
       leptArrayForShapeVar.Clear();
 
+
+      counter++;
+      bool isInJson = jsonContainsEvent(jsonVector, ev.run, ev.lumi);
+      if(!isInJson){
+	counterJ++;
+	//cout << "Run  " << ev.run << ", " << ev.lumi << " is not in json" << endl;
+      }
+
       //////////////////////////////////FILL////////////////////////////////////////
       //////////////////////////////////////////////////////////////////////////////
 
@@ -1379,13 +1440,13 @@ int main(int argc, const char* argv[])
 
     }
 
+    cout << counter << " => " << counterJ << endl;
 
     outTree->Write("",TObject::kOverwrite );
 
     mySamples->GetFile( currentName )->Close();
 
    }
-
 
 
   return 0;

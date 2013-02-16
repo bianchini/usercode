@@ -45,6 +45,10 @@
 #include "DataFormats/FWLite/interface/Handle.h"
 #include "DataFormats/GeometryVector/interface/VectorUtil.h"
 
+#include "DataFormats/FWLite/interface/LuminosityBlock.h"
+#include "DataFormats/FWLite/interface/Run.h"
+#include "DataFormats/Luminosity/interface/LumiSummary.h"
+
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include "PhysicsTools/FWLite/interface/TFileService.h"
@@ -281,6 +285,27 @@ void findGenMatch(int& genMatch, LV genJet, LV topBLV, LV topW1LV, LV topW2LV, L
 }
 
 
+bool jsonContainsEvent (const std::vector< edm::LuminosityBlockRange > &jsonVec,
+                        unsigned long run, unsigned long lumi
+			)
+{
+  // if the jsonVec is empty, then no JSON file was provided so all
+  // events should pass
+  if (jsonVec.empty())
+    {
+      return true;
+    }
+  bool (* funcPtr) (edm::LuminosityBlockRange const &,
+		    edm::LuminosityBlockID const &) = &edm::contains;
+  edm::LuminosityBlockID lumiID (run,lumi); 
+  std::vector< edm::LuminosityBlockRange >::const_iterator iter = 
+    std::find_if (jsonVec.begin(), jsonVec.end(),
+		  boost::bind(funcPtr, _1, lumiID) );
+  return jsonVec.end() != iter;
+
+}
+
+
 int main(int argc, const char* argv[])
 {
 
@@ -303,7 +328,16 @@ int main(int argc, const char* argv[])
   double lumi(            in.getParameter<double>("lumi" ) );
   bool verbose(           in.getParameter<bool>("verbose" ) );
 
-  //const edm::VParameterSet& samples = in.getParameter<edm::VParameterSet>("samples") ;
+  std::vector<edm::LuminosityBlockRange> jsonVector;
+  if ( in.exists("lumisToProcess") ) 
+    {
+      std::vector<edm::LuminosityBlockRange> const & lumisTemp =
+	in.getUntrackedParameter<std::vector<edm::LuminosityBlockRange> > ("lumisToProcess");
+      jsonVector.resize( lumisTemp.size() );
+      copy( lumisTemp.begin(), lumisTemp.end(), jsonVector.begin() );
+    }
+  
+
   edm::VParameterSet samples;
   if( in.exists("samples") && argc==2 ) samples = in.getParameter<edm::VParameterSet>("samples") ;
   else{
@@ -390,6 +424,7 @@ int main(int argc, const char* argv[])
     //////////////////////////////////NEW VARIABLES///////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
 
+    int myJson_;
     int hJetRank_[100];
     int aJetRank_[100];
     int index1_,  index2_,  index3_,  index4_,  index5_,  index6_;
@@ -559,6 +594,8 @@ int main(int argc, const char* argv[])
 
     TBranch *bestHiggsMassBR = outTree->Branch("bestHiggsMass",&bestHiggsMass_,"bestHiggsMass/F");
 
+    TBranch *myJsonBR = outTree->Branch("myJson",&myJson_,"myJson/F");
+    
     //TBranch *BR = outTree->Branch("",&_,"/F");
     //////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
@@ -599,11 +636,21 @@ int main(int argc, const char* argv[])
       float momid;
     } genParticleInfo;
     
+    typedef struct 
+    {
+      int run;
+      int lumi;
+      int event;
+      int json;
+    } EventInfo;
 
     int nhJets;
     int naJets;
     int nvlep;
     int Vtype;
+    //int run, event, lumi;
+    EventInfo ev;
+
     float met[999];
     float hJetspt[999]; float hJetseta[999]; float hJetsphi[999]; float hJetse[999]; float hJetscsv[999]; float hJetsunc[999]; float hJetsflavor[999]; float hJetsgenpt[999];float hJetsgeneta[999];float hJetsgenphi[999];
     float aJetspt[999]; float aJetseta[999]; float aJetsphi[999]; float aJetse[999]; float aJetscsv[999]; float aJetsunc[999]; float aJetsflavor[999]; float aJetsgenpt[999];float aJetsgeneta[999];float aJetsgenphi[999];
@@ -651,6 +698,12 @@ int main(int argc, const char* argv[])
     outTree->SetBranchAddress("genTbar",&genTbar);
     outTree->SetBranchAddress("genB",   &genB);
     outTree->SetBranchAddress("genBbar",&genBbar);
+
+    //outTree->SetBranchAddress("EVENT.run",  &run);
+    //outTree->SetBranchAddress("EVENT.event",&event);
+    //outTree->SetBranchAddress("EVENT.lumi", &lumi);
+
+    outTree->SetBranchAddress("EVENT",  &ev);
     //////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
 
@@ -1266,6 +1319,13 @@ int main(int argc, const char* argv[])
       } 
       jetArrayForShapeVar.Clear(); 
       leptArrayForShapeVar.Clear();
+
+
+
+      bool isInJson = jsonContainsEvent(jsonVector, ev.run, ev.lumi);
+      myJson_ = isInJson ? 1 : 0;
+      //if(!isInJson && verbose) cout << "Event " << run << ", " << lumi << " is not in json" << endl;
+
 
       //////////////////////////////////FILL////////////////////////////////////////
       //////////////////////////////////////////////////////////////////////////////
