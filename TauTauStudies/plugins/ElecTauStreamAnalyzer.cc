@@ -1306,7 +1306,7 @@ void ElecTauStreamAnalyzer::analyze(const edm::Event & iEvent, const edm::EventS
 	    }
 	  }
 	}
-	if( Geom::deltaR( aObj->triggerObject().p4(), leg1->p4() )<0.5  && aObj->hasFilterLabel(HLTfiltersElec[i]) && aObj->hasTriggerObjectType(trigger::TriggerElectron && aObj->triggerObject().pt()>13 )){
+	if( Geom::deltaR( aObj->triggerObject().p4(), leg1->p4() )<0.5  && aObj->hasFilterLabel(HLTfiltersElec[i]) && aObj->hasTriggerObjectType(trigger::TriggerElectron) && aObj->triggerObject().pt()>13 ){
 	  matched = true;
 	}
       }
