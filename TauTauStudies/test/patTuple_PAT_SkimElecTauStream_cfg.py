@@ -97,10 +97,10 @@ process.printTree1 = cms.EDAnalyzer(
 
 process.load('RecoJets.Configuration.RecoPFJets_cff')
 
-process.kt6PFJetsForRhoComputationVoronoi = process.kt6PFJets.clone(
-    doRhoFastjet = True,
-    voronoiRfact = 0.9
-    )
+#process.kt6PFJetsForRhoComputationVoronoi = process.kt6PFJets.clone(
+#    doRhoFastjet = True,
+#    voronoiRfact = 0.9
+#    )
 
 process.kt6PFJets.doRhoFastjet  = True
 process.kt6PFJets.doAreaFastjet = True
@@ -261,7 +261,7 @@ from PhysicsTools.PatAlgos.tools.tauTools import *
 #                 pfTauLabelOld = 'shrinkingConePFTauProducer',
 #                 pfTauLabelNew = 'hpsPFTauProducer'
 #                 )
-switchToPFTauHPS(process)
+#switchToPFTauHPS(process)
                  
 getattr(process,"patTaus").embedIsolationTracks             = cms.bool(True)
 getattr(process,"patTaus").embedSignalTracks                = cms.bool(True)
@@ -311,6 +311,30 @@ process.electronIsoSequence = setupPFElectronIso(process,'gsfElectrons')
 from CommonTools.ParticleFlow.pfParticleSelection_cff import pfParticleSelectionSequence
 process.pfParticleSelectionSequence = pfParticleSelectionSequence
 
+#Custom cone size for Electron isolation
+process.elPFIsoValueChargedAll04PFIdPFIso.deposits[0].vetos = cms.vstring(
+        'EcalBarrel:ConeVeto(0.01)','EcalEndcaps:ConeVeto(0.015)',
+        )
+process.elPFIsoValueGamma04PFIdPFIso.deposits[0].vetos = cms.vstring(
+        'EcalBarrel:ConeVeto(0.08)','EcalEndcaps:ConeVeto(0.08)',
+        )
+process.elPFIsoValuePU04PFIdPFIso.deposits[0].vetos = cms.vstring()
+process.elPFIsoValueNeutral04PFIdPFIso.deposits[0].vetos = cms.vstring()
+
+process.elPFIsoValueChargedAll04NoPFIdPFIso.deposits[0].vetos = cms.vstring(
+        'EcalBarrel:ConeVeto(0.01)','EcalEndcaps:ConeVeto(0.015)',
+        )
+process.elPFIsoValueGamma04NoPFIdPFIso.deposits[0].vetos = cms.vstring(
+        'EcalBarrel:ConeVeto(0.08)','EcalEndcaps:ConeVeto(0.08)',
+        )
+process.elPFIsoValuePU04NoPFIdPFIso.deposits[0].vetos = cms.vstring()
+process.elPFIsoValueNeutral04PFIdPFIso.deposits[0].vetos = cms.vstring()
+
+#Custom cone size for Muon isolation
+process.muPFIsoValueChargedAll04PFIso.deposits[0].vetos = cms.vstring(
+        '0.0001','Threshold(0.0)'
+        )
+
 process.patMuons.isoDeposits = cms.PSet(
     pfAllParticles   = cms.InputTag("muPFIsoDepositPUPFIso"),      # all PU   CH+MU+E
     pfChargedHadrons = cms.InputTag("muPFIsoDepositChargedPFIso"), # all noPU CH
@@ -346,15 +370,18 @@ process.patElectrons.isolationValues = cms.PSet(
     pfPhotons        = cms.InputTag("elPFIsoValueGamma04PFIdPFIso"),
     user = cms.VInputTag(
     cms.InputTag("elPFIsoValueChargedAll04PFIdPFIso"),
-    cms.InputTag("elPFIsoValueChargedAll04NoPFIdPFIso"),
-    cms.InputTag("elPFIsoValuePU04NoPFIdPFIso"),
-    cms.InputTag("elPFIsoValueCharged04NoPFIdPFIso"),
-    cms.InputTag("elPFIsoValueGamma04NoPFIdPFIso"),
-    cms.InputTag("elPFIsoValueNeutral04NoPFIdPFIso")
     )
     )
 
-process.patElectrons.isolationValues = cms.PSet()
+process.patElectrons.isolationValuesNoPFId = cms.PSet(
+    pfAllParticles   = cms.InputTag("elPFIsoValuePU04NoPFIdPFIso"),
+    pfChargedHadrons = cms.InputTag("elPFIsoValueCharged04NoPFIdPFIso"),
+    pfNeutralHadrons = cms.InputTag("elPFIsoValueNeutral04NoPFIdPFIso"),
+    pfPhotons        = cms.InputTag("elPFIsoValueGamma04NoPFIdPFIso"),
+    user = cms.VInputTag(
+        cms.InputTag("elPFIsoValueChargedAll04NoPFIdPFIso")
+        )
+    )
 
 ########################  pat::muon  #############################
 

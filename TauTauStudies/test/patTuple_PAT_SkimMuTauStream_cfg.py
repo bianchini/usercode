@@ -32,7 +32,7 @@ process.source.fileNames = cms.untracked.vstring(
     )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange(
-#    '1:751063'
+#    '1:807011'
 #    )
 ################### event content ##################
 
@@ -97,10 +97,10 @@ process.printTree1 = cms.EDAnalyzer(
 
 process.load('RecoJets.Configuration.RecoPFJets_cff')
 
-process.kt6PFJetsForRhoComputationVoronoi = process.kt6PFJets.clone(
-    doRhoFastjet = True,
-    voronoiRfact = 0.9
-    )
+#process.kt6PFJetsForRhoComputationVoronoi = process.kt6PFJets.clone(
+#    doRhoFastjet = True,
+#    voronoiRfact = 0.9
+#    )
 
 process.kt6PFJets.doRhoFastjet  = True
 process.kt6PFJets.doAreaFastjet = True
@@ -135,11 +135,9 @@ process.fjSequence = cms.Sequence(process.kt6PFJets+
 process.load("RecoJets.JetProducers.pujetidsequence_cff")
 process.puJetId.algos.label = 'full_5x'
 
-
 ################### met ################################
 
 #process.load("RecoMET.METProducers.mvaPFMET_cff")
-#process.load("RecoMET.METProducers.mvaPFMET_cff_leptons")
 process.load("JetMETCorrections.METPUSubtraction.mvaPFMET_leptons_cff")
 
 if runOnMC:
@@ -156,7 +154,8 @@ process.patPFMetByMVA = process.patMETs.clone(
     )
 
 process.patPFMetByMVA.addGenMET = cms.bool(runOnMC)
-process.pfMEtMVA.srcVertices = cms.InputTag("offlinePrimaryVertices")
+process.puJetIdAndMvaMet = cms.Sequence(process.puJetIdSqeuence *
+                                        (process.pfMEtMVAsequence*process.patPFMetByMVA))
 
 ################### bTag ##############################
 
@@ -264,7 +263,7 @@ from PhysicsTools.PatAlgos.tools.tauTools import *
 #                 pfTauLabelNew = 'hpsPFTauProducer'
 #                 )
 
-switchToPFTauHPS(process)
+#switchToPFTauHPS(process)
 
 
 getattr(process,"patTaus").embedIsolationTracks             = cms.bool(True)
@@ -314,14 +313,38 @@ process.electronIsoSequence = setupPFElectronIso(process,'gsfElectrons')
 from CommonTools.ParticleFlow.pfParticleSelection_cff import pfParticleSelectionSequence
 process.pfParticleSelectionSequence = pfParticleSelectionSequence
 
+#Custom cone size for Electron isolation
+process.elPFIsoValueChargedAll04PFIdPFIso.deposits[0].vetos = cms.vstring(
+        'EcalBarrel:ConeVeto(0.01)','EcalEndcaps:ConeVeto(0.015)',
+        )
+process.elPFIsoValueGamma04PFIdPFIso.deposits[0].vetos = cms.vstring(
+        'EcalBarrel:ConeVeto(0.08)','EcalEndcaps:ConeVeto(0.08)',
+        )
+process.elPFIsoValuePU04PFIdPFIso.deposits[0].vetos = cms.vstring()
+process.elPFIsoValueNeutral04PFIdPFIso.deposits[0].vetos = cms.vstring()
+
+process.elPFIsoValueChargedAll04NoPFIdPFIso.deposits[0].vetos = cms.vstring(
+        'EcalBarrel:ConeVeto(0.01)','EcalEndcaps:ConeVeto(0.015)',
+        )
+process.elPFIsoValueGamma04NoPFIdPFIso.deposits[0].vetos = cms.vstring(
+        'EcalBarrel:ConeVeto(0.08)','EcalEndcaps:ConeVeto(0.08)',
+        )
+process.elPFIsoValuePU04NoPFIdPFIso.deposits[0].vetos = cms.vstring()
+process.elPFIsoValueNeutral04PFIdPFIso.deposits[0].vetos = cms.vstring()
+
+#Custom cone size for Muon isolation
+process.muPFIsoValueChargedAll04PFIso.deposits[0].vetos = cms.vstring(
+        '0.0001','Threshold(0.0)'
+        )
+
 process.patMuons.isoDeposits = cms.PSet(
     pfAllParticles   = cms.InputTag("muPFIsoDepositPUPFIso"),      # all PU   CH+MU+E
     pfChargedHadrons = cms.InputTag("muPFIsoDepositChargedPFIso"), # all noPU CH
     pfNeutralHadrons = cms.InputTag("muPFIsoDepositNeutralPFIso"), # all NH
     pfPhotons        = cms.InputTag("muPFIsoDepositGammaPFIso"),   # all PH
     user = cms.VInputTag(
-    cms.InputTag("muPFIsoDepositChargedAllPFIso"),                 # all noPU CH+MU+E
-    )
+        cms.InputTag("muPFIsoDepositChargedAllPFIso"),                 # all noPU CH+MU+E
+        )
     )
 process.patMuons.isolationValues = cms.PSet(
     pfAllParticles   = cms.InputTag("muPFIsoValuePU04PFIso"),
@@ -329,8 +352,8 @@ process.patMuons.isolationValues = cms.PSet(
     pfNeutralHadrons = cms.InputTag("muPFIsoValueNeutral04PFIso"),
     pfPhotons        = cms.InputTag("muPFIsoValueGamma04PFIso"),
     user = cms.VInputTag(
-    cms.InputTag("muPFIsoValueChargedAll04PFIso"),
-    )
+        cms.InputTag("muPFIsoValueChargedAll04PFIso"),
+        )
     )
 
 process.patElectrons.isoDeposits = cms.PSet(
@@ -339,8 +362,8 @@ process.patElectrons.isoDeposits = cms.PSet(
     pfNeutralHadrons = cms.InputTag("elPFIsoDepositNeutralPFIso"), # all NH
     pfPhotons        = cms.InputTag("elPFIsoDepositGammaPFIso"),   # all PH
     user = cms.VInputTag(
-    cms.InputTag("elPFIsoDepositChargedAllPFIso"),                 # all noPU CH+MU+E
-    )
+        cms.InputTag("elPFIsoDepositChargedAllPFIso"),                 # all noPU CH+MU+E
+        )
     )
 process.patElectrons.isolationValues = cms.PSet(
     pfAllParticles   = cms.InputTag("elPFIsoValuePU04PFIdPFIso"),
@@ -348,20 +371,18 @@ process.patElectrons.isolationValues = cms.PSet(
     pfNeutralHadrons = cms.InputTag("elPFIsoValueNeutral04PFIdPFIso"),
     pfPhotons        = cms.InputTag("elPFIsoValueGamma04PFIdPFIso"),
     user = cms.VInputTag(
-    cms.InputTag("elPFIsoValueChargedAll04PFIdPFIso"),
-    cms.InputTag("elPFIsoValueChargedAll04NoPFIdPFIso"),
-    cms.InputTag("elPFIsoValuePU04NoPFIdPFIso"),
-    cms.InputTag("elPFIsoValueCharged04NoPFIdPFIso"),
-    cms.InputTag("elPFIsoValueGamma04NoPFIdPFIso"),
-    cms.InputTag("elPFIsoValueNeutral04NoPFIdPFIso")
-    )
+        cms.InputTag("elPFIsoValueChargedAll04PFIdPFIso"),
+        )
     )
 
-#process.patElectrons.isoDeposits = cms.PSet(
-#    pfAllParticles   = cms.InputTag("elPFIsoDepositPUPFIso"),
-#    )
-process.patElectrons.isolationValues = cms.PSet(
-    #pfAllParticles   = cms.InputTag("elPFIsoValuePU04PFIdPFIso"),
+process.patElectrons.isolationValuesNoPFId = cms.PSet(
+    pfAllParticles   = cms.InputTag("elPFIsoValuePU04NoPFIdPFIso"),
+    pfChargedHadrons = cms.InputTag("elPFIsoValueCharged04NoPFIdPFIso"),
+    pfNeutralHadrons = cms.InputTag("elPFIsoValueNeutral04NoPFIdPFIso"),
+    pfPhotons        = cms.InputTag("elPFIsoValueGamma04NoPFIdPFIso"),
+    user = cms.VInputTag(
+        cms.InputTag("elPFIsoValueChargedAll04NoPFIdPFIso")
+        )
     )
 
 ########################  pat::muon  #############################
@@ -741,13 +762,13 @@ process.skim = cms.Sequence(
     process.HLTFilter*
     process.atLeastOneGoodVertexSequence*
     process.fjSequence*
-    process.PFTau*
+    #process.PFTau*
     process.pfParticleSelectionSequence*
     process.muIsoSequence*
     process.electronIsoSequence*
     (process.ak5JetTracksAssociatorAtVertex*process.btagging)*
     process.patDefaultSequence*
-    process.puJetIdSqeuence *
+    #process.puJetIdSqeuence *
     ##process.kt6PFJetsNeutral*
     process.selectedPatMuonsUserEmbedded*
     process.selectedPatElectronsUserEmbedded*
@@ -757,7 +778,8 @@ process.skim = cms.Sequence(
     process.alLeastOneMuTauSequence*
     process.muLegSequence*
     process.tauLegSequence*
-    (process.pfMEtMVAsequence*process.patPFMetByMVA) +
+    #(process.pfMEtMVAsequence*process.patPFMetByMVA) +
+    process.puJetIdAndMvaMet +
     ##process.jetCleaningSequence*
     process.printTree1
     )
@@ -768,7 +790,10 @@ massSearchReplaceAnyInputTag(process.skim,
                              "selectedPrimaryVertices",
                              verbose=False)
 process.selectedPrimaryVertices.src = cms.InputTag('offlinePrimaryVertices')
-
+massSearchReplaceAnyInputTag(process.puJetIdAndMvaMet,
+                             "selectedPrimaryVertices",
+                             "offlinePrimaryVertices",
+                             verbose=False)
 
 if not runOnMC:
     process.skim.remove(process.printTree1)
@@ -795,7 +820,7 @@ process.out.outputCommands.extend( cms.vstring(
     'keep *_patTriggerEvent_*_*',
     'keep *_patTrigger_*_*',
     'keep *_selectedPatJets_*_*',
-    'keep *_ak5PFJets_*_*',
+    'keep *_ak5PFJets_*_PAT',
     'keep *_genParticles_*_*',
     'keep *_particleFlow__*',
     'keep *_offlinePrimaryVertices_*_*',
