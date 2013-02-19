@@ -232,6 +232,7 @@ int main(int argc, const char* argv[])
       h1->GetYaxis()->SetLabelSize(16); //in pixels
       h1->GetYaxis()->SetTitleSize(0.05);
       h1->GetXaxis()->SetTitleSize(0.05);
+      h1->GetYaxis()->SetTitleOffset(1.0);
 
       if( currentName.find("Data")!=string::npos) 
 	h1->SetMarkerStyle(20);h1->SetMarkerSize(1.2);h1->SetMarkerColor(kBlack);h1->SetLineColor(kBlack);
@@ -279,8 +280,8 @@ int main(int argc, const char* argv[])
     //RIGHT: 
     //TLegend* leg = new TLegend(0.6393189,0.5594406,0.8900929,0.8951049,NULL,"brNDC");
 
-    TLegend* leg = new TLegend(0.120,0.80,0.875,0.92,NULL,"brNDC");
-    leg->SetNColumns(4);
+    TLegend* leg = new TLegend(0.113,0.7353,0.874,0.9001,NULL,"brNDC");
+    leg->SetNColumns(5);
 
     
     CanvasAndLegend(c1, leg, logy);
@@ -289,9 +290,11 @@ int main(int argc, const char* argv[])
     vector<TH1F*> mcHistoArray;
 
     TH1F* Data = 0;
-    TH1F* DiBoson = 0; TH1F* WJets = 0;
+    TH1F* DiBoson = 0; TH1F* WJets = 0; TH1F* DYJets = 0;
     TH1F* top   = 0;   TH1F* singleTop = 0;
     TH1F* topLF = 0;   TH1F* topC      = 0; TH1F* topB = 0;
+    TH1F* Higgs = 0;
+    TH1F* TTV = 0;
      
     for(  std::map<string,TH1F*>::iterator it = mapHist.begin(); it!= mapHist.end() ; it++){
       if( (it->first).find("Data")==string::npos  ){
@@ -303,7 +306,16 @@ int main(int argc, const char* argv[])
 	    continue;
 	  }
 
+	  bool isHiggs     = ((it->first).find("WH")!=string::npos  || 
+			      (it->first).find("ZH")!=string::npos || 
+			      (it->first).find("TTH")!=string::npos );
+
+	  bool isTTV       = ((it->first).find("TTZ")!=string::npos  || 
+			      (it->first).find("TTW")!=string::npos );
+
 	  bool isWJets     =  (it->first).find("WJets")!=string::npos;
+
+	  bool isDYJets    =  (it->first).find("DYJets")!=string::npos;
 
 	  bool isDiBoson   = ((it->first).find("ZZ")!=string::npos || 
 			      (it->first).find("WW")!=string::npos || 
@@ -348,6 +360,18 @@ int main(int argc, const char* argv[])
 	    if(!WJets) WJets = (it->second);
 	    else WJets->Add(it->second);
 	  }
+	  else if(isDYJets){
+	    if(!DYJets) DYJets = (it->second);
+	    else DYJets->Add(it->second);
+	  }
+	  else if(isTTV){
+	    if(!TTV) TTV = (it->second);
+	    else TTV->Add(it->second);
+	  }
+	  else if(isHiggs){
+	    if(!Higgs) Higgs = (it->second);
+	    else Higgs->Add(it->second);
+	  }
 	  else{
 	    mcHistoArray.push_back((it->second));
 	    leg->AddEntry(it->second, (it->first).c_str(), "F");
@@ -387,9 +411,29 @@ int main(int argc, const char* argv[])
       mcHistoArray.push_back(DiBoson);
       leg->AddEntry(DiBoson, "Di-boson", "F");
     }
-    if(WJets){
-      mcHistoArray.push_back(WJets);
-      leg->AddEntry(WJets, "W+jets", "F");
+    if(WJets || DYJets){
+      if(WJets && !DYJets){
+	mcHistoArray.push_back(WJets);
+	leg->AddEntry(WJets, "W+jets", "F");
+      }
+      else if(!WJets && DYJets){
+	mcHistoArray.push_back(DYJets);
+	leg->AddEntry(DYJets, "Z+jets", "F");
+      }
+      else{
+	WJets->Add( DYJets );
+	mcHistoArray.push_back(WJets);
+	leg->AddEntry(WJets, "EWK", "F");
+      }
+    }
+    if(TTV){
+      mcHistoArray.push_back(TTV);
+      leg->AddEntry(TTV, "t#bar{t}+V", "F");
+    }
+    if(Higgs){
+      mcHistoArray.push_back(Higgs);
+      Higgs->SetFillStyle(3004);
+      leg->AddEntry(Higgs, "H(125)", "F");
     }
 
 
@@ -408,11 +452,12 @@ int main(int argc, const char* argv[])
 
     c1->cd();
     if(Data!=0){
-      leg->AddEntry(Data, "Data", "P");
-      if(mcTotal)
-	Data->SetMaximum( 1.3*TMath::Max(mcTotal->GetMaximum(), Data->GetMaximum()) );
-      else
-	Data->SetMaximum( 1.3*Data->GetMaximum() );
+      leg->AddEntry(Data, "Data", "PE");
+
+      //if(mcTotal)
+      //Data->SetMaximum( 1.3*TMath::Max(mcTotal->GetMaximum(), Data->GetMaximum()) );
+      //else
+      //Data->SetMaximum( 1.3*Data->GetMaximum() );
 
       Data->Sumw2();
       if(normalize){
@@ -428,14 +473,31 @@ int main(int argc, const char* argv[])
 	TPad *pad1 = new TPad("pad1","pad1",0,0.3,1,1);
 	pad1->SetBottomMargin(0);
 	pad1->Draw();
+	pad1->SetLogy(logy);
 	pad1->cd();
+
+	TH1F* HiggsScaled = 0;
+	if(Higgs && mcTotal){
+	  HiggsScaled = (TH1F*)Higgs->Clone("HiggsScaled");
+	  HiggsScaled->SetLineWidth(2);
+	  HiggsScaled->SetLineStyle(kDotted);
+	  HiggsScaled->SetLineColor(kRed);
+	  HiggsScaled->SetFillStyle(0);
+	  HiggsScaled->Scale((mcTotal->Integral()-Higgs->Integral())/HiggsScaled->Integral());
+	  Data->SetMaximum( 1.3*TMath::Max(mcTotal->GetMaximum(), TMath::Max(Data->GetMaximum(),HiggsScaled->GetMaximum() )) );
+	}
 
 	Data->Draw("PE");
 	aStack->Draw("HISTSAME");
 	Data->Draw("PSAME");
+	if(HiggsScaled){
+	  HiggsScaled->Draw("HISTSAME");
+	  leg->AddEntry(HiggsScaled,"Signal norm.to bkg","L");
+	}
+	leg->Draw();
 
 	c1->cd();
-	TPad *pad2 = new TPad("pad2","pad2",0,0.05,1,0.3);
+	TPad *pad2 = new TPad("pad2","pad2",0,0.05,1,0.298);
 	pad2->SetTitle("");
 	pad2->SetTopMargin(0);
 	pad2->Draw();
@@ -444,19 +506,22 @@ int main(int argc, const char* argv[])
 	if(mcTotal){
 	  mcTotal->Sumw2();
 	  mcTotal->SetTitle("");
-	  mcTotal->SetMarkerStyle(20);mcTotal->SetMarkerSize(1.2);mcTotal->SetMarkerColor(kBlack);mcTotal->SetLineColor(kBlack);
-	  mcTotal->GetXaxis()->SetLabelFont(63); //font in pixels
-	  mcTotal->GetXaxis()->SetLabelSize(16); //in pixels
-	  mcTotal->GetYaxis()->SetLabelFont(63); //font in pixels
-	  mcTotal->GetYaxis()->SetLabelSize(16); //in pixels
-	  mcTotal->GetYaxis()->SetTitleSize(0.10);
-	  mcTotal->GetXaxis()->SetTitleSize(0.13);
-	  mcTotal->GetYaxis()->SetTitle("MC/data");
-	  mcTotal->Divide(Data);
-	  mcTotal->SetMinimum(0);  mcTotal->SetMaximum(3);
-	  mcTotal->Draw("EP");
+	  TH1F* dataMC = (TH1F*)mcTotal->Clone("dataMC");
+	  dataMC->SetMarkerStyle(20);dataMC->SetMarkerSize(1.2);dataMC->SetMarkerColor(kBlack);dataMC->SetLineColor(kBlack);
+	  dataMC->GetXaxis()->SetLabelFont(63); //font in pixels
+	  dataMC->GetXaxis()->SetLabelSize(16); //in pixels
+	  dataMC->GetYaxis()->SetLabelFont(63); //font in pixels
+	  dataMC->GetYaxis()->SetLabelSize(16); //in pixels
+	  dataMC->GetYaxis()->SetTitleSize(0.10);
+	  dataMC->GetXaxis()->SetTitleSize(0.13);
+	  dataMC->GetYaxis()->SetTitleOffset(0.9);
+	  dataMC->GetYaxis()->SetTitle("MC/data");
+	  dataMC->Reset();
+	  dataMC->Divide(Data, mcTotal, 1.0, 1.0);
+	  dataMC->SetMinimum(0);  dataMC->SetMaximum(2);
+	  dataMC->Draw("EP");
 
-	  TF1* line = new TF1("line","1",mcTotal->GetXaxis()->GetXmin(),mcTotal->GetXaxis()->GetXmax());
+	  TF1* line = new TF1("line","1",dataMC->GetXaxis()->GetXmin(),dataMC->GetXaxis()->GetXmax());
 	  line->SetLineStyle(3);
 	  line->SetLineWidth(1.5);
 	  line->SetLineColor(kBlack);
@@ -464,16 +529,7 @@ int main(int argc, const char* argv[])
 	}
 	c1->cd();
 
-	leg->Draw();
-
       }
-      TH1F* hStack = (TH1F*)aStack->GetHistogram();
-      //hStack->SetTitle(cutName.c_str());
-      //hStack->SetXTitle(xTitle.c_str());
-      //hStack->SetYTitle(yTitle.c_str());
-      //hStack->SetTitleSize(  0.04,"X");
-      //hStack->SetTitleSize(  0.05,"Y");
-      //hStack->SetTitleOffset(0.95,"Y");
     }
     else{
       if(normalize){

@@ -889,18 +889,18 @@ int main(int argc, const char* argv[])
 	    jetUncUntag.push_back( aJetsunc[i] );
 	  }
 	  allMapPt30[ aJetspt[i]] = -i-1; // distinguish jet collection
-	  sumAllJet30Pt_ +=  hJetspt[i];
+	  sumAllJet30Pt_ +=  aJetspt[i];
 
 	  allJetsForShapeVar.push_back( math::RhoEtaPhiVector(aJetspt[i], aJetseta[i], aJetsphi[i]) );
 	  TVector3 *tv3 = new TVector3(jetLV.Px(),jetLV.Py(),jetLV.Pz());
 	  jetArrayForShapeVar.Add( tv3 );
 	  
 	}
-	if( hJetspt[i]>40.){
+	if( aJetspt[i]>40.){
 	  numJets40_++;
 	  if( aJetscsv[i] > BTAGTHR) numJets40bTag_++;
 	  MHT40LV += jetLV;
-	  sumAllJet40Pt_ +=  hJetspt[i];
+	  sumAllJet40Pt_ +=  aJetspt[i];
 	}
       }
 
@@ -916,27 +916,31 @@ int main(int argc, const char* argv[])
       float sumDeltaRbTag = 0.;
       float sumMassBtag   = 0.;
       float sumMassUntag  = 0.;
+      int numOfComb       = 0;
 
       if(allBtagJetsForShapeVar.size()>1){
 	float minDeltaR = 999.;
 	for(unsigned k = 0; k< allBtagJetsForShapeVar.size()-1 ; k++){
 	  for(unsigned l = k+1; l<allBtagJetsForShapeVar.size() ; l++){
+
 	    LV first  = allBtagJetsForShapeVar[k];
 	    LV second = allBtagJetsForShapeVar[l];
 	    float deltaR = TMath::Sqrt( TMath::Power(first.Eta()-second.Eta(),2) + TMath::Power(first.Phi()-second.Phi(),2)  );
+
 	    sumDeltaRbTag += deltaR;
+	    sumMassBtag   += (first+second).M();
 	    if(deltaR < minDeltaR){
 	      minDeltaRBtag_ = deltaR;
 	      closestJJbTagMass_ = (first+second).M();
 	      minDeltaR = deltaR;
 	    }
-	    sumMassBtag   += (first+second).M();
+	    numOfComb++;
 	  }
 	}
       }
 
-      aveDeltaRbTag_ = numJets30bTag_>1 ? sumDeltaRbTag/(numJets30bTag_/2*(numJets30bTag_-1)) : -99;
-      aveMbTag_      = numJets30bTag_>1 ? sumMassBtag/(numJets30bTag_/2*(numJets30bTag_-1))   : -99;
+      aveDeltaRbTag_ = numOfComb>0 ? sumDeltaRbTag/numOfComb : -99;
+      aveMbTag_      = numOfComb>0 ? sumMassBtag/numOfComb   : -99;
 
 
       float maxCsv = -999.; float minCsv = 999.;
@@ -949,16 +953,18 @@ int main(int argc, const char* argv[])
       minCsv_ = minCsv;
       varCsv_ = numJets30bTag_>1 ? varCsv_/(numJets30bTag_-1) : -99;
   
+      numOfComb =  0;
       if(allUntagJetsForShapeVar.size()>1){
 	for(unsigned k = 0; k< allUntagJetsForShapeVar.size()-1 ; k++){
 	  for(unsigned l = k+1; l<allUntagJetsForShapeVar.size() ; l++){
 	    LV first  = allUntagJetsForShapeVar[k];
 	    LV second = allUntagJetsForShapeVar[l];
 	    sumMassUntag   += (first+second).M();
+	    numOfComb++;
 	  }
 	}
       }
-      aveMunTag_     = (numJets30_-numJets30bTag_)>1 ? sumMassUntag/((numJets30_-numJets30bTag_)/2*((numJets30_-numJets30bTag_)-1)) : -99;
+      aveMunTag_     = numOfComb>0 ? sumMassUntag/numOfComb : -99;
       
 
       LV allP4(0.,0.,0.,0.);

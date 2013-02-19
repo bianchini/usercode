@@ -19,6 +19,7 @@ void LHEInfoProducer::beginJob(){
 
   tree_->Branch("lheHT",   &lheHT_,  "lheHT/F");
   tree_->Branch("lheVpt",  &lheVpt_, "lheVpt/F");
+  tree_->Branch("lheVM",   &lheVM_,  "lheVM/F");
   tree_->Branch("lheNj",   &lheNj_,  "lheNj/I");
   tree_->Branch("lheNjLF", &lheNjLF_,"lheNjLF/I");
   tree_->Branch("lheNjC",  &lheNjC_, "lheNjC/I");
@@ -46,6 +47,7 @@ LHEInfoProducer::~LHEInfoProducer(){}
 void LHEInfoProducer::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup){
 
   lheHT_  = -99.;
+  lheVM_  = -99.;
   lheVpt_ = -99.;
   lheNj_  = -99;
   lheNjLF_= -99;
@@ -95,6 +97,7 @@ void LHEInfoProducer::analyze(const edm::Event & iEvent, const edm::EventSetup &
     bool vlbarCheck =false;
 
     lheHT_  =0.;
+    lheVM_  =0.;
     lheNj_  =0 ;
     lheNjLF_=0 ;
     lheNjC_ =0 ;
@@ -153,6 +156,7 @@ void LHEInfoProducer::analyze(const edm::Event & iEvent, const edm::EventSetup &
     if( lbarCheck && vlCheck )  V_tlv = lbar + vl;  // WToLNu       
 
     lheVpt_ = V_tlv.Pt();
+    lheVM_  = V_tlv.M();
     
   }
 

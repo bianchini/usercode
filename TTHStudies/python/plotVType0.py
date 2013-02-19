@@ -43,16 +43,32 @@ process.fwliteInput = cms.PSet(
     pathToFile    = cms.string("dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/store//user/bianchi/HBB_EDMNtuple/AllHDiJetPt"+VType),
     ordering      = cms.string("DiJetPt_"),
     lumi          = cms.double(12.1),
-    debug         = cms.bool(True),
+    debug         = cms.bool(False),
 
     samples       = cms.VPSet(
 
     cms.PSet(
+    skip     = cms.bool(True),
+    name     = cms.string('DYJetsToLL_M-10to50_TuneZ2Star_8TeV-madgraph'+VType),
+    nickName = cms.string('DYJets10to50'),
+    color    = cms.int32(18),
+    xSec     = cms.double(12765.)
+    ),
+
+    cms.PSet(
     skip     = cms.bool(False),
     name     = cms.string('DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball'+VType),
-    nickName = cms.string('DYJets'),
+    nickName = cms.string('DYJets50'),
     color    = cms.int32(18),
     xSec     = cms.double(3503.71)
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('WJetsToLNu_TuneZ2Star_8TeV-madgraph-tarball'+VType),
+    nickName = cms.string('WJetsPt'),
+    color    = cms.int32(29),
+    xSec     = cms.double(37509.0),
     ),
    
     cms.PSet(
@@ -161,7 +177,21 @@ process.fwliteInput = cms.PSet(
     cut      = cms.string(ttjetsB),
     ),
 
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTWJets_8TeV-madgraph'+VType),
+    nickName = cms.string('TTW'),
+    color    = cms.int32(8),
+    xSec     = cms.double(0.232),
+    ),
 
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTZJets_8TeV-madgraph'+VType),
+    nickName = cms.string('TTZ'),
+    color    = cms.int32(8),
+    xSec     = cms.double(0.2057),
+    ),
     
     cms.PSet(
     skip     = cms.bool(False),  
@@ -282,6 +312,111 @@ process.fwliteInput = cms.PSet(
     color    = cms.int32(2),
     xSec     = cms.double(0.01250888)
     ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('WH_WToLNu_HToBB_M-110_8TeV-powheg-herwigpp'+VType),
+    nickName = cms.string('WH110'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.78864),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('WH_WToLNu_HToBB_M-115_8TeV-powheg-herwigpp'+VType),
+    nickName = cms.string('WH115'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.644299499),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('WH_WToLNu_HToBB_M-120_8TeV-powheg-herwigpp'+VType),
+    nickName = cms.string('WH120'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.5161968)
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('WH_WToLNu_HToBB_M-125_8TeV-powheg-herwigpp'+VType),
+    nickName = cms.string('WH125'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.4019381),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('WH_WToLNu_HToBB_M-130_8TeV-powheg-herwigpp'+VType),
+    nickName = cms.string('WH130'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.3010930)
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('WH_WToLNu_HToBB_M-135_8TeV-powheg-herwigpp'+VType),
+    nickName = cms.string('WH135'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.230628)
+    ),
+
+
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTH_HToBB_M-110_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH110'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1887*0.744)
+    ),
+
+    
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTH_HToBB_M-115_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH115'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1663*0.703)
+    ),
+
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTH_HToBB_M-120_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH120'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1470*0.648)
+    ),
+
+    
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTH_HToBB_M-125_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH125'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1302*0.569)
+    ),
+
+    
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTH_HToBB_M-130_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH130'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1157*0.494)
+    ),
+
+    
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTH_HToBB_M-135_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH135'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1031*0.404)
+    ),
+
+    
 
 
     cms.PSet(

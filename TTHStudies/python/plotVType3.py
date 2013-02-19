@@ -13,15 +13,25 @@ mmId         = "(vLepton_pfCorrIso[0]<0.10)"
 mmJetBasic   = "(numJets30>=3 && pt1>30 && pt2>30 && pt3>30 && numJets30bTag>=2)"
 
 common       =  mmJetBasic + " && " + mmBasic+" && "+mmKin+" && "+mmId
-cat4j2b      = "numJets40==4 && numJets30bTag==2"
-cat4j3b      = "numJets40==4 && numJets30bTag==3"
-cat4j4b      = "numJets40==4 && numJets30bTag==4"
-cat5j2b      = "numJets40==5 && numJets30bTag==2"
-cat5j3b      = "numJets40==5 && numJets30bTag==3"
-cat5j4b      = "numJets40==5 && numJets30bTag>=4"
-cat6j2b      = "numJets40>=6 && numJets30bTag==2"
-cat6j3b      = "numJets40>=6 && numJets30bTag==3"
-cat6j4b      = "numJets40>=6 && numJets30bTag>=4"
+#cat4j2b      = "numJets40==4 && numJets30bTag==2"
+#cat4j3b      = "numJets40==4 && numJets30bTag==3"
+#cat4j4b      = "numJets40==4 && numJets30bTag==4"
+#cat5j2b      = "numJets40==5 && numJets30bTag==2"
+#cat5j3b      = "numJets40==5 && numJets30bTag==3"
+#cat5j4b      = "numJets40==5 && numJets30bTag>=4"
+#cat6j2b      = "numJets40>=6 && numJets30bTag==2"
+#cat6j3b      = "numJets40>=6 && numJets30bTag==3"
+#cat6j4b      = "numJets40>=6 && numJets30bTag>=4"
+
+cat4j2b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5<40 && numJets30bTag==2"
+cat4j3b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5<40 && numJets30bTag==3"
+cat4j4b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5<40 && numJets30bTag==4"
+cat5j2b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5>40 && pt6<40 && numJets30bTag==2"
+cat5j3b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5>40 && pt6<40 && numJets30bTag==3"
+cat5j4b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5>40 && pt6<40 && numJets30bTag>=4"
+cat6j2b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5>40 && pt6>40 && numJets30bTag==2"
+cat6j3b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5>40 && pt6>40 && numJets30bTag==3"
+cat6j4b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5>40 && pt6>40 && numJets30bTag>=4"
 
 
 dataCut      = "((EVENT.json == 1 || EVENT.run < 196532) && (triggerFlags[3] || triggerFlags[44] ))"
@@ -57,15 +67,31 @@ process.fwliteInput = cms.PSet(
     samples       = cms.VPSet(
 
     cms.PSet(
+    skip     = cms.bool(True),
+    name     = cms.string('DYJetsToLL_M-10to50_TuneZ2Star_8TeV-madgraph'+VType),
+    nickName = cms.string('DYJets10to50'),
+    color    = cms.int32(18),
+    xSec     = cms.double(12765.)
+    ),
+ 
+    cms.PSet(
     skip     = cms.bool(False),
     name     = cms.string('DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball'+VType),
-    nickName = cms.string('DYJets'),
+    nickName = cms.string('DYJets50'),
     color    = cms.int32(19),
     xSec     = cms.double(3503.71)
     ),
 
     cms.PSet(
     skip     = cms.bool(False),  
+    name     = cms.string('WJetsToLNu_TuneZ2Star_8TeV-madgraph-tarball'+VType),
+    nickName = cms.string('WJetsPt'),
+    color    = cms.int32(29),
+    xSec     = cms.double(37509.0),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
     name     = cms.string('WJetsToLNu_PtW-70To100_TuneZ2star_8TeV-madgraph'+VType),
     nickName = cms.string('WJetsPt70100'),
     color    = cms.int32(29),
@@ -73,7 +99,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('WJetsToLNu_PtW-100_TuneZ2star_8TeV-madgraph'+VType),
     nickName = cms.string('WJetsPt100'),
     color    = cms.int32(29),
@@ -186,6 +212,21 @@ process.fwliteInput = cms.PSet(
     cut      = cms.string(ttjetsB),
     ),
 
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTWJets_8TeV-madgraph'+VType),
+    nickName = cms.string('TTW'),
+    color    = cms.int32(18),
+    xSec     = cms.double(0.232),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTZJets_8TeV-madgraph'+VType),
+    nickName = cms.string('TTZ'),
+    color    = cms.int32(18),
+    xSec     = cms.double(0.2057),
+    ),
     
     cms.PSet(
     skip     = cms.bool(False),  
@@ -355,6 +396,61 @@ process.fwliteInput = cms.PSet(
     xSec     = cms.double(0.230628)
     ),
 
+    
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTH_HToBB_M-110_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH110'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1887*0.744)
+    ),
+
+    
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTH_HToBB_M-115_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH115'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1663*0.703)
+    ),
+
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTH_HToBB_M-120_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH120'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1470*0.648)
+    ),
+
+    
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTH_HToBB_M-125_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH125'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1302*0.569)
+    ),
+
+    
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTH_HToBB_M-130_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH130'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1157*0.494)
+    ),
+
+    
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTH_HToBB_M-135_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH135'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1031*0.404)
+    ),
+
+
     cms.PSet(
     skip     = cms.bool(False),  
     name     = cms.string('SingleElectronRun2012AAug06EdmV42'+VType),
@@ -501,6 +597,7 @@ for plot in plots_jetsBasic:
     newplot = plot.clone()
     newplot.histoName = cms.string("VType3_"+(plot.histoName).value()+"_preselection")
     newplot.cut       = cms.string(common)
+    newplot.cutName   = cms.string("Single e")
     oldVPset = process.fwliteInput.plots
     oldVPset.append(newplot)
 
@@ -511,50 +608,59 @@ for plot in plots_aNNInputs:
     newplot = plot.clone()
     newplot.histoName  = cms.string("VType3_"+(plot.histoName).value()+"_4j2b")
     newplot.cut        = cms.string(common+" && "+cat4j2b)
-    oldVPset.append(plot)
+    newplot.cutName    = cms.string("Single e, 4j2b")
+    oldVPset.append(newplot)
 
     newplot2 = plot.clone()
     newplot2.histoName = cms.string("VType3_"+(plot.histoName).value()+"_4j3b")
     newplot2.cut       = cms.string(common+" && "+cat4j3b)
+    newplot.cutName    = cms.string("Single e, 4j3b")
     oldVPset.append(newplot2)
 
     newplot3 = plot.clone()
     newplot3.histoName = cms.string("VType3_"+(plot.histoName).value()+"_4j4b")
     newplot3.cut       = cms.string(common+" && "+cat4j4b)
+    newplot3.cutName   = cms.string("Single e, 4j4b")
     oldVPset = process.fwliteInput.plots
     oldVPset.append(newplot3)
 
     newplot4 = plot.clone()
     newplot4.histoName = cms.string("VType3_"+(plot.histoName).value()+"_5j2b")
     newplot4.cut       = cms.string(common+" && "+cat5j2b)
+    newplot4.cutName   = cms.string("Single e, 5j2b")
     oldVPset = process.fwliteInput.plots
     oldVPset.append(newplot4)
 
     newplot5 = plot.clone()
     newplot5.histoName = cms.string("VType3_"+(plot.histoName).value()+"_5j3b")
     newplot5.cut       = cms.string(common+" && "+cat5j3b)
+    newplot5.cutName   = cms.string("Single e, 5j3b")
     oldVPset.append(newplot5)
 
     newplot6 = plot.clone()
     newplot6.histoName = cms.string("VType3_"+(plot.histoName).value()+"_5j4b")
     newplot6.cut       = cms.string(common+" && "+cat5j4b)
+    newplot6.cutName   = cms.string("Single e, 5j4b")
     oldVPset = process.fwliteInput.plots
     oldVPset.append(newplot6)
 
     newplot7 = plot.clone()
     newplot7.histoName = cms.string("VType3_"+(plot.histoName).value()+"_6j2b")
     newplot7.cut       = cms.string(common+" && "+cat6j2b)
+    newplot7.cutName   = cms.string("Single e, 6j2b")
     oldVPset = process.fwliteInput.plots
     oldVPset.append(newplot7)
 
     newplot8 = plot.clone()
     newplot8.histoName = cms.string("VType3_"+(plot.histoName).value()+"_6j3b")
     newplot8.cut       = cms.string(common+" && "+cat6j3b)
+    newplot8.cutName   = cms.string("Single e, 6j3b")
     oldVPset.append(newplot8)
 
     newplot9 = plot.clone()
     newplot9.histoName = cms.string("VType3_"+(plot.histoName).value()+"_6j4b")
     newplot9.cut       = cms.string(common+" && "+cat6j4b)
+    newplot9.cutName   = cms.string("Single e, 6j4b")
     oldVPset = process.fwliteInput.plots
     oldVPset.append(newplot9)
 

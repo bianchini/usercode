@@ -27,7 +27,7 @@ class LHEInfoProducer : public edm::EDAnalyzer{
  private:
 
   TTree* tree_;
-  float lheHT_, lheVpt_;
+  float lheHT_, lheVpt_, lheVM_;
   int lheNj_, lheNjLF_, lheNjC_, lheNjB_, nSimBs_;
   unsigned long run_,event_,lumi_;
   float SimBs_pt[100];
