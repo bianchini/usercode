@@ -288,6 +288,15 @@ void MuonsUserEmbedded::produce(edm::Event & iEvent, const edm::EventSetup & iSe
     aMuon.addUserFloat("PFRelIsoDB03",(chIso03+std::max(nhIso03+phIso03-0.5*(nhIsoPU03),0.0))/aMuon.pt());
     aMuon.addUserFloat("PFRelIsoDB04v2",(allChIso04+std::max(nhIso04+phIso04-0.5*(nhIsoPU04),0.0))/aMuon.pt());
     
+    //add user isolation with custom configuration for x-check
+    float allChIso04v3 = aMuon.userIsolation(pat::User1Iso);
+    float nhIso04v3 = aMuon.userIsolation(pat::PfNeutralHadronIso);
+    float phIso04v3 = aMuon.userIsolation(pat::PfGammaIso);
+    float allIsoPU04v3 = aMuon.userIsolation(pat::PfAllParticleIso);
+    aMuon.addUserFloat("PFRelIsoDB04v3",(allChIso04v3+std::max(nhIso04v3+phIso04v3-0.5*(allIsoPU04v3),0.0))/aMuon.pt());
+
+    //std::cout <<" Muon Pt : "<<aMuon.pt() << " => "<<" isoV2 "<<aMuon.userFloat("PFRelIsoDB04v2")
+    //          <<" isoV3 "<<aMuon.userFloat("PFRelIsoDB04v3")<<std::endl;
     //std::cout << aMuon.pt() << " => "
     //      << chIso04v2 << ", "
     //      << nhIso04v2 << ", "

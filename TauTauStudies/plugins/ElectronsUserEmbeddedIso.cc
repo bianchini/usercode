@@ -221,6 +221,18 @@ void ElectronsUserEmbeddedIso::produce(edm::Event & iEvent, const edm::EventSetu
     aElectron.addUserFloat("PFRelIsoDB04v3", 
                            (allChIso04PFId+std::max(nhIso04PFId+phIso04PFId-0.5*(nhIsoPU04PFId),0.0))/aElectron.pt());
 
+
+    //add user isolation with custom configuration for x-check
+    float allChIso04v4 = aElectron.userIsolation(pat::User1Iso);
+    float nhIso04v4 = aElectron.userIsolation(pat::PfNeutralHadronIso);
+    float phIso04v4 = aElectron.userIsolation(pat::PfGammaIso);
+    float allIsoPU04v4 = aElectron.userIsolation(pat::PfAllParticleIso);
+    aElectron.addUserFloat("PFRelIsoDB04v4", 
+			   (allChIso04v4+std::max(nhIso04v4+phIso04v4-0.5*(allIsoPU04v4),0.0))/aElectron.pt());
+
+    //std::cout <<" Electron Pt : "<<aElectron.pt() << " => "<<" isoV3 "<<aElectron.userFloat("PFRelIsoDB04v3")
+    //          <<" isoV4 "<<aElectron.userFloat("PFRelIsoDB04v4")<<std::endl;
+
     // cleaning
     for(unsigned int i = 0; i <vetos2012EBPFIdCharged.size(); i++){
       delete vetos2012EBPFIdCharged[i];
