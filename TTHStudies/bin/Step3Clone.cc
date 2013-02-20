@@ -438,6 +438,8 @@ int main(int argc, const char* argv[])
     float flavor1_, flavor2_, flavor3_, flavor4_, flavor5_, flavor6_;
     int nLF_,    nC_,    nB_;
     int nLFTop_, nCTop_, nBTop_;
+    int numOfBs_, numOfBsAcc_;
+    int numOfBsFlav_, numOfBsFlavAcc_, numOfCsFlav_, numOfCsFlavAcc_;
 
     int numJets40_; int numJets40bTag_;
     int numJets30_; int numJets30bTag_;
@@ -596,6 +598,12 @@ int main(int argc, const char* argv[])
 
     TBranch *myJsonBR = outTree->Branch("myJson",&myJson_,"myJson/F");
     
+    TBranch *numOfBsBR        = outTree->Branch("numOfBs",   &numOfBs_,   "numOfBs/F");
+    TBranch *numOfBsAccBR     = outTree->Branch("numOfBsAcc",&numOfBsAcc_,"numOfBsAcc/F");
+    TBranch *numOfBsFlavBR    = outTree->Branch("numOfBsFlav",   &numOfBsFlav_,   "numOfBsFlav/F");
+    TBranch *numOfBsFlavAccBR = outTree->Branch("numOfBsFlavAcc",&numOfBsFlavAcc_,"numOfBsFlavAcc/F");
+    TBranch *numOfCsFlavBR    = outTree->Branch("numOfCsFlav",   &numOfCsFlav_,   "numOfCsFlav/F");
+    TBranch *numOfCsFlavAccBR = outTree->Branch("numOfCsFlavAcc",&numOfCsFlavAcc_,"numOfCsFlavAcc/F");
     //TBranch *BR = outTree->Branch("",&_,"/F");
     //////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
@@ -648,6 +656,7 @@ int main(int argc, const char* argv[])
     int naJets;
     int nvlep;
     int Vtype;
+    int nSimBs;
     //int run, event, lumi;
     EventInfo ev;
 
@@ -656,6 +665,7 @@ int main(int argc, const char* argv[])
     float aJetspt[999]; float aJetseta[999]; float aJetsphi[999]; float aJetse[999]; float aJetscsv[999]; float aJetsunc[999]; float aJetsflavor[999]; float aJetsgenpt[999];float aJetsgeneta[999];float aJetsgenphi[999];
     float vLeptonpt[999]; float vLeptoneta[999]; float vLeptonphi[999];
     float vLeptonpfCombRelIso[999];
+    float SimBspt[999]; float SimBseta[999]; float SimBsphi[999]; float SimBsmass[999];
 
     genTopInfo genTop, genTbar;
     genParticleInfo genB, genBbar;
@@ -663,6 +673,7 @@ int main(int argc, const char* argv[])
     outTree->SetBranchAddress("nhJets",   &nhJets);
     outTree->SetBranchAddress("naJets",   &naJets);
     outTree->SetBranchAddress("Vtype",    &Vtype);
+    outTree->SetBranchAddress("nSimBs",   &nSimBs);
 
     outTree->SetBranchAddress("hJet_pt",   hJetspt);
     outTree->SetBranchAddress("hJet_eta",  hJetseta);
@@ -699,6 +710,11 @@ int main(int argc, const char* argv[])
     outTree->SetBranchAddress("genB",   &genB);
     outTree->SetBranchAddress("genBbar",&genBbar);
 
+    outTree->SetBranchAddress("SimBs_pt",  SimBspt);
+    outTree->SetBranchAddress("SimBs_eta" ,SimBseta );
+    outTree->SetBranchAddress("SimBs_phi" ,SimBsphi );
+    outTree->SetBranchAddress("SimBs_mass",SimBsmass );
+
     //outTree->SetBranchAddress("EVENT.run",  &run);
     //outTree->SetBranchAddress("EVENT.event",&event);
     //outTree->SetBranchAddress("EVENT.lumi", &lumi);
@@ -729,6 +745,10 @@ int main(int argc, const char* argv[])
       nLF_    = 0; nC_    = 0; nB_    = 0;
       nLFTop_ = 0; nCTop_ = 0; nBTop_ = 0;
 
+      numOfBs_=0; numOfBsAcc_=0;
+      numOfBsFlav_=0;  numOfBsFlavAcc_=0;
+      numOfCsFlav_=0;  numOfCsFlavAcc_=0;
+
       thrust0_       = -99;  thrust1_ = -99; thrust2_ = -99; 
       sphericity2_   = -99;  aplanarity2_ = -99;
       h10_           = -99;  h20_ = -99; h30_ = -99; h40_ = -99; h50_ = -99; h60_ = -99;
@@ -748,6 +768,14 @@ int main(int argc, const char* argv[])
       TObjArray leptArrayForShapeVar;
       jetArrayForShapeVar.SetOwner();
       leptArrayForShapeVar.SetOwner();
+
+      std::vector<LV> allBs;
+      for(int k = 0; k < nSimBs; k++){
+	LV bLV(SimBspt[k], SimBseta[k], SimBsphi[k], SimBsmass[k]);
+	allBs.push_back(bLV);
+      }
+     
+
 
       std::vector<LV> allLeptons;
       std::vector<LV> allMets;
@@ -799,13 +827,13 @@ int main(int argc, const char* argv[])
       }
       LV genBLV(0.,0.,0.,0.);
       LV genBbarLV(0.,0.,0.,0.);
-      if(genB.mass>0){
+      if(genB.mass>0 && genB.momid==25){
 	genBLV.SetPt(  genB.pt );
 	genBLV.SetEta( genB.eta );
 	genBLV.SetPhi( genB.phi );
 	genBLV.SetM(   genB.mass );
       }
-      if(genBbar.mass>0){
+      if(genBbar.mass>0 && genBbar.momid==25){
 	genBbarLV.SetPt(  genBbar.pt );
 	genBbarLV.SetEta( genBbar.eta );
 	genBbarLV.SetPhi( genBbar.phi );
@@ -824,6 +852,25 @@ int main(int argc, const char* argv[])
 
 	float jetMass2 = hJetse[i]*hJetse[i] -  TMath::Power(hJetspt[i]*TMath::CosH(hJetseta[i]) ,2);
 	LV jetLV(hJetspt[i], hJetseta[i], hJetsphi[i], TMath::Sqrt(jetMass2));
+	LV genJetLV(hJetsgenpt[i], hJetsgeneta[i], hJetsgenphi[i], 0.0);
+
+	for(unsigned int b = 0; b < allBs.size(); b++){
+	  LV bLV = allBs[b];
+	  if( genJetLV.Pt()>20. && Geom::deltaR(bLV,genJetLV )< GENJETDR ){
+	    numOfBs_++;
+	    if( TMath::Abs(genJetLV.Eta())<2.5 )
+	      numOfBsAcc_++;
+	  }
+	}
+	if( genJetLV.Pt()>20. && TMath::Abs( hJetsflavor[i])==5 ){
+	  numOfBsFlav_++;	
+	  if( TMath::Abs(genJetLV.Eta())<2.5 ) numOfBsFlavAcc_++;
+	}
+	if( genJetLV.Pt()>20. && TMath::Abs( hJetsflavor[i])==4 ){
+	  numOfCsFlav_++;	
+	  if( TMath::Abs(genJetLV.Eta())<2.5 ) numOfCsFlavAcc_++;
+	}
+
 
 	if( hJetspt[i] > 20.){
 	  numJets20_++;
@@ -867,6 +914,16 @@ int main(int argc, const char* argv[])
 
 	float jetMass2 = aJetse[i]*aJetse[i] -  TMath::Power(aJetspt[i]*TMath::CosH(aJetseta[i]),2);
 	LV jetLV(aJetspt[i], aJetseta[i], aJetsphi[i],  TMath::Sqrt(jetMass2));
+	LV genJetLV(aJetsgenpt[i], aJetsgeneta[i], aJetsgenphi[i], 0.0);
+
+	for(unsigned int b = 0; b < allBs.size(); b++){
+	  LV bLV = allBs[b];
+	  if( genJetLV.Pt()>20. && Geom::deltaR(bLV,genJetLV )< GENJETDR ){
+	    numOfBs_++;
+	    if( TMath::Abs(genJetLV.Eta())<2.5 )
+	      numOfBsAcc_++;
+	  }
+	}
 
 	if( aJetspt[i] > 20.){
 	  numJets20_++;
@@ -1452,6 +1509,15 @@ int main(int argc, const char* argv[])
       fourthBtagBR->Fill();
 
       bestHiggsMassBR->Fill();
+
+      myJsonBR->Fill();
+      numOfBsBR->Fill();
+      numOfBsAccBR->Fill();
+      numOfBsFlavBR->Fill();
+      numOfBsFlavAccBR->Fill();
+      numOfCsFlavBR->Fill();
+      numOfCsFlavAccBR->Fill();
+
 
       delete eventShapes;
       delete topologicalWorker;
