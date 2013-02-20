@@ -69,8 +69,9 @@ int main(int argc, const char* argv[])
   const edm::ParameterSet& in = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("fwliteInput");
 
   std::string pathToFile( in.getParameter<std::string>("pathToFile" ) );
-  std::string outPath( in.getParameter<std::string>("outPath" ) );
+  std::string outPath(    in.getParameter<std::string>("outPath" ) );
   std::string ordering(   in.getParameter<std::string>("ordering" ) );
+  std::string newDir(     in.getParameter<std::string>("newDir" ) );
   double lumi(            in.getParameter<double>("lumi" ) );
   bool verbose(           in.getParameter<bool>("verbose" ) );
 
@@ -168,9 +169,9 @@ int main(int argc, const char* argv[])
       string skim_it = it->first;
       TCut cut((it->second).c_str());
 
-      string cleanSE  = "srmrm srm://t3se01.psi.ch:8443/srm/managerv2?SFN=/pnfs/psi.ch/cms/trivcat/store/user/bianchi/HBB_EDMNtuple/AllHDiJetPt_"+skim_it+"/"+fileName+"_"+skim_it+".root"; 
-      cout << cleanSE << endl;
-      gSystem->Exec(cleanSE.c_str());
+      //string cleanSE  = "srmrm srm://t3se01.psi.ch:8443/srm/managerv2?SFN=/pnfs/psi.ch/cms/trivcat/store/user/bianchi/HBB_EDMNtuple/AllHDiJetPt_"+skim_it+"/"+newDir+"/"+fileName+"_"+skim_it+".root"; 
+      //cout << cleanSE << endl;
+      //gSystem->Exec(cleanSE.c_str());
      
       //string outputName0 = pathToFile+"/"+fileName+"_"+skim_it+".root"; 
       //TFile* fs0      = new TFile(outputName0.c_str(), "RECREATE");
@@ -181,7 +182,7 @@ int main(int argc, const char* argv[])
       //fs0->Close();
       //delete fs0;
 
-      string outputName = outPath+"/AllHDiJetPt_"+skim_it+"/"+fileName+"_"+skim_it+".root"; 
+      string outputName = outPath+"/AllHDiJetPt_"+skim_it+"/"+newDir+"/"+fileName+"_"+skim_it+".root"; 
       TFile* fs      = TFile::Open(outputName.c_str(), "RECREATE");
      
       //fwlite::TFileService fs = fwlite::TFileService( ("TThNTuples_"+currentName+".root").c_str());

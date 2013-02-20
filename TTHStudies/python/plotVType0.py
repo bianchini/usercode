@@ -7,7 +7,7 @@ from Bianchi.TTHStudies.aNNInputs_cff import *
 
 VType = "_VType0"
 
-mmBasic      = "(Vtype==0 && H.HiggsFlag==1 && vLepton_charge[0]*vLepton_charge[1]<0 && V.mass>60)"
+mmBasic      = "(Vtype==0 && H.HiggsFlag==1 && vLepton_charge[0]*vLepton_charge[1]<0 && V.mass>20)"
 mmKin        = "(vLepton_pt[0]>30 && vLepton_pt[1]>20 && abs(vLepton_eta[0])<2.1 && abs(vLepton_eta[1])<2.4)"
 mmId         = "(vLepton_pfCorrIso[0]<0.10 && vLepton_pfCorrIso[1]<0.20)"
 mmJetBasic   = "(numJets30>=2 && pt1>30 && pt2>30 && numJets30bTag>=1)"
@@ -48,8 +48,8 @@ process.fwliteInput = cms.PSet(
     samples       = cms.VPSet(
 
     cms.PSet(
-    skip     = cms.bool(True),
-    name     = cms.string('DYJetsToLL_M-10to50_TuneZ2Star_8TeV-madgraph'+VType),
+    skip     = cms.bool(False),
+    name     = cms.string('DYJetsToLL_M-10To50_TuneZ2Star_8TeV-madgraph'+VType),
     nickName = cms.string('DYJets10to50'),
     color    = cms.int32(18),
     xSec     = cms.double(12765.)
@@ -66,7 +66,7 @@ process.fwliteInput = cms.PSet(
     cms.PSet(
     skip     = cms.bool(False),  
     name     = cms.string('WJetsToLNu_TuneZ2Star_8TeV-madgraph-tarball'+VType),
-    nickName = cms.string('WJetsPt'),
+    nickName = cms.string('WJets'),
     color    = cms.int32(29),
     xSec     = cms.double(37509.0),
     ),

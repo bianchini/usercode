@@ -23,15 +23,15 @@ common       =  mmJetBasic + " && " + mmBasic+" && "+mmKin+" && "+mmId
 #cat6j3b      = "numJets40>=6 && numJets30bTag==3"
 #cat6j4b      = "numJets40>=6 && numJets30bTag>=4"
 
-cat4j2b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5<40 && numJets30bTag==2"
-cat4j3b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5<40 && numJets30bTag==3"
-cat4j4b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5<40 && numJets30bTag==4"
-cat5j2b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5>40 && pt6<40 && numJets30bTag==2"
-cat5j3b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5>40 && pt6<40 && numJets30bTag==3"
-cat5j4b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5>40 && pt6<40 && numJets30bTag>=4"
-cat6j2b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5>40 && pt6>40 && numJets30bTag==2"
-cat6j3b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5>40 && pt6>40 && numJets30bTag==3"
-cat6j4b      = "pt1>40 && pt2>40 && pt3>40 && pt4>40 && pt5>40 && pt6>40 && numJets30bTag>=4"
+cat4j2b      = "pt1>40 && pt2>40 && pt3>40 && pt4>30 && pt5<30 && numJets30bTag==2"
+cat4j3b      = "pt1>40 && pt2>40 && pt3>40 && pt4>30 && pt5<30 && numJets30bTag==3"
+cat4j4b      = "pt1>40 && pt2>40 && pt3>40 && pt4>30 && pt5<30 && numJets30bTag==4"
+cat5j2b      = "pt1>40 && pt2>40 && pt3>40 && pt4>30 && pt5>30 && pt6<30 && numJets30bTag==2"
+cat5j3b      = "pt1>40 && pt2>40 && pt3>40 && pt4>30 && pt5>30 && pt6<30 && numJets30bTag==3"
+cat5j4b      = "pt1>40 && pt2>40 && pt3>40 && pt4>30 && pt5>30 && pt6<30 && numJets30bTag>=4"
+cat6j2b      = "pt1>40 && pt2>40 && pt3>40 && pt4>30 && pt5>30 && pt6>30 && numJets30bTag==2"
+cat6j3b      = "pt1>40 && pt2>40 && pt3>40 && pt4>30 && pt5>30 && pt6>30 && numJets30bTag==3"
+cat6j4b      = "pt1>40 && pt2>40 && pt3>40 && pt4>30 && pt5>30 && pt6>30 && numJets30bTag>=4"
 
 
 dataCut      = "((EVENT.json == 1 || EVENT.run < 196532) && (triggerFlags[3] || triggerFlags[44] ))"
@@ -62,13 +62,13 @@ process.fwliteInput = cms.PSet(
     #pathToFile    = cms.string("/scratch/bianchi/HBB_EDMNtuple/All.H.DiJetPt/"),
     ordering      = cms.string("DiJetPt_"),
     lumi          = cms.double(12.1),
-    debug         = cms.bool(True),
+    debug         = cms.bool(False),
 
     samples       = cms.VPSet(
 
     cms.PSet(
-    skip     = cms.bool(True),
-    name     = cms.string('DYJetsToLL_M-10to50_TuneZ2Star_8TeV-madgraph'+VType),
+    skip     = cms.bool(False),
+    name     = cms.string('DYJetsToLL_M-10To50_TuneZ2Star_8TeV-madgraph'+VType),
     nickName = cms.string('DYJets10to50'),
     color    = cms.int32(18),
     xSec     = cms.double(12765.)
@@ -85,7 +85,7 @@ process.fwliteInput = cms.PSet(
     cms.PSet(
     skip     = cms.bool(False),  
     name     = cms.string('WJetsToLNu_TuneZ2Star_8TeV-madgraph-tarball'+VType),
-    nickName = cms.string('WJetsPt'),
+    nickName = cms.string('WJets'),
     color    = cms.int32(29),
     xSec     = cms.double(37509.0),
     ),
@@ -539,7 +539,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(True),
+    skip      = cms.bool(False),
     xLow      = cms.double(0),
     xHigh     = cms.double(30),
     nBins     = cms.int32(30),
@@ -552,7 +552,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(True),
+    skip      = cms.bool(False),
     xLow      = cms.double(0),
     xHigh     = cms.double(200),
     nBins     = cms.int32(50),
@@ -565,7 +565,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip      = cms.bool(True),
+    skip      = cms.bool(False),
     xLow      = cms.double(-3),
     xHigh     = cms.double(3),
     nBins     = cms.int32(60),
@@ -614,7 +614,7 @@ for plot in plots_aNNInputs:
     newplot2 = plot.clone()
     newplot2.histoName = cms.string("VType3_"+(plot.histoName).value()+"_4j3b")
     newplot2.cut       = cms.string(common+" && "+cat4j3b)
-    newplot.cutName    = cms.string("Single e, 4j3b")
+    newplot2.cutName    = cms.string("Single e, 4j3b")
     oldVPset.append(newplot2)
 
     newplot3 = plot.clone()

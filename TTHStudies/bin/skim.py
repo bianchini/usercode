@@ -13,31 +13,32 @@ process.fwliteInput = cms.PSet(
     outPath       = cms.string("gsidcap://t3se01.psi.ch:22128//pnfs/psi.ch/cms/trivcat/store/user/bianchi/HBB_EDMNtuple/"),
     #outPath       = cms.string("/scratch/bianchi/HBB_EDMNtuple/All.H.DiJetPt/"),
     ordering      = cms.string("DiJetPt_"),
+    newDir        = cms.string("v2"),
     #ordering      = cms.string("ZllH.DiJetPt.Oct22."),
     lumi          = cms.double(12.1),
     verbose       = cms.bool(False),
 
     skims         = cms.VPSet(
 
-    #cms.PSet(
-    #name = cms.string("VType0"),
-    #cut  = cms.string("numJets30bTag>=1 && Vtype==0 && numJets30>=2 && pt1>30 && pt2>30")
-    #),
+    cms.PSet(
+    name = cms.string("VType0"),
+    cut  = cms.string("numJets30bTag>=1 && Vtype==0 && numJets30>=2 && pt1>30 && pt2>30")
+    ),
 
     cms.PSet(
     name = cms.string("VType1"),
     cut  = cms.string("numJets30bTag>=1 && Vtype==1 && numJets30>=2 && pt1>30 && pt2>30")
     ),
 
-    #cms.PSet(
-    #name = cms.string("VType2"),
-    #cut  = cms.string("numJets30bTag>=1 && Vtype==2 && numJets30>=3 && pt1>30 && pt2>30 && pt3>30")
-    #),
+    cms.PSet(
+    name = cms.string("VType2"),
+    cut  = cms.string("numJets30bTag>=1 && Vtype==2 && numJets30>=3 && pt1>30 && pt2>30 && pt3>30")
+    ),
 
-    #cms.PSet(
-    #name = cms.string("VType3"),
-    #cut  = cms.string("numJets30bTag>=1 && Vtype==3 && numJets30>=3 && pt1>30 && pt2>30 && pt3>30")
-    #),
+    cms.PSet(
+    name = cms.string("VType3"),
+    cut  = cms.string("numJets30bTag>=1 && Vtype==3 && numJets30>=3 && pt1>30 && pt2>30 && pt3>30")
+    ),
 
 
     ),
