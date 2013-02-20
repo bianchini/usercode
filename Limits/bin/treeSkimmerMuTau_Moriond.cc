@@ -58,7 +58,7 @@
 #define MINJetID 0.5
 #define USERECOILALGO true
 #define USEFAKERATE false
-#define DOSVFITSTANDALONE true
+#define DOSVFITSTANDALONE false
 #define DOVBFMVA true
 #define READSOFT false
 #define DEBUG false
@@ -139,13 +139,22 @@ double deltaR(LV v1, LV v2) {
 float reweightHEPNUP(int hepNUP) {
 
   int nJets = hepNUP-5;
-  
+  /* //old one
   if(nJets==0)      return 1 ;
   else if(nJets==1) return 0.368748897 ;
   else if(nJets==2) return 0.114009944 ;
   else if(nJets==3) return 0.077158785 ;
   else if(nJets>=4) return 0.038490064 ;
   else return 1 ;
+  */
+  //New Weights specific to mu-tau from Christian 
+  if(nJets==0)      return 0.502269748 ;  
+  else if(nJets==1) return 0.183765696 ;  
+  else if(nJets==2) return 0.057359534 ;  
+  else if(nJets==3) return 0.038266418 ;  
+  else if(nJets>=4) return 0.019149548 ;  
+  else return 1 ;  
+
 }
 
 void createReWeighting3D(){
@@ -358,6 +367,34 @@ Bool_t isbtagged(Bool_t isBQuark, Double_t btagCSV, Bool_t isdata, UInt_t btagef
   return btagged;
 }  
 
+int getJetIDMVALoose(double pt, double eta, double rawMVA)
+{
+  float eta_bin[] = {0,2.5,2.75,3.0,5.0};
+  float Pt010_Loose[]    = {-0.95,-0.97,-0.97,-0.97};
+  float Pt1020_Loose[]   = {-0.95,-0.97,-0.97,-0.97};
+  float Pt2030_Loose[]   = {-0.80,-0.85,-0.84,-0.85};
+  float Pt3050_Loose[]   = {-0.80,-0.74,-0.68,-0.77};
+
+  int passId = 0;
+  for(int i = 0; i < 4; i++){
+    if(TMath::Abs(eta) >= eta_bin[i] && TMath::Abs(eta) < eta_bin[i+1]){
+      if(pt < 10){
+        if(rawMVA > Pt010_Loose[i])passId = 1;
+      }
+      else if(pt >= 10 && pt < 20){
+        if(rawMVA > Pt1020_Loose[i])passId = 1;
+      }
+      else if(pt >= 20 && pt < 30){ 
+        if(rawMVA > Pt2030_Loose[i])passId = 1; 
+      }
+      else if(pt >= 30){  
+        if(rawMVA > Pt3050_Loose[i])passId = 1;  
+      }
+    }
+  }
+  return passId;
+}
+
 void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0., string inputDir_ = "./", string dirOut_ = "./", int iJson_=-1, bool doLepVeto=true){
 
   cout << "Now skimming analysis " << analysis_ << endl;
@@ -471,16 +508,16 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   //TH2F* UnfoldDen1 = embeddingUnfoldingLead.IsZombie()    ? 0 : (TH2F*)embeddingUnfoldingLead.Get("UnfoldDen1");
   //TH2F* UnfoldDen2 = embeddingUnfoldingSubLead.IsZombie() ? 0 : (TH2F*)embeddingUnfoldingSubLead.Get("UnfoldDen2");
 
-  TFile embeddingUnfolding("../../Utilities/data_arch/unfolding/Unfold2DEta.root");
+  TFile embeddingUnfolding("../../Utilities/data/unfolding/Unfold2DEta.root");
   TH2F* UnfoldDen1 = embeddingUnfolding.IsZombie()    ? 0 : (TH2F*)embeddingUnfolding.Get("UnfoldDen1");
   if(UnfoldDen1) cout << "Unfolding for embedded sample open!!" << endl;
 
   //////////////////////////////////////////////////////////
 
   cout << "Using fake-rate method from fakeRate.root" << endl;
-  TFile fakeRate_DYJets ("../../Utilities/data_arch/fakeRate/fakeRate_DYJetsToTauTau_rebinned.root","READ");
-  TFile fakeRate_Run2011("../../Utilities/data_arch/fakeRate/fakeRate_Run2011AB_rebinned.root","READ");
-  TFile fakeRate_WJets  ("../../Utilities/data_arch/fakeRate/fakeRate_WJetsToMuNu_rebinned.root","READ");
+  TFile fakeRate_DYJets ("../../Utilities/data/fakeRate/fakeRate_DYJetsToTauTau_rebinned.root","READ");
+  TFile fakeRate_Run2011("../../Utilities/data/fakeRate/fakeRate_Run2011AB_rebinned.root","READ");
+  TFile fakeRate_WJets  ("../../Utilities/data/fakeRate/fakeRate_WJetsToMuNu_rebinned.root","READ");
 
  
   TH3F* hfakeRateDYJets  = 0;
@@ -556,7 +593,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   int isVetoInJets; float chFracPVVeto;
 
   // diTau related variables
-  float diTauNSVfitMass_,diTauNSVfitMassErrUp_,diTauNSVfitMassErrDown_, diTauNSVfitMassOld_,
+  float diTauNSVfitMass_,diTauNSVfitMassErrUp_,diTauNSVfitMassErrDown_, 
     diTauSVFitMass, diTauSVFitMassCal0, diTauSVFitMassCal1, diTauSVFitMassCal2, 
     diTauSVFitPt, diTauSVFitEta , diTauSVFitPhi ;
   float diTauSVFitMassSA, diTauSVFitMassErrSA;
@@ -570,11 +607,11 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   // taus/MET related variables
   float ptL1,ptL2,etaL1,etaL2,phiL1,phiL2,dPhiL1L2, dxy1_, dz1_;
   float diTauCharge_,
-    MtLeg1_,MtLeg1Corr_,MtLeg1MVA_,MtLeg1MVAOld_,
-    MtLeg2_,MtLeg2Corr_,MtLeg2MVA_,MtLeg2MVAOld_,
-    pZeta_,pZetaCorr_,pZetaMVA_,pZetaMVAOld_,
-    pZetaVis_,pZetaVisCorr_,pZetaVisMVA_,pZetaVisMVAOld_,pZetaSig_;
-  float MEt,MEtPhi,MEtCorr,MEtCorrPhi, MEtMVA, MEtMVAPhi,MEtMVAOld, MEtMVAPhiOld; 
+    MtLeg1_,MtLeg1Corr_,MtLeg1MVA_,
+    MtLeg2_,MtLeg2Corr_,MtLeg2MVA_,
+    pZeta_,pZetaCorr_,pZetaMVA_,
+    pZetaVis_,pZetaVisCorr_,pZetaVisMVA_,pZetaSig_;
+  float MEt,MEtPhi,MEtCorr,MEtCorrPhi, MEtMVA, MEtMVAPhi; 
   float MEtCov00,MEtCov01,MEtCov10,MEtCov11;
   float combRelIsoLeg1,combRelIsoLeg1Beta,combRelIsoLeg1DBeta,combRelIsoLeg1DBetav2,combRelIsoLeg1Rho, combIsoLeg2;
   float rhoFastJet_;
@@ -692,7 +729,6 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   outTreePtOrd->Branch("chFracPVVeto", &chFracPVVeto,"chFracPVVeto/F"); 
 
   outTreePtOrd->Branch("diTauNSVfitMass",       &diTauNSVfitMass_,       "diTauNSVfitMass/F");
-  outTreePtOrd->Branch("diTauNSVfitMassOld",    &diTauNSVfitMassOld_,    "diTauNSVfitMassOld/F");
   outTreePtOrd->Branch("diTauNSVfitMassErrUp",  &diTauNSVfitMassErrUp_,  "diTauNSVfitMassErrUp/F");
   outTreePtOrd->Branch("diTauNSVfitMassErrDown",&diTauNSVfitMassErrDown_,"diTauNSVfitMassErrDown/F");
   
@@ -760,19 +796,15 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   outTreePtOrd->Branch("MtLeg1",      &MtLeg1_,"MtLeg1/F");
   outTreePtOrd->Branch("MtLeg1Corr",  &MtLeg1Corr_,"MtLeg1Corr/F");
   outTreePtOrd->Branch("MtLeg1MVA",   &MtLeg1MVA_,"MtLeg1MVA/F");
-  outTreePtOrd->Branch("MtLeg1MVAOld",   &MtLeg1MVAOld_,"MtLeg1MVAOld/F");
   outTreePtOrd->Branch("MtLeg2",      &MtLeg2_,"MtLeg2/F");
   outTreePtOrd->Branch("MtLeg2Corr",  &MtLeg2Corr_,"MtLeg2Corr/F");
   outTreePtOrd->Branch("MtLeg2MVA",   &MtLeg2MVA_,"MtLeg2MVA/F");
-  outTreePtOrd->Branch("MtLeg2MVAOld",   &MtLeg2MVAOld_,"MtLeg2MVAOld/F"); 
   outTreePtOrd->Branch("pZeta",       &pZeta_,"pZeta/F");
   outTreePtOrd->Branch("pZetaCorr",   &pZetaCorr_,"pZetaCorr/F");
   outTreePtOrd->Branch("pZetaMVA",    &pZetaMVA_,"pZetaMVA/F");
-  outTreePtOrd->Branch("pZetaMVAOld",    &pZetaMVAOld_,"pZetaMVAOld/F");
   outTreePtOrd->Branch("pZetaVis",    &pZetaVis_,"pZetaVis/F");
   outTreePtOrd->Branch("pZetaVisCorr",&pZetaVisCorr_,"pZetaVisCorr/F");
   outTreePtOrd->Branch("pZetaVisMVA", &pZetaVisMVA_,"pZetaVisMVA/F");
-  outTreePtOrd->Branch("pZetaVisMVAOld", &pZetaVisMVAOld_,"pZetaVisMVAOld/F");
   outTreePtOrd->Branch("pZetaSig",    &pZetaSig_,"pZetaSig/F");
 
   outTreePtOrd->Branch("MEt",         &MEt,        "MEt/F");
@@ -781,8 +813,6 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
   outTreePtOrd->Branch("MEtCorrPhi",  &MEtCorrPhi, "MEtCorrPhi/F");
   outTreePtOrd->Branch("MEtMVA",      &MEtMVA,     "MEtMVA/F");
   outTreePtOrd->Branch("MEtMVAPhi",   &MEtMVAPhi,  "MEtMVAPhi/F");
-  outTreePtOrd->Branch("MEtMVAOld",      &MEtMVAOld,     "MEtMVAOld/F"); 
-  outTreePtOrd->Branch("MEtMVAPhiOld",   &MEtMVAPhiOld,  "MEtMVAPhiOld/F"); 
 
   outTreePtOrd->Branch("MEtCov00",    &MEtCov00,   "MEtCov00/F");
   outTreePtOrd->Branch("MEtCov01",    &MEtCov01,   "MEtCov01/F");
@@ -1276,26 +1306,21 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
 
   RecoilCorrector* recoilCorr = 0;
 
-  //if(sample_.find("WJets")!=string::npos){ 
-  if( sample_.find("WJets")!=string::npos || sample_.find("W1Jets")!=string::npos ||  
-      sample_.find("W2Jets")!=string::npos || sample_.find("W3Jets")!=string::npos ||  
-      sample_.find("W4Jets")!=string::npos  
-      ){ 
-    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_wjets53X_20pv_njet.root"); 
-    recoilCorr->addMCFile(           "../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_zmm53X_2012_njet.root"); 
-    recoilCorr->addDataFile(         "../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_datamm53X_2012_njet.root"); 
-  } 
-  else if(sample_.find("DYJets")!=string::npos){ 
-    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_zmm53X_2012_njet.root"); 
-    recoilCorr->addMCFile(           "../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_zmm53X_2012_njet.root");  
-    recoilCorr->addDataFile(         "../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_datamm53X_2012_njet.root");  
-  } 
-  else if(sample_.find("HToTauTau")!=string::npos){ 
-    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_higgs53X_20pv_njet.root"); 
-    recoilCorr->addMCFile(           "../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_zmm53X_2012_njet.root");   
-    recoilCorr->addDataFile(         "../../Utilities/data/recoilv7/RecoilCorrector_v7/recoilfits/recoilfit_datamm53X_2012_njet.root");   
-  } 
-  
+  if(sample_.find("WJets")!=string::npos){
+    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_wjets_njet.root");
+    recoilCorr->addMCFile(           "../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
+    recoilCorr->addDataFile(         "../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
+  }
+  else if(sample_.find("DYJets")!=string::npos){
+    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zjets_ltau_njet.root");
+    recoilCorr->addMCFile(           "../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
+    recoilCorr->addDataFile(         "../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
+  }
+  else if(sample_.find("H1")!=string::npos){
+    recoilCorr = new RecoilCorrector("../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_higgs_njet.root");
+    recoilCorr->addMCFile(           "../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_zmm42X_njet.root");
+    recoilCorr->addDataFile(         "../../Utilities/data/recoilv4/RecoilCorrector_v4/recoilfits/recoilfit_datamm_njet.root");
+  }
     
 
   TFile* HqT      = 0;
@@ -1314,7 +1339,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     if(sample_.find("GGFH145")!=string::npos) mH = 145;
     if(sample_.find("GGFH160")!=string::npos) mH = 160;
     cout << "Reweighting powheg with HqT mH=" << mH << endl;
-    HqT = new TFile(Form("../../Utilities/data_arch/HqTFeHiPro/weight_ptH_%d.root", mH));
+    HqT = new TFile(Form("../../Utilities/data/HqTFeHiPro/weight_ptH_%d.root", mH));
     if(!HqT) cout << "Cannot find HqT file..." << endl;
     else{
       histo = (TH1F*)(HqT->Get(Form("powheg_weight/weight_hqt_fehipro_fit_%d",mH)));
@@ -1410,7 +1435,9 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     int veto  = -99;
     vector<int> indexes;
     for(int l = 0 ; l < int(jets->size()) ; l++){
-      if((*jets)[l].Pt()>MINPt1 && TMath::Abs((*jets)[l].Eta())<MAXEta && (*jetPUWP)[l*3]>MINJetID)
+      //if((*jets)[l].Pt()>MINPt1 && TMath::Abs((*jets)[l].Eta())<MAXEta && (*jetPUWP)[l*3]>MINJetID)
+      int passJetID = getJetIDMVALoose((*jets)[l].Pt(), (*jets)[l].Eta(), (*jetPUMVA)[l]);
+      if((*jets)[l].Pt()>MINPt1 && TMath::Abs((*jets)[l].Eta())<MAXEta && passJetID>MINJetID)
 	indexes.push_back(l);
     }
 
@@ -1544,7 +1571,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
 	isVetoInJets = 1;
     }
 
-    diTauNSVfitMassOld_     = diTauNSVfitMass;
+    diTauNSVfitMass_        = diTauNSVfitMass;
     diTauNSVfitMassErrUp_   = diTauNSVfitMassErrUp;
     diTauNSVfitMassErrDown_ = diTauNSVfitMassErrDown;
 
@@ -1629,23 +1656,16 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     if(DEBUG) cout << "Look at MET correct" << endl;
     TLorentzVector corrMET_tmp;
     LV corrMET(1,0,0,1);
-    double corrPt = (*METP4)[3].Et(); double corrPhi = (*METP4)[3].Phi();
+    double corrPt = (*METP4)[0].Et(); double corrPhi = (*METP4)[0].Phi();
     double u1 = 0.; double u2 = 0.;
     double err1 = 0; double err2 = 0;
 
     if(genVP4->size() && recoilCorr!=0){
-      //if(sample_.find("WJets")  !=string::npos)      
-      if( sample_.find("WJets")!=string::npos || sample_.find("W1Jets")!=string::npos || 
-	  sample_.find("W2Jets")!=string::npos || sample_.find("W3Jets")!=string::npos || 
-	  sample_.find("W4Jets")!=string::npos 
-	  )  
-	recoilCorr->CorrectType1(corrPt,corrPhi,(*genVP4)[0].Pt() ,(*genVP4)[0].Phi() , 
+      if(sample_.find("WJets")  !=string::npos)      
+	recoilCorr->CorrectType2(corrPt,corrPhi,(*genVP4)[0].Pt() ,(*genVP4)[0].Phi() , 
 				 ((*diTauLegsP4)[0]).Pt(),((*diTauLegsP4)[0]).Phi(), u1, u2 , err1,err2, TMath::Min(nJets30,2) );
-      //else if(sample_.find("DYJets")!=string::npos || sample_.find("H1")!=string::npos)  
-      else if((sample_.find("DYJets")!=string::npos && abs(genDecay)==(23*15)) //only Z->tautau
-	      || (sample_.find("DYJets")!=string::npos && abs(genDecay)!=(23*15) && isTauLegMatched==0 && (*genDiTauLegsP4)[1].E()>0) //Zmm, m->tau
-	      || sample_.find("HToTauTau")!=string::npos)
-	recoilCorr->CorrectType1(corrPt,corrPhi,(*genVP4)[0].Pt() ,(*genVP4)[0].Phi() , 
+      else if(sample_.find("DYJets")!=string::npos || sample_.find("H1")!=string::npos)  
+	recoilCorr->CorrectType2(corrPt,corrPhi,(*genVP4)[0].Pt() ,(*genVP4)[0].Phi() , 
 				 ((*diTauLegsP4)[0]+(*diTauLegsP4)[1]).Pt(),((*diTauLegsP4)[0]+(*diTauLegsP4)[1]).Phi(), u1, u2, err1,err2, TMath::Min(nJets30,2)  );
     }
     corrMET_tmp.SetPtEtaPhiM(corrPt,0,corrPhi,0);
@@ -1653,7 +1673,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     corrMET.SetPy(corrMET_tmp.Py());
     corrMET.SetPz(corrMET_tmp.Pz());
     corrMET.SetE(corrMET_tmp.E());
-    
+
 
 
     ////////////////////////////////////////////////////////////////////
@@ -1676,21 +1696,18 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
 
     MtLeg1_     = TMath::Sqrt( scalarSumPtLeg1*scalarSumPtLeg1 - vectorSumPtLeg1*vectorSumPtLeg1 ) ;
     MtLeg1Corr_ = TMath::Sqrt( scalarSumPtLeg1Corr*scalarSumPtLeg1Corr - vectorSumPtLeg1Corr*vectorSumPtLeg1Corr ) ;
-    MtLeg1MVAOld_  = TMath::Sqrt( scalarSumPtLeg1MVA*scalarSumPtLeg1MVA - vectorSumPtLeg1MVA*vectorSumPtLeg1MVA ) ;
-    MtLeg1MVA_ = TMath::Sqrt( scalarSumPtLeg1Corr*scalarSumPtLeg1Corr - vectorSumPtLeg1Corr*vectorSumPtLeg1Corr ) ; //new Recoil correction with MVA MET
+    MtLeg1MVA_  = TMath::Sqrt( scalarSumPtLeg1MVA*scalarSumPtLeg1MVA - vectorSumPtLeg1MVA*vectorSumPtLeg1MVA ) ;
+
     MtLeg2_     = TMath::Sqrt( scalarSumPtLeg2*scalarSumPtLeg2 - vectorSumPtLeg2*vectorSumPtLeg2 ) ;
     MtLeg2Corr_ = TMath::Sqrt( scalarSumPtLeg2Corr*scalarSumPtLeg2Corr - vectorSumPtLeg2Corr*vectorSumPtLeg2Corr ) ;
-    MtLeg2MVAOld_  = TMath::Sqrt( scalarSumPtLeg2MVA*scalarSumPtLeg2MVA - vectorSumPtLeg2MVA*vectorSumPtLeg2MVA ) ;
-    MtLeg2MVA_ = TMath::Sqrt( scalarSumPtLeg2Corr*scalarSumPtLeg2Corr - vectorSumPtLeg2Corr*vectorSumPtLeg2Corr ) ; //new Recoil correction with MVA MET
+    MtLeg2MVA_  = TMath::Sqrt( scalarSumPtLeg2MVA*scalarSumPtLeg2MVA - vectorSumPtLeg2MVA*vectorSumPtLeg2MVA ) ;
 
     pZeta_        = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[0]))[1];
     pZetaCorr_    = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], recoilCorrecMET))[1];
-    pZetaMVAOld_     = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[1]))[1]; // index 3->1
-    pZetaMVA_    = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], recoilCorrecMET))[1]; //new Recoil correction with MVA MET
+    pZetaMVA_     = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[1]))[1]; // index 3->1
     pZetaVis_     = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[0]))[0];
     pZetaVisCorr_ = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], recoilCorrecMET))[0];
-    pZetaVisMVAOld_  = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[1]))[0]; // index 3->1
-    pZetaVisMVA_ = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], recoilCorrecMET))[0];//new Recoil correction with MVA MET 
+    pZetaVisMVA_  = (computeZeta( (*diTauLegsP4)[0], (*diTauLegsP4)[1], (*METP4)[1]))[0]; // index 3->1
 
     pZetaSig_     = pZetaSig;
 
@@ -1698,11 +1715,9 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     MEtPhi     = (*METP4)[0].Phi();
     MEtCorr    = recoilCorrecMET.Et();
     MEtCorrPhi = recoilCorrecMET.Phi();
-    MEtMVAOld     = (*METP4)[1].Et();
-    MEtMVAPhiOld  = (*METP4)[1].Phi();
-    MEtMVA    = recoilCorrecMET.Et(); 
-    MEtMVAPhi = recoilCorrecMET.Phi(); 
-
+    MEtMVA     = (*METP4)[1].Et();
+    MEtMVAPhi  = (*METP4)[1].Phi();
+    
     if(l1ETMP4->size()>0){
       L1etm_     = (*l1ETMP4)[0].Et();//MB etMiss()
       L1etmPhi_  = (*l1ETMP4)[0].Phi();//MB
@@ -1738,12 +1753,12 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     //add additional variables to test MVA Met (from Christian)
     if( !isData && genVP4->size() > 0){
       int errorFlag = 0;
-      std::pair<double, double> uT = compMEtProjU((*genVP4)[0], recoilCorrecMET.Px() - (*genMETP4)[0].px(), recoilCorrecMET.py() - (*genMETP4)[0].py(), errorFlag);
+      std::pair<double, double> uT = compMEtProjU((*genVP4)[0], (*METP4)[1].Px() - (*genMETP4)[0].px(), (*METP4)[1].py() - (*genMETP4)[0].py(), errorFlag);
       if ( !errorFlag ) {
 	uParl = uT.first;
 	uPerp = uT.second;
       }
-      reco::Candidate::LorentzVector met_rotated = compP4inZetaFrame(recoilCorrecMET - (*genMETP4)[0], (*genVP4)[0].Phi());
+      reco::Candidate::LorentzVector met_rotated = compP4inZetaFrame((*METP4)[1] - (*genMETP4)[0], (*genVP4)[0].Phi());
       metParl = met_rotated.px();
       metPerp = met_rotated.py();
       TMatrixD metCov_rotated = compCovMatrixInZetaFrame(*metsig, (*genVP4)[0].Phi());
@@ -1758,8 +1773,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     (*metsig)[0][1] = (*metSgnMatrix)[1]; 
     (*metsig)[1][0] = (*metSgnMatrix)[1]; 
     (*metsig)[1][1] = (*metSgnMatrix)[2]; */
-    //NSVfitStandalone::Vector measuredMET( (*METP4)[1].Px(), (*METP4)[1].Py(), 0);
-    NSVfitStandalone::Vector measuredMET( recoilCorrecMET.Px(), recoilCorrecMET.Py(), 0);
+    NSVfitStandalone::Vector measuredMET( (*METP4)[1].Px(), (*METP4)[1].Py(), 0);
     std::vector<NSVfitStandalone::MeasuredTauLepton> measuredTauLeptons;
     NSVfitStandalone::LorentzVector p1( (*diTauLegsP4)[1] );
     measuredTauLeptons.push_back(NSVfitStandalone::MeasuredTauLepton(NSVfitStandalone::kHadDecay,p1));    
@@ -1771,12 +1785,10 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     algo.addLogM(false);
     if(DOSVFITSTANDALONE) {
       //algo.fit();
-      //algo.integrate();
-      algo.integrateMarkovChain();
+      algo.integrate();
     }
     if(DOSVFITSTANDALONE){
       diTauSVFitMassSA    =  algo.getMass();//algo.fittedDiTauSystem().mass();
-      diTauNSVfitMass_    = algo.getMass(); //new Recoil correction with MVA MET
       diTauSVFitMassErrSA = -99;//algo.massUncert();
       etaTau1Fit          = -99;//((algo.fittedTauLeptons())[1]).Eta();
       etaTau2Fit          = -99;//((algo.fittedTauLeptons())[0]).Eta();
@@ -1787,7 +1799,6 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     }
     else{
       diTauSVFitMassSA    = -99; 
-      diTauNSVfitMass_    = -99;
       diTauSVFitMassErrSA = -99;
       etaTau1Fit          = -99;
       etaTau2Fit          = -99;
@@ -1836,9 +1847,9 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
     // Reweight W+Jets
     weightHepNup=1;
     //if( sample_.find("WJets")!=string::npos ) weightHepNup = reweightHEPNUP( hepNUP_ );
-    if( sample_.find("WJets")!=string::npos || sample_.find("W1Jets")!=string::npos ||
-        sample_.find("W2Jets")!=string::npos || sample_.find("W3Jets")!=string::npos ||
-        sample_.find("W4Jets")!=string::npos
+    if( (sample_.find("WJets")!=string::npos && sample_.find("WWJets")==string::npos ) || 
+	sample_.find("W1Jets")!=string::npos || sample_.find("W2Jets")!=string::npos || 
+	sample_.find("W3Jets")!=string::npos || sample_.find("W4Jets")!=string::npos
         ) 
       weightHepNup = reweightHEPNUP( hepNUP_ );
 
@@ -2144,11 +2155,14 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
 	 deltaR((*diTauLegsP4)[1], (*vetoMuonsP4)[imu]) > 0.3 )
 	nVetoLepton++;
     }
+    /*
     for(size_t imu = 0; imu < vetoElectronsP4->size(); imu++){ 
       if(deltaR((*diTauLegsP4)[0], (*vetoElectronsP4)[imu]) > 0.3 &&  
          deltaR((*diTauLegsP4)[1], (*vetoElectronsP4)[imu]) > 0.3 ) 
         nVetoLepton++; 
-    }    
+    } 
+    */
+    nVetoLepton += vetoElectronsP4->size();
     if(DEBUG) cout << "End 3rd lepton veto" << endl;
 
     isPFMuon_        = isPFMuon;
@@ -2168,8 +2182,8 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
    
 
     int pairIndex = -1;
-    //bool passQualityCuts = (ptL1>20 && ptL2>20 && tightestHPSMVAWP_>=0 && combRelIsoLeg1DBetav2<0.1 && HLTmatch);
-    bool passQualityCuts = (ptL1>10 && ptL2>20 && tightestHPSMVAWP_>=0 && combRelIsoLeg1DBetav2<0.1 && HLTmatchETM);//MB ptL1>20->10, HLTmatch->HLTmatchETM
+    bool passQualityCuts = (ptL1>20 && ptL2>20 && tightestHPSMVAWP_>=0 && combRelIsoLeg1DBetav2<0.1 && HLTmatch);
+    //bool passQualityCuts = (ptL1>10 && ptL2>20 && tightestHPSMVAWP_>=0 && combRelIsoLeg1DBetav2<0.1 && HLTmatchETM);//MB ptL1>20->10, HLTmatch->HLTmatchETM
 
     if( !(run==lastRun && lumi==lastLumi && event==lastEvent) ){
 
@@ -2193,7 +2207,7 @@ void makeTrees_MuTau(string analysis_ = "", string sample_ = "", float xsec_ = 0
 	pairIndex = -1;
     }
     pairIndex_ = pairIndex;
-
+    
     
     
     outTreePtOrd->Fill();
