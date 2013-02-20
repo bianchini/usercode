@@ -175,7 +175,8 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
       edm::LogError("DataNotAvailable")
 	<< "No jets label available \n";
     const pat::JetCollection* jets = jetsHandle.product();
-    
+
+    /* //compute it after identifying leptons
     int nJets30 = 0;
     for(unsigned int jet = 0 ; jet<jets->size(); jet++){
       bool matchedToLept = false;
@@ -192,6 +193,7 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
 	nJets30++;
     }
     if(verbose_) cout << "nJets30 = " << nJets30 << endl;
+    */
 
     math::XYZTLorentzVectorD genVP4;
     math::XYZTLorentzVectorD genLeg1P4(0,0,0,0);
@@ -363,26 +365,45 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
       double leptPt  = -99;
       double leptPhi = -99;
 
+      math::XYZTLorentzVectorD leptonLeg1P4(0,0,0,0); 
+      math::XYZTLorentzVectorD leptonLeg2P4(0,0,0,0); 
+
       if(leg1IsMatched && leg2IsMatched){
 	if(verbose_) cout << "Both gen taus can be matched to reco objects" << endl;
 	leptPt  = (recoLeg1P4+recoLeg2P4).Pt();
 	leptPhi = (recoLeg1P4+recoLeg2P4).Phi();
+	leptonLeg1P4 = recoLeg1P4; leptonLeg2P4 = recoLeg2P4;
       }
       else if(leg1IsMatched && !leg2IsMatched){
 	if(verbose_) cout << "Only one gen tau can be matched to reco objects" << endl;
 	leptPt  = (recoLeg1P4+genVisLeg2P4).Pt();
 	leptPhi = (recoLeg1P4+genVisLeg2P4).Phi();
+	leptonLeg1P4 = recoLeg1P4; leptonLeg2P4 = genVisLeg2P4;
       }
       else if(!leg1IsMatched && leg2IsMatched){
 	if(verbose_) cout << "Only one gen tau can be matched to reco objects" << endl;
 	leptPt  = (genVisLeg1P4+recoLeg2P4).Pt();
 	leptPhi = (genVisLeg1P4+recoLeg2P4).Phi();
+	leptonLeg1P4 = genVisLeg1P4; leptonLeg2P4 = recoLeg2P4;
       }
       else{
 	if(verbose_) cout << "None of the gen taus can be matched to reco objects" << endl;
 	leptPt  = (genVisLeg1P4+genVisLeg2P4).Pt();
 	leptPhi = (genVisLeg1P4+genVisLeg2P4).Phi();
+	leptonLeg1P4 = genVisLeg1P4; leptonLeg2P4 = genVisLeg2P4;
       }
+
+      int nJets30 = 0; 
+      for(unsigned int jet = 0 ; jet<jets->size(); jet++){ 
+	bool matchedToLept = false; 
+	if(Geom::deltaR( leptonLeg1P4, (*jets)[jet].p4())<0.3 ||
+	   Geom::deltaR( leptonLeg2P4, (*jets)[jet].p4())<0.3)
+	  matchedToLept = true; 
+	
+	if(!matchedToLept && (*jets)[jet].pt()>minJetPt_ && TMath::Abs((*jets)[jet].eta())<4.5)  
+	  nJets30++; 
+      } 
+      if(verbose_) cout << "nJets30 = " << nJets30 << endl; 
 
       if(verbose_) cout << "Raw MEt " << scaledMETPtN << endl;
 
@@ -510,16 +531,30 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
       double leptPt  = -99;
       double leptPhi = -99;
       
+      math::XYZTLorentzVectorD leptonLeg1P4(0,0,0,0);  
+
       if(leg1IsMatched){
 	if(verbose_) cout << "The lepton from W decay is matched to reco objects" << endl;
 	leptPt  = recoLeg1P4.Pt();
 	leptPhi = recoLeg1P4.Phi();
+	leptonLeg1P4 = recoLeg1P4;
       }
       else{
 	if(verbose_) cout << "The lepton from W decay is not matched to reco objects" << endl;
 	leptPt  = genVisLeg1P4.Pt();
 	leptPhi = genVisLeg1P4.Phi();
+	leptonLeg1P4 = genVisLeg1P4;
       }
+
+      int nJets30 = 0;  
+      for(unsigned int jet = 0 ; jet<jets->size(); jet++){  
+        bool matchedToLept = false;  
+        if(Geom::deltaR( leptonLeg1P4, (*jets)[jet].p4())<0.3)
+          matchedToLept = true;  
+         
+        if(!matchedToLept && (*jets)[jet].pt()>minJetPt_ && TMath::Abs((*jets)[jet].eta())<4.5)   
+          nJets30++;  
+      }  
 
       if(verbose_) cout << "Raw MEt " << scaledMETPtN << endl;
 
@@ -629,27 +664,46 @@ void MEtRecoilCorrectorProducer::produce(edm::Event & iEvent, const edm::EventSe
       double leptPt  = -99;
       double leptPhi = -99;
       
+      math::XYZTLorentzVectorD leptonLeg1P4(0,0,0,0);  
+      math::XYZTLorentzVectorD leptonLeg2P4(0,0,0,0);  
+      
       if(leg1IsMatched && leg2IsMatched){
 	if(verbose_) cout << "Both gen leptons can be matched to reco objects" << endl;
 	leptPt  = (recoLeg1P4+recoLeg2P4).Pt();
 	leptPhi = (recoLeg1P4+recoLeg2P4).Phi();
+	leptonLeg1P4 = recoLeg1P4; leptonLeg2P4 = recoLeg2P4;
       }
       else if(leg1IsMatched && !leg2IsMatched){
 	if(verbose_) cout << "Only one gen lepton can be matched to reco objects" << endl;
 	leptPt  = (recoLeg1P4+genLeg2P4).Pt();
 	leptPhi = (recoLeg1P4+genLeg2P4).Phi();
+	leptonLeg1P4 = recoLeg1P4; leptonLeg2P4 = genLeg2P4;
       }
       else if(!leg1IsMatched && leg2IsMatched){
 	if(verbose_) cout << "Only one gen lepton can be matched to reco objects" << endl;
 	leptPt  = (genLeg1P4+recoLeg2P4).Pt();
 	leptPhi = (genLeg1P4+recoLeg2P4).Phi();
+	leptonLeg1P4 = genLeg1P4; leptonLeg2P4 = recoLeg2P4;
       }
       else{
 	if(verbose_) cout << "None of the gen leptons can be matched to reco objects" << endl;
 	leptPt  = (genLeg1P4+genLeg2P4).Pt();
 	leptPhi = (genLeg1P4+genLeg2P4).Phi();
+	leptonLeg1P4 = genLeg1P4; leptonLeg2P4 = genLeg2P4;
       }
 
+      int nJets30 = 0;  
+      for(unsigned int jet = 0 ; jet<jets->size(); jet++){  
+        bool matchedToLept = false;  
+        if(Geom::deltaR( leptonLeg1P4, (*jets)[jet].p4())<0.3 || 
+           Geom::deltaR( leptonLeg2P4, (*jets)[jet].p4())<0.3) 
+          matchedToLept = true;  
+	
+        if(!matchedToLept && (*jets)[jet].pt()>minJetPt_ && TMath::Abs((*jets)[jet].eta())<4.5)   
+          nJets30++;  
+      }  
+      if(verbose_) cout << "nJets30 = " << nJets30 << endl;  
+      
       if(verbose_) cout << "Raw MEt " << scaledMETPtN << endl;
 
       if(verbose_) cout << "Evaluating Nominal recoil-corrected MEt" << endl;

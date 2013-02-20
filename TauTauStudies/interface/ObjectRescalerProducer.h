@@ -32,6 +32,12 @@ public:
   }
 
   ~ObjectRescalerProducer(){}
+  math::XYZTLorentzVectorD CompScale(const T& object, double shift){
+    double scale = sqrt( object.energy()*(1+shift)*object.energy()*(1+shift) - object.mass()*object.mass() )/object.p();
+    math::XYZTLorentzVectorD p4( object.px()*scale , object.py()*scale, object.pz()*scale, object.energy()*(1+shift) );
+    
+    return p4;
+  }
 
   void produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   {
@@ -57,12 +63,10 @@ public:
       float shift = fabs(ptr->eta())<1.44 ? shift_[0] : shift_[1];
       shift *= numOfSigmas_;
 
-      double scaleU = sqrt( ptr->energy()*(1+shift)*ptr->energy()*(1+shift) - ptr->mass()*ptr->mass() )/ptr->p();
-      math::XYZTLorentzVectorD p4Up( ptr->px()*scaleU , ptr->py()*scaleU, ptr->pz()*scaleU, ptr->energy()*(1+shift) );
+      math::XYZTLorentzVectorD p4Up = CompScale(*ptr, shift);
       objectU.setP4( p4Up );
 
-      double scaleD = sqrt( ptr->energy()*(1-shift)*ptr->energy()*(1-shift) - ptr->mass()*ptr->mass() )/ptr->p();
-      math::XYZTLorentzVectorD p4Down( ptr->px()*scaleD , ptr->py()*scaleD, ptr->pz()*scaleD, ptr->energy()*(1-shift) );
+      math::XYZTLorentzVectorD p4Down = CompScale(*ptr, -shift);
       objectD.setP4( p4Down );
  
       if(verbose_) 
