@@ -427,11 +427,16 @@ int main(int argc, const char* argv[])
   const edm::ParameterSet& in = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("fwliteInput");
 
   std::string pathToFile( in.getParameter<std::string>("pathToFile" ) );
-  std::string outPath( in.getParameter<std::string>("outPath" ) );
+  std::string outPath(    in.getParameter<std::string>("outPath" ) );
 
   std::string ordering(   in.getParameter<std::string>("ordering" ) );
   double lumi(            in.getParameter<double>("lumi" ) );
   bool verbose(           in.getParameter<bool>("verbose" ) );
+
+  int eventsToDebug = -1;
+  if(in.exists("eventsToDebug")) eventsToDebug = in.getParameter<int>("eventsToDebug") ;
+  int eventsToDebugCounter = 0;
+
 
   std::vector<edm::LuminosityBlockRange> jsonVector;
   if ( in.exists("lumisToProcess") ) 
@@ -782,7 +787,7 @@ int main(int argc, const char* argv[])
     TBranch *genMatchTbarBR  = outTree->Branch("genMatchTbar", &genMatchTbar_,"bmass/F:bpt/F:beta:bphi/F:bstatus/F:wdau1mass/F:wdau1pt/F:wdau1eta:wdau1phi/F:wdau1id/F:wdau2mass/F:wdau2pt/F:wdau2eta:wdau2phi/F:wdau2id/F:wmass/F:wpt/F:weta/F:wphi/F:wid/F:topmass/F:toppt/F:topeta/F:topphi/F:topid/F");
 
     TBranch *recoHiggsBR     = outTree->Branch("recoHiggs",    &recoHiggs_,"hdau1mass/F:hdau1pt/F:hdau1eta:hdau1phi/F:hdau1id/F:hdau2mass/F:hdau2pt/F:hdau2eta:hdau2phi/F:hdau2id/F:hmass/F:hpt/F:heta/F:hphi/F:hid/F");
-    TBranch *genMatchHiggsBR     = outTree->Branch("genMatchHiggs",    &genMatchHiggs_,"hdau1mass/F:hdau1pt/F:hdau1eta:hdau1phi/F:hdau1id/F:hdau2mass/F:hdau2pt/F:hdau2eta:hdau2phi/F:hdau2id/F:hmass/F:hpt/F:heta/F:hphi/F:hid/F");
+    TBranch *genMatchHiggsBR = outTree->Branch("genMatchHiggs",    &genMatchHiggs_,"hdau1mass/F:hdau1pt/F:hdau1eta:hdau1phi/F:hdau1id/F:hdau2mass/F:hdau2pt/F:hdau2eta:hdau2phi/F:hdau2id/F:hmass/F:hpt/F:heta/F:hphi/F:hid/F");
 
 
     //TBranch *BR = outTree->Branch("",&_,"/F");
@@ -843,8 +848,8 @@ int main(int argc, const char* argv[])
     EventInfo ev;
 
     float met[999];
-    float hJetspt[999]; float hJetseta[999]; float hJetsphi[999]; float hJetse[999]; float hJetscsv[999]; float hJetsunc[999]; float hJetsflavor[999]; float hJetsgenpt[999];float hJetsgeneta[999];float hJetsgenphi[999];
-    float aJetspt[999]; float aJetseta[999]; float aJetsphi[999]; float aJetse[999]; float aJetscsv[999]; float aJetsunc[999]; float aJetsflavor[999]; float aJetsgenpt[999];float aJetsgeneta[999];float aJetsgenphi[999];
+    float hJetspt[999]; float hJetseta[999]; float hJetsphi[999]; float hJetse[999]; float hJetscsv[999]; float hJetsunc[999]; float hJetsflavor[999]; float hJetsgenpt[999];float hJetsgeneta[999];float hJetsgenphi[999]; float hJetspuJetIdL[999]; bool hJetsid[999];
+    float aJetspt[999]; float aJetseta[999]; float aJetsphi[999]; float aJetse[999]; float aJetscsv[999]; float aJetsunc[999]; float aJetsflavor[999]; float aJetsgenpt[999];float aJetsgeneta[999];float aJetsgenphi[999]; float aJetspuJetIdL[999]; bool aJetsid[999];
     float vLeptonpt[999]; float vLeptoneta[999]; float vLeptonphi[999];
     float vLeptonpfCombRelIso[999];
     float SimBspt[999]; float SimBseta[999]; float SimBsphi[999]; float SimBsmass[999];
@@ -867,6 +872,9 @@ int main(int argc, const char* argv[])
     outTree->SetBranchAddress("hJet_genPt",  hJetsgenpt);
     outTree->SetBranchAddress("hJet_genEta", hJetsgeneta);
     outTree->SetBranchAddress("hJet_genPhi", hJetsgenphi);
+    outTree->SetBranchAddress("hJet_puJetIdL", hJetspuJetIdL);
+    outTree->SetBranchAddress("hJet_id", hJetsid);
+
 
     outTree->SetBranchAddress("aJet_pt",   aJetspt);
     outTree->SetBranchAddress("aJet_eta",  aJetseta);
@@ -878,6 +886,8 @@ int main(int argc, const char* argv[])
     outTree->SetBranchAddress("aJet_genPt",  aJetsgenpt);
     outTree->SetBranchAddress("aJet_genEta", aJetsgeneta);
     outTree->SetBranchAddress("aJet_genPhi", aJetsgenphi);
+    outTree->SetBranchAddress("aJet_puJetIdL", aJetspuJetIdL);
+    outTree->SetBranchAddress("aJet_id", aJetsid);
 
     outTree->SetBranchAddress("vLepton_pt", vLeptonpt);
     outTree->SetBranchAddress("vLepton_phi",vLeptonphi);
@@ -1082,45 +1092,7 @@ int main(int argc, const char* argv[])
 
 	hMapPt[ hJetspt[i]]   = i;
 
-	float jetMass2 = hJetse[i]*hJetse[i] -  TMath::Power(hJetspt[i]*TMath::CosH(hJetseta[i]) ,2);
-	LV jetLV(hJetspt[i], hJetseta[i], hJetsphi[i], TMath::Sqrt(jetMass2));
 	LV genJetLV(hJetsgenpt[i], hJetsgeneta[i], hJetsgenphi[i], 0.0);
-
-	if( topBLV.Pt()>0   && Geom::deltaR(topBLV, genJetLV) <GENJETDR ){
-	  recotopBLV   = jetLV;
-	  topB_flag++;
-	}
-	else if( abs(genTop.wdau1id)<6 && topW1LV.Pt()>0  && Geom::deltaR(topW1LV,genJetLV) <GENJETDR ){
-	  recotopW1LV  = jetLV;
-	  topW1_flag++;
-	}
-	else if( abs(genTop.wdau2id)<6 && topW2LV.Pt()>0  && Geom::deltaR(topW2LV,genJetLV) <GENJETDR ){
-	  recotopW2LV  = jetLV;
-	  topW2_flag++;
-	}
-	else if( atopBLV.Pt()>0  && Geom::deltaR(atopBLV, genJetLV)<GENJETDR ){
-	  recoatopBLV  = jetLV;
-	  atopB_flag++;
-	}
-	else if( abs(genTbar.wdau1id)<6 && atopW1LV.Pt()>0 && Geom::deltaR(atopW1LV,genJetLV)<GENJETDR ){
-	  recoatopW1LV = jetLV;
-	  atopW1_flag++;
-	}
-	else if( abs(genTbar.wdau2id)<6 && atopW2LV.Pt()>0 && Geom::deltaR(atopW2LV,genJetLV)<GENJETDR ){
-	  recoatopW2LV = jetLV;
-	  atopW2_flag++;
-	}
-	else if( genBLV.Pt()>0 && Geom::deltaR(genBLV,genJetLV)<GENJETDR ){
-	  recohiggsB1LV = jetLV;
-	  higgsB1_flag++;
-	}
-	else if( genBbarLV.Pt()>0 && Geom::deltaR(genBbarLV,genJetLV)<GENJETDR ){
-	  recohiggsB2LV = jetLV;
-	  higgsB2_flag++;
-	}
-	else{}
-
-
 	for(unsigned int b = 0; b < allBs.size(); b++){
 	  LV bLV = allBs[b];
 	  if( genJetLV.Pt()>20. && Geom::deltaR(bLV,genJetLV )< 0.5 ){
@@ -1137,6 +1109,51 @@ int main(int argc, const char* argv[])
 	  numOfCsFlav_++;	
 	  if( TMath::Abs(genJetLV.Eta())<2.5 ) numOfCsFlavAcc_++;
 	}
+
+
+	bool jetID = hJetspuJetIdL[i]>0.5 && TMath::Abs(hJetseta[i])<5.0 && hJetsid[i];
+	if(!jetID){
+	  if(verbose) cout << "hJet " << i << "does not pass" << endl;
+	  continue;
+	}
+
+
+	float jetMass2 = hJetse[i]*hJetse[i] -  TMath::Power(hJetspt[i]*TMath::CosH(hJetseta[i]) ,2);
+	LV jetLV(hJetspt[i], hJetseta[i], hJetsphi[i], TMath::Sqrt(jetMass2));
+
+	if( topBLV.Pt()>0   && Geom::deltaR(topBLV, jetLV) <GENJETDR ){
+	  recotopBLV   = jetLV;
+	  topB_flag++;
+	}
+	else if( abs(genTop.wdau1id)<6 && topW1LV.Pt()>0  && Geom::deltaR(topW1LV,jetLV) <GENJETDR ){
+	  recotopW1LV  = jetLV;
+	  topW1_flag++;
+	}
+	else if( abs(genTop.wdau2id)<6 && topW2LV.Pt()>0  && Geom::deltaR(topW2LV,jetLV) <GENJETDR ){
+	  recotopW2LV  = jetLV;
+	  topW2_flag++;
+	}
+	else if( atopBLV.Pt()>0  && Geom::deltaR(atopBLV, jetLV)<GENJETDR ){
+	  recoatopBLV  = jetLV;
+	  atopB_flag++;
+	}
+	else if( abs(genTbar.wdau1id)<6 && atopW1LV.Pt()>0 && Geom::deltaR(atopW1LV,jetLV)<GENJETDR ){
+	  recoatopW1LV = jetLV;
+	  atopW1_flag++;
+	}
+	else if( abs(genTbar.wdau2id)<6 && atopW2LV.Pt()>0 && Geom::deltaR(atopW2LV,jetLV)<GENJETDR ){
+	  recoatopW2LV = jetLV;
+	  atopW2_flag++;
+	}
+	else if( genBLV.Pt()>0 && Geom::deltaR(genBLV,jetLV)<GENJETDR ){
+	  recohiggsB1LV = jetLV;
+	  higgsB1_flag++;
+	}
+	else if( genBbarLV.Pt()>0 && Geom::deltaR(genBbarLV,jetLV)<GENJETDR ){
+	  recohiggsB2LV = jetLV;
+	  higgsB2_flag++;
+	}
+	else{}
 
 
 	if( hJetspt[i] > 20.){
@@ -1177,47 +1194,10 @@ int main(int argc, const char* argv[])
 
 
       for(int i = 0; i < naJets; i++){
+
 	aMapPt[ aJetspt[i]] = i;
 
-	float jetMass2 = aJetse[i]*aJetse[i] -  TMath::Power(aJetspt[i]*TMath::CosH(aJetseta[i]),2);
-	LV jetLV(aJetspt[i], aJetseta[i], aJetsphi[i],  TMath::Sqrt(jetMass2));
 	LV genJetLV(aJetsgenpt[i], aJetsgeneta[i], aJetsgenphi[i], 0.0);
-
-	if( topBLV.Pt()>0   && Geom::deltaR(topBLV, genJetLV) <GENJETDR ){
-          recotopBLV   = jetLV;
-          topB_flag++;
-        }
-        else if( topW1LV.Pt()>0  && Geom::deltaR(topW1LV,genJetLV) <GENJETDR ){
-          recotopW1LV  = jetLV;
-          topW1_flag++;
-        }
-        else if( topW2LV.Pt()>0  && Geom::deltaR(topW2LV,genJetLV) <GENJETDR ){
-          recotopW2LV  = jetLV;
-          topW2_flag++;
-        }
-        else if( atopBLV.Pt()>0  && Geom::deltaR(atopBLV, genJetLV)<GENJETDR ){
-          recoatopBLV  = jetLV;
-          atopB_flag++;
-        }
-        else if( atopW1LV.Pt()>0 && Geom::deltaR(atopW1LV,genJetLV)<GENJETDR ){
-          recoatopW1LV = jetLV;
-          atopW1_flag++;
-        }
-        else if( atopW2LV.Pt()>0 && Geom::deltaR(atopW2LV,genJetLV)<GENJETDR ){
-          recoatopW2LV = jetLV;
-          atopW2_flag++;
-        }
-	else if( genBLV.Pt()>0 && Geom::deltaR(genBLV,genJetLV)<GENJETDR ){
-	  recohiggsB1LV = jetLV;
-	  higgsB1_flag++;
-	}
-	else if( genBbarLV.Pt()>0 && Geom::deltaR(genBbarLV,genJetLV)<GENJETDR ){
-	  recohiggsB2LV = jetLV;
-	  higgsB2_flag++;
-	}
-	else{}
-
-
 	for(unsigned int b = 0; b < allBs.size(); b++){
 	  LV bLV = allBs[b];
 	  if( genJetLV.Pt()>20. && Geom::deltaR(bLV,genJetLV )< 0.5 ){
@@ -1236,11 +1216,55 @@ int main(int argc, const char* argv[])
 	}
 
 
+	bool jetID = aJetspuJetIdL[i]>0.5 && TMath::Abs(aJetseta[i])<5.0 && aJetsid[i];
+	if(!jetID){
+	  if(verbose) cout << "aJet " << i << "does not pass" << endl;
+	  continue;
+	}
+
+	float jetMass2 = aJetse[i]*aJetse[i] -  TMath::Power(aJetspt[i]*TMath::CosH(aJetseta[i]),2);
+	LV jetLV(aJetspt[i], aJetseta[i], aJetsphi[i],  TMath::Sqrt(jetMass2));
+
+	if( topBLV.Pt()>0   && Geom::deltaR(topBLV, jetLV) <GENJETDR ){
+          recotopBLV   = jetLV;
+          topB_flag++;
+        }
+        else if( topW1LV.Pt()>0  && Geom::deltaR(topW1LV,jetLV) <GENJETDR ){
+          recotopW1LV  = jetLV;
+          topW1_flag++;
+        }
+        else if( topW2LV.Pt()>0  && Geom::deltaR(topW2LV,jetLV) <GENJETDR ){
+          recotopW2LV  = jetLV;
+          topW2_flag++;
+        }
+        else if( atopBLV.Pt()>0  && Geom::deltaR(atopBLV, jetLV)<GENJETDR ){
+          recoatopBLV  = jetLV;
+          atopB_flag++;
+        }
+        else if( atopW1LV.Pt()>0 && Geom::deltaR(atopW1LV,jetLV)<GENJETDR ){
+          recoatopW1LV = jetLV;
+          atopW1_flag++;
+        }
+        else if( atopW2LV.Pt()>0 && Geom::deltaR(atopW2LV,jetLV)<GENJETDR ){
+          recoatopW2LV = jetLV;
+          atopW2_flag++;
+        }
+	else if( genBLV.Pt()>0 && Geom::deltaR(genBLV,jetLV)<GENJETDR ){
+	  recohiggsB1LV = jetLV;
+	  higgsB1_flag++;
+	}
+	else if( genBbarLV.Pt()>0 && Geom::deltaR(genBbarLV,jetLV)<GENJETDR ){
+	  recohiggsB2LV = jetLV;
+	  higgsB2_flag++;
+	}
+	else{}
+
+
 	if( aJetspt[i] > 20.){
 	  numJets20_++;
 	  if( aJetscsv[i] > BTAGTHR) numJets20bTag_++;
 	  MHT20LV += jetLV;
-	  sumAllJet20Pt_ +=  hJetspt[i];
+	  sumAllJet20Pt_ +=  aJetspt[i];
 	}
 	if( aJetspt[i]>30.){
 	  numJets30_++;
@@ -1906,6 +1930,230 @@ int main(int argc, const char* argv[])
 
       }
 
+
+      if(eventsToDebug>0 && eventsToDebugCounter<eventsToDebug){
+
+	bool isTopToHad   = abs(genTop.wdau1id)<6 && abs(genTop.wdau2id)<6 && abs(genTbar.wdau1id)>=11;
+	bool isTopInAcc   = genTop.wdau1pt>30 && genTop.wdau2pt>30 && genTop.bpt>30 && genTbar.bpt>30  && TMath::Abs(genTop.wdau1eta)<5.0 && TMath::Abs(genTop.wdau2eta)<5.0 && TMath::Abs(genTop.beta)<5.0 && TMath::Abs(genTbar.beta)<5.0;
+	bool isHiggsInAcc = genB.pt>30 && genBbar.pt>30 && abs(genB.eta)<5.0 && TMath::Abs(genBbar.eta)<5.0;
+
+	if(isTopToHad && isTopInAcc && isHiggsInAcc){
+
+	  eventsToDebugCounter++;
+
+	  cout << "************ DEBUG" << endl;
+	  cout << "In event " << ev.event << ", the hadronic top and the higgs decay in acceptance...number of reconstructed jets: " << numJets30_ << endl;
+	  cout << "The partons are " << endl;
+	  cout << string(Form("W(1). (%.0f,%.1f,%.1f)",genTop.wdau1pt,genTop.wdau1eta,genTop.wdau1phi)) << endl;
+	  cout << string(Form("W(2). (%.0f,%.1f,%.1f)",genTop.wdau2pt,genTop.wdau2eta,genTop.wdau2phi)) << endl;
+	  cout << string(Form("b.    (%.0f,%.1f,%.1f)",genTop.bpt,genTop.beta,genTop.bphi)) << endl;
+	  cout << string(Form("bbar. (%.0f,%.1f,%.1f)",genTbar.bpt,genTbar.beta,genTbar.bphi)) << endl;
+	  cout << string(Form("H(1). (%.0f,%.1f,%.1f)",genB.pt,genB.eta,genB.phi)) << endl;
+	  cout << string(Form("H(2). (%.0f,%.1f,%.1f)",genBbar.pt,genBbar.eta,genBbar.phi)) << endl;
+
+	  float minDeltaR = 999.;
+	  if(topHiggsDecay.size()>1){
+	    for(unsigned int k = 0; k < topHiggsDecay.size()-1; k++){
+	      for(unsigned int l = k+1; l < topHiggsDecay.size(); l++){
+		LV first  = topHiggsDecay[k];
+		LV second = topHiggsDecay[l];
+		float deltaR = Geom::deltaR(first,second);
+		if( deltaR < minDeltaR) minDeltaR = deltaR;
+	      }
+	    }
+	  }
+	  cout << " ==> The smallest deltaR between all partons is " << string(Form("%.1f",minDeltaR)) << endl;
+
+	  if(numJets30_>=5 && numJets30_<=7){
+	    cout << numJets30_ << " jets have been reconstructed: " << endl;
+	    cout << string(Form("1. (%.0f,%.1f,%.1f)",pt1_,eta1_,phi1_)) << endl;
+	    cout << string(Form("2. (%.0f,%.1f,%.1f)",pt2_,eta2_,phi2_)) << endl;
+	    cout << string(Form("3. (%.0f,%.1f,%.1f)",pt3_,eta3_,phi3_)) << endl;
+	    cout << string(Form("4. (%.0f,%.1f,%.1f)",pt4_,eta4_,phi4_)) << endl;
+	    cout << string(Form("5. (%.0f,%.1f,%.1f)",pt5_,eta5_,phi5_)) << endl;
+	    if(numJets30_>=6) cout << string(Form("6. (%.0f,%.1f,%.1f)",pt6_,eta6_,phi6_)) << endl;	  
+	    if(numJets30_==7) cout << string(Form("7. (%.0f,%.1f,%.1f)",pt7_,eta7_,phi7_)) << endl;	  
+
+	    int topB_hits   = 0;
+	    int topW1_hits  = 0;
+	    int topW2_hits  = 0;
+	    int atopB_hits  = 0;
+	    int higgsB1_hits= 0;
+	    int higgsB2_hits= 0;
+
+	    vector<LV> myJets; 
+	    myJets.push_back(LV(pt1_,eta1_,phi1_,mass1_));
+	    myJets.push_back(LV(pt2_,eta2_,phi2_,mass2_));
+	    myJets.push_back(LV(pt3_,eta3_,phi3_,mass3_));
+	    myJets.push_back(LV(pt4_,eta4_,phi4_,mass4_));
+	    myJets.push_back(LV(pt5_,eta5_,phi5_,mass5_));
+	    if(numJets30_>=6) myJets.push_back(LV(pt6_,eta6_,phi6_,mass6_));
+	    if(numJets30_==7) myJets.push_back(LV(pt7_,eta7_,phi7_,mass7_));
+
+	    map<unsigned int, int> recoJetHits;
+	    for(unsigned int k = 0 ; k <myJets.size() ; k++  ) recoJetHits[k] = 0;
+
+	    for(unsigned int k = 0 ; k <myJets.size() ; k++  ){
+	      if(Geom::deltaR( myJets[k],topW1LV ) < 0.5 ){
+		cout << "W(1) is dR = " << string(Form("%.1f",Geom::deltaR( myJets[k],topW1LV ) )) << " away from jet #" << k+1 << endl;
+		topW1_hits++;
+		recoJetHits[k]++;
+	      }
+	      if(Geom::deltaR( myJets[k],topW2LV ) < 0.5 ){
+		cout << "W(2) is dR = " << string(Form("%.1f",Geom::deltaR( myJets[k],topW2LV ) )) << " away from jet #" << k+1 << endl;
+		topW2_hits++;
+		recoJetHits[k]++;
+	      }
+	      if(Geom::deltaR( myJets[k],topBLV ) < 0.5 ){
+		cout << "b    is dR = " << string(Form("%.1f",Geom::deltaR( myJets[k],topBLV ) )) << " away from jet #" << k+1 << endl;
+		topB_hits++;
+		recoJetHits[k]++;
+	      }
+	      if(Geom::deltaR( myJets[k],atopBLV ) < 0.5 ){
+		cout << "bbar is dR = " << string(Form("%.1f",Geom::deltaR( myJets[k],atopBLV ) )) << " away from jet #" << k+1 << endl;
+		atopB_hits++;
+		recoJetHits[k]++;
+	      }
+	      if(Geom::deltaR( myJets[k],genBLV ) < 0.5 ){
+		cout << "H(1) is dR = " << string(Form("%.1f",Geom::deltaR( myJets[k], genBLV) )) << " away from jet #" << k+1 << endl;
+		higgsB1_hits++;
+		recoJetHits[k]++;
+	      }
+	      if(Geom::deltaR( myJets[k],genBbarLV ) < 0.5 ){
+		cout << "H(2) is dR = " << string(Form("%.1f",Geom::deltaR( myJets[k], genBbarLV) )) << " away from jet #" << k+1 << endl;
+		higgsB2_hits++;
+		recoJetHits[k]++;
+	      }
+	    }
+	    cout << "Gen Summary:" << endl;
+	    cout << "W(1) has " << topW1_hits << "matches" << endl;
+	    if( topW1_hits==0){
+	      cout << "... looking at all jets>20 GeV..." << endl;
+	      for(int i = 0; i < nhJets; i++){
+		float jetMass2 = hJetse[i]*hJetse[i] -  TMath::Power(hJetspt[i]*TMath::CosH(hJetseta[i]) ,2);
+		LV jetLV(hJetspt[i], hJetseta[i], hJetsphi[i], TMath::Sqrt(jetMass2));
+		if(Geom::deltaR( jetLV, topW1LV) < 0.5 ){
+		  cout << "W(1) can be matched to this jet: " << string(Form("(%.0f,%.1f,%.1f)",jetLV.Pt(),jetLV.Eta(),jetLV.Phi())) <<  endl;
+		}
+	      }
+	      for(int i = 0; i < naJets; i++){
+		float jetMass2 = aJetse[i]*aJetse[i] -  TMath::Power(aJetspt[i]*TMath::CosH(aJetseta[i]) ,2);
+		LV jetLV(aJetspt[i], aJetseta[i], aJetsphi[i], TMath::Sqrt(jetMass2));
+		if(Geom::deltaR( jetLV, topW1LV) < 0.5 ){
+		  cout << "W(1) can be matched to this jet: " << string(Form("(%.0f,%.1f,%.1f)",jetLV.Pt(),jetLV.Eta(),jetLV.Phi())) << endl;
+		}
+	      }
+	    }
+	    cout << "W(2) has " << topW2_hits << "matches" << endl;
+	    if( topW2_hits==0){
+	      cout << "... looking at all jets>20 GeV..." << endl;
+	      for(int i = 0; i < nhJets; i++){
+		float jetMass2 = hJetse[i]*hJetse[i] -  TMath::Power(hJetspt[i]*TMath::CosH(hJetseta[i]) ,2);
+		LV jetLV(hJetspt[i], hJetseta[i], hJetsphi[i], TMath::Sqrt(jetMass2));
+		if(Geom::deltaR( jetLV, topW2LV) < 0.5 ){
+		  cout << "W(2) can be matched to this jet: " << string(Form("(%.0f,%.1f,%.1f)",jetLV.Pt(),jetLV.Eta(),jetLV.Phi())) << endl;
+		}
+	      }
+	      for(int i = 0; i < naJets; i++){
+		float jetMass2 = aJetse[i]*aJetse[i] -  TMath::Power(aJetspt[i]*TMath::CosH(aJetseta[i]) ,2);
+		LV jetLV(aJetspt[i], aJetseta[i], aJetsphi[i], TMath::Sqrt(jetMass2));
+		if(Geom::deltaR( jetLV, topW2LV) < 0.5 ){
+		  cout << "W(2) can be matched to this jet: " << string(Form("(%.0f,%.1f,%.1f)",jetLV.Pt(),jetLV.Eta(),jetLV.Phi())) << endl;
+		}
+	      }
+	    }
+	    cout << "b    has " << topB_hits << "matches" << endl;
+	    if( topB_hits==0){
+	      cout << "... looking at all jets>20 GeV..." << endl;
+	      for(int i = 0; i < nhJets; i++){
+		float jetMass2 = hJetse[i]*hJetse[i] -  TMath::Power(hJetspt[i]*TMath::CosH(hJetseta[i]) ,2);
+		LV jetLV(hJetspt[i], hJetseta[i], hJetsphi[i], TMath::Sqrt(jetMass2));
+		if(Geom::deltaR( jetLV, topBLV) < 0.5 ){
+		  cout << "b can be matched to this jet: " << string(Form("(%.0f,%.1f,%.1f)",jetLV.Pt(),jetLV.Eta(),jetLV.Phi())) << endl;
+		}
+	      }
+	      for(int i = 0; i < naJets; i++){
+		float jetMass2 = aJetse[i]*aJetse[i] -  TMath::Power(aJetspt[i]*TMath::CosH(aJetseta[i]) ,2);
+		LV jetLV(aJetspt[i], aJetseta[i], aJetsphi[i], TMath::Sqrt(jetMass2));
+		if(Geom::deltaR( jetLV, topBLV) < 0.5 ){
+		  cout << "b can be matched to this jet: " << string(Form("(%.0f,%.1f,%.1f)",jetLV.Pt(),jetLV.Eta(),jetLV.Phi())) << endl;
+		}
+	      }
+	    }
+	    cout << "bbar has " << atopB_hits << "matches" << endl;
+	    if( atopB_hits==0){
+	      cout << "... looking at all jets>20 GeV..." << endl;
+	      for(int i = 0; i < nhJets; i++){
+		float jetMass2 = hJetse[i]*hJetse[i] -  TMath::Power(hJetspt[i]*TMath::CosH(hJetseta[i]) ,2);
+		LV jetLV(hJetspt[i], hJetseta[i], hJetsphi[i], TMath::Sqrt(jetMass2));
+		if(Geom::deltaR( jetLV, atopBLV) < 0.5 ){
+		  cout << "bbar can be matched to this jet: " << string(Form("(%.0f,%.1f,%.1f)",jetLV.Pt(),jetLV.Eta(),jetLV.Phi())) << endl;
+		}
+	      }
+	      for(int i = 0; i < naJets; i++){
+		float jetMass2 = aJetse[i]*aJetse[i] -  TMath::Power(aJetspt[i]*TMath::CosH(aJetseta[i]) ,2);
+		LV jetLV(aJetspt[i], aJetseta[i], aJetsphi[i], TMath::Sqrt(jetMass2));
+		if(Geom::deltaR( jetLV, atopBLV) < 0.5 ){
+		  cout << "bbar can be matched to this jet: " << string(Form("(%.0f,%.1f,%.1f)",jetLV.Pt(),jetLV.Eta(),jetLV.Phi())) << endl;
+		}
+	      }
+	    }
+	    cout << "H(1) has " << higgsB1_hits << "matches" << endl;
+	    if( higgsB1_hits==0){
+	      cout << "... looking at all jets>20 GeV..." << endl;
+	      for(int i = 0; i < nhJets; i++){
+		float jetMass2 = hJetse[i]*hJetse[i] -  TMath::Power(hJetspt[i]*TMath::CosH(hJetseta[i]) ,2);
+		LV jetLV(hJetspt[i], hJetseta[i], hJetsphi[i], TMath::Sqrt(jetMass2));
+		if(Geom::deltaR( jetLV, genBLV) < 0.5 ){
+		  cout << "H(1) can be matched to this jet: " << string(Form("(%.0f,%.1f,%.1f)",jetLV.Pt(),jetLV.Eta(),jetLV.Phi())) << endl;
+		}
+	      }
+	      for(int i = 0; i < naJets; i++){
+		float jetMass2 = aJetse[i]*aJetse[i] -  TMath::Power(aJetspt[i]*TMath::CosH(aJetseta[i]) ,2);
+		LV jetLV(aJetspt[i], aJetseta[i], aJetsphi[i], TMath::Sqrt(jetMass2));
+		if(Geom::deltaR( jetLV, genBLV) < 0.5 ){
+		  cout << "H(1) can be matched to this jet: " << string(Form("(%.0f,%.1f,%.1f)",jetLV.Pt(),jetLV.Eta(),jetLV.Phi())) << endl;
+		}
+	      }
+	    }
+	    cout << "H(2) has " << higgsB2_hits << "matches" << endl;
+	    if( higgsB2_hits==0){
+	      cout << "... looking at all jets>20 GeV..." << endl;
+	      for(int i = 0; i < nhJets; i++){
+		float jetMass2 = hJetse[i]*hJetse[i] -  TMath::Power(hJetspt[i]*TMath::CosH(hJetseta[i]) ,2);
+		LV jetLV(hJetspt[i], hJetseta[i], hJetsphi[i], TMath::Sqrt(jetMass2));
+		if(Geom::deltaR( jetLV, genBbarLV) < 0.5 ){
+		  cout << "H(2) can be matched to this jet: " << string(Form("(%.0f,%.1f,%.1f)",jetLV.Pt(),jetLV.Eta(),jetLV.Phi())) << endl;
+		}
+	      }
+	      for(int i = 0; i < naJets; i++){
+		float jetMass2 = aJetse[i]*aJetse[i] -  TMath::Power(aJetspt[i]*TMath::CosH(aJetseta[i]) ,2);
+		LV jetLV(aJetspt[i], aJetseta[i], aJetsphi[i], TMath::Sqrt(jetMass2));
+		if(Geom::deltaR( jetLV, genBbarLV) < 0.5 ){
+		  cout << "H(2) can be matched to this jet: " << string(Form("(%.0f,%.1f,%.1f)",jetLV.Pt(),jetLV.Eta(),jetLV.Phi())) << endl;
+		}
+	      }
+	    }
+	    cout << "Reco Summary:" << endl;
+	    for(unsigned int k = 0 ; k <myJets.size() ; k++ ){
+	      cout << "Jet #" << k+1 << "has " << (recoJetHits[k]) << " matches";
+	      int hitsk = recoJetHits[k];
+	      if( (hitsk == 0) ){
+		cout << " ==> this jet is not matched to any parton... flavor ";
+		if(k==0) cout << flavor1_ << endl;
+		if(k==1) cout << flavor2_ << endl;
+		if(k==2) cout << flavor3_ << endl;
+		if(k==3) cout << flavor4_ << endl;
+		if(k==4) cout << flavor5_ << endl;
+		if(k==5) cout << flavor6_ << endl;
+		if(k==6) cout << flavor7_ << endl;
+	      }
+	      if(  (hitsk == 1)  ) cout << " ==> 1 <-> 1 match" << endl;
+	      if(  (hitsk == 2)  ) cout << " ==> probably this jet merges two partons" << endl;
+	    }
+	  } // numJets30_
+	}
+      }
 
 
 
