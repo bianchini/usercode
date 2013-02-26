@@ -78,7 +78,7 @@ def processAllDebugBatch(samples):
 ###########################################
 ###########################################
 
-def processAllBatch(samples, skims, redoStep3=False):
+def processAllBatch(samples, skims, redoStep3):
 
     print "Processing: "
     i = 0
@@ -140,7 +140,7 @@ def processAllBatch(samples, skims, redoStep3=False):
             for name in outFiles:
                 if re.search("FAILURE",name)!=None:
                     skipStep3 = False
-            skipStep3 = (skipStep3 or redoStep3)
+            skipStep3 = (skipStep3 and not redoStep3)
             if skipStep3:
                 print "File "+fileN+sample[0]+".root is already at destination, proceed with Skim..."
             else:
@@ -196,22 +196,32 @@ samples = [
     #['SingleMuRun2012CAug24RerecoEdmV42',  'SingleMu_4'],
     #['SingleMuRun2012CPromptv2EdmV42',     'SingleMu_5'],
     #['SingleMuRun2012CPromptV2TopUpEdmV42','SingleMu_6']
-    ['DoubleElectron_Run2012A-13Jul2012-v1_ProcFIXED',   'DoubleEle_1'],
-    ['DoubleElectron_Run2012A-recover-06Aug2012-v1_ProcV2','DoubleEle_2'],
-    ['DoubleElectron_Run2012B-13Jul2012-v1_ProcFIXED','DoubleEle_3'],
-    ['DoubleElectronRun2012CAug24RerecoEdmV42','DoubleEle_4'],
-    ['DoubleElectron_Run2012C-PromptReco-v2_HBB_EDMNtupleV42_ProcV1','DoubleEle_5'],
-    ['DoubleElectron_Run2012C-PromptReco-v2_HBB_EDMNtupleV42_ProcV2','DoubleEle_6'],
+    #['DoubleElectron_Run2012A-13Jul2012-v1_ProcFIXED',   'DoubleEle_1'],
+    #['DoubleElectron_Run2012A-recover-06Aug2012-v1_ProcV2','DoubleEle_2'],
+    #['DoubleElectron_Run2012B-13Jul2012-v1_ProcFIXED','DoubleEle_3'],
+    #['DoubleElectronRun2012CAug24RerecoEdmV42','DoubleEle_4'],
+    #['DoubleElectron_Run2012C-PromptReco-v2_HBB_EDMNtupleV42_ProcV1','DoubleEle_5'],
+    #['DoubleElectron_Run2012C-PromptReco-v2_HBB_EDMNtupleV42_ProcV2','DoubleEle_6'],
+    #['TTH_HToBB_M-110_8TeV-pythia6','TTH110'],
+    #['TTH_HToBB_M-115_8TeV-pythia6','TTH115'],
+    #['TTH_HToBB_M-120_8TeV-pythia6','TTH120'],
+    ['TTH_HToBB_M-125_8TeV-pythia6','TTH125'],
+    #['TTH_HToBB_M-130_8TeV-pythia6','TTH130'],
+    #['TTH_HToBB_M-135_8TeV-pythia6','TTH135'],
+    #['TTWJets_8TeV-madgraph','TTW'],
+    #['TTZJets_8TeV-madgraph','TTZ'],
+    #['WJetsToLNu_TuneZ2Star_8TeV-madgraph-tarball','WJets']
+    #['DYJetsToLL_M-10To50_TuneZ2Star_8TeV-madgraph','DYJets10to50']
     ]
 
 skims = [
-    #['VType0','numJets30bTag>=1&&Vtype==0&&numJets30>=2&&pt1>30&&pt2>30'],
-    #['VType1','numJets30bTag>=1&&Vtype==1&&numJets30>=2&&pt1>30&&pt2>30'],
-    #['VType2','numJets30bTag>=1&&Vtype==2&&numJets30>=3&&pt1>30&&pt2>30&&pt3>30'],
-    #['VType3','numJets30bTag>=1&&Vtype==3&&numJets30>=3&&pt1>30&&pt2>30&&pt3>30']
+    #['VType0','numJets30bTag>=1&&Vtype==0&&numJets30>=2&&jet1.pt>30&&jet2.pt>30'],
+    #['VType1','numJets30bTag>=1&&Vtype==1&&numJets30>=2&&jet1.pt>30&&jet2.pt>30'],
+    #['VType2','numJets30bTag>=1&&Vtype==2&&numJets30>=3&&jet1.pt>30&&jet2.pt>30&&jet3.pt>30'],
+    #['VType3','numJets30bTag>=1&&Vtype==3&&numJets30>=3&&jet1.pt>30&&jet2.pt>30&&jet3.pt>30']
     ]
-skims = []
+#skims = []
 
 #processAll(samples)
-processAllBatch(samples, skims, False)
+processAllBatch(samples, skims, True)
 #processAllDebugBatch(samples)
