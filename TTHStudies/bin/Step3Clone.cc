@@ -110,6 +110,10 @@ struct sorterByPt {
    float topeta;
    float topphi;
    float topid;
+   float bbarmass;
+   float bbarpt;
+   float bbareta;
+   float bbarphi;
  } recoTopInfo;
 
 typedef struct
@@ -213,6 +217,10 @@ void resetTopInfo(recoTopInfo &info){
   info.topeta = -99;
   info.topphi = -99;
   info.topid  = -99;
+  info.bbarmass = -99;
+  info.bbarpt  = -99;
+  info.bbareta = -99;
+  info.bbarphi = -99;
 }
 
 
@@ -377,6 +385,7 @@ float bestHiggsMass( std::vector<LV> leptons, std::vector<LV> mets,
 //    0  => jet matched to higgs b quarks
 // +/-1  => jet matched to top/antitop b quarks
 // +/-2  => jet matched to top/antitop W quarks
+//    4  => ambiguous match
 
 void findGenMatch(int& genMatch, LV genJet, LV topBLV, LV topW1LV, LV topW2LV, LV atopBLV, LV atopW1LV, LV atopW2LV, LV genBLV, LV genBbarLV){
 
@@ -385,33 +394,47 @@ void findGenMatch(int& genMatch, LV genJet, LV topBLV, LV topW1LV, LV topW2LV, L
     return;
   }
 
-  if( topBLV.Pt()>0 && Geom::deltaR(genJet, topBLV)            < GENJETDR ){
+  int numMatches = 0;
+
+  if( topBLV.Pt()>0 && Geom::deltaR(genJet, topBLV)       < GENJETDR ){
     genMatch = 1;
+    numMatches++;
   }
-  else if( topW1LV.Pt()>0 && Geom::deltaR(genJet, topW1LV)     < GENJETDR ){
+  if( topW1LV.Pt()>0 && Geom::deltaR(genJet, topW1LV)     < GENJETDR ){
     genMatch = 2;
+    numMatches++;
   }
-  else if( topW2LV.Pt()>0 && Geom::deltaR(genJet, topW2LV)     < GENJETDR ){
+  if( topW2LV.Pt()>0 && Geom::deltaR(genJet, topW2LV)     < GENJETDR ){
     genMatch = 2;
+    numMatches++;
   }
-  else if( atopBLV.Pt()>0 && Geom::deltaR(genJet, atopBLV)     < GENJETDR ){
+  if( atopBLV.Pt()>0 && Geom::deltaR(genJet, atopBLV)     < GENJETDR ){
     genMatch = -1;
+    numMatches++;
   }
-  else if( atopW1LV.Pt()>0 && Geom::deltaR(genJet, atopW1LV)   < GENJETDR ){
+  if( atopW1LV.Pt()>0 && Geom::deltaR(genJet, atopW1LV)   < GENJETDR ){
     genMatch = -2;
+    numMatches++;
   }
-  else if( atopW2LV.Pt()>0 && Geom::deltaR(genJet, atopW2LV)   < GENJETDR ){
+  if( atopW2LV.Pt()>0 && Geom::deltaR(genJet, atopW2LV)   < GENJETDR ){
     genMatch = -2;
+    numMatches++;
   }
-  else if( genBLV.Pt()>0 && Geom::deltaR(genJet, genBLV)       < GENJETDR ){
+  if( genBLV.Pt()>0 && Geom::deltaR(genJet, genBLV)       < GENJETDR ){
     genMatch = 0;
+    numMatches++;
   }
-  else if( genBbarLV.Pt()>0 && Geom::deltaR(genJet, genBbarLV) < GENJETDR ){
+  if( genBbarLV.Pt()>0 && Geom::deltaR(genJet, genBbarLV) < GENJETDR ){
     genMatch = 0;
+    numMatches++;
   }
-  else{
-    genMatch = 3; 
-  }
+
+  if(numMatches==0)
+    genMatch = 3; // NO MATCH 
+  if(numMatches>1)
+    genMatch = 4; // AMBIGUOUS MATCH
+
+
 
   return;
 
@@ -426,6 +449,14 @@ void setTopDecay(float& topB_,  float& topW_,
   atopB_ = int(genMatch==-1);
   atopW_ = int(genMatch==-2);
   higgsB_= int(genMatch==0);
+
+  if(genMatch==3 || genMatch==4){
+    topB_  = int(genMatch);
+    topW_  = int(genMatch);
+    atopB_ = int(genMatch);
+    atopW_ = int(genMatch);
+    higgsB_= int(genMatch);
+  }
 
   return;
 }
@@ -581,21 +612,6 @@ int main(int argc, const char* argv[])
 
     JetByPt jet1_, jet2_, jet3_, jet4_, jet5_, jet6_, jet7_, jet8_, jet9_, jet10_;
 
-//     int index1_,  index2_,  index3_,  index4_,  index5_,  index6_, index7_, index8_;
-//     float pt1_,  pt2_,  pt3_,  pt4_,  pt5_,  pt6_, pt7_, pt8_;
-//     float eta1_, eta2_, eta3_, eta4_, eta5_, eta6_, eta7_, eta8_;
-//     float phi1_, phi2_, phi3_, phi4_, phi5_, phi6_, phi7_, phi8_;
-//     float mass1_, mass2_, mass3_, mass4_, mass5_, mass6_, mass7_, mass8_;
-
-//     float csv1_, csv2_, csv3_, csv4_, csv5_, csv6_, csv7_, csv8_;
-//     float topB1_,  topB2_,  topB3_,  topB4_,  topB5_,  topB6_, topB7_, topB8_;
-//     float topW1_,  topW2_,  topW3_,  topW4_,  topW5_,  topW6_, topW7_, topW8_;
-//     float atopB1_,  atopB2_,  atopB3_,  atopB4_,  atopB5_,  atopB6_, atopB7_, atopB8_;
-//     float atopW1_,  atopW2_,  atopW3_,  atopW4_,  atopW5_,  atopW6_, atopW7_, atopW8_;
-
-//     float higgsB1_,  higgsB2_,  higgsB3_,  higgsB4_,  higgsB5_,  higgsB6_, higgsB7_, higgsB8_;
-//     float flavor1_, flavor2_, flavor3_, flavor4_, flavor5_, flavor6_, flavor7_, flavor8_ ;
-
     int nLF_,    nC_,    nB_;
     int nLFTop_, nCTop_, nBTop_;
     int numOfBs_, numOfBsAcc_;
@@ -624,8 +640,6 @@ int main(int argc, const char* argv[])
     float firstBtag_, secondBtag_, thirdBtag_, fourthBtag_;
     float bestHiggsMass_;
 
-    //float recoTopHadMass_,  recoTopHadPt_,  recoTopHadEta_, recoTopHadPhi_;
-    //float recoWHadMass_, recoWHadPt_, recoWHadEta_, recoWHadPhi_;
     recoTopInfo recoTop_, recoTbar_, genMatchTop_, genMatchTbar_;
     recoHiggsInfo recoHiggs_, genMatchHiggs_;
 
@@ -644,115 +658,6 @@ int main(int argc, const char* argv[])
     TBranch *jet9BR = outTree->Branch("jet9",&jet9_,"index/I:pt/F:eta/F:phi/F:mass/F:csv/F:topB/F:topW/F:atopB/F:atopW/F:higgsB/F:flavor/F:unc/F");
     TBranch *jet10BR= outTree->Branch("jet10",&jet10_,"index/I:pt/F:eta/F:phi/F:mass/F:csv/F:topB/F:topW/F:atopB/F:atopW/F:higgsB/F:flavor/F:unc/F");
 
-
-
-//     TBranch *index1BR = outTree->Branch("index1",&index1_,"index1/I");
-//     TBranch *index2BR = outTree->Branch("index2",&index2_,"index2/I");
-//     TBranch *index3BR = outTree->Branch("index3",&index3_,"index3/I");
-//     TBranch *index4BR = outTree->Branch("index4",&index4_,"index4/I");
-//     TBranch *index5BR = outTree->Branch("index5",&index5_,"index5/I");
-//     TBranch *index6BR = outTree->Branch("index6",&index6_,"index6/I");
-//     TBranch *index7BR = outTree->Branch("index7",&index7_,"index7/I");
-//     TBranch *index8BR = outTree->Branch("index8",&index8_,"index8/I");
-
-//     TBranch *pt1BR = outTree->Branch("pt1",&pt1_,"pt1/F");
-//     TBranch *pt2BR = outTree->Branch("pt2",&pt2_,"pt2/F");
-//     TBranch *pt3BR = outTree->Branch("pt3",&pt3_,"pt3/F");
-//     TBranch *pt4BR = outTree->Branch("pt4",&pt4_,"pt4/F");
-//     TBranch *pt5BR = outTree->Branch("pt5",&pt5_,"pt5/F");
-//     TBranch *pt6BR = outTree->Branch("pt6",&pt6_,"pt6/F");
-//     TBranch *pt7BR = outTree->Branch("pt7",&pt7_,"pt7/F");
-//     TBranch *pt8BR = outTree->Branch("pt8",&pt8_,"pt8/F");
-
-//     TBranch *eta1BR = outTree->Branch("eta1",&eta1_,"eta1/F");
-//     TBranch *eta2BR = outTree->Branch("eta2",&eta2_,"eta2/F");
-//     TBranch *eta3BR = outTree->Branch("eta3",&eta3_,"eta3/F");
-//     TBranch *eta4BR = outTree->Branch("eta4",&eta4_,"eta4/F");
-//     TBranch *eta5BR = outTree->Branch("eta5",&eta5_,"eta5/F");
-//     TBranch *eta6BR = outTree->Branch("eta6",&eta6_,"eta6/F");
-//     TBranch *eta7BR = outTree->Branch("eta7",&eta7_,"eta7/F");
-//     TBranch *eta8BR = outTree->Branch("eta8",&eta8_,"eta8/F");
- 
-//     TBranch *phi1BR = outTree->Branch("phi1",&phi1_,"phi1/F");
-//     TBranch *phi2BR = outTree->Branch("phi2",&phi2_,"phi2/F");
-//     TBranch *phi3BR = outTree->Branch("phi3",&phi3_,"phi3/F");
-//     TBranch *phi4BR = outTree->Branch("phi4",&phi4_,"phi4/F");
-//     TBranch *phi5BR = outTree->Branch("phi5",&phi5_,"phi5/F");
-//     TBranch *phi6BR = outTree->Branch("phi6",&phi6_,"phi6/F");
-//     TBranch *phi7BR = outTree->Branch("phi7",&phi7_,"phi7/F");
-//     TBranch *phi8BR = outTree->Branch("phi8",&phi8_,"phi8/F");
-
-//     TBranch *mass1BR = outTree->Branch("mass1",&mass1_,"mass1/F");
-//     TBranch *mass2BR = outTree->Branch("mass2",&mass2_,"mass2/F");
-//     TBranch *mass3BR = outTree->Branch("mass3",&mass3_,"mass3/F");
-//     TBranch *mass4BR = outTree->Branch("mass4",&mass4_,"mass4/F");
-//     TBranch *mass5BR = outTree->Branch("mass5",&mass5_,"mass5/F");
-//     TBranch *mass6BR = outTree->Branch("mass6",&mass6_,"mass6/F");
-//     TBranch *mass7BR = outTree->Branch("mass7",&mass7_,"mass7/F");
-//     TBranch *mass8BR = outTree->Branch("mass8",&mass8_,"mass8/F");
-
-//     TBranch *csv1BR = outTree->Branch("csv1",&csv1_,"csv1/F");
-//     TBranch *csv2BR = outTree->Branch("csv2",&csv2_,"csv2/F");
-//     TBranch *csv3BR = outTree->Branch("csv3",&csv3_,"csv3/F");
-//     TBranch *csv4BR = outTree->Branch("csv4",&csv4_,"csv4/F");
-//     TBranch *csv5BR = outTree->Branch("csv5",&csv5_,"csv5/F");
-//     TBranch *csv6BR = outTree->Branch("csv6",&csv6_,"csv6/F");
-//     TBranch *csv7BR = outTree->Branch("csv7",&csv7_,"csv7/F");
-//     TBranch *csv8BR = outTree->Branch("csv8",&csv8_,"csv8/F");
-
-//     TBranch *topB1BR = outTree->Branch("topB1",&topB1_,"topB1/F");
-//     TBranch *topB2BR = outTree->Branch("topB2",&topB2_,"topB2/F");
-//     TBranch *topB3BR = outTree->Branch("topB3",&topB3_,"topB3/F");
-//     TBranch *topB4BR = outTree->Branch("topB4",&topB4_,"topB4/F");
-//     TBranch *topB5BR = outTree->Branch("topB5",&topB5_,"topB5/F");
-//     TBranch *topB6BR = outTree->Branch("topB6",&topB6_,"topB6/F");
-//     TBranch *topB7BR = outTree->Branch("topB7",&topB7_,"topB7/F");
-//     TBranch *topB8BR = outTree->Branch("topB8",&topB8_,"topB8/F");
-
-//     TBranch *topW1BR = outTree->Branch("topW1",&topW1_,"topW1/F");
-//     TBranch *topW2BR = outTree->Branch("topW2",&topW2_,"topW2/F");
-//     TBranch *topW3BR = outTree->Branch("topW3",&topW3_,"topW3/F");
-//     TBranch *topW4BR = outTree->Branch("topW4",&topW4_,"topW4/F");
-//     TBranch *topW5BR = outTree->Branch("topW5",&topW5_,"topW5/F");
-//     TBranch *topW6BR = outTree->Branch("topW6",&topW6_,"topW6/F");
-//     TBranch *topW7BR = outTree->Branch("topW7",&topW7_,"topW7/F");
-//     TBranch *topW8BR = outTree->Branch("topW8",&topW8_,"topW8/F");
-
-//     TBranch *atopB1BR = outTree->Branch("atopB1",&atopB1_,"atopB1/F");
-//     TBranch *atopB2BR = outTree->Branch("atopB2",&atopB2_,"atopB2/F");
-//     TBranch *atopB3BR = outTree->Branch("atopB3",&atopB3_,"atopB3/F");
-//     TBranch *atopB4BR = outTree->Branch("atopB4",&atopB4_,"atopB4/F");
-//     TBranch *atopB5BR = outTree->Branch("atopB5",&atopB5_,"atopB5/F");
-//     TBranch *atopB6BR = outTree->Branch("atopB6",&atopB6_,"atopB6/F");
-//     TBranch *atopB7BR = outTree->Branch("atopB7",&atopB7_,"atopB7/F");
-//     TBranch *atopB8BR = outTree->Branch("atopB8",&atopB8_,"atopB8/F");
-
-//     TBranch *atopW1BR = outTree->Branch("atopW1",&atopW1_,"atopW1/F");
-//     TBranch *atopW2BR = outTree->Branch("atopW2",&atopW2_,"atopW2/F");
-//     TBranch *atopW3BR = outTree->Branch("atopW3",&atopW3_,"atopW3/F");
-//     TBranch *atopW4BR = outTree->Branch("atopW4",&atopW4_,"atopW4/F");
-//     TBranch *atopW5BR = outTree->Branch("atopW5",&atopW5_,"atopW5/F");
-//     TBranch *atopW6BR = outTree->Branch("atopW6",&atopW6_,"atopW6/F");
-//     TBranch *atopW7BR = outTree->Branch("atopW7",&atopW7_,"atopW7/F");
-//     TBranch *atopW8BR = outTree->Branch("atopW8",&atopW8_,"atopW8/F");
-
-//     TBranch *higgsB1BR = outTree->Branch("higgsB1",&higgsB1_,"higgsB1/F");
-//     TBranch *higgsB2BR = outTree->Branch("higgsB2",&higgsB2_,"higgsB2/F");
-//     TBranch *higgsB3BR = outTree->Branch("higgsB3",&higgsB3_,"higgsB3/F");
-//     TBranch *higgsB4BR = outTree->Branch("higgsB4",&higgsB4_,"higgsB4/F");
-//     TBranch *higgsB5BR = outTree->Branch("higgsB5",&higgsB5_,"higgsB5/F");
-//     TBranch *higgsB6BR = outTree->Branch("higgsB6",&higgsB6_,"higgsB6/F");
-//     TBranch *higgsB7BR = outTree->Branch("higgsB7",&higgsB7_,"higgsB7/F");
-//     TBranch *higgsB8BR = outTree->Branch("higgsB8",&higgsB8_,"higgsB8/F");
-
-//     TBranch *flavor1BR = outTree->Branch("flavor1",&flavor1_,"flavor1/F");
-//     TBranch *flavor2BR = outTree->Branch("flavor2",&flavor2_,"flavor2/F");
-//     TBranch *flavor3BR = outTree->Branch("flavor3",&flavor3_,"flavor3/F");
-//     TBranch *flavor4BR = outTree->Branch("flavor4",&flavor4_,"flavor4/F");
-//     TBranch *flavor5BR = outTree->Branch("flavor5",&flavor5_,"flavor5/F");
-//     TBranch *flavor6BR = outTree->Branch("flavor6",&flavor6_,"flavor6/F");
-//     TBranch *flavor7BR = outTree->Branch("flavor7",&flavor7_,"flavor7/F");
-//     TBranch *flavor8BR = outTree->Branch("flavor8",&flavor8_,"flavor8/F");
 
     TBranch *nLFBR     = outTree->Branch("nLF",   &nLF_,   "nLF/I");
     TBranch *nCBR      = outTree->Branch("nC",    &nC_,    "nC/I");
@@ -828,20 +733,11 @@ int main(int argc, const char* argv[])
     TBranch *numOfBsFlavAccBR = outTree->Branch("numOfBsFlavAcc",&numOfBsFlavAcc_,"numOfBsFlavAcc/I");
     TBranch *numOfCsFlavBR    = outTree->Branch("numOfCsFlav",   &numOfCsFlav_,   "numOfCsFlav/I");
     TBranch *numOfCsFlavAccBR = outTree->Branch("numOfCsFlavAcc",&numOfCsFlavAcc_,"numOfCsFlavAcc/I");
-
-    //TBranch *recoTopHadMassBR = outTree->Branch("recoTopHadMass",&recoTopHadMass_,"recoTopHadMass/F");
-    //TBranch *recoTopHadPtBR   = outTree->Branch("recoTopHadPt",  &recoTopHadPt_,  "recoTopHadPt/F");
-    //TBranch *recoTopHadEtaBR  = outTree->Branch("recoTopHadEta", &recoTopHadEta_, "recoTopHadEta/F");
-    //TBranch *recoTopHadPhiBR  = outTree->Branch("recoTopHadPhi", &recoTopHadPhi_, "recoTopHadPhi/F");
-    //TBranch *recoWHadMassBR   = outTree->Branch("recoWHadMass",  &recoWHadMass_,"recoWHadMass/F");
-    //TBranch *recoWHadPtBR     = outTree->Branch("recoWHadPt",    &recoWHadPt_,  "recoWHadPt/F");
-    //TBranch *recoWHadEtaBR    = outTree->Branch("recoWHadEta",   &recoWHadEta_, "recoWHadEta/F");
-    //TBranch *recoWHadPhiBR    = outTree->Branch("recoWHadPhi",   &recoWHadPhi_, "recoWHadPhi/F");
     
-    TBranch *recoTopBR       = outTree->Branch("recoTop",      &recoTop_,"bmass/F:bpt/F:beta:bphi/F:bstatus/F:wdau1mass/F:wdau1pt/F:wdau1eta:wdau1phi/F:wdau1id/F:wdau2mass/F:wdau2pt/F:wdau2eta:wdau2phi/F:wdau2id/F:wmass/F:wpt/F:weta/F:wphi/F:wid/F:topmass/F:toppt/F:topeta/F:topphi/F:topid/F");
-    TBranch *genMatchTopBR   = outTree->Branch("genMatchTop",  &genMatchTop_,"bmass/F:bpt/F:beta:bphi/F:bstatus/F:wdau1mass/F:wdau1pt/F:wdau1eta:wdau1phi/F:wdau1id/F:wdau2mass/F:wdau2pt/F:wdau2eta:wdau2phi/F:wdau2id/F:wmass/F:wpt/F:weta/F:wphi/F:wid/F:topmass/F:toppt/F:topeta/F:topphi/F:topid/F");
-    TBranch *recoTbarBR      = outTree->Branch("recoTbar",     &recoTbar_,"bmass/F:bpt/F:beta:bphi/F:bstatus/F:wdau1mass/F:wdau1pt/F:wdau1eta:wdau1phi/F:wdau1id/F:wdau2mass/F:wdau2pt/F:wdau2eta:wdau2phi/F:wdau2id/F:wmass/F:wpt/F:weta/F:wphi/F:wid/F:topmass/F:toppt/F:topeta/F:topphi/F:topid/F");
-    TBranch *genMatchTbarBR  = outTree->Branch("genMatchTbar", &genMatchTbar_,"bmass/F:bpt/F:beta:bphi/F:bstatus/F:wdau1mass/F:wdau1pt/F:wdau1eta:wdau1phi/F:wdau1id/F:wdau2mass/F:wdau2pt/F:wdau2eta:wdau2phi/F:wdau2id/F:wmass/F:wpt/F:weta/F:wphi/F:wid/F:topmass/F:toppt/F:topeta/F:topphi/F:topid/F");
+    TBranch *recoTopBR       = outTree->Branch("recoTop",      &recoTop_,"bmass/F:bpt/F:beta:bphi/F:bstatus/F:wdau1mass/F:wdau1pt/F:wdau1eta:wdau1phi/F:wdau1id/F:wdau2mass/F:wdau2pt/F:wdau2eta:wdau2phi/F:wdau2id/F:wmass/F:wpt/F:weta/F:wphi/F:wid/F:topmass/F:toppt/F:topeta/F:topphi/F:topid/F:bbarmass/F:bbarpt/F:bbareta/F:bbarphi/F");
+    TBranch *genMatchTopBR   = outTree->Branch("genMatchTop",  &genMatchTop_,"bmass/F:bpt/F:beta:bphi/F:bstatus/F:wdau1mass/F:wdau1pt/F:wdau1eta:wdau1phi/F:wdau1id/F:wdau2mass/F:wdau2pt/F:wdau2eta:wdau2phi/F:wdau2id/F:wmass/F:wpt/F:weta/F:wphi/F:wid/F:topmass/F:toppt/F:topeta/F:topphi/F:topid/F:bbarmass/F:bbarpt/F:bbareta/F:bbarphi/F");
+    TBranch *recoTbarBR      = outTree->Branch("recoTbar",     &recoTbar_,"bmass/F:bpt/F:beta:bphi/F:bstatus/F:wdau1mass/F:wdau1pt/F:wdau1eta:wdau1phi/F:wdau1id/F:wdau2mass/F:wdau2pt/F:wdau2eta:wdau2phi/F:wdau2id/F:wmass/F:wpt/F:weta/F:wphi/F:wid/F:topmass/F:toppt/F:topeta/F:topphi/F:topid/F:bbarmass/F:bbarpt/F:bbareta/F:bbarphi/F");
+    TBranch *genMatchTbarBR  = outTree->Branch("genMatchTbar", &genMatchTbar_,"bmass/F:bpt/F:beta:bphi/F:bstatus/F:wdau1mass/F:wdau1pt/F:wdau1eta:wdau1phi/F:wdau1id/F:wdau2mass/F:wdau2pt/F:wdau2eta:wdau2phi/F:wdau2id/F:wmass/F:wpt/F:weta/F:wphi/F:wid/F:topmass/F:toppt/F:topeta/F:topphi/F:topid/F:bbarmass/F:bbarpt/F:bbareta/F:bbarphi/F");
 
     TBranch *recoHiggsBR     = outTree->Branch("recoHiggs",    &recoHiggs_,"hdau1mass/F:hdau1pt/F:hdau1eta:hdau1phi/F:hdau1id/F:hdau2mass/F:hdau2pt/F:hdau2eta:hdau2phi/F:hdau2id/F:hmass/F:hpt/F:heta/F:hphi/F:hid/F");
     TBranch *genMatchHiggsBR = outTree->Branch("genMatchHiggs",    &genMatchHiggs_,"hdau1mass/F:hdau1pt/F:hdau1eta:hdau1phi/F:hdau1id/F:hdau2mass/F:hdau2pt/F:hdau2eta:hdau2phi/F:hdau2id/F:hmass/F:hpt/F:heta/F:hphi/F:hid/F");
@@ -970,6 +866,7 @@ int main(int argc, const char* argv[])
     //outTree->SetBranchAddress("EVENT.lumi", &lumi);
 
     outTree->SetBranchAddress("EVENT",  &ev);
+  
     //////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
 
@@ -991,22 +888,6 @@ int main(int argc, const char* argv[])
       jet8_.reset();
       jet9_.reset();
       jet10_.reset();
-
-//       index1_  = -99; index2_  = -99; index3_  = -99; index4_  = -99; index5_  = -99; index6_  = -99; index7_  = -99; index8_  = -99;
-//       pt1_  = -99; pt2_  = -99; pt3_  = -99; pt4_  = -99; pt5_  = -99; pt6_  = -99; pt7_  = -99; pt8_  = -99;
-//       eta1_ = -99; eta2_ = -99; eta3_ = -99; eta4_ = -99; eta5_ = -99; eta6_ = -99; eta7_ = -99; eta8_ = -99;
-//       phi1_ = -99; phi2_ = -99; phi3_ = -99; phi4_ = -99; phi5_ = -99; phi6_ = -99; phi7_ = -99; phi8_ = -99;
-//       mass1_ = -99; mass2_ = -99; mass3_ = -99; mass4_ = -99; mass5_ = -99; mass6_ = -99; mass7_ = -99; mass8_ = -99;
-//       csv1_ = -99; csv2_ = -99; csv3_ = -99; csv4_ = -99; csv5_ = -99; csv6_ = -99; csv7_ = -99; csv8_ = -99; 
-//       topB1_  = -99; topB2_  = -99; topB3_  = -99; topB4_  = -99; topB5_  = -99; topB6_  = -99; topB7_  = -99; topB8_  = -99;
-//       topW1_  = -99; topW2_  = -99; topW3_  = -99; topW4_  = -99; topW5_  = -99; topW6_  = -99; topB7_  = -99; topB8_  = -99;
-//       atopB1_  = -99; atopB2_  = -99; atopB3_  = -99; atopB4_  = -99; atopB5_  = -99; atopB6_  = -99; atopB7_  = -99; atopB8_  = -99;
-//       atopW1_  = -99; atopW2_  = -99; atopW3_  = -99; atopW4_  = -99; atopW5_  = -99; atopW6_  = -99; atopW7_  = -99; atopW8_  = -99;
-//       higgsB1_= -99; higgsB2_= -99; higgsB3_= -99; higgsB4_= -99; higgsB5_= -99; higgsB6_= -99; higgsB7_= -99; higgsB8_= -99;  
-//       flavor1_= -99; flavor2_= -99; flavor3_= -99; flavor4_= -99; flavor5_= -99; flavor6_= -99; flavor7_= -99; flavor8_= -99;
-//       recoTopHadMass_ = -99; recoTopHadPt_ = -99; recoTopHadEta_= -99; recoTopHadPhi_ = -99;
-//       recoWHadMass_ = -99; recoWHadPt_ = -99; recoWHadEta_= -99; recoWHadPhi_ = -99;
-
     
       nLF_    = 0; nC_    = 0; nB_    = 0;
       nLFTop_ = 0; nCTop_ = 0; nBTop_ = 0;
@@ -1612,7 +1493,7 @@ int main(int argc, const char* argv[])
       for(std::map<float, int>::iterator it = allMapPt20.begin(); it!=allMapPt20.end(); it++, all++){
 
 	int index = it->second;
-	float pt = -99; float eta = -99; float phi = -99; float csv = -99; float mass = -99; float unc = -99;
+	float pt  = -99; float eta = -99; float phi  = -99; float csv  = -99; float mass   = -99; float unc    = -99;
 	float topB= -99; float topW= -99; float atopB= -99; float atopW= -99; float higgsB = -99; float flavor = -99;
 
 
@@ -1676,7 +1557,8 @@ int main(int argc, const char* argv[])
 
       }
 
-
+      ////////////////////////////////////////////////////////////
+      // TTH and TTJets specific
       ////////////////////////////////////////////////////////////
 
       bool overlap = false;
@@ -1763,6 +1645,10 @@ int main(int argc, const char* argv[])
         recoTop_.topeta    = (topW1_flag>0 && topW2_flag>0 && topB_flag>0) ? (recotopW1LV+recotopW2LV+recotopBLV).Eta(): -99;
         recoTop_.topphi    = (topW1_flag>0 && topW2_flag>0 && topB_flag>0) ? (recotopW1LV+recotopW2LV+recotopBLV).Phi(): -99;
         recoTop_.topid     = (topW1_flag + topW2_flag + topB_flag - 2 );
+	recoTop_.bbarmass  = topB_flag>0 && atopB_flag>0 ? (recoatopBLV+recotopBLV).M() : -99;
+	recoTop_.bbarpt    = topB_flag>0 && atopB_flag>0 ? (recoatopBLV+recotopBLV).Pt() : -99;
+	recoTop_.bbareta   = topB_flag>0 && atopB_flag>0 ? (recoatopBLV+recotopBLV).Eta() : -99;
+	recoTop_.bbarphi   = topB_flag>0 && atopB_flag>0 ? (recoatopBLV+recotopBLV).Phi() : -99;
 
 	genMatchTop_.bmass     = topB_flag>0  ? topBLV.M()   : -99;
         genMatchTop_.bpt       = topB_flag>0  ? topBLV.Pt()  : -99;
@@ -1789,7 +1675,10 @@ int main(int argc, const char* argv[])
         genMatchTop_.topeta    = (topW1_flag>0 && topW2_flag>0 && topB_flag>0) ? (topW1LV+topW2LV+topBLV).Eta(): -99;
         genMatchTop_.topphi    = (topW1_flag>0 && topW2_flag>0 && topB_flag>0) ? (topW1LV+topW2LV+topBLV).Phi(): -99;
         genMatchTop_.topid     = !overlap ? (topW1_flag + topW2_flag + topB_flag - 2 ) : -(topW1_flag + topW2_flag + topB_flag - 2 );
-
+	genMatchTop_.bbarmass      = topB_flag>0 && atopB_flag>0 ? (topBLV+atopBLV).M()   : -99;
+	genMatchTop_.bbarpt        = topB_flag>0 && atopB_flag>0 ? (topBLV+atopBLV).Pt()  : -99;
+	genMatchTop_.bbareta       = topB_flag>0 && atopB_flag>0 ? (topBLV+atopBLV).Eta() : -99;
+	genMatchTop_.bbarphi       = topB_flag>0 && atopB_flag>0 ? (topBLV+atopBLV).Phi() : -99;
       }
       
       if( (abs(genTbar.wdau1id)<6 && abs(genTbar.wdau2id)<6) || (abs(genTbar.wdau1id)>=11 && abs(genTbar.wdau2id)>=11)
@@ -1819,6 +1708,10 @@ int main(int argc, const char* argv[])
         recoTbar_.toppt     = (atopW1_flag>0 && atopW2_flag>0 && atopB_flag>0) ? (recoatopW1LV+recoatopW2LV+recoatopBLV).Pt() : -99;
         recoTbar_.topeta    = (atopW1_flag>0 && atopW2_flag>0 && atopB_flag>0) ? (recoatopW1LV+recoatopW2LV+recoatopBLV).Eta(): -99;
         recoTbar_.topphi    = (atopW1_flag>0 && atopW2_flag>0 && atopB_flag>0) ? (recoatopW1LV+recoatopW2LV+recoatopBLV).Phi(): -99;
+	recoTbar_.bbarmass  = topB_flag>0 && atopB_flag>0 ? (recoatopBLV+recotopBLV).M()   : -99;
+	recoTbar_.bbarpt    = topB_flag>0 && atopB_flag>0 ? (recoatopBLV+recotopBLV).Pt()  : -99;
+	recoTbar_.bbareta   = topB_flag>0 && atopB_flag>0 ? (recoatopBLV+recotopBLV).Eta() : -99;
+	recoTbar_.bbarphi   = topB_flag>0 && atopB_flag>0 ? (recoatopBLV+recotopBLV).Phi() : -99;
 
 	genMatchTbar_.bmass     = atopB_flag>0  ? atopBLV.M()   : -99;
         genMatchTbar_.bpt       = atopB_flag>0  ? atopBLV.Pt()  : -99;
@@ -1845,7 +1738,10 @@ int main(int argc, const char* argv[])
         genMatchTbar_.topeta    = (atopW1_flag>0 && atopW2_flag>0 && atopB_flag>0) ? (atopW1LV+atopW2LV+atopBLV).Eta(): -99;
         genMatchTbar_.topphi    = (atopW1_flag>0 && atopW2_flag>0 && atopB_flag>0) ? (atopW1LV+atopW2LV+atopBLV).Phi(): -99;
         genMatchTbar_.topid     = !overlap ? (atopW1_flag + atopW2_flag + atopB_flag - 2 ) : -(atopW1_flag + atopW2_flag + atopB_flag - 2 );
-
+	genMatchTbar_.bbarmass  = topB_flag>0 && atopB_flag>0 ? (topBLV+atopBLV).M()   : -99;
+	genMatchTbar_.bbarpt    = topB_flag>0 && atopB_flag>0 ? (topBLV+atopBLV).Pt()  : -99;
+	genMatchTbar_.bbareta   = topB_flag>0 && atopB_flag>0 ? (topBLV+atopBLV).Eta() : -99;
+	genMatchTbar_.bbarphi   = topB_flag>0 && atopB_flag>0 ? (topBLV+atopBLV).Phi() : -99;
       }
 
 
@@ -2123,6 +2019,10 @@ int main(int argc, const char* argv[])
       //if(!isInJson && verbose) cout << "Event " << run << ", " << lumi << " is not in json" << endl;
 
 
+
+
+
+
       //////////////////////////////////FILL////////////////////////////////////////
       //////////////////////////////////////////////////////////////////////////////
 
@@ -2134,103 +2034,6 @@ int main(int argc, const char* argv[])
       numJets40bTagBR->Fill();
       numJets30bTagBR->Fill();
       numJets20bTagBR->Fill();
-
- //      index1BR->Fill();
-//       index2BR->Fill();
-//       index3BR->Fill();
-//       index4BR->Fill();
-//       index5BR->Fill();
-//       index6BR->Fill();
-//       index7BR->Fill();
-//       index8BR->Fill();
-//       pt1BR->Fill();
-//       pt2BR->Fill();
-//       pt3BR->Fill();
-//       pt4BR->Fill();
-//       pt5BR->Fill();
-//       pt6BR->Fill();
-//       pt7BR->Fill();
-//       pt8BR->Fill();
-//       eta1BR->Fill();
-//       eta2BR->Fill();
-//       eta3BR->Fill();
-//       eta4BR->Fill();
-//       eta5BR->Fill();
-//       eta6BR->Fill();
-//       eta7BR->Fill();
-//       eta8BR->Fill();
-//       phi1BR->Fill();
-//       phi2BR->Fill();
-//       phi3BR->Fill();
-//       phi4BR->Fill();
-//       phi5BR->Fill();
-//       phi6BR->Fill();
-//       phi7BR->Fill();
-//       phi8BR->Fill();
-//       mass1BR->Fill();
-//       mass2BR->Fill();
-//       mass3BR->Fill();
-//       mass4BR->Fill();
-//       mass5BR->Fill();
-//       mass6BR->Fill();
-//       mass7BR->Fill();
-//       mass8BR->Fill();
-//       csv1BR->Fill();
-//       csv2BR->Fill();
-//       csv3BR->Fill();
-//       csv4BR->Fill();
-//       csv5BR->Fill();
-//       csv6BR->Fill();
-//       csv7BR->Fill();
-//       csv8BR->Fill();
-//       topB1BR->Fill();
-//       topB2BR->Fill();
-//       topB3BR->Fill();
-//       topB4BR->Fill();
-//       topB5BR->Fill();
-//       topB6BR->Fill();
-//       topB7BR->Fill();
-//       topB8BR->Fill();
-//       topW1BR->Fill();
-//       topW2BR->Fill();
-//       topW3BR->Fill();
-//       topW4BR->Fill();
-//       topW5BR->Fill();
-//       topW6BR->Fill();
-//       topW7BR->Fill();
-//       topW8BR->Fill();
-//       atopB1BR->Fill();
-//       atopB2BR->Fill();
-//       atopB3BR->Fill();
-//       atopB4BR->Fill();
-//       atopB5BR->Fill();
-//       atopB6BR->Fill();
-//       atopB7BR->Fill();
-//       atopB8BR->Fill();
-//       atopW1BR->Fill();
-//       atopW2BR->Fill();
-//       atopW3BR->Fill();
-//       atopW4BR->Fill();
-//       atopW5BR->Fill();
-//       atopW6BR->Fill();
-//       atopW7BR->Fill();
-//       atopW8BR->Fill();
-//       higgsB1BR->Fill();
-//       higgsB2BR->Fill();
-//       higgsB3BR->Fill();
-//       higgsB4BR->Fill();
-//       higgsB5BR->Fill();
-//       higgsB6BR->Fill();
-//       higgsB7BR->Fill();
-//       higgsB8BR->Fill();
-//       flavor1BR->Fill();
-//       flavor2BR->Fill();
-//       flavor3BR->Fill();
-//       flavor4BR->Fill();
-//       flavor5BR->Fill();
-//       flavor6BR->Fill();
-//       flavor7BR->Fill();
-//       flavor8BR->Fill();
 
       jet1BR->Fill();
       jet2BR->Fill();
@@ -2311,16 +2114,6 @@ int main(int argc, const char* argv[])
       genMatchTbarBR->Fill();
       recoHiggsBR->Fill();
       genMatchHiggsBR->Fill();
-
-      //recoTopHadMassBR->Fill();
-      //recoTopHadPtBR->Fill();
-      //recoTopHadEtaBR->Fill();
-      //recoTopHadPhiBR->Fill();
-      //recoWHadMassBR->Fill();
-      //recoWHadPtBR->Fill();
-      //recoWHadEtaBR->Fill();
-      //recoWHadPhiBR->Fill();
-      
 
       delete eventShapes;
       delete topologicalWorker;
