@@ -3987,6 +3987,8 @@ void Acc(int doGen=1){
   TH1F* hMult          = new TH1F("hMult", "visited"   ,10, 0 ,10 );
   TH2F* h2Mult         = new TH2F("h2Mult", "visited"   ,10, 0 ,10 ,10, 0 ,10 );
 
+  TH1F* hDistr        = new TH1F("hDistr", "visited"   ,20, 0 ,20 );
+
   TH1F* h46MatchBTag30   = new TH1F("h46MatchBTag30", "visited"   ,10, 0 ,10 );
   TH1F* h46MatchBTag20   = new TH1F("h46MatchBTag20", "visited"   ,10, 0 ,10 );
   TH1F* h46MatchNoTag30  = new TH1F("h46MatchNoTag30", "visited"   ,10, 0 ,10 );
@@ -4256,9 +4258,10 @@ void Acc(int doGen=1){
 	  topW2LV.Pt()>0 &&
 	  atopBLV.Pt()>0 &&
 	  atopW1LV.Pt()>0 &&
-	  atopW2LV.Pt()>0 //&&
-	  //genBLV.Pt()>0 &&
-	  //genBbarLV.Pt()>0
+	  atopW2LV.Pt()>0 && //&&
+	  genBLV.Pt()>0 &&
+	  genBbarLV.Pt()>0 
+	  && (abs(genTop.wdau1id)<6 || abs(genTbar.wdau1id)<6 )
 	  )
 	) continue;
      
@@ -4336,7 +4339,8 @@ void Acc(int doGen=1){
      int numBTag=0;
      for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
        float csv_k = mapFilt[k].csv>0 ? mapFilt[k].csv : 0.0 ;
-       if(csv_k>0.679) numBTag++;
+       float pt_k = mapFilt[k].pt>0 ? mapFilt[k].pt : 0.0 ;
+       if(csv_k>0.679 && pt_k>30) numBTag++;
      }
      int numJets30=0;
      for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
@@ -4356,7 +4360,132 @@ void Acc(int doGen=1){
      if(numBTag==4 && numJets30>=6)
        hMult->Fill(4.5, weight);
 
-     
+     if( numJets30>=6 && numBTag>=4 ){
+
+       int matchW1 = 0;
+       int matchW2 = 0;
+       int matchB1 = 0;
+       int matchB2 = 0;
+       int matchH1 = 0;
+       int matchH2 = 0;
+
+       int twoBsMerg = 0;
+       int twoWsMerg = 0;
+       int oneBWMerg = 0;
+
+       for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
+	 float pt_k = mapFilt[k].pt>0 ? mapFilt[k].pt : 0.0 ;
+	 float eta_k = mapFilt[k].eta;
+	 if(pt_k<30 || TMath::Abs(eta_k)>2.5) continue;
+	 float csv_k = mapFilt[k].csv>0 ? mapFilt[k].csv : 0.0 ;
+
+	 int matchByTopB=0;
+	 int matchByTopW=0;
+	 int matchByHiggsB=0;
+
+	 //cout << myJetsFilt[k].Pt() << " - " << topBLV.Pt() << endl;
+
+	 int genMatch;
+	 findGenMatch2(genMatch, myJetsFilt[k] , topBLV, topW1LV, topW2LV, atopBLV, atopW1LV, atopW2LV, genBLV, genBbarLV);
+	 if( deltaR(myJetsFilt[k], topBLV)<0.3 ){
+	   matchB1++;
+	   matchByTopB++;
+	 }
+	 if( (abs(genTop.wdau1id)<6 && deltaR(myJetsFilt[k], topW1LV)<0.3) || 
+	     (abs(genTbar.wdau1id)<6 && deltaR(myJetsFilt[k], atopW1LV)<0.3) ){
+	   matchW1++;
+	   matchByTopW++;
+	 }
+	 if( (abs(genTop.wdau1id)<6 && deltaR(myJetsFilt[k], topW2LV)<0.3) || 
+	     (abs(genTbar.wdau1id)<6 && deltaR(myJetsFilt[k], atopW2LV)<0.3) ){
+	   matchW2++;
+	   matchByTopW++;
+	 }
+	 if( deltaR(myJetsFilt[k], atopBLV)<0.3 ){
+	   matchB2++;
+	   matchByTopB++;
+	 }
+	 if( deltaR(myJetsFilt[k], genBLV)<0.3 ){
+	   matchH1++;
+	   matchByHiggsB++;
+	 }
+	 if( deltaR(myJetsFilt[k], genBbarLV)<0.3 ){
+	   matchH2++;
+	   matchByHiggsB++;
+	 }
+
+	 if(matchByTopW>1) twoWsMerg=1;
+	 if(matchByTopW==1 && (matchByTopB>0 || matchByHiggsB>0)) oneBWMerg=1;
+	 if(matchByTopB>1 || matchByHiggsB>1 || (matchByTopB>0 && matchByHiggsB>0)) twoBsMerg=1;
+
+       }
+
+       int nomerge =  twoWsMerg==0 && twoBsMerg==0 && oneBWMerg==0;
+       int merge1 = twoWsMerg>0;
+       int merge2 = twoBsMerg>0;
+       int merge3 = oneBWMerg>0;
+
+       // cout << matchW1 << ", " << matchW2 << ", " << matchB1 << ", " <<  matchB2 << ", " << matchH1 << ", " <<  matchH2 << endl;
+       //cout << nomerge << ", " << merge1 << ", " << merge2 << ", "<< merge2 << endl;
+
+       if( matchW1==1 && matchW2==1 && matchB1==1 && matchB2==1 && matchH1==1 && matchH2==1 && nomerge) 
+	 hDistr->Fill(  0.5 ); // ideal
+       else if( ( (matchW1<1 && matchW2==1) || (matchW1==1 && matchW2<1)) && matchB1==1 && matchB2==1 && matchH1==1 && matchH2==1 && nomerge){
+	 hDistr->Fill(  1.5 ); // no W
+	 if(abs(genTop.wdau1id)<6){
+	   //cout << "W1 = " << topW1LV.Pt() << ", " << topW1LV.Eta() << endl; 
+	   //cout << "W2 = " << topW2LV.Pt() << ", " << topW2LV.Eta() << endl; 
+	 }
+	 else{
+	   //cout << "W1~ = " << atopW1LV.Pt() << ", " << atopW1LV.Eta() << endl; 
+	   //cout << "W2~ = " << atopW2LV.Pt() << ", " << atopW2LV.Eta() << endl; 
+	 }
+       }
+       else if( matchW1==1 && matchW2==1 && (matchB1<1 || matchB2<1) && matchH1==1 && matchH2==1 && nomerge) 
+	 hDistr->Fill(  2.5 ); // no top bs
+       else if( matchW1==1 && matchW2==1 && matchB1==1 && matchB2==1 && (matchH1<1 || matchH2<1) && nomerge) 
+	 hDistr->Fill(  3.5 ); // no higgs bs
+       else if( matchW1==1 && matchW2==1 && matchB1==1 && matchB2==1 && matchH1==1 && matchH2==1 && merge1) 
+	 hDistr->Fill(  4.5 ); // ideal
+       else if( (matchW1<1 || matchW2<1) && matchB1==1 && matchB2==1 && matchH1==1 && matchH2==1 && merge1) 
+	 hDistr->Fill(  5.5 ); // no W
+       else if( matchW1==1 && matchW2==1 && (matchB1<1 || matchB2<1) && matchH1==1 && matchH2==1 && merge1) 
+	 hDistr->Fill(  6.5 ); // no top bs
+       else if( matchW1==1 && matchW2==1 && matchB1==1 && matchB2==1 && (matchH1<1 || matchH2<1) && merge1) 
+	 hDistr->Fill(  7.5 ); // no higgs bs
+       else if( matchW1==1 && matchW2==1 && matchB1==1 && matchB2==1 && matchH1==1 && matchH2==1 && merge2) 
+	 hDistr->Fill(  8.5 ); // ideal
+       else if( (matchW1<1 || matchW2<1) && matchB1==1 && matchB2==1 && matchH1==1 && matchH2==1 && merge2) 
+	 hDistr->Fill(  9.5 ); // no W
+       else if( matchW1==1 && matchW2==1 && (matchB1<1 || matchB2<1) && matchH1==1 && matchH2==1 && merge2) 
+	 hDistr->Fill(  10.5 ); // no top bs
+       else if( matchW1==1 && matchW2==1 && matchB1==1 && matchB2==1 && (matchH1<1 || matchH2<1) && merge2) 
+	 hDistr->Fill(  11.5 ); // no higgs bs
+       else if( matchW1==1 && matchW2==1 && matchB1==1 && matchB2==1 && matchH1==1 && matchH2==1 && merge3) 
+	 hDistr->Fill(  12.5 ); // ideal
+       else if( (matchW1<1 || matchW2<1) && matchB1==1 && matchB2==1 && matchH1==1 && matchH2==1 && merge3) 
+	 hDistr->Fill(  13.5 ); // no W
+       else if( matchW1==1 && matchW2==1 && (matchB1<1 || matchB2<1) && matchH1==1 && matchH2==1 && merge3) 
+	 hDistr->Fill(  14.5 ); // no top bs
+       else if( matchW1==1 && matchW2==1 && matchB1==1 && matchB2==1 && (matchH1<1 || matchH2<1) && merge3) 
+	 hDistr->Fill(  15.5 ); // no higgs bs
+       else if( (matchW1<1 || matchW2<1) && matchB1==1 && matchB2==1 && (matchH1<1 || matchH2<1)) 
+	 hDistr->Fill(  16.5 ); // no W
+       else if( (matchW1<1 || matchW2<1) && (matchB1<1 || matchB2<1) && matchH1==1 && matchH2==1) 
+	 hDistr->Fill(  17.5 ); // no W
+       else if( (matchW1<1 && matchW2<1) && matchB1==1 && matchB2==1 && matchH1==1 && matchH2==1 && nomerge) 
+	 hDistr->Fill(  18.5 ); // no W
+       else{
+	 hDistr->Fill(  19.5 );
+
+	 //cout << matchW1 << ", " << matchW2 << ", " << matchB1 << ", " <<  matchB2 << ", " << matchH1 << ", " <<  matchH2 << endl;
+	 //cout << nomerge << ", " << merge1 << ", " << merge2 << ", "<< merge2 << endl;
+
+       }
+
+     }
+
+
      if(abs(genTop.wdau1id)<6 && topBLV.Pt()>0 && topW1LV.Pt()>0 && topW2LV.Pt()>0){
        LV topLV  = topBLV+topW1LV+topW2LV;
        LV topWLV = topW1LV+topW2LV;
@@ -4436,7 +4565,7 @@ void Acc(int doGen=1){
      //cout << genTbar.wdau1id << " - " << genTbar.wdau2id << endl;
      // chi* variables pag. 56
      if( genTbar.wdau1id==13 && atopBLV.Pt()>0 && atopW1LV.Pt()>0 && atopW2LV.Pt()>0 && genBLV.Pt()>0){
-       LV topLV  = atopBLV+atopW1LV+atopW2LV; <----------
+       LV topLV  = atopBLV+atopW1LV+atopW2LV; //<----------
        LV topWLV = atopW1LV+atopW2LV;
 
        TVector3 boost(topLV.Px()/topLV.E(), topLV.Py()/topLV.E(), topLV.Pz()/topLV.E());
