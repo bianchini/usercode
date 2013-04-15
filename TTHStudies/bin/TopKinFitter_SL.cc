@@ -51,6 +51,26 @@ typedef struct
   float phi;
 } metInfo;
 
+
+typedef struct
+{
+  float bmass;
+  float bpt;
+  float beta;
+  float bphi;
+  float bstatus;
+  float wdau1mass;
+  float wdau1pt;
+  float wdau1eta;
+  float wdau1phi;
+  float wdau1id;
+  float wdau2mass;
+  float wdau2pt;
+  float wdau2eta;
+  float wdau2phi;
+  float wdau2id;
+} genTopInfo;
+
 typedef struct
 {
   int index;
@@ -147,6 +167,38 @@ int main(int argc, const char* argv[])
 
   AutoLibraryLoader::enable();
 
+  fwlite::TFileService fs = fwlite::TFileService("topKinFitterSL.root");
+  TTree* outTreeR    = fs.make<TTree>("outTreeR","tree right");
+  TTree* outTreeW    = fs.make<TTree>("outTreeW","tree wrong");
+  TTree* outTree     = fs.make<TTree>("outTree","event tree");
+
+  float chi2R, probR, chi2W, probW;
+  int nResJets, matches, nPermut, nPermutAll, status ;
+  int TTnoW, fullTT, fullH;
+  JetByPt hjet1, hjet2;
+  JetByPt w1jet, w2jet;
+
+  outTreeR->Branch("chi2",    &chi2R,    "chi2/F");
+  outTreeR->Branch("prob",    &probR,    "prob/F");
+  outTreeW->Branch("chi2",    &chi2W,"chi2/F");
+  outTreeW->Branch("prob",    &probW,"prob/F");
+
+  outTree->Branch("hjet1",    &hjet1,      "index/I:pt/F:eta/F:phi/F:mass/F:csv/F:topB/F:topW/F:atopB/F:atopW/F:higgsB/F:flavor/F:unc/F");
+  outTree->Branch("hjet2",    &hjet2,      "index/I:pt/F:eta/F:phi/F:mass/F:csv/F:topB/F:topW/F:atopB/F:atopW/F:higgsB/F:flavor/F:unc/F");
+  outTree->Branch("w1jet",    &w1jet,      "index/I:pt/F:eta/F:phi/F:mass/F:csv/F:topB/F:topW/F:atopB/F:atopW/F:higgsB/F:flavor/F:unc/F");
+  outTree->Branch("w2jet",    &w2jet,      "index/I:pt/F:eta/F:phi/F:mass/F:csv/F:topB/F:topW/F:atopB/F:atopW/F:higgsB/F:flavor/F:unc/F");
+
+  outTree->Branch("nResJets",&nResJets,  "nResJets/I");
+  outTree->Branch("matches", &matches,   "matches/I");
+  outTree->Branch("nPermut", &nPermut,   "nPermut/I");
+  outTree->Branch("nPermutAll", &nPermutAll,"nPermutAll/I");
+  outTree->Branch("status",     &status,    "status/I");
+  outTree->Branch("fullTT",     &fullTT,    "fullTT/I");
+  outTree->Branch("fullH",      &fullH,     "fullH/I");
+  outTree->Branch("TTnoW",      &TTnoW,     "TTnoW/I");
+
+
+
   PythonProcessDesc builder(argv[1]);
  
   const edm::ParameterSet& in = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("fwliteInput");
@@ -155,11 +207,13 @@ int main(int argc, const char* argv[])
 
   std::string pathToFile( in.getParameter<std::string>("pathToFile" ) );
   std::string ordering(   in.getParameter<std::string>("ordering" ) );
-  std::vector< edm::ParameterSet > udscResolutions(      in.getParameter<edm::VParameterSet>("udscResolutions") );
-  std::vector< edm::ParameterSet > bResolutions(         in.getParameter<edm::VParameterSet>("bResolutions") );
-  std::vector< edm::ParameterSet > lepResolutions(       in.getParameter<edm::VParameterSet>("lepResolutions") );
-  std::vector<double> metResolutionsCoeff(               in.getParameter<std::vector<double> >("metResolutionsCoeff") );
-  std::vector<double> helicityCoeff(                     in.getParameter<std::vector<double> >("helicityCoeff") );
+  std::vector< edm::ParameterSet > udscResolutions(in.getParameter<edm::VParameterSet>("udscResolutions") );
+  std::vector< edm::ParameterSet > bResolutions   (in.getParameter<edm::VParameterSet>("bResolutions") );
+  std::vector< edm::ParameterSet > lepResolutions (in.getParameter<edm::VParameterSet>("lepResolutions") );
+  std::vector<double> metResolutionsCoeff         (in.getParameter<std::vector<double> >("metResolutionsCoeff") );
+  std::vector<double> helicityCoeff               (in.getParameter<std::vector<double> >("helicityCoeff") );
+  std::vector<double> chi2Coeff                   (in.getParameter<std::vector<double> >("chi2Coeff") );
+
   if(helicityCoeff.size()!=9){
     cout << "Nine parameters are required for the helicity angle param... return" << endl;
     return 0;
@@ -191,6 +245,8 @@ int main(int argc, const char* argv[])
   TF1* fHelTopLept = new TF1("fHelTopLept",Form("%f + %f*x + %f*x*x + %f*x*x*x",              helicityCoeff[0], helicityCoeff[1], helicityCoeff[2], helicityCoeff[3]),-1,1);
   TF1* fHelTopHadr = new TF1("fHelTopHadr",Form("%f + %f*x + %f*x*x + %f*x*x*x + %f*x*x*x*x", helicityCoeff[4], helicityCoeff[5], helicityCoeff[6], helicityCoeff[7], helicityCoeff[8]),-1,1);
 
+  float ndf = chi2Coeff.size()>0 ? chi2Coeff[0] : 3.;
+  TF1* fChi2       = new TF1("fChi2", Form("1./TMath::Gamma(%f/2)/2.^(%f/2)*TMath::Exp(-x/2)*(x^(%f/2-1))", chi2Coeff[0],chi2Coeff[1],chi2Coeff[2]), 0, 100);
 
   bool openAllFiles  = false;
   Samples* mySamples = new Samples(openAllFiles, pathToFile, ordering, samples, lumi, verbose);
@@ -227,6 +283,8 @@ int main(int argc, const char* argv[])
     
     JetByPt jet1, jet2, jet3, jet4, jet5, jet6, jet7, jet8, jet9, jet10;
     genParticleInfo genB, genBbar;
+    genTopInfo genTop, genTbar;
+
     Float_t vLepton_mass[99];
     Float_t vLepton_pt  [99];
     Float_t vLepton_eta [99];
@@ -245,6 +303,8 @@ int main(int argc, const char* argv[])
     currentTree->SetBranchAddress("jet10",  &jet10);
     currentTree->SetBranchAddress("genB",   &genB);
     currentTree->SetBranchAddress("genBbar",&genBbar);
+    currentTree->SetBranchAddress("genTop", &genTop);
+    currentTree->SetBranchAddress("genTbar",&genTbar);
     currentTree->SetBranchAddress("vLepton_mass",vLepton_mass);
     currentTree->SetBranchAddress("vLepton_pt",vLepton_pt);
     currentTree->SetBranchAddress("vLepton_eta",vLepton_eta);
@@ -256,11 +316,45 @@ int main(int argc, const char* argv[])
     
     for (Long64_t i = 0; i < nentries ; i++){
       
-      if(i%100==0) cout << i << endl;
+      if(i%1000==0) cout << i << endl;
       currentTree->GetEntry(i);
       
+      LV topBLV   (0.,0.,0.,0.);
+      LV topW1LV  (0.,0.,0.,0.); 
+      LV topW2LV  (0.,0.,0.,0.);
+      LV atopBLV  (0.,0.,0.,0.); 
+      LV atopW1LV (0.,0.,0.,0.); 
+      LV atopW2LV (0.,0.,0.,0.);
       LV genBLV   (0.,0.,0.,0.);
       LV genBbarLV(0.,0.,0.,0.);
+      if(genTop.bmass>0){
+	topBLV.SetPt(   genTop.bpt );
+	topBLV.SetEta(  genTop.beta );
+	topBLV.SetPhi(  genTop.bphi );
+	topBLV.SetM(    genTop.bmass );
+	topW1LV.SetPt(  genTop.wdau1pt );
+	topW1LV.SetEta( genTop.wdau1eta );
+	topW1LV.SetPhi( genTop.wdau1phi );
+	topW1LV.SetM(   genTop.wdau1mass );
+	topW2LV.SetPt(  genTop.wdau2pt );
+	topW2LV.SetEta( genTop.wdau2eta );
+	topW2LV.SetPhi( genTop.wdau2phi );
+	topW2LV.SetM(   genTop.wdau2mass );
+      }
+      if(genTbar.bmass>0){
+	atopBLV.SetPt(   genTbar.bpt );
+	atopBLV.SetEta(  genTbar.beta );
+	atopBLV.SetPhi(  genTbar.bphi );
+	atopBLV.SetM(    genTbar.bmass );
+	atopW1LV.SetPt(  genTbar.wdau1pt );
+	atopW1LV.SetEta( genTbar.wdau1eta );
+	atopW1LV.SetPhi( genTbar.wdau1phi );
+	atopW1LV.SetM(   genTbar.wdau1mass );
+	atopW2LV.SetPt(  genTbar.wdau2pt );
+	atopW2LV.SetEta( genTbar.wdau2eta );
+	atopW2LV.SetPhi( genTbar.wdau2phi );
+	atopW2LV.SetM(   genTbar.wdau2mass );
+     }
       if(genB.mass>0 && genB.momid==25){
 	genBLV.SetPt(  genB.pt );
 	genBLV.SetEta( genB.eta );
@@ -424,166 +518,346 @@ int main(int argc, const char* argv[])
 	indices[k]=k; 
       vector<unsigned int> visited;
 
-      if( myJetsFilt.size()<4 ) continue;
+      if( myJetsFilt.size()<4 || numJets30<6 || numJets30BtagM<4) continue;
+
+      
+      ////////////////////////////////////////
+      unsigned int mmatchW1 = 999;
+      unsigned int mmatchW2 = 999;
+      unsigned int mmatchB1 = 999;
+      unsigned int mmatchB2 = 999;
+      unsigned int mmatchH1 = 999;
+      unsigned int mmatchH2 = 999;
+
+      for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
+	 float pt_k = mapFilt[k].pt>0 ? mapFilt[k].pt : 0.0 ;
+	 float eta_k = mapFilt[k].eta;
+	 if(pt_k<30 || TMath::Abs(eta_k)>2.5) continue;
+	 float csv_k = mapFilt[k].csv>0 ? mapFilt[k].csv : 0.0 ;
+
+	 if( deltaR(myJetsFilt[k], topBLV)<0.3 ){
+	   if(csv_k>0.679) mmatchB1=k;
+	 }
+	 else if( (abs(genTop.wdau1id)<6 && deltaR(myJetsFilt[k], topW1LV)<0.3) || 
+	     (abs(genTbar.wdau1id)<6 && deltaR(myJetsFilt[k], atopW1LV)<0.3) ){
+	   if(csv_k<0.679)  mmatchW1=k;
+	 }
+	 else if( (abs(genTop.wdau1id)<6 && deltaR(myJetsFilt[k], topW2LV)<0.3) || 
+	     (abs(genTbar.wdau1id)<6 && deltaR(myJetsFilt[k], atopW2LV)<0.3) ){
+	   if(csv_k<0.679) mmatchW2=k;
+	 }
+	 else if( deltaR(myJetsFilt[k], atopBLV)<0.3 ){
+	   if(csv_k>0.679) mmatchB2=k;
+	 }
+	 else if( deltaR(myJetsFilt[k], genBLV)<0.3 ){
+	   if(csv_k>0.679) mmatchH1=k;
+	 }
+	 else if( deltaR(myJetsFilt[k], genBbarLV)<0.3 ){
+	   if(csv_k>0.679) mmatchH2=k;
+	 }
+	 else{}
+       }
+      if( mmatchW1!=999 && mmatchW2!=999 && mmatchB1!=999 && mmatchB2!=999 ){
+	fullTT = 1;
+      }
+      else
+	fullTT = 0;
+      if( mmatchH1!=999 && mmatchH2!=999) 
+	fullH = 1;
+      else
+	fullH = 0;
+      if( (mmatchW1==999 || mmatchW1==999) && mmatchB1!=999 && mmatchB2!=999) 
+	TTnoW = 1;
+      else
+	TTnoW = 0;
+
+
+      int WTag = 0;
+      unsigned int indexLight1=999;
+      unsigned int indexLight2=999;
+      for(unsigned int ii = 0; ii < myJetsFilt.size()-1; ii++){
+	for(unsigned int jj = ii+1; jj < myJetsFilt.size(); jj++){
+	  for(unsigned int swapJ = 0; swapJ<2 ; swapJ++){
+	    unsigned int indexWdau1Cand = swapJ==0 ? ii : jj;//indices[0];
+	    unsigned int indexWdau2Cand = swapJ==0 ? jj : ii;//indices[1];
+	    
+	    if( !( (mapFilt[indexWdau1Cand ]).pt >  udscPtCut && (mapFilt[indexWdau2Cand ]).pt > udscPtCut ) )
+	      continue;
+	    
+	    if( !( (mapFilt[indexWdau1Cand ]).csv < 0.679   && (mapFilt[indexWdau2Cand ]).csv <0.679) ) 
+	      continue;
+	    
+	    float WMass   = (myJetsFilt[indexWdau1Cand]+myJetsFilt[indexWdau2Cand]).M();
+	    if( WMass  >  40 && WMass  < 120 ){
+	      WTag++;
+	      if(indexLight1==999 && indexLight2==999){
+		indexLight1 = ii;
+		indexLight2 = jj;
+	      }
+	    }
+	  } 
+	}
+      }
+      
+      w1jet.reset(); w2jet.reset();
+      w1jet        = mapFilt[indexLight1];
+      w2jet        = mapFilt[indexLight2];
+
+      //genHadrTopPt  =  (abs(genTop.wdau1id) <6) ? (topBLV+topW1LV+topW2LV).Pt()  : (atopBLV+atopW1LV+atopW2LV).Pt();
+      //genHadrTopEta =  (abs(genTop.wdau1id) <6) ? (topBLV+topW1LV+topW2LV).Eta() : (atopBLV+atopW1LV+atopW2LV).Eta();
+      //matchedWPt    = 
+
+      
+
+
+
+      ////////////////////////////////////////
 
       int counterPer = 0;
+      nPermutAll     = 0;
+      status         = 0;
       float minLogP  = 999;
       vector<unsigned int> bestRank; 
-      do {
+      bestRank.clear();
+      bestRank.push_back(0);	bestRank.push_back(0);
+      bestRank.push_back(0);	bestRank.push_back(0);
+      int foundMatch=0;
+      
+      //do {
+      for(unsigned int ii = 0; ii < myJetsFilt.size()-1; ii++){
+	for(unsigned int jj = ii+1; jj < myJetsFilt.size(); jj++){
+	  for(unsigned int kk = 0; kk < myJetsFilt.size()-1; kk++){
+	    if(kk==ii || kk==jj) continue;
+	    for(unsigned int ll = kk+1; ll < myJetsFilt.size(); ll++){
+	      if(ll==ii || ll==jj) continue;
+	      for(unsigned int swapB = 0; swapB<2 ; swapB++){
+		for(unsigned int swapJ = 0; swapJ<2 ; swapJ++){
+		
+		  float logp = 999;
 
-	float logp = 999;
-	bestRank.push_back(0);	bestRank.push_back(0);
-	bestRank.push_back(0);	bestRank.push_back(0);
+		  unsigned int indexWdau1Cand = swapJ==0 ? ii : jj;//indices[0];
+		  unsigned int indexWdau2Cand = swapJ==0 ? jj : ii;//indices[1];
+		  unsigned int indexbCand     = swapB==0 ? kk : ll;//indices[2];
+		  unsigned int indexbbarCand  = swapB==0 ? ll : kk;//indices[3];
+		  
+		  int matchW1 = 0; // W had
+		  int matchW2 = 0; // W had
+		  int matchB1 = 0; // b from top had
+		  int matchB2 = 0; // b from top lept
+		  //int matchH1 = 0; // higgs
+		  //int matchH2 = 0; // higgs
+		  
+		  if( (topBLV.Pt()>0 && topW1LV.Pt()>0 && topW2LV.Pt()>0 && atopBLV.Pt()>0 && atopW1LV.Pt()>0 && atopW2LV.Pt()>0 )){
+		    
+		    if( (deltaR(myJetsFilt[indexbCand],    topBLV)<0.3 && abs(genTop.wdau1id) <6) || 
+			(deltaR(myJetsFilt[indexbCand],   atopBLV)<0.3 && abs(genTbar.wdau1id)<6)
+			){
+		      matchB1++;
+		    }
+		    if( (abs(genTop.wdau1id)<6  && deltaR(myJetsFilt[indexWdau1Cand], topW1LV)<0.3 && deltaR(myJetsFilt[indexWdau2Cand], topW2LV) <0.3) || 
+			(abs(genTbar.wdau1id)<6 && deltaR(myJetsFilt[indexWdau1Cand],atopW1LV)<0.3 && deltaR(myJetsFilt[indexWdau2Cand], atopW2LV)<0.3) ){
+		      matchW1++;
+		      matchW2++;
+		    }
+		    if( (deltaR(myJetsFilt[indexbbarCand],    topBLV)<0.3 && abs(genTop.wdau1id) >6) || 
+			(deltaR(myJetsFilt[indexbbarCand],   atopBLV)<0.3 && abs(genTbar.wdau1id)>6) ){
+		      matchB2++;
+		    }
+		    
+		    //cout << matchW1 << ", " << matchW2 << ", " << matchB1 << ", " << matchB2 << endl;  
+		  }
+		  
+		  
+		  //if( !bookKeeper( indexWdau1Cand, indexWdau2Cand, indexbCand, indexbbarCand, visited) ) 
+		  //continue;
+		  nPermutAll++;
+		  
+		  //if(verbose || (i==1930 && indexWdau1Cand==5 && indexWdau2Cand==6 && indexbCand==2 && indexbbarCand==1)){
+		  //cout << "Perm #" << counterPer << " [" << indexWdau1Cand << "," << indexWdau2Cand << "," << indexbCand << "," << indexbbarCand << " => STEP1" <<endl;
+		  //cout << (mapFilt[indexWdau1Cand ]).pt << "," << (mapFilt[indexWdau2Cand ]).pt  << ", " << (mapFilt[indexbCand ]).pt   << "," << (mapFilt[indexbbarCand ]).pt  << endl;
+		  //}
+		  
+		  if( !( (mapFilt[indexWdau1Cand ]).pt >  udscPtCut && (mapFilt[indexWdau2Cand ]).pt > udscPtCut  &&
+			 (mapFilt[indexbCand ]).pt     >  bPtCut    && (mapFilt[indexbbarCand ]).pt  > bPtCut ) )
+		    continue;
+		  
+		  //if(verbose || (i==1930 && indexWdau1Cand==5 && indexWdau2Cand==6 && indexbCand==2 && indexbbarCand==1))
+		  //cout << "Perm #" << counterPer << " [" << indexWdau1Cand << "," << indexWdau2Cand << "," << indexbCand << "," << indexbbarCand << " => STEP2" <<endl;
+		  
+		  if( !((mapFilt[indexbCand ]).csv     > 0.679 && (mapFilt[indexbbarCand ]).csv  >  0.679 &&
+			(mapFilt[indexWdau1Cand ]).csv < 0.679   && (mapFilt[indexWdau2Cand ]).csv <0.679) ) 
+		    continue;
+		  
+		  //if(verbose || (i==1930 && indexWdau1Cand==5 && indexWdau2Cand==6 && indexbCand==2 && indexbbarCand==1))
+		  //cout << "Perm #" << counterPer << " [" << indexWdau1Cand << "," << indexWdau2Cand << "," << indexbCand << "," << indexbbarCand << " => STEP3" <<endl;
+		  
+		  
+		  float WMass   = (myJetsFilt[indexWdau1Cand]+myJetsFilt[indexWdau2Cand]).M();
+		  float TopMass = (myJetsFilt[indexWdau1Cand]+myJetsFilt[indexWdau2Cand]+myJetsFilt[indexbCand]).M();
+		  
+		  if( WMass  <  40 || WMass  > 120 ) continue;
+		  if( TopMass< 120 || TopMass> 230 ) continue;
+		  
+		  
+		  //if(verbose || (i==1930 && indexWdau1Cand==5 && indexWdau2Cand==6 && indexbCand==2 && indexbbarCand==1))
+		  //cout << "Perm #" << counterPer << " [" << indexWdau1Cand << "," << indexWdau2Cand << "," << indexbCand << "," << indexbbarCand << " => STEP4" <<endl;	
+		  
+		  counterPer++;
+	
+		  p4HadB.SetPx( (myJetsFilt[indexbCand]).Px() );
+		  p4HadB.SetPy( (myJetsFilt[indexbCand]).Py() );
+		  p4HadB.SetPz( (myJetsFilt[indexbCand]).Pz() );
+		  p4HadB.SetE(  (myJetsFilt[indexbCand]).E()  );
+		  
+		  p4HadP.SetPx( (myJetsFilt[indexWdau1Cand]).Px() );
+		  p4HadP.SetPy( (myJetsFilt[indexWdau1Cand]).Py() );
+		  p4HadP.SetPz( (myJetsFilt[indexWdau1Cand]).Pz() );
+		  p4HadP.SetE(  (myJetsFilt[indexWdau1Cand]).E()  );
 
-	unsigned int indexWdau1Cand = indices[0];
-	unsigned int indexWdau2Cand = indices[1];
-	unsigned int indexbCand     = indices[2];
-	unsigned int indexbbarCand  = indices[3];
+		  p4HadQ.SetPx( (myJetsFilt[indexWdau2Cand]).Px() );
+		  p4HadQ.SetPy( (myJetsFilt[indexWdau2Cand]).Py() );
+		  p4HadQ.SetPz( (myJetsFilt[indexWdau2Cand]).Pz() );
+		  p4HadQ.SetE(  (myJetsFilt[indexWdau2Cand]).E()  );
+		  
+		  p4LepB.SetPx( (myJetsFilt[indexbbarCand]).Px() );
+		  p4LepB.SetPy( (myJetsFilt[indexbbarCand]).Py() );
+		  p4LepB.SetPz( (myJetsFilt[indexbbarCand]).Pz() );
+		  p4LepB.SetE(  (myJetsFilt[indexbbarCand]).E()  );
+		  
+		  int statusPerm = fitter->fit(p4HadP, p4HadQ, p4HadB, p4LepB, p4Lepton, p4Neutrino, -1, CovarianceMatrix::kMuon);
+		  if(statusPerm!=0) continue;
+		  status++;
+		  
+		  //if(verbose || (i==1930 && indexWdau1Cand==5 && indexWdau2Cand==6 && indexbCand==2 && indexbbarCand==1))
+		  //cout << "Perm #" << counterPer << " [" << indexWdau1Cand << "," << indexWdau2Cand << "," << indexbCand << "," << indexbbarCand << " => STEP5" <<endl;	
+		  
+		  float chi2 = fitter->fitS();
+		  float p    = fitter->fitProb();
+		  if(useKin && p>0.)
+		    logp =  -TMath::Log(p);
+		  
+		  if(useBtag && fLikelihoodCsvB && fLikelihoodCsvNonB){
+		    float btag1   = fLikelihoodCsvB->Eval( (mapFilt[indexbCand    ]).csv);
+		    float btag2   = fLikelihoodCsvB->Eval( (mapFilt[indexbbarCand ]).csv);
+		    float buntag1 = fLikelihoodCsvNonB->Eval( (mapFilt[indexWdau1Cand ]).csv);
+		    float buntag2 = fLikelihoodCsvNonB->Eval( (mapFilt[indexWdau2Cand ]).csv);
+		    if( useKin && btag1>0. && btag2>0. && buntag1>0. && buntag2>0.){
+		      logp += (-TMath::Log(btag1));
+		      logp += (-TMath::Log(btag2));
+		      logp += (-TMath::Log(buntag1));
+		      logp += (-TMath::Log(buntag2));
+		    }
+		    else if( !useKin && btag1>0. && btag2>0. && buntag1>0. && buntag2>0.){
+		      logp =  (-TMath::Log(btag1));
+		      logp += (-TMath::Log(btag2));
+		      logp += (-TMath::Log(buntag1));
+		      logp += (-TMath::Log(buntag2));
+		    }
+		    else
+		      logp = 999;	  
+		  }
 
-	if( !((mapFilt[indexbCand ]).csv     > 0. && (mapFilt[indexbbarCand ]).csv  > 0. &&
-	    (mapFilt[indexWdau1Cand ]).csv <  0.679 && (mapFilt[indexWdau2Cand ]).csv <  0.679) ) 
-	  continue;
-	if( !( (mapFilt[indexWdau1Cand ]).pt >  udscPtCut && (mapFilt[indexWdau2Cand ]).pt > udscPtCut  &&
-	       (mapFilt[indexbCand ]).pt     >  bPtCut    && (mapFilt[indexbbarCand ]).pt  > bPtCut ) )
-	  continue;
 	
 
-	if( !bookKeeper( indexWdau1Cand, indexWdau2Cand, indexbCand, indexbbarCand, visited) ) 
-	  continue;
-
-	float WMass   = (myJetsFilt[indexWdau1Cand]+myJetsFilt[indexWdau2Cand]).M();
-	float TopMass = (myJetsFilt[indexWdau1Cand]+myJetsFilt[indexWdau2Cand]+myJetsFilt[indexbCand]).M();
-
-	if( WMass  <  40 || WMass  > 120 ) continue;
-	if( TopMass< 120 || TopMass> 230 ) continue;
+		  pat::Particle resHadP     = fitter->fittedHadP();
+		  pat::Particle resHadQ     = fitter->fittedHadQ();
+		  pat::Particle resHadB     = fitter->fittedHadB();
+		  pat::Particle resLepB     = fitter->fittedLepB();
+		  pat::Particle resLepton   = fitter->fittedLepton();
+		  pat::Particle resNeutrino = fitter->fittedNeutrino();
 	
-	counterPer++;
+		  TLorentzVector lvHadP(resHadP.px(),resHadP.py(),resHadP.pz(),resHadP.energy());
+		  TLorentzVector lvHadQ(resHadQ.px(),resHadQ.py(),resHadQ.pz(),resHadQ.energy());
+		  TLorentzVector lvHadB(resHadB.px(),resHadB.py(),resHadB.pz(),resHadB.energy());
+		  TLorentzVector lvLepB(resLepB.px(),resLepB.py(),resLepB.pz(),resLepB.energy());
+		  TLorentzVector lvLepton(resLepton.px(),resLepton.py(),resLepton.pz(),resLepton.energy());
+		  TLorentzVector lvNeutrino(resNeutrino.px(),resNeutrino.py(),resNeutrino.pz(),resNeutrino.energy());
+		  TLorentzVector lvHadW   = lvHadP   + lvHadQ ;
+		  TLorentzVector lvHadTop = lvHadW   + lvHadB ;
+		  TLorentzVector lvLepW   = lvLepton + lvNeutrino ;
+		  TLorentzVector lvLepTop = lvLepW   + lvLepB ;
+		  
+		  if(useHel && fHelTopLept && fHelTopHadr){
+		    
+		    TLorentzVector bHad;
+		    TLorentzVector w1Had;
+		    TLorentzVector w2Had;
+		    w1Had.SetPxPyPzE( lvHadP.Px(), lvHadP.Py(), lvHadP.Pz(), lvHadP.E());
+		    w2Had.SetPxPyPzE( lvHadQ.Px(), lvHadQ.Py(), lvHadQ.Pz(), lvHadQ.E());
+		    bHad.SetPxPyPzE(  lvHadB.Px(), lvHadB.Py(), lvHadB.Pz(), lvHadB.E());
+		    TVector3 boostWHad(lvHadW.Px()/lvHadW.E(), lvHadW.Py()/lvHadW.E(), lvHadW.Pz()/lvHadW.E());
+		    w1Had.Boost(-boostWHad);
+		    w2Had.Boost(-boostWHad);
+		    bHad.Boost( -boostWHad);
+		    double cosChiStarTopHad = TMath::Cos(w1Had.Vect().Angle( -bHad.Vect() ));
+		    float helHad = fHelTopHadr->Eval( cosChiStarTopHad );
+		    
+		    TLorentzVector bLep;
+		    TLorentzVector w1Lep;
+		    TLorentzVector w2Lep;
+		    w1Lep.SetPxPyPzE( lvLepton.Px(), lvLepton.Py(), lvLepton.Pz(), lvLepton.E());
+		    w2Lep.SetPxPyPzE( lvNeutrino.Px(), lvNeutrino.Py(), lvNeutrino.Pz(), lvNeutrino.E());
+		    bLep.SetPxPyPzE(  lvLepB.Px(), lvLepB.Py(), lvLepB.Pz(), lvLepB.E());
+		    TVector3 boostWLep(lvLepW.Px()/lvLepW.E(), lvLepW.Py()/lvLepW.E(), lvLepW.Pz()/lvLepW.E());
+		    w1Lep.Boost(-boostWLep);
+		    w2Lep.Boost(-boostWLep);
+		    bLep.Boost( -boostWLep);
+		    double cosChiStarTopLep = TMath::Cos(w1Lep.Vect().Angle( -bLep.Vect() ));
+		    float helLep = fHelTopLept->Eval( cosChiStarTopLep );
+		    
+		    if( (useKin || useBtag) && helHad>0. && helLep>0. ){
+		      logp += (-TMath::Log(helHad));
+		      logp += (-TMath::Log(helLep));
+		    }
+		    else if( !(useKin || useBtag) && helHad>0. && helLep>0.){
+		      logp =  (-TMath::Log(helHad));
+		      logp += (-TMath::Log(helLep));
+		    }
+		    else
+		      logp = 999;
+		  }
+
+		  
+		  if(logp<minLogP){
+		    minLogP = logp;
+		    bestRank.clear();
+		    bestRank.push_back( indexWdau1Cand);
+		    bestRank.push_back( indexWdau2Cand);
+		    bestRank.push_back( indexbCand);
+		    bestRank.push_back( indexbbarCand);
+		  }
+		  
+		  if(verbose) cout << "Perm #" << counterPer << " [" << indexWdau1Cand << "," << indexWdau2Cand << "," << indexbCand << "," << indexbbarCand << "] => log(p) = " << logp << endl;
+		  
+		  
+		  if( matchB1>0 && matchW1>0 && matchW2>0 && matchB2>0){
+		    foundMatch = 1;
+		    chi2R = chi2;
+		    probR = p;
+		    outTreeR->Fill();
+		  }
+		  else{
+		    chi2W = chi2;
+		    probW = p;
+		    outTreeW->Fill();
+		  }
 	
-	p4HadB.SetPx( (myJetsFilt[indexbCand]).Px() );
-	p4HadB.SetPy( (myJetsFilt[indexbCand]).Py() );
-	p4HadB.SetPz( (myJetsFilt[indexbCand]).Pz() );
-	p4HadB.SetE(  (myJetsFilt[indexbCand]).E()  );
+		
 
-	p4HadP.SetPx( (myJetsFilt[indexWdau1Cand]).Px() );
-	p4HadP.SetPy( (myJetsFilt[indexWdau1Cand]).Py() );
-	p4HadP.SetPz( (myJetsFilt[indexWdau1Cand]).Pz() );
-	p4HadP.SetE(  (myJetsFilt[indexWdau1Cand]).E()  );
+		  
+		}}}}}}
+      //while ( std::next_permutation( indices, indices+myJetsFilt.size()  ) );
+      
 
-	p4HadQ.SetPx( (myJetsFilt[indexWdau2Cand]).Px() );
-	p4HadQ.SetPy( (myJetsFilt[indexWdau2Cand]).Py() );
-	p4HadQ.SetPz( (myJetsFilt[indexWdau2Cand]).Pz() );
-	p4HadQ.SetE(  (myJetsFilt[indexWdau2Cand]).E()  );
+      
+      //if(foundMatch==0 && fullTT==1){
+      //cout << "Event " << i << " <==> " << counterPer << " / " << nPermutAll << ", status :" << status << endl;
+      //cout  << mmatchW1 << "," << mmatchW2 << "," << mmatchB1 << "," << mmatchB2 << endl;
+      //cout << "Csv : " << mapFilt[mmatchW1].csv << "," << mapFilt[mmatchW2].csv << "," << mapFilt[mmatchB1].csv << "," << mapFilt[mmatchB2].csv << endl;
+      //cout << "Mass W " <<  (myJetsFilt[mmatchW1]+myJetsFilt[mmatchW2]).M() << endl;
+      //}
 
-	p4LepB.SetPx( (myJetsFilt[indexbbarCand]).Px() );
-	p4LepB.SetPy( (myJetsFilt[indexbbarCand]).Py() );
-	p4LepB.SetPz( (myJetsFilt[indexbbarCand]).Pz() );
-	p4LepB.SetE(  (myJetsFilt[indexbbarCand]).E()  );
-
-	int status = fitter->fit(p4HadP, p4HadQ, p4HadB, p4LepB, p4Lepton, p4Neutrino, -1, CovarianceMatrix::kMuon);
-	if(status!=0) continue;
-
-	float chi2 = fitter->fitS();
-	float p    = fitter->fitProb();
-	if(useKin && p>0.)
-	  logp =  -TMath::Log(p);
-	
-	if(useBtag && fLikelihoodCsvB && fLikelihoodCsvNonB){
-	  float btag1   = fLikelihoodCsvB->Eval( (mapFilt[indexbCand    ]).csv);
-	  float btag2   = fLikelihoodCsvB->Eval( (mapFilt[indexbbarCand ]).csv);
-	  float buntag1 = fLikelihoodCsvNonB->Eval( (mapFilt[indexWdau1Cand ]).csv);
-	  float buntag2 = fLikelihoodCsvNonB->Eval( (mapFilt[indexWdau2Cand ]).csv);
-	  if( useKin && btag1>0. && btag2>0. && buntag1>0. && buntag2>0.){
-	    logp += (-TMath::Log(btag1));
-	    logp += (-TMath::Log(btag2));
-	    logp += (-TMath::Log(buntag1));
-	    logp += (-TMath::Log(buntag2));
-	  }
-	  else if( !useKin && btag1>0. && btag2>0. && buntag1>0. && buntag2>0.){
-	    logp =  (-TMath::Log(btag1));
-	    logp += (-TMath::Log(btag2));
-	    logp += (-TMath::Log(buntag1));
-	    logp += (-TMath::Log(buntag2));
-	  }
-	  else
-	    logp = 999;	  
-	}
-
-	
-
-	pat::Particle resHadP     = fitter->fittedHadP();
-	pat::Particle resHadQ     = fitter->fittedHadQ();
-	pat::Particle resHadB     = fitter->fittedHadB();
-	pat::Particle resLepB     = fitter->fittedLepB();
-	pat::Particle resLepton   = fitter->fittedLepton();
-	pat::Particle resNeutrino = fitter->fittedNeutrino();
-	
-	TLorentzVector lvHadP(resHadP.px(),resHadP.py(),resHadP.pz(),resHadP.energy());
-	TLorentzVector lvHadQ(resHadQ.px(),resHadQ.py(),resHadQ.pz(),resHadQ.energy());
-	TLorentzVector lvHadB(resHadB.px(),resHadB.py(),resHadB.pz(),resHadB.energy());
-	TLorentzVector lvLepB(resLepB.px(),resLepB.py(),resLepB.pz(),resLepB.energy());
-	TLorentzVector lvLepton(resLepton.px(),resLepton.py(),resLepton.pz(),resLepton.energy());
-	TLorentzVector lvNeutrino(resNeutrino.px(),resNeutrino.py(),resNeutrino.pz(),resNeutrino.energy());
-	TLorentzVector lvHadW   = lvHadP   + lvHadQ ;
-	TLorentzVector lvHadTop = lvHadW   + lvHadB ;
-	TLorentzVector lvLepW   = lvLepton + lvNeutrino ;
-	TLorentzVector lvLepTop = lvLepW   + lvLepB ;
-
-	if(useHel && fHelTopLept && fHelTopHadr){
-	  
-	  TLorentzVector bHad;
-	  TLorentzVector w1Had;
-	  TLorentzVector w2Had;
-	  w1Had.SetPxPyPzE( lvHadP.Px(), lvHadP.Py(), lvHadP.Pz(), lvHadP.E());
-	  w2Had.SetPxPyPzE( lvHadQ.Px(), lvHadQ.Py(), lvHadQ.Pz(), lvHadQ.E());
-	  bHad.SetPxPyPzE(  lvHadB.Px(), lvHadB.Py(), lvHadB.Pz(), lvHadB.E());
-	  TVector3 boostWHad(lvHadW.Px()/lvHadW.E(), lvHadW.Py()/lvHadW.E(), lvHadW.Pz()/lvHadW.E());
-	  w1Had.Boost(-boostWHad);
-	  w2Had.Boost(-boostWHad);
-	  bHad.Boost( -boostWHad);
-	  double cosChiStarTopHad = TMath::Cos(w1Had.Vect().Angle( -bHad.Vect() ));
-	  float helHad = fHelTopHadr->Eval( cosChiStarTopHad );
-
-	  TLorentzVector bLep;
-	  TLorentzVector w1Lep;
-	  TLorentzVector w2Lep;
-	  w1Lep.SetPxPyPzE( lvLepton.Px(), lvLepton.Py(), lvLepton.Pz(), lvLepton.E());
-	  w2Lep.SetPxPyPzE( lvNeutrino.Px(), lvNeutrino.Py(), lvNeutrino.Pz(), lvNeutrino.E());
-	  bLep.SetPxPyPzE(  lvLepB.Px(), lvLepB.Py(), lvLepB.Pz(), lvLepB.E());
-	  TVector3 boostWLep(lvLepW.Px()/lvLepW.E(), lvLepW.Py()/lvLepW.E(), lvLepW.Pz()/lvLepW.E());
-	  w1Lep.Boost(-boostWLep);
-	  w2Lep.Boost(-boostWLep);
-	  bLep.Boost( -boostWLep);
-	  double cosChiStarTopLep = TMath::Cos(w1Lep.Vect().Angle( -bLep.Vect() ));
-	  float helLep = fHelTopLept->Eval( cosChiStarTopLep );
-
-	  if( (useKin || useBtag) && helHad>0. && helLep>0. ){
-	    logp += (-TMath::Log(helHad));
-	    logp += (-TMath::Log(helLep));
-	  }
-	  else if( !(useKin || useBtag) && helHad>0. && helLep>0.){
-	    logp = (-TMath::Log(helHad));
-	    logp += (-TMath::Log(helLep));
-	  }
-	  else
-	    logp = 999;
-	}
-
-
-	if(logp<minLogP){
-	  minLogP = logp;
-	  bestRank.clear();
-	  bestRank.push_back( indexWdau1Cand);
-	  bestRank.push_back( indexWdau2Cand);
-	  bestRank.push_back( indexbCand);
-	  bestRank.push_back( indexbbarCand);
-	}
-
-	if(verbose) cout << "Perm #" << counterPer << " [" << indexWdau1Cand << "," << indexWdau2Cand << "," << indexbCand << "," << indexbbarCand << "] => log(p) = " << logp << endl;
-
-      }
-      while ( std::next_permutation( indices, indices+myJetsFilt.size()  ) );
-
-      if(verbose || true){
+      if(verbose){
 	cout << "Number of permutation:  " << counterPer << endl;
 	cout << "Smallest logLikelihood: " << minLogP
 	     << " [" << bestRank[0] << "," <<  bestRank[1] << "," << bestRank[2] << "," <<  bestRank[3] << "]"
@@ -591,16 +865,70 @@ int main(int argc, const char* argv[])
       }
 
 
-      //int matchB    = 0;
-      //int matchBbar = 0;
-      //for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
-      //if( minLogP>10 ) continue;
-      //if( k==counterPer[0] || k==counterPer[1] ||  k==counterPer[2]  |  k==counterPer[3]   ) continue;
-      //bool isB    = deltaR( myJetsFilt[k], genBLV)    < 0.3;
-      //bool isBbar = deltaR( myJetsFilt[k], genBbarLV) < 0.3;
-      //if( isB)     matchB++;
-      //if( isBbar)  matchBbar++;
-      //}
+
+      hjet1.reset(); hjet2.reset();
+      int counter=0; unsigned int h1=999; unsigned int h2=999;
+      for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
+
+	if( status<1 /*minLogP>10*/ ) continue;
+	float csv_k = mapFilt[k].csv>0 ? mapFilt[k].csv : 0.0 ;
+	float pt_k  = mapFilt[k].pt>0  ? mapFilt[k].pt  : 0.0 ;
+	if( !(csv_k > 0.679 && pt_k>30) ) continue;
+
+	if( k==bestRank[0] || k==bestRank[1] ||  k==bestRank[2]  ||  k==bestRank[3]   ) continue;
+
+	if(counter==0){
+	  //jet1 = mapFilt[k];
+	  hjet1.index = mapFilt[k].index; 
+	  hjet1.pt    = mapFilt[k].pt; 
+	  hjet1.eta   = mapFilt[k].eta; 
+	  hjet1.phi   = mapFilt[k].phi; 
+	  hjet1.mass  = mapFilt[k].mass; 
+	  hjet1.csv   = mapFilt[k].csv; 
+	  hjet1.topB  = mapFilt[k].topB; 
+	  hjet1.topW  = mapFilt[k].topW; 
+	  hjet1.atopW = mapFilt[k].atopW; 
+	  hjet1.higgsB= mapFilt[k].higgsB; 
+	  hjet1.flavor= mapFilt[k].flavor; 
+	  hjet1.unc   = mapFilt[k].unc; 
+	  h1   = k;
+	}
+	else if(counter==1){
+	  //jet2 = mapFilt[k];
+	  hjet2.index = mapFilt[k].index; 
+	  hjet2.pt    = mapFilt[k].pt; 
+	  hjet2.eta   = mapFilt[k].eta; 
+	  hjet2.phi   = mapFilt[k].phi; 
+	  hjet2.mass  = mapFilt[k].mass; 
+	  hjet2.csv   = mapFilt[k].csv; 
+	  hjet2.topB  = mapFilt[k].topB; 
+	  hjet2.topW  = mapFilt[k].topW; 
+	  hjet2.atopW = mapFilt[k].atopW; 
+	  hjet2.higgsB= mapFilt[k].higgsB; 
+	  hjet2.flavor= mapFilt[k].flavor; 
+	  hjet2.unc   = mapFilt[k].unc; 
+	  h2 = k;
+	}
+	else{}
+
+	counter++;
+      }
+      int matchB    = 0;
+      int matchBbar = 0;
+      if(h1!=999 && h2!=999 && genBLV.Pt()>0 ){
+	if(deltaR(myJetsFilt[h1], genBLV)<0.3) matchB++;
+	if(deltaR(myJetsFilt[h2], genBLV)<0.3) matchB++;
+      }
+      if(h1!=999 && h2!=999 && genBbarLV.Pt()>0 ){
+	if(deltaR(myJetsFilt[h1], genBbarLV)<0.3) matchBbar++;
+	if(deltaR(myJetsFilt[h2], genBbarLV)<0.3) matchBbar++;
+      }
+
+      
+      nPermut  = counterPer;
+      nResJets = counter;
+      matches  = matchB+matchBbar;
+      outTree->Fill();
       
 
       delete fitter;

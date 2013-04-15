@@ -3980,14 +3980,17 @@ void algoPre( float cutW_ = 4.0, float cutW2_ = 4.0, float csvCut_ = 0.60, float
 
 
 
-void Acc(int doGen=1){
+void Acc(int doGen=1, int jets30=6 ,  int bTagJets30 = 4, int excl=0){
 
   TFile *fOutput       = new TFile("Acc.root","RECREATE");
   TH1F* hCount         = new TH1F("hCount", "visited"   ,10, 0 ,10 );
   TH1F* hMult          = new TH1F("hMult", "visited"   ,10, 0 ,10 );
   TH2F* h2Mult         = new TH2F("h2Mult", "visited"   ,10, 0 ,10 ,10, 0 ,10 );
+  TH1F* hMassWThere     = new TH1F("hMassWThere", "visited"   ,40,0, 400 );
+  TH1F* hMassWLost     = new TH1F("hMassWLost", "visited"   ,40,0, 400 );
 
-  TH1F* hDistr        = new TH1F("hDistr", "visited"   ,20, 0 ,20 );
+  string relation = excl ? "=" : ">=" ;
+  TH1F* hDistr = new TH1F("hDistr", Form("Njets%s%d, Nbjets%s%d ; ;", relation.c_str(), jets30, relation.c_str(),bTagJets30  )   ,20, 0 ,20 );
 
   TH1F* h46MatchBTag30   = new TH1F("h46MatchBTag30", "visited"   ,10, 0 ,10 );
   TH1F* h46MatchBTag20   = new TH1F("h46MatchBTag20", "visited"   ,10, 0 ,10 );
@@ -4117,9 +4120,10 @@ void Acc(int doGen=1){
 
 
   Long64_t nentries = tree->GetEntries();
+  //nentries = 500000;
   int totCounter = 0;
   
-  for (Long64_t i = 0; i < /*500000*/ nentries ; i++){
+  for (Long64_t i = 0; i < nentries ; i++){
     
     if(i%10000==0) cout << i << endl;
     tree->GetEntry(i);
@@ -4258,9 +4262,9 @@ void Acc(int doGen=1){
 	  topW2LV.Pt()>0 &&
 	  atopBLV.Pt()>0 &&
 	  atopW1LV.Pt()>0 &&
-	  atopW2LV.Pt()>0 && //&&
-	  genBLV.Pt()>0 &&
-	  genBbarLV.Pt()>0 
+	  atopW2LV.Pt()>0 
+	  //&& genBLV.Pt()>0 &&
+	  //genBbarLV.Pt()>0 
 	  && (abs(genTop.wdau1id)<6 || abs(genTbar.wdau1id)<6 )
 	  )
 	) continue;
@@ -4360,7 +4364,9 @@ void Acc(int doGen=1){
      if(numBTag==4 && numJets30>=6)
        hMult->Fill(4.5, weight);
 
-     if( numJets30>=6 && numBTag>=4 ){
+     if( (!excl && ( (jets30==6 && numJets30>=jets30) || (jets30<6 && numJets30>=jets30)) && numBTag>=bTagJets30) ||
+	 (excl  && ( (jets30==6 && numJets30>=jets30) || (jets30<6 && numJets30==jets30)) && numBTag==bTagJets30) 
+	 ){
 
        int matchW1 = 0;
        int matchW2 = 0;
@@ -4373,11 +4379,18 @@ void Acc(int doGen=1){
        int twoWsMerg = 0;
        int oneBWMerg = 0;
 
+       LV w1(0.,0.,0.,0.); unsigned int w1index=999;
+       LV w2(0.,0.,0.,0.); unsigned int w2index=999;
+
        for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
 	 float pt_k = mapFilt[k].pt>0 ? mapFilt[k].pt : 0.0 ;
 	 float eta_k = mapFilt[k].eta;
 	 if(pt_k<30 || TMath::Abs(eta_k)>2.5) continue;
 	 float csv_k = mapFilt[k].csv>0 ? mapFilt[k].csv : 0.0 ;
+
+	 if(csv_k<0.679 && w1.Pt()<0.001) w1 = myJetsFilt[k]; 
+	 else if(csv_k<0.679 && w2.Pt()<0.001 && w1.Pt()>0) w2 = myJetsFilt[k]; 
+	 else{}
 
 	 int matchByTopB=0;
 	 int matchByTopW=0;
@@ -4388,29 +4401,35 @@ void Acc(int doGen=1){
 	 int genMatch;
 	 findGenMatch2(genMatch, myJetsFilt[k] , topBLV, topW1LV, topW2LV, atopBLV, atopW1LV, atopW2LV, genBLV, genBbarLV);
 	 if( deltaR(myJetsFilt[k], topBLV)<0.3 ){
-	   matchB1++;
-	   matchByTopB++;
+	   if(csv_k>0.679) matchB1++;
+	     matchByTopB++;
 	 }
 	 if( (abs(genTop.wdau1id)<6 && deltaR(myJetsFilt[k], topW1LV)<0.3) || 
 	     (abs(genTbar.wdau1id)<6 && deltaR(myJetsFilt[k], atopW1LV)<0.3) ){
-	   matchW1++;
+	   if(csv_k<0.679){
+	     matchW1++;
+	     w1index = k;
+	   }
 	   matchByTopW++;
 	 }
 	 if( (abs(genTop.wdau1id)<6 && deltaR(myJetsFilt[k], topW2LV)<0.3) || 
 	     (abs(genTbar.wdau1id)<6 && deltaR(myJetsFilt[k], atopW2LV)<0.3) ){
-	   matchW2++;
+	   if(csv_k<0.679){
+	     matchW2++;
+	     w2index = k;
+	   }
 	   matchByTopW++;
 	 }
 	 if( deltaR(myJetsFilt[k], atopBLV)<0.3 ){
-	   matchB2++;
+	   if(csv_k>0.679) matchB2++;
 	   matchByTopB++;
 	 }
 	 if( deltaR(myJetsFilt[k], genBLV)<0.3 ){
-	   matchH1++;
+	   if(csv_k>0.679) matchH1++;
 	   matchByHiggsB++;
 	 }
 	 if( deltaR(myJetsFilt[k], genBbarLV)<0.3 ){
-	   matchH2++;
+	   if(csv_k>0.679) matchH2++;
 	   matchByHiggsB++;
 	 }
 
@@ -4425,21 +4444,22 @@ void Acc(int doGen=1){
        int merge2 = twoBsMerg>0;
        int merge3 = oneBWMerg>0;
 
+
+       // if bkg
+       //matchH1=0; matchH2=0;
+
+       //if( !(w1index!=999 && w2index!=999 && (myJetsFilt[w1index]+myJetsFilt[w2index]).M()<100 && (myJetsFilt[w1index]+myJetsFilt[w2index]).M()>60)) continue;
+
        // cout << matchW1 << ", " << matchW2 << ", " << matchB1 << ", " <<  matchB2 << ", " << matchH1 << ", " <<  matchH2 << endl;
        //cout << nomerge << ", " << merge1 << ", " << merge2 << ", "<< merge2 << endl;
 
-       if( matchW1==1 && matchW2==1 && matchB1==1 && matchB2==1 && matchH1==1 && matchH2==1 && nomerge) 
+       if( matchW1==1 && matchW2==1 && matchB1==1 && matchB2==1 && matchH1==1 && matchH2==1 && nomerge )/*&& (w1index!=999 && w2index!=999 && (myJetsFilt[w1index]+myJetsFilt[w2index]).M()<120 && (myJetsFilt[w1index]+myJetsFilt[w2index]).M()>30*/ {
 	 hDistr->Fill(  0.5 ); // ideal
+	 hMassWThere->Fill( (w1+w2).M() );
+       }
        else if( ( (matchW1<1 && matchW2==1) || (matchW1==1 && matchW2<1)) && matchB1==1 && matchB2==1 && matchH1==1 && matchH2==1 && nomerge){
 	 hDistr->Fill(  1.5 ); // no W
-	 if(abs(genTop.wdau1id)<6){
-	   //cout << "W1 = " << topW1LV.Pt() << ", " << topW1LV.Eta() << endl; 
-	   //cout << "W2 = " << topW2LV.Pt() << ", " << topW2LV.Eta() << endl; 
-	 }
-	 else{
-	   //cout << "W1~ = " << atopW1LV.Pt() << ", " << atopW1LV.Eta() << endl; 
-	   //cout << "W2~ = " << atopW2LV.Pt() << ", " << atopW2LV.Eta() << endl; 
-	 }
+	 hMassWLost->Fill( (w1+w2).M() );
        }
        else if( matchW1==1 && matchW2==1 && (matchB1<1 || matchB2<1) && matchH1==1 && matchH2==1 && nomerge) 
 	 hDistr->Fill(  2.5 ); // no top bs
@@ -4859,8 +4879,30 @@ void Acc(int doGen=1){
 
 
    /////////////////////////////////////////////////////////////////////////// 
-   
-   
+
+  float total = hDistr->Integral() ;
+  cout << "*************** Distribution *****************" << endl;
+  cout << "No merge, all partons: "  << hDistr->GetBinContent(1)/total << endl;
+  cout << "No merge, ==1 W lost : "  << hDistr->GetBinContent(2)/total << endl;
+  cout << "No merge, >1 W lost  : "  << hDistr->GetBinContent(19)/total << endl;
+  cout << "No merge, one b lost : "  << hDistr->GetBinContent(3)/total << endl;
+  cout << "No merge, one H lost : "  << hDistr->GetBinContent(4)/total << endl;
+  cout << "Ws merge, all partons: "  << hDistr->GetBinContent(5)/total << endl;
+  cout << "Ws merge, >=1 W lost : "  << hDistr->GetBinContent(6)/total << endl;
+  cout << "Ws merge, one b lost : "  << hDistr->GetBinContent(7)/total << endl;
+  cout << "Ws merge, one H lost : "  << hDistr->GetBinContent(8)/total << endl;
+  cout << "Bs merge, all partons: "  << hDistr->GetBinContent(9)/total << endl;
+  cout << "Bs merge, >=1 W lost : "  << hDistr->GetBinContent(10)/total << endl;
+  cout << "Bs merge, one b lost : "  << hDistr->GetBinContent(11)/total << endl;
+  cout << "Bs merge, one H lost : "  << hDistr->GetBinContent(12)/total << endl;
+  cout << "WB merge, all partons: "  << hDistr->GetBinContent(13)/total << endl;
+  cout << "WB merge, >=1 W lost : "  << hDistr->GetBinContent(14)/total << endl;
+  cout << "WB merge, one b lost : "  << hDistr->GetBinContent(15)/total << endl;
+  cout << "WB merge, one H lost : "  << hDistr->GetBinContent(16)/total << endl;
+  cout << ">=1 W >=1 H lost     : "  << hDistr->GetBinContent(17)/total << endl;
+  cout << ">=1 W >=1 b lost     : "  << hDistr->GetBinContent(18)/total << endl;
+  cout << "Other                : "  << hDistr->GetBinContent(20)/total << endl;
+
   fOutput->Write();
   fOutput->Close();
   fInput->Close();

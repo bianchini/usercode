@@ -26,7 +26,7 @@ process.fwliteInput = cms.PSet(
 
     likelihoodFile = cms.string("../test/Macro/likelihoods_bkgd.root"),
     #likelihoods    = cms.vstring("KIN","BTAG","HEL"),
-    likelihoods    = cms.vstring("HEL"),
+    likelihoods    = cms.vstring("KIN","HEL"),
 
     udscPtCut = cms.double(30),
     bPtCut    = cms.double(30),
@@ -34,6 +34,7 @@ process.fwliteInput = cms.PSet(
     metResolutionsCoeff = cms.vdouble(1.12544e+02, 3.00905e-01, 6.54808e+01, 7.35296e-01),
     helicityCoeff       = cms.vdouble(0.0315287, -0.00783723, -0.0290744, 0.00656129,      # leptonic pol3
                                       0.0296338, 0.00, -0.0121257, 0.00, -0.0182667),      # hadronic pol4
+    chi2Coeff           = cms.vdouble(3.09651e+00),
     
     udscResolutions = cms.VPSet(
 
