@@ -172,30 +172,92 @@ int main(int argc, const char* argv[])
   TTree* outTreeW    = fs.make<TTree>("outTreeW","tree wrong");
   TTree* outTree     = fs.make<TTree>("outTree","event tree");
 
-  float chi2R, probR, chi2W, probW;
+  float chi2R, probR, helHadR, helLepR, bTagR;
+  float xaR;
+  float xbR;
+  float totalPtR  ;
+  float planeCosThetaR  ;
+  float higgsOrientR    ;
+  float topEnFracR ;
+  float atopEnFracR ;
+  float higgsPtStarR   ;
+  float topMassR  ;
+  float atopMassR ;
+  float higgsMassR ;
+  float topsCosDPhiR;
+
+  float chi2W, probW, helHadW, helLepW, bTagW;
+  float xaW;
+  float xbW;
+  float totalPtW  ;
+  float planeCosThetaW  ;
+  float higgsOrientW    ;
+  float topEnFracW ;
+  float atopEnFracW ;
+  float higgsPtStarW   ;
+  float topMassW  ;
+  float atopMassW ;
+  float higgsMassW ;
+  float topsCosDPhiW;
+
   int nResJets, matches, nPermut, nPermutAll, status ;
   int TTnoW, fullTT, fullH;
+  int WTag;
   JetByPt hjet1, hjet2;
   JetByPt w1jet, w2jet;
+  genTopInfo missingTop;
 
   outTreeR->Branch("chi2",    &chi2R,    "chi2/F");
   outTreeR->Branch("prob",    &probR,    "prob/F");
-  outTreeW->Branch("chi2",    &chi2W,"chi2/F");
-  outTreeW->Branch("prob",    &probW,"prob/F");
+  outTreeR->Branch("helHad",  &helHadR,  "helHad/F");
+  outTreeR->Branch("helLep",  &helLepR,  "helLep/F");
+  outTreeR->Branch("bTag",    &bTagR,    "bTag/F");
+  outTreeR->Branch("xa",           &xaR,    "xa/F");
+  outTreeR->Branch("xb",           &xbR,    "xb/F");
+  outTreeR->Branch("totalPt",      &totalPtR,    "totalPt/F");
+  outTreeR->Branch("planeCosTheta",&planeCosThetaR,    "planeCosTheta/F");
+  outTreeR->Branch("higgsOrient",  &higgsOrientR,    "higgsOrient/F");
+  outTreeR->Branch("topEnFrac",    &topEnFracR,    "topEnFrac/F");
+  outTreeR->Branch("atopEnFrac",   &atopEnFracR,    "atopEnFrac/F");
+  outTreeR->Branch("higgsPtStar",    &higgsPtStarR,    "higgsPtStar/F");
+  outTreeR->Branch("topMass",    &topMassR,    "topMass/F");
+  outTreeR->Branch("atopMass",   &atopMassR,    "atopMass/F");
+  outTreeR->Branch("higgsMass",  &higgsMassR,   "higgsMass/F");
+  outTreeR->Branch("topsCosDPhi",    &topsCosDPhiR,    "topsCosDPhi/F");
 
-  outTree->Branch("hjet1",    &hjet1,      "index/I:pt/F:eta/F:phi/F:mass/F:csv/F:topB/F:topW/F:atopB/F:atopW/F:higgsB/F:flavor/F:unc/F");
-  outTree->Branch("hjet2",    &hjet2,      "index/I:pt/F:eta/F:phi/F:mass/F:csv/F:topB/F:topW/F:atopB/F:atopW/F:higgsB/F:flavor/F:unc/F");
-  outTree->Branch("w1jet",    &w1jet,      "index/I:pt/F:eta/F:phi/F:mass/F:csv/F:topB/F:topW/F:atopB/F:atopW/F:higgsB/F:flavor/F:unc/F");
-  outTree->Branch("w2jet",    &w2jet,      "index/I:pt/F:eta/F:phi/F:mass/F:csv/F:topB/F:topW/F:atopB/F:atopW/F:higgsB/F:flavor/F:unc/F");
+  outTreeW->Branch("chi2",    &chi2W,    "chi2/F");
+  outTreeW->Branch("prob",    &probW,    "prob/F");
+  outTreeW->Branch("helHad",  &helHadW,  "helHad/F");
+  outTreeW->Branch("helLep",  &helLepW,  "helLep/F");
+  outTreeW->Branch("bTag",    &bTagW,    "bTag/F");
+  outTreeW->Branch("xa",    &xaW,    "xa/F");
+  outTreeW->Branch("xb",    &xbW,    "xb/F");
+  outTreeW->Branch("totalPt",    &totalPtW,    "totalPt/F");
+  outTreeW->Branch("planeCosTheta",    &planeCosThetaW,    "planeCosTheta/F");
+  outTreeW->Branch("higgsOrient",    &higgsOrientW,    "higgsOrient/F");
+  outTreeW->Branch("topEnFrac",    &topEnFracW,    "topEnFrac/F");
+  outTreeW->Branch("atopEnFrac",    &atopEnFracW,    "atopEnFrac/F");
+  outTreeW->Branch("higgsPtStar",    &higgsPtStarR,    "higgsPtStar/F");
+  outTreeW->Branch("topMass",    &topMassW,    "topMass/F");
+  outTreeW->Branch("atopMass",   &atopMassW,    "atopMass/F");
+  outTreeW->Branch("higgsMass",  &higgsMassW,   "higgsMass/F");
+  outTreeW->Branch("topsCosDPhi",    &topsCosDPhiW,    "topsCosDPhi/F");
+  //outTreeR->Branch("",    &R,    "/F");
 
-  outTree->Branch("nResJets",&nResJets,  "nResJets/I");
-  outTree->Branch("matches", &matches,   "matches/I");
-  outTree->Branch("nPermut", &nPermut,   "nPermut/I");
+  outTree->Branch("hjet1",    &hjet1,       "index/I:pt/F:eta/F:phi/F:mass/F:csv/F:topB/F:topW/F:atopB/F:atopW/F:higgsB/F:flavor/F:unc/F");
+  outTree->Branch("hjet2",    &hjet2,       "index/I:pt/F:eta/F:phi/F:mass/F:csv/F:topB/F:topW/F:atopB/F:atopW/F:higgsB/F:flavor/F:unc/F");
+  outTree->Branch("w1jet",    &w1jet,       "index/I:pt/F:eta/F:phi/F:mass/F:csv/F:topB/F:topW/F:atopB/F:atopW/F:higgsB/F:flavor/F:unc/F");
+  outTree->Branch("w2jet",    &w2jet,       "index/I:pt/F:eta/F:phi/F:mass/F:csv/F:topB/F:topW/F:atopB/F:atopW/F:higgsB/F:flavor/F:unc/F");
+  outTree->Branch("nResJets",&nResJets,     "nResJets/I");
+  outTree->Branch("matches", &matches,      "matches/I");
+  outTree->Branch("nPermut", &nPermut,      "nPermut/I");
   outTree->Branch("nPermutAll", &nPermutAll,"nPermutAll/I");
   outTree->Branch("status",     &status,    "status/I");
   outTree->Branch("fullTT",     &fullTT,    "fullTT/I");
   outTree->Branch("fullH",      &fullH,     "fullH/I");
   outTree->Branch("TTnoW",      &TTnoW,     "TTnoW/I");
+  outTree->Branch("WTag",       &WTag,      "WTag/I");
+  outTree->Branch("genTop",     &missingTop,  "bmass/F:bpt/F:beta:bphi/F:bstatus/F:wdau1mass/F:wdau1pt/F:wdau1eta:wdau1phi/F:wdau1id/F:wdau2mass/F:wdau2pt/F:wdau2eta:wdau2phi/F:wdau2id/F");
 
 
 
@@ -213,27 +275,31 @@ int main(int argc, const char* argv[])
   std::vector<double> metResolutionsCoeff         (in.getParameter<std::vector<double> >("metResolutionsCoeff") );
   std::vector<double> helicityCoeff               (in.getParameter<std::vector<double> >("helicityCoeff") );
   std::vector<double> chi2Coeff                   (in.getParameter<std::vector<double> >("chi2Coeff") );
+  std::vector<double> sgnMassCoeff                (in.getParameter<std::vector<double> >("sgnMassCoeff") );
 
   if(helicityCoeff.size()!=9){
     cout << "Nine parameters are required for the helicity angle param... return" << endl;
     return 0;
   }
 
-  double lumi     (in.getParameter<double>("lumi") );
-  bool verbose    (in.getParameter<bool>("verbose") );
+  double lumi              (in.getParameter<double>("lumi") );
+  bool verbose             (in.getParameter<bool>("verbose") );
+  bool computeCMSVariables (in.getParameter<bool>("computeCMSVariables") );
   double udscPtCut(in.getParameter<double>("udscPtCut") );
   double bPtCut   (in.getParameter<double>("bPtCut") );
   std::string likelihoodFile(in.getParameter<std::string>("likelihoodFile") );
   vector<std::string> likelihoods(in.getParameter<vector<std::string> >("likelihoods") );
 
-  int useKin  = 0;
-  int useBtag = 0;
-  int useHel  = 0;
+  int useKin   = 0;
+  int useBtag  = 0;
+  int useHel   = 0;
+  int useHMass = 0;
 
   for(unsigned int l = 0; l < likelihoods.size() ; l++){
-    if( likelihoods[l].find("KIN") !=string::npos ) useKin =1;
-    if( likelihoods[l].find("BTAG")!=string::npos ) useBtag=1;
-    if( likelihoods[l].find("HEL") !=string::npos ) useHel =1;
+    if( likelihoods[l].find("KIN")   !=string::npos ) useKin   =1;
+    if( likelihoods[l].find("BTAG")  !=string::npos ) useBtag  =1;
+    if( likelihoods[l].find("HEL")   !=string::npos ) useHel   =1;
+    if( likelihoods[l].find("HMASS") !=string::npos ) useHMass =1;
   }
 
   TFile* fLikelihoods          = TFile::Open(likelihoodFile.c_str(),"READ");
@@ -247,6 +313,9 @@ int main(int argc, const char* argv[])
 
   float ndf = chi2Coeff.size()>0 ? chi2Coeff[0] : 3.;
   TF1* fChi2       = new TF1("fChi2", Form("1./TMath::Gamma(%f/2)/2.^(%f/2)*TMath::Exp(-x/2)*(x^(%f/2-1))", chi2Coeff[0],chi2Coeff[1],chi2Coeff[2]), 0, 100);
+
+  TF1 *fSgnMass = new TF1("fSgnMass","gaus",0,1000);
+  fSgnMass->SetParameters(1./TMath::Sqrt(2*TMath::Pi())/sgnMassCoeff[1],sgnMassCoeff[0],sgnMassCoeff[1]);
 
   bool openAllFiles  = false;
   Samples* mySamples = new Samples(openAllFiles, pathToFile, ordering, samples, lumi, verbose);
@@ -289,6 +358,7 @@ int main(int argc, const char* argv[])
     Float_t vLepton_pt  [99];
     Float_t vLepton_eta [99];
     Float_t vLepton_phi [99];
+    Float_t vLepton_charge [99];
     metInfo METtype1p2corr;
 
     currentTree->SetBranchAddress("jet1",   &jet1);
@@ -305,10 +375,12 @@ int main(int argc, const char* argv[])
     currentTree->SetBranchAddress("genBbar",&genBbar);
     currentTree->SetBranchAddress("genTop", &genTop);
     currentTree->SetBranchAddress("genTbar",&genTbar);
-    currentTree->SetBranchAddress("vLepton_mass",vLepton_mass);
-    currentTree->SetBranchAddress("vLepton_pt",vLepton_pt);
-    currentTree->SetBranchAddress("vLepton_eta",vLepton_eta);
-    currentTree->SetBranchAddress("vLepton_phi",vLepton_phi);
+    currentTree->SetBranchAddress("vLepton_mass"  ,vLepton_mass);
+    currentTree->SetBranchAddress("vLepton_pt"    ,vLepton_pt);
+    currentTree->SetBranchAddress("vLepton_eta"   ,vLepton_eta);
+    currentTree->SetBranchAddress("vLepton_phi"   ,vLepton_phi);
+    currentTree->SetBranchAddress("vLepton_charge",vLepton_charge);
+    
     currentTree->SetBranchAddress("METtype1p2corr",&METtype1p2corr);
 
 
@@ -318,6 +390,8 @@ int main(int argc, const char* argv[])
       
       if(i%1000==0) cout << i << endl;
       currentTree->GetEntry(i);
+
+      //continue;
       
       LV topBLV   (0.,0.,0.,0.);
       LV topW1LV  (0.,0.,0.,0.); 
@@ -468,6 +542,8 @@ int main(int argc, const char* argv[])
 	//bool isBbar = genBbarLV.Pt()>0 ? deltaR( myJetsFilt[k], genBbarLV) < 0.3 && TMath::Abs(myJetsFilt[k].Pt()-genBbarLV.Pt())/genBbarLV.Pt()<0.30  : false;      
       }
 
+      if( myJetsFilt.size()<4 || numJets30<6 || numJets30BtagM<4) continue;
+
 
       ////////////////////////////  TOP KIN FITTER    ////////////////////////////
 
@@ -518,8 +594,6 @@ int main(int argc, const char* argv[])
 	indices[k]=k; 
       vector<unsigned int> visited;
 
-      if( myJetsFilt.size()<4 || numJets30<6 || numJets30BtagM<4) continue;
-
       
       ////////////////////////////////////////
       unsigned int mmatchW1 = 999;
@@ -528,6 +602,8 @@ int main(int argc, const char* argv[])
       unsigned int mmatchB2 = 999;
       unsigned int mmatchH1 = 999;
       unsigned int mmatchH2 = 999;
+      unsigned int indexLight1=999;
+      unsigned int indexLight2=999;
 
       for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
 	 float pt_k = mapFilt[k].pt>0 ? mapFilt[k].pt : 0.0 ;
@@ -540,11 +616,17 @@ int main(int argc, const char* argv[])
 	 }
 	 else if( (abs(genTop.wdau1id)<6 && deltaR(myJetsFilt[k], topW1LV)<0.3) || 
 	     (abs(genTbar.wdau1id)<6 && deltaR(myJetsFilt[k], atopW1LV)<0.3) ){
-	   if(csv_k<0.679)  mmatchW1=k;
+	   if(csv_k<0.679){
+	     mmatchW1    = k;
+	     indexLight1 = k;
+	   }
 	 }
 	 else if( (abs(genTop.wdau1id)<6 && deltaR(myJetsFilt[k], topW2LV)<0.3) || 
 	     (abs(genTbar.wdau1id)<6 && deltaR(myJetsFilt[k], atopW2LV)<0.3) ){
-	   if(csv_k<0.679) mmatchW2=k;
+	   if(csv_k<0.679){
+	     mmatchW2    = k;
+	     indexLight2 = k;
+	   }
 	 }
 	 else if( deltaR(myJetsFilt[k], atopBLV)<0.3 ){
 	   if(csv_k>0.679) mmatchB2=k;
@@ -572,9 +654,7 @@ int main(int argc, const char* argv[])
 	TTnoW = 0;
 
 
-      int WTag = 0;
-      unsigned int indexLight1=999;
-      unsigned int indexLight2=999;
+      WTag = 0;
       for(unsigned int ii = 0; ii < myJetsFilt.size()-1; ii++){
 	for(unsigned int jj = ii+1; jj < myJetsFilt.size(); jj++){
 	  for(unsigned int swapJ = 0; swapJ<2 ; swapJ++){
@@ -599,13 +679,11 @@ int main(int argc, const char* argv[])
 	}
       }
       
-      w1jet.reset(); w2jet.reset();
-      w1jet        = mapFilt[indexLight1];
-      w2jet        = mapFilt[indexLight2];
-
-      //genHadrTopPt  =  (abs(genTop.wdau1id) <6) ? (topBLV+topW1LV+topW2LV).Pt()  : (atopBLV+atopW1LV+atopW2LV).Pt();
-      //genHadrTopEta =  (abs(genTop.wdau1id) <6) ? (topBLV+topW1LV+topW2LV).Eta() : (atopBLV+atopW1LV+atopW2LV).Eta();
-      //matchedWPt    = 
+      w1jet.reset(); 
+      w2jet.reset();
+      if(indexLight1!=999) w1jet        = mapFilt[indexLight1];
+      if(indexLight2!=999) w2jet        = mapFilt[indexLight2];
+      missingTop   = abs(genTop.wdau1id)<6 ? genTop : genTbar;
 
       
 
@@ -730,17 +808,25 @@ int main(int argc, const char* argv[])
 		  
 		  //if(verbose || (i==1930 && indexWdau1Cand==5 && indexWdau2Cand==6 && indexbCand==2 && indexbbarCand==1))
 		  //cout << "Perm #" << counterPer << " [" << indexWdau1Cand << "," << indexWdau2Cand << "," << indexbCand << "," << indexbbarCand << " => STEP5" <<endl;	
-		  
+		  helHadR = -99; helLepR = -99; bTagR = -99;
+		  helHadW = -99; helLepW = -99; bTagW = -99;
+
+
+
 		  float chi2 = fitter->fitS();
 		  float p    = fitter->fitProb();
 		  if(useKin && p>0.)
 		    logp =  -TMath::Log(p);
-		  
+		    //logp   = TMath::Exp(-chi2);
+
+		  float bTag = -99;
 		  if(useBtag && fLikelihoodCsvB && fLikelihoodCsvNonB){
 		    float btag1   = fLikelihoodCsvB->Eval( (mapFilt[indexbCand    ]).csv);
 		    float btag2   = fLikelihoodCsvB->Eval( (mapFilt[indexbbarCand ]).csv);
 		    float buntag1 = fLikelihoodCsvNonB->Eval( (mapFilt[indexWdau1Cand ]).csv);
 		    float buntag2 = fLikelihoodCsvNonB->Eval( (mapFilt[indexWdau2Cand ]).csv);
+
+		    bTag = btag1*btag2*buntag1*buntag2;
 		    if( useKin && btag1>0. && btag2>0. && buntag1>0. && buntag2>0.){
 		      logp += (-TMath::Log(btag1));
 		      logp += (-TMath::Log(btag2));
@@ -777,6 +863,8 @@ int main(int argc, const char* argv[])
 		  TLorentzVector lvLepW   = lvLepton + lvNeutrino ;
 		  TLorentzVector lvLepTop = lvLepW   + lvLepB ;
 		  
+		  float helHad = -99;
+		  float helLep = -99;
 		  if(useHel && fHelTopLept && fHelTopHadr){
 		    
 		    TLorentzVector bHad;
@@ -790,7 +878,7 @@ int main(int argc, const char* argv[])
 		    w2Had.Boost(-boostWHad);
 		    bHad.Boost( -boostWHad);
 		    double cosChiStarTopHad = TMath::Cos(w1Had.Vect().Angle( -bHad.Vect() ));
-		    float helHad = fHelTopHadr->Eval( cosChiStarTopHad );
+		    helHad = fHelTopHadr->Eval( cosChiStarTopHad );
 		    
 		    TLorentzVector bLep;
 		    TLorentzVector w1Lep;
@@ -803,7 +891,7 @@ int main(int argc, const char* argv[])
 		    w2Lep.Boost(-boostWLep);
 		    bLep.Boost( -boostWLep);
 		    double cosChiStarTopLep = TMath::Cos(w1Lep.Vect().Angle( -bLep.Vect() ));
-		    float helLep = fHelTopLept->Eval( cosChiStarTopLep );
+		    helLep = fHelTopLept->Eval( cosChiStarTopLep );
 		    
 		    if( (useKin || useBtag) && helHad>0. && helLep>0. ){
 		      logp += (-TMath::Log(helHad));
@@ -816,6 +904,94 @@ int main(int argc, const char* argv[])
 		    else
 		      logp = 999;
 		  }
+
+		  float higgsMassProb = -99;
+		  int counterPairPerm=0; 
+		  unsigned int h1Perm=999; 
+		  unsigned int h2Perm=999;
+		  for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
+		    float csv_k = mapFilt[k].csv>0 ? mapFilt[k].csv : 0.0 ;
+		    float pt_k  = mapFilt[k].pt>0  ? mapFilt[k].pt  : 0.0 ;
+		    if( !(csv_k > 0.679 && pt_k>bPtCut) ) continue;
+		    
+		    if( k==indexbCand || k==indexWdau1Cand || k==indexWdau2Cand || k==indexbbarCand) continue;
+		    
+		    if(counterPairPerm==0){
+		      h1Perm   = k;
+		    }
+		    else if(counterPairPerm==1){
+		      h2Perm   = k;
+		    }
+		    else{}
+		    counterPairPerm++;
+		  }
+		  
+		  if(useHMass && fSgnMass){
+
+		    if(h1Perm!=999 && h2Perm!=999){
+		      higgsMassProb = fSgnMass->Eval( (myJetsFilt[h1Perm]+myJetsFilt[h2Perm]).M() );
+
+		      if( (useKin || useBtag || useHel) )  
+			logp += (-TMath::Log(higgsMassProb));
+		      else
+			logp  = (-TMath::Log(higgsMassProb));			
+		    }
+		    else{
+		      logp = 999;
+		    }
+		  }
+
+		  
+
+		  /////////////////////////////////////////////////////
+		  float xa            = -99;
+		  float xb            = -99;
+		  float totalPt       = -99;
+		  float planeCosTheta = -99;
+		  float higgsOrient   = -99;
+		  float topEnFrac     = -99;
+		  float atopEnFrac    = -99;
+		  float higgsPtStar   = -99;
+		  float topMass       = -99;
+		  float atopMass      = -99;
+		  float higgsMass     = -99;
+		  float topsCosDPhi   = -99;
+		  if(computeCMSVariables && h1Perm!=999 && h2Perm!=999){
+
+		    TLorentzVector TOP   = (vLepton_charge[0]==1)  ? lvLepTop : lvHadTop; 
+		    TLorentzVector ATOP  = (vLepton_charge[0]==-1) ? lvLepTop : lvHadTop; 
+		    TLorentzVector DIJET;
+		    DIJET.SetPxPyPzE( (myJetsFilt[h1Perm]+myJetsFilt[h2Perm]).Px(), (myJetsFilt[h1Perm]+myJetsFilt[h2Perm]).Py(), (myJetsFilt[h1Perm]+myJetsFilt[h2Perm]).Pz(), (myJetsFilt[h1Perm]+myJetsFilt[h2Perm]).E());
+
+		    TLorentzVector TOT = TOP+ATOP+DIJET;
+		    TVector3 boostToCMS(TOT.Px()/TOT.E(), TOT.Py()/TOT.E(), TOT.Pz()/TOT.E());
+
+		    totalPt = TOT.Pt();
+		    xa = (  TOT.Pz() + TOT.E() )/TMath::Sqrt(8000*8000.);
+		    xb = ( -TOT.Pz() + TOT.E() )/TMath::Sqrt(8000*8000.);
+
+		    TOP.Boost(-boostToCMS);
+		    ATOP.Boost(-boostToCMS);
+		    DIJET.Boost(-boostToCMS);
+
+		    if(TOP.Mag()<=0 || ATOP.Mag()<=0) cout << "Error: null momentum" << endl;
+		    TVector3 decayPlane    = ((TOP.Vect()).Cross(ATOP.Vect())).Unit();
+		    TVector3 decayPlanePhi = decayPlane.Cross( TVector3(0,0,1) );
+		    planeCosTheta = TMath::Cos( decayPlane.Angle( TVector3(0,0,1)) );
+		    higgsOrient   = TMath::Cos( (DIJET.Vect()).Angle( decayPlanePhi ) );
+		    topEnFrac     = TOP.E()/TOT.E();
+		    atopEnFrac    = ATOP.E()/TOT.E();
+
+		    higgsPtStar = DIJET.Vect().Mag();
+		    higgsMass   = DIJET.M();
+		    topMass     = TOP.M();
+		    atopMass    = ATOP.M();
+
+		    topsCosDPhi = TMath::Cos( (TOP.Vect()).Angle( ATOP.Vect() ) );
+
+		  }
+
+		  /////////////////////////////////////////////////////
 
 		  
 		  if(logp<minLogP){
@@ -834,11 +1010,42 @@ int main(int argc, const char* argv[])
 		    foundMatch = 1;
 		    chi2R = chi2;
 		    probR = p;
+		    helHadR = helHad;
+		    helLepR = helLep;
+		    bTagR   = bTag;
+		    xaR=xa;
+		    xbR=xb;
+		    totalPtR = totalPt;
+		    planeCosThetaR = planeCosTheta;
+		    higgsOrientR   = higgsOrient;
+		    topEnFracR     = topEnFrac;
+		    atopEnFracR    = atopEnFrac;
+		    higgsPtStarR = higgsPtStar;
+		    higgsMassR   = higgsMass;
+		    topMassR     = topMass;
+		    atopMassR    = atopMass;
+		    topsCosDPhiR =topsCosDPhi;
 		    outTreeR->Fill();
 		  }
 		  else{
 		    chi2W = chi2;
 		    probW = p;
+		    helHadW = helHad;
+		    helLepW = helLep;
+		    bTagW   = bTag;
+
+		    xaW=xa;
+		    xbW=xb;
+		    totalPtW = totalPt;
+		    planeCosThetaW = planeCosTheta;
+		    higgsOrientW   = higgsOrient;
+		    topEnFracW     = topEnFrac;
+		    atopEnFracW    = atopEnFrac;
+		    higgsPtStarW = higgsPtStar;
+		    higgsMassW   = higgsMass;
+		    topMassW     = topMass;
+		    atopMassW    = atopMass;
+		    topsCosDPhiW =topsCosDPhi;
 		    outTreeW->Fill();
 		  }
 	
@@ -932,6 +1139,7 @@ int main(int argc, const char* argv[])
       
 
       delete fitter;
+
     } // event loop
 
     mySamples->GetFile( currentName )->Close();
@@ -939,6 +1147,9 @@ int main(int argc, const char* argv[])
   } // samples loop
 
 
+  fLikelihoods->Close();
+  delete fHelTopLept; delete fHelTopHadr; delete fChi2; delete fSgnMass;
+ 
   return 0;
 
 }

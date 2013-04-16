@@ -3,6 +3,10 @@ import FWCore.ParameterSet.Config as cms
 
 VType = "_VType2"
 
+xsecTT_FH = 106.9
+xsecTT_SL = 103.0
+xsecTT_FL = 24.8
+
 process = cms.Process("TopHinFitterSL")
 
 process.fwliteInput = cms.PSet(
@@ -10,23 +14,32 @@ process.fwliteInput = cms.PSet(
     pathToFile    = cms.string("dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/store//user/bianchi/HBB_EDMNtuple/AllHDiJetPt"+VType+"/v2/"),
     ordering      = cms.string("DiJetPt_"),
     lumi          = cms.double(12.1),
-    verbose       = cms.bool(False),
+    verbose             = cms.bool(False),
+    computeCMSVariables = cms.bool(True),
     
     samples       = cms.VPSet(
     
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('TTH_HToBB_M-125_8TeV-pythia6'+VType),
     nickName = cms.string('TTH125'),
     color    = cms.int32(2),
     xSec     = cms.double(0.1302*0.569)
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
+    nickName = cms.string('TTJetsSemiLept'),
+    color    = cms.int32(41),
+    xSec     = cms.double(xsecTT_SL),
     ),
     
     ),
 
     likelihoodFile = cms.string("../test/Macro/likelihoods_bkgd.root"),
     #likelihoods    = cms.vstring("KIN","BTAG","HEL"),
-    likelihoods    = cms.vstring("KIN","HEL"),
+    likelihoods    = cms.vstring("KIN","HMASS", "HEL"),
 
     udscPtCut = cms.double(30),
     bPtCut    = cms.double(30),
@@ -35,6 +48,7 @@ process.fwliteInput = cms.PSet(
     helicityCoeff       = cms.vdouble(0.0315287, -0.00783723, -0.0290744, 0.00656129,      # leptonic pol3
                                       0.0296338, 0.00, -0.0121257, 0.00, -0.0182667),      # hadronic pol4
     chi2Coeff           = cms.vdouble(3.09651e+00),
+    sgnMassCoeff        = cms.vdouble(1.15716e+02,1.98236e+01),
     
     udscResolutions = cms.VPSet(
 
