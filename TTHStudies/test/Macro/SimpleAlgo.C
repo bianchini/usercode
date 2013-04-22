@@ -3989,6 +3989,14 @@ void Acc(int doGen=1, int jets30=6 ,  int bTagJets30 = 4, int excl=0){
   TH1F* hMassWThere     = new TH1F("hMassWThere", "visited"   ,40,0, 400 );
   TH1F* hMassWLost     = new TH1F("hMassWLost", "visited"   ,40,0, 400 );
 
+  TH1F* hCsvW     = new TH1F("hCsvW", "visited"   ,40,0, 1 );
+
+  TH2F* hCsvWvsId     = new TH2F("hCsvWvsId", "visited"   ,40,0, 1 , 23, 0, 23);
+
+  TH1F* hCsvB     = new TH1F("hCsvB", "visited"   ,40,0, 1 );
+  TH1F* hCsvH     = new TH1F("hCsvH", "visited"   ,40,0, 1 );
+  
+
   string relation = excl ? "=" : ">=" ;
   TH1F* hDistr = new TH1F("hDistr", Form("Njets%s%d, Nbjets%s%d ; ;", relation.c_str(), jets30, relation.c_str(),bTagJets30  )   ,20, 0 ,20 );
 
@@ -4041,6 +4049,12 @@ void Acc(int doGen=1, int jets30=6 ,  int bTagJets30 = 4, int excl=0){
   TH1F* hcosThetaStarWrong    =  new TH1F("hcosThetaStarWrong", ""   ,50, -1.1 ,1.1 );
 
   TH1F* hPt =  new TH1F("hPt", ""   ,60, 0 ,6 );
+
+  TH2F* hPtMiss =  new TH2F("hPtMiss", ""   ,120, 0 ,600, 100,-5,5 );
+  TH2F* hPtTrue =  new TH2F("hPtTrue", ""   ,120, 0 ,600, 100,-5,5 );
+  TH1F* hcosMiss1 =  new TH1F("hcosMiss1", ""     ,50, -1.1 ,1.1 );
+  TH1F* hcosMiss2 =  new TH1F("hcosMiss2", ""     ,50, -1.1 ,1.1 );
+  TH1F* hcosMiss3 =  new TH1F("hcosMiss3", ""     ,50, -1.1 ,1.1 );
 
   //TH1F* h =  new TH1F("", ""   ,50, -1.1 ,1.1 );
 
@@ -4122,6 +4136,8 @@ void Acc(int doGen=1, int jets30=6 ,  int bTagJets30 = 4, int excl=0){
   Long64_t nentries = tree->GetEntries();
   //nentries = 500000;
   int totCounter = 0;
+  int doneTest = 0;
+
   
   for (Long64_t i = 0; i < nentries ; i++){
     
@@ -4364,9 +4380,83 @@ void Acc(int doGen=1, int jets30=6 ,  int bTagJets30 = 4, int excl=0){
      if(numBTag==4 && numJets30>=6)
        hMult->Fill(4.5, weight);
 
-     if( (!excl && ( (jets30==6 && numJets30>=jets30) || (jets30<6 && numJets30>=jets30)) && numBTag>=bTagJets30) ||
-	 (excl  && ( (jets30==6 && numJets30>=jets30) || (jets30<6 && numJets30==jets30)) && numBTag==bTagJets30) 
+     if( (!excl && ( (jets30>=6 && numJets30>=0/*jets30*/) || (jets30<6 && numJets30>=jets30)) && numBTag>=bTagJets30) ||
+	 (excl  && ( (jets30>=6 && numJets30>=jets30) || (jets30<6 && numJets30==jets30)) && numBTag==bTagJets30) 
 	 ){
+
+
+       /////////////////////////////////////////////
+
+       if(abs(genTop.wdau1id)<6 && topBLV.Pt()>40 && topW1LV.Pt()>40){
+
+	 doneTest++;
+	 if(doneTest==2){
+
+
+	 float ptS  = 1.0;
+	 float etaS = 0.1;
+	 float phiS = 0.1;
+	 
+	 hPtTrue->Fill(topW2LV.Pt(), topW2LV.Eta());
+	 cout << topW2LV.Pt() << ", " << topW2LV.Eta() << ", " << topW2LV.Phi() << endl;
+	 cout << topW1LV.Pt() << ", " << topW1LV.Eta() << ", " << topW1LV.Phi() << endl;
+	 cout << topBLV.Pt() << ", " <<topBLV.Eta() << ", " << topBLV.Phi() << endl;
+
+	 for(int scan1 = 0; scan1<100    ; scan1++){
+	   for(int scan2 = 0; scan2<100  ; scan2++){
+	     for(int scan3 = 0; scan3<30 ; scan3++){
+	       
+	       float pt  =  5.0 + ptS*scan1;
+	       float eta = -5  + etaS*scan2; 
+	       float phi = -TMath::Pi() +  (2*TMath::Pi())/30.*scan3;
+	       
+
+	       LV jetLV(pt, eta, phi, 0.);
+	       float TopMass =  (topBLV+topW1LV+jetLV).M();
+	       float WMass   =  (topW1LV+jetLV).M();
+
+	       LV topLV  = topBLV+topW1LV+jetLV;
+	       LV topWLV = topW1LV+jetLV;
+	       
+	       TVector3 boost(topLV.Px()/topLV.E(), topLV.Py()/topLV.E(), topLV.Pz()/topLV.E());
+	       
+	       TLorentzVector bHad;
+	       TLorentzVector w1Had;
+	       TLorentzVector w2Had;
+	       
+	       bHad.SetPxPyPzE( topBLV.Px(), topBLV.Py(), topBLV.Pz(), topBLV.E());
+	       w1Had.SetPxPyPzE( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
+	       w2Had.SetPxPyPzE( jetLV.Px(), jetLV.Py(), jetLV.Pz(), jetLV.E());
+	       
+	       bHad.Boost(-boost);
+	       w1Had.Boost(-boost);
+	       w2Had.Boost(-boost);
+
+	       double cosThetaStarTopB  = TMath::Cos(bHad.Vect().Angle(boost));
+	       double cosThetaStarTopW1 = TMath::Cos(w1Had.Vect().Angle(boost));
+	       double cosThetaStarTopW2 = TMath::Cos(w2Had.Vect().Angle(boost));
+
+	       hcosMiss1->Fill(cosThetaStarTopB, weight);
+	       hcosMiss2->Fill(cosThetaStarTopW1, weight);
+	       hcosMiss3->Fill(cosThetaStarTopW2, weight);
+
+	   
+	       if( pt>55 && pt < 58 && eta>-2.3 && eta<-2. && phi>2.5 && phi<2.7){
+		 cout << TopMass << ", " << WMass << endl;
+	       }
+
+	       if(TMath::Abs(WMass-81.)<15. && TMath::Abs(TopMass-175.)<20){
+		 hPtMiss->Fill( pt , eta);
+		 //doneTest++;
+	       }
+	       
+	     }
+	   }
+	 }
+	 }
+       }
+	  
+       /////////////////////////////////////////////
 
        int matchW1 = 0;
        int matchW2 = 0;
@@ -4387,6 +4477,7 @@ void Acc(int doGen=1, int jets30=6 ,  int bTagJets30 = 4, int excl=0){
 	 float eta_k = mapFilt[k].eta;
 	 if(pt_k<30 || TMath::Abs(eta_k)>2.5) continue;
 	 float csv_k = mapFilt[k].csv>0 ? mapFilt[k].csv : 0.0 ;
+	 float pdgid_k = abs(mapFilt[k].flavor);
 
 	 if(csv_k<0.679 && w1.Pt()<0.001) w1 = myJetsFilt[k]; 
 	 else if(csv_k<0.679 && w2.Pt()<0.001 && w1.Pt()>0) w2 = myJetsFilt[k]; 
@@ -4401,7 +4492,10 @@ void Acc(int doGen=1, int jets30=6 ,  int bTagJets30 = 4, int excl=0){
 	 int genMatch;
 	 findGenMatch2(genMatch, myJetsFilt[k] , topBLV, topW1LV, topW2LV, atopBLV, atopW1LV, atopW2LV, genBLV, genBbarLV);
 	 if( deltaR(myJetsFilt[k], topBLV)<0.3 ){
-	   if(csv_k>0.679) matchB1++;
+	   if(csv_k>0.679){
+	     matchB1++;
+	     hCsvB->Fill(csv_k);
+	   }
 	     matchByTopB++;
 	 }
 	 if( (abs(genTop.wdau1id)<6 && deltaR(myJetsFilt[k], topW1LV)<0.3) || 
@@ -4409,6 +4503,8 @@ void Acc(int doGen=1, int jets30=6 ,  int bTagJets30 = 4, int excl=0){
 	   if(csv_k<0.679){
 	     matchW1++;
 	     w1index = k;
+	     hCsvW->Fill(csv_k);
+	     hCsvWvsId->Fill(csv_k,pdgid_k);
 	   }
 	   matchByTopW++;
 	 }
@@ -4417,19 +4513,30 @@ void Acc(int doGen=1, int jets30=6 ,  int bTagJets30 = 4, int excl=0){
 	   if(csv_k<0.679){
 	     matchW2++;
 	     w2index = k;
+	     hCsvW->Fill(csv_k);
+	     hCsvWvsId->Fill(csv_k,pdgid_k);
 	   }
 	   matchByTopW++;
 	 }
 	 if( deltaR(myJetsFilt[k], atopBLV)<0.3 ){
-	   if(csv_k>0.679) matchB2++;
+	   if(csv_k>0.679){
+	     matchB2++;
+	     hCsvB->Fill(csv_k);
+	   }
 	   matchByTopB++;
 	 }
 	 if( deltaR(myJetsFilt[k], genBLV)<0.3 ){
-	   if(csv_k>0.679) matchH1++;
+	   if(csv_k>0.679){
+	     matchH1++;
+	     hCsvH->Fill(csv_k);
+	   }
 	   matchByHiggsB++;
 	 }
 	 if( deltaR(myJetsFilt[k], genBbarLV)<0.3 ){
-	   if(csv_k>0.679) matchH2++;
+	   if(csv_k>0.679){
+	     matchH2++;
+	     hCsvH->Fill(csv_k);
+	   }
 	   matchByHiggsB++;
 	 }
 
@@ -4444,11 +4551,12 @@ void Acc(int doGen=1, int jets30=6 ,  int bTagJets30 = 4, int excl=0){
        int merge2 = twoBsMerg>0;
        int merge3 = oneBWMerg>0;
 
-
        // if bkg
        //matchH1=0; matchH2=0;
 
-       //if( !(w1index!=999 && w2index!=999 && (myJetsFilt[w1index]+myJetsFilt[w2index]).M()<100 && (myJetsFilt[w1index]+myJetsFilt[w2index]).M()>60)) continue;
+       //if( !(w1index!=999 && w2index!=999 && ((myJetsFilt[w1index]+myJetsFilt[w2index]).M()<1000 && (myJetsFilt[w1index]+myJetsFilt[w2index]).M()>0)  )) continue;
+       //if( !(abs(genTop.wdau1id)==4 ||  abs(genTop.wdau2id)==4 || abs(genTbar.wdau1id)==4 ||  abs(genTbar.wdau2id)==4) ) continue;
+       //if( !(w1.Pt()>0 && w2.Pt()>0 &&  (w1+w2).M() > 60 &&  (w1+w2).M()<100) ) continue;
 
        // cout << matchW1 << ", " << matchW2 << ", " << matchB1 << ", " <<  matchB2 << ", " << matchH1 << ", " <<  matchH2 << endl;
        //cout << nomerge << ", " << merge1 << ", " << merge2 << ", "<< merge2 << endl;
@@ -4882,6 +4990,7 @@ void Acc(int doGen=1, int jets30=6 ,  int bTagJets30 = 4, int excl=0){
 
   float total = hDistr->Integral() ;
   cout << "*************** Distribution *****************" << endl;
+  cout << "Total: " << total << endl;
   cout << "No merge, all partons: "  << hDistr->GetBinContent(1)/total << endl;
   cout << "No merge, ==1 W lost : "  << hDistr->GetBinContent(2)/total << endl;
   cout << "No merge, >1 W lost  : "  << hDistr->GetBinContent(19)/total << endl;

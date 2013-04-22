@@ -172,6 +172,10 @@ int main(int argc, const char* argv[])
   TTree* outTreeW    = fs.make<TTree>("outTreeW","tree wrong");
   TTree* outTree     = fs.make<TTree>("outTree","event tree");
 
+  TTree* genTree     = fs.make<TTree>("genTree","event tree");
+  TTree* genJetLightTree  = fs.make<TTree>("genJetLightTree","event tree");
+  TTree* genJetHeavyTree  = fs.make<TTree>("genJetHeavyTree","event tree");
+
   float chi2R, probR, helHadR, helLepR, bTagR;
   float xaR;
   float xbR;
@@ -185,6 +189,12 @@ int main(int argc, const char* argv[])
   float atopMassR ;
   float higgsMassR ;
   float topsCosDPhiR;
+  float topLepPtR;
+  float topLepEtaR;
+  float topLepPhiR;
+  float topHadPtR;
+  float topHadEtaR;
+  float topHadPhiR;
 
   float chi2W, probW, helHadW, helLepW, bTagW;
   float xaW;
@@ -207,6 +217,37 @@ int main(int argc, const char* argv[])
   JetByPt w1jet, w2jet;
   genTopInfo missingTop;
 
+  float X1;
+  float X2;
+  float PtTTH  ;
+  float PzTTH  ;
+  float PhiTTH  ;
+  float BetaTTH  ;
+  float GammaTTH    ;
+  float DeltaTTH    ;
+  float PtHStar ;
+  float DphiHStar ;
+  float BetaW  ;
+  float GammaW  ;
+  float DeltaW  ;
+
+  float ptRecoLight;
+  float phiRecoLight;
+  float etaRecoLight;
+  float csvRecoLight;
+  float ptLight;
+  float etaLight;
+  float phiLight;
+  float massRecoLight;
+  float ptRecoHeavy;
+  float phiRecoHeavy;
+  float etaRecoHeavy;
+  float csvRecoHeavy;
+  float ptHeavy;
+  float etaHeavy;
+  float phiHeavy;
+  float massRecoHeavy;
+
   outTreeR->Branch("chi2",    &chi2R,    "chi2/F");
   outTreeR->Branch("prob",    &probR,    "prob/F");
   outTreeR->Branch("helHad",  &helHadR,  "helHad/F");
@@ -223,7 +264,15 @@ int main(int argc, const char* argv[])
   outTreeR->Branch("topMass",    &topMassR,    "topMass/F");
   outTreeR->Branch("atopMass",   &atopMassR,    "atopMass/F");
   outTreeR->Branch("higgsMass",  &higgsMassR,   "higgsMass/F");
-  outTreeR->Branch("topsCosDPhi",    &topsCosDPhiR,    "topsCosDPhi/F");
+  outTreeR->Branch("topsCosDPhi",  &topsCosDPhiR,    "topsCosDPhi/F");
+  outTreeR->Branch("topLepPt",     &topLepPtR,    "topLepPt/F");
+  outTreeR->Branch("topLepEta",    &topLepEtaR,    "topLepEta/F");
+  outTreeR->Branch("topLepPhi",    &topLepPhiR,    "topLepPhi/F");
+  outTreeR->Branch("topHadPt",     &topHadPtR,    "topHadPt/F");
+  outTreeR->Branch("topHadEta",    &topHadEtaR,    "topHadEta/F");
+  outTreeR->Branch("topHadPhi",    &topHadPhiR,    "topHadPhi/F");
+
+
 
   outTreeW->Branch("chi2",    &chi2W,    "chi2/F");
   outTreeW->Branch("prob",    &probW,    "prob/F");
@@ -259,6 +308,38 @@ int main(int argc, const char* argv[])
   outTree->Branch("WTag",       &WTag,      "WTag/I");
   outTree->Branch("genTop",     &missingTop,  "bmass/F:bpt/F:beta:bphi/F:bstatus/F:wdau1mass/F:wdau1pt/F:wdau1eta:wdau1phi/F:wdau1id/F:wdau2mass/F:wdau2pt/F:wdau2eta:wdau2phi/F:wdau2id/F");
 
+
+  genTree->Branch("X1",       &X1,     "X1/F");
+  genTree->Branch("X2",       &X2,     "X2/F");
+  genTree->Branch("PtTTH",    &PtTTH,  "PtTTH/F");
+  genTree->Branch("PzTTH",    &PzTTH,  "PzTTH/F");
+  genTree->Branch("PhiTTH",   &PhiTTH, "PhiTTH/F");
+  genTree->Branch("BetaTTH",  &BetaTTH,     "BetaTTH/F");
+  genTree->Branch("GammaTTH", &GammaTTH,     "GammaTTH/F");
+  genTree->Branch("DeltaTTH", &DeltaTTH,     "DeltaTTH/F");
+  genTree->Branch("PtHStar",  &PtHStar,       "PtHStar/F");
+  genTree->Branch("DphiHStar",&DphiHStar,    "DphiHStar/F");
+  genTree->Branch("BetaW",    &BetaW,        "BetaW/F");
+  genTree->Branch("GammaW",   &GammaW,       "GammaW/F");
+  genTree->Branch("DeltaW",   &DeltaW,       "DeltaW/F");
+
+  genJetLightTree->Branch("ptReco",   &ptRecoLight, "ptReco/F");
+  genJetLightTree->Branch("etaReco",  &etaRecoLight, "etaReco/F");
+  genJetLightTree->Branch("phiReco",  &phiRecoLight, "phiReco/F");
+  genJetLightTree->Branch("csvReco",   &csvRecoLight, "csvReco/F");
+  genJetLightTree->Branch("pt",       &ptLight,     "pt/F");
+  genJetLightTree->Branch("eta",      &etaLight,    "eta/F");
+  genJetLightTree->Branch("phi",      &phiLight,    "phi/F");
+  genJetLightTree->Branch("massReco",     &massRecoLight,   "massReco/F");
+
+  genJetHeavyTree->Branch("ptReco",   &ptRecoHeavy, "ptReco/F");
+  genJetHeavyTree->Branch("etaReco",  &etaRecoHeavy, "etaReco/F");
+  genJetHeavyTree->Branch("phiReco",  &phiRecoHeavy, "phiReco/F");
+  genJetHeavyTree->Branch("csvReco",   &csvRecoHeavy, "csvReco/F");
+  genJetHeavyTree->Branch("pt",       &ptHeavy,     "pt/F");
+  genJetHeavyTree->Branch("eta",      &etaHeavy,    "eta/F");
+  genJetHeavyTree->Branch("phi",      &phiHeavy,    "phi/F");
+  genJetHeavyTree->Branch("massReco",     &massRecoHeavy,   "massReco/F");
 
 
   PythonProcessDesc builder(argv[1]);
@@ -545,6 +626,173 @@ int main(int argc, const char* argv[])
       if( myJetsFilt.size()<4 || numJets30<6 || numJets30BtagM<4) continue;
 
 
+      ///////////////////////////////////////////////////////////////////////////
+
+      ptRecoLight=-99;
+      etaRecoLight=-99;
+      phiRecoLight=-99;
+      csvRecoLight=-99;
+      ptLight=-99;
+      etaLight=-99;
+      phiLight=-99;
+      massRecoLight=-99;
+      ptRecoHeavy=-99;
+      etaRecoHeavy=-99;
+      phiRecoHeavy=-99;
+      csvRecoHeavy=-99;
+      ptHeavy=-99;
+      etaHeavy=-99;
+      phiHeavy=-99;
+      massRecoHeavy=-99;
+
+      if(abs(genTop.wdau1id)<6 &&  abs(genTbar.wdau1id)>6){
+
+	unsigned int indexB = 999;
+	for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
+	  if(deltaR(myJetsFilt[k],topBLV)<0.3)
+	    indexB = k;
+	}
+	if(indexB!=999){
+	  ptRecoHeavy   = myJetsFilt[indexB].Pt();
+	  etaRecoHeavy   = myJetsFilt[indexB].Eta();
+	  phiRecoHeavy   = myJetsFilt[indexB].Phi();
+	  massRecoHeavy = myJetsFilt[indexB].M();
+	  csvRecoHeavy  =  mapFilt[indexB].csv>0 ? mapFilt[indexB].csv : 0.0 ;
+	}else{ 
+	  ptRecoHeavy=-99;
+	  etaRecoHeavy=-99;
+	  phiRecoHeavy=-99;
+	  csvRecoHeavy=-99;
+	  massRecoHeavy=-99;
+	}
+	ptHeavy       = topBLV.Pt();
+	etaHeavy      = topBLV.Eta();
+	phiHeavy      = topBLV.Phi();
+	genJetHeavyTree->Fill();
+	
+
+	unsigned int indexW1 = 999;
+	for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
+	  if(deltaR(myJetsFilt[k],topW1LV)<0.3)
+	    indexW1 = k;
+	}
+	if(indexW1!=999){
+	  ptRecoLight   = myJetsFilt[indexW1].Pt();
+	  etaRecoLight   = myJetsFilt[indexW1].Eta();
+	  phiRecoLight   = myJetsFilt[indexW1].Phi();
+	  massRecoLight = myJetsFilt[indexW1].M();
+	  csvRecoLight  =  mapFilt[indexW1].csv>0 ? mapFilt[indexW1].csv : 0.0 ;
+	}
+	else{
+	  ptRecoLight=-99;
+	  csvRecoLight=-99;
+	  massRecoLight=-99;
+	  etaRecoLight=-99;
+	  phiRecoLight=-99;
+	}
+	ptLight       = topW1LV.Pt();
+	etaLight      = topW1LV.Eta();
+	phiLight      = topW1LV.Phi();
+	genJetLightTree->Fill();
+	
+
+	unsigned int indexW2 = 999;
+	for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
+	  if(deltaR(myJetsFilt[k],topW2LV)<0.3)
+	    indexW2 = k;
+	}
+	if(indexW2!=999){
+	  ptRecoLight   = myJetsFilt[indexW2].Pt();
+	  massRecoLight = myJetsFilt[indexW2].M();
+	  etaRecoLight   = myJetsFilt[indexW2].Eta();
+	  phiRecoLight   = myJetsFilt[indexW2].Phi();
+	  csvRecoLight  =  mapFilt[indexW2].csv>0 ? mapFilt[indexW2].csv : 0.0 ;
+	}else{
+	  ptRecoLight=-99;
+	  csvRecoLight=-99;
+	  massRecoLight=-99;
+	  etaRecoLight=-99;
+	  phiRecoLight=-99;
+	}	
+	ptLight       = topW2LV.Pt();
+	etaLight      = topW2LV.Eta();
+	phiLight      = topW2LV.Phi();
+	genJetLightTree->Fill();
+	
+	unsigned int indexBbar = 999;
+	for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
+	  if(deltaR(myJetsFilt[k],atopBLV)<0.3)
+	    indexBbar = k;
+	}
+	if(indexBbar!=999){
+	  ptRecoHeavy   = myJetsFilt[indexBbar].Pt();
+	  massRecoHeavy = myJetsFilt[indexBbar].M();
+	  csvRecoHeavy  =  mapFilt[indexBbar].csv>0 ? mapFilt[indexBbar].csv : 0.0 ;
+	  etaRecoHeavy   = myJetsFilt[indexBbar].Eta();
+	  phiRecoHeavy   = myJetsFilt[indexBbar].Phi();
+	}else{
+	  ptRecoHeavy=-99;
+	  csvRecoHeavy=-99;
+	  massRecoHeavy=-99;
+	  etaRecoHeavy=-99;
+	  phiRecoHeavy=-99;
+	}
+	ptHeavy       = atopBLV.Pt();
+	etaHeavy      = atopBLV.Eta();
+	phiHeavy      = atopBLV.Phi();
+	genJetHeavyTree->Fill();
+	
+	unsigned int indexH1 = 999;
+	for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
+	  if(deltaR(myJetsFilt[k],genBLV)<0.3)
+	    indexH1 = k;
+	}
+	if(indexH1!=999){
+	  ptRecoHeavy   = myJetsFilt[indexH1].Pt();
+	  massRecoHeavy = myJetsFilt[indexH1].M();
+	  csvRecoHeavy  =  mapFilt[indexH1].csv>0 ? mapFilt[indexH1].csv : 0.0 ;
+	  etaRecoHeavy   = myJetsFilt[indexH1].Eta();
+	  phiRecoHeavy   = myJetsFilt[indexH1].Phi();
+	}
+	else{
+	  ptRecoHeavy=-99;
+	  csvRecoHeavy=-99;
+	  massRecoHeavy=-99;
+	  etaRecoHeavy=-99;
+	  phiRecoHeavy=-99;
+	}
+	ptHeavy       = genBLV.Pt();
+	etaHeavy      = genBLV.Eta();
+	phiHeavy      = genBLV.Phi();
+	genJetHeavyTree->Fill();
+	
+	unsigned int indexH2 = 999;
+	for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
+	  if(deltaR(myJetsFilt[k],genBbarLV)<0.3)
+	    indexH2 = k;
+	}
+	if(indexH2!=999){
+	  ptRecoHeavy   = myJetsFilt[indexH2].Pt();
+	  massRecoHeavy = myJetsFilt[indexH2].M();
+	  csvRecoHeavy  =  mapFilt[indexH2].csv>0 ? mapFilt[indexH2].csv : 0.0 ;
+	  etaRecoHeavy   = myJetsFilt[indexH2].Eta();
+	  phiRecoHeavy   = myJetsFilt[indexH2].Phi();
+	}
+	else{
+	  ptRecoHeavy=-99;
+	  csvRecoHeavy=-99;
+	  massRecoHeavy=-99;
+	  etaRecoHeavy=-99;
+	  phiRecoHeavy=-99;
+	}
+	ptHeavy       = genBbarLV.Pt();
+	etaHeavy      = genBbarLV.Eta();
+	phiHeavy      = genBbarLV.Phi();
+	genJetHeavyTree->Fill();
+       
+      }
+
+
       ////////////////////////////  TOP KIN FITTER    ////////////////////////////
 
       std::vector< TtSemiLepKinFitter::Constraint > constraints; 
@@ -724,23 +972,47 @@ int main(int argc, const char* argv[])
 		  int matchB2 = 0; // b from top lept
 		  //int matchH1 = 0; // higgs
 		  //int matchH2 = 0; // higgs
-		  
+
 		  if( (topBLV.Pt()>0 && topW1LV.Pt()>0 && topW2LV.Pt()>0 && atopBLV.Pt()>0 && atopW1LV.Pt()>0 && atopW2LV.Pt()>0 )){
 		    
-		    if( (deltaR(myJetsFilt[indexbCand],    topBLV)<0.3 && abs(genTop.wdau1id) <6) || 
-			(deltaR(myJetsFilt[indexbCand],   atopBLV)<0.3 && abs(genTbar.wdau1id)<6)
-			){
-		      matchB1++;
+		    if(abs(genTop.wdau1id)<6 &&  abs(genTbar.wdau1id)>6){
+		      if(deltaR(myJetsFilt[indexbCand],    topBLV)<0.3){
+			matchB1++;
+		      }
+		      if( deltaR(myJetsFilt[indexWdau1Cand], topW1LV)<0.3 && deltaR(myJetsFilt[indexWdau2Cand], topW2LV) <0.3){
+			matchW1++;
+			matchW2++;
+		      }
+		      if(deltaR(myJetsFilt[indexbbarCand],   atopBLV)<0.3)
+			matchB2++;
 		    }
-		    if( (abs(genTop.wdau1id)<6  && deltaR(myJetsFilt[indexWdau1Cand], topW1LV)<0.3 && deltaR(myJetsFilt[indexWdau2Cand], topW2LV) <0.3) || 
-			(abs(genTbar.wdau1id)<6 && deltaR(myJetsFilt[indexWdau1Cand],atopW1LV)<0.3 && deltaR(myJetsFilt[indexWdau2Cand], atopW2LV)<0.3) ){
-		      matchW1++;
-		      matchW2++;
+		    else if(abs(genTop.wdau1id)>6 &&  abs(genTbar.wdau1id)<6){
+		      if(deltaR(myJetsFilt[indexbCand],    atopBLV)<0.3)
+			matchB1++;
+		      if( deltaR(myJetsFilt[indexWdau1Cand], atopW1LV)<0.3 && deltaR(myJetsFilt[indexWdau2Cand], atopW2LV) <0.3){
+			matchW1++;
+			matchW2++;
+		      }
+		      if(deltaR(myJetsFilt[indexbbarCand],   topBLV)<0.3)
+			matchB2++;
 		    }
-		    if( (deltaR(myJetsFilt[indexbbarCand],    topBLV)<0.3 && abs(genTop.wdau1id) >6) || 
-			(deltaR(myJetsFilt[indexbbarCand],   atopBLV)<0.3 && abs(genTbar.wdau1id)>6) ){
-		      matchB2++;
-		    }
+		    else{}
+
+
+		    //if( (deltaR(myJetsFilt[indexbCand],    topBLV)<0.3 && abs(genTop.wdau1id) <6) || 
+		    //(deltaR(myJetsFilt[indexbCand],   atopBLV)<0.3 && abs(genTbar.wdau1id)<6)
+		    //){
+		    //matchB1++;
+		    //}
+		    //if( (abs(genTop.wdau1id)<6  && deltaR(myJetsFilt[indexWdau1Cand], topW1LV)<0.3 && deltaR(myJetsFilt[indexWdau2Cand], topW2LV) <0.3) || 
+		    //(abs(genTbar.wdau1id)<6 && deltaR(myJetsFilt[indexWdau1Cand],atopW1LV)<0.3 && deltaR(myJetsFilt[indexWdau2Cand], atopW2LV)<0.3) ){
+		    //matchW1++;
+		    //matchW2++;
+		    //}
+		    //if( (deltaR(myJetsFilt[indexbbarCand],    topBLV)<0.3 && abs(genTop.wdau1id) >6) || 
+		    //(deltaR(myJetsFilt[indexbbarCand],   atopBLV)<0.3 && abs(genTbar.wdau1id)>6) ){
+		    //matchB2++;
+		    //}
 		    
 		    //cout << matchW1 << ", " << matchW2 << ", " << matchB1 << ", " << matchB2 << endl;  
 		  }
@@ -956,6 +1228,13 @@ int main(int argc, const char* argv[])
 		  float atopMass      = -99;
 		  float higgsMass     = -99;
 		  float topsCosDPhi   = -99;
+		  float topLepPt  = -99;
+		  float topLepEta = -99;
+		  float topLepPhi = -99;
+		  float topHadPt  = -99;
+		  float topHadEta = -99;
+		  float topHadPhi = -99;
+
 		  if(computeCMSVariables && h1Perm!=999 && h2Perm!=999){
 
 		    TLorentzVector TOP   = (vLepton_charge[0]==1)  ? lvLepTop : lvHadTop; 
@@ -965,6 +1244,24 @@ int main(int argc, const char* argv[])
 
 		    TLorentzVector TOT = TOP+ATOP+DIJET;
 		    TVector3 boostToCMS(TOT.Px()/TOT.E(), TOT.Py()/TOT.E(), TOT.Pz()/TOT.E());
+
+		    if(abs(genTop.wdau1id)>6 &&  abs(genTbar.wdau1id)<6){
+		      topLepPt   = (lvLepTop.Pt() -(topBLV+topW1LV+topW2LV).Pt() ) /(topBLV+topW1LV+topW2LV).Pt();
+		      topLepEta  = (lvLepTop.Eta()-(topBLV+topW1LV+topW2LV).Eta() )/(topBLV+topW1LV+topW2LV).Eta();
+		      topLepPhi  = (lvLepTop.Phi() -(topBLV+topW1LV+topW2LV).Phi() ) /(topBLV+topW1LV+topW2LV).Phi();
+		      topHadPt   = (lvHadTop.Pt() -(atopBLV+atopW1LV+atopW2LV).Pt() ) /(atopBLV+atopW1LV+atopW2LV).Pt();
+		      topHadEta =  (lvHadTop.Eta()-(atopBLV+atopW1LV+atopW2LV).Eta() )/(atopBLV+atopW1LV+atopW2LV).Eta();
+		      topHadPhi =  (lvHadTop.Phi() -(atopBLV+atopW1LV+atopW2LV).Phi() ) /(atopBLV+atopW1LV+atopW2LV).Phi();
+		    }
+		    else if(abs(genTop.wdau1id)<6 &&  abs(genTbar.wdau1id)>6){
+		      topLepPt   = (lvLepTop.Pt() -(atopBLV+atopW1LV+atopW2LV).Pt() ) /(atopBLV+atopW1LV+atopW2LV).Pt();
+		      topLepEta  = (lvLepTop.Eta()-(atopBLV+atopW1LV+atopW2LV).Eta() )/(atopBLV+atopW1LV+atopW2LV).Eta();
+		      topLepPhi  = (lvLepTop.Phi() -(atopBLV+atopW1LV+atopW2LV).Phi() ) /(atopBLV+atopW1LV+atopW2LV).Phi();
+		      topHadPt   = (lvHadTop.Pt() -(topBLV+topW1LV+topW2LV).Pt() ) /(topBLV+topW1LV+topW2LV).Pt();
+		      topHadEta =  (lvHadTop.Eta()-(topBLV+topW1LV+topW2LV).Eta() )/(topBLV+topW1LV+topW2LV).Eta();
+		      topHadPhi =  (lvHadTop.Phi() -(topBLV+topW1LV+topW2LV).Phi() ) /(topBLV+topW1LV+topW2LV).Phi();
+		    }
+		    else{}
 
 		    totalPt = TOT.Pt();
 		    xa = (  TOT.Pz() + TOT.E() )/TMath::Sqrt(8000*8000.);
@@ -1025,7 +1322,17 @@ int main(int argc, const char* argv[])
 		    topMassR     = topMass;
 		    atopMassR    = atopMass;
 		    topsCosDPhiR =topsCosDPhi;
+		    
+		    topLepPtR  = topLepPt;
+		    topLepEtaR = topLepEta;
+		    topLepPhiR = topLepPhi;
+		    topHadPtR  = topHadPt;
+		    topHadEtaR = topHadEta;
+		    topHadPhiR = topHadPhi;
+		    
 		    outTreeR->Fill();
+
+		    
 		  }
 		  else{
 		    chi2W = chi2;
@@ -1136,6 +1443,130 @@ int main(int argc, const char* argv[])
       nResJets = counter;
       matches  = matchB+matchBbar;
       outTree->Fill();
+
+
+      /////////////////////////
+
+
+      X1 = -99;
+      X2 = -99;
+      PtTTH   = -99;
+      PhiTTH   = -99;
+      BetaTTH   = -99;
+      GammaTTH     = -99;
+      DeltaTTH     = -99;
+      PtHStar  = -99;
+      DphiHStar  = -99;
+      BetaW   = -99;
+      GammaW   = -99;
+      DeltaW   = -99;
+
+      if(computeCMSVariables && genBLV.Pt()>0 && genBbarLV.Pt()>0 && topBLV.Pt()>0 && topW1LV.Pt()>0 && topW2LV.Pt()>0 && atopBLV.Pt()>0 && atopW1LV.Pt()>0 && atopW2LV.Pt()>0){
+
+	TLorentzVector TOPLEP;
+	TLorentzVector TOPHAD;
+	TLorentzVector TOPHADW1;
+	TLorentzVector TOPHADW2;
+	TLorentzVector TOPHADB;
+	TLorentzVector HIGGS;
+
+	int properEvent = 1;
+
+	if( abs(genTop.wdau1id)>6 && abs(genTbar.wdau1id)<6){
+	  TOPLEP.SetPxPyPzE( (topBLV+topW1LV+topW2LV).Px(), (topBLV+topW1LV+topW2LV).Py(), (topBLV+topW1LV+topW2LV).Pz(), (topBLV+topW1LV+topW2LV).E() );
+	  TOPHAD.SetPxPyPzE( (atopBLV+atopW1LV+atopW2LV).Px(), (atopBLV+atopW1LV+atopW2LV).Py(), (atopBLV+atopW1LV+atopW2LV).Pz(), (atopBLV+atopW1LV+atopW2LV).E() );
+	  TOPHADW1.SetPxPyPzE( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
+	  TOPHADW2.SetPxPyPzE( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
+	  TOPHADB.SetPxPyPzE( atopBLV.Px(),  atopBLV.Py(),   atopBLV.Pz(),  atopBLV.E());
+	}
+	else if(abs(genTop.wdau1id)<6 && abs(genTbar.wdau1id)>6){
+	  TOPHAD.SetPxPyPzE( (topBLV+topW1LV+topW2LV).Px(), (topBLV+topW1LV+topW2LV).Py(), (topBLV+topW1LV+topW2LV).Pz(), (topBLV+topW1LV+topW2LV).E() );
+	  TOPLEP.SetPxPyPzE( (atopBLV+atopW1LV+atopW2LV).Px(), (atopBLV+atopW1LV+atopW2LV).Py(), (atopBLV+atopW1LV+atopW2LV).Pz(), (atopBLV+atopW1LV+atopW2LV).E() );
+	  TOPHADW1.SetPxPyPzE( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
+	  TOPHADW2.SetPxPyPzE( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
+	  TOPHADB.SetPxPyPzE( topBLV.Px(),  topBLV.Py(),   topBLV.Pz(),  topBLV.E());
+	}
+	else{properEvent=0;}
+	HIGGS.SetPxPyPzE( (genBLV+genBbarLV).Px(), (genBLV+genBbarLV).Py(),(genBLV+genBbarLV).Pz(),(genBLV+genBbarLV).E());
+
+	if(properEvent){
+
+
+	  TLorentzVector TOT = TOPLEP+TOPHAD+HIGGS;
+	  TVector3 boostToCMS(TOT.Px()/TOT.E(), TOT.Py()/TOT.E(), TOT.Pz()/TOT.E());
+	  TVector3 boostToTopHadCMS(TOPHAD.Px()/TOPHAD.E(), TOPHAD.Py()/TOPHAD.E(), TOPHAD.Pz()/TOPHAD.E());
+
+	PtTTH  = TOT.Pt();
+	PhiTTH = TOT.Phi();
+	PzTTH  = TOT.Pz();
+	X1 = (  TOT.Pz() + TOT.E() )/TMath::Sqrt(8000*8000.);
+	X2 = ( -TOT.Pz() + TOT.E() )/TMath::Sqrt(8000*8000.);
+
+	TOPLEP.Boost(-boostToCMS);
+	TOPHAD.Boost(-boostToCMS);
+	HIGGS .Boost(-boostToCMS);
+	
+	if(TOPLEP.Mag()<=0 || TOPHAD.Mag()<=0) cout << "Error: null momentum" << endl;
+
+	TVector3 decayPlane    = ((TOPHAD.Vect()).Cross(TOPLEP.Vect())).Unit();
+	TVector3 aux1 = (boostToCMS.Cross( TVector3(0,0,1) )).Unit();
+	TVector3 aux2 = (boostToCMS.Cross( aux1 )).Unit();
+	TVector3 aux3 = boostToCMS.Unit();
+
+	TVector3 aux4( aux1.Px()*TMath::Cos(decayPlane.Angle(aux1)) , aux1.Py()*TMath::Cos(decayPlane.Angle(aux1)), aux1.Pz()*TMath::Cos(decayPlane.Angle(aux1)));
+	TVector3 aux5( aux2.Px()*TMath::Cos(decayPlane.Angle(aux2)) , aux2.Py()*TMath::Cos(decayPlane.Angle(aux2)), aux2.Pz()*TMath::Cos(decayPlane.Angle(aux2)));
+
+	//TVector3 decayPlanePhi = decayPlane.Cross( TVector3(0,0,1) );
+
+	BetaTTH  = TMath::Cos(decayPlane.Angle(aux3));
+	DeltaTTH = TMath::Cos((aux4+aux5).Angle(aux1));
+	GammaTTH = TMath::Cos((HIGGS.Vect()).Angle( boostToCMS ));
+
+	PtHStar   = HIGGS.P()/TOT.E();
+	DphiHStar = TMath::Cos((HIGGS.Vect()).Angle(TOPLEP.Vect()));
+
+	//////////////////////////
+	if( abs(genTop.wdau1id)>6 && abs(genTbar.wdau1id)<6){
+	  TOPHAD.SetPxPyPzE( (atopBLV+atopW1LV+atopW2LV).Px(), (atopBLV+atopW1LV+atopW2LV).Py(), (atopBLV+atopW1LV+atopW2LV).Pz(), (atopBLV+atopW1LV+atopW2LV).E() );
+	  TOPHADW1.SetPxPyPzE( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
+	  TOPHADW2.SetPxPyPzE( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
+	  TOPHADB.SetPxPyPzE( atopBLV.Px(),  atopBLV.Py(),   atopBLV.Pz(),  atopBLV.E());
+	}
+	else{
+	  TOPHAD.SetPxPyPzE( (topBLV+topW1LV+topW2LV).Px(), (topBLV+topW1LV+topW2LV).Py(), (topBLV+topW1LV+topW2LV).Pz(), (topBLV+topW1LV+topW2LV).E() );
+	  TOPHADW1.SetPxPyPzE( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
+	  TOPHADW2.SetPxPyPzE( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
+	  TOPHADB.SetPxPyPzE( topBLV.Px(),  topBLV.Py(),   topBLV.Pz(),  topBLV.E());
+	}
+
+	//TOPHAD.Boost(-boostToTopHadCMS);
+	TOPHADW1.Boost(-boostToTopHadCMS);
+	TOPHADW2.Boost(-boostToTopHadCMS);
+	TOPHADB.Boost(-boostToTopHadCMS);
+
+	TVector3 boostToWHadCMS((TOPHADW1+TOPHADW2).Px()/(TOPHADW1+TOPHADW2).E(), (TOPHADW1+TOPHADW2).Py()/(TOPHADW1+TOPHADW2).E(), (TOPHADW1+TOPHADW2).Pz()/(TOPHADW1+TOPHADW2).E());
+	TOPHADW1.Boost(-boostToWHadCMS);
+	TOPHADW2.Boost(-boostToWHadCMS);
+
+	//cout << TOPHADB.P() << endl;
+	//cout << "W1: " << TOPHADW1.E() << " W1: " << TOPHADW2.E() << endl;
+
+	BetaW     = TMath::Cos((TOPHADB.Vect()).Angle( boostToTopHadCMS  ));
+	DeltaW    = 0.0;
+	GammaW    = TMath::Cos( (TOPHADW1.Vect()).Angle(boostToWHadCMS) );
+
+	///////
+
+
+
+	///////
+	genTree->Fill();
+	}
+      }
+
+
+
+      /////////////////////////
       
 
       delete fitter;
