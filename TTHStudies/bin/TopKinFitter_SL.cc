@@ -1497,10 +1497,16 @@ int main(int argc, const char* argv[])
 	  TVector3 boostToTopHadCMS(TOPHAD.Px()/TOPHAD.E(), TOPHAD.Py()/TOPHAD.E(), TOPHAD.Pz()/TOPHAD.E());
 
 	PtTTH  = TOT.Pt();
-	PhiTTH = TOT.Phi();
+	PhiTTH = TMath::Cos(TOT.Phi());
 	PzTTH  = TOT.Pz();
 	X1 = (  TOT.Pz() + TOT.E() )/TMath::Sqrt(8000*8000.);
 	X2 = ( -TOT.Pz() + TOT.E() )/TMath::Sqrt(8000*8000.);
+
+	//trasform
+	float tmp1 = X1;
+	float tmp2 = X2;
+	X1 = TMath::Sqrt(tmp1*tmp2);
+	X2 = tmp1-tmp2;
 
 	TOPLEP.Boost(-boostToCMS);
 	TOPHAD.Boost(-boostToCMS);
@@ -1522,7 +1528,7 @@ int main(int argc, const char* argv[])
 	DeltaTTH = TMath::Cos((aux4+aux5).Angle(aux1));
 	GammaTTH = TMath::Cos((HIGGS.Vect()).Angle( boostToCMS ));
 
-	PtHStar   = HIGGS.P()/TOT.E();
+	PtHStar   = HIGGS.P()/TOT.M();
 	DphiHStar = TMath::Cos((HIGGS.Vect()).Angle(TOPLEP.Vect()));
 
 	//////////////////////////
