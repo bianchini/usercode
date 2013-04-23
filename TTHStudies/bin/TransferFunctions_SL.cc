@@ -100,6 +100,82 @@ int main(int argc, const char* argv[])
     return 0;
   }
 
+  TTree* treeJetsLight = (TTree*)file->Get("genJetLightTree");
+  if(!treeJetsLight){
+    cout << "The tree called 'genJetLightTree' is not there..."<< endl;
+    return 0;
+  }
+  TTree* treeJetsHeavy = (TTree*)file->Get("genJetHeavyTree");
+  if(!treeJetsHeavy){
+    cout << "The tree called 'genJetHeavyTree' is not there..."<< endl;
+    return 0;
+  }
+
+
+  float etaBinning[] = {0.0, 1.0, 2.5};
+
+  TH1F* accLightBin0  = new TH1F("accLightBin0","",100,0,400);
+  TH1F* accLightBin1  = new TH1F("accLightBin1","",100,0,400);
+  TH1F* accHeavyBin0  = new TH1F("accHeavyBin0","",100,0,400);
+  TH1F* accHeavyBin1  = new TH1F("accHeavyBin1","",100,0,400);
+
+  for(int k = 0; k < 2; k++){
+
+    TH1F* accPass   = (TH1F*)accLightBin0->Clone(Form("accPass%d",k)); //accPass->Sumw2();
+    TH1F* accTot    = (TH1F*)accLightBin0->Clone(Form("accTot%d",k));  //accTot->Sumw2();
+    treeJetsLight->Draw(Form("pt>>accTot%d",k),  Form("(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",            etaBinning[k],etaBinning[k+1]) );
+    treeJetsLight->Draw(Form("pt>>accPass%d",k), Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
+    accPass->Sumw2();
+    accTot->Sumw2();
+
+    if(k==0)
+      accLightBin0->Divide( accPass,accTot, 1.0,1.0);
+    if(k==1)
+      accLightBin1->Divide( accPass,accTot, 1.0,1.0);
+
+    accPass->Reset();
+    accTot->Reset();
+
+    treeJetsHeavy->Draw(Form("pt>>accTot%d",k),  Form("(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",            etaBinning[k],etaBinning[k+1]) );
+    treeJetsHeavy->Draw(Form("pt>>accPass%d",k), Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
+    accPass->Sumw2();
+    accTot->Sumw2();
+
+    if(k==0)
+      accHeavyBin0->Divide( accPass,accTot, 1.0,1.0);
+    if(k==1)
+      accHeavyBin1->Divide( accPass,accTot, 1.0,1.0);
+      
+  }
+
+  TF1* turnOnLightBin0 = new TF1("turnOnBin0","TMath::Erf([0]*x+[1])+[2]", 0,400);
+  TF1* turnOnLightBin1 = new TF1("turnOnBin1","TMath::Erf([0]*x+[1])+[2]", 0,400);
+  TF1* turnOnHeavyBin0 = new TF1("turnOnBin0","TMath::Erf([0]*x+[1])+[2]", 0,400);
+  TF1* turnOnHeavyBin1 = new TF1("turnOnBin1","TMath::Erf([0]*x+[1])+[2]", 0,400);
+  accLightBin0->Fit(turnOnLightBin0);  
+  accLightBin1->Fit(turnOnLightBin1);
+  accHeavyBin0->Fit(turnOnHeavyBin0);  
+  accHeavyBin1->Fit(turnOnHeavyBin1);
+
+
+
+
+  fout = new TFile("ControlPlots.root","UPDATE");
+  fout->cd();
+
+  accLightBin0->Write();
+  accLightBin1->Write();
+  accHeavyBin0->Write();
+  accHeavyBin1->Write();
+
+  fout->Close();
+  delete fout;
+
+  return 0;
+  
+
+
+
 
   RooWorkspace *w = new RooWorkspace("transferFuntions","all functions for SL ttH");
 
@@ -117,10 +193,6 @@ int main(int argc, const char* argv[])
 
 
   RooDataSet dataset("dataset","dataset", RooArgSet(v1,v2, PtTTH, PhiTTH,PtHStar,DphiHStar,BetaW,GammaW,DeltaW), Import( *tree ) );
-
-
-
-
 
   // v1)
   ///////////////////////////////////////////////////////////////////////////////
@@ -364,6 +436,10 @@ int main(int argc, const char* argv[])
   plotGammaW->Draw();
   c1GammaW->Write("",TObject::kOverwrite);
 
+  accLightBin0->Write();
+  accLightBin1->Write();
+  accHeavyBin0->Write();
+  accHeavyBin1->Write();
 
   fout->Close();
   delete fout;
