@@ -20,6 +20,10 @@
 #include "TLorentzVector.h"
 #include "TVectorD.h"
 
+#include "Math/Factory.h"
+#include "Math/Functor.h"
+#include "Math/GSLMCIntegrator.h"
+
 #include "PhysicsTools/FWLite/interface/TFileService.h"
 
 #include "FWCore/ParameterSet/interface/ProcessDesc.h"
@@ -94,8 +98,20 @@ int main(int argc, const char* argv[])
   std::string pathToFile(  in.getParameter<std::string> ("pathToFile"   ) );
 
 
-  MEIntegrator* meIntegrator = new MEIntegrator( pathToFile );
+  MEIntegrator* meIntegrator = new MEIntegrator( pathToFile , 1);
   meIntegrator->debug();
+
+
+  int par = 1;
+  double xL[1] = { 0.0 };
+  double xU[1] = { 1.0 };
+
+  ROOT::Math::GSLMCIntegrator ig2("vegas", 1.e-12, 1.e-5, 2000);
+  ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegrator::Eval, par); 
+  meIntegrator->SetPar(par);
+  ig2.SetFunction(toIntegrate);
+  double p = ig2.Integral(xL, xU);
+  cout << "Prob = " << p << endl;
 
   fout = new TFile("TestME.root","UPDATE");
   fout->cd();

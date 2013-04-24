@@ -35,19 +35,24 @@
 using namespace RooFit;
 using namespace std;
 
+
 class MEIntegrator {
 
  public:
 
-  MEIntegrator( string );
+  MEIntegrator( string , int );
   ~MEIntegrator();
 
-  void saveJetParam( string );
-  void cachePdf( string , string , int );
-
-  TH1F* getCachedPdf( string );
-
-  void debug();
+  double Eval(const double* ) const;  
+  void   setInputLV( TLorentzVector , TLorentzVector );
+  void   SetPar(int);
+  void   setJets( vector<TLorentzVector>* );
+  void   setBtag( std::vector<float>* );
+  double probability(const double*) const;
+  void   saveJetParam( string );
+  void   cachePdf( string , string , int );
+  TH1F*  getCachedPdf( string );
+  void   debug();
 
 
  private:
@@ -55,17 +60,28 @@ class MEIntegrator {
   RooWorkspace *w_;
   std::map<string, double> jetParam_; 
   std::map<string, TH1F*> variables_;
+  vector<TLorentzVector> jets_;
+  vector<float> bTagging_;
+  TLorentzVector higgsLV_;
+  TLorentzVector topLepLV_;
+  int par_;
 
 };
 
 
-MEIntegrator::MEIntegrator( string fileName  ) {
+MEIntegrator::MEIntegrator( string fileName , int param  ) {
 
   cout << "Begin constructor" << endl;
 
+  par_      = param;
+  higgsLV_. SetPxPyPzE(0.,0.,0.,0.);
+  topLepLV_.SetPxPyPzE(0.,0.,0.,0.);
+  jets_.    clear();
+  bTagging_.clear();
+
+
   TFile* file = TFile::Open(fileName.c_str(),"READ");
   w_ = (RooWorkspace*)file->Get("transferFuntions");
-
 
   // jets
   RooArgSet allVars = w_->allVars();
@@ -86,6 +102,7 @@ MEIntegrator::MEIntegrator( string fileName  ) {
 
 
   cout << "End constructor" << endl;
+  //file->Close();
 
 }
 
@@ -98,6 +115,35 @@ MEIntegrator::~MEIntegrator(){
   }
 
 
+}
+
+
+double MEIntegrator::Eval(const double* x) const {
+  double prob = probability(x);      
+  if ( TMath::IsNaN(prob) ) prob = 0.;
+  return prob;
+}
+
+void MEIntegrator::setInputLV( TLorentzVector lv1, TLorentzVector lv2){ 
+  higgsLV_  = lv1;
+  topLepLV_ = lv2;
+}
+
+void MEIntegrator::SetPar(int p){ 
+  par_ = p; 
+}
+ 
+
+void MEIntegrator::setJets( std::vector<TLorentzVector>* jets){
+  jets_.clear();
+  for(unsigned int k = 0 ; k<jets->size() ; k++)
+    jets_.push_back( (*jets)[k] );
+}
+
+void MEIntegrator::setBtag( std::vector<float>* bTagging ){
+  bTagging_.clear();
+  for(unsigned int k = 0 ; k<bTagging->size() ; k++)
+    bTagging_.push_back( (*bTagging)[k] );
 }
 
 
@@ -133,6 +179,16 @@ TH1F* MEIntegrator::getCachedPdf( string pdfName ){
 
   return variables_[ pdfName ];
 
+}
+
+ 
+
+
+
+double MEIntegrator::probability(const double* x) const{
+
+  return 2.0;
+  
 }
 
 
