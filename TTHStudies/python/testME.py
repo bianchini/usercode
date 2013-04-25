@@ -7,6 +7,7 @@ process.fwliteInput = cms.PSet(
 
     outFileName   = cms.string("transferFunctions_SL.root"),
     pathToFile    = cms.string("./transferFunctions_SL.root"),
+    vegasPoints   = cms.int32(400000),
     verbose       = cms.bool(False),
     
     

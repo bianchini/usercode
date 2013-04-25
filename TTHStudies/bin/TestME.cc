@@ -96,6 +96,7 @@ int main(int argc, const char* argv[])
   const edm::ParameterSet& in = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("fwliteInput");
   std::string outFileName( in.getParameter<std::string>  ("outFileName" ) );
   std::string pathToFile(  in.getParameter<std::string> ("pathToFile"   ) );
+  int vegasPoints(  in.getParameter<int> ("vegasPoints"   ) );
 
   int par = 8;
   MEIntegrator* meIntegrator = new MEIntegrator( pathToFile , par);
@@ -107,31 +108,31 @@ int main(int argc, const char* argv[])
   jet2.SetPtEtaPhiM(70, 1.0,-1.0,10);
   jet3.SetPtEtaPhiM(70,-1.0,-2.0,10);
   jet4.SetPtEtaPhiM(65,-0.5,-1.0, 0);
-  jet5.SetPtEtaPhiM(65,-0.1, 0.5,10);
-  jet6.SetPtEtaPhiM(60, 2.0,-3,  10);
-  jet7.SetPtEtaPhiM(50,-1.2,-2.5,  10);
+
+  jet5.SetPtEtaPhiM(49.2, -2.14,  0.421, 0.1);
+  jet6.SetPtEtaPhiM(47.8, -3.16, -0.967, 0.1);
+  jet7.SetPtEtaPhiM(54.7, -3.4   ,2.96,    5);
 
   jets.push_back( jet1 );  jets.push_back( jet2 );  jets.push_back( jet3 );
   jets.push_back( jet4 );  jets.push_back( jet5 );  jets.push_back( jet6 );
   jets.push_back( jet7 );
 
   vector<float> bTagging;
+  bTagging.push_back( 0.0 ) ; bTagging.push_back( 0.0 ) ; bTagging.push_back( 0.0 ) ; bTagging.push_back( 0.0 ) ; 
   bTagging.push_back( 0.0 ) ; bTagging.push_back( 0.0 ) ; bTagging.push_back( 0.0 ) ; 
-  bTagging.push_back( 0.0 ) ; bTagging.push_back( 0.0 ) ; bTagging.push_back( 0.0 ) ; 
-  bTagging.push_back( 0.0 ) ; 
 
 
-  double xL[8] = { 0.00, -0.6,   0., -TMath::Pi(), -1.,  -TMath::Pi(), -1,  -TMath::Pi()};
-  double xU[8] = { 0.50,  0.6, 600.,  TMath::Pi(),  1.,   TMath::Pi(),  1,   TMath::Pi()};
+  double xL[8] = { 0.00, -0.6,   0.,  -TMath::Pi(), -1.,  -TMath::Pi(), -1,  -TMath::Pi()};
+  double xU[8] = { 0.50,  0.6,  600.,  TMath::Pi(),  1.,   TMath::Pi(),  1,   TMath::Pi()};
 
-  ROOT::Math::GSLMCIntegrator ig2("vegas", 1.e-12, 1.e-5, 2000);
+  ROOT::Math::GSLMCIntegrator ig2("vegas", 1.e-12, 1.e-5, vegasPoints);
   ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegrator::Eval, par); 
   meIntegrator->SetPar(par);
   meIntegrator->setJets(&jets);
   meIntegrator->setBtag(&bTagging);
   meIntegrator->createMash();
   meIntegrator->setInputLV( TLorentzVector( 20., 20.,0.,TMath::Sqrt(120*120+20*20*2)), 
-			    TLorentzVector(-20.,-20.,0.,TMath::Sqrt(170*170+20*20*2)) );
+			    TLorentzVector(-20., 20.,0.,TMath::Sqrt(170*170+20*20*2)) );
   ig2.SetFunction(toIntegrate);
   double p = ig2.Integral(xL, xU);
   cout << "Prob  = " << p << endl;
@@ -147,6 +148,7 @@ int main(int argc, const char* argv[])
   (meIntegrator->getCachedPdf("pdfCsvLight"))->Write("pdfCsvLight",TObject::kOverwrite);
   (meIntegrator->getCachedPdf("pdfV1"))->Write("pdfV1",TObject::kOverwrite);
   (meIntegrator->getMash())->Write("mash",TObject::kOverwrite);
+  (meIntegrator->getDebugHisto())->Write("debugHisto1",TObject::kOverwrite);
   fout->Close();
   delete fout;
 
