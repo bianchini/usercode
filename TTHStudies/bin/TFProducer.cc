@@ -13,12 +13,14 @@
 #include "TTree.h"
 #include "TH1D.h"
 #include "TH2F.h"
+#include "TH3F.h"
 #include "TF1.h"
 #include "TF2.h"
 #include "TGraph.h"
 #include "Math/GenVector/LorentzVector.h"
 #include "TLorentzVector.h"
 #include "TVectorD.h"
+#include "TArrayF.h"
 
 #include "PhysicsTools/FWLite/interface/TFileService.h"
 
@@ -383,12 +385,60 @@ int main(int argc, const char* argv[])
   w->import(pdfGammaTTH);
 
   // v6)
-  GammaTT.setBins( 50 );
-  MassTT.setBins ( 50 );
-  X1.setBins     ( 50 );
-  RooDataHist hist3D("hist3D","hist3D", RooArgSet(GammaTT,MassTT,X1), dataset, 1.0);
-  RooHistPdf pdf3D  ("pdf3D","", RooArgSet(GammaTT,MassTT,X1), hist3D);
+  //GammaTT.setBins(  3 );
+  //MassTT.setBins ( 40 );
+  //X1.setBins     ( 40 );
+
+  int nBinsX = 27;
+  TArrayF binsX(nBinsX+1);
+  cout << "Making histograms with " << nBinsX << " bins:" << endl;
+  binsX[0] = 0.; binsX[1] = 0.06;  
+  for(int k = 2; k < 21; k++)
+    binsX[k] = 0.06 + (k-1)*0.005;
+  binsX[21] = 0.17;  binsX[22] = 0.18;  binsX[23] = 0.19;  binsX[24] = 0.20;
+  binsX[25] = 0.225; binsX[26] = 0.25;  binsX[27] = 0.30; 
+
+  int nBinsMassTT = 23;
+  TArrayF binsMassTT(nBinsMassTT+1);
+  cout << "Making histograms with " << nBinsMassTT << " bins:" << endl;
+  binsMassTT[0] = 350;
+  for(int k = 1; k < 19; k++)
+    binsMassTT[k] = 350 + 25*k;
+  binsMassTT[19] = 900;  binsMassTT[20] = 1000; binsMassTT[21] = 1200; binsMassTT[22] = 1400;
+  binsMassTT[23] = 2000;
+
+  int nBinsGammaTT = 3;
+  TArrayF binsGammaTT(nBinsGammaTT+1);
+  cout << "Making histograms with " << nBinsGammaTT << " bins:" << endl;
+  binsGammaTT[0] = -1.01;
+  binsGammaTT[1] = -0.5;
+  binsGammaTT[2] =  0.5;
+  binsGammaTT[3] =  1.01;
+
+  TH1F* hBinCont = new TH1F("hBinCont","",200,0,200);
+  TH3F* h3 = new TH3F("h3","", nBinsX, binsX.GetArray(), nBinsMassTT, binsMassTT.GetArray(), nBinsGammaTT, binsGammaTT.GetArray());
+  tree->Draw("GammaTT:MassTT:X1>>h3");
+  
+  RooDataHist hist3D("hist3D","hist3D", RooArgSet(X1,MassTT,GammaTT), Import( *h3, 1 ));
+  RooHistPdf pdf3D  ("pdf3D","", RooArgSet(X1,MassTT,GammaTT), hist3D);
   w->import( pdf3D );
+
+  for( int i = 1; i < h3->GetNbinsX(); i++){
+    for( int j = 1; j < h3->GetNbinsY(); j++){
+      for( int k = 1; k < h3->GetNbinsZ(); k++){
+	int bin = h3->GetBin(i,j,k);
+	float binC  = h3->GetBinContent( bin );
+	float width = h3->GetBinWidth( bin );
+	h3->SetBinContent(bin, binC/width );
+      }
+    }
+  }
+  
+  for(int i = 0 ; i < 1000 ; i++){
+    double var1,var2,var3;
+    h3->GetRandom3(var1,var2,var3);
+    hBinCont->Fill(  h3->GetBinContent(h3->FindBin(var1,var2,var3)) );
+  }
 
   // v5)
   //RooDataHist histMassTT("histMassTT","histMassTT", RooArgSet(MassTT), dataset, 1.0);
@@ -704,6 +754,9 @@ int main(int argc, const char* argv[])
   fout = new TFile("ControlPlots.root","RECREATE");
   fout->cd();
 
+  h3->Write("",TObject::kOverwrite);
+  hBinCont->Write("",TObject::kOverwrite);
+  
   c1BetaWHad->cd();
   plotBetaWHad->Draw();
   c1BetaWHad->Write("",TObject::kOverwrite);

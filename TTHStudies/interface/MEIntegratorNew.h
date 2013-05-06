@@ -38,7 +38,7 @@
 using namespace RooFit;
 using namespace std;
 
-#define MTOP 175.
+#define Mtop_ 175.
 #define MW    81.
 #define Mb    5.
 
@@ -47,11 +47,10 @@ class MEIntegratorNew {
 
  public:
 
-  MEIntegratorNew( string , int );
+  MEIntegratorNew( string , int , int);
   ~MEIntegratorNew();
 
   double Eval(const double* ) const;  
-  void   setInputLV( TLorentzVector , TLorentzVector );
   void   SetPar(int);
   void   setJets( vector<TLorentzVector>* );
   void   setBtag( std::vector<float>* );
@@ -62,8 +61,10 @@ class MEIntegratorNew {
   void   cachePdf( string , string , int );
   void   cachePdf( string , string , string, int,    int );
   void   cachePdf( string , string , string, string, int, int, int );
+  void   cachePdf( string , string , string, string, TArrayF, TArrayF, TArrayF);
   void   setMass(double);
-  TH1F*  getCachedPdf( string ) const;
+  void   initTF() ;
+  TH1*   getCachedPdf( string ) const;
   TH2F*  getMash( );
   TH1F*  getDebugHisto( );
   void   debug();
@@ -73,8 +74,14 @@ class MEIntegratorNew {
   void topHadEnergies    (double, double&, double&, double&, double&, int&);
   void topLepEnergies    (double, double,  double&, double&, double&, double&, int&);
   void topHadLostEnergies(double, double,  double,  double&, double&, double&, double&, int&);
-  void higgsEnergies     (double, double&, double&, int& errFlag)
-
+  void higgsEnergies     (double, double&, double&, int&);
+  double topHadJakobi    (double, double, double) const;
+  double topLepJakobi    (double, double ) const;
+  double higgsJakobi     (double, double ) const;
+  double topHadDensity   (double, double)  const;
+  double topLepDensity   (double, double)  const;
+  double higgsDensity    (double)  const;
+  double tthDensity      (double, double, double, double)  const;
 
  private:
   
@@ -83,6 +90,7 @@ class MEIntegratorNew {
   std::map<string, TH1F*> variables1D_;
   std::map<string, TH2F*> variables2D_;
   std::map<string, TH3F*> variables3D_;
+  std::map<string, TF1* > transferFunctions_;
 
   // 0- lep 
   // 1- MET 
@@ -104,6 +112,7 @@ class MEIntegratorNew {
   TVector3 eB2_;
 
   int par_;
+  int verbose_;
   float M_;
   float pStar_;
   float EbStar_;
@@ -111,28 +120,39 @@ class MEIntegratorNew {
   float EuStar_;
   float dM2_;
   float dMh2_;
+  float Mtop_;
+  float Mb_;
+  float Mw_;
   TH2F* mash_;
 
   TH1F* debugHisto1_;
+  TH1F* pdfBetaWHad_, pdfBetaWHad_, pdfBetaWLep_, pdfGammaWLep_, pdfGammaTTH_;
+  TH3F* pdf3D_;
+  TF1* tfWjet1_,tfWjet2_, tfbHad_, tfbLep_, tfMetPt_,tfMetPhi_, tfHiggs1_, tfHiggs2_;
 
 };
 
 
-MEIntegratorNew::MEIntegratorNew( string fileName , int param  ) {
+MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
 
   cout << "Begin constructor" << endl;
 
-  par_      = param;
-  jets_.    clear();
+  par_     = param;
+  verbose_ = verbose;
+
+  jets_.clear();
   bTagging_.clear();
   initializeVersors(0);
 
-  pStar_  =  TMath::Sqrt( (MTOP*MTOP-(MW+Mb)*(MW+Mb) )*( MTOP*MTOP-(MW-Mb)*(MW-Mb) ) )/2./MTOP;
-  EbStar_ =  (MTOP*MTOP - MW*MW + Mb*Mb)/2./MTOP;
-  EWStar_ =  (MTOP*MTOP + MW*MW - Mb*Mb)/2./MTOP;
-  EuStar_ =  MW/2;
-  dM2_    =  (MTOP*MTOP-Mb*Mb-MW*MW)*0.5;
-  dMh2_   =  (MTOP*MTOP-M_*M_)*0.5;
+  Mtop_   = 174.3;
+  Mb_     = 4.8;
+  Mw_     = 80.19;
+  pStar_  =  TMath::Sqrt( (Mtop_*Mtop_-(Mw_+Mb_)*(Mw_+Mb_) )*( Mtop_*Mtop_-(Mw_-Mb_)*(Mw_-Mb_) ) )/2./Mtop_;
+  EbStar_ =  (Mtop_*Mtop_ - Mw_*Mw_ + Mb_*Mb_)/2./Mtop_;
+  EWStar_ =  (Mtop_*Mtop_ + Mw_*Mw_ - Mb_*Mb_)/2./Mtop_;
+  EuStar_ =  Mw_/2;
+  dM2_    =  (Mtop_*Mtop_-Mb_*Mb_-Mw_*Mw_)*0.5;
+  dMh2_   =  (Mtop_*Mtop_-M_*M_)*0.5;
   M_      = -99;
 
   mash_        = new TH2F("mash","",500,-2.5,2.5, 628, -TMath::Pi(), TMath::Pi());
@@ -149,14 +169,47 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param  ) {
     jetParam_[ string(var->GetName()) ] = var->getVal();
   }
 
+  int nBinsX = 27;
+  TArrayF binsX(nBinsX+1);
+  cout << "Making histograms with " << nBinsX << " bins:" << endl;
+  binsX[0] = 0.; binsX[1] = 0.06;  
+  for(int k = 2; k < 21; k++)
+    binsX[k] = 0.06 + (k-1)*0.005;
+  binsX[21] = 0.17;  binsX[22] = 0.18;  binsX[23] = 0.19;  binsX[24] = 0.20;
+  binsX[25] = 0.225; binsX[26] = 0.25;  binsX[27] = 0.30; 
+
+  int nBinsMassTT = 23;
+  TArrayF binsMassTT(nBinsMassTT+1);
+  cout << "Making histograms with " << nBinsMassTT << " bins:" << endl;
+  binsMassTT[0] = 350;
+  for(int k = 1; k < 19; k++)
+    binsMassTT[k] = 350 + 25*k;
+  binsMassTT[19] = 900;  binsMassTT[20] = 1000; binsMassTT[21] = 1200; binsMassTT[22] = 1400;
+  binsMassTT[23] = 2000;
+
+  int nBinsGammaTT = 3;
+  TArrayF binsGammaTT(nBinsGammaTT+1);
+  cout << "Making histograms with " << nBinsGammaTT << " bins:" << endl;
+  binsGammaTT[0] = -1.01;
+  binsGammaTT[1] = -0.5;
+  binsGammaTT[2] =  0.5;
+  binsGammaTT[3] =  1.01;
 
   cachePdf( "pdfGammaWHad",     "GammaW",    100);
-  cachePdf( "histBetaWHad",     "BetaW",     100);
+  cachePdf( "pdfBetaWHad",      "BetaW",     100);
   cachePdf( "pdfGammaWLep",     "GammaWLep", 100);
   cachePdf( "pdfBetaWLep",      "BetaWLep",  100);
   cachePdf( "pdfGammaTTH",      "GammaTTH",  100);
-  cachePdf( "pdf3D",            "GammaTT","MassTT","X1", 50, 50, 50);
+  cachePdf( "pdf3D",            "X1", "MassTT","GammaTT", binsX, binsMassTT, binsGammaTT);
 
+  pdfGammaWHad_ = (TH1F*)this->getCachedPdf("pdfGammaWHad");
+  pdfBetaWHad_  = (TH1F*)this->getCachedPdf("pdfBetaWHad");
+  pdfBetaWLep_  = (TH1F*)this->getCachedPdf("pdfBetaWLep");
+  pdfGammaWLep_ = (TH1F*)this->getCachedPdf("pdfGammaWLep");
+  pdfGammaTTH_  = (TH1F*)this->getCachedPdf("pdfGammaTTH");
+  pdf3D_        = (TH3F*)this->getCachedPdf("pdf3D");
+
+  
   cout << "End constructor" << endl;
 
 }
@@ -168,7 +221,19 @@ MEIntegratorNew::~MEIntegratorNew(){
     if(it->second) 
       delete (it->second);
   }
-  
+  for(std::map<string, TH2F*>::iterator it = variables2D_.begin(); it!=variables2D_.end(); it++){
+    if(it->second) 
+      delete (it->second);
+  }
+  for(std::map<string, TH3F*>::iterator it = variables3D_.begin(); it!=variables3D_.end(); it++){
+    if(it->second) 
+      delete (it->second);
+  }
+  for(std::map<string, TF1*>::iterator it = transferFunctions_.begin(); it!=transferFunctions_.end(); it++){
+    if(it->second) 
+      delete (it->second);
+  }
+
   delete mash_; delete debugHisto1_;
 
 }
@@ -204,6 +269,126 @@ void MEIntegratorNew::initializeVersors(int withJetList){
 }
 
  
+void initTF(){
+  
+  string bin = "Bin0";
+  if(  TMath::Abs( eW1Had_.Eta() )<1.0 ){
+    bin = "Bin0";
+  }
+  else{
+    bin = "Bin1";
+  }
+
+  TF1* tfWjet1 = new TF1("tfWjet1",Form("(TMath::Erf(%f*x+%f)+%f) * TMath::Gaus( x, x , x*TMath::Sqrt( %f/x + %f/x/x) ) ", 
+					(jetParam_.find("param0AccLight"+bin))->second, 
+					(jetParam_.find("param1AccLight"+bin))->second,
+					(jetParam_.find("param2AccLight"+bin))->second,
+					(jetParam_.find("param0resolLight"+bin))->second*(jetParam_.find("param0resolLight"+bin))->second,
+					(jetParam_.find("param1resolLight"+bin))->second*(jetParam_.find("param1resolLight"+bin))->second
+					),1,1000);
+  tfWjet1->SetNpx(1000);
+  transferFunctions_["tfWjet1"] = tfWjet1;
+  tfWjet1_ = tfWjet1;
+
+  if(  TMath::Abs( eW2Had_.Eta() )<1.0 ){
+    bin = "Bin0";
+  }
+  else{
+    bin = "Bin1";
+  }
+
+  TF1* tfWjet2 = new TF1("tfWjet2",Form("(TMath::Erf(%f*x+%f)+%f) * TMath::Gaus( x, x , x*TMath::Sqrt( %f/x + %f/x/x) ) ", 
+					(jetParam_.find("param0AccLight"+bin))->second, 
+					(jetParam_.find("param1AccLight"+bin))->second,
+					(jetParam_.find("param2AccLight"+bin))->second,
+					(jetParam_.find("param0resolLight"+bin))->second*(jetParam_.find("param0resolLight"+bin))->second,
+					(jetParam_.find("param1resolLight"+bin))->second*(jetParam_.find("param1resolLight"+bin))->second
+					),1,1000);
+  tfWjet2->SetNpx(1000);
+  transferFunctions_["tfWjet2"] = tfWjet2;
+  tfWjet2_ = tfWjet2;
+
+  if(  TMath::Abs( eBHad_.Eta() )<1.0 ){
+    bin = "Bin0";
+  }
+  else{
+    bin = "Bin1";
+  }
+
+  TF1* tfbHad = new TF1("tfbHad",Form("(TMath::Erf(%f*x+%f)+%f) * TMath::Gaus( x, x , x*TMath::Sqrt( %f/x + %f/x/x) ) ", 
+				      (jetParam_.find("param0AccHeavy"+bin))->second, 
+				      (jetParam_.find("param1AccHeavy"+bin))->second,
+				      (jetParam_.find("param2AccHeavy"+bin))->second,
+				      (jetParam_.find("param0resolHeavy"+bin))->second*(jetParam_.find("param0resolHeavy"+bin))->second,
+				      (jetParam_.find("param1resolHeavy"+bin))->second*(jetParam_.find("param1resolHeavy"+bin))->second
+				      ),1,1000);
+  tfbHad->SetNpx(1000);
+  transferFunctions_["tfbHad"] = tfbHad;
+  tfbHad_ = tfbHad;
+
+  if(  TMath::Abs( eBLep_.Eta() )<1.0 ){
+    bin = "Bin0";
+  }
+  else{
+    bin = "Bin1";
+  }
+
+  TF1* tfbLep = new TF1("tfbLep",Form("(TMath::Erf(%f*x+%f)+%f) * TMath::Gaus( x, x , x*TMath::Sqrt( %f/x + %f/x/x) ) ", 
+				      (jetParam_.find("param0AccHeavy"+bin))->second, 
+				      (jetParam_.find("param1AccHeavy"+bin))->second,
+				      (jetParam_.find("param2AccHeavy"+bin))->second,
+				      (jetParam_.find("param0resolHeavy"+bin))->second*(jetParam_.find("param0resolHeavy"+bin))->second,
+				      (jetParam_.find("param1resolHeavy"+bin))->second*(jetParam_.find("param1resolHeavy"+bin))->second
+				      ),1,1000);
+  tfbLep->SetNpx(1000);
+  transferFunctions_["tfbLep"] = tfbLep;
+  tfbLep_ = tfbLep;
+
+  if(  TMath::Abs( eB1_.Eta() )<1.0 ){
+    bin = "Bin0";
+  }
+  else{
+    bin = "Bin1";
+  }
+
+  TF1* tfHiggs1 = new TF1("tfHiggs1",Form("(TMath::Erf(%f*x+%f)+%f) * TMath::Gaus( x, x , x*TMath::Sqrt( %f/x + %f/x/x) ) ", 
+				      (jetParam_.find("param0AccHeavy"+bin))->second, 
+				      (jetParam_.find("param1AccHeavy"+bin))->second,
+				      (jetParam_.find("param2AccHeavy"+bin))->second,
+				      (jetParam_.find("param0resolHeavy"+bin))->second*(jetParam_.find("param0resolHeavy"+bin))->second,
+				      (jetParam_.find("param1resolHeavy"+bin))->second*(jetParam_.find("param1resolHeavy"+bin))->second
+				      ),1,1000);
+  tfHiggs1->SetNpx(1000);
+  transferFunctions_["tfHiggs1"] = tfHiggs1;
+  tfHiggs1_ = tfHiggs1;
+
+  if(  TMath::Abs( eB2_.Eta() )<1.0 ){
+    bin = "Bin0";
+  }
+  else{
+    bin = "Bin1";
+  }
+
+  TF1* tfHiggs2 = new TF1("tfHiggs2",Form("(TMath::Erf(%f*x+%f)+%f) * TMath::Gaus( x, x , x*TMath::Sqrt( %f/x + %f/x/x) ) ", 
+				      (jetParam_.find("param0AccHeavy"+bin))->second, 
+				      (jetParam_.find("param1AccHeavy"+bin))->second,
+				      (jetParam_.find("param2AccHeavy"+bin))->second,
+				      (jetParam_.find("param0resolHeavy"+bin))->second*(jetParam_.find("param0resolHeavy"+bin))->second,
+				      (jetParam_.find("param1resolHeavy"+bin))->second*(jetParam_.find("param1resolHeavy"+bin))->second
+				      ),1,1000);
+  tfHiggs2->SetNpx(1000);
+  transferFunctions_["tfHiggs2"] = tfHiggs2;
+  tfHiggs2_ = tfHiggs2;
+
+
+  /////// do something here for the MET
+
+
+
+}
+
+
+
 void MEIntegratorNew::setMass(double mass){
   M_ = mass;
 }
@@ -218,29 +403,29 @@ void MEIntegratorNew::topHadEnergies(double E1, double& E2, double& E3, double& 
   double a13 = e1.Angle(e3);
   double a23 = e2.Angle(e3);
   
-  E2 = MW*MW/E1/(4*TMath::Sin(a12/2.)*TMath::Sin(a12/2.));
+  E2 = Mw_*Mw_/E1/(4*TMath::Sin(a12/2.)*TMath::Sin(a12/2.));
 
   double a = E1+E2;
   double b = E1*TMath::Cos(a13)+E2*TMath::Cos(a23);
 
-  if( dM2*dM2 - (a*a - b*b)*Mb*Mb < 0){
+  if( dM2*dM2 - (a*a - b*b)*Mb_*Mb_ < 0){
     errFlag = 1;
     continue;
   }
   
-  double E3_1 =  (a*dM2 + b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb*Mb))/(a*a - b*b) ;
-  double E3_2 =  (a*dM2 - b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb*Mb))/(a*a - b*b) ;
+  double E3_1 =  (a*dM2 + b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b) ;
+  double E3_2 =  (a*dM2 - b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b) ;
   
   E3 = E3_1;
 
-  if(E3<Mb){
+  if(E3<Mb_){
     errFlag = 1;
     return;
   }
 
   TLorentzVector w1( (e1.Unit())*E1,   E1);
   TLorentzVector w2( (e2.Unit())*E2,   E2);
-  TLorentzVector blv((e3.Unit())*(TMath::Sqrt(E3*E3 - Mb*Mb)), E3);
+  TLorentzVector blv((e3.Unit())*(TMath::Sqrt(E3*E3 - Mb_*Mb_)), E3);
 
 
   TVector3 boost = (w1+w2+blv).BoostVector();
@@ -262,7 +447,7 @@ void MEIntegratorNew::topHadEnergies(double E1, double& E2, double& E3, double& 
 
 void MEIntegratorNew::topLepEnergies(double nuPhi, double nuTheta, double& Enu, double& Eb, double& cos1, double& cos2, int& errFlag ){
 
-  double Elep =  jets_[0].P();
+  double Elep =  jets_[0].E();
   TVector3 e1 =  eLep_;
   TVector3 e2 =  eBLep_;
   TVector3 e3(0.,0.,1.); // neutrino
@@ -274,28 +459,28 @@ void MEIntegratorNew::topLepEnergies(double nuPhi, double nuTheta, double& Enu, 
   double a13 = e1.Angle(e3); // lep - nu
   double a23 = e2.Angle(e3); // b   - nu
   
-  Enu = MW*MW/ Elep / (4*TMath::Sin(a13/2.)*TMath::Sin(a13/2.));
+  Enu = Mw_*Mw_/ Elep / (4*TMath::Sin(a13/2.)*TMath::Sin(a13/2.));
 
   double a = Elep+Enu;
   double b = Elep*TMath::Cos(a12)+Enu*TMath::Cos(a23);
 
-  if( dM2*dM2 - (a*a - b*b)*Mb*Mb < 0){
+  if( dM2*dM2 - (a*a - b*b)*Mb_*Mb_ < 0){
     errFlag = 1;
     continue;
   }
 
-  double E3_1 =  (a*dM2 + b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb*Mb))/(a*a - b*b) ;
-  double E3_2 =  (a*dM2 - b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb*Mb))/(a*a - b*b) ;
+  double E3_1 =  (a*dM2 + b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b) ;
+  double E3_2 =  (a*dM2 - b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b) ;
 
   Eb = E3_1;
 
-  if(E3<Mb){
+  if(E3<Mb_){
     errFlag = 1;
     return;
   }
 
   TLorentzVector wLep( (e1.Unit())*Elep,   Elep);
-  TLorentzVector blv(  (e2.Unit())*(TMath::Sqrt(Eb*Eb - Mb*Mb)), Eb);
+  TLorentzVector blv(  (e2.Unit())*(TMath::Sqrt(Eb*Eb - Mb_*Mb_)), Eb);
   TLorentzVector wNu ( (e3.Unit())*Enu,    Enu);
 
 
@@ -324,7 +509,7 @@ void MEIntegratorNew::topHadLostEnergies(double missPhi, double missTheta, doubl
 
 void MEIntegratorNew::higgsEnergies(double E1, double& E2, double& cos1, int& errFlag){
 
-  if(E1<Mb){
+  if(E1<Mb_){
     errFlag = 1;
     return;
   }
@@ -335,25 +520,25 @@ void MEIntegratorNew::higgsEnergies(double E1, double& E2, double& cos1, int& er
   double a12 = e1.Angle(e2); // b1 - b2
 
   double a = E1;
-  double b = TMath::Sqrt(E1*E1 - Mb*Mb)*TMath::Cos(a12);
+  double b = TMath::Sqrt(E1*E1 - Mb_*Mb_)*TMath::Cos(a12);
 
-  if( dM2*dM2 - (a*a - b*b)*Mb*Mb < 0){
+  if( dM2*dM2 - (a*a - b*b)*Mb_*Mb_ < 0){
     errFlag = 1;
     return;
   }
 
-  double E2_1 = (a*dM2 + b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb*Mb))/(a*a - b*b);
-  double E2_2 = (a*dM2 - b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb*Mb))/(a*a - b*b);
+  double E2_1 = (a*dM2 + b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b);
+  double E2_2 = (a*dM2 - b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b);
 
   E2 = E2_1;
 
-  if(E2<Mb){
+  if(E2<Mb_){
     errFlag = 1;
     return;
   }
   
-  TLorentzVector b1( (e1.Unit())*(TMath::Sqrt(E1*E1 - Mb*Mb)),   E1);
-  TLorentzVector b2( (e2.Unit())*(TMath::Sqrt(E2*E2 - Mb*Mb)),   E2);
+  TLorentzVector b1( (e1.Unit())*(TMath::Sqrt(E1*E1 - Mb_*Mb_)),   E1);
+  TLorentzVector b2( (e2.Unit())*(TMath::Sqrt(E2*E2 - Mb_*Mb_)),   E2);
 
 
   TVector3 boost = (b1+b2).BoostVector();
@@ -372,8 +557,6 @@ double MEIntegratorNew::Eval(const double* x) const {
   return prob;
 }
 
-void MEIntegratorNew::setInputLV( TLorentzVector lv1, TLorentzVector lv2){ 
-}
 
 void MEIntegratorNew::SetPar(int p){ 
   par_ = p; 
@@ -452,7 +635,7 @@ void MEIntegratorNew::cachePdf( string pdfName, string varName, int nBins){
     TH1F* hCache = new TH1F("hCache","", nBins, var->getMin(), var->getMax() );
     
     for(int j = 1; j < hCache->GetNbinsX(); j++){
-      float lvalue = ( TMath::Abs(var->getMax() - var->getMin() )/nBins)*(j-0.5) +  var->getMin();
+      float lvalue = hCache->GetXaxis()->GetBinCenter(j);
       var->setVal( lvalue );
       hCache->SetBinContent(j, pdf->getVal( RooArgSet(*var) ) );
     }
@@ -474,10 +657,10 @@ void MEIntegratorNew::cachePdf( string pdfName, string varName1, string varName2
     TH2F* hCache = new TH2F("hCache","", nBins1, var1->getMin(), var1->getMax(), nBins2, var2->getMin(), var2->getMax() );
     
     for(int j = 1; j < hCache->GetNbinsX(); j++){
-      float lvalue1 = ( TMath::Abs(var1->getMax() - var1->getMin() )/nBins1)*(j-0.5) +  var1->getMin();
+      float lvalue1 = hCache->GetXaxis()->GetBinCenter(j);
       var1->setVal( lvalue1 );
       for(int k = 1; k < hCache->GetNbinsY(); k++){
-	float lvalue2 = ( TMath::Abs(var2->getMax() - var2->getMin() )/nBins2)*(k-0.5) +  var2->getMin();
+	float lvalue2 = hCache->GetYaxis()->GetBinCenter(k);
 	var2->setVal( lvalue2 );
 	hCache->SetBinContent(j,k, pdf->getVal( RooArgSet(*var1,*var2) ) );
       }
@@ -501,13 +684,13 @@ void MEIntegratorNew::cachePdf( string pdfName, string varName1, string varName2
     TH3F* hCache = new TH3F("hCache","", nBins1, var1->getMin(), var1->getMax(), nBins2, var2->getMin(), var2->getMax(), nBins3, var3->getMin(), var3->getMax() );
 
     for(int j = 1; j < hCache->GetNbinsX(); j++){
-      float lvalue1 = ( TMath::Abs(var1->getMax() - var1->getMin() )/nBins1)*(j-0.5) +  var1->getMin();
+      float lvalue1 = hCache->GetXaxis()->GetBinCenter(j);
       var1->setVal( lvalue1 );
       for(int k = 1; k < hCache->GetNbinsY(); k++){
-	float lvalue2 = ( TMath::Abs(var2->getMax() - var2->getMin() )/nBins2)*(k-0.5) +  var2->getMin();
+	float lvalue2 =  hCache->GetYaxis()->GetBinCenter(k);
 	var2->setVal( lvalue2 );
 	for(int m = 1; m < hCache->GetNbinsZ(); m++){
-	  float lvalue3 = ( TMath::Abs(var3->getMax() - var3->getMin() )/nBins3)*(m-0.5) +  var3->getMin();
+	  float lvalue3 =  hCache->GetZaxis()->GetBinCenter(m);
 	  var3->setVal( lvalue3 );
 	  hCache->SetBinContent(j,k,m, pdf->getVal( RooArgSet(*var1,*var2,*var3) ) );
 	}
@@ -521,13 +704,127 @@ void MEIntegratorNew::cachePdf( string pdfName, string varName1, string varName2
 }
 
 
-TH1F* MEIntegratorNew::getCachedPdf( string pdfName ) const{
 
-  return (variables1D_.find(pdfName))->second;
+void MEIntegratorNew::cachePdf( string pdfName, string varName1, string varName2, string varName3 , TArrayF bins1, TArrayF bins2, TArrayF bins3){
+  
+  RooAbsPdf* pdf = w_->pdf( pdfName.c_str() );
+  if(pdf){
+    RooRealVar* var1 = w_->var( varName1.c_str() );
+    RooRealVar* var2 = w_->var( varName2.c_str() );
+    RooRealVar* var3 = w_->var( varName3.c_str() );
+
+    TH3F* hCache = new TH3F("hCache","", 
+			    bins1.GetSize()-1, bins1.GetArray() , 
+			    bins2.GetSize()-1, bins2.GetArray(), 
+			    bins3.GetSize()-1, bins3.GetArray());
+
+    for(int j = 1; j < hCache->GetNbinsX(); j++){
+      float lvalue1 = hCache->GetXaxis()->GetBinCenter(j);
+      var1->setVal( lvalue1 );
+      for(int k = 1; k < hCache->GetNbinsY(); k++){
+	float lvalue2 =  hCache->GetYaxis()->GetBinCenter(k);
+	var2->setVal( lvalue2 );
+	for(int m = 1; m < hCache->GetNbinsZ(); m++){
+	  float lvalue3 = hCache->GetZaxis()->GetBinCenter(m);;
+	  var3->setVal( lvalue3 );
+	  hCache->SetBinContent(j,k,m, pdf->getVal( RooArgSet(*var1,*var2,*var3) ) );
+	}
+      }
+    }
+    
+    variables3D_[ pdfName ] = hCache;
+
+  }
 
 }
 
+
+
+
+TH1* MEIntegratorNew::getCachedPdf( string pdfName ) const{
+
+  if( variables1D_.find(pdfName) !=  variables1D_.end() ) 
+    return (variables1D_.find(pdfName))->second;
+  else if( variables2D_.find(pdfName) !=  variables2D_.end() ) 
+    return (variables2D_.find(pdfName))->second;
+  else if( variables3D_.find(pdfName) !=  variables3D_.end() ) 
+    return (variables3D_.find(pdfName))->second;
+
+  else return 0;
+}
+
  
+double topHadJakobi( double Eq1, double Eq2, double EbHad) const {
+  return EbHad * Eq2 * Eq1 ;
+}
+
+double topLepJakobi( double Enu, double EbLep) const {
+  return EbLep * Enu ;
+}
+
+double higgsJakobi ( double Eh1, double Eh2) const {
+  return Eh1 * Eh2 ;
+}
+
+
+double topHadDensity ( double cos1, double cos2) const {
+
+  if( !pdfBetaWHad_ || !pdfGammaWHad_ ){
+    if(verbose_) cout << "topHadDensity tries to access non-existing histogram" << endl;
+    return 0.0;
+  }
+
+
+  double val1 = pdfBetaWHad_ ->Interpolate(cos1);
+  double val2 = pdfGammaWHad_->Interpolate(cos2);
+
+  return val1*val2;
+
+}
+
+double topLepDensity ( double cos1, double cos2) const {
+
+  if( !pdfBetaWLep_ || !pdfGammaWLep_){
+    if(verbose_) cout << "topLepDensity tries to access non-existing histogram" << endl;
+    return 0.0;
+  }
+
+  double val1 = pdfBetaWLep_ ->Interpolate(cos1);
+  double val2 = pdfGammaWLep_->Interpolate(cos2);
+
+  return val1*val2;
+
+}
+
+double higgsDensity ( double cos1 ) const {
+  return 1.0;
+}
+
+double tthDensity ( double Q, double m12, double cos1Star, double cos3) const {
+
+  if( !pdfGammaTTH || !pdf3D){
+    if(verbose_) cout << "tthDensity tries to access non-existing histogram" << endl;
+    return 0.0;
+  }
+
+  double p1Star = (m12*m12 - 4*Mtop_*Mtop_) >=0 ? 
+    TMath::Sqrt((m12*m12 - 4*Mtop_*Mtop_)*(m12*m12))/2./m12 : -999.;
+  double p3     = (Q*Q - (m12+M_)*(m12+M_)) >=0 && (Q*Q - (m12 - M_)*(m12 - M_)) >=0 ? 
+    TMath::Sqrt((Q*Q - (m12+M_)*(m12+M_) )*( Q*Q - (m12 - M_)* (m12 - M_)))/2./Q : -999;
+
+  if( TMath::IsNaN(p1Star) || TMath::IsNaN(p3) || p1Star<=0 || p3 <=0){
+    if(verbose_) cout << "tthDensity evaluated for non-acceptable values of p1Star and/or p3" << endl;
+    return 0.0;
+  }
+
+  double val1 = pdf3D_->Interpolate(Q, m12, cos1Star);
+  double val2 = pdfGammaTTH_->Interpolate( cos3 );
+
+  return (val1*val2)/p1Star/p3;
+
+}
+
+
 
 
 
@@ -535,250 +832,100 @@ double MEIntegratorNew::probability(const double* x) const{
 
   double prob = 1.0;
   
-  double v1       = x[0];
-  double v2       = x[1];
-  double PtTTH    = x[2];
-  double PhiTTH   = x[3];
-  double BetaW    = x[4];
-  double DeltaW   = x[5];
-  double GammaW   = x[6];
-  double EpsilonW = x[7];
+  double Eq1         = x[0];
+  double cosThetaNu  = x[1];
+  double phiNu       = x[2];
+  double Eh1         = x[3];
 
-  if(DEBUG){
-    cout << "v1    = " << v1 << endl; 
-    cout << "v2    = " << v2 << endl; 
-    cout << "PtTTH = " << PtTTH << endl; 
-    cout << "PhiTTH = " <<PhiTTH  << endl; 
-    cout << "BetaW = " << BetaW  << endl; 
-    cout << "DeltaW = " << DeltaW  << endl; 
-    cout << "GammaW = " <<  GammaW << endl; 
-    cout << "EpsilonW = " <<  EpsilonW << endl; 
+  TVector3 eNu(0.,0.,1.); // neutrino
+  eNu.SetTheta( TMath::ACos( cosThetaNu ) ); 
+  eNu.SetPhi  ( phiNu );   
+  eNu.SetMag  ( 1.);  
+
+  if(verbose){
+    cout << "Eq = "         << Eq << endl; 
+    cout << "cosThetaNu = " << cosThetaNu << endl; 
+    cout << "phiNu = "      << phiNu  << endl; 
+    cout << "Eh = "         << Eh  << endl; 
   }
 
+  int erFlag = 0;
 
+  double Eq2, EbHad, cos1Had, cos2Had;
+  topHadEnergies( Eq1, Eq2, EbHad, cos1Had, cos2Had, errFlag );
 
-
-
-
-
-
-  TLorentzVector higgsLV  = higgsLV_;
-  TLorentzVector topLepLV = topLepLV_;
-  TLorentzVector PTOT;
-  PTOT.SetPxPyPzE( PtTTH*TMath::Cos( PhiTTH ), PtTTH*TMath::Sin( PhiTTH ), 8000*v2, 
-		   TMath::Sqrt( PtTTH*PtTTH + 8000*v2*8000*v2  + 8000*8000*v1*v1 )  );
-
-  TVector3 boostToCMS(PTOT.Px()/PTOT.E(), PTOT.Py()/PTOT.E(), PTOT.Pz()/PTOT.E() );
-
-  TLorentzVector topHadLV = PTOT - higgsLV - topLepLV ;
-  if( topHadLV.E()<MTOP ){
-    prob =   std::numeric_limits<double>::min();
-    return prob; 
+  if(errFlag){
+    if(verbose_) cout << "Problems with topHadEnergies" << endl;
+    return 0.0;
   }
 
-  topHadLV.SetE( TMath::Sqrt( (PTOT - higgsLV - topLepLV).P()*(PTOT - higgsLV - topLepLV).P() + MTOP*MTOP ) );
-  if(DEBUG){
-    cout << "Top had in lab " << topHadLV.Pt() << "," << topHadLV.Eta() << ", " << topHadLV.Phi() << endl;
+  double Enu, EbLep, cos1Lep, cos2Lep;
+  topLepEnergies( phiNu, cosThetaNu, Enu, EbLep, cos1Lep, cos2Lep, erFlag  );
+
+  if(errFlag){
+    if(verbose_) cout << "Problems with topLepEnergies" << endl;
+    return 0.0;
   }
 
-  higgsLV. Boost( -boostToCMS );
-  topLepLV.Boost( -boostToCMS );
-
-  double PtHStar   = higgsLV.P()/PTOT.M();
-  double DphiHStar = TMath::Cos((higgsLV.Vect()).Angle(topLepLV.Vect()));
-
-
-  //////////////////////// 
-  TVector3 boostToTopHadCMS(topHadLV.Px()/topHadLV.E(), topHadLV.Py()/topHadLV.E(), topHadLV.Pz()/topHadLV.E() );
-  TLorentzVector topHadLVInCMS = topHadLV;
-  topHadLVInCMS.Boost( -boostToTopHadCMS );
-
-  TVector3 versor1 = boostToTopHadCMS.Unit();
-  TVector3 versor2 = (versor1.Orthogonal()).Unit();
-  TVector3 versor3 = versor1.Cross(versor2);
-
-  TVector3 dirB = BetaW*versor1 + TMath::Sqrt(1-BetaW*BetaW)*TMath::Cos( DeltaW )*versor2 + TMath::Sqrt(1-BetaW*BetaW)*TMath::Sin( DeltaW )*versor3;
-  //TLorentzVector bLV, wLV;
-  //bLV.SetPxPyPzE(  dirB.X()*pStar_,  dirB.Y()*pStar_,  dirB.Z()*pStar_ , EbStar_ );
-  //wLV.SetPxPyPzE( -dirB.X()*pStar_, -dirB.Y()*pStar_, -dirB.Z()*pStar_ , EWStar_ );
-  TLorentzVector bLV( (dirB*pStar_),    EbStar_ );
-  TLorentzVector wLV( (dirB*(-pStar_)), EWStar_ );
-
-  TLorentzVector bInLab = bLV;
-  bInLab.Boost( boostToTopHadCMS );
-
-  if(DEBUG){
-    cout << "B had in CMS " << bLV.Pt() << "," << bLV.Eta() << ", " << bLV.Phi() << endl;
-    cout << "B had in Lab " << bInLab.Pt() << "," << bInLab.Eta() << ", " << bInLab.Phi() << endl;
+  double Eh2, cos1Higgs;
+  higgsEnergies( Eh1, Eh2, erFlag );
+  
+  if(errFlag){
+    if(verbose_) cout << "Problems with higgsEnergies" << endl;
+    return 0.0;
   }
+
+  TLorentzVector W1Had( eW1Had_*Eq1, Eq1 );
+  TLorentzVector W2Had( eW2Had_*Eq2, Eq2 );
+  TLorentzVector WHad = W1Had + W2Had;
+  TLorentzVector bHad( eBHad_*TMath::Sqrt(EbHad*EbHad - Mb_*Mb_), EbHad );
+  TLorentzVector topHad = WHad + bHad;
+
+  TLorentzVector WLepLep = jets_[0];
+  TLorentzVector WLepNu( eNu*Enu, Enu);
+  TLorentzVector WLep = WLepLep + WLepNu;
+  TLorentzVector bLep( eBLep_*TMath::Sqrt(EbLep*EbLep - Mb_*Mb_), EbLep );
+  TLorentzVector topLep = WLep + bLep;
+
+  TLorentzVector higgs1(  eB1_*TMath::Sqrt(Eh1*Eh1 -  Mb_*Mb_), Eh1);
+  TLorentzVector higgs2(  eB2_*TMath::Sqrt(Eh2*Eh2 -  Mb_*Mb_), Eh2);
+  TLorentzVector higgs = higgs1 + higgs2;
+
+  TLorentzVector tot = topHad+topLep+higgs;
+
+  TVector3 boostToCMS  = tot.BoostVector();
+
+  topHad.Boost( -boostToCMS );
+  topLep.Boost( -boostToCMS );
+  higgs.Boost(  -boostToCMS );
+
+  double cos3 = TMath::Cos((higgs.Vect()).Angle( boostToCMS ));
+
+  TVector3 boostToTTCMS = (topLep+topHad).BoostVector();
+  topLep.Boost( -boostToTTCMS );
+  topHad.Boost( -boostToTTCMS );
+  
+  double cos1Star = TMath::Cos( (topLep.Vect()).Angle( boostToTTCMS ) );
+  double m12      = (topHad+topLep).M();
+  double Q        = tot.M();
+
+  double MEpart = 
+    topHadDensity(cos1Had,cos2Had) * topLepDensity(cos1Lep,cos2Lep) * higgsDensity(cos1Higgs) *
+    topHadJakobi( Eq1, Eq2, EbHad) * topLepJakobi(Enu, EbLep) * higgsJakobi( Eh1, Eh2 ) *
+    tthDensity( Q , m12, cos1Star, cos3);
+
+  double TFpart = 
+    tfWjet1_->Eval( W1Had.Pt() ) * tfWjet2_->Eval( W2Had.Pt() ) * tfbHad_->Eval( bHad.Pt() ) *
+    tfbLep_->Eval( bLep.Pt() ) * /* something for MET  */ 
+    tfHiggs1_->Eval( higgs1.Pt() ) * tfHiggs12_->Eval( higgs2.Pt() ) ;
 
   
-  TVector3 boostToWHadCMS(wLV.Px()/wLV.E(), wLV.Py()/wLV.E(), wLV.Pz()/wLV.E() );
-  TLorentzVector WHadLVInCMS = wLV;
-  WHadLVInCMS.Boost( -boostToWHadCMS );
+  prob *= MEpart;
+  prob *= TFpart;
 
-  versor1 = boostToWHadCMS.Unit();
-  versor2 = (versor1.Orthogonal()).Unit();
-  versor3 = versor1.Cross(versor2);
-
-  TVector3 dirW = GammaW*versor1 + TMath::Sqrt(1-GammaW*GammaW)*TMath::Cos( EpsilonW )*versor2 + TMath::Sqrt(1-GammaW*GammaW)*TMath::Sin( EpsilonW )*versor3;
-  //TLorentzVector w1LV, w2LV;
-  //w1LV.SetPxPyPzE(  dirW.X()*EuStar_,  dirW.Y()*EuStar_,  dirW.Z()*EuStar_ , EuStar_ );
-  //w2LV.SetPxPyPzE( -dirW.X()*EuStar_, -dirW.Y()*EuStar_, -dirW.Z()*EuStar_ , EuStar_ );
-  TLorentzVector w1LV( (dirW*EuStar_),    EuStar_);
-  TLorentzVector w2LV( (dirW*(-EuStar_)), EuStar_);
-
-  TLorentzVector w1InLab = w1LV;
-  TLorentzVector w2InLab = w2LV;
-  w1InLab.Boost( boostToWHadCMS );
-  w2InLab.Boost( boostToWHadCMS );
-  w1InLab.Boost( boostToTopHadCMS );
-  w2InLab.Boost( boostToTopHadCMS );
-  //////////////////////// 
-
-  if(DEBUG){
-    //debugHisto1_->Fill( w1InLab.Pt() );
-    cout << "W1 in Lab " << w1InLab.Pt() << ", " << w1InLab.Eta() << ", " << w1InLab.Phi() << endl;
-    cout << "W2 in Lab " << w2InLab.Pt() << ", " << w2InLab.Eta() << ", " << w2InLab.Phi() << endl;
-
-    cout << "Check Pt: " <<   "Top had in lab " << topHadLV.Pt() << " from components: " << (w1InLab+w2InLab+bInLab).Pt()   << endl;
-    cout << "Check Eta: " <<  "Top had in lab " << topHadLV.Eta() << " from components: " << (w1InLab+w2InLab+bInLab).Eta() << endl;
-    cout << "Check BetaW..." << endl;
-    TLorentzVector bHelp = bInLab;
-    bHelp.Boost( -boostToTopHadCMS );
-    cout << BetaW << " <=> " << TMath::Cos( (bHelp.Vect()).Angle(boostToTopHadCMS) ) << endl;
-    cout << "Check GammaW..." << endl;
-    TLorentzVector w1Help = w1InLab;
-    TLorentzVector wHelp  = w1InLab+w2InLab;
-    wHelp.Boost( -boostToTopHadCMS );
-    w1Help.Boost( -boostToTopHadCMS );
-    w1Help.Boost( -wHelp.BoostVector() );
-    cout << GammaW << " <=> " << TMath::Cos( (w1Help.Vect()).Angle(wHelp.BoostVector()) ) << endl;
-  }
-
-
-  unsigned int j1 = findMatch(w1InLab.Eta(), w1InLab.Phi());
-  unsigned int j2 = findMatch(w2InLab.Eta(), w2InLab.Phi());
-  unsigned int bb = findMatch(bInLab.Eta(),  bInLab.Phi());
-
-
-  double AccJ1 =  TMath::Abs(w1InLab.Eta())<1.0 ?  
-    TMath::Erf( (jetParam_.find("param0AccLightBin0"))->second * w1InLab.Pt()+(jetParam_.find("param1AccLightBin0"))->second )+(jetParam_.find("param2AccLightBin0"))->second :
-    TMath::Erf( (jetParam_.find("param0AccLightBin1"))->second * w1InLab.Pt()+(jetParam_.find("param1AccLightBin1"))->second )+(jetParam_.find("param2AccLightBin1"))->second ;
-  double AccJ2 =  TMath::Abs(w2InLab.Eta())<1.0 ?  
-    TMath::Erf( (jetParam_.find("param0AccLightBin0"))->second * w2InLab.Pt()+(jetParam_.find("param1AccLightBin0"))->second )+(jetParam_.find("param2AccLightBin0"))->second :
-    TMath::Erf( (jetParam_.find("param0AccLightBin1"))->second * w2InLab.Pt()+(jetParam_.find("param1AccLightBin1"))->second )+(jetParam_.find("param2AccLightBin1"))->second ;
-  double AccB =  TMath::Abs(bInLab.Eta())<1.0 ?  
-    TMath::Erf( (jetParam_.find("param0AccHeavyBin0"))->second * bInLab.Pt()+(jetParam_.find("param1AccHeavyBin0"))->second )+(jetParam_.find("param2AccHeavyBin0"))->second :
-    TMath::Erf( (jetParam_.find("param0AccHeavyBin1"))->second * bInLab.Pt()+(jetParam_.find("param1AccHeavyBin1"))->second )+(jetParam_.find("param2AccHeavyBin1"))->second ;
-   
-  double ResolJ1 =  999.;
-  if( w1InLab.Pt()>0){
-    ResolJ1 = TMath::Abs(w1InLab.Eta())<1.0 ?  
-      w1InLab.Pt()*TMath::Sqrt( (jetParam_.find("param0resolLightBin0"))->second*(jetParam_.find("param0resolLightBin0"))->second/w1InLab.Pt() +  
-				(jetParam_.find("param1resolLightBin0"))->second*(jetParam_.find("param1resolLightBin0"))->second/w1InLab.Pt()/w1InLab.Pt()) :
-      w1InLab.Pt()*TMath::Sqrt( (jetParam_.find("param0resolLightBin1"))->second*(jetParam_.find("param0resolLightBin1"))->second/w1InLab.Pt() +  
-				(jetParam_.find("param1resolLightBin1"))->second*(jetParam_.find("param1resolLightBin1"))->second/w1InLab.Pt()/w1InLab.Pt()) ;
-  }
-  double ResolJ2 =  999.;
-  if( w2InLab.Pt()>0){
-    ResolJ2 = TMath::Abs(w2InLab.Eta())<1.0 ?  
-      w2InLab.Pt()*TMath::Sqrt( (jetParam_.find("param0resolLightBin0"))->second*(jetParam_.find("param0resolLightBin0"))->second/w2InLab.Pt() +  
-				(jetParam_.find("param1resolLightBin0"))->second*(jetParam_.find("param1resolLightBin0"))->second/w2InLab.Pt()/w2InLab.Pt()) :
-      w2InLab.Pt()*TMath::Sqrt( (jetParam_.find("param0resolLightBin1"))->second*(jetParam_.find("param0resolLightBin1"))->second/w2InLab.Pt() +  
-				(jetParam_.find("param1resolLightBin1"))->second*(jetParam_.find("param1resolLightBin1"))->second/w2InLab.Pt()/w2InLab.Pt()) ;
-  }
-  double ResolB =  999.;
-  if( bInLab.Pt()>0){
-    ResolB = TMath::Abs(bInLab.Eta())<1.0 ?  
-      bInLab.Pt()*TMath::Sqrt( (jetParam_.find("param0resolHeavyBin0"))->second*(jetParam_.find("param0resolHeavyBin0"))->second/bInLab.Pt() +  
-			       (jetParam_.find("param1resolHeavyBin0"))->second*(jetParam_.find("param1resolHeavyBin0"))->second/bInLab.Pt()/bInLab.Pt()) :
-      bInLab.Pt()*TMath::Sqrt( (jetParam_.find("param0resolHeavyBin1"))->second*(jetParam_.find("param0resolHeavyBin1"))->second/bInLab.Pt() +  
-			       (jetParam_.find("param1resolHeavyBin1"))->second*(jetParam_.find("param1resolHeavyBin1"))->second/bInLab.Pt()/bInLab.Pt()) ;
-  }
-
-  if(DEBUG){
-    cout << "AccJ1 " << AccJ1 << endl;
-    cout << "AccJ2 " << AccJ2 << endl;
-    cout << "AccB "  << AccB << endl;
-
-    cout << "ResolJ1 " << ResolJ1 << endl;
-    cout << "ResolJ2 " << ResolJ2 << endl;
-    cout << "ResolB "  << ResolB << endl;
-
-  }
-
-  TH1F* bTagLight = this->getCachedPdf(string("pdfCsvLight"));
-  TH1F* bTagHeavy = this->getCachedPdf(string("pdfCsvHeavy"));
-
-  double TFJ1 = 1.0;
-  if( j1==98) 
-    TFJ1 = 0.0;
-  else if(j1==99)
-    TFJ1 = TMath::Max(1-AccJ1, 0.0);
-  else
-    TFJ1 = TMath::Min( AccJ1,  1.0)*TMath::Gaus( w1InLab.Pt(), ResolJ1 );
-  TFJ1 *= bTagLight->Interpolate(  bTagging_[j1] );
-
- double TFJ2 = 1.0;
-  if( j2==98) 
-    TFJ2 = 0.0;
-  else if(j2==99)
-    TFJ2 = TMath::Max(1-AccJ2, 0.0);
-  else
-    TFJ2 = TMath::Min( AccJ2,  1.0)*TMath::Gaus( w2InLab.Pt(), ResolJ2 );
-  TFJ2 *= bTagLight->Interpolate(  bTagging_[j2] );
-
-  double TFB = 1.0;
-  if( bb==98) 
-    TFB = 0.0;
-  else if(bb==99)
-    TFB = TMath::Max(1-AccB, 0.0);
-  else
-    TFB = TMath::Min( AccB,  1.0)*TMath::Gaus( bInLab.Pt(), ResolB );
-  TFB *= bTagHeavy->Interpolate(  bTagging_[bb] );
-
-  prob *= TFJ1;
-  prob *= TFJ2;
-  prob *= TFB;
-
-  TH1F* pdfV1      = this->getCachedPdf(string("pdfV1"));
-  TH1F* pdfV2      = this->getCachedPdf(string("pdfV2"));
-  TH1F* pdfPtHStar = this->getCachedPdf(string("pdfPtHStar"));
-  TH1F* pdfPtTTH   = this->getCachedPdf(string("pdfPtTTH"));
-  TH1F* pdfBetaW   = this->getCachedPdf(string("pdfBetaW"));
-  TH1F* pdfGammaW  = this->getCachedPdf(string("pdfGammaW"));
-
-
-  double pdf = 
-    pdfV1->Interpolate( v1 ) *
-    pdfV2->Interpolate( v2 ) *
-    pdfPtTTH->Interpolate( PtTTH ) *
-    (1./2./TMath::Pi())    ;
-
-  double cms = 
-    pdfPtHStar->Interpolate( PtHStar ) ;
-
-  double decay = 
-    pdfBetaW->Interpolate(  BetaW  ) * 
-    (1./2./TMath::Pi())  * 
-    pdfGammaW->Interpolate( GammaW ) * 
-    (1./2./TMath::Pi())  ;
-
-  prob *= pdf;
-  prob *= cms;
-  prob *= decay;
-
- if(DEBUG){
-   cout << "TFJ1 " << TFJ1 << endl;
-   cout << "TFJ2 " << TFJ2 << endl;
-   cout << "TFB  " << TFB << endl;
-   debugHisto1_->Fill( w1InLab.Pt() , decay*pdf*cms);
- }
-
- prob = pdf*cms*decay;
 
   ////////////////////////
+
   return prob;
 }
 
