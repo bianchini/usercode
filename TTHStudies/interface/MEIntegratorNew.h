@@ -5,8 +5,7 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TPluginManager.h"
-#include "TH1F.h"
-#include "TH1.h"
+
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TPad.h"
@@ -27,7 +26,10 @@
 #include "Math/GenVector/LorentzVector.h"
 #include "TLorentzVector.h"
 #include "RooWorkspace.h"
+#include "TH1.h"
 #include "TH1F.h"
+#include "TH2F.h"
+#include "TH3F.h"
 
 #include <string>
 #include <map>
@@ -37,10 +39,6 @@
 
 using namespace RooFit;
 using namespace std;
-
-#define Mtop_ 175.
-#define MW    81.
-#define Mb    5.
 
 
 class MEIntegratorNew {
@@ -63,18 +61,20 @@ class MEIntegratorNew {
   void   cachePdf( string , string , string, string, int, int, int );
   void   cachePdf( string , string , string, string, TArrayF, TArrayF, TArrayF);
   void   setMass(double);
-  void   initTF() ;
+  void   setSumEt(double);
   TH1*   getCachedPdf( string ) const;
+  TF1*   getCachedTF ( string ) const;
   TH2F*  getMash( );
   TH1F*  getDebugHisto( );
   void   debug();
 
-  void initializeVersors(int);
+  void   initVersors(int);
+  void   initTF(int) ;
 
-  void topHadEnergies    (double, double&, double&, double&, double&, int&);
-  void topLepEnergies    (double, double,  double&, double&, double&, double&, int&);
-  void topHadLostEnergies(double, double,  double,  double&, double&, double&, double&, int&);
-  void higgsEnergies     (double, double&, double&, int&);
+  void   topHadEnergies    (double, double&, double&, double&, double&, int&) const;
+  void   topLepEnergies    (double, double,  double&, double&, double&, double&, int&) const;
+  void   topHadLostEnergies(double, double,  double,  double&, double&, double&, double&, int&) const;
+  void   higgsEnergies     (double, double&, double&, int&) const;
   double topHadJakobi    (double, double, double) const;
   double topLepJakobi    (double, double ) const;
   double higgsJakobi     (double, double ) const;
@@ -110,6 +110,7 @@ class MEIntegratorNew {
   TVector3 eW2Had_;
   TVector3 eB1_;
   TVector3 eB2_;
+  TVector3 eMEt_;
 
   int par_;
   int verbose_;
@@ -123,12 +124,13 @@ class MEIntegratorNew {
   float Mtop_;
   float Mb_;
   float Mw_;
+  double sumEt_;
   TH2F* mash_;
 
   TH1F* debugHisto1_;
-  TH1F* pdfBetaWHad_, pdfBetaWHad_, pdfBetaWLep_, pdfGammaWLep_, pdfGammaTTH_;
-  TH3F* pdf3D_;
-  TF1* tfWjet1_,tfWjet2_, tfbHad_, tfbLep_, tfMetPt_,tfMetPhi_, tfHiggs1_, tfHiggs2_;
+  TH1F pdfBetaWHad_, pdfGammaWHad_, pdfBetaWLep_, pdfGammaWLep_, pdfGammaTTH_;
+  TH3F pdf3D_;
+  TF1  tfWjet1_,tfWjet2_, tfbHad_, tfbLep_, tfMetPt_,tfMetPhi_, tfHiggs1_, tfHiggs2_;
 
 };
 
@@ -139,10 +141,12 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
 
   par_     = param;
   verbose_ = verbose;
+  sumEt_   = 1500.; //dummy
 
   jets_.clear();
   bTagging_.clear();
-  initializeVersors(0);
+  initVersors(0);
+  initTF(0);
 
   Mtop_   = 174.3;
   Mb_     = 4.8;
@@ -202,12 +206,12 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   cachePdf( "pdfGammaTTH",      "GammaTTH",  100);
   cachePdf( "pdf3D",            "X1", "MassTT","GammaTT", binsX, binsMassTT, binsGammaTT);
 
-  pdfGammaWHad_ = (TH1F*)this->getCachedPdf("pdfGammaWHad");
-  pdfBetaWHad_  = (TH1F*)this->getCachedPdf("pdfBetaWHad");
-  pdfBetaWLep_  = (TH1F*)this->getCachedPdf("pdfBetaWLep");
-  pdfGammaWLep_ = (TH1F*)this->getCachedPdf("pdfGammaWLep");
-  pdfGammaTTH_  = (TH1F*)this->getCachedPdf("pdfGammaTTH");
-  pdf3D_        = (TH3F*)this->getCachedPdf("pdf3D");
+  pdfGammaWHad_ = *((TH1F*)this->getCachedPdf("pdfGammaWHad"));
+  pdfBetaWHad_  = *((TH1F*)this->getCachedPdf("pdfBetaWHad"));
+  pdfBetaWLep_  = *((TH1F*)this->getCachedPdf("pdfBetaWLep"));
+  pdfGammaWLep_ = *((TH1F*)this->getCachedPdf("pdfGammaWLep"));
+  pdfGammaTTH_  = *((TH1F*)this->getCachedPdf("pdfGammaTTH"));
+  pdf3D_        = *((TH3F*)this->getCachedPdf("pdf3D"));
 
   
   cout << "End constructor" << endl;
@@ -216,6 +220,8 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
 
 
 MEIntegratorNew::~MEIntegratorNew(){
+
+  cout << "Start destructor" << endl;
 
   for(std::map<string, TH1F*>::iterator it = variables1D_.begin(); it!=variables1D_.end(); it++){
     if(it->second) 
@@ -234,11 +240,14 @@ MEIntegratorNew::~MEIntegratorNew(){
       delete (it->second);
   }
 
-  delete mash_; delete debugHisto1_;
+  delete mash_; 
+  delete debugHisto1_;
+
+  cout << "End destructor" << endl;
 
 }
 
-void MEIntegratorNew::initializeVersors(int withJetList){
+void MEIntegratorNew::initVersors(int withJetList){
   
   if(withJetList==0){
     eLep_   = TVector3(0.,0.,1.);
@@ -248,6 +257,7 @@ void MEIntegratorNew::initializeVersors(int withJetList){
     eW2Had_ = TVector3(0.,0.,1.);
     eB1_    = TVector3(0.,0.,1.);
     eB2_    = TVector3(0.,0.,1.);
+    eMEt_   = TVector3(0.,0.,1.);
     return;
   }
   else if( withJetList==1 && jets_.size() < 7 ){
@@ -256,20 +266,33 @@ void MEIntegratorNew::initializeVersors(int withJetList){
   }
   else if(  withJetList==1 && jets_.size() == 8 ){
     eLep_  = (jets_[0].Vect()).Unit();
+    eMEt_  = (jets_[1].Vect()).Unit();
     eBLep_ = (jets_[2].Vect()).Unit();
-    eBHad_ = (jets_[5].Vect()).Unit();
     eW1Had_= (jets_[3].Vect()).Unit();
     eW2Had_= (jets_[4].Vect()).Unit();
+    eBHad_ = (jets_[5].Vect()).Unit();
     eB1_   = (jets_[6].Vect()).Unit();
     eB2_   = (jets_[7].Vect()).Unit();
    }
-  else{cout << "Problems in MEIntegratorNew::initializeVersors" << endl;}
+  else{cout << "Problems in MEIntegratorNew::initVersors" << endl;}
   
   return;
 }
 
  
-void initTF(){
+void MEIntegratorNew::initTF(int withJetList){
+
+  if(withJetList==0){
+    tfWjet1_  = *(new TF1());
+    tfWjet2_  = *(new TF1()); 
+    tfbHad_   = *(new TF1()); 
+    tfbLep_   = *(new TF1()); 
+    tfMetPt_  = *(new TF1());
+    tfMetPhi_ = *(new TF1()); 
+    tfHiggs1_ = *(new TF1()); 
+    tfHiggs2_ = *(new TF1());
+    return;
+  }
   
   string bin = "Bin0";
   if(  TMath::Abs( eW1Had_.Eta() )<1.0 ){
@@ -279,16 +302,16 @@ void initTF(){
     bin = "Bin1";
   }
 
-  TF1* tfWjet1 = new TF1("tfWjet1",Form("(TMath::Erf(%f*x+%f)+%f) * TMath::Gaus( x, x , x*TMath::Sqrt( %f/x + %f/x/x) ) ", 
-					(jetParam_.find("param0AccLight"+bin))->second, 
-					(jetParam_.find("param1AccLight"+bin))->second,
-					(jetParam_.find("param2AccLight"+bin))->second,
+  TF1* tfWjet1 = new TF1("tfWjet1",Form("TMath::Gaus( x, [0] , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", //(TMath::Erf(%f*x+%f)+%f) *
+					//(jetParam_.find("param0AccLight"+bin))->second, 
+					//(jetParam_.find("param1AccLight"+bin))->second,
+					//(jetParam_.find("param2AccLight"+bin))->second,
 					(jetParam_.find("param0resolLight"+bin))->second*(jetParam_.find("param0resolLight"+bin))->second,
 					(jetParam_.find("param1resolLight"+bin))->second*(jetParam_.find("param1resolLight"+bin))->second
 					),1,1000);
   tfWjet1->SetNpx(1000);
   transferFunctions_["tfWjet1"] = tfWjet1;
-  tfWjet1_ = tfWjet1;
+  tfWjet1_ = *tfWjet1;
 
   if(  TMath::Abs( eW2Had_.Eta() )<1.0 ){
     bin = "Bin0";
@@ -297,16 +320,16 @@ void initTF(){
     bin = "Bin1";
   }
 
-  TF1* tfWjet2 = new TF1("tfWjet2",Form("(TMath::Erf(%f*x+%f)+%f) * TMath::Gaus( x, x , x*TMath::Sqrt( %f/x + %f/x/x) ) ", 
-					(jetParam_.find("param0AccLight"+bin))->second, 
-					(jetParam_.find("param1AccLight"+bin))->second,
-					(jetParam_.find("param2AccLight"+bin))->second,
+  TF1* tfWjet2 = new TF1("tfWjet2",Form("TMath::Gaus( x, [0] , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]), 1 ) ", //(TMath::Erf(%f*x+%f)+%f) *
+					//(jetParam_.find("param0AccLight"+bin))->second, 
+					//(jetParam_.find("param1AccLight"+bin))->second,
+					//(jetParam_.find("param2AccLight"+bin))->second,
 					(jetParam_.find("param0resolLight"+bin))->second*(jetParam_.find("param0resolLight"+bin))->second,
 					(jetParam_.find("param1resolLight"+bin))->second*(jetParam_.find("param1resolLight"+bin))->second
 					),1,1000);
   tfWjet2->SetNpx(1000);
   transferFunctions_["tfWjet2"] = tfWjet2;
-  tfWjet2_ = tfWjet2;
+  tfWjet2_ = *tfWjet2;
 
   if(  TMath::Abs( eBHad_.Eta() )<1.0 ){
     bin = "Bin0";
@@ -315,16 +338,16 @@ void initTF(){
     bin = "Bin1";
   }
 
-  TF1* tfbHad = new TF1("tfbHad",Form("(TMath::Erf(%f*x+%f)+%f) * TMath::Gaus( x, x , x*TMath::Sqrt( %f/x + %f/x/x) ) ", 
-				      (jetParam_.find("param0AccHeavy"+bin))->second, 
-				      (jetParam_.find("param1AccHeavy"+bin))->second,
-				      (jetParam_.find("param2AccHeavy"+bin))->second,
+  TF1* tfbHad = new TF1("tfbHad",Form("TMath::Gaus( x, [0] , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", //(TMath::Erf(%f*x+%f)+%f) *
+				      //(jetParam_.find("param0AccHeavy"+bin))->second, 
+				      //(jetParam_.find("param1AccHeavy"+bin))->second,
+				      //(jetParam_.find("param2AccHeavy"+bin))->second,
 				      (jetParam_.find("param0resolHeavy"+bin))->second*(jetParam_.find("param0resolHeavy"+bin))->second,
 				      (jetParam_.find("param1resolHeavy"+bin))->second*(jetParam_.find("param1resolHeavy"+bin))->second
 				      ),1,1000);
   tfbHad->SetNpx(1000);
   transferFunctions_["tfbHad"] = tfbHad;
-  tfbHad_ = tfbHad;
+  tfbHad_ = *tfbHad;
 
   if(  TMath::Abs( eBLep_.Eta() )<1.0 ){
     bin = "Bin0";
@@ -333,16 +356,16 @@ void initTF(){
     bin = "Bin1";
   }
 
-  TF1* tfbLep = new TF1("tfbLep",Form("(TMath::Erf(%f*x+%f)+%f) * TMath::Gaus( x, x , x*TMath::Sqrt( %f/x + %f/x/x) ) ", 
-				      (jetParam_.find("param0AccHeavy"+bin))->second, 
-				      (jetParam_.find("param1AccHeavy"+bin))->second,
-				      (jetParam_.find("param2AccHeavy"+bin))->second,
+  TF1* tfbLep = new TF1("tfbLep",Form("TMath::Gaus( x, [0] , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", //(TMath::Erf(%f*x+%f)+%f) *
+				      //(jetParam_.find("param0AccHeavy"+bin))->second, 
+				      //(jetParam_.find("param1AccHeavy"+bin))->second,
+				      //(jetParam_.find("param2AccHeavy"+bin))->second,
 				      (jetParam_.find("param0resolHeavy"+bin))->second*(jetParam_.find("param0resolHeavy"+bin))->second,
 				      (jetParam_.find("param1resolHeavy"+bin))->second*(jetParam_.find("param1resolHeavy"+bin))->second
 				      ),1,1000);
   tfbLep->SetNpx(1000);
   transferFunctions_["tfbLep"] = tfbLep;
-  tfbLep_ = tfbLep;
+  tfbLep_ = *tfbLep;
 
   if(  TMath::Abs( eB1_.Eta() )<1.0 ){
     bin = "Bin0";
@@ -351,16 +374,16 @@ void initTF(){
     bin = "Bin1";
   }
 
-  TF1* tfHiggs1 = new TF1("tfHiggs1",Form("(TMath::Erf(%f*x+%f)+%f) * TMath::Gaus( x, x , x*TMath::Sqrt( %f/x + %f/x/x) ) ", 
-				      (jetParam_.find("param0AccHeavy"+bin))->second, 
-				      (jetParam_.find("param1AccHeavy"+bin))->second,
-				      (jetParam_.find("param2AccHeavy"+bin))->second,
-				      (jetParam_.find("param0resolHeavy"+bin))->second*(jetParam_.find("param0resolHeavy"+bin))->second,
-				      (jetParam_.find("param1resolHeavy"+bin))->second*(jetParam_.find("param1resolHeavy"+bin))->second
-				      ),1,1000);
+  TF1* tfHiggs1 = new TF1("tfHiggs1",Form("TMath::Gaus( x, [0] , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", //(TMath::Erf(%f*x+%f)+%f) *
+					  //(jetParam_.find("param0AccHeavy"+bin))->second, 
+					  //(jetParam_.find("param1AccHeavy"+bin))->second,
+					  //(jetParam_.find("param2AccHeavy"+bin))->second,
+					  (jetParam_.find("param0resolHeavy"+bin))->second*(jetParam_.find("param0resolHeavy"+bin))->second,
+					  (jetParam_.find("param1resolHeavy"+bin))->second*(jetParam_.find("param1resolHeavy"+bin))->second
+					  ),1,1000);
   tfHiggs1->SetNpx(1000);
   transferFunctions_["tfHiggs1"] = tfHiggs1;
-  tfHiggs1_ = tfHiggs1;
+  tfHiggs1_ = *tfHiggs1;
 
   if(  TMath::Abs( eB2_.Eta() )<1.0 ){
     bin = "Bin0";
@@ -369,20 +392,42 @@ void initTF(){
     bin = "Bin1";
   }
 
-  TF1* tfHiggs2 = new TF1("tfHiggs2",Form("(TMath::Erf(%f*x+%f)+%f) * TMath::Gaus( x, x , x*TMath::Sqrt( %f/x + %f/x/x) ) ", 
-				      (jetParam_.find("param0AccHeavy"+bin))->second, 
-				      (jetParam_.find("param1AccHeavy"+bin))->second,
-				      (jetParam_.find("param2AccHeavy"+bin))->second,
-				      (jetParam_.find("param0resolHeavy"+bin))->second*(jetParam_.find("param0resolHeavy"+bin))->second,
-				      (jetParam_.find("param1resolHeavy"+bin))->second*(jetParam_.find("param1resolHeavy"+bin))->second
-				      ),1,1000);
+  TF1* tfHiggs2 = new TF1("tfHiggs2",Form("TMath::Gaus( x, [0] , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", //(TMath::Erf(%f*x+%f)+%f) *
+					  //(jetParam_.find("param0AccHeavy"+bin))->second, 
+					  //(jetParam_.find("param1AccHeavy"+bin))->second,
+					  //(jetParam_.find("param2AccHeavy"+bin))->second,
+					  (jetParam_.find("param0resolHeavy"+bin))->second*(jetParam_.find("param0resolHeavy"+bin))->second,
+					  (jetParam_.find("param1resolHeavy"+bin))->second*(jetParam_.find("param1resolHeavy"+bin))->second
+					  ),1,1000);
   tfHiggs2->SetNpx(1000);
   transferFunctions_["tfHiggs2"] = tfHiggs2;
-  tfHiggs2_ = tfHiggs2;
+  tfHiggs2_ = *tfHiggs2;
 
 
   /////// do something here for the MET
 
+  float MetPtRes = TMath::Sqrt( 1.12544e+02 + sumEt_*3.00905e-01 );
+  TF1* tfMetPt   = new TF1("tfMetPt",Form("TMath::Gaus( x ,%f, %f, 1 )", jets_[1].Pt(), MetPtRes), 0, 1000);
+
+  tfMetPt->SetNpx(1000);
+  transferFunctions_["tfMetPt"] = tfMetPt;
+  tfMetPt_ = *tfMetPt;
+
+  float MetPhiRes = TMath::Sqrt( 6.54808e+01 + sumEt_*7.35296e-01 )/jets_[1].Pt();
+  TF1* tfMetPhi   = new TF1("tfMetPhi",Form("TMath::Gaus( x ,%f, %f , 1)", jets_[1].Phi(), MetPhiRes), -TMath::Pi(),TMath::Pi());
+
+  tfMetPhi->SetNpx(1000);
+  transferFunctions_["tfMetPhi"] = tfMetPhi;
+  tfMetPhi_ = *tfMetPhi;
+
+  ///////////////////////////////////////////
+
+  tfWjet1-> SetParameter(0, jets_[3].Pt() ) ;
+  tfWjet2-> SetParameter(0, jets_[4].Pt() ) ;
+  tfbHad->  SetParameter(0, jets_[5].Pt() ) ;
+  tfbLep->  SetParameter(0, jets_[2].Pt() ) ; 
+  tfHiggs1->SetParameter(0, jets_[6].Pt() ) ;
+  tfHiggs2->SetParameter(0, jets_[7].Pt() ) ;
 
 
 }
@@ -393,7 +438,11 @@ void MEIntegratorNew::setMass(double mass){
   M_ = mass;
 }
 
-void MEIntegratorNew::topHadEnergies(double E1, double& E2, double& E3, double& cos1, double& cos2, int& errFlag ){
+void MEIntegratorNew::setSumEt(double sumEt){
+  sumEt_ = sumEt;
+}
+
+void MEIntegratorNew::topHadEnergies(double E1, double& E2, double& E3, double& cos1, double& cos2, int& errFlag ) const {
   
   TVector3 e1 = eW1Had_;
   TVector3 e2 = eW2Had_;
@@ -408,13 +457,13 @@ void MEIntegratorNew::topHadEnergies(double E1, double& E2, double& E3, double& 
   double a = E1+E2;
   double b = E1*TMath::Cos(a13)+E2*TMath::Cos(a23);
 
-  if( dM2*dM2 - (a*a - b*b)*Mb_*Mb_ < 0){
+  if( dM2_*dM2_ - (a*a - b*b)*Mb_*Mb_ < 0){
     errFlag = 1;
-    continue;
+    return;
   }
   
-  double E3_1 =  (a*dM2 + b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b) ;
-  double E3_2 =  (a*dM2 - b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b) ;
+  double E3_1 =  (a*dM2_ + b*TMath::Sqrt(dM2_*dM2_ - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b) ;
+  //double E3_2 =  (a*dM2_ - b*TMath::Sqrt(dM2_*dM2_ - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b) ;
   
   E3 = E3_1;
 
@@ -445,7 +494,7 @@ void MEIntegratorNew::topHadEnergies(double E1, double& E2, double& E3, double& 
 }
 
 
-void MEIntegratorNew::topLepEnergies(double nuPhi, double nuTheta, double& Enu, double& Eb, double& cos1, double& cos2, int& errFlag ){
+void MEIntegratorNew::topLepEnergies(double nuPhi, double nuTheta, double& Enu, double& Eb, double& cos1, double& cos2, int& errFlag ) const{
 
   double Elep =  jets_[0].E();
   TVector3 e1 =  eLep_;
@@ -464,17 +513,17 @@ void MEIntegratorNew::topLepEnergies(double nuPhi, double nuTheta, double& Enu, 
   double a = Elep+Enu;
   double b = Elep*TMath::Cos(a12)+Enu*TMath::Cos(a23);
 
-  if( dM2*dM2 - (a*a - b*b)*Mb_*Mb_ < 0){
+  if( dM2_*dM2_ - (a*a - b*b)*Mb_*Mb_ < 0){
     errFlag = 1;
-    continue;
+    return;
   }
 
-  double E3_1 =  (a*dM2 + b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b) ;
-  double E3_2 =  (a*dM2 - b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b) ;
+  double E3_1 =  (a*dM2_ + b*TMath::Sqrt(dM2_*dM2_ - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b) ;
+  //double E3_2 =  (a*dM2_ - b*TMath::Sqrt(dM2_*dM2_ - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b) ;
 
   Eb = E3_1;
 
-  if(E3<Mb_){
+  if(Eb<Mb_){
     errFlag = 1;
     return;
   }
@@ -502,12 +551,12 @@ void MEIntegratorNew::topLepEnergies(double nuPhi, double nuTheta, double& Enu, 
 
 
 
-void MEIntegratorNew::topHadLostEnergies(double missPhi, double missTheta, double missE, double& E1, double& Eb, double& cos1, double& cos2, int& errFlag ){
+void MEIntegratorNew::topHadLostEnergies(double missPhi, double missTheta, double missE, double& E1, double& Eb, double& cos1, double& cos2, int& errFlag ) const{
 
 }
 
 
-void MEIntegratorNew::higgsEnergies(double E1, double& E2, double& cos1, int& errFlag){
+void MEIntegratorNew::higgsEnergies(double E1, double& E2, double& cos1, int& errFlag) const{
 
   if(E1<Mb_){
     errFlag = 1;
@@ -522,13 +571,13 @@ void MEIntegratorNew::higgsEnergies(double E1, double& E2, double& cos1, int& er
   double a = E1;
   double b = TMath::Sqrt(E1*E1 - Mb_*Mb_)*TMath::Cos(a12);
 
-  if( dM2*dM2 - (a*a - b*b)*Mb_*Mb_ < 0){
+  if( dM2_*dM2_ - (a*a - b*b)*Mb_*Mb_ < 0){
     errFlag = 1;
     return;
   }
 
-  double E2_1 = (a*dM2 + b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b);
-  double E2_2 = (a*dM2 - b*TMath::Sqrt(dM2*dM2 - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b);
+  double E2_1 = (a*dM2_ + b*TMath::Sqrt(dM2_*dM2_ - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b);
+  //double E2_2 = (a*dM2_ - b*TMath::Sqrt(dM2_*dM2_ - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b);
 
   E2 = E2_1;
 
@@ -632,7 +681,7 @@ void MEIntegratorNew::cachePdf( string pdfName, string varName, int nBins){
   if(pdf){
     RooRealVar* var = w_->var( varName.c_str() );
     
-    TH1F* hCache = new TH1F("hCache","", nBins, var->getMin(), var->getMax() );
+    TH1F* hCache = new TH1F(pdfName.c_str(),"", nBins, var->getMin(), var->getMax() );
     
     for(int j = 1; j < hCache->GetNbinsX(); j++){
       float lvalue = hCache->GetXaxis()->GetBinCenter(j);
@@ -741,7 +790,7 @@ void MEIntegratorNew::cachePdf( string pdfName, string varName1, string varName2
 
 
 
-TH1* MEIntegratorNew::getCachedPdf( string pdfName ) const{
+TH1* MEIntegratorNew::getCachedPdf( string pdfName ) const {
 
   if( variables1D_.find(pdfName) !=  variables1D_.end() ) 
     return (variables1D_.find(pdfName))->second;
@@ -753,59 +802,53 @@ TH1* MEIntegratorNew::getCachedPdf( string pdfName ) const{
   else return 0;
 }
 
+
+TF1* MEIntegratorNew::getCachedTF( string tfName ) const {
+
+  if( transferFunctions_.find(tfName) != transferFunctions_.end() ) 
+    return (transferFunctions_.find(tfName))->second;
+
+  else return 0;
+}
+
  
-double topHadJakobi( double Eq1, double Eq2, double EbHad) const {
+double MEIntegratorNew::topHadJakobi( double Eq1, double Eq2, double EbHad)  const{
   return EbHad * Eq2 * Eq1 ;
 }
 
-double topLepJakobi( double Enu, double EbLep) const {
+double MEIntegratorNew::topLepJakobi( double Enu, double EbLep)  const{
   return EbLep * Enu ;
 }
 
-double higgsJakobi ( double Eh1, double Eh2) const {
+double MEIntegratorNew::higgsJakobi ( double Eh1, double Eh2)  const{
   return Eh1 * Eh2 ;
 }
 
 
-double topHadDensity ( double cos1, double cos2) const {
+double MEIntegratorNew::topHadDensity ( double cos1, double cos2) const{
 
-  if( !pdfBetaWHad_ || !pdfGammaWHad_ ){
-    if(verbose_) cout << "topHadDensity tries to access non-existing histogram" << endl;
-    return 0.0;
-  }
+  double val1 = const_cast<TH1F*>(&pdfBetaWHad_)->Interpolate(cos1);
+  double val2 = const_cast<TH1F*>(&pdfGammaWHad_)->Interpolate(cos2);
+  double res  = val1*val2;
 
+  return res;
 
-  double val1 = pdfBetaWHad_ ->Interpolate(cos1);
-  double val2 = pdfGammaWHad_->Interpolate(cos2);
+}
+
+double MEIntegratorNew::topLepDensity ( double cos1, double cos2)  const{
+
+  double val1 = const_cast<TH1F*>(&pdfBetaWLep_)->Interpolate(cos1);
+  double val2 = const_cast<TH1F*>(&pdfGammaWLep_)->Interpolate(cos2);
 
   return val1*val2;
 
 }
 
-double topLepDensity ( double cos1, double cos2) const {
-
-  if( !pdfBetaWLep_ || !pdfGammaWLep_){
-    if(verbose_) cout << "topLepDensity tries to access non-existing histogram" << endl;
-    return 0.0;
-  }
-
-  double val1 = pdfBetaWLep_ ->Interpolate(cos1);
-  double val2 = pdfGammaWLep_->Interpolate(cos2);
-
-  return val1*val2;
-
-}
-
-double higgsDensity ( double cos1 ) const {
+double MEIntegratorNew::higgsDensity ( double cos1 )  const{
   return 1.0;
 }
 
-double tthDensity ( double Q, double m12, double cos1Star, double cos3) const {
-
-  if( !pdfGammaTTH || !pdf3D){
-    if(verbose_) cout << "tthDensity tries to access non-existing histogram" << endl;
-    return 0.0;
-  }
+double MEIntegratorNew::tthDensity ( double Q, double m12, double cos1Star, double cos3)  const{
 
   double p1Star = (m12*m12 - 4*Mtop_*Mtop_) >=0 ? 
     TMath::Sqrt((m12*m12 - 4*Mtop_*Mtop_)*(m12*m12))/2./m12 : -999.;
@@ -817,8 +860,8 @@ double tthDensity ( double Q, double m12, double cos1Star, double cos3) const {
     return 0.0;
   }
 
-  double val1 = pdf3D_->Interpolate(Q, m12, cos1Star);
-  double val2 = pdfGammaTTH_->Interpolate( cos3 );
+  double val1 = const_cast<TH3F*>(&pdf3D_)->Interpolate(Q, m12, cos1Star);
+  double val2 = const_cast<TH1F*>(&pdfGammaTTH_)->Interpolate( cos3 );
 
   return (val1*val2)/p1Star/p3;
 
@@ -842,14 +885,14 @@ double MEIntegratorNew::probability(const double* x) const{
   eNu.SetPhi  ( phiNu );   
   eNu.SetMag  ( 1.);  
 
-  if(verbose){
-    cout << "Eq = "         << Eq << endl; 
+  if(verbose_){
+    cout << "Eq1 = "         << Eq1 << endl; 
     cout << "cosThetaNu = " << cosThetaNu << endl; 
     cout << "phiNu = "      << phiNu  << endl; 
-    cout << "Eh = "         << Eh  << endl; 
+    cout << "Eh1 = "         << Eh1  << endl; 
   }
 
-  int erFlag = 0;
+  int errFlag = 0;
 
   double Eq2, EbHad, cos1Had, cos2Had;
   topHadEnergies( Eq1, Eq2, EbHad, cos1Had, cos2Had, errFlag );
@@ -860,7 +903,7 @@ double MEIntegratorNew::probability(const double* x) const{
   }
 
   double Enu, EbLep, cos1Lep, cos2Lep;
-  topLepEnergies( phiNu, cosThetaNu, Enu, EbLep, cos1Lep, cos2Lep, erFlag  );
+  topLepEnergies( phiNu, cosThetaNu, Enu, EbLep, cos1Lep, cos2Lep, errFlag  );
 
   if(errFlag){
     if(verbose_) cout << "Problems with topLepEnergies" << endl;
@@ -868,7 +911,7 @@ double MEIntegratorNew::probability(const double* x) const{
   }
 
   double Eh2, cos1Higgs;
-  higgsEnergies( Eh1, Eh2, erFlag );
+  higgsEnergies( Eh1, Eh2, cos1Higgs, errFlag );
   
   if(errFlag){
     if(verbose_) cout << "Problems with higgsEnergies" << endl;
@@ -914,10 +957,17 @@ double MEIntegratorNew::probability(const double* x) const{
     topHadJakobi( Eq1, Eq2, EbHad) * topLepJakobi(Enu, EbLep) * higgsJakobi( Eh1, Eh2 ) *
     tthDensity( Q , m12, cos1Star, cos3);
 
+  (const_cast<TF1*>(&tfWjet1_ ))->SetParameter(0, W1Had.Pt());
+  (const_cast<TF1*>(&tfWjet2_ ))->SetParameter(0, W2Had.Pt());
+  (const_cast<TF1*>(&tfbHad_  ))->SetParameter(0,  bHad.Pt());
+  (const_cast<TF1*>(&tfbLep_  ))->SetParameter(0,  bLep.Pt());
+  (const_cast<TF1*>(&tfHiggs1_))->SetParameter(0,higgs1.Pt());
+  (const_cast<TF1*>(&tfHiggs2_))->SetParameter(0,higgs2.Pt());
+
   double TFpart = 
-    tfWjet1_->Eval( W1Had.Pt() ) * tfWjet2_->Eval( W2Had.Pt() ) * tfbHad_->Eval( bHad.Pt() ) *
-    tfbLep_->Eval( bLep.Pt() ) * /* something for MET  */ 
-    tfHiggs1_->Eval( higgs1.Pt() ) * tfHiggs12_->Eval( higgs2.Pt() ) ;
+    tfWjet1_. Eval( jets_[3].Pt() ) * tfWjet2_.Eval( jets_[4].Pt() ) * tfbHad_.Eval( jets_[5].Pt() ) *
+    tfbLep_.  Eval( jets_[2].Pt() ) * /* something for MET  */ 
+    tfHiggs1_.Eval( jets_[6].Pt() ) * tfHiggs2_.Eval( jets_[7].Pt() ) ;
 
   
   prob *= MEpart;
@@ -962,6 +1012,19 @@ void MEIntegratorNew::debug(){
     else
       cout << it->first << " => null pointer" << endl;
   }
+  for(std::map<string, TH2F*>::iterator it = variables2D_.begin(); it!=variables2D_.end(); it++){
+    if(it->second) 
+      cout << it->first << " => " << (it->second)->Integral() << endl;
+    else
+      cout << it->first << " => null pointer" << endl;
+  }
+  for(std::map<string, TH3F*>::iterator it = variables3D_.begin(); it!=variables3D_.end(); it++){
+    if(it->second) 
+      cout << it->first << " => " << (it->second)->Integral() << endl;
+    else
+      cout << it->first << " => null pointer" << endl;
+  }
+
 
   cout << "*** debug end *** " << endl;
 

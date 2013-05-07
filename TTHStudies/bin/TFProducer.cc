@@ -103,6 +103,12 @@ int main(int argc, const char* argv[])
     return 0;
   }
 
+  TTree* treeEvent = (TTree*)file->Get("genEventTree");
+  if(!treeEvent){
+    cout << "The tree called 'genEventTree' is not there..."<< endl;
+    return 0;
+  }
+
   TTree* treeJetsLight = (TTree*)file->Get("genJetLightTree");
   if(!treeJetsLight){
     cout << "The tree called 'genJetLightTree' is not there..."<< endl;
@@ -423,9 +429,9 @@ int main(int argc, const char* argv[])
   RooHistPdf pdf3D  ("pdf3D","", RooArgSet(X1,MassTT,GammaTT), hist3D);
   w->import( pdf3D );
 
-  for( int i = 1; i < h3->GetNbinsX(); i++){
-    for( int j = 1; j < h3->GetNbinsY(); j++){
-      for( int k = 1; k < h3->GetNbinsZ(); k++){
+  for( int i = 1; i <= h3->GetNbinsX(); i++){
+    for( int j = 1; j <= h3->GetNbinsY(); j++){
+      for( int k = 1; k <= h3->GetNbinsZ(); k++){
 	int bin = h3->GetBin(i,j,k);
 	float binC  = h3->GetBinContent( bin );
 	float width = h3->GetBinWidth( bin );
@@ -439,6 +445,83 @@ int main(int argc, const char* argv[])
     h3->GetRandom3(var1,var2,var3);
     hBinCont->Fill(  h3->GetBinContent(h3->FindBin(var1,var2,var3)) );
   }
+
+
+
+  ////////////////////////////////////////////////////////////
+
+  int nBinsEt = 16;
+  TArrayF binsEt(nBinsEt+1);
+  cout << "Making histograms with " << nBinsEt << " bins:" << endl;
+  for(int k = 0; k < 11; k++)
+    binsEt[k] = 10*k;
+  for(int k = 11; k < 16; k++)
+    binsEt[k] = 100 + 50*(k-11);
+  binsEt[16] = 1000;
+
+  int nBinsPullEt = 25;
+  TArrayF binsPullEt(nBinsPullEt+1);
+  cout << "Making histograms with " << nBinsPullEt << " bins:" << endl;
+  for(int k = 0; k < 21; k++)
+    binsPullEt[k] = -1+k*(2./20);
+  binsPullEt[21] = 1.5;
+  binsPullEt[22] = 2.0;
+  binsPullEt[23] = 3.0;
+  binsPullEt[24] = 4.0;
+  binsPullEt[25] = 10 ;
+
+  TH2F* h2_0 = new TH2F("h2_0","", nBinsEt, binsEt.GetArray(), nBinsPullEt, binsPullEt.GetArray());
+  treeEvent->Draw("(etReco-et)/et:et>>h2_0","sumEt<1200");
+
+  TH2F* h2_1 = new TH2F("h2_1","", nBinsEt, binsEt.GetArray(), nBinsPullEt, binsPullEt.GetArray());
+  treeEvent->Draw("(etReco-et)/et:et>>h2_1","sumEt>1200 && sumEt<1800");
+
+  TH2F* h2_2 = new TH2F("h2_2","", nBinsEt, binsEt.GetArray(), nBinsPullEt, binsPullEt.GetArray());
+  treeEvent->Draw("(etReco-et)/et:et>>h2_2","sumEt>1800");
+
+
+  for(int b = 1; b <= h2_0->GetNbinsX(); b++){
+    int counter = 0.;
+    for(int bb = 1; bb <= h2_0->GetNbinsY(); bb++){
+      counter += h2_0->GetBinContent(b,bb);
+    }
+    for(int bb = 1; bb <= h2_0->GetNbinsY(); bb++){
+      int bin = h2_0->GetBin(b,bb);
+      float width = h2_0->GetYaxis()->GetBinWidth( bb );
+      float newbc = h2_0->GetBinContent( bin );
+      if(counter>0)
+	h2_0->SetBinContent(bin, newbc/width/counter );
+    }
+  }
+
+  for(int b = 1; b <= h2_1->GetNbinsX(); b++){
+    int counter = 0.;
+    for(int bb = 1; bb <= h2_1->GetNbinsY(); bb++){
+      counter += h2_1->GetBinContent(b,bb);
+    }
+    for(int bb = 1; bb <= h2_1->GetNbinsY(); bb++){
+      int bin = h2_1->GetBin(b,bb);
+      float width = h2_1->GetYaxis()->GetBinWidth( bb );
+      float newbc = h2_1->GetBinContent( bin );
+      if(counter>0)
+	h2_1->SetBinContent(bin, newbc/width/counter );
+    }
+  }
+
+  for(int b = 1; b <= h2_2->GetNbinsX(); b++){
+    int counter = 0.;
+    for(int bb = 1; bb <= h2_2->GetNbinsY(); bb++){
+      counter += h2_2->GetBinContent(b,bb);
+    }
+    for(int bb = 1; bb <= h2_2->GetNbinsY(); bb++){
+      int bin = h2_2->GetBin(b,bb);
+      float width = h2_2->GetYaxis()->GetBinWidth( bb );
+      float newbc = h2_2->GetBinContent( bin );
+      if(counter>0)
+	h2_2->SetBinContent(bin, newbc/width/counter );
+    }
+  }
+
 
   // v5)
   //RooDataHist histMassTT("histMassTT","histMassTT", RooArgSet(MassTT), dataset, 1.0);
@@ -753,6 +836,10 @@ int main(int argc, const char* argv[])
 
   fout = new TFile("ControlPlots.root","RECREATE");
   fout->cd();
+
+  h2_0->Write("",TObject::kOverwrite);
+  h2_1->Write("",TObject::kOverwrite);
+  h2_2->Write("",TObject::kOverwrite);
 
   h3->Write("",TObject::kOverwrite);
   hBinCont->Write("",TObject::kOverwrite);

@@ -140,6 +140,7 @@ int main(int argc, const char* argv[])
   fwlite::TFileService fs = fwlite::TFileService("./root/treeProducer.root");
   TTree* genTree          = fs.make<TTree>("genTree","event tree");
   TTree* genJetLightTree  = fs.make<TTree>("genJetLightTree","event tree");
+  TTree* genEventTree     = fs.make<TTree>("genEventTree","event tree");
   TTree* genJetHeavyTree  = fs.make<TTree>("genJetHeavyTree","event tree");
 
   float X1;
@@ -172,6 +173,12 @@ int main(int argc, const char* argv[])
   float etaLight;
   float phiLight;
   float massRecoLight;
+
+  float sumEt;
+  float et;
+  float etReco;
+  float phi;
+  float phiReco;
 
   float ptRecoHeavy;
   float phiRecoHeavy;
@@ -215,7 +222,13 @@ int main(int argc, const char* argv[])
   genJetLightTree->Branch("pt",       &ptLight,     "pt/F");
   genJetLightTree->Branch("eta",      &etaLight,    "eta/F");
   genJetLightTree->Branch("phi",      &phiLight,    "phi/F");
-  genJetLightTree->Branch("massReco",     &massRecoLight,   "massReco/F");
+  genJetLightTree->Branch("massReco", &massRecoLight,   "massReco/F");
+
+  genEventTree->Branch("sumEt",    &sumEt,   "sumEt/F");
+  genEventTree->Branch("et",       &et,    "et/F");
+  genEventTree->Branch("etReco",   &etReco,"etReco/F");
+  genEventTree->Branch("phi",      &phi,   "phi/F");
+  genEventTree->Branch("phiReco",  &phiReco,"phiReco/F");
 
   genJetHeavyTree->Branch("ptReco",   &ptRecoHeavy, "ptReco/F");
   genJetHeavyTree->Branch("etaReco",  &etaRecoHeavy, "etaReco/F");
@@ -275,6 +288,7 @@ int main(int argc, const char* argv[])
     JetByPt jet1, jet2, jet3, jet4, jet5, jet6, jet7, jet8, jet9, jet10;
     genParticleInfo genB, genBbar;
     genTopInfo genTop, genTbar;
+    metInfo METtype1p2corr;
 
     currentTree->SetBranchAddress("jet1",   &jet1);
     currentTree->SetBranchAddress("jet2",   &jet2);
@@ -290,7 +304,8 @@ int main(int argc, const char* argv[])
     currentTree->SetBranchAddress("genBbar",&genBbar);
     currentTree->SetBranchAddress("genTop", &genTop);
     currentTree->SetBranchAddress("genTbar",&genTbar);
-    
+    currentTree->SetBranchAddress("METtype1p2corr",&METtype1p2corr);
+
     Long64_t nentries = currentTree->GetEntries();
     
     for (Long64_t i = 0; i < nentries ; i++){
@@ -494,6 +509,36 @@ int main(int argc, const char* argv[])
       phiHeavy=-99;
       massRecoHeavy=-99;
 
+      //////////////////////////////////////////////////
+      // met
+      //////////////////////////////////////////////////
+
+      sumEt   = METtype1p2corr.sumet;
+      etReco  = METtype1p2corr.et;
+      phiReco = METtype1p2corr.phi;
+
+      if(abs(genTop.wdau1id)==12 || abs(genTop.wdau1id)==14 || abs(genTop.wdau1id)==16){
+	et  = genTop.wdau1pt;
+	phi = genTop.wdau1phi;
+      }
+      else if(abs(genTop.wdau2id)==12 || abs(genTop.wdau2id)==14 || abs(genTop.wdau2id)==16){
+	et  = genTop.wdau2pt;
+	phi = genTop.wdau2phi;
+      }
+      else if(abs(genTbar.wdau1id)==12 || abs(genTbar.wdau1id)==14 || abs(genTbar.wdau1id)==16){
+	et  = genTbar.wdau1pt;
+	phi = genTbar.wdau1phi;
+      }
+      else if(abs(genTbar.wdau2id)==12 || abs(genTbar.wdau2id)==14 || abs(genTbar.wdau2id)==16){
+	et  = genTbar.wdau2pt;
+	phi = genTbar.wdau2phi;
+      }
+      else{
+	et  = -99;
+	phi = -99;
+      }
+ 
+      genEventTree->Fill();
 
       ///////////////////////////////////////////////////
       // Heavy
