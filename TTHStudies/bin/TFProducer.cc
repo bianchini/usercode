@@ -73,6 +73,65 @@ using namespace std;
 using namespace RooFit;
 
 
+void smoothTH2(TH2F* h2, TH1F* mean, TH1F* width, int useLandauFirstBin = 0 , int Et=1){
+
+
+ for(int b = 1; b <= h2->GetNbinsX(); b++){
+
+   TH1F* h1 = (TH1F*)h2->ProjectionY(Form("%s%d_py",h2->GetName(),b),b,b);
+   for(int i = 1; i <= h1->GetNbinsX(); i++){
+     float newbin = h1->GetBinContent(i)/h1->GetBinWidth(i); 
+     h1->SetBinContent(i, newbin );
+   }
+
+   if(useLandauFirstBin && b==1){// fit with Landau
+     cout << "h1 = " << h1->Integral() << endl;
+     TF1* f1 = new TF1("f1","landau", 0, 2000);
+     h1->Fit(f1);
+     TF1* fitFunc = h1->GetFunction("f1");
+     mean->SetBinContent( b, fitFunc->GetParameter(1) );
+     mean->SetBinError  ( b, (fitFunc->GetParErrors())[1] );
+     width->SetBinContent( b, fitFunc->GetParameter(2) );
+     width->SetBinError  ( b, (fitFunc->GetParErrors())[2] );
+     for(int i = 1; i <= h1->GetNbinsX(); i++){
+       h1->SetBinContent(i, fitFunc->Eval( h1->GetBinCenter(i) )  );
+     }
+     for(int bb = 1; bb <= h2->GetNbinsY(); bb++){
+       int bin     = h2->GetBin(b,bb);
+       float width = h2->GetYaxis()->GetBinWidth( bb );
+       h2->SetBinContent(bin, h1->GetBinContent(bb)/width/h1->Integral() );
+     }
+     delete f1;
+   }
+   else{
+     TF1* f2 = 0;
+     if(Et==1) 
+       f2 = new TF1("f2","gaus", -200, 200);
+     else
+       f2 = new TF1("f2","gaus",  -10, 10);
+
+     h1->Fit(f2);
+     TF1* fitFunc = h1->GetFunction("f2");
+     mean->SetBinContent( b, fitFunc->GetParameter(1) );
+     mean->SetBinError  ( b, (fitFunc->GetParErrors())[1] );
+     width->SetBinContent( b, fitFunc->GetParameter(2) );
+     width->SetBinError  ( b, (fitFunc->GetParErrors())[2] );
+     for(int i = 1; i <= h1->GetNbinsX(); i++){
+       h1->SetBinContent(i, fitFunc->Eval( h1->GetBinCenter(i) )  );
+     }
+     for(int bb = 1; bb <= h2->GetNbinsY(); bb++){
+       int bin     = h2->GetBin(b,bb);
+       float width = h2->GetYaxis()->GetBinWidth( bb );
+       h2->SetBinContent(bin, h1->GetBinContent(bb)/width/h1->Integral() );
+     }
+     delete f2;
+   }
+
+   //delete f1; delete f2;
+  }
+
+}
+
 
 int main(int argc, const char* argv[])
 {
@@ -450,77 +509,257 @@ int main(int argc, const char* argv[])
 
   ////////////////////////////////////////////////////////////
 
-  int nBinsEt = 16;
+  int nBinsEt = 17;
   TArrayF binsEt(nBinsEt+1);
   cout << "Making histograms with " << nBinsEt << " bins:" << endl;
   for(int k = 0; k < 11; k++)
     binsEt[k] = 10*k;
   for(int k = 11; k < 16; k++)
     binsEt[k] = 100 + 50*(k-11);
-  binsEt[16] = 1000;
+  binsEt[16] = 500;
+  binsEt[17] = 1000;
 
-  int nBinsPullEt = 25;
+  int nBins2Et = 11;
+  TArrayF bins2Et(nBins2Et+1);
+  cout << "Making histograms with " << nBins2Et << " bins:" << endl;
+  for(int k = 0; k < 6; k++)
+    bins2Et[k] = 20*k;
+  for(int k = 6; k < 10; k++)
+    bins2Et[k] = 100 + 50*(k-5);
+  bins2Et[10] = 500;
+  bins2Et[11] = 1000;
+
+  int nBinsPullEt = 45;
   TArrayF binsPullEt(nBinsPullEt+1);
   cout << "Making histograms with " << nBinsPullEt << " bins:" << endl;
-  for(int k = 0; k < 21; k++)
-    binsPullEt[k] = -1+k*(2./20);
-  binsPullEt[21] = 1.5;
-  binsPullEt[22] = 2.0;
-  binsPullEt[23] = 3.0;
-  binsPullEt[24] = 4.0;
-  binsPullEt[25] = 10 ;
+  for(int k = 0; k < 41; k++)
+    binsPullEt[k] = -1+k*(1./20);
+  binsPullEt[41] = 1.5;
+  binsPullEt[42] = 2.0;
+  binsPullEt[43] = 3.0;
+  binsPullEt[44] = 4.0;
+  binsPullEt[45] = 10 ;
 
-  TH2F* h2_0 = new TH2F("h2_0","", nBinsEt, binsEt.GetArray(), nBinsPullEt, binsPullEt.GetArray());
-  treeEvent->Draw("(etReco-et)/et:et>>h2_0","sumEt<1200");
+  int nBins2PullEt = 200;
+  TArrayF bins2PullEt(nBins2PullEt+1);
+  cout << "Making histograms with " << nBins2PullEt << " bins:" << endl;
+  for(int k = 0; k < 201; k++)
+    bins2PullEt[k] =  -1000 + 10*k;
+  
+  
+  int nBinsPullPhi = 34;
+  TArrayF binsPullPhi(nBinsPullPhi+1);
+  cout << "Making histograms with " << nBinsPullPhi << " bins:" << endl;
+  for(int k = 0; k < 7; k++)
+    binsPullPhi[k] = 0. + TMath::Pi()/60.*k;
+  for(int k = 1; k < 29; k++)
+    binsPullPhi[k+6] = TMath::Pi()/10. + (TMath::Pi()-TMath::Pi()/10.)/28.*k;
 
-  TH2F* h2_1 = new TH2F("h2_1","", nBinsEt, binsEt.GetArray(), nBinsPullEt, binsPullEt.GetArray());
-  treeEvent->Draw("(etReco-et)/et:et>>h2_1","sumEt>1200 && sumEt<1800");
 
-  TH2F* h2_2 = new TH2F("h2_2","", nBinsEt, binsEt.GetArray(), nBinsPullEt, binsPullEt.GetArray());
-  treeEvent->Draw("(etReco-et)/et:et>>h2_2","sumEt>1800");
+  TH2F* h2Et_0 = new TH2F("h2Et_0","", nBins2Et, bins2Et.GetArray(), nBins2PullEt, bins2PullEt.GetArray());
+  treeEvent->Draw("(etReco-et):et>>h2Et_0","sumEt<1200");
+
+  TH2F* h2Et_1 = new TH2F("h2Et_1","", nBins2Et, bins2Et.GetArray(), nBins2PullEt, bins2PullEt.GetArray());
+  treeEvent->Draw("(etReco-et):et>>h2Et_1","sumEt>1200 && sumEt<1800");
+
+  TH2F* h2Et_2 = new TH2F("h2Et_2","", nBins2Et, bins2Et.GetArray(), nBins2PullEt, bins2PullEt.GetArray());
+  treeEvent->Draw("(etReco-et):et>>h2Et_2","sumEt>1800");
 
 
-  for(int b = 1; b <= h2_0->GetNbinsX(); b++){
+  TH2F* h2Phi_0 = new TH2F("h2Phi_0","", nBins2Et, bins2Et.GetArray(), nBinsPullPhi, binsPullPhi.GetArray());
+  treeEvent->Draw("TMath::ACos(TMath::Cos(phiReco-phi)):et>>h2Phi_0","sumEt<1200");
+
+  TH2F* h2Phi_1 = new TH2F("h2Phi_1","", nBins2Et, bins2Et.GetArray(), nBinsPullPhi, binsPullPhi.GetArray());
+  treeEvent->Draw("TMath::ACos(TMath::Cos(phiReco-phi)):et>>h2Phi_1","sumEt>1200 && sumEt<1800");
+
+  TH2F* h2Phi_2 = new TH2F("h2Phi_2","", nBins2Et, bins2Et.GetArray(), nBinsPullPhi, binsPullPhi.GetArray());
+  treeEvent->Draw("TMath::ACos(TMath::Cos(phiReco-phi)):et>>h2Phi_2","sumEt>1800");
+
+  TH1F* hMeanEt_0  = new TH1F("hMeanEt_0","", nBins2Et, bins2Et.GetArray());
+  TH1F* hWidthEt_0 = new TH1F("hWidthEt_0","",nBins2Et, bins2Et.GetArray());
+  TH1F* hMeanEt_1  = new TH1F("hMeanEt_1","", nBins2Et, bins2Et.GetArray());
+  TH1F* hWidthEt_1 = new TH1F("hWidthEt_1","",nBins2Et, bins2Et.GetArray());
+  TH1F* hMeanEt_2  = new TH1F("hMeanEt_2","", nBins2Et, bins2Et.GetArray());
+  TH1F* hWidthEt_2 = new TH1F("hWidthEt_2","",nBins2Et, bins2Et.GetArray());
+
+  TH1F* hMeanPhi_0  = new TH1F("hMeanPhi_0","", nBins2Et, bins2Et.GetArray());
+  TH1F* hWidthPhi_0 = new TH1F("hWidthPhi_0","",nBins2Et, bins2Et.GetArray());
+  TH1F* hMeanPhi_1  = new TH1F("hMeanPhi_1","", nBins2Et, bins2Et.GetArray());
+  TH1F* hWidthPhi_1 = new TH1F("hWidthPhi_1","",nBins2Et, bins2Et.GetArray());
+  TH1F* hMeanPhi_2  = new TH1F("hMeanPhi_2","", nBins2Et, bins2Et.GetArray());
+  TH1F* hWidthPhi_2 = new TH1F("hWidthPhi_2","",nBins2Et, bins2Et.GetArray());
+
+  smoothTH2( h2Et_0, hMeanEt_0, hWidthEt_0, 0    ,1);
+  smoothTH2( h2Et_1, hMeanEt_1, hWidthEt_1, 0    ,1);
+  smoothTH2( h2Et_2, hMeanEt_2, hWidthEt_2, 0    ,1);
+  smoothTH2( h2Phi_0, hMeanPhi_0, hWidthPhi_0, 0 ,0);
+  smoothTH2( h2Phi_1, hMeanPhi_1, hWidthPhi_1, 0 ,0);
+  smoothTH2( h2Phi_2, hMeanPhi_2, hWidthPhi_2, 0 ,0);
+
+  TF1* widthEtBin0 = new TF1("widthEtBin0","x*sqrt([0]*[0]/x + [1]*[1]/x/x)",1,1000);
+  hWidthEt_0->Fit(widthEtBin0,"","",10, 200);
+  TF1* meanEtBin0 = new TF1("meanEtBin0","[0] + [1]*TMath::Exp([2]*x + [3])",1,1000);
+  hMeanEt_0->Fit(meanEtBin0,"","",0,300);
+
+  TF1* widthEtBin1 = new TF1("widthEtBin1","x*sqrt([0]*[0]/x + [1]*[1]/x/x)",1,1000);
+  hWidthEt_1->Fit(widthEtBin1,"","",10, 400);
+  TF1* meanEtBin1 = new TF1("meanEtBin1","[0] + [1]*TMath::Exp([2]*x + [3])",1,1000);
+  hMeanEt_1->Fit(meanEtBin1,"","",0,300);
+
+  TF1* widthEtBin2 = new TF1("widthEtBin2","x*sqrt([0]*[0]/x + [1]*[1]/x/x)",1,1000);
+  hWidthEt_2->Fit(widthEtBin2,"","",10, 400);
+  TF1* meanEtBin2 = new TF1("meanEtBin2","[0] + [1]*TMath::Exp([2]*x + [3])",1,1000);
+  hMeanEt_2->Fit(meanEtBin2,"","",0,300);
+
+  TF1* widthPhiBin0 = new TF1("widthPhiBin0","[0]/x + [1]/x/x",1,1000);
+  hWidthPhi_0->Fit(widthPhiBin0,"","",20, 200);
+
+  TF1* widthPhiBin1 = new TF1("widthPhiBin1","[0]/x + [1]/x/x",1,1000);
+  hWidthPhi_1->Fit(widthPhiBin1,"","",20, 200);
+
+  TF1* widthPhiBin2 = new TF1("widthPhiBin2","[0]/x + [1]/x/x",1,1000);
+  hWidthPhi_2->Fit(widthPhiBin2,"","",20, 200);
+
+
+  RooRealVar param0EtWidthBin0("param0EtWidthBin0","", widthEtBin0->GetParameter(0) );
+  RooRealVar param1EtWidthBin0("param1EtWidthBin0","", widthEtBin0->GetParameter(1) );
+  RooRealVar param0EtWidthBin1("param0EtWidthBin1","", widthEtBin1->GetParameter(0) );
+  RooRealVar param1EtWidthBin1("param1EtWidthBin1","", widthEtBin1->GetParameter(1) );
+  RooRealVar param0EtWidthBin2("param0EtWidthBin2","", widthEtBin2->GetParameter(0) );
+  RooRealVar param1EtWidthBin2("param1EtWidthBin2","", widthEtBin2->GetParameter(1) );
+
+  RooRealVar param0EtMeanBin0("param0EtMeanBin0","", meanEtBin0->GetParameter(0) );
+  RooRealVar param1EtMeanBin0("param1EtMeanBin0","", meanEtBin0->GetParameter(1) );
+  RooRealVar param2EtMeanBin0("param2EtMeanBin0","", meanEtBin0->GetParameter(2) );
+  RooRealVar param3EtMeanBin0("param3EtMeanBin0","", meanEtBin0->GetParameter(3) );
+  RooRealVar param0EtMeanBin1("param0EtMeanBin1","", meanEtBin1->GetParameter(0) );
+  RooRealVar param1EtMeanBin1("param1EtMeanBin1","", meanEtBin1->GetParameter(1) );
+  RooRealVar param2EtMeanBin1("param2EtMeanBin1","", meanEtBin1->GetParameter(2) );
+  RooRealVar param3EtMeanBin1("param3EtMeanBin1","", meanEtBin1->GetParameter(3) );
+  RooRealVar param0EtMeanBin2("param0EtMeanBin2","", meanEtBin2->GetParameter(0) );
+  RooRealVar param1EtMeanBin2("param1EtMeanBin2","", meanEtBin2->GetParameter(1) );
+  RooRealVar param2EtMeanBin2("param2EtMeanBin2","", meanEtBin2->GetParameter(2) );
+  RooRealVar param3EtMeanBin2("param3EtMeanBin2","", meanEtBin2->GetParameter(3) );
+
+  RooRealVar param0PhiWidthBin0("param0PhiWidthBin0","", widthPhiBin0->GetParameter(0) );
+  RooRealVar param1PhiWidthBin0("param1PhiWidthBin0","", widthPhiBin0->GetParameter(1) );
+  RooRealVar param0PhiWidthBin1("param0PhiWidthBin1","", widthPhiBin1->GetParameter(0) );
+  RooRealVar param1PhiWidthBin1("param1PhiWidthBin1","", widthPhiBin1->GetParameter(1) );
+  RooRealVar param0PhiWidthBin2("param0PhiWidthBin2","", widthPhiBin2->GetParameter(0) );
+  RooRealVar param1PhiWidthBin2("param1PhiWidthBin2","", widthPhiBin2->GetParameter(1) );
+
+  w->import(  param0EtWidthBin0 );
+  w->import(  param1EtWidthBin0 );
+  w->import(  param0EtWidthBin1);
+  w->import(  param1EtWidthBin1);
+  w->import(  param0EtWidthBin2 );
+  w->import(  param1EtWidthBin2);
+  w->import(  param0EtMeanBin0 );
+  w->import(  param1EtMeanBin0);
+  w->import(  param2EtMeanBin0);
+  w->import(  param3EtMeanBin0);
+  w->import(  param0EtMeanBin1 );
+  w->import(  param1EtMeanBin1);
+  w->import(  param2EtMeanBin1);
+  w->import(  param3EtMeanBin1);
+  w->import(  param0EtMeanBin2 );
+  w->import(  param1EtMeanBin2);
+  w->import(  param2EtMeanBin2);
+  w->import(  param3EtMeanBin2);
+  w->import(  param0PhiWidthBin0);
+  w->import(  param1PhiWidthBin0);
+  w->import(  param0PhiWidthBin1);
+  w->import(  param1PhiWidthBin1);
+  w->import(  param0PhiWidthBin2);
+  w->import(  param1PhiWidthBin2);
+
+  /*
+  for(int b = 1; b <= h2Et_0->GetNbinsX(); b++){
     int counter = 0.;
-    for(int bb = 1; bb <= h2_0->GetNbinsY(); bb++){
-      counter += h2_0->GetBinContent(b,bb);
+    for(int bb = 1; bb <= h2Et_0->GetNbinsY(); bb++){
+      counter += h2Et_0->GetBinContent(b,bb);
     }
-    for(int bb = 1; bb <= h2_0->GetNbinsY(); bb++){
-      int bin = h2_0->GetBin(b,bb);
-      float width = h2_0->GetYaxis()->GetBinWidth( bb );
-      float newbc = h2_0->GetBinContent( bin );
+    for(int bb = 1; bb <= h2Et_0->GetNbinsY(); bb++){
+      int bin = h2Et_0->GetBin(b,bb);
+      float width = h2Et_0->GetYaxis()->GetBinWidth( bb );
+      float newbc = h2Et_0->GetBinContent( bin );
       if(counter>0)
-	h2_0->SetBinContent(bin, newbc/width/counter );
+	h2Et_0->SetBinContent(bin, newbc/width/counter );
     }
   }
 
-  for(int b = 1; b <= h2_1->GetNbinsX(); b++){
+  for(int b = 1; b <= h2Et_1->GetNbinsX(); b++){
     int counter = 0.;
-    for(int bb = 1; bb <= h2_1->GetNbinsY(); bb++){
-      counter += h2_1->GetBinContent(b,bb);
+    for(int bb = 1; bb <= h2Et_1->GetNbinsY(); bb++){
+      counter += h2Et_1->GetBinContent(b,bb);
     }
-    for(int bb = 1; bb <= h2_1->GetNbinsY(); bb++){
-      int bin = h2_1->GetBin(b,bb);
-      float width = h2_1->GetYaxis()->GetBinWidth( bb );
-      float newbc = h2_1->GetBinContent( bin );
+    for(int bb = 1; bb <= h2Et_1->GetNbinsY(); bb++){
+      int bin = h2Et_1->GetBin(b,bb);
+      float width = h2Et_1->GetYaxis()->GetBinWidth( bb );
+      float newbc = h2Et_1->GetBinContent( bin );
       if(counter>0)
-	h2_1->SetBinContent(bin, newbc/width/counter );
+	h2Et_1->SetBinContent(bin, newbc/width/counter );
     }
   }
 
-  for(int b = 1; b <= h2_2->GetNbinsX(); b++){
+  for(int b = 1; b <= h2Et_2->GetNbinsX(); b++){
     int counter = 0.;
-    for(int bb = 1; bb <= h2_2->GetNbinsY(); bb++){
-      counter += h2_2->GetBinContent(b,bb);
+    for(int bb = 1; bb <= h2Et_2->GetNbinsY(); bb++){
+      counter += h2Et_2->GetBinContent(b,bb);
     }
-    for(int bb = 1; bb <= h2_2->GetNbinsY(); bb++){
-      int bin = h2_2->GetBin(b,bb);
-      float width = h2_2->GetYaxis()->GetBinWidth( bb );
-      float newbc = h2_2->GetBinContent( bin );
+    for(int bb = 1; bb <= h2Et_2->GetNbinsY(); bb++){
+      int bin = h2Et_2->GetBin(b,bb);
+      float width = h2Et_2->GetYaxis()->GetBinWidth( bb );
+      float newbc = h2Et_2->GetBinContent( bin );
       if(counter>0)
-	h2_2->SetBinContent(bin, newbc/width/counter );
+	h2Et_2->SetBinContent(bin, newbc/width/counter );
     }
   }
+
+
+  for(int b = 1; b <= h2Phi_0->GetNbinsX(); b++){
+    int counter = 0.;
+    for(int bb = 1; bb <= h2Phi_0->GetNbinsY(); bb++){
+      counter += h2Phi_0->GetBinContent(b,bb);
+    }
+    for(int bb = 1; bb <= h2Phi_0->GetNbinsY(); bb++){
+      int bin = h2Phi_0->GetBin(b,bb);
+      float width = h2Phi_0->GetYaxis()->GetBinWidth( bb );
+      float newbc = h2Phi_0->GetBinContent( bin );
+      if(counter>0)
+	h2Phi_0->SetBinContent(bin, newbc/width/counter );
+    }
+  }
+
+  for(int b = 1; b <= h2Phi_1->GetNbinsX(); b++){
+    int counter = 0.;
+    for(int bb = 1; bb <= h2Phi_1->GetNbinsY(); bb++){
+      counter += h2Phi_1->GetBinContent(b,bb);
+    }
+    for(int bb = 1; bb <= h2Phi_1->GetNbinsY(); bb++){
+      int bin = h2Phi_1->GetBin(b,bb);
+      float width = h2Phi_1->GetYaxis()->GetBinWidth( bb );
+      float newbc = h2Phi_1->GetBinContent( bin );
+      if(counter>0)
+	h2Phi_1->SetBinContent(bin, newbc/width/counter );
+    }
+  }
+
+ for(int b = 1; b <= h2Phi_2->GetNbinsX(); b++){
+    int counter = 0.;
+    for(int bb = 1; bb <= h2Phi_2->GetNbinsY(); bb++){
+      counter += h2Phi_2->GetBinContent(b,bb);
+    }
+    for(int bb = 1; bb <= h2Phi_2->GetNbinsY(); bb++){
+      int bin = h2Phi_2->GetBin(b,bb);
+      float width = h2Phi_2->GetYaxis()->GetBinWidth( bb );
+      float newbc = h2Phi_2->GetBinContent( bin );
+      if(counter>0)
+	h2Phi_2->SetBinContent(bin, newbc/width/counter );
+    }
+  }
+  */
+
 
 
   // v5)
@@ -837,9 +1076,24 @@ int main(int argc, const char* argv[])
   fout = new TFile("ControlPlots.root","RECREATE");
   fout->cd();
 
-  h2_0->Write("",TObject::kOverwrite);
-  h2_1->Write("",TObject::kOverwrite);
-  h2_2->Write("",TObject::kOverwrite);
+  h2Et_0->Write("",TObject::kOverwrite);
+  h2Et_1->Write("",TObject::kOverwrite);
+  h2Et_2->Write("",TObject::kOverwrite);
+  h2Phi_0->Write("",TObject::kOverwrite);
+  h2Phi_1->Write("",TObject::kOverwrite);
+  h2Phi_2->Write("",TObject::kOverwrite);
+  hMeanEt_0->Write("",TObject::kOverwrite);
+  hWidthEt_0->Write("",TObject::kOverwrite);
+  hMeanEt_1->Write("",TObject::kOverwrite);
+  hWidthEt_1->Write("",TObject::kOverwrite);
+  hMeanEt_2->Write("",TObject::kOverwrite);
+  hWidthEt_2->Write("",TObject::kOverwrite);
+  hMeanPhi_0->Write("",TObject::kOverwrite);
+  hWidthPhi_0->Write("",TObject::kOverwrite);
+  hMeanPhi_1->Write("",TObject::kOverwrite);
+  hWidthPhi_1->Write("",TObject::kOverwrite);
+  hMeanPhi_2->Write("",TObject::kOverwrite);
+  hWidthPhi_2->Write("",TObject::kOverwrite);
 
   h3->Write("",TObject::kOverwrite);
   hBinCont->Write("",TObject::kOverwrite);
