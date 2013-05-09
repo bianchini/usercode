@@ -53,7 +53,7 @@ class MEIntegratorNew {
   void   setJets( vector<TLorentzVector>* );
   void   setBtag( std::vector<float>* );
   void   createMash();
-  double        probability(const double*) const;
+  double        probability(const double*, int) const;
   unsigned int  findMatch(double, double) const;
   void   saveJetParam( string );
   void   cachePdf( string , string , int );
@@ -62,6 +62,7 @@ class MEIntegratorNew {
   void   cachePdf( string , string , string, string, TArrayF, TArrayF, TArrayF);
   void   setMass(double);
   void   setSumEt(double);
+  void   setPtPhiParam (int);
   TH1*   getCachedPdf( string ) const;
   TH1*   getCachedTF ( string ) const;
   TH2F*  getMash( );
@@ -76,6 +77,7 @@ class MEIntegratorNew {
 
   void   topHadEnergies    (double, double&, double&, double&, double&, int&) const;
   void   topLepEnergies    (double, double,  double&, double&, double&, double&, int&) const;
+  void   topLepEnergiesFromPtPhi    (int, double, double,  double&, double&, double&, double&, int&) const;
   void   topHadLostEnergies(double, double,  double,  double&, double&, double&, double&, int&) const;
   void   higgsEnergies     (double, double&, double&, int&) const;
   double topHadJakobi    (double, double, double) const;
@@ -117,6 +119,7 @@ class MEIntegratorNew {
 
   int par_;
   int verbose_;
+  int usePtPhiParam_;
   float M_;
   float pStar_;
   float EbStar_;
@@ -146,6 +149,7 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   par_     = param;
   verbose_ = verbose;
   sumEt_   = 1500.; //dummy
+  usePtPhiParam_ = 0;
 
   jets_.clear();
   bTagging_.clear();
@@ -470,6 +474,10 @@ void MEIntegratorNew::setSumEt(double sumEt){
   sumEt_ = sumEt;
 }
 
+void MEIntegratorNew::setPtPhiParam(int usePtPhiParam){
+  usePtPhiParam_ =  usePtPhiParam;
+}
+
 void MEIntegratorNew::topHadEnergies(double E1, double& E2, double& E3, double& cos1, double& cos2, int& errFlag ) const {
   
   TVector3 e1 = eW1Had_;
@@ -520,6 +528,37 @@ void MEIntegratorNew::topHadEnergies(double E1, double& E2, double& E3, double& 
   
   return;
 }
+
+
+void MEIntegratorNew::topLepEnergiesFromPtPhi(int sign , double nuPhi, double nuPt, double& Enu, double& Eb, double& cos1, double& cos2, int& errFlag ) const{
+  
+
+  TVector3 e3T( nuPt*TMath::Cos(nuPhi), nuPt*TMath::Sin(nuPhi) , 0.);
+  TVector3 e1T( jets_[0].Px(),  jets_[0].Py(), 0.);
+    
+  double rho = e1T.Dot(e3T) + Mw_*Mw_/2.;
+
+  double a   = jets_[0].Pz()/jets_[0].P();
+  double b   = rho/jets_[0].P();
+  double c2 =  nuPt*nuPt - b*b;     
+
+  if( (a*a*b*b - c2*(1-a*a))<0 ){
+    errFlag = 1;
+    return;
+  }
+
+  double pz1 = (a*b + sqrt(a*a*b*b - c2*(1-a*a)))/(1-a*a);
+  double pz2 = (a*b - sqrt(a*a*b*b - c2*(1-a*a)))/(1-a*a);
+
+  double pz = sign==1 ? pz1 : pz2;
+  Enu = TMath::Sqrt(nuPt*nuPt + pz*pz);
+  double nuTheta = pz/Enu;
+
+  topLepEnergies( nuPhi, nuTheta, Enu, Eb, cos1, cos2, errFlag  );
+
+  return;
+}
+
 
 
 void MEIntegratorNew::topLepEnergies(double nuPhi, double nuTheta, double& Enu, double& Eb, double& cos1, double& cos2, int& errFlag ) const{
@@ -629,7 +668,15 @@ void MEIntegratorNew::higgsEnergies(double E1, double& E2, double& cos1, int& er
 
 
 double MEIntegratorNew::Eval(const double* x) const {
-  double prob = probability(x);      
+
+  double prob = 0.0;
+  if(usePtPhiParam_==0)
+    prob = probability(x,0);     
+  else{
+    prob += probability(x,-1);
+    prob += probability(x,+1);
+  }
+
   if ( TMath::IsNaN(prob) ) prob = 0.;
   return prob;
 }
@@ -899,19 +946,15 @@ double MEIntegratorNew::tthDensity ( double Q, double m12, double cos1Star, doub
 
 
 
-double MEIntegratorNew::probability(const double* x) const{
+double MEIntegratorNew::probability(const double* x, int sign) const{
 
+  int errFlag = 0;
   double prob = 1.0;
   
   double Eq1         = x[0];
-  double cosThetaNu  = x[1];
+  double cosThetaNu  = x[1]; // or nuPt
   double phiNu       = x[2];
   double Eh1         = x[3];
-
-  TVector3 eNu(0.,0.,1.); // neutrino
-  eNu.SetTheta( TMath::ACos( cosThetaNu ) ); 
-  eNu.SetPhi  ( phiNu );   
-  eNu.SetMag  ( 1.);  
 
   if(verbose_){
     cout << "Eq1 = "         << Eq1 << endl; 
@@ -919,8 +962,6 @@ double MEIntegratorNew::probability(const double* x) const{
     cout << "phiNu = "      << phiNu  << endl; 
     cout << "Eh1 = "         << Eh1  << endl; 
   }
-
-  int errFlag = 0;
 
   double Eq2, EbHad, cos1Had, cos2Had;
   topHadEnergies( Eq1, Eq2, EbHad, cos1Had, cos2Had, errFlag );
@@ -930,13 +971,26 @@ double MEIntegratorNew::probability(const double* x) const{
     return 0.0;
   }
 
+  TVector3 eNu(0.,0.,1.); // neutrino
   double Enu, EbLep, cos1Lep, cos2Lep;
-  topLepEnergies( phiNu, cosThetaNu, Enu, EbLep, cos1Lep, cos2Lep, errFlag  );
+  if(usePtPhiParam_==0){
+    topLepEnergies( phiNu, cosThetaNu, Enu, EbLep, cos1Lep, cos2Lep, errFlag  );
+    eNu.SetTheta( TMath::ACos( cosThetaNu ) ); 
+    eNu.SetPhi  ( phiNu );   
+    eNu.SetMag  ( 1.); 
+  }
+  else{
+    topLepEnergiesFromPtPhi(sign, phiNu, cosThetaNu, Enu, EbLep, cos1Lep, cos2Lep, errFlag );
+    eNu.SetTheta( TMath::ASin(cosThetaNu/Enu) ); 
+    eNu.SetPhi  ( phiNu );   
+    eNu.SetMag  ( 1.); 
+  }
 
   if(errFlag){
     if(verbose_) cout << "Problems with topLepEnergies" << endl;
     return 0.0;
   }
+ 
 
   double Eh2, cos1Higgs;
   higgsEnergies( Eh1, Eh2, cos1Higgs, errFlag );
@@ -993,7 +1047,7 @@ double MEIntegratorNew::probability(const double* x) const{
     const_cast<TH1F*>(&tfHiggs1_) ->Interpolate( higgs1.Pt()) *
     const_cast<TH1F*>(&tfHiggs2_) ->Interpolate( higgs2.Pt()) *
     const_cast<TH1F*>(&tfMetPt_)  ->Interpolate( WLepNu.Pt()) *
-    const_cast<TH2F*>(&tfMetPhi_) ->Interpolate( WLepNu.Pt(), WLepNu.Phi()) ;
+    const_cast<TH2F*>(&tfMetPhi_) ->Interpolate( WLepNu.Pt(), TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) ) ;
 
   prob *= MEpart;
   prob *= TFpart;
