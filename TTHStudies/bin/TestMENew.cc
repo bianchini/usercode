@@ -98,6 +98,8 @@ int main(int argc, const char* argv[])
   std::string pathToFile(  in.getParameter<std::string> ("pathToFile"   ) );
   int vegasPoints(  in.getParameter<int> ("vegasPoints"   ) );
 
+  float met(  in.getParameter<double> ("met") );
+
   int par = 4;
   MEIntegratorNew* meIntegrator = new MEIntegratorNew( pathToFile , par, 1);
   meIntegrator->debug();
@@ -105,7 +107,7 @@ int main(int argc, const char* argv[])
   vector<TLorentzVector> jets;
   TLorentzVector jet1,jet2,jet3,jet4,jet5,jet6,jet7,jet8;
   jet1.SetPtEtaPhiM(100,   0.0,   0.0,    0. );    // lep
-  jet2.SetPtEtaPhiM(20.,   0.0,   2.0,    0. );    // MET
+  jet2.SetPtEtaPhiM(met,   0.0,   2.0,    0. );    // MET
   jet3.SetPtEtaPhiM(70,    1.0,  -1.0,   10  );    // b from top lep
   jet4.SetPtEtaPhiM(100,   -1.0,  -2.0,   10  );    // j1 from W
   jet5.SetPtEtaPhiM(150,   -0.5,  -1.0,   10  );    // j2 from W
@@ -145,7 +147,7 @@ int main(int argc, const char* argv[])
   meIntegrator->setMass(125);
   meIntegrator->setSumEt(1500.);
   meIntegrator->initVersors(1);
-  meIntegrator->initTF(1);
+  meIntegrator->initTF();
 
   ig2.SetFunction(toIntegrate);
 

@@ -70,6 +70,9 @@ class MEIntegratorNew {
 
   void   initVersors(int);
   void   initTF() ;
+  void   adaptRange(TF1*, float&, float&, float, float);
+  void   createTFjet(string, float , float, string , float, float);
+  void   createTFmet(string , float , float, float, float);
 
   void   topHadEnergies    (double, double&, double&, double&, double&, int&) const;
   void   topLepEnergies    (double, double,  double&, double&, double&, double&, int&) const;
@@ -279,251 +282,181 @@ void MEIntegratorNew::initVersors(int withJetList){
   return;
 }
 
- 
-void MEIntegratorNew::initTF(){
-  
+
+void MEIntegratorNew::adaptRange(TF1* f, float& xLow, float& xHigh, float quantile, float margin){
+
+  double probSum[2] = {quantile, 1-quantile};
+  double q[2];
+  int n = f->GetQuantiles(2,q,probSum);
+
+  if(margin<=1){
+    xLow  = q[0]*(1-margin);
+    xHigh = q[1]*(1+margin);
+  }
+  else{
+    xLow  = q[0];
+    xHigh = q[1];
+  }
+}
+
+
+void MEIntegratorNew::createTFjet(string tfName, float eta, float pt, string flavor, float quantile, float margin){
+
+  float xLow, xHigh;
+  float gevStep = 2.;
+
   string bin = "Bin0";
-  if(  TMath::Abs( eW1Had_.Eta() )<1.0 ) bin = "Bin0";
+  if(  TMath::Abs( eta )<1.0 ) bin = "Bin0";
   else bin = "Bin1";
   
+  TF1* tf = new TF1("tf",Form("TMath::Gaus( x, [0] , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", //(TMath::Erf(%f*x+%f)+%f) *
+			      //(jetParam_.find("param0AccLight"+bin))->second, 
+			      //(jetParam_.find("param1AccLight"+bin))->second,
+			      //(jetParam_.find("param2AccLight"+bin))->second,
+			      (jetParam_.find("param0resol"+flavor+bin))->second*(jetParam_.find("param0resol"+flavor+bin))->second,
+			      (jetParam_.find("param1resol"+flavor+bin))->second*(jetParam_.find("param1resol"+flavor+bin))->second
+			      ),1,1000);
+  tf->SetNpx(1000);
+  tf->SetParameter(0, pt );
+  adaptRange(tf, xLow, xHigh, quantile, margin);
 
-  TF1* tfWjet1 = new TF1("tfWjet1",Form("TMath::Gaus( x, [0] , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", //(TMath::Erf(%f*x+%f)+%f) *
-					//(jetParam_.find("param0AccLight"+bin))->second, 
-					//(jetParam_.find("param1AccLight"+bin))->second,
-					//(jetParam_.find("param2AccLight"+bin))->second,
-					(jetParam_.find("param0resolLight"+bin))->second*(jetParam_.find("param0resolLight"+bin))->second,
-					(jetParam_.find("param1resolLight"+bin))->second*(jetParam_.find("param1resolLight"+bin))->second
-					),1,1000);
-  tfWjet1->SetNpx(1000);
- 
-  TH1F* htfWjet1_ = new TH1F("htfWjet1", "", int(jets_[3].Pt()), 0, jets_[3].Pt()*2);
-  for( int i = 1; i <= htfWjet1_->GetNbinsX(); i++){
-    float binC = htfWjet1_->GetBinCenter(i);
-    tfWjet1->SetParameter(0, binC);
-    htfWjet1_->SetBinContent(i, tfWjet1->Eval( jets_[3].Pt() ) );
+  TH1F* htf_ = new TH1F(("htf"+tfName).c_str(), "", int((xHigh-xLow)/gevStep), xLow, xHigh);
+  for( int i = 1; i <= htf_->GetNbinsX(); i++){
+    float binC = htf_->GetBinCenter(i);
+    tf->SetParameter(0, binC);
+    htf_->SetBinContent(i, tf->Eval( pt ) );
   }
-  if( transferFunctions_.find("tfWjet1")!=transferFunctions_.end()){
-    delete (transferFunctions_.find("tfWjet1")->second);
-    transferFunctions_.erase( transferFunctions_.find("tfWjet1") );
-    transferFunctions_["tfWjet1"] = htfWjet1_;
-  }
-  else
-    transferFunctions_["tfWjet1"] = htfWjet1_;
-  tfWjet1_ = *htfWjet1_;
-  delete tfWjet1;
-
-
-  if(  TMath::Abs( eW2Had_.Eta() )<1.0 ) bin = "Bin0";
-  else bin = "Bin1";
-  
-
-  TF1* tfWjet2 = new TF1("tfWjet2",Form("TMath::Gaus( x, [0] , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]), 1 ) ", //(TMath::Erf(%f*x+%f)+%f) *
-					//(jetParam_.find("param0AccLight"+bin))->second, 
-					//(jetParam_.find("param1AccLight"+bin))->second,
-					//(jetParam_.find("param2AccLight"+bin))->second,
-					(jetParam_.find("param0resolLight"+bin))->second*(jetParam_.find("param0resolLight"+bin))->second,
-					(jetParam_.find("param1resolLight"+bin))->second*(jetParam_.find("param1resolLight"+bin))->second
-					),1,1000);
-  tfWjet2->SetNpx(1000);
-
-  TH1F* htfWjet2_ = new TH1F("htfWjet2", "", int(jets_[4].Pt()), 0, jets_[4].Pt()*2);
-  for( int i = 1; i <= htfWjet2_->GetNbinsX(); i++){
-    float binC = htfWjet2_->GetBinCenter(i);
-    tfWjet2->SetParameter(0, binC);
-    htfWjet2_->SetBinContent(i, tfWjet2->Eval( jets_[4].Pt() ) );
-  }
-  if( transferFunctions_.find("tfWjet2")!=transferFunctions_.end()){
-    delete (transferFunctions_.find("tfWjet2")->second);
-    transferFunctions_.erase( transferFunctions_.find("tfWjet2") );
-    transferFunctions_["tfWjet2"] = htfWjet2_;
+  if( transferFunctions_.find("tf"+tfName)!=transferFunctions_.end()){
+    delete (transferFunctions_.find("tf"+tfName)->second);
+    transferFunctions_.erase( transferFunctions_.find("tf"+tfName) );
+    transferFunctions_["tf"+tfName] = htf_;
   }
   else
-    transferFunctions_["tfWjet2"] = htfWjet2_;
+    transferFunctions_["tf"+tfName] = htf_;
 
-  tfWjet2_ = *htfWjet2_;
-  delete tfWjet2;
-
-  if(  TMath::Abs( eBHad_.Eta() )<1.0 ) bin = "Bin0";
-  else bin = "Bin1";
-
-  TF1* tfbHad = new TF1("tfbHad",Form("TMath::Gaus( x, [0] , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", //(TMath::Erf(%f*x+%f)+%f) *
-				      //(jetParam_.find("param0AccHeavy"+bin))->second, 
-				      //(jetParam_.find("param1AccHeavy"+bin))->second,
-				      //(jetParam_.find("param2AccHeavy"+bin))->second,
-				      (jetParam_.find("param0resolHeavy"+bin))->second*(jetParam_.find("param0resolHeavy"+bin))->second,
-				      (jetParam_.find("param1resolHeavy"+bin))->second*(jetParam_.find("param1resolHeavy"+bin))->second
-				      ),1,1000);
-  tfbHad->SetNpx(1000);
-
-  TH1F* htfbHad_ = new TH1F("htfbHad", "", int(jets_[5].Pt()), 0, jets_[5].Pt()*2);
-  for( int i = 1; i <= htfbHad_->GetNbinsX(); i++){
-    float binC = htfbHad_->GetBinCenter(i);
-    tfbHad->SetParameter(0, binC);
-    htfbHad_->SetBinContent(i, tfbHad->Eval( jets_[5].Pt() ) );
+  if(tfName.find("Wjet1")!=string::npos)
+    tfWjet1_ = *htf_;
+  else if (tfName.find("Wjet2")!=string::npos)
+    tfWjet2_ = *htf_;
+  else if (tfName.find("bHad")!=string::npos)
+    tfbHad_ = *htf_;
+  else if (tfName.find("bLep")!=string::npos)
+    tfbLep_ = *htf_;
+  else if (tfName.find("Higgs1")!=string::npos)
+    tfHiggs1_ = *htf_;
+  else if (tfName.find("Higgs2")!=string::npos)
+    tfHiggs2_ = *htf_;
+  else{
+    if(verbose_) cout << "Name in createTFjet is not valid" << endl;
   }
-  if( transferFunctions_.find("tfbHad")!=transferFunctions_.end()){
-    delete (transferFunctions_.find("tfbHad")->second);
-    transferFunctions_.erase( transferFunctions_.find("tfbHad") );
-    transferFunctions_["tfbHad"] = htfbHad_;
-  }
-  else
-    transferFunctions_["tfbHad"] = htfbHad_;
 
-  tfbHad_ = *htfbHad_;
-  delete tfbHad;
+  delete tf;
+}
 
 
-  if(  TMath::Abs( eBLep_.Eta() )<1.0 ) bin = "Bin0";
-  else bin = "Bin1";
+void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quantile, float margin){
 
-  TF1* tfbLep = new TF1("tfbLep",Form("TMath::Gaus( x, [0] , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", //(TMath::Erf(%f*x+%f)+%f) *
-				      //(jetParam_.find("param0AccHeavy"+bin))->second, 
-				      //(jetParam_.find("param1AccHeavy"+bin))->second,
-				      //(jetParam_.find("param2AccHeavy"+bin))->second,
-				      (jetParam_.find("param0resolHeavy"+bin))->second*(jetParam_.find("param0resolHeavy"+bin))->second,
-				      (jetParam_.find("param1resolHeavy"+bin))->second*(jetParam_.find("param1resolHeavy"+bin))->second
-				      ),1,1000);
-  tfbLep->SetNpx(1000);
+  float xLowEt, xHighEt, xLowPhi, xHighPhi;
+  float gevStep = 4.;
+  float etaStep = 0.04;
 
-  TH1F* htfbLep_ = new TH1F("htfbLep", "", int(jets_[2].Pt()), 0, jets_[2].Pt()*2);
-  for( int i = 1; i <= htfbLep_->GetNbinsX(); i++){
-    float binC = htfbLep_->GetBinCenter(i);
-    tfbLep->SetParameter(0, binC);
-    htfbLep_->SetBinContent(i, tfbLep->Eval( jets_[2].Pt() ) );
-  }
-  if( transferFunctions_.find("tfbLep")!=transferFunctions_.end()){
-    delete (transferFunctions_.find("tfbLep")->second);
-    transferFunctions_.erase( transferFunctions_.find("tfbLep") );
-    transferFunctions_["tfbLep"] = htfbLep_;
-  }
-  else
-    transferFunctions_["tfbLep"] = htfbLep_;
+  string bin = "Bin0";
+  if (sumEt_ < 1200.) 
+    bin =  "Bin0";
+  else if ( sumEt_ > 1200. && sumEt_ < 1800.)
+    bin =  "Bin1";
+  else 
+    bin =  "Bin2";
 
-  tfbLep_ = *htfbLep_;
-  delete tfbLep;
-
-
-
-  if(  TMath::Abs( eB1_.Eta() )<1.0 ) bin = "Bin0";
-  else bin = "Bin1";
-  
-  
-  TF1* tfHiggs1 = new TF1("tfHiggs1",Form("TMath::Gaus( x, [0] , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", //(TMath::Erf(%f*x+%f)+%f) *
-					  //(jetParam_.find("param0AccHeavy"+bin))->second, 
-					  //(jetParam_.find("param1AccHeavy"+bin))->second,
-					  //(jetParam_.find("param2AccHeavy"+bin))->second,
-					  (jetParam_.find("param0resolHeavy"+bin))->second*(jetParam_.find("param0resolHeavy"+bin))->second,
-					  (jetParam_.find("param1resolHeavy"+bin))->second*(jetParam_.find("param1resolHeavy"+bin))->second
-					  ),1,1000);
-  tfHiggs1->SetNpx(1000);
-
-  TH1F* htfHiggs1_ = new TH1F("htfHiggs1", "", int(jets_[6].Pt()), 0, jets_[6].Pt()*2);
-  for( int i = 1; i <= htfHiggs1_->GetNbinsX(); i++){
-    float binC = htfHiggs1_->GetBinCenter(i);
-    tfHiggs1->SetParameter(0, binC);
-    htfHiggs1_->SetBinContent(i, tfHiggs1->Eval( jets_[6].Pt() ) );
-  }
-  if( transferFunctions_.find("tfHiggs1")!=transferFunctions_.end()){
-    delete (transferFunctions_.find("tfHiggs1")->second);
-    transferFunctions_.erase( transferFunctions_.find("tfHiggs1") );
-    transferFunctions_["tfHiggs1"] = htfHiggs1_;
-  }
-  else
-    transferFunctions_["tfHiggs1"] = htfHiggs1_;
-
-  tfHiggs1_ = *htfHiggs1_;
-  delete tfHiggs1;
-
-
-  if(  TMath::Abs( eB2_.Eta() )<1.0 ) bin = "Bin0";
-  else bin = "Bin1";
-
-  TF1* tfHiggs2 = new TF1("tfHiggs2",Form("TMath::Gaus( x, [0] , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", //(TMath::Erf(%f*x+%f)+%f) *
-					  //(jetParam_.find("param0AccHeavy"+bin))->second, 
-					  //(jetParam_.find("param1AccHeavy"+bin))->second,
-					  //(jetParam_.find("param2AccHeavy"+bin))->second,
-					  (jetParam_.find("param0resolHeavy"+bin))->second*(jetParam_.find("param0resolHeavy"+bin))->second,
-					  (jetParam_.find("param1resolHeavy"+bin))->second*(jetParam_.find("param1resolHeavy"+bin))->second
-					  ),1,1000);
-  tfHiggs2->SetNpx(1000);
-
-  TH1F* htfHiggs2_ = new TH1F("htfHiggs2", "", int(jets_[7].Pt()), 0, jets_[7].Pt()*2);
-  for( int i = 1; i <= htfHiggs2_->GetNbinsX(); i++){
-    float binC = htfHiggs2_->GetBinCenter(i);
-    tfHiggs2->SetParameter(0, binC);
-    htfHiggs2_->SetBinContent(i, tfHiggs2->Eval( jets_[7].Pt() ) );
-  }
-  if( transferFunctions_.find("tfHiggs2")!=transferFunctions_.end()){
-    delete (transferFunctions_.find("tfHiggs2")->second);
-    transferFunctions_.erase( transferFunctions_.find("tfHiggs2") );
-    transferFunctions_["tfHiggs2"] = htfHiggs2_;
-  }
-  else
-    transferFunctions_["tfHiggs2"] = htfHiggs2_;
-
-  tfHiggs2_ = *htfHiggs2_;
-  delete tfHiggs2;
-
-
-  if (sumEt_ < 1200.) bin =  "Bin0";
-  else if ( sumEt_ > 1200. && sumEt_ < 1800.) bin =  "Bin1";
-  else bin =  "Bin2";
-
-  TF1* tfMetPt   = new TF1("tfMetPt", Form("TMath::Gaus(x, (%f + %f*TMath::Exp(%f*[0]+%f) ),  [0]*TMath::Sqrt(%f/[0] + %f/[0]/[0])  , 1)",
+  TF1* tfMetPt   = new TF1(("tf"+tfName+"Pt").c_str(), Form("TMath::Gaus(x, (%f + %f*TMath::Exp(%f*[0]+%f) ),  [0]*TMath::Sqrt(%f/[0] + %f/[0]/[0])  , 1)",
 					   (jetParam_.find("param0EtMean"+bin))->second, (jetParam_.find("param1EtMean"+bin))->second, (jetParam_.find("param2EtMean"+bin))->second,(jetParam_.find("param3EtMean"+bin))->second,
 					   (jetParam_.find("param0EtWidth"+bin))->second*(jetParam_.find("param0EtWidth"+bin))->second,(jetParam_.find("param1EtWidth"+bin))->second*(jetParam_.find("param1EtWidth"+bin))->second
 					   ),   // x = reco - gen 
 			   -1000.,1000.
 			   );
   tfMetPt->SetNpx(2000);
+  tfMetPt->SetParameter(0, pt );
+  adaptRange(tfMetPt, xLowEt, xHighEt, quantile, margin);
+  if(xLowEt>0){
+    xLowEt  += pt;
+    xHighEt += pt;
+  }
+  else{
+    xLowEt  =  0.;
+    xHighEt += pt;
+  }
 
-  TH1F* htfMetPt_ = new TH1F("htfMetPt", "", 250, 0, 1000);
+
+  TH1F* htfMetPt_ = new TH1F(("htf"+tfName+"Pt").c_str(), "", int((xHighEt-xLowEt)/gevStep), xLowEt, xHighEt);
   for( int i = 1; i <= htfMetPt_->GetNbinsX(); i++){
     float binC = htfMetPt_->GetBinCenter(i);
     tfMetPt->SetParameter(0, binC);
-    htfMetPt_->SetBinContent(i, tfMetPt->Eval( jets_[1].Pt() - binC) );
+    htfMetPt_->SetBinContent(i, tfMetPt->Eval( pt - binC) );
   }
-  if( transferFunctions_.find("tfMetPt")!=transferFunctions_.end()){
-    delete (transferFunctions_.find("tfMetPt")->second);
-    transferFunctions_.erase( transferFunctions_.find("tfMetPt") );
-    transferFunctions_["tfMetPt"] = htfMetPt_;
+  if( transferFunctions_.find("tf"+tfName+"Pt")!=transferFunctions_.end()){
+    delete (transferFunctions_.find("tf"+tfName+"Pt")->second);
+    transferFunctions_.erase( transferFunctions_.find("tf"+tfName+"Pt") );
+    transferFunctions_["tf"+tfName+"Pt"] = htfMetPt_;
   }
   else
-    transferFunctions_["tfMetPt"] = htfMetPt_;
+    transferFunctions_["tf"+tfName+"Pt"] = htfMetPt_;
 
   tfMetPt_ = *htfMetPt_;
   delete tfMetPt;
 
 
   // check norm...
-  TF1* tfMetPhi   = new TF1("tfMetPhi",Form("(0.5/(TMath::Erf(TMath::Pi()/ (%f/[0] + %f/[0]/[0]) )))*TMath::Gaus(x, 0.0, %f/[0] + %f/[0]/[0] ,1)", 
-					    (jetParam_.find("param0PhiWidth"+bin))->second,(jetParam_.find("param1PhiWidth"+bin))->second,
-					    (jetParam_.find("param0PhiWidth"+bin))->second,(jetParam_.find("param1PhiWidth"+bin))->second
-					    ),   // x = |reco-gen| 
+  TF1* tfMetPhi   = new TF1(("tf"+tfName+"Phi").c_str(),Form("(2./(TMath::Erf(TMath::Pi()/ (%f/[0] + %f/[0]/[0]) )))*TMath::Gaus(x, 0.0, %f/[0] + %f/[0]/[0] ,1)", 
+							     (jetParam_.find("param0PhiWidth"+bin))->second,(jetParam_.find("param1PhiWidth"+bin))->second,
+							     (jetParam_.find("param0PhiWidth"+bin))->second,(jetParam_.find("param1PhiWidth"+bin))->second
+							     ),   // x = |reco-gen| 
 			    0,TMath::Pi()); 
 
   tfMetPhi->SetNpx(1000);
+  tfMetPhi->SetParameter(0, pt );
+  adaptRange(tfMetPhi, xLowPhi, xHighPhi, quantile, margin );
+  if((TMath::Pi() - xHighPhi) < 0.2) xHighPhi =  TMath::Pi();
 
-  TH2F* htfMetPhi_ = new TH2F("htfMetPhi", "", 250, 0, 1000, 150, -TMath::Pi(), TMath::Pi());
+ 
+  TH2F* htfMetPhi_ = new TH2F(("htf"+tfName+"Phi").c_str(), "", int((xHighEt-xLowEt)/gevStep), xLowEt, xHighEt, int((xHighPhi-xLowPhi)/etaStep), xLowPhi, xHighPhi);
   for( int i = 1; i <= htfMetPhi_->GetNbinsX(); i++){
     float binCX = htfMetPhi_->GetXaxis()->GetBinCenter(i);
     tfMetPhi->SetParameter(0, binCX);
      for( int j = 1; j <= htfMetPhi_->GetNbinsY(); j++){
        float binCY = htfMetPhi_->GetYaxis()->GetBinCenter(j);
-       htfMetPhi_->SetBinContent(i,j, tfMetPhi->Eval( TMath::ACos(TMath::Cos( jets_[1].Phi() - binCY)) ) );
+       //htfMetPhi_->SetBinContent(i,j, tfMetPhi->Eval( TMath::ACos(TMath::Cos( phi - binCY)) ) );
+       htfMetPhi_->SetBinContent(i,j, tfMetPhi->Eval( binCY ) );
      }
   }
-  if( transferFunctions_.find("tfMetPhi")!=transferFunctions_.end()){
-    delete (transferFunctions_.find("tfMetPhi")->second);
-    transferFunctions_.erase( transferFunctions_.find("tfMetPhi") );
-    transferFunctions_["tfMetPhi"] = htfMetPhi_;
+  if( transferFunctions_.find("tf"+tfName+"Phi")!=transferFunctions_.end()){
+    delete (transferFunctions_.find("tf"+tfName+"Phi")->second);
+    transferFunctions_.erase( transferFunctions_.find("tf"+tfName+"Phi") );
+    transferFunctions_["tf"+tfName+"Phi"] = htfMetPhi_;
   }
   else
-    transferFunctions_["tfMetPhi"] = htfMetPhi_;
+    transferFunctions_["tf"+tfName+"Phi"] = htfMetPhi_;
 
   tfMetPhi_ = *htfMetPhi_;
   delete tfMetPhi;
 
+
+
+}
+
+
+
+
+ 
+void MEIntegratorNew::initTF(){
+  
+  createTFjet("Wjet1",  eW1Had_.Eta(), jets_[3].Pt(), "Light", 0.025, 0.30);
+  createTFjet("Wjet2",  eW2Had_.Eta(), jets_[4].Pt(), "Light", 0.025, 0.30);
+  createTFjet("bHad",   eBHad_.Eta(),  jets_[5].Pt(), "Heavy", 0.025, 0.30);
+  createTFjet("bLep",   eBLep_.Eta(),  jets_[2].Pt(), "Heavy", 0.025, 0.30);
+  createTFjet("Higgs1", eB1_.Eta(),    jets_[6].Pt(), "Heavy", 0.025, 0.30);
+  createTFjet("Higgs2", eB2_.Eta(),    jets_[7].Pt(), "Heavy", 0.025, 0.30);
+
+  createTFmet("Met", jets_[1].Phi() , jets_[1].Pt() , 0.025, 0.50);
 
 }
 
