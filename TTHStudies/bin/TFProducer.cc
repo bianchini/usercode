@@ -180,12 +180,15 @@ int main(int argc, const char* argv[])
   }
 
 
+  //////////////////// WATCH OUT !!! pt = parton, genPt = genJet
+
+
   float etaBinning[] = {0.0, 1.0, 2.5};
 
-  TH1F* accLightBin0  = new TH1F("accLightBin0","",100,0,400);
-  TH1F* accLightBin1  = new TH1F("accLightBin1","",100,0,400);
-  TH1F* accHeavyBin0  = new TH1F("accHeavyBin0","",100,0,400);
-  TH1F* accHeavyBin1  = new TH1F("accHeavyBin1","",100,0,400);
+  TH1F* accLightBin0    = new TH1F("accLightBin0","", 100,0,400);
+  TH1F* accLightBin1    = new TH1F("accLightBin1","", 100,0,400);
+  TH1F* accHeavyBin0    = new TH1F("accHeavyBin0","", 100,0,400);
+  TH1F* accHeavyBin1    = new TH1F("accHeavyBin1","", 100,0,400);
 
   TH1F* resolLightBin0  = new TH1F("resolLightBin0","",20,0,200);
   TH1F* respLightBin0   = new TH1F("respLightBin0","", 20,0,200);
@@ -203,10 +206,10 @@ int main(int argc, const char* argv[])
     TH1F* accTot    = (TH1F*)accLightBin0->Clone(Form("accTot%d",k));  //accTot->Sumw2();
 
     TH2F* hCorrLight = new TH2F("hCorrLight","", 20, 0,200, 40, 0,200);
-    treeJetsLight->Draw("ptReco:pt>>hCorrLight", Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
+    treeJetsLight->Draw("ptReco:ptGen>>hCorrLight", Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
 
-    treeJetsLight->Draw(Form("pt>>accTot%d",k),  Form("(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",            etaBinning[k],etaBinning[k+1]) );
-    treeJetsLight->Draw(Form("pt>>accPass%d",k), Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
+    treeJetsLight->Draw(Form("ptGen>>accTot%d",k),  Form("(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",            etaBinning[k],etaBinning[k+1]) );
+    treeJetsLight->Draw(Form("ptGen>>accPass%d",k), Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
     accPass->Sumw2();
     accTot->Sumw2();
 
@@ -245,10 +248,10 @@ int main(int argc, const char* argv[])
     accTot->Reset();
 
     TH2F* hCorrHeavy = new TH2F("hCorrHeavy","", 20, 0,200, 40, 0,200);
-    treeJetsHeavy->Draw("ptReco:pt>>hCorrHeavy", Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
+    treeJetsHeavy->Draw("ptReco:ptGen>>hCorrHeavy", Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
 
-    treeJetsHeavy->Draw(Form("pt>>accTot%d",k),  Form("(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",            etaBinning[k],etaBinning[k+1]) );
-    treeJetsHeavy->Draw(Form("pt>>accPass%d",k), Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
+    treeJetsHeavy->Draw(Form("ptGen>>accTot%d",k),  Form("(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",            etaBinning[k],etaBinning[k+1]) );
+    treeJetsHeavy->Draw(Form("ptGen>>accPass%d",k), Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
     accPass->Sumw2();
     accTot->Sumw2();
 

@@ -170,6 +170,7 @@ int main(int argc, const char* argv[])
   float etaRecoLight;
   float csvRecoLight;
   float ptLight;
+  float genPtLight;
   float etaLight;
   float phiLight;
   float massRecoLight;
@@ -179,12 +180,16 @@ int main(int argc, const char* argv[])
   float etReco;
   float phi;
   float phiReco;
+  float impEtReco;
+  float impPhiReco;
+  float impSumEt;
 
   float ptRecoHeavy;
   float phiRecoHeavy;
   float etaRecoHeavy;
   float csvRecoHeavy;
   float ptHeavy;
+  float genPtHeavy;
   float etaHeavy;
   float phiHeavy;
   float massRecoHeavy;
@@ -220,6 +225,7 @@ int main(int argc, const char* argv[])
   genJetLightTree->Branch("phiReco",  &phiRecoLight, "phiReco/F");
   genJetLightTree->Branch("csvReco",   &csvRecoLight, "csvReco/F");
   genJetLightTree->Branch("pt",       &ptLight,     "pt/F");
+  genJetLightTree->Branch("ptGen",    &genPtLight,     "ptGen/F");
   genJetLightTree->Branch("eta",      &etaLight,    "eta/F");
   genJetLightTree->Branch("phi",      &phiLight,    "phi/F");
   genJetLightTree->Branch("massReco", &massRecoLight,   "massReco/F");
@@ -229,12 +235,17 @@ int main(int argc, const char* argv[])
   genEventTree->Branch("etReco",   &etReco,"etReco/F");
   genEventTree->Branch("phi",      &phi,   "phi/F");
   genEventTree->Branch("phiReco",  &phiReco,"phiReco/F");
+  genEventTree->Branch("impEtReco",  &impEtReco, "impEtReco/F");
+  genEventTree->Branch("impPhiReco", &impPhiReco,"impPhiReco/F");
+  genEventTree->Branch("impSumEt",    &impSumEt,   "impSumEt/F");
+
 
   genJetHeavyTree->Branch("ptReco",   &ptRecoHeavy, "ptReco/F");
   genJetHeavyTree->Branch("etaReco",  &etaRecoHeavy, "etaReco/F");
   genJetHeavyTree->Branch("phiReco",  &phiRecoHeavy, "phiReco/F");
   genJetHeavyTree->Branch("csvReco",   &csvRecoHeavy, "csvReco/F");
   genJetHeavyTree->Branch("pt",       &ptHeavy,     "pt/F");
+  genJetHeavyTree->Branch("ptGen",    &genPtHeavy,     "ptGen/F");
   genJetHeavyTree->Branch("eta",      &etaHeavy,    "eta/F");
   genJetHeavyTree->Branch("phi",      &phiHeavy,    "phi/F");
   genJetHeavyTree->Branch("massReco",     &massRecoHeavy,   "massReco/F");
@@ -251,6 +262,8 @@ int main(int argc, const char* argv[])
   double lumi              (in.getParameter<double>("lumi") );
   bool verbose             (in.getParameter<bool>("verbose") );
   bool computeCMSVariables (in.getParameter<bool>("computeCMSVariables") );
+  bool printP4             (in.getParameter<bool>("printP4") );
+  int toPrint              (in.getParameter<int>("toPrint") );
 
   bool openAllFiles  = false;
   Samples* mySamples = new Samples(openAllFiles, pathToFile, ordering, samples, lumi, verbose);
@@ -285,6 +298,12 @@ int main(int argc, const char* argv[])
     TTree* currentTree       = mySamples->GetTree( currentName, "tree");
     cout << "Done!!" << endl;
     
+    float hJetsgenpt [999];
+    float aJetsgenpt [999];
+    float hJetsgeneta[999];
+    float aJetsgeneta[999];
+    float hJetsgenphi[999];
+    float aJetsgenphi[999];
     JetByPt jet1, jet2, jet3, jet4, jet5, jet6, jet7, jet8, jet9, jet10;
     genParticleInfo genB, genBbar;
     genTopInfo genTop, genTbar;
@@ -305,7 +324,15 @@ int main(int argc, const char* argv[])
     currentTree->SetBranchAddress("genTop", &genTop);
     currentTree->SetBranchAddress("genTbar",&genTbar);
     currentTree->SetBranchAddress("METtype1p2corr",&METtype1p2corr);
+    currentTree->SetBranchAddress("hJet_genPt",  hJetsgenpt);
+    currentTree->SetBranchAddress("aJet_genPt",  aJetsgenpt);
+    currentTree->SetBranchAddress("hJet_genEta",  hJetsgeneta);
+    currentTree->SetBranchAddress("aJet_genEta",  aJetsgeneta);
+    currentTree->SetBranchAddress("hJet_genPhi",  hJetsgenphi);
+    currentTree->SetBranchAddress("aJet_genPhi",  aJetsgenphi);
 
+
+    int printed = 0;
     Long64_t nentries = currentTree->GetEntries();
     
     for (Long64_t i = 0; i < nentries ; i++){
@@ -483,7 +510,7 @@ int main(int argc, const char* argv[])
 	//bool isBbar = genBbarLV.Pt()>0 ? deltaR( myJetsFilt[k], genBbarLV) < 0.3 && TMath::Abs(myJetsFilt[k].Pt()-genBbarLV.Pt())/genBbarLV.Pt()<0.30  : false;      
       }
 
-      if( myJetsFilt.size()<4 ) continue;
+      if( myJetsFilt.size()<4 /*|| numJets30<6 || numJets30BtagM<4*/) continue;
 
 
       if(  !((abs(genTop.wdau1id)<6 &&  abs(genTbar.wdau1id)>6) ||  
@@ -517,6 +544,13 @@ int main(int argc, const char* argv[])
       etReco  = METtype1p2corr.et;
       phiReco = METtype1p2corr.phi;
 
+
+      TVector3 recoMEt( etReco*TMath::Cos(phiReco), etReco*TMath::Sin(phiReco), 0.0) ;
+      //recoMEt.SetPtEtaPhiM( etReco, 0.0, phiReco, 0.0);
+      impSumEt   = sumEt;
+      //impEtReco  = etReco;
+      //impPhiReco = phiReco;
+
       if(abs(genTop.wdau1id)==12 || abs(genTop.wdau1id)==14 || abs(genTop.wdau1id)==16){
 	et  = genTop.wdau1pt;
 	phi = genTop.wdau1phi;
@@ -538,130 +572,241 @@ int main(int argc, const char* argv[])
 	phi = -99;
       }
  
-      genEventTree->Fill();
+      //genEventTree->Fill();
 
       ///////////////////////////////////////////////////
       // Heavy
       ///////////////////////////////////////////////////
       
-	unsigned int indexB = 999;
-	for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
-	  if(deltaR(myJetsFilt[k],topBLV)<0.3)
-	    indexB = k;
-	}
-	if(indexB!=999){
-	  ptRecoHeavy    = myJetsFilt[indexB].Pt();
-	  etaRecoHeavy   = myJetsFilt[indexB].Eta();
-	  phiRecoHeavy   = myJetsFilt[indexB].Phi();
-	  massRecoHeavy  = myJetsFilt[indexB].M();
-	  csvRecoHeavy   = mapFilt[indexB].csv>0 ? mapFilt[indexB].csv : 0.0 ;
-	}else{ 
-	  ptRecoHeavy=-99;
-	  etaRecoHeavy=-99;
-	  phiRecoHeavy=-99;
-	  csvRecoHeavy=-99;
-	  massRecoHeavy=-99;
-	}
-	ptHeavy       = topBLV.Pt();
-	etaHeavy      = topBLV.Eta();
-	phiHeavy      = topBLV.Phi();
-	if(topBLV.Pt()>0) genJetHeavyTree->Fill();
-	
-	unsigned int indexBbar = 999;
-	for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
-	  if(deltaR(myJetsFilt[k],atopBLV)<0.3)
-	    indexBbar = k;
-	}
-	if(indexBbar!=999){
-	  ptRecoHeavy    = myJetsFilt[indexBbar].Pt();
-	  massRecoHeavy  = myJetsFilt[indexBbar].M();
-	  csvRecoHeavy   = mapFilt[indexBbar].csv>0 ? mapFilt[indexBbar].csv : 0.0 ;
-	  etaRecoHeavy   = myJetsFilt[indexBbar].Eta();
-	  phiRecoHeavy   = myJetsFilt[indexBbar].Phi();
-	}else{
-	  ptRecoHeavy=-99;
-	  csvRecoHeavy=-99;
-	  massRecoHeavy=-99;
-	  etaRecoHeavy=-99;
-	  phiRecoHeavy=-99;
-	}
-	ptHeavy       = atopBLV.Pt();
-	etaHeavy      = atopBLV.Eta();
-	phiHeavy      = atopBLV.Phi();
-	if(atopBLV.Pt()>0) genJetHeavyTree->Fill();
+      unsigned int indexB    = 999;
+      unsigned int indexBbar = 999;
+      unsigned int indexH1   = 999;
+      unsigned int indexH2   = 999;
+      unsigned int indexW1   = 999;
+      unsigned int indexW2   = 999;
 
-	unsigned int indexH1 = 999;
-	if(genBLV.Pt()>0){
-	  for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
-	    if(genBLV.Pt()>0 && deltaR(myJetsFilt[k],genBLV)<0.3)
-	      indexH1 = k;
+      int whichTopHad = abs(genTop.wdau1id)<6 ? 0 : 1;
+      TLorentzVector wCand1 = whichTopHad==0 ? topW1LV : atopW1LV;
+      TLorentzVector wCand2 = whichTopHad==0 ? topW2LV : atopW2LV;
+      
+      for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
+	if(deltaR(myJetsFilt[k],topBLV)<0.3)
+	  indexB = k;
+	if(deltaR(myJetsFilt[k],atopBLV)<0.3)
+	  indexBbar = k;
+	if(genBLV.E()>0 && deltaR(myJetsFilt[k],genBLV)<0.3)
+	  indexH1 = k;
+	if(genBbarLV.E()>0 && deltaR(myJetsFilt[k],genBbarLV)<0.3)
+	  indexH2 = k;
+	if(deltaR(myJetsFilt[k],wCand1)<0.3)
+	  indexW1 = k;
+	if(deltaR(myJetsFilt[k],wCand2)<0.3)
+	  indexW2 = k;
+      }
+
+
+      genPtHeavy = -99; 
+      if(indexB!=999 && indexB!=indexBbar && indexB!=indexH1 && indexB!=indexH2 && indexB!=indexW1 && indexB!=indexW2){
+	// CHECK!!!!!!
+	//ptRecoHeavy    = mapFilt[indexB].index>=0 ? hJetsgenpt[mapFilt[indexB].index] :  aJetsgenpt[-mapFilt[indexB].index-1] ;	 
+	ptRecoHeavy    = myJetsFilt[indexB].E();
+	etaRecoHeavy   = myJetsFilt[indexB].Eta();
+	phiRecoHeavy   = myJetsFilt[indexB].Phi();
+	massRecoHeavy  = myJetsFilt[indexB].M();
+	csvRecoHeavy   = mapFilt[indexB].csv>0 ? mapFilt[indexB].csv : 0.0 ;
+	
+	float dPx = mapFilt[indexB].index>=0 ? 
+	  hJetsgenpt[mapFilt[indexB].index]*TMath::Cos(  hJetsgenphi[mapFilt[indexB].index] ) - myJetsFilt[indexB].Px():
+	  aJetsgenpt[-mapFilt[indexB].index-1]*TMath::Cos(  aJetsgenphi[-mapFilt[indexB].index-1] ) - myJetsFilt[indexB].Px();
+	float dPy = mapFilt[indexB].index>=0 ? 
+	  hJetsgenpt[mapFilt[indexB].index]*TMath::Sin(  hJetsgenphi[mapFilt[indexB].index] ) - myJetsFilt[indexB].Py():
+	  aJetsgenpt[-mapFilt[indexB].index-1]*TMath::Sin(  aJetsgenphi[-mapFilt[indexB].index-1] ) - myJetsFilt[indexB].Py();
+
+	if(mapFilt[indexB].index>=0)
+	  genPtHeavy =  hJetsgenpt[mapFilt[indexB].index];
+	else if(mapFilt[indexB].index!=-99)
+	  genPtHeavy  = aJetsgenpt[-mapFilt[indexB].index-1];
+	else{}
+
+	TVector3 shift( dPx, dPy , 0.0);
+	recoMEt  -= shift;
+	impSumEt += (topBLV.E()-myJetsFilt[indexB].E());
+	
+      }else{ 
+	ptRecoHeavy=-99;
+	etaRecoHeavy=-99;
+	phiRecoHeavy=-99;
+	csvRecoHeavy=-99;
+	massRecoHeavy=-99;
+      }
+      ptHeavy       = topBLV.E();
+      etaHeavy      = topBLV.Eta();
+      phiHeavy      = topBLV.Phi();
+      if(topBLV.E()>0) genJetHeavyTree->Fill();
+      
+
+      genPtHeavy = -99; 
+      if(indexBbar!=999 && indexBbar!=indexB && indexBbar!=indexH1 && indexBbar!=indexH2 && indexBbar!=indexW1 && indexBbar!=indexW2){
+	//ptRecoHeavy    = mapFilt[indexBbar].index>=0 ? hJetsgenpt[mapFilt[indexBbar].index] :  aJetsgenpt[-mapFilt[indexBbar].index-1] ;	 
+	ptRecoHeavy    = myJetsFilt[indexBbar].E();
+	massRecoHeavy  = myJetsFilt[indexBbar].M();
+	csvRecoHeavy   = mapFilt[indexBbar].csv>0 ? mapFilt[indexBbar].csv : 0.0 ;
+	etaRecoHeavy   = myJetsFilt[indexBbar].Eta();
+	phiRecoHeavy   = myJetsFilt[indexBbar].Phi();
+
+	float dPx = mapFilt[indexBbar].index>=0 ? 
+	  hJetsgenpt[mapFilt[indexBbar].index]*TMath::Cos(  hJetsgenphi[mapFilt[indexBbar].index] ) - myJetsFilt[indexBbar].Px():
+	  aJetsgenpt[-mapFilt[indexBbar].index-1]*TMath::Cos(  aJetsgenphi[-mapFilt[indexBbar].index-1] ) - myJetsFilt[indexBbar].Px();
+	float dPy = mapFilt[indexBbar].index>=0 ? 
+	  hJetsgenpt[mapFilt[indexBbar].index]*TMath::Sin(  hJetsgenphi[mapFilt[indexBbar].index] ) - myJetsFilt[indexBbar].Py():
+	  aJetsgenpt[-mapFilt[indexBbar].index-1]*TMath::Sin(  aJetsgenphi[-mapFilt[indexBbar].index-1] ) - myJetsFilt[indexBbar].Py();
+
+	if(mapFilt[indexBbar].index>=0)
+	  genPtHeavy =  hJetsgenpt[mapFilt[indexBbar].index];
+	else if(mapFilt[indexBbar].index!=-99)
+	  genPtHeavy  = aJetsgenpt[-mapFilt[indexBbar].index-1];
+	else{}
+
+	TVector3 shift( dPx , dPy , 0.0);
+
+	if(indexB!=indexBbar) {
+	  recoMEt  -= shift;
+	  impSumEt += (atopBLV.E()-myJetsFilt[indexBbar].E());
+	}
+
+      }else{
+	ptRecoHeavy=-99;
+	csvRecoHeavy=-99;
+	massRecoHeavy=-99;
+	etaRecoHeavy=-99;
+	phiRecoHeavy=-99;
+      }
+      ptHeavy       = atopBLV.E();
+      etaHeavy      = atopBLV.Eta();
+      phiHeavy      = atopBLV.Phi();
+      if(atopBLV.E()>0) genJetHeavyTree->Fill();
+
+
+      genPtHeavy = -99; 
+      if(indexH1!=999 && indexH1!=indexB && indexH1!=indexBbar && indexH1!=indexH2 && indexH1!=indexW1 && indexH1!=indexW2){
+	//ptRecoHeavy    = mapFilt[indexH1].index>=0 ? hJetsgenpt[mapFilt[indexH1].index] :  aJetsgenpt[-mapFilt[indexH1].index-1] ;	 
+	ptRecoHeavy    = myJetsFilt[indexH1].E();
+	massRecoHeavy  = myJetsFilt[indexH1].M();
+	csvRecoHeavy   = mapFilt[indexH1].csv>0 ? mapFilt[indexH1].csv : 0.0 ;
+	etaRecoHeavy   = myJetsFilt[indexH1].Eta();
+	phiRecoHeavy   = myJetsFilt[indexH1].Phi();
+	
+	float dPx = mapFilt[indexH1].index>=0 ? 
+	  hJetsgenpt[mapFilt[indexH1].index]*TMath::Cos(  hJetsgenphi[mapFilt[indexH1].index] ) - myJetsFilt[indexH1].Px():
+	  aJetsgenpt[-mapFilt[indexH1].index-1]*TMath::Cos(  aJetsgenphi[-mapFilt[indexH1].index-1] ) - myJetsFilt[indexH1].Px();
+	float dPy = mapFilt[indexH1].index>=0 ? 
+	  hJetsgenpt[mapFilt[indexH1].index]*TMath::Sin(  hJetsgenphi[mapFilt[indexH1].index] ) - myJetsFilt[indexH1].Py():
+	  aJetsgenpt[-mapFilt[indexH1].index-1]*TMath::Sin(  aJetsgenphi[-mapFilt[indexH1].index-1] ) - myJetsFilt[indexH1].Py();
+
+	if(mapFilt[indexH1].index>=0)
+	  genPtHeavy =  hJetsgenpt[mapFilt[indexH1].index];
+	else if(mapFilt[indexH1].index!=-99)
+	  genPtHeavy  = aJetsgenpt[-mapFilt[indexH1].index-1];
+	else{}
+
+
+	TVector3 shift( dPx , dPy , 0.0);
+
+	if(indexH1!=indexBbar && indexH1!=indexB) {
+	  recoMEt  -= shift;
+	  impSumEt += (genBLV.E()-myJetsFilt[indexH1].E());
+	}
+	
+      }
+      else{
+	  ptRecoHeavy=-99;
+	  csvRecoHeavy=-99;
+	  massRecoHeavy=-99;
+	  etaRecoHeavy=-99;
+	  phiRecoHeavy=-99;
+	}
+      ptHeavy       = genBLV.E()>0 ? genBLV.E() : -999;
+      etaHeavy      = genBLV.E()>0 ? genBLV.Eta(): -999;
+      phiHeavy      = genBLV.E()>0 ? genBLV.Phi(): -999;
+      if(genBLV.E()>0) genJetHeavyTree->Fill();
+	
+      genPtHeavy = -99; 
+      if(indexH2!=999 && indexH2!=indexB && indexH2!=indexBbar && indexH2!=indexH1 && indexH2!=indexW1 && indexH2!=indexW2){
+	//ptRecoHeavy    = mapFilt[indexH2].index>=0 ? hJetsgenpt[mapFilt[indexH2].index] :  aJetsgenpt[-mapFilt[indexH2].index-1] ;	 
+	ptRecoHeavy    = myJetsFilt[indexH2].E();
+	massRecoHeavy  = myJetsFilt[indexH2].M();
+	csvRecoHeavy   = mapFilt[indexH2].csv>0 ? mapFilt[indexH2].csv : 0.0 ;
+	etaRecoHeavy   = myJetsFilt[indexH2].Eta();
+	phiRecoHeavy   = myJetsFilt[indexH2].Phi();
+
+	float dPx = mapFilt[indexH2].index>=0 ? 
+	  hJetsgenpt[mapFilt[indexH2].index]*TMath::Cos(  hJetsgenphi[mapFilt[indexH2].index] ) - myJetsFilt[indexH2].Px():
+	  aJetsgenpt[-mapFilt[indexH2].index-1]*TMath::Cos(  aJetsgenphi[-mapFilt[indexH2].index-1] ) - myJetsFilt[indexH2].Px();
+	float dPy = mapFilt[indexH2].index>=0 ? 
+	  hJetsgenpt[mapFilt[indexH2].index]*TMath::Sin(  hJetsgenphi[mapFilt[indexH2].index] ) - myJetsFilt[indexH2].Py():
+	  aJetsgenpt[-mapFilt[indexH2].index-1]*TMath::Sin(  aJetsgenphi[-mapFilt[indexH2].index-1] ) - myJetsFilt[indexH2].Py();
+	
+	if(mapFilt[indexH2].index>=0)
+	  genPtHeavy =  hJetsgenpt[mapFilt[indexH2].index];
+	else if(mapFilt[indexH2].index!=-99)
+	  genPtHeavy  = aJetsgenpt[-mapFilt[indexH2].index-1];
+	else{}
+
+	TVector3 shift( dPx, dPy, 0.0);
+
+	if(indexH2!=indexBbar && indexH2!=indexB && indexH2!=indexH1) {
+	  recoMEt  -= shift;
+	  impSumEt += (genBbarLV.E()-myJetsFilt[indexH2].E());
+	}
+	
+      }
+      else{
+	ptRecoHeavy=-99;
+	csvRecoHeavy=-99;
+	massRecoHeavy=-99;
+	etaRecoHeavy=-99;
+	phiRecoHeavy=-99;
+      }
+      ptHeavy       = genBbarLV.E()>0 ? genBbarLV.E() : -999;
+      etaHeavy      = genBbarLV.E()>0 ? genBbarLV.Eta(): -999;
+      phiHeavy      = genBbarLV.E()>0 ? genBbarLV.Phi(): -999;
+      if(genBbarLV.E()>0) genJetHeavyTree->Fill();
+      
+      ///////////////////////////////////////////////////
+      // Light
+      ///////////////////////////////////////////////////
+      
+      genPtLight = -99;
+      if(indexW1!=999 && indexW1!=indexB && indexW1!=indexBbar && indexW1!=indexH1 && indexW1!=indexH2 && indexW1!=indexW2){  // CHECK!!!!!!
+	//ptRecoLight    = mapFilt[indexW1].index>=0 ? hJetsgenpt[mapFilt[indexW1].index] :  aJetsgenpt[-mapFilt[indexW1].index-1] ;
+	ptRecoLight    = myJetsFilt[indexW1].E();
+	etaRecoLight   = myJetsFilt[indexW1].Eta();
+	phiRecoLight   = myJetsFilt[indexW1].Phi();
+	massRecoLight  = myJetsFilt[indexW1].M();
+	csvRecoLight   = mapFilt[indexW1].csv>0 ? mapFilt[indexW1].csv : 0.0 ;
+	
+	
+	float dPx = mapFilt[indexW1].index>=0 ? 
+	  hJetsgenpt[mapFilt[indexW1].index]*TMath::Cos(  hJetsgenphi[mapFilt[indexW1].index] ) - myJetsFilt[indexW1].Px():
+	  aJetsgenpt[-mapFilt[indexW1].index-1]*TMath::Cos(  aJetsgenphi[-mapFilt[indexW1].index-1] ) - myJetsFilt[indexW1].Px();
+	float dPy = mapFilt[indexW1].index>=0 ? 
+	  hJetsgenpt[mapFilt[indexW1].index]*TMath::Sin(  hJetsgenphi[mapFilt[indexW1].index] ) - myJetsFilt[indexW1].Py():
+	  aJetsgenpt[-mapFilt[indexW1].index-1]*TMath::Sin(  aJetsgenphi[-mapFilt[indexW1].index-1] ) - myJetsFilt[indexW1].Py();
+	
+	if(mapFilt[indexW1].index>=0)
+	  genPtLight =  hJetsgenpt[mapFilt[indexW1].index];
+	else if(mapFilt[indexW1].index!=-99)
+	  genPtLight  = aJetsgenpt[-mapFilt[indexW1].index-1];
+	else{}
+
+	  TVector3 shift(dPx ,dPy , 0.0);
+	  
+	  if(indexW1!=indexBbar && indexW1!=indexB && indexW1!=indexH1 &&  indexW1!=indexH2) {
+	    recoMEt  -= shift;
+	    impSumEt += (wCand1.E()-myJetsFilt[indexW1].E());
 	  }
-	}
-	if(indexH1!=999){
-	  ptRecoHeavy    = myJetsFilt[indexH1].Pt();
-	  massRecoHeavy  = myJetsFilt[indexH1].M();
-	  csvRecoHeavy   = mapFilt[indexH1].csv>0 ? mapFilt[indexH1].csv : 0.0 ;
-	  etaRecoHeavy   = myJetsFilt[indexH1].Eta();
-	  phiRecoHeavy   = myJetsFilt[indexH1].Phi();
-	}
-	else{
-	  ptRecoHeavy=-99;
-	  csvRecoHeavy=-99;
-	  massRecoHeavy=-99;
-	  etaRecoHeavy=-99;
-	  phiRecoHeavy=-99;
-	}
-	ptHeavy       = genBLV.Pt()>0 ? genBLV.Pt() : -999;
-	etaHeavy      = genBLV.Pt()>0 ? genBLV.Eta(): -999;
-	phiHeavy      = genBLV.Pt()>0 ? genBLV.Phi(): -999;
-	if(genBLV.Pt()>0) genJetHeavyTree->Fill();
-	
-	unsigned int indexH2 = 999;
-	if(genBbarLV.Pt()>0){
-	  for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
-	    if(genBbarLV.Pt()>0 && deltaR(myJetsFilt[k],genBbarLV)<0.3)
-	      indexH2 = k;
-	  }
-	}
-	if(indexH2!=999){
-	  ptRecoHeavy    = myJetsFilt[indexH2].Pt();
-	  massRecoHeavy  = myJetsFilt[indexH2].M();
-	  csvRecoHeavy   =  mapFilt[indexH2].csv>0 ? mapFilt[indexH2].csv : 0.0 ;
-	  etaRecoHeavy   = myJetsFilt[indexH2].Eta();
-	  phiRecoHeavy   = myJetsFilt[indexH2].Phi();
-	}
-	else{
-	  ptRecoHeavy=-99;
-	  csvRecoHeavy=-99;
-	  massRecoHeavy=-99;
-	  etaRecoHeavy=-99;
-	  phiRecoHeavy=-99;
-	}
-	ptHeavy       = genBbarLV.Pt()>0 ? genBbarLV.Pt() : -999;
-	etaHeavy      = genBbarLV.Pt()>0 ? genBbarLV.Eta(): -999;
-	phiHeavy      = genBbarLV.Pt()>0 ? genBbarLV.Phi(): -999;
-	if(genBbarLV.Pt()>0) genJetHeavyTree->Fill();
-	
-	///////////////////////////////////////////////////
-	// Light
-	///////////////////////////////////////////////////
 
 
-	int whichTopHad = abs(genTop.wdau1id)<6 ? 0 : 1;
-	TLorentzVector wCand1 = whichTopHad==0 ? topW1LV : atopW1LV;
-	TLorentzVector wCand2 = whichTopHad==0 ? topW2LV : atopW2LV;
-
-	unsigned int indexW1 = 999;
-	for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
-	  if(deltaR(myJetsFilt[k],wCand1)<0.3)
-	    indexW1 = k;
-	}
-	if(indexW1!=999){
-	  ptRecoLight    = myJetsFilt[indexW1].Pt();
-	  etaRecoLight   = myJetsFilt[indexW1].Eta();
-	  phiRecoLight   = myJetsFilt[indexW1].Phi();
-	  massRecoLight  = myJetsFilt[indexW1].M();
-	  csvRecoLight   = mapFilt[indexW1].csv>0 ? mapFilt[indexW1].csv : 0.0 ;
 	}
 	else{
 	  ptRecoLight=-99;
@@ -670,23 +815,40 @@ int main(int argc, const char* argv[])
 	  etaRecoLight=-99;
 	  phiRecoLight=-99;
 	}
-	ptLight       = wCand1.Pt();
+	ptLight       = wCand1.E();
 	etaLight      = wCand1.Eta();
 	phiLight      = wCand1.Phi();
-	if(wCand1.Pt()>0) genJetLightTree->Fill();
+	if(wCand1.E()>0) genJetLightTree->Fill();
 	
-
-	unsigned int indexW2 = 999;
-	for(unsigned int k = 0; k < myJetsFilt.size(); k++){  
-	  if(deltaR(myJetsFilt[k],wCand2)<0.3)
-	    indexW2 = k;
-	}
-	if(indexW2!=999){
-	  ptRecoLight    = myJetsFilt[indexW2].Pt();
+	genPtLight = -99;
+	if(indexW2!=999 && indexW2!=indexB && indexW2!=indexBbar && indexW2!=indexH1 && indexW2!=indexH2 && indexW2!=indexW1){
+	  //ptRecoLight    = mapFilt[indexW2].index>=0 ? hJetsgenpt[mapFilt[indexW2].index] :  aJetsgenpt[-mapFilt[indexW2].index-1] ;
+	  ptRecoLight    = myJetsFilt[indexW2].E();
 	  massRecoLight  = myJetsFilt[indexW2].M();
 	  etaRecoLight   = myJetsFilt[indexW2].Eta();
 	  phiRecoLight   = myJetsFilt[indexW2].Phi();
 	  csvRecoLight   =  mapFilt[indexW2].csv>0 ? mapFilt[indexW2].csv : 0.0 ;
+
+	  float dPx = mapFilt[indexW2].index>=0 ? 
+	    hJetsgenpt[mapFilt[indexW2].index]*TMath::Cos(  hJetsgenphi[mapFilt[indexW2].index] ) - myJetsFilt[indexW2].Px():
+	    aJetsgenpt[-mapFilt[indexW2].index-1]*TMath::Cos(  aJetsgenphi[-mapFilt[indexW2].index-1] ) - myJetsFilt[indexW2].Px();
+	  float dPy = mapFilt[indexW2].index>=0 ? 
+	    hJetsgenpt[mapFilt[indexW2].index]*TMath::Sin(  hJetsgenphi[mapFilt[indexW2].index] ) - myJetsFilt[indexW2].Py():
+	    aJetsgenpt[-mapFilt[indexW2].index-1]*TMath::Sin(  aJetsgenphi[-mapFilt[indexW2].index-1] ) - myJetsFilt[indexW2].Py();
+
+	  if(mapFilt[indexW2].index>=0)
+	    genPtLight =  hJetsgenpt[mapFilt[indexW2].index];
+	  else if(mapFilt[indexW2].index!=-99)
+	    genPtLight  = aJetsgenpt[-mapFilt[indexW2].index-1];
+	  else{}
+
+	  TVector3 shift( dPx, dPy, 0.0);
+
+	  if(indexW2!=indexBbar && indexW2!=indexB && indexW2!=indexH2 &&  indexW2!=indexH1 &&  indexW2!=indexW1) {
+	    recoMEt  -= shift;
+	    impSumEt += (wCand2.E()-myJetsFilt[indexW2].E());
+	  }
+
 	}else{
 	  ptRecoLight=-99;
 	  csvRecoLight=-99;
@@ -694,12 +856,18 @@ int main(int argc, const char* argv[])
 	  etaRecoLight=-99;
 	  phiRecoLight=-99;
 	}	
-	ptLight       = wCand2.Pt();
+	ptLight       = wCand2.E();
 	etaLight      = wCand2.Eta();
 	phiLight      = wCand2.Phi();
-	if(wCand2.Pt()>0) genJetLightTree->Fill();
+	if(wCand2.E()>0) genJetLightTree->Fill();
 	
       
+	impEtReco  = recoMEt.Pt();
+	impPhiReco = recoMEt.Phi();
+	genEventTree->Fill();
+
+
+
 
       X1 = -99;
       X2 = -99;
@@ -758,6 +926,19 @@ int main(int argc, const char* argv[])
 	HIGGS.SetPxPyPzE( (genBLV+genBbarLV).Px(), (genBLV+genBbarLV).Py(),(genBLV+genBbarLV).Pz(),(genBLV+genBbarLV).E());
 
 	if(properEvent){
+
+
+	  if(printP4 && printed<toPrint){
+	    cout << "jet1.SetPtEtaPhiM(" << TOPLEPW1.Pt() << "," <<  TOPLEPW1.Eta() << "," << TOPLEPW1.Phi() << "," << TOPLEPW1.M() << endl;
+	    cout << "jet2.SetPtEtaPhiM(" << TOPLEPW2.Pt() << "," <<  TOPLEPW2.Eta() << "," << TOPLEPW2.Phi() << "," << TOPLEPW2.M() << endl;
+	    cout << "jet3.SetPtEtaPhiM(" << TOPLEPB.Pt() << "," <<  TOPLEPB.Eta() << "," << TOPLEPB.Phi() << "," << TOPLEPB.M() << endl;
+	    cout << "jet4.SetPtEtaPhiM(" << TOPHADW1.Pt() << "," <<  TOPHADW1.Eta() << "," << TOPHADW1.Phi() << "," << TOPHADW1.M() << endl;
+	    cout << "jet5.SetPtEtaPhiM(" << TOPHADW2.Pt() << "," <<  TOPHADW2.Eta() << "," << TOPHADW2.Phi() << "," << TOPHADW2.M() << endl;
+	    cout << "jet6.SetPtEtaPhiM(" << TOPHADB.Pt() << "," <<  TOPHADB.Eta() << "," << TOPHADB.Phi() << "," << TOPHADB.M() << endl;
+	    cout << "jet7.SetPtEtaPhiM(" << genBLV.Pt() << "," <<  genBLV.Eta() << "," << genBLV.Phi() << "," << genBLV.M() << endl;
+	    cout << "jet8.SetPtEtaPhiM(" << genBbarLV.Pt() << "," <<  genBbarLV.Eta() << "," << genBbarLV.Phi() << "," << genBbarLV.M() << endl;
+	    printed++;
+	  }
 
 	  TLorentzVector TOT = TOPLEP+TOPHAD+HIGGS;
 	  TVector3 boostToCMS       = TOT.BoostVector();

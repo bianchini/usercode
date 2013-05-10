@@ -63,6 +63,8 @@ class MEIntegratorNew {
   void   setMass(double);
   void   setSumEt(double);
   void   setPtPhiParam (int);
+  void   resetEvaluation();
+
   TH1*   getCachedPdf( string ) const;
   TH1*   getCachedTF ( string ) const;
   TH2F*  getMash( );
@@ -120,6 +122,7 @@ class MEIntegratorNew {
   int par_;
   int verbose_;
   int usePtPhiParam_;
+  int evaluation_;
   float M_;
   float pStar_;
   float EbStar_;
@@ -150,21 +153,22 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   verbose_ = verbose;
   sumEt_   = 1500.; //dummy
   usePtPhiParam_ = 0;
+  evaluation_    = 0;
 
   jets_.clear();
   bTagging_.clear();
   initVersors(0);
 
-  Mtop_   = 174.3;
-  Mb_     = 4.8;
-  Mw_     = 80.19;
+  Mtop_   =  174.3;
+  Mb_     =  4.8;
+  Mw_     =  80.19;
   pStar_  =  TMath::Sqrt( (Mtop_*Mtop_-(Mw_+Mb_)*(Mw_+Mb_) )*( Mtop_*Mtop_-(Mw_-Mb_)*(Mw_-Mb_) ) )/2./Mtop_;
   EbStar_ =  (Mtop_*Mtop_ - Mw_*Mw_ + Mb_*Mb_)/2./Mtop_;
   EWStar_ =  (Mtop_*Mtop_ + Mw_*Mw_ - Mb_*Mb_)/2./Mtop_;
   EuStar_ =  Mw_/2;
   dM2_    =  (Mtop_*Mtop_-Mb_*Mb_-Mw_*Mw_)*0.5;
-  dMh2_   =  (Mtop_*Mtop_-M_*M_)*0.5;
-  M_      = -99;
+  M_      =  125.;
+  dMh2_   =  (M_*M_-2*Mb_*Mb_)*0.5;
 
   mash_        = new TH2F("mash","",500,-2.5,2.5, 628, -TMath::Pi(), TMath::Pi());
   debugHisto1_ = new TH1F("debugHisto1","w1 pt", 100,0,400);
@@ -453,12 +457,12 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
  
 void MEIntegratorNew::initTF(){
   
-  createTFjet("Wjet1",  eW1Had_.Eta(), jets_[3].Pt(), "Light", 0.025, 0.30);
-  createTFjet("Wjet2",  eW2Had_.Eta(), jets_[4].Pt(), "Light", 0.025, 0.30);
-  createTFjet("bHad",   eBHad_.Eta(),  jets_[5].Pt(), "Heavy", 0.025, 0.30);
-  createTFjet("bLep",   eBLep_.Eta(),  jets_[2].Pt(), "Heavy", 0.025, 0.30);
-  createTFjet("Higgs1", eB1_.Eta(),    jets_[6].Pt(), "Heavy", 0.025, 0.30);
-  createTFjet("Higgs2", eB2_.Eta(),    jets_[7].Pt(), "Heavy", 0.025, 0.30);
+  createTFjet("Wjet1",  eW1Had_.Eta(), jets_[3].E(), "Light", 0.025, 0.30);
+  createTFjet("Wjet2",  eW2Had_.Eta(), jets_[4].E(), "Light", 0.025, 0.30);
+  createTFjet("bHad",   eBHad_.Eta(),  jets_[5].E(), "Heavy", 0.025, 0.30);
+  createTFjet("bLep",   eBLep_.Eta(),  jets_[2].E(), "Heavy", 0.025, 0.30);
+  createTFjet("Higgs1", eB1_.Eta(),    jets_[6].E(), "Heavy", 0.025, 0.30);
+  createTFjet("Higgs2", eB2_.Eta(),    jets_[7].E(), "Heavy", 0.025, 0.30);
 
   createTFmet("Met", jets_[1].Phi() , jets_[1].Pt() , 0.025, 0.50);
 
@@ -467,7 +471,8 @@ void MEIntegratorNew::initTF(){
 
 
 void MEIntegratorNew::setMass(double mass){
-  M_ = mass;
+  M_    = mass;
+  dMh2_ = (M_*M_-2*Mb_*Mb_)*0.5; 
 }
 
 void MEIntegratorNew::setSumEt(double sumEt){
@@ -638,13 +643,13 @@ void MEIntegratorNew::higgsEnergies(double E1, double& E2, double& cos1, int& er
   double a = E1;
   double b = TMath::Sqrt(E1*E1 - Mb_*Mb_)*TMath::Cos(a12);
 
-  if( dM2_*dM2_ - (a*a - b*b)*Mb_*Mb_ < 0){
+  if( dMh2_*dMh2_ - (a*a - b*b)*Mb_*Mb_ < 0){
     errFlag = 1;
     return;
   }
 
-  double E2_1 = (a*dM2_ + b*TMath::Sqrt(dM2_*dM2_ - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b);
-  //double E2_2 = (a*dM2_ - b*TMath::Sqrt(dM2_*dM2_ - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b);
+  double E2_1 = (a*dMh2_ + b*TMath::Sqrt(dMh2_*dMh2_ - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b);
+  //double E2_2 = (a*dMh2_ - b*TMath::Sqrt(dMh2_*dMh2_ - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b);
 
   E2 = E2_1;
 
@@ -668,6 +673,8 @@ void MEIntegratorNew::higgsEnergies(double E1, double& E2, double& cos1, int& er
 
 
 double MEIntegratorNew::Eval(const double* x) const {
+
+  //evaluation_++;
 
   double prob = 0.0;
   if(usePtPhiParam_==0)
@@ -943,7 +950,9 @@ double MEIntegratorNew::tthDensity ( double Q, double m12, double cos1Star, doub
 }
 
 
-
+void MEIntegratorNew::resetEvaluation(){
+  evaluation_ = 0;
+}
 
 
 double MEIntegratorNew::probability(const double* x, int sign) const{
@@ -956,11 +965,19 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
   double phiNu       = x[2];
   double Eh1         = x[3];
 
+  // trasnform phiNu into an absolute phi:
+  phiNu += eMEt_.Phi();
+  if( phiNu < -TMath::Pi() ) phiNu += (2*TMath::Pi());
+  if( phiNu >  TMath::Pi())  phiNu -= (2*TMath::Pi());
+
+
   if(verbose_){
+    cout << "#" << evaluation_ << endl;
     cout << "Eq1 = "         << Eq1 << endl; 
     cout << "cosThetaNu = " << cosThetaNu << endl; 
     cout << "phiNu = "      << phiNu  << endl; 
     cout << "Eh1 = "         << Eh1  << endl; 
+    cout << "********" << endl;
   }
 
   double Eq2, EbHad, cos1Had, cos2Had;
@@ -984,6 +1001,7 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
     eNu.SetTheta( TMath::ASin(cosThetaNu/Enu) ); 
     eNu.SetPhi  ( phiNu );   
     eNu.SetMag  ( 1.); 
+    prob *= (cosThetaNu/Enu/Enu); // Jacobian  <--------- CORRECT !!!!
   }
 
   if(errFlag){
@@ -1034,22 +1052,23 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
   double m12      = (topHad+topLep).M();
   double Q        = tot.M();
 
-  double MEpart = 
-    topHadDensity(cos1Had,cos2Had) * topLepDensity(cos1Lep,cos2Lep) * higgsDensity(cos1Higgs) *
-    topHadJakobi( Eq1, Eq2, EbHad) * topLepJakobi(Enu, EbLep) * higgsJakobi( Eh1, Eh2 ) *
-    tthDensity( Q , m12, cos1Star, cos3);
+  ///double MEpart = 
+  //topHadDensity(cos1Had,cos2Had) * topLepDensity(cos1Lep,cos2Lep) * higgsDensity(cos1Higgs) *
+  //topHadJakobi( Eq1, Eq2, EbHad) * topLepJakobi(Enu, EbLep) * higgsJakobi( Eh1, Eh2 ) *
+  //tthDensity( Q , m12, cos1Star, cos3);
 
   double TFpart = 
-    const_cast<TH1F*>(&tfWjet1_)  ->Interpolate( W1Had.Pt() ) *
-    const_cast<TH1F*>(&tfWjet2_)  ->Interpolate( W2Had.Pt() ) *
-    const_cast<TH1F*>(&tfbHad_)   ->Interpolate( bHad.Pt()  ) *
-    const_cast<TH1F*>(&tfbLep_)   ->Interpolate( bLep.Pt()  ) *
-    const_cast<TH1F*>(&tfHiggs1_) ->Interpolate( higgs1.Pt()) *
-    const_cast<TH1F*>(&tfHiggs2_) ->Interpolate( higgs2.Pt()) *
-    const_cast<TH1F*>(&tfMetPt_)  ->Interpolate( WLepNu.Pt()) *
-    const_cast<TH2F*>(&tfMetPhi_) ->Interpolate( WLepNu.Pt(), TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) ) ;
+    const_cast<TH1F*>(&tfWjet1_)  ->Interpolate( W1Had.E() ) *
+    const_cast<TH1F*>(&tfWjet2_)  ->Interpolate( W2Had.E() ) *
+    const_cast<TH1F*>(&tfbHad_)   ->Interpolate( bHad.E()  ) //*
+    //const_cast<TH1F*>(&tfbLep_)   ->Interpolate( bLep.E()  ) *
+    //const_cast<TH1F*>(&tfHiggs1_) ->Interpolate( higgs1.E()) *
+    //const_cast<TH1F*>(&tfHiggs2_) ->Interpolate( higgs2.E()) //*
+    //const_cast<TH1F*>(&tfMetPt_)  ->Interpolate( WLepNu.Pt()) *
+    //const_cast<TH2F*>(&tfMetPhi_) ->Interpolate( WLepNu.Pt(), TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) ) 
+    ;
 
-  prob *= MEpart;
+  //prob *= MEpart;
   prob *= TFpart;
 
   ////////////////////////

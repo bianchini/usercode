@@ -97,23 +97,35 @@ int main(int argc, const char* argv[])
   std::string outFileName( in.getParameter<std::string>  ("outFileName" ) );
   std::string pathToFile(  in.getParameter<std::string> ("pathToFile"   ) );
   int vegasPoints(  in.getParameter<int> ("vegasPoints"   ) );
+  bool verbose   (  in.getParameter<bool>("verbose") );
 
   float met(  in.getParameter<double> ("met") );
 
+
+  float pertW1(    in.getParameter<double> ("pertW1") );
+  float pertW2(    in.getParameter<double> ("pertW2") );
+  float pertBHad(  in.getParameter<double> ("pertBHad") );
+  float pertBLep(  in.getParameter<double> ("pertBLep") );
+  float enlargeE1(  in.getParameter<double>  ("enlargeE1") );
+  float enlargeEh1(  in.getParameter<double> ("enlargeEh1") );
+  float enlargePt(  in.getParameter<double>  ("enlargePt") );
+
+
   int par = 4;
-  MEIntegratorNew* meIntegrator = new MEIntegratorNew( pathToFile , par, 1);
-  meIntegrator->debug();
+  MEIntegratorNew* meIntegrator = new MEIntegratorNew( pathToFile , par, int(verbose));
+  //meIntegrator->debug();
 
   vector<TLorentzVector> jets;
   TLorentzVector jet1,jet2,jet3,jet4,jet5,jet6,jet7,jet8;
-  jet1.SetPtEtaPhiM(100,   0.0,   0.0,    0. );    // lep
-  jet2.SetPtEtaPhiM(met,   0.0,   2.0,    0. );    // MET
-  jet3.SetPtEtaPhiM(70,    1.0,  -1.0,   10  );    // b from top lep
-  jet4.SetPtEtaPhiM(100,   -1.0,  -2.0,   10  );    // j1 from W
-  jet5.SetPtEtaPhiM(150,   -0.5,  -1.0,   10  );    // j2 from W
-  jet6.SetPtEtaPhiM(49.2, -2.14,  0.421,  0.1);    // b from top hadr
-  jet7.SetPtEtaPhiM(170.8, -3.16, -0.967,  0.1);    // b1 from H
-  jet8.SetPtEtaPhiM(54.7, -3.4,   2.96,     5);    // b2 from H
+
+  jet1.SetPtEtaPhiM(19.8454,            0.822914,-2.3529,0.10566);     // lep
+  jet2.SetPtEtaPhiM(91.934,             0.0,-0.0161266,-2.33602e-06);  // MET
+  jet3.SetPtEtaPhiM(175.197 * pertBLep, 0.0936224,-0.969521,4.8);      // b from top lep
+  jet4.SetPtEtaPhiM(122.914 * pertW1,   1.17562,2.17839,0.33);         // j1 from W
+  jet5.SetPtEtaPhiM(34.9939 * pertW2,   1.06994,0.879248,0.33);        // j2 from W
+  jet6.SetPtEtaPhiM(95.5899 * pertBHad, 0.829954,3.10669,4.8);         // b from top hadr
+  jet7.SetPtEtaPhiM(32.805,             0.678347,-0.0951163,4.8);      // b1 from H
+  jet8.SetPtEtaPhiM(75.4309,            2.08021,2.75503,4.8);          // b2 from H
 
   jets.push_back( jet1 );  
   jets.push_back( jet2 );  
@@ -124,36 +136,58 @@ int main(int argc, const char* argv[])
   jets.push_back( jet7 );
   jets.push_back( jet8 );
 
-  vector<float> bTagging;
-  bTagging.push_back( 0.0 ) ; 
-  bTagging.push_back( 0.0 ) ; 
-  bTagging.push_back( 0.0 ) ; 
-  bTagging.push_back( 0.0 ) ; 
-  bTagging.push_back( 0.0 ) ; 
-  bTagging.push_back( 0.0 ) ; 
-  bTagging.push_back( 0.0 ) ; 
-  bTagging.push_back( 0.0 ) ; 
+  /////////////////////////////////////////////////////////////////////////////
 
-
-  double xL[4] = {  0., -1., -TMath::Pi(),   0.};
-  double xU[4] = {500.,  1.,  TMath::Pi(), 500.};
-
-  ROOT::Math::GSLMCIntegrator ig2("vegas", 1.e-12, 1.e-5, vegasPoints);
-  ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par); 
   meIntegrator->SetPar(par);
   meIntegrator->setJets(&jets);
-  meIntegrator->setBtag(&bTagging);
+
   meIntegrator->createMash();
-  meIntegrator->setMass(125);
+  meIntegrator->setMass( met );
   meIntegrator->setSumEt(1500.);
   meIntegrator->initVersors(1);
   meIntegrator->initTF();
+  meIntegrator->setPtPhiParam(0);
+  
+  /////////////////////////////////////////////////////////////////////////////
 
+  double E1low   = (meIntegrator->getCachedTF("tfWjet1"))->GetXaxis()->GetXmin() * (1-enlargeE1);
+  double E1high  = (meIntegrator->getCachedTF("tfWjet1"))->GetXaxis()->GetXmax() * (1+enlargeE1);
+
+  double Ptlow   = (meIntegrator->getCachedTF("tfMetPt"))->GetXaxis()->GetXmin() * (1-enlargePt);
+  double Pthigh  = (meIntegrator->getCachedTF("tfMetPt"))->GetXaxis()->GetXmax() * (1+enlargePt);
+
+  Ptlow  = -1.;
+  Pthigh = +1.;
+
+  double Philow   = -(meIntegrator->getCachedTF("tfMetPhi"))->GetYaxis()->GetXmax();
+  double Phihigh  =  (meIntegrator->getCachedTF("tfMetPhi"))->GetYaxis()->GetXmax();
+
+  double Eh1low   = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmin() * (1-enlargeEh1);
+  double Eh1high  = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmax() * (1+enlargeEh1);
+
+  /////////////////////////////////////////////////////////////////////////////
+
+  cout << "E1  : ["  << E1low  << "," << E1high  << "]" << endl;
+  cout << "Pt  : ["  << Ptlow  << "," << Pthigh  << "]" << endl;
+  cout << "Phi : ["  << Philow << "," << Phihigh << "]" << endl;
+  cout << "Eh1 : ["  << Eh1low << "," << Eh1high << "]" << endl;
+
+  /////////////////////////////////////////////////////////////////////////////
+
+  double xL[4] = {  E1low,  Ptlow,   Philow,   Eh1low};
+  double xU[4] = {  E1high, Pthigh , Phihigh,  Eh1high};
+
+  ROOT::Math::GSLMCIntegrator ig2("vegas", 1.e-12, 1.e-5, vegasPoints);
+  ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par); 
   ig2.SetFunction(toIntegrate);
 
+  double mH[7] = {100, 110, 120, 125, 130, 140, 150};
 
-  //double p = ig2.Integral(xL, xU);
-  //cout << "Prob  = " << p << endl;
+  for(int m = 0; m<7 ; m++){
+    meIntegrator->setMass( mH[m] );
+    double p = ig2.Integral(xL, xU);
+    cout << "Mass " << mH[m] << " => prob  = " << p << endl;
+  }
 
   fout = new TFile(outFileName.c_str(),"RECREATE");
   fout->cd();
