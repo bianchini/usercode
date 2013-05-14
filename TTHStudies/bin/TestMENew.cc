@@ -119,7 +119,7 @@ int main(int argc, const char* argv[])
   TLorentzVector jet1,jet2,jet3,jet4,jet5,jet6,jet7,jet8;
 
   jet1.SetPtEtaPhiM(19.8454,            0.822914,-2.3529,0.10566);     // lep
-  jet2.SetPtEtaPhiM(91.934,             0.0,-0.0161266,-2.33602e-06);  // MET
+  jet2.SetPtEtaPhiM(91.934,             0.0,-0.0161266,   0.);         // MET    0.543608 <=> cosTheta = 0.495714;
   jet3.SetPtEtaPhiM(175.197 * pertBLep, 0.0936224,-0.969521,4.8);      // b from top lep
   jet4.SetPtEtaPhiM(122.914 * pertW1,   1.17562,2.17839,0.33);         // j1 from W
   jet5.SetPtEtaPhiM(34.9939 * pertW2,   1.06994,0.879248,0.33);        // j2 from W
@@ -159,8 +159,14 @@ int main(int argc, const char* argv[])
   Ptlow  = -1.;
   Pthigh = +1.;
 
+  //Ptlow = 0.48;
+  //Pthigh = 0.50;
+  
   double Philow   = -(meIntegrator->getCachedTF("tfMetPhi"))->GetYaxis()->GetXmax();
   double Phihigh  =  (meIntegrator->getCachedTF("tfMetPhi"))->GetYaxis()->GetXmax();
+
+  //Philow  =  -0.01;
+  //Phihigh =  +0.01;
 
   double Eh1low   = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmin() * (1-enlargeEh1);
   double Eh1high  = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmax() * (1+enlargeEh1);
