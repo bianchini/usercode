@@ -19,6 +19,7 @@
 #include "TObjArray.h"
 #include "TVector3.h"
 #include "TStyle.h"
+#include "TDirectory.h"
 #include "TGraph.h"
 #include "TKey.h"
 #include "TMultiGraph.h"
@@ -60,9 +61,11 @@ class MEIntegratorNew {
   void   cachePdf( string , string , string, int,    int );
   void   cachePdf( string , string , string, string, int, int, int );
   void   cachePdf( string , string , string, string, TArrayF, TArrayF, TArrayF);
-  void   setMass(double);
-  void   setSumEt(double);
+  void   setMass   (double);
+  void   setTopMass(double, double);
+  void   setSumEt  (double);
   void   setPtPhiParam (int);
+  //void   setFile(TFile*);
   void   resetEvaluation();
 
   TH1*   getCachedPdf( string ) const;
@@ -73,7 +76,9 @@ class MEIntegratorNew {
 
   void   initVersors(int);
   void   initTF() ;
+  void   deleteTF();
   void   adaptRange(TF1*, float&, float&, float, float);
+  void   adaptRange(TH1*, float&, float&, float, float);
   void   createTFjet(string, float , float, string , float, float);
   void   createTFmet(string , float , float, float, float);
 
@@ -94,6 +99,7 @@ class MEIntegratorNew {
 
  private:
   
+  //TFile* out_;
   RooWorkspace *w_;
   std::map<string, double> jetParam_; 
   std::map<string, TH1F*> variables1D_;
@@ -156,6 +162,7 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   sumEt_   = 1500.; //dummy
   usePtPhiParam_ = 0;
   evaluation_    = 0;
+  //out_           = 0;
 
   jets_.clear();
   bTagging_.clear();
@@ -172,8 +179,8 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   M_      =  125.;
   dMh2_   =  (M_*M_-2*Mb_*Mb_)*0.5;
 
-  mash_        = new TH2F("mash","",500,-2.5,2.5, 628, -TMath::Pi(), TMath::Pi());
-  debugHisto1_ = new TH1F("debugHisto1","w1 pt", 100,0,400);
+  mash_        = 0;// new TH2F("mash","",500,-2.5,2.5, 628, -TMath::Pi(), TMath::Pi());
+  debugHisto1_ = 0;//new TH1F("debugHisto1","w1 pt", 100,0,400);
 
   TFile* file = TFile::Open(fileName.c_str(),"READ");
   w_ = (RooWorkspace*)file->Get("transferFuntions");
@@ -248,16 +255,28 @@ MEIntegratorNew::~MEIntegratorNew(){
     if(it->second) 
       delete (it->second);
   }
-  for(std::map<string, TH1*>::iterator it = transferFunctions_.begin(); it!=transferFunctions_.end(); it++){
-    if(it->second) 
-      delete (it->second);
-  }
+  //for(std::map<string, TH1*>::iterator it = transferFunctions_.begin(); it!=transferFunctions_.end(); it++){
+  //if(it->second) 
+  //  delete (it->second);
+  //}
+  //delete mash_; 
+  //delete debugHisto1_;
 
-  delete mash_; 
-  delete debugHisto1_;
+  //out_->Close();
+  //delete out_;
 
   cout << "End destructor" << endl;
 
+}
+
+void MEIntegratorNew::deleteTF(){
+  for(std::map<string, TH1*>::iterator it = transferFunctions_.begin(); it!=transferFunctions_.end(); it++){
+    if(it->second){
+      //cout << "Deleted " << string((it->second)->GetName()) << endl;
+      delete (it->second);
+    }
+  }
+  transferFunctions_.clear();
 }
 
 void MEIntegratorNew::initVersors(int withJetList){
@@ -309,15 +328,37 @@ void MEIntegratorNew::adaptRange(TF1* f, float& xLow, float& xHigh, float quanti
   }
 }
 
+void MEIntegratorNew::adaptRange(TH1* f, float& xLow, float& xHigh, float quantile, float margin){
+
+  double probSum[2] = {quantile, 1-quantile};
+  double q[2];
+  int n = f->GetQuantiles(2,q,probSum);
+
+  if(margin<=1){
+    xLow  = q[0]*(1-margin);
+    xHigh = q[1]*(1+margin);
+  }
+  else{
+    xLow  = q[0];
+    xHigh = q[1];
+  }
+}
+
 
 void MEIntegratorNew::createTFjet(string tfName, float eta, float pt, string flavor, float quantile, float margin){
 
-  float xLow, xHigh;
+  float xLow  =    0.;
+  float xHigh = 1000.;
   float gevStep = 2.;
 
   string bin = "Bin0";
   if(  TMath::Abs( eta )<1.0 ) bin = "Bin0";
   else bin = "Bin1";
+
+  if(gDirectory->FindObject("tf")!=0){
+    gDirectory->Remove(gDirectory->FindObject("tf"));
+  }
+  
   
   TF1* tf = new TF1("tf",Form("TMath::Gaus( x, [0] , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", //(TMath::Erf(%f*x+%f)+%f) *
 			      //(jetParam_.find("param0AccLight"+bin))->second, 
@@ -326,9 +367,25 @@ void MEIntegratorNew::createTFjet(string tfName, float eta, float pt, string fla
 			      (jetParam_.find("param0resol"+flavor+bin))->second*(jetParam_.find("param0resol"+flavor+bin))->second,
 			      (jetParam_.find("param1resol"+flavor+bin))->second*(jetParam_.find("param1resol"+flavor+bin))->second
 			      ),1,1000);
-  tf->SetNpx(1000);
+  //tf->SetNpx(100);
   tf->SetParameter(0, pt );
   adaptRange(tf, xLow, xHigh, quantile, margin);
+  
+  //if(gDirectory->FindObject("htmp")!=0)
+  //gDirectory->Remove(gDirectory->FindObject("htmp"));
+  //TH1F* htmp = new TH1F("htmp", "", int(3*pt)/gevStep , 0, 3*pt);
+  //for( int i = 1; i <= htmp->GetNbinsX(); i++){
+  //float binC = htmp->GetBinCenter(i);
+  //htmp->SetBinContent(i, tf->Eval( pt ) );
+  //}
+  //htmp->ComputeIntegral();
+  //adaptRange(htmp, xLow, xHigh, quantile, margin);
+  //delete  htmp;
+
+
+  if(gDirectory->FindObject(("htf"+tfName).c_str())!=0){
+    gDirectory->Remove(gDirectory->FindObject(("htf"+tfName).c_str()));
+  }
 
   TH1F* htf_ = new TH1F(("htf"+tfName).c_str(), "", int((xHigh-xLow)/gevStep), xLow, xHigh);
   for( int i = 1; i <= htf_->GetNbinsX(); i++){
@@ -366,6 +423,7 @@ void MEIntegratorNew::createTFjet(string tfName, float eta, float pt, string fla
 
 void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quantile, float margin){
 
+
   float xLowEt, xHighEt, xLowPhi, xHighPhi;
   float gevStep = 4.;
   float etaStep = 0.04;
@@ -378,15 +436,25 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
   else 
     bin =  "Bin2";
 
+  if(gDirectory->FindObject(("tf"+tfName+"Pt").c_str())!=0){
+    gDirectory->Remove(gDirectory->FindObject(("tf"+tfName+"Pt").c_str()));
+  }
+  
+  double param0EtMean  = (jetParam_.find("param0EtMean"+bin))->second;
+  double param1EtMean  = (jetParam_.find("param1EtMean"+bin))->second;
+  double param2EtMean  = (jetParam_.find("param2EtMean"+bin))->second;
+  double param3EtMean  = (jetParam_.find("param3EtMean"+bin))->second;
+  double param0EtWidth = (jetParam_.find("param0EtWidth"+bin))->second*(jetParam_.find("param0EtWidth"+bin))->second;
+  double param1EtWidth = (jetParam_.find("param1EtWidth"+bin))->second*(jetParam_.find("param1EtWidth"+bin))->second;
+
   TF1* tfMetPt   = new TF1(("tf"+tfName+"Pt").c_str(), Form("TMath::Gaus(x, (%f + %f*TMath::Exp(%f*[0]+%f) ),  [0]*TMath::Sqrt(%f/[0] + %f/[0]/[0])  , 1)",
-					   (jetParam_.find("param0EtMean"+bin))->second, (jetParam_.find("param1EtMean"+bin))->second, (jetParam_.find("param2EtMean"+bin))->second,(jetParam_.find("param3EtMean"+bin))->second,
-					   (jetParam_.find("param0EtWidth"+bin))->second*(jetParam_.find("param0EtWidth"+bin))->second,(jetParam_.find("param1EtWidth"+bin))->second*(jetParam_.find("param1EtWidth"+bin))->second
-					   ),   // x = reco - gen 
-			   -1000.,1000.
-			   );
-  tfMetPt->SetNpx(2000);
+							    param0EtMean,param1EtMean,param2EtMean,param3EtMean,
+							    param0EtWidth,param1EtWidth
+							    ), -1000.,1000.); // x = reco - gen 
+  //tfMetPt->SetNpx(2000);
   tfMetPt->SetParameter(0, pt );
   adaptRange(tfMetPt, xLowEt, xHighEt, quantile, margin);
+
   if(xLowEt>0){
     xLowEt  += pt;
     xHighEt += pt;
@@ -396,6 +464,9 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
     xHighEt += pt;
   }
 
+  if(gDirectory->FindObject(("htf"+tfName+"Pt").c_str())!=0){
+    gDirectory->Remove(gDirectory->FindObject(("htf"+tfName+"Pt").c_str()));
+  }
 
   TH1F* htfMetPt_ = new TH1F(("htf"+tfName+"Pt").c_str(), "", int((xHighEt-xLowEt)/gevStep), xLowEt, xHighEt);
   for( int i = 1; i <= htfMetPt_->GetNbinsX(); i++){
@@ -414,18 +485,28 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
   tfMetPt_ = *htfMetPt_;
   delete tfMetPt;
 
+  if(gDirectory->FindObject(("tf"+tfName+"Phi").c_str())!=0){
+    gDirectory->Remove(gDirectory->FindObject(("tf"+tfName+"Phi").c_str()));
+  }
 
-  // check norm...
-  TF1* tfMetPhi   = new TF1(("tf"+tfName+"Phi").c_str(),Form("(2./(TMath::Erf(TMath::Pi()/ (%f/[0] + %f/[0]/[0]) )))*TMath::Gaus(x, 0.0, %f/[0] + %f/[0]/[0] ,1)", 
-							     (jetParam_.find("param0PhiWidth"+bin))->second,(jetParam_.find("param1PhiWidth"+bin))->second,
-							     (jetParam_.find("param0PhiWidth"+bin))->second,(jetParam_.find("param1PhiWidth"+bin))->second
-							     ),   // x = |reco-gen| 
-			    0,TMath::Pi()); 
 
-  tfMetPhi->SetNpx(1000);
+  double param0PhiWidth = (jetParam_.find("param0PhiWidth"+bin))->second;
+  double param1PhiWidth = (jetParam_.find("param1PhiWidth"+bin))->second;
+
+  TF1* tfMetPhi   = new TF1(("tf"+tfName+"Phi").c_str(),Form("(2./(TMath::Erf(TMath::Pi()/ (%f/[0] + %f/[0]/[0]) )))*TMath::Gaus(x, 0.0, %f/[0] + %f/[0]/[0] ,1)",
+							     param0PhiWidth,param1PhiWidth, param0PhiWidth,param1PhiWidth
+							     ), 0., TMath::Pi());  // x = |reco-gen| 
+
+  //tfMetPhi->SetNpx(1000);
   tfMetPhi->SetParameter(0, pt );
   adaptRange(tfMetPhi, xLowPhi, xHighPhi, quantile, margin );
+
   if((TMath::Pi() - xHighPhi) < 0.2) xHighPhi =  TMath::Pi();
+
+
+  if(gDirectory->FindObject(("htf"+tfName+"Phi").c_str())!=0){
+    gDirectory->Remove(gDirectory->FindObject(("htf"+tfName+"Phi").c_str()));
+  }
 
  
   TH2F* htfMetPhi_ = new TH2F(("htf"+tfName+"Phi").c_str(), "", int((xHighEt-xLowEt)/gevStep), xLowEt, xHighEt, int((xHighPhi-xLowPhi)/etaStep), xLowPhi, xHighPhi);
@@ -458,7 +539,7 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
 
  
 void MEIntegratorNew::initTF(){
-  
+
   createTFjet("Wjet1",  eW1Had_.Eta(), jets_[3].E(), "Light", 0.025, 0.30);
   createTFjet("Wjet2",  eW2Had_.Eta(), jets_[4].E(), "Light", 0.025, 0.30);
   createTFjet("bHad",   eBHad_.Eta(),  jets_[5].E(), "Heavy", 0.025, 0.30);
@@ -470,11 +551,23 @@ void MEIntegratorNew::initTF(){
 
 }
 
-
+//void MEIntegratorNew::setFile(TFile* f){
+//out_ = f;
+//}
 
 void MEIntegratorNew::setMass(double mass){
   M_    = mass;
   dMh2_ = (M_*M_-2*Mb_*Mb_)*0.5; 
+}
+
+void MEIntegratorNew::setTopMass(double massTop, double massW){
+  Mtop_    = massTop;
+  Mw_      = massW;
+  pStar_  =  TMath::Sqrt( (Mtop_*Mtop_-(Mw_+Mb_)*(Mw_+Mb_) )*( Mtop_*Mtop_-(Mw_-Mb_)*(Mw_-Mb_) ) )/2./Mtop_;
+  EbStar_ =  (Mtop_*Mtop_ - Mw_*Mw_ + Mb_*Mb_)/2./Mtop_;
+  EWStar_ =  (Mtop_*Mtop_ + Mw_*Mw_ - Mb_*Mb_)/2./Mtop_;
+  EuStar_ =  Mw_/2;
+  dM2_    =  (Mtop_*Mtop_-Mb_*Mb_-Mw_*Mw_)*0.5;
 }
 
 void MEIntegratorNew::setSumEt(double sumEt){
@@ -933,6 +1026,8 @@ void MEIntegratorNew::setBtag( std::vector<float>* bTagging ){
 
 void   MEIntegratorNew::createMash(){
 
+  if(!mash_) return;
+
   mash_->Reset();
 
   for(unsigned int j = 0; j < jets_.size() ; j++){
@@ -1289,14 +1384,14 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
   double Q        = tot.M();
 
   double MEpart = 
-    //topHadDensity(cos1Had,cos2Had) * 
+    topHadDensity(cos1Had,cos2Had) * 
     topLepDensity(cos1Lep,cos2Lep) //* 
     //higgsDensity(cos1Higgs) *
     //tthDensity( Q , m12, cos1Star, cos3)
     ;
 
   double Jpart = 
-    //topHadJakobi( Eq1, Eq2, EbHad) //* 
+    topHadJakobi( Eq1, Eq2, EbHad) * 
     topLepJakobi(Enu, Elep, EbLep, &WLep ) //* 
     //higgsJakobi( Eh1, Eh2 ) 
     ;
@@ -1323,10 +1418,10 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
 
 
   double TFpart = 
-    //tf1 *
-    //tf2 *
-    //tf3 *
-    tf4//*
+    tf1 *
+    tf2 *
+    tf3 *
+    tf4 //*
     //tf5*
     //tf6
     ;
@@ -1338,8 +1433,8 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
 
 
   prob *= MEpart;
-  //prob *= Jpart;
-  //prob *= METpart;
+  prob *= Jpart;
+  prob *= METpart;
   prob *= TFpart;
 
   ////////////////////////
