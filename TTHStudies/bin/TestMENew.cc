@@ -118,6 +118,21 @@ typedef struct
 } genParticleInfo;
 
 
+//namespace LHAPDF {
+//    void   initPDFSet(int nset, const std::string& filename, int member=0);
+//    int    numberPDF  (int nset);
+//    void   usePDFMember(int nset, int member);
+//    double xfx(int nset, double x, double Q, int fl);
+//    double getXmin(int nset, int member);
+//    double getXmax(int nset, int member);
+//    double getQ2min(int nset, int member);
+//    double getQ2max(int nset, int member);
+//    void   extrapolate(bool extrapolate=true);
+//}
+
+
+
+
 int main(int argc, const char* argv[])
 {
 
@@ -135,11 +150,11 @@ int main(int argc, const char* argv[])
 
   const edm::VParameterSet& samples = in.getParameter<edm::VParameterSet>("samples") ;
   std::string outFileName  ( in.getParameter<std::string>  ("outFileName" ) );
-  std::string pathToFile   ( in.getParameter<std::string>("pathToFile" ) );
-  std::string ordering     ( in.getParameter<std::string>("ordering" ) );
-  std::string pathToTF     ( in.getParameter<std::string> ("pathToTF"   ) );
-  int vegasPoints          ( in.getParameter<int> ("vegasPoints"   ) );
-  bool verbose             ( in.getParameter<bool>("verbose") );
+  std::string pathToFile   ( in.getParameter<std::string>  ("pathToFile" ) );
+  std::string ordering     ( in.getParameter<std::string>  ("ordering" ) );
+  std::string pathToTF     ( in.getParameter<std::string>  ("pathToTF"   ) );
+  int vegasPoints          ( in.getParameter<int>   ("vegasPoints"   ) );
+  bool verbose             ( in.getParameter<bool>  ("verbose") );
   double lumi              ( in.getParameter<double>("lumi") );
 
   float met       ( in.getParameter<double> ("met") );
@@ -147,12 +162,14 @@ int main(int argc, const char* argv[])
   float pertW2    ( in.getParameter<double> ("pertW2") );
   float pertBHad  ( in.getParameter<double> ("pertBHad") );
   float pertBLep  ( in.getParameter<double> ("pertBLep") );
-  float enlargeE1 ( in.getParameter<double>  ("enlargeE1") );
+  float enlargeE1 ( in.getParameter<double> ("enlargeE1") );
   float enlargeEh1( in.getParameter<double> ("enlargeEh1") );
-  float enlargePt ( in.getParameter<double>  ("enlargePt") );
+  float enlargePt ( in.getParameter<double> ("enlargePt") );
   vector<int> evLimits( in.getParameter<vector<int> >  ("evLimits") );
   int evLow = evLimits[0];
   int evHigh = evLimits[1];
+
+
 
   //TFile* fout = 0;
   //fout = new TFile(outFileName.c_str(),"RECREATE");
@@ -165,16 +182,40 @@ int main(int argc, const char* argv[])
   int printP4 = 0;
   int par = 4;
   MEIntegratorNew* meIntegrator = new MEIntegratorNew( pathToTF , par, int(verbose));
-  //meIntegrator->setFile(fout);
+
+
+  //////////////////////
+  TH1F*  hPdfLumi     = new TH1F("hPdfLumi","",42, 425 , 2525.);
+
+  ROOT::Math::GSLMCIntegrator ig2Pdf("vegas", 1.e-12, 1.e-5, 1000);
+  ROOT::Math::Functor toIntegratePdf(meIntegrator, &MEIntegratorNew::EvalPdf, 1); 
+  ig2Pdf.SetFunction(toIntegratePdf);
+
+  //double xLPdf[1] = {0.0000001};
+  //double xUPdf[1] = {1.0};
+
+  for(int q = 0; q < 42; q++){
+    double qValue = 450 + q*50; 
+    meIntegrator->setQ(qValue);
+
+    double xLPdf[1] = {qValue*qValue/8000./8000.};
+    double xUPdf[1] = {1.0};
+
+    double pPdf = ig2Pdf.Integral(xLPdf, xUPdf);
+    cout << pPdf << endl;
+    hPdfLumi->SetBinContent(hPdfLumi->FindBin(qValue), pPdf);
+  }
+  //////////////////////
+
 
   ROOT::Math::GSLMCIntegrator ig2("vegas", 1.e-12, 1.e-5, vegasPoints);
   ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par); 
   ig2.SetFunction(toIntegrate);
   
-  const int nMassPoints = 21;
-  double mH[nMassPoints] = {140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240};
-  TH1F*  hMass     = new TH1F("hMass","",21, 137.5, 242.5);
-  TH1F*  hBestMass = new TH1F("hBestMass","",100, 50, 250);
+  const int nMassPoints = 29;
+  double mH[nMassPoints] = {100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240};
+  TH1F*  hMass     = new TH1F("hMass","",29, 97.5, 242.5);
+  TH1F*  hBestMass = new TH1F("hBestMass","",40, 50, 250);
 
   ////////////////////////////////////////////////////////
 
@@ -376,6 +417,7 @@ int main(int argc, const char* argv[])
       meIntegrator->setJets(&jets);
       if(printP4) cout << "Setup H mass..." << endl;
       meIntegrator->setMass( met );
+      meIntegrator->setTopMass( 174.3 , 80.19);
       meIntegrator->setSumEt( METtype1p2corr.sumet );
       if(printP4) cout << "Setup versors..." << endl;
       meIntegrator->initVersors(1);
@@ -397,8 +439,8 @@ int main(int argc, const char* argv[])
       double Philow   = -(meIntegrator->getCachedTF("tfMetPhi"))->GetYaxis()->GetXmax();
       double Phihigh  =  (meIntegrator->getCachedTF("tfMetPhi"))->GetYaxis()->GetXmax();
             
-      //Philow  = -0.04;
-      //Phihigh = +0.04;
+      //Philow  = -TMath::Pi();
+      //Phihigh = +TMath::Pi();
 
       double Eh1low   = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmin() * (1-enlargeEh1);
       double Eh1high  = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmax() * (1+enlargeEh1);
@@ -419,8 +461,8 @@ int main(int argc, const char* argv[])
       
       hMass->Reset();
       for(int m = 0; m < nMassPoints ; m++){
-	//meIntegrator->setMass( mH[m] );
-	meIntegrator->setTopMass( mH[m], 80.19);
+	meIntegrator->setMass( mH[m] );
+	//meIntegrator->setTopMass( mH[m], 80.19);
 	double p = ig2.Integral(xL, xU);
 	 if(printP4) cout << "Mass " << mH[m] << " => prob  = " << p << endl;
 	hMass->Fill(mH[m], p);
@@ -461,6 +503,7 @@ int main(int argc, const char* argv[])
 
   TFile* fout_tmp = TFile::Open(outFileName.c_str(),"UPDATE");
   hBestMass->Write("hBestMass",TObject::kOverwrite);
+  hPdfLumi->Write("hPdfLumi",TObject::kOverwrite);
   fout_tmp->Close();
 
   //cout << "Closing file..." << endl;

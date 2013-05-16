@@ -36,10 +36,23 @@
 #include <map>
 #include <limits>  
 
+
 #define DEBUG 0
 
 using namespace RooFit;
 using namespace std;
+
+namespace LHAPDF {
+      void   initPDFSet(int nset, const std::string& filename, int member=0);
+      int    numberPDF  (int nset);
+      void   usePDFMember(int nset, int member);
+      double xfx(int nset, double x, double Q, int fl);
+      double getXmin(int nset, int member);
+      double getXmax(int nset, int member);
+      double getQ2min(int nset, int member);
+      double getQ2max(int nset, int member);
+      void   extrapolate(bool extrapolate=true);
+}
 
 
 class MEIntegratorNew {
@@ -50,6 +63,8 @@ class MEIntegratorNew {
   ~MEIntegratorNew();
 
   double Eval(const double* ) const;  
+  double EvalPdf(const double* ) const;  
+
   void   SetPar(int);
   void   setJets( vector<TLorentzVector>* );
   void   setBtag( std::vector<float>* );
@@ -62,6 +77,7 @@ class MEIntegratorNew {
   void   cachePdf( string , string , string, string, int, int, int );
   void   cachePdf( string , string , string, string, TArrayF, TArrayF, TArrayF);
   void   setMass   (double);
+  void   setQ      (double);
   void   setTopMass(double, double);
   void   setSumEt  (double);
   void   setPtPhiParam (int);
@@ -132,6 +148,7 @@ class MEIntegratorNew {
   int usePtPhiParam_;
   int evaluation_;
   float M_;
+  float Q_;
   float pStar_;
   float EbStar_;
   float EWStar_;
@@ -157,6 +174,9 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
 
   cout << "Begin constructor" << endl;
 
+  LHAPDF::initPDFSet(0,"cteq65.LHgrid");
+
+
   par_     = param;
   verbose_ = verbose;
   sumEt_   = 1500.; //dummy
@@ -177,6 +197,7 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   EuStar_ =  Mw_/2;
   dM2_    =  (Mtop_*Mtop_-Mb_*Mb_-Mw_*Mw_)*0.5;
   M_      =  125.;
+  Q_      =  500;
   dMh2_   =  (M_*M_-2*Mb_*Mb_)*0.5;
 
   mash_        = 0;// new TH2F("mash","",500,-2.5,2.5, 628, -TMath::Pi(), TMath::Pi());
@@ -359,30 +380,26 @@ void MEIntegratorNew::createTFjet(string tfName, float eta, float pt, string fla
     gDirectory->Remove(gDirectory->FindObject("tf"));
   }
   
+  double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
+  double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+  double param0resp  = (jetParam_.find("param0resp"+flavor+bin))->second;
+  double param1resp  = (jetParam_.find("param1resp"+flavor+bin))->second;
+
+  double trialWidth  = pt*TMath::Sqrt( param0resol*param0resol/pt + param1resol*param1resol/pt/pt);
+
+  TF1* tf = new TF1("tf",Form("TMath::Gaus( x, %f*[0]+%f , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", 
+			      param0resp, param1resp,
+			      param0resol*param0resol, param1resol*param1resol ),1, (pt+5*trialWidth));
   
-  TF1* tf = new TF1("tf",Form("TMath::Gaus( x, [0] , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", //(TMath::Erf(%f*x+%f)+%f) *
-			      //(jetParam_.find("param0AccLight"+bin))->second, 
-			      //(jetParam_.find("param1AccLight"+bin))->second,
-			      //(jetParam_.find("param2AccLight"+bin))->second,
-			      (jetParam_.find("param0resol"+flavor+bin))->second*(jetParam_.find("param0resol"+flavor+bin))->second,
-			      (jetParam_.find("param1resol"+flavor+bin))->second*(jetParam_.find("param1resol"+flavor+bin))->second
-			      ),1,1000);
+  //TF1* tf = new TF1("tf", "TMath::Gaus( x, [0] , 10 , 1)",1,1000); //toy
+
+
+
   //tf->SetNpx(100);
   tf->SetParameter(0, pt );
   adaptRange(tf, xLow, xHigh, quantile, margin);
+  if(xLow<0) xLow = 0.0;
   
-  //if(gDirectory->FindObject("htmp")!=0)
-  //gDirectory->Remove(gDirectory->FindObject("htmp"));
-  //TH1F* htmp = new TH1F("htmp", "", int(3*pt)/gevStep , 0, 3*pt);
-  //for( int i = 1; i <= htmp->GetNbinsX(); i++){
-  //float binC = htmp->GetBinCenter(i);
-  //htmp->SetBinContent(i, tf->Eval( pt ) );
-  //}
-  //htmp->ComputeIntegral();
-  //adaptRange(htmp, xLow, xHigh, quantile, margin);
-  //delete  htmp;
-
-
   if(gDirectory->FindObject(("htf"+tfName).c_str())!=0){
     gDirectory->Remove(gDirectory->FindObject(("htf"+tfName).c_str()));
   }
@@ -560,6 +577,10 @@ void MEIntegratorNew::setMass(double mass){
   dMh2_ = (M_*M_-2*Mb_*Mb_)*0.5; 
 }
 
+void MEIntegratorNew::setQ(double Q){
+  Q_    = Q;
+}
+
 void MEIntegratorNew::setTopMass(double massTop, double massW){
   Mtop_    = massTop;
   Mw_      = massW;
@@ -582,13 +603,9 @@ int MEIntegratorNew::topHadEnergies(double E1, double& E2, double& E3, double& c
   
   int nSol = 0;
 
-  TVector3 e1 = eW1Had_;
-  TVector3 e2 = eW2Had_;
-  TVector3 e3 = eBHad_;
-
-  double a12 = e1.Angle(e2);
-  double a13 = e1.Angle(e3);
-  double a23 = e2.Angle(e3);
+  double a12 = eW1Had_.Angle(eW2Had_);
+  double a13 = eW1Had_.Angle(eBHad_);
+  double a23 = eW2Had_.Angle(eBHad_);
   
   E2 = Mw_*Mw_/E1/(4*TMath::Sin(a12/2.)*TMath::Sin(a12/2.));
 
@@ -643,9 +660,9 @@ int MEIntegratorNew::topHadEnergies(double E1, double& E2, double& E3, double& c
     return nSol;
   }
 
-  TLorentzVector w1( (e1.Unit())*E1,   E1);
-  TLorentzVector w2( (e2.Unit())*E2,   E2);
-  TLorentzVector blv((e3.Unit())*(TMath::Sqrt(E3*E3 - Mb_*Mb_)), E3);
+  TLorentzVector w1 ( eW1Had_*E1,   E1);
+  TLorentzVector w2 ( eW2Had_*E2,   E2);
+  TLorentzVector blv( eBHad_*(TMath::Sqrt(E3*E3 - Mb_*Mb_)), E3);
 
 
   TVector3 boost = (w1+w2+blv).BoostVector();
@@ -815,16 +832,15 @@ int MEIntegratorNew::topLepEnergies(double nuPhi, double nuTheta, double& Enu, d
   int nSol = 0;
 
   double Elep =  jets_[0].E();
-  TVector3 e1 =  eLep_;
-  TVector3 e2 =  eBLep_;
+
   TVector3 e3(0.,0.,1.); // neutrino
   e3.SetTheta( TMath::ACos( nuTheta ) ); 
   e3.SetPhi  ( nuPhi);   
   e3.SetMag  ( 1.);  
 
-  double a12 = e1.Angle(e2); // lep - b
-  double a13 = e1.Angle(e3); // lep - nu
-  double a23 = e2.Angle(e3); // b   - nu
+  double a12 = eLep_.Angle(eBLep_); // lep - b
+  double a13 = eLep_.Angle(e3);     // lep - nu
+  double a23 = eBLep_.Angle(e3);    // b   - nu
   
   Enu = Mw_*Mw_/ Elep / (4*TMath::Sin(a13/2.)*TMath::Sin(a13/2.));
   
@@ -880,8 +896,8 @@ int MEIntegratorNew::topLepEnergies(double nuPhi, double nuTheta, double& Enu, d
     return nSol;
   }
 
-  TLorentzVector wLep( (e1.Unit())*Elep,   Elep);
-  TLorentzVector blv(  (e2.Unit())*(TMath::Sqrt(Eb*Eb - Mb_*Mb_)), Eb);
+  TLorentzVector wLep( eLep_*Elep,   Elep);
+  TLorentzVector blv ( eBLep_*(TMath::Sqrt(Eb*Eb - Mb_*Mb_)), Eb);
   TLorentzVector wNu ( (e3.Unit())*Enu,    Enu);
 
 
@@ -917,10 +933,8 @@ int MEIntegratorNew::higgsEnergies(double E1, double& E2, double& cos1, int& err
     return nSol;
   }
 
-  TVector3 e1 = eB1_;
-  TVector3 e2 = eB2_;
 
-  double a12 = e1.Angle(e2); // b1 - b2
+  double a12 = eB1_.Angle(eB2_); // b1 - b2
 
   double a = E1;
   double b = TMath::Sqrt(E1*E1 - Mb_*Mb_)*TMath::Cos(a12);
@@ -973,9 +987,8 @@ int MEIntegratorNew::higgsEnergies(double E1, double& E2, double& cos1, int& err
     return nSol;
   }
   
-  TLorentzVector b1( (e1.Unit())*(TMath::Sqrt(E1*E1 - Mb_*Mb_)),   E1);
-  TLorentzVector b2( (e2.Unit())*(TMath::Sqrt(E2*E2 - Mb_*Mb_)),   E2);
-
+  TLorentzVector b1( eB1_*(TMath::Sqrt(E1*E1 - Mb_*Mb_)),   E1);
+  TLorentzVector b2( eB2_*(TMath::Sqrt(E2*E2 - Mb_*Mb_)),   E2);
 
   TVector3 boost = (b1+b2).BoostVector();
   b1.Boost( -boost );
@@ -985,6 +998,22 @@ int MEIntegratorNew::higgsEnergies(double E1, double& E2, double& cos1, int& err
 
   return nSol;
 }
+
+double MEIntegratorNew::EvalPdf(const double* x) const {
+
+  double lumiGG =  LHAPDF::xfx(0, x[0], Q_, 0) *  LHAPDF::xfx(0, Q_*Q_/x[0]/8000./8000., Q_, 0) 
+    /x[0]/x[0]/x[0]/Q_/Q_; //8000./8000.
+  double lumiQQ =  2*(LHAPDF::xfx(0, x[0], Q_, 1) *  LHAPDF::xfx(0, Q_*Q_/x[0]/8000./8000., Q_, -1) + 
+		      LHAPDF::xfx(0, x[0], Q_, 2) *  LHAPDF::xfx(0, Q_*Q_/x[0]/8000./8000., Q_, -2) + 
+		      LHAPDF::xfx(0, x[0], Q_, 3) *  LHAPDF::xfx(0, Q_*Q_/x[0]/8000./8000., Q_, -3) + 
+		      LHAPDF::xfx(0, x[0], Q_, 4) *  LHAPDF::xfx(0, Q_*Q_/x[0]/8000./8000., Q_, -4) +
+		      LHAPDF::xfx(0, x[0], Q_, 5) *  LHAPDF::xfx(0, Q_*Q_/x[0]/8000./8000., Q_, -5)
+		      ) 
+    /x[0]/x[0]/x[0]/Q_/Q_; //8000./8000.
+
+  return lumiQQ;  
+}
+
 
 
 double MEIntegratorNew::Eval(const double* x) const {
@@ -1352,13 +1381,13 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
   TLorentzVector W1Had( eW1Had_*Eq1, Eq1 );
   TLorentzVector W2Had( eW2Had_*Eq2, Eq2 );
   TLorentzVector WHad = W1Had + W2Had;
-  TLorentzVector bHad( eBHad_*TMath::Sqrt(EbHad*EbHad - Mb_*Mb_), EbHad );
+  TLorentzVector bHad ( eBHad_*TMath::Sqrt(EbHad*EbHad - Mb_*Mb_), EbHad );
   TLorentzVector topHad = WHad + bHad;
 
   TLorentzVector WLepLep = jets_[0];
   TLorentzVector WLepNu( eNu*Enu, Enu);
   TLorentzVector WLep = WLepLep + WLepNu;
-  TLorentzVector bLep( eBLep_*TMath::Sqrt(EbLep*EbLep - Mb_*Mb_), EbLep );
+  TLorentzVector bLep  ( eBLep_*TMath::Sqrt(EbLep*EbLep - Mb_*Mb_), EbLep );
   TLorentzVector topLep = WLep + bLep;
 
   TLorentzVector higgs1(  eB1_*TMath::Sqrt(Eh1*Eh1 -  Mb_*Mb_), Eh1);
@@ -1371,7 +1400,7 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
 
   topHad.Boost( -boostToCMS );
   topLep.Boost( -boostToCMS );
-  higgs.Boost(  -boostToCMS );
+  higgs.Boost ( -boostToCMS );
 
   double cos3 = TMath::Cos((higgs.Vect()).Angle( boostToCMS ));
 
@@ -1384,16 +1413,16 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
   double Q        = tot.M();
 
   double MEpart = 
-    topHadDensity(cos1Had,cos2Had) * 
-    topLepDensity(cos1Lep,cos2Lep) //* 
-    //higgsDensity(cos1Higgs) *
+    //topHadDensity(cos1Had,cos2Had) * 
+    //topLepDensity(cos1Lep,cos2Lep) //* 
+    higgsDensity(cos1Higgs) //*
     //tthDensity( Q , m12, cos1Star, cos3)
     ;
 
   double Jpart = 
-    topHadJakobi( Eq1, Eq2, EbHad) * 
-    topLepJakobi(Enu, Elep, EbLep, &WLep ) //* 
-    //higgsJakobi( Eh1, Eh2 ) 
+    //topHadJakobi( Eq1,  Eq2, EbHad) * 
+    //topLepJakobi( Enu, Elep, EbLep, &WLep ) //* 
+    higgsJakobi( Eh1, Eh2 ) 
     ;
 
   double tf1 = (W1Had.E()>=tfWjet1_.GetXaxis()->GetXmin() && W1Had.E()<=tfWjet1_.GetXaxis()->GetXmax()) ?
@@ -1418,12 +1447,12 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
 
 
   double TFpart = 
-    tf1 *
-    tf2 *
-    tf3 *
-    tf4 //*
-    //tf5*
-    //tf6
+    //tf1 *
+    //tf2 *
+    //tf3 *
+    //tf4 *
+    tf5 *
+    tf6
     ;
 
   double METpart =  
@@ -1433,8 +1462,8 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
 
 
   prob *= MEpart;
-  prob *= Jpart;
-  prob *= METpart;
+  //prob *= Jpart;
+  //prob *= METpart;
   prob *= TFpart;
 
   ////////////////////////
