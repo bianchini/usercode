@@ -75,13 +75,15 @@ class MEIntegratorNew {
   void   cachePdf( string , string , int );
   void   cachePdf( string , string , string, int,    int );
   void   cachePdf( string , string , string, string, int, int, int );
+  void   cachePdf( string , string , string, TArrayF, TArrayF);
   void   cachePdf( string , string , string, string, TArrayF, TArrayF, TArrayF);
   void   setMass   (double);
   void   setQ      (double);
   void   setTopMass(double, double);
   void   setSumEt  (double);
   void   setPtPhiParam (int);
-  //void   setFile(TFile*);
+  void   setPartonLuminosity(TH1F*);
+
   void   resetEvaluation();
 
   TH1*   getCachedPdf( string ) const;
@@ -112,6 +114,8 @@ class MEIntegratorNew {
   double topLepDensity   (double, double)  const;
   double higgsDensity    (double)  const;
   double tthDensity      (double, double, double, double)  const;
+  double meSquaredAtQ    (double, double, double, double) const;
+  double evaluateCahchedPdf (TH1*, double, double, double)  const;
 
  private:
   
@@ -162,7 +166,9 @@ class MEIntegratorNew {
   TH2F* mash_;
 
   TH1F* debugHisto1_;
+  TH1F* partonLuminosity_;
   TH1F pdfBetaWHad_, pdfGammaWHad_, pdfBetaWLep_, pdfGammaWLep_, pdfGammaTTH_;
+  TH2F pdf2D_;
   TH3F pdf3D_;
   TH1F tfWjet1_, tfWjet2_, tfbHad_, tfbLep_, tfMetPt_, tfHiggs1_, tfHiggs2_;
   TH2F tfMetPhi_;
@@ -202,6 +208,7 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
 
   mash_        = 0;// new TH2F("mash","",500,-2.5,2.5, 628, -TMath::Pi(), TMath::Pi());
   debugHisto1_ = 0;//new TH1F("debugHisto1","w1 pt", 100,0,400);
+  partonLuminosity_ = 0;
 
   TFile* file = TFile::Open(fileName.c_str(),"READ");
   w_ = (RooWorkspace*)file->Get("transferFuntions");
@@ -232,13 +239,26 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   binsMassTT[19] = 900;  binsMassTT[20] = 1000; binsMassTT[21] = 1200; binsMassTT[22] = 1400;
   binsMassTT[23] = 2000;
 
-  int nBinsGammaTT = 3;
+
+  int nBinsMassTT2 = 42;
+  TArrayF binsMassTT2(nBinsMassTT2+1);
+  cout << "Making histograms with " << nBinsMassTT2 << " bins:" << endl;
+  binsMassTT2[0] = 350;
+  for(int k = 1; k < 38; k++)
+    binsMassTT2[k] = 350 + 12.5*k;
+  binsMassTT2[38] = 900;  binsMassTT2[39] = 1000; binsMassTT2[40] = 1200; binsMassTT2[41] = 1400;
+  binsMassTT2[42] = 2000;
+
+
+  int nBinsGammaTT = 10;
   TArrayF binsGammaTT(nBinsGammaTT+1);
   cout << "Making histograms with " << nBinsGammaTT << " bins:" << endl;
-  binsGammaTT[0] = -1.01;
-  binsGammaTT[1] = -0.5;
-  binsGammaTT[2] =  0.5;
-  binsGammaTT[3] =  1.01;
+  for(int k = 0; k < 11; k++)
+    binsGammaTT[k] = -1.01 + k*0.2;
+  //binsGammaTT[0] = -1.01;
+  //binsGammaTT[1] = -0.5;
+  //binsGammaTT[2] =  0.5;
+  //binsGammaTT[3] =  1.01;
 
   cachePdf( "pdfGammaWHad",     "GammaW",    100);
   cachePdf( "pdfBetaWHad",      "BetaW",     100);
@@ -246,6 +266,7 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   cachePdf( "pdfBetaWLep",      "BetaWLep",  100);
   cachePdf( "pdfGammaTTH",      "GammaTTH",  100);
   cachePdf( "pdf3D",            "X1", "MassTT","GammaTT", binsX, binsMassTT, binsGammaTT);
+  cachePdf( "pdf2D",            "X1", "MassTT", binsX, binsMassTT);
 
   pdfGammaWHad_ = *((TH1F*)this->getCachedPdf("pdfGammaWHad"));
   pdfBetaWHad_  = *((TH1F*)this->getCachedPdf("pdfBetaWHad"));
@@ -253,6 +274,7 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   pdfGammaWLep_ = *((TH1F*)this->getCachedPdf("pdfGammaWLep"));
   pdfGammaTTH_  = *((TH1F*)this->getCachedPdf("pdfGammaTTH"));
   pdf3D_        = *((TH3F*)this->getCachedPdf("pdf3D"));
+  pdf2D_        = *((TH2F*)this->getCachedPdf("pdf2D"));
 
   
   cout << "End constructor" << endl;
@@ -568,9 +590,9 @@ void MEIntegratorNew::initTF(){
 
 }
 
-//void MEIntegratorNew::setFile(TFile* f){
-//out_ = f;
-//}
+void MEIntegratorNew::setPartonLuminosity(TH1F* h){
+  partonLuminosity_ =  h;
+}
 
 void MEIntegratorNew::setMass(double mass){
   M_    = mass;
@@ -1011,7 +1033,7 @@ double MEIntegratorNew::EvalPdf(const double* x) const {
 		      ) 
     /x[0]/x[0]/x[0]/Q_/Q_; //8000./8000.
 
-  return lumiQQ;  
+  return lumiGG;  
 }
 
 
@@ -1113,7 +1135,7 @@ void MEIntegratorNew::cachePdf( string pdfName, string varName, int nBins){
     
     TH1F* hCache = new TH1F(pdfName.c_str(),"", nBins, var->getMin(), var->getMax() );
     
-    for(int j = 1; j < hCache->GetNbinsX(); j++){
+    for(int j = 1; j <= hCache->GetNbinsX(); j++){
       float lvalue = hCache->GetXaxis()->GetBinCenter(j);
       var->setVal( lvalue );
       hCache->SetBinContent(j, pdf->getVal( RooArgSet(*var) ) );
@@ -1135,10 +1157,10 @@ void MEIntegratorNew::cachePdf( string pdfName, string varName1, string varName2
     
     TH2F* hCache = new TH2F("hCache","", nBins1, var1->getMin(), var1->getMax(), nBins2, var2->getMin(), var2->getMax() );
     
-    for(int j = 1; j < hCache->GetNbinsX(); j++){
+    for(int j = 1; j <= hCache->GetNbinsX(); j++){
       float lvalue1 = hCache->GetXaxis()->GetBinCenter(j);
       var1->setVal( lvalue1 );
-      for(int k = 1; k < hCache->GetNbinsY(); k++){
+      for(int k = 1; k <= hCache->GetNbinsY(); k++){
 	float lvalue2 = hCache->GetYaxis()->GetBinCenter(k);
 	var2->setVal( lvalue2 );
 	hCache->SetBinContent(j,k, pdf->getVal( RooArgSet(*var1,*var2) ) );
@@ -1162,16 +1184,19 @@ void MEIntegratorNew::cachePdf( string pdfName, string varName1, string varName2
 
     TH3F* hCache = new TH3F("hCache","", nBins1, var1->getMin(), var1->getMax(), nBins2, var2->getMin(), var2->getMax(), nBins3, var3->getMin(), var3->getMax() );
 
-    for(int j = 1; j < hCache->GetNbinsX(); j++){
+    for(int j = 1; j <= hCache->GetNbinsX(); j++){
       float lvalue1 = hCache->GetXaxis()->GetBinCenter(j);
+      float bvalue1 = hCache->GetXaxis()->GetBinWidth(j);
       var1->setVal( lvalue1 );
-      for(int k = 1; k < hCache->GetNbinsY(); k++){
+      for(int k = 1; k <= hCache->GetNbinsY(); k++){
 	float lvalue2 =  hCache->GetYaxis()->GetBinCenter(k);
+	float bvalue2 =  hCache->GetYaxis()->GetBinWidth(k);
 	var2->setVal( lvalue2 );
-	for(int m = 1; m < hCache->GetNbinsZ(); m++){
+	for(int m = 1; m <= hCache->GetNbinsZ(); m++){
 	  float lvalue3 =  hCache->GetZaxis()->GetBinCenter(m);
+	  float bvalue3 =  hCache->GetZaxis()->GetBinWidth(m);
 	  var3->setVal( lvalue3 );
-	  hCache->SetBinContent(j,k,m, pdf->getVal( RooArgSet(*var1,*var2,*var3) ) );
+	  hCache->SetBinContent(j,k,m, pdf->getVal( RooArgSet(*var1,*var2,*var3) ) / (bvalue1*bvalue2*bvalue3) );
 	}
       }
     }
@@ -1181,6 +1206,39 @@ void MEIntegratorNew::cachePdf( string pdfName, string varName1, string varName2
   }
 
 }
+
+
+
+void MEIntegratorNew::cachePdf( string pdfName, string varName1, string varName2,  TArrayF bins1, TArrayF bins2){
+  
+  RooAbsPdf* pdf = w_->pdf( pdfName.c_str() );
+  if(pdf){
+    RooRealVar* var1 = w_->var( varName1.c_str() );
+    RooRealVar* var2 = w_->var( varName2.c_str() );
+
+    TH2F* hCache = new TH2F("hCache","", 
+			    bins1.GetSize()-1, bins1.GetArray() , 
+			    bins2.GetSize()-1, bins2.GetArray() );
+
+    for(int j = 1; j <= hCache->GetNbinsX(); j++){
+      float lvalue1 = hCache->GetXaxis()->GetBinCenter(j);
+      float bvalue1 = hCache->GetXaxis()->GetBinWidth(j);
+      var1->setVal( lvalue1 );
+      for(int k = 1; k <= hCache->GetNbinsY(); k++){
+	float lvalue2 =  hCache->GetYaxis()->GetBinCenter(k);
+	float bvalue2 =  hCache->GetYaxis()->GetBinWidth(k);
+	var2->setVal( lvalue2 );
+	hCache->SetBinContent(j,k, pdf->getVal( RooArgSet(*var1,*var2) ) / (bvalue1*bvalue2) );
+	//cout << lvalue1 << ", " << lvalue2 << ", " <<  lvalue3 << " ==> " << pdf->getVal( RooArgSet(*var1,*var2,*var3) )/ (bvalue1*bvalue2*bvalue3) << endl;	
+      }
+    }
+        
+    variables2D_[ pdfName ] = hCache;
+
+  }
+
+}
+
 
 
 
@@ -1197,19 +1255,24 @@ void MEIntegratorNew::cachePdf( string pdfName, string varName1, string varName2
 			    bins2.GetSize()-1, bins2.GetArray(), 
 			    bins3.GetSize()-1, bins3.GetArray());
 
-    for(int j = 1; j < hCache->GetNbinsX(); j++){
+    for(int j = 1; j <= hCache->GetNbinsX(); j++){
       float lvalue1 = hCache->GetXaxis()->GetBinCenter(j);
+      float bvalue1 = hCache->GetXaxis()->GetBinWidth(j);
       var1->setVal( lvalue1 );
-      for(int k = 1; k < hCache->GetNbinsY(); k++){
+      for(int k = 1; k <= hCache->GetNbinsY(); k++){
 	float lvalue2 =  hCache->GetYaxis()->GetBinCenter(k);
+	float bvalue2 =  hCache->GetYaxis()->GetBinWidth(k);
 	var2->setVal( lvalue2 );
-	for(int m = 1; m < hCache->GetNbinsZ(); m++){
-	  float lvalue3 = hCache->GetZaxis()->GetBinCenter(m);;
+	for(int m = 1; m <= hCache->GetNbinsZ(); m++){
+	  float lvalue3 =  hCache->GetZaxis()->GetBinCenter(m);
+	  float bvalue3 =  hCache->GetZaxis()->GetBinWidth(m);
 	  var3->setVal( lvalue3 );
-	  hCache->SetBinContent(j,k,m, pdf->getVal( RooArgSet(*var1,*var2,*var3) ) );
+	  hCache->SetBinContent(j,k,m, pdf->getVal( RooArgSet(*var1,*var2,*var3) ) / (bvalue1*bvalue2*bvalue3) );
+	  //cout << lvalue1 << ", " << lvalue2 << ", " <<  lvalue3 << " ==> " << pdf->getVal( RooArgSet(*var1,*var2,*var3) )/ (bvalue1*bvalue2*bvalue3) << endl;
 	}
       }
     }
+    
     
     variables3D_[ pdfName ] = hCache;
 
@@ -1258,9 +1321,43 @@ double MEIntegratorNew::higgsJakobi ( double Eh1, double Eh2)  const{
 }
 
 
+
+
+double MEIntegratorNew::evaluateCahchedPdf(TH1* h, double val1, double val2, double val3) const {
+
+  if( (val1 < h->GetXaxis()->GetBinLowEdge(1) ||  val1 > h->GetXaxis()->GetBinUpEdge( h->GetNbinsX() ))  || 
+      (val2 < h->GetYaxis()->GetBinLowEdge(1) ||  val2 > h->GetYaxis()->GetBinUpEdge( h->GetNbinsY() ))  || 
+      (val3 < h->GetZaxis()->GetBinLowEdge(1) ||  val3 > h->GetZaxis()->GetBinUpEdge( h->GetNbinsZ() )) 
+      )
+    return 0.0;
+  else if( (val1 <= h->GetXaxis()->GetBinCenter(1) || val1 >= h->GetXaxis()->GetBinCenter(h->GetNbinsX()) ) ||
+	   (val2 <= h->GetYaxis()->GetBinCenter(1) || val2 >= h->GetYaxis()->GetBinCenter(h->GetNbinsY()) ) ||
+	   (val3 <= h->GetZaxis()->GetBinCenter(1) || val3 >= h->GetZaxis()->GetBinCenter(h->GetNbinsZ()) )
+	   ){
+    double newVal1 = val1;
+    double newVal2 = val2;
+    double newVal3 = val3;
+    if( val1 <= h->GetXaxis()->GetBinCenter(1) )              newVal1 = h->GetXaxis()->GetBinUpEdge(1);
+    if( val1 >= h->GetXaxis()->GetBinCenter(h->GetNbinsX()) ) newVal1 = h->GetXaxis()->GetBinLowEdge(h->GetNbinsX()); 
+    if( val2 <= h->GetYaxis()->GetBinCenter(1) )              newVal2 = h->GetYaxis()->GetBinUpEdge(1);
+    if( val2 >= h->GetYaxis()->GetBinCenter(h->GetNbinsY()) ) newVal2 = h->GetYaxis()->GetBinLowEdge(h->GetNbinsY()); 
+    if( val3 <= h->GetZaxis()->GetBinCenter(1) )              newVal3 = h->GetZaxis()->GetBinUpEdge(1);
+    if( val3 >= h->GetZaxis()->GetBinCenter(h->GetNbinsZ()) ) newVal3 = h->GetZaxis()->GetBinLowEdge(h->GetNbinsZ()); 
+    return 
+      //h->Interpolate(newVal1 ,newVal2, newVal3);
+      h->GetBinContent( h->FindBin(val1,val2,val3) );
+  }
+  else
+    //return  h->Interpolate( val1,val2,val3 );
+    return h->GetBinContent( h->FindBin(val1,val2,val3) );
+  
+}
+
+
+
 double MEIntegratorNew::topHadDensity ( double cos1, double cos2) const{
 
-  double val1 = const_cast<TH1F*>(&pdfBetaWHad_)->Interpolate(cos1);
+  double val1 = const_cast<TH1F*>(&pdfBetaWHad_) ->Interpolate(cos1);
   double val2 = const_cast<TH1F*>(&pdfGammaWHad_)->Interpolate(cos2);
   double res  = val1*val2;
 
@@ -1281,19 +1378,47 @@ double MEIntegratorNew::higgsDensity ( double cos1 )  const{
   return 1.0;
 }
 
-double MEIntegratorNew::tthDensity ( double Q, double m12, double cos1Star, double cos3)  const{
+
+double MEIntegratorNew::meSquaredAtQ( double Q, double m12, double cos1Star, double cos3)  const{
 
   double p1Star = (m12*m12 - 4*Mtop_*Mtop_) >=0 ? 
-    TMath::Sqrt((m12*m12 - 4*Mtop_*Mtop_)*(m12*m12))/2./m12 : -999.;
+    TMath::Sqrt((m12*m12 - 4*Mtop_*Mtop_))/2. : -999.;
   double p3     = (Q*Q - (m12+M_)*(m12+M_)) >=0 && (Q*Q - (m12 - M_)*(m12 - M_)) >=0 ? 
-    TMath::Sqrt((Q*Q - (m12+M_)*(m12+M_) )*( Q*Q - (m12 - M_)* (m12 - M_)))/2./Q : -999;
+    TMath::Sqrt((Q*Q - (m12+M_)*(m12+M_) )*( Q*Q - (m12 - M_)*(m12 - M_)))/2./Q : -999;
 
   if( TMath::IsNaN(p1Star) || TMath::IsNaN(p3) || p1Star<=0 || p3 <=0){
     if(verbose_) cout << "tthDensity evaluated for non-acceptable values of p1Star and/or p3" << endl;
     return 0.0;
   }
 
-  double val1 = const_cast<TH3F*>(&pdf3D_)->Interpolate(Q, m12, cos1Star);
+  double diffCrossSec = const_cast<TH2F*>(&pdf2D_) ->Interpolate( Q/8000., m12);// tthDensity(Q, m12, cos1Star, cos3);
+  double lumi = 1.0;
+  if(partonLuminosity_)
+    lumi = partonLuminosity_->Interpolate( Q );
+  
+  double val2 = const_cast<TH1F*>(&pdfGammaTTH_)->Interpolate( cos3 );
+
+  return (diffCrossSec*val2/lumi/p1Star/p3);
+}
+
+
+
+
+double MEIntegratorNew::tthDensity ( double Q, double m12, double cos1Star, double cos3)  const{
+
+  double p1Star = (m12*m12 - 4*Mtop_*Mtop_) >=0 ? 
+    TMath::Sqrt((m12*m12 - 4*Mtop_*Mtop_))/2. : -999.;
+  double p3     = (Q*Q - (m12+M_)*(m12+M_)) >=0 && (Q*Q - (m12 - M_)*(m12 - M_)) >=0 ? 
+    TMath::Sqrt((Q*Q - (m12+M_)*(m12+M_) )*( Q*Q - (m12 - M_)*(m12 - M_)))/2./Q : -999;
+
+  if( TMath::IsNaN(p1Star) || TMath::IsNaN(p3) || p1Star<=0 || p3 <=0){
+    if(verbose_) cout << "tthDensity evaluated for non-acceptable values of p1Star and/or p3" << endl;
+    return 0.0;
+  }
+
+  //cout << Q/8000. << ", " << m12 << ", " <<  cos1Star << endl;
+  double val1 = evaluateCahchedPdf(const_cast<TH3F*>(&pdf3D_), Q/8000., m12, cos1Star );
+  //const_cast<TH3F*>(&pdf3D_)->Interpolate(Q/8000., m12, cos1Star);
   double val2 = const_cast<TH1F*>(&pdfGammaTTH_)->Interpolate( cos3 );
 
   return (val1*val2)/p1Star/p3;
@@ -1416,7 +1541,7 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
     //topHadDensity(cos1Had,cos2Had) * 
     //topLepDensity(cos1Lep,cos2Lep) //* 
     higgsDensity(cos1Higgs) //*
-    //tthDensity( Q , m12, cos1Star, cos3)
+    //tthDensity( Q/8000. , m12, cos1Star, cos3)
     ;
 
   double Jpart = 

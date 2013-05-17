@@ -34,7 +34,6 @@
 #include "DataFormats/FWLite/interface/Run.h"
 #include "DataFormats/Luminosity/interface/LumiSummary.h"
 
-
 #include "RooWorkspace.h"
 #include "RooAbsData.h"
 #include "RooAbsPdf.h"
@@ -206,10 +205,10 @@ int main(int argc, const char* argv[])
     TH1F* accTot    = (TH1F*)accLightBin0->Clone(Form("accTot%d",k));  //accTot->Sumw2();
 
     TH2F* hCorrLight = new TH2F("hCorrLight","", 20, 0,200, 40, 0,200);
-    treeJetsLight->Draw("ptReco:ptGen>>hCorrLight", Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
+    treeJetsLight->Draw("ptReco:pt>>hCorrLight", Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
 
-    treeJetsLight->Draw(Form("ptGen>>accTot%d",k),  Form("(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",            etaBinning[k],etaBinning[k+1]) );
-    treeJetsLight->Draw(Form("ptGen>>accPass%d",k), Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
+    treeJetsLight->Draw(Form("pt>>accTot%d",k),  Form("(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",            etaBinning[k],etaBinning[k+1]) );
+    treeJetsLight->Draw(Form("pt>>accPass%d",k), Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
     accPass->Sumw2();
     accTot->Sumw2();
 
@@ -248,10 +247,10 @@ int main(int argc, const char* argv[])
     accTot->Reset();
 
     TH2F* hCorrHeavy = new TH2F("hCorrHeavy","", 20, 0,200, 40, 0,200);
-    treeJetsHeavy->Draw("ptReco:ptGen>>hCorrHeavy", Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
+    treeJetsHeavy->Draw("ptReco:pt>>hCorrHeavy", Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
 
-    treeJetsHeavy->Draw(Form("ptGen>>accTot%d",k),  Form("(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",            etaBinning[k],etaBinning[k+1]) );
-    treeJetsHeavy->Draw(Form("ptGen>>accPass%d",k), Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
+    treeJetsHeavy->Draw(Form("pt>>accTot%d",k),  Form("(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",            etaBinning[k],etaBinning[k+1]) );
+    treeJetsHeavy->Draw(Form("pt>>accPass%d",k), Form("(ptReco>30)*(TMath::Abs(eta)>%f && TMath::Abs(eta)<%f)",etaBinning[k],etaBinning[k+1]) );
     accPass->Sumw2();
     accTot->Sumw2();
 
@@ -457,6 +456,19 @@ int main(int argc, const char* argv[])
   //MassTT.setBins ( 40 );
   //X1.setBins     ( 40 );
 
+
+  //////////////////////////////////////////////////////////////////////
+  //cout << "Start preparing Pdf" << endl;
+  //RooNDKeysPdf pdfCMS("pdfCMS","pdfCMS", RooArgList(X1,MassTT, GammaTT), dataset, "av");
+  //cout << "Prepared Pdf" << endl;
+  //RooDataHist hist3D ("hist3D","hist3D", RooArgSet(X1,MassTT,GammaTT), 
+  //	      *(pdfCMS.generate( RooArgSet(X1,MassTT,GammaTT) , 1000,  Verbose(1), AllBinned()   ) ));
+  //RooHistPdf pdf3D   ("pdf3D","", RooArgSet(X1,MassTT,GammaTT), hist3D);
+  //w->import( pdf3D );
+  //////////////////////////////////////////////////////////////////////
+
+
+
   int nBinsX = 27;
   TArrayF binsX(nBinsX+1);
   cout << "Making histograms with " << nBinsX << " bins:" << endl;
@@ -475,32 +487,69 @@ int main(int argc, const char* argv[])
   binsMassTT[19] = 900;  binsMassTT[20] = 1000; binsMassTT[21] = 1200; binsMassTT[22] = 1400;
   binsMassTT[23] = 2000;
 
-  int nBinsGammaTT = 3;
+  int nBinsMassTT2 = 42;
+  TArrayF binsMassTT2(nBinsMassTT2+1);
+  cout << "Making histograms with " << nBinsMassTT2 << " bins:" << endl;
+  binsMassTT2[0] = 350;
+  for(int k = 1; k < 38; k++)
+    binsMassTT2[k] = 350 + 12.5*k;
+  binsMassTT2[38] = 900;  binsMassTT2[39] = 1000; binsMassTT2[40] = 1200; binsMassTT2[41] = 1400;
+  binsMassTT2[42] = 2000;
+
+
+  int nBinsGammaTT = 10;
   TArrayF binsGammaTT(nBinsGammaTT+1);
   cout << "Making histograms with " << nBinsGammaTT << " bins:" << endl;
-  binsGammaTT[0] = -1.01;
-  binsGammaTT[1] = -0.5;
-  binsGammaTT[2] =  0.5;
-  binsGammaTT[3] =  1.01;
+  for(int k = 0; k < 11; k++)
+    binsGammaTT[k] = -1.01 + k*0.2;
+  //binsGammaTT[0] = -1.01;
+  //binsGammaTT[1] = -0.5;
+  //binsGammaTT[2] =  0.5;
+  //binsGammaTT[3] =  1.01;
 
   TH1F* hBinCont = new TH1F("hBinCont","",200,0,200);
-  TH3F* h3 = new TH3F("h3","", nBinsX, binsX.GetArray(), nBinsMassTT, binsMassTT.GetArray(), nBinsGammaTT, binsGammaTT.GetArray());
+  TH3F* h3 = new TH3F("h3","", 
+		      nBinsX, binsX.GetArray(), 
+		      nBinsMassTT, binsMassTT.GetArray(), 
+		      nBinsGammaTT, binsGammaTT.GetArray());
   tree->Draw("GammaTT:MassTT:X1>>h3");
+  
   
   RooDataHist hist3D("hist3D","hist3D", RooArgSet(X1,MassTT,GammaTT), Import( *h3, 1 ));
   RooHistPdf pdf3D  ("pdf3D","", RooArgSet(X1,MassTT,GammaTT), hist3D);
   w->import( pdf3D );
+  
+  TH2F* h2 = new TH2F("h2","", 
+		      nBinsX, binsX.GetArray(), 
+		      nBinsMassTT2, binsMassTT2.GetArray() );
+  tree->Draw("MassTT:X1>>h2");
+
+  RooDataHist hist2D("hist2D","hist2D", RooArgSet(X1,MassTT), Import( *h2, 1 ));
+  RooHistPdf pdf2D  ("pdf2D","", RooArgSet(X1,MassTT), hist2D);
+  w->import( pdf2D );
+
 
   for( int i = 1; i <= h3->GetNbinsX(); i++){
     for( int j = 1; j <= h3->GetNbinsY(); j++){
       for( int k = 1; k <= h3->GetNbinsZ(); k++){
 	int bin = h3->GetBin(i,j,k);
 	float binC  = h3->GetBinContent( bin );
-	float width = h3->GetBinWidth( bin );
+	float width = h3->GetXaxis()->GetBinWidth( i )* h3->GetYaxis()->GetBinWidth( j )* h3->GetZaxis()->GetBinWidth( k );
 	h3->SetBinContent(bin, binC/width );
       }
     }
   }
+
+
+  for( int i = 1; i <= h2->GetNbinsX(); i++){
+    for( int j = 1; j <= h2->GetNbinsY(); j++){
+      int bin = h2->GetBin(i,j);
+      float binC  = h2->GetBinContent( bin );
+      float width = h2->GetXaxis()->GetBinWidth( i )* h2->GetYaxis()->GetBinWidth( j );
+      h2->SetBinContent(bin, binC/width );      
+    }
+  }
+
   
   for(int i = 0 ; i < 1000 ; i++){
     double var1,var2,var3;
@@ -1070,10 +1119,17 @@ int main(int argc, const char* argv[])
   histGammaTTH.plotOn(plotGammaTTH);
   pdfGammaTTH.plotOn(plotGammaTTH);
 
-  //TCanvas *c1MassTT = new TCanvas("c1MassTT","canvas",10,30,650,600);
-  //RooPlot* plotMassTT = MassTT.frame(Bins(20),Title("MassTT"));
-  //histMassTT.plotOn(plotMassTT);
-  //pdfMassTT.plotOn(plotMassTT);
+  TCanvas *c1MassTT = new TCanvas("c1MassTT","canvas",10,30,650,600);
+  RooPlot* plotMassTT = MassTT.frame(Bins(20),Title("MassTT"));
+  hist3D.plotOn(plotMassTT);
+
+  TCanvas *c1X1 = new TCanvas("c1X1","canvas",10,30,650,600);
+  RooPlot* plotX1 = X1.frame(Bins(20),Title("X1"));
+  hist3D.plotOn(plotX1);
+
+  TCanvas *c1GammaTT = new TCanvas("c1GammaTT","canvas",10,30,650,600);
+  RooPlot* plotGammaTT = GammaTT.frame(Bins(20),Title("GammaTT"));
+  hist3D.plotOn(plotGammaTT);
 
 
   fout = new TFile("ControlPlots.root","RECREATE");
@@ -1098,9 +1154,11 @@ int main(int argc, const char* argv[])
   hMeanPhi_2->Write("",TObject::kOverwrite);
   hWidthPhi_2->Write("",TObject::kOverwrite);
 
-  h3->Write("",TObject::kOverwrite);
+  h3->Write("h3",TObject::kOverwrite);
   hBinCont->Write("",TObject::kOverwrite);
   
+  h2->Write("h2",TObject::kOverwrite);
+
   c1BetaWHad->cd();
   plotBetaWHad->Draw();
   c1BetaWHad->Write("",TObject::kOverwrite);
@@ -1121,9 +1179,19 @@ int main(int argc, const char* argv[])
   plotGammaTTH->Draw();
   c1GammaTTH->Write("",TObject::kOverwrite);
 
-  //c1MassTT->cd();
-  //plotMassTT->Draw();
-  //c1MassTT->Write("",TObject::kOverwrite);
+  c1MassTT->cd();
+  plotMassTT->Draw();
+  c1MassTT->Write("",TObject::kOverwrite);
+
+  c1X1->cd();
+  plotX1->Draw();
+  c1X1->Write("",TObject::kOverwrite);
+
+  c1GammaTT->cd();
+  plotGammaTT->Draw();
+  c1GammaTT->Write("",TObject::kOverwrite);
+
+
 
   /*
   c1CsvLight->cd();
