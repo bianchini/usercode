@@ -84,6 +84,12 @@ class MEIntegratorNew {
   void   setPtPhiParam (int);
   void   setPartonLuminosity(TH1F*);
 
+  void   setUseME   (int);
+  void   setUseJac  (int);
+  void   setUseMET  (int);
+  void   setUseTF   (int);
+  void   setUsePDF  (int);
+
   void   resetEvaluation();
 
   TH1*   getCachedPdf( string ) const;
@@ -116,6 +122,8 @@ class MEIntegratorNew {
   double tthDensity      (double, double, double, double)  const;
   double meSquaredAtQ    (double, double, double, double) const;
   double evaluateCahchedPdf (TH1*, double, double, double)  const;
+  double ggPdf              ( double, double, double) const; 
+  double qqPdf              ( double, double, double) const; 
 
  private:
   
@@ -162,8 +170,14 @@ class MEIntegratorNew {
   float Mtop_;
   float Mb_;
   float Mw_;
+  float SqrtS_;
   double sumEt_;
   TH2F* mash_;
+  int useME_;
+  int useJac_;
+  int useMET_;
+  int useTF_;
+  int usePDF_;
 
   TH1F* debugHisto1_;
   TH1F* partonLuminosity_;
@@ -205,10 +219,18 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   M_      =  125.;
   Q_      =  500;
   dMh2_   =  (M_*M_-2*Mb_*Mb_)*0.5;
+  SqrtS_  =  8000.;
 
   mash_        = 0;// new TH2F("mash","",500,-2.5,2.5, 628, -TMath::Pi(), TMath::Pi());
   debugHisto1_ = 0;//new TH1F("debugHisto1","w1 pt", 100,0,400);
   partonLuminosity_ = 0;
+
+  useME_   = 1;
+  useJac_  = 1;
+  useMET_  = 1;
+  useTF_   = 1;
+  usePDF_  = 1;
+
 
   TFile* file = TFile::Open(fileName.c_str(),"READ");
   w_ = (RooWorkspace*)file->Get("transferFuntions");
@@ -606,11 +628,11 @@ void MEIntegratorNew::setQ(double Q){
 void MEIntegratorNew::setTopMass(double massTop, double massW){
   Mtop_    = massTop;
   Mw_      = massW;
-  pStar_  =  TMath::Sqrt( (Mtop_*Mtop_-(Mw_+Mb_)*(Mw_+Mb_) )*( Mtop_*Mtop_-(Mw_-Mb_)*(Mw_-Mb_) ) )/2./Mtop_;
-  EbStar_ =  (Mtop_*Mtop_ - Mw_*Mw_ + Mb_*Mb_)/2./Mtop_;
-  EWStar_ =  (Mtop_*Mtop_ + Mw_*Mw_ - Mb_*Mb_)/2./Mtop_;
-  EuStar_ =  Mw_/2;
-  dM2_    =  (Mtop_*Mtop_-Mb_*Mb_-Mw_*Mw_)*0.5;
+  pStar_  =  TMath::Sqrt( (massTop*massTop-(massW+Mb_)*(massW+Mb_) )*( massTop*massTop-(massW-Mb_)*(massW-Mb_) ) )/2./massTop;
+  EbStar_ =  (massTop*massTop - massW*massW + Mb_*Mb_)/2./massTop;
+  EWStar_ =  (massTop*massTop + massW*massW - Mb_*Mb_)/2./massTop;
+  EuStar_ =  massW/2;
+  dM2_    =  (massTop*massTop-Mb_*Mb_-massW*massW)*0.5;
 }
 
 void MEIntegratorNew::setSumEt(double sumEt){
@@ -619,6 +641,22 @@ void MEIntegratorNew::setSumEt(double sumEt){
 
 void MEIntegratorNew::setPtPhiParam(int usePtPhiParam){
   usePtPhiParam_ =  usePtPhiParam;
+}
+
+void MEIntegratorNew::setUseME   (int use){
+  useME_  = use;  
+}
+void MEIntegratorNew::setUseJac  (int use){
+  useJac_ = use;  
+}
+void MEIntegratorNew::setUseMET  (int use){
+  useMET_ = use;  
+}
+void MEIntegratorNew::setUseTF   (int use){
+  useTF_  = use;  
+}
+void MEIntegratorNew::setUsePDF  (int use){
+  usePDF_ = use;  
 }
 
 int MEIntegratorNew::topHadEnergies(double E1, double& E2, double& E3, double& cos1, double& cos2, int& errFlag ) const {
@@ -1021,17 +1059,42 @@ int MEIntegratorNew::higgsEnergies(double E1, double& E2, double& cos1, int& err
   return nSol;
 }
 
+
+double MEIntegratorNew::ggPdf( double x1, double x2, double Q) const {
+
+  double lumiGG =  LHAPDF::xfx(0, x1, Q, 0) *  LHAPDF::xfx(0, x2 , Q, 0) 
+    /x1/x1/x2/x2;
+  
+  return lumiGG;  
+}
+
+
+double MEIntegratorNew::qqPdf( double x1, double x2, double Q) const {
+
+  double lumiQQ =  2*(LHAPDF::xfx(0, x1, Q, 1) *  LHAPDF::xfx(0, x2, Q, -1) + 
+		      LHAPDF::xfx(0, x1, Q, 2) *  LHAPDF::xfx(0, x2, Q, -2) + 
+		      LHAPDF::xfx(0, x1, Q, 3) *  LHAPDF::xfx(0, x2, Q, -3) + 
+		      LHAPDF::xfx(0, x1, Q, 4) *  LHAPDF::xfx(0, x2, Q, -4) +
+		      LHAPDF::xfx(0, x1, Q, 5) *  LHAPDF::xfx(0, x2, Q, -5)
+		      ) 
+    /x1/x1/x2/x2;
+
+  return lumiQQ;  
+}
+
+
+
 double MEIntegratorNew::EvalPdf(const double* x) const {
 
-  double lumiGG =  LHAPDF::xfx(0, x[0], Q_, 0) *  LHAPDF::xfx(0, Q_*Q_/x[0]/8000./8000., Q_, 0) 
-    /x[0]/x[0]/x[0]/Q_/Q_; //8000./8000.
-  double lumiQQ =  2*(LHAPDF::xfx(0, x[0], Q_, 1) *  LHAPDF::xfx(0, Q_*Q_/x[0]/8000./8000., Q_, -1) + 
-		      LHAPDF::xfx(0, x[0], Q_, 2) *  LHAPDF::xfx(0, Q_*Q_/x[0]/8000./8000., Q_, -2) + 
-		      LHAPDF::xfx(0, x[0], Q_, 3) *  LHAPDF::xfx(0, Q_*Q_/x[0]/8000./8000., Q_, -3) + 
-		      LHAPDF::xfx(0, x[0], Q_, 4) *  LHAPDF::xfx(0, Q_*Q_/x[0]/8000./8000., Q_, -4) +
-		      LHAPDF::xfx(0, x[0], Q_, 5) *  LHAPDF::xfx(0, Q_*Q_/x[0]/8000./8000., Q_, -5)
+  double lumiGG =  LHAPDF::xfx(0, x[0], Q_, 0) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, 0) 
+    /x[0]/x[0]/x[0]/Q_/Q_; //SqrtS_/SqrtS_
+  double lumiQQ =  2*(LHAPDF::xfx(0, x[0], Q_, 1) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, -1) + 
+		      LHAPDF::xfx(0, x[0], Q_, 2) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, -2) + 
+		      LHAPDF::xfx(0, x[0], Q_, 3) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, -3) + 
+		      LHAPDF::xfx(0, x[0], Q_, 4) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, -4) +
+		      LHAPDF::xfx(0, x[0], Q_, 5) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, -5)
 		      ) 
-    /x[0]/x[0]/x[0]/Q_/Q_; //8000./8000.
+    /x[0]/x[0]/x[0]/Q_/Q_; //SqrtS_/SqrtS_
 
   return lumiGG;  
 }
@@ -1391,7 +1454,7 @@ double MEIntegratorNew::meSquaredAtQ( double Q, double m12, double cos1Star, dou
     return 0.0;
   }
 
-  double diffCrossSec = const_cast<TH2F*>(&pdf2D_) ->Interpolate( Q/8000., m12);// tthDensity(Q, m12, cos1Star, cos3);
+  double diffCrossSec = const_cast<TH2F*>(&pdf2D_) ->Interpolate( Q/SqrtS_, m12);// tthDensity(Q, m12, cos1Star, cos3);
   double lumi = 1.0;
   if(partonLuminosity_)
     lumi = partonLuminosity_->Interpolate( Q );
@@ -1416,9 +1479,9 @@ double MEIntegratorNew::tthDensity ( double Q, double m12, double cos1Star, doub
     return 0.0;
   }
 
-  //cout << Q/8000. << ", " << m12 << ", " <<  cos1Star << endl;
-  double val1 = evaluateCahchedPdf(const_cast<TH3F*>(&pdf3D_), Q/8000., m12, cos1Star );
-  //const_cast<TH3F*>(&pdf3D_)->Interpolate(Q/8000., m12, cos1Star);
+  //cout << Q/SqrtS_ << ", " << m12 << ", " <<  cos1Star << endl;
+  double val1 = evaluateCahchedPdf(const_cast<TH3F*>(&pdf3D_), Q/SqrtS_, m12, cos1Star );
+  //const_cast<TH3F*>(&pdf3D_)->Interpolate(Q/SqrtS_, m12, cos1Star);
   double val2 = const_cast<TH1F*>(&pdfGammaTTH_)->Interpolate( cos3 );
 
   return (val1*val2)/p1Star/p3;
@@ -1523,30 +1586,31 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
 
   TVector3 boostToCMS  = tot.BoostVector();
 
-  topHad.Boost( -boostToCMS );
-  topLep.Boost( -boostToCMS );
-  higgs.Boost ( -boostToCMS );
+  //topHad.Boost( -boostToCMS );
+  //topLep.Boost( -boostToCMS );
+  //higgs.Boost ( -boostToCMS );
+  //double cos3 = TMath::Cos((higgs.Vect()).Angle( boostToCMS ));
+  //TVector3 boostToTTCMS = (topLep+topHad).BoostVector();
+  //topLep.Boost( -boostToTTCMS );
+  //topHad.Boost( -boostToTTCMS );
+  //double cos1Star = TMath::Cos( (topLep.Vect()).Angle( boostToTTCMS ) );
+  //double m12      = (topHad+topLep).M();
+  //double Q        = tot.M();
 
-  double cos3 = TMath::Cos((higgs.Vect()).Angle( boostToCMS ));
-
-  TVector3 boostToTTCMS = (topLep+topHad).BoostVector();
-  topLep.Boost( -boostToTTCMS );
-  topHad.Boost( -boostToTTCMS );
-  
-  double cos1Star = TMath::Cos( (topLep.Vect()).Angle( boostToTTCMS ) );
-  double m12      = (topHad+topLep).M();
-  double Q        = tot.M();
+  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
+  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
+  double Q  = (2*Mtop_ + M_)/2.;
 
   double MEpart = 
-    //topHadDensity(cos1Had,cos2Had) * 
-    //topLepDensity(cos1Lep,cos2Lep) //* 
+    topHadDensity(cos1Had,cos2Had) * 
+    topLepDensity(cos1Lep,cos2Lep) * 
     higgsDensity(cos1Higgs) //*
-    //tthDensity( Q/8000. , m12, cos1Star, cos3)
+    //tthDensity( Q/SqrtS_ , m12, cos1Star, cos3)
     ;
 
   double Jpart = 
-    //topHadJakobi( Eq1,  Eq2, EbHad) * 
-    //topLepJakobi( Enu, Elep, EbLep, &WLep ) //* 
+    topHadJakobi( Eq1,  Eq2, EbHad) * 
+    topLepJakobi( Enu, Elep, EbLep, &WLep ) * 
     higgsJakobi( Eh1, Eh2 ) 
     ;
 
@@ -1569,13 +1633,11 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
     (TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) <= tfMetPhi_.GetYaxis()->GetXmax() && TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) >= tfMetPhi_.GetYaxis()->GetXmin()) ?
     const_cast<TH2F*>(&tfMetPhi_) ->Interpolate( WLepNu.Pt(), TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) ) : 0.0;
 
-
-
   double TFpart = 
-    //tf1 *
-    //tf2 *
-    //tf3 *
-    //tf4 *
+    tf1 *
+    tf2 *
+    tf3 *
+    tf4 *
     tf5 *
     tf6
     ;
@@ -1585,11 +1647,13 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
     tf8
     ;
 
+  double PDFpart = ggPdf( x1, x2 , Q);
 
-  prob *= MEpart;
-  //prob *= Jpart;
-  //prob *= METpart;
-  prob *= TFpart;
+  if(useME_)  prob *= MEpart;
+  if(useJac_) prob *= Jpart;
+  if(useMET_) prob *= METpart;
+  if(useTF_)  prob *= TFpart;
+  if(usePDF_) prob *= PDFpart;
 
   ////////////////////////
 

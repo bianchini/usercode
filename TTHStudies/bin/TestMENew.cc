@@ -23,6 +23,7 @@
 #include "Math/Factory.h"
 #include "Math/Functor.h"
 #include "Math/GSLMCIntegrator.h"
+#include "Math/AllIntegrationTypes.h"
 
 #include "PhysicsTools/FWLite/interface/TFileService.h"
 
@@ -70,7 +71,7 @@
 
 #include "Bianchi/TTHStudies/interface/MEIntegratorNew.h"
 #include "Bianchi/TTHStudies/interface/Samples.h"
-
+#include "Bianchi/TTHStudies/interface/CalcME.h"
 
 #define GENJETDR 0.3
 #define VERBOSE  false
@@ -132,7 +133,6 @@ typedef struct
 
 
 
-
 int main(int argc, const char* argv[])
 {
 
@@ -141,7 +141,6 @@ int main(int argc, const char* argv[])
  
   gSystem->Load("libFWCoreFWLite");
   gSystem->Load("libDataFormatsFWLite");
-  //gSystem->Load("BianchiTTHStudiesPlugins");
 
   AutoLibraryLoader::enable();
 
@@ -157,18 +156,23 @@ int main(int argc, const char* argv[])
   bool verbose             ( in.getParameter<bool>  ("verbose") );
   double lumi              ( in.getParameter<double>("lumi") );
 
-  float met       ( in.getParameter<double> ("met") );
-  float pertW1    ( in.getParameter<double> ("pertW1") );
-  float pertW2    ( in.getParameter<double> ("pertW2") );
-  float pertBHad  ( in.getParameter<double> ("pertBHad") );
-  float pertBLep  ( in.getParameter<double> ("pertBLep") );
-  float enlargeE1 ( in.getParameter<double> ("enlargeE1") );
+  float met       ( in.getParameter<double> ("met")        );
+  float pertW1    ( in.getParameter<double> ("pertW1")     );
+  float pertW2    ( in.getParameter<double> ("pertW2")     );
+  float pertBHad  ( in.getParameter<double> ("pertBHad")   );
+  float pertBLep  ( in.getParameter<double> ("pertBLep")   );
+  float enlargeE1 ( in.getParameter<double> ("enlargeE1")  );
   float enlargeEh1( in.getParameter<double> ("enlargeEh1") );
-  float enlargePt ( in.getParameter<double> ("enlargePt") );
+  float enlargePt ( in.getParameter<double> ("enlargePt")  );
+  int   useME     ( in.getParameter<int>    ("useME")      );
+  int   useJac    ( in.getParameter<int>    ("useJac")     );
+  int   useMET    ( in.getParameter<int>    ("useMET")     );
+  int   useTF     ( in.getParameter<int>    ("useTF")      );
+  int   usePDF    ( in.getParameter<int>    ("usePDF")     );
+
   vector<int> evLimits( in.getParameter<vector<int> >  ("evLimits") );
   int evLow = evLimits[0];
   int evHigh = evLimits[1];
-
 
 
   //TFile* fout = 0;
@@ -179,38 +183,84 @@ int main(int argc, const char* argv[])
   gSystem->Exec(("rm "+outFileName).c_str());
 
 
-  int printP4 = 0;
+  int printP4 = 1;
   int par = 4;
   MEIntegratorNew* meIntegrator = new MEIntegratorNew( pathToTF , par, int(verbose));
 
 
   //////////////////////
-  TH1F*  hPdfLumi     = new TH1F("hPdfLumi","",42, 425 , 2525.);
+  //TH1F*  hPdfLumi     = new TH1F("hPdfLumi","",42, 425 , 2525.);
 
-  ROOT::Math::GSLMCIntegrator ig2Pdf("vegas", 1.e-12, 1.e-5, 1000);
-  ROOT::Math::Functor toIntegratePdf(meIntegrator, &MEIntegratorNew::EvalPdf, 1); 
-  ig2Pdf.SetFunction(toIntegratePdf);
+  //ROOT::Math::GSLMCIntegrator ig2Pdf("vegas", 1.e-12, 1.e-5, 1000);
+  //ROOT::Math::Functor toIntegratePdf(meIntegrator, &MEIntegratorNew::EvalPdf, 1); 
+  //ig2Pdf.SetFunction(toIntegratePdf);
 
   //double xLPdf[1] = {0.0000001};
   //double xUPdf[1] = {1.0};
 
-  for(int q = 0; q < 42; q++){
-    double qValue = 450 + q*50; 
-    meIntegrator->setQ(qValue);
+  //for(int q = 0; q < 8/*84*/; q++){
+  //double qValue = 450 + q*25; 
+  //meIntegrator->setQ(qValue);
 
-    double xLPdf[1] = {qValue*qValue/8000./8000.};
-    double xUPdf[1] = {1.0};
+  //double xLPdf[1] = {qValue*qValue/8000./8000.};
+  //double xUPdf[1] = {1.0};
 
-    double pPdf = ig2Pdf.Integral(xLPdf, xUPdf);
-    cout << pPdf << endl;
-    hPdfLumi->SetBinContent(hPdfLumi->FindBin(qValue), pPdf);
-  }
+  //double pPdf = ig2Pdf.Integral(xLPdf, xUPdf);
+  //cout << pPdf << endl;
+  //hPdfLumi->SetBinContent(hPdfLumi->FindBin(qValue), pPdf);
+  //}
+  //meIntegrator->setPartonLuminosity( hPdfLumi );
   //////////////////////
 
+  //double Q1    =  600;
+  //double Q2    =  800;
+  //double Q3    = 1000;
+  //double Q4    = 1500;
 
-  ROOT::Math::GSLMCIntegrator ig2("vegas", 1.e-12, 1.e-5, vegasPoints);
-  ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par); 
-  ig2.SetFunction(toIntegrate);
+  //double cos3 =   0;
+  //TH2F* meSquared1 = new TH2F("meSquared1","; m12 ; cos1Star", 50, 2*175, Q1-met, 50, -1,1);
+  //TH2F* meSquared2 = new TH2F("meSquared2","; m12 ; cos1Star", 50, 2*175, Q2-met, 50, -1,1);
+  //TH2F* meSquared3 = new TH2F("meSquared3","; m12 ; cos1Star", 50, 2*175, Q3-met, 50, -1,1);
+  //TH2F* meSquared4 = new TH2F("meSquared4","; m12 ; cos1Star", 50, 2*175, Q4-met, 50, -1,1);
+  /*
+  for(int x = 1; x <=meSquared1->GetNbinsX(); x++){
+    double m12 = meSquared1->GetXaxis()->GetBinCenter(x);
+    for(int y = 1; y <=meSquared1->GetNbinsY(); y++){
+      double cos1Star = meSquared1->GetYaxis()->GetBinCenter(y);
+      meSquared1->SetBinContent( x,y,  meIntegrator->meSquaredAtQ(Q1, m12, cos1Star, cos3) );
+    }
+  }
+
+  for(int x = 1; x <=meSquared2->GetNbinsX(); x++){
+    double m12 = meSquared2->GetXaxis()->GetBinCenter(x);
+    for(int y = 1; y <=meSquared2->GetNbinsY(); y++){
+      double cos1Star = meSquared2->GetYaxis()->GetBinCenter(y);
+      meSquared2->SetBinContent( x,y,  meIntegrator->meSquaredAtQ(Q2, m12, cos1Star, cos3) );
+    }
+  }
+
+  for(int x = 1; x <=meSquared3->GetNbinsX(); x++){
+    double m12 = meSquared3->GetXaxis()->GetBinCenter(x);
+    for(int y = 1; y <=meSquared3->GetNbinsY(); y++){
+      double cos1Star = meSquared3->GetYaxis()->GetBinCenter(y);
+      meSquared3->SetBinContent( x,y,  meIntegrator->meSquaredAtQ(Q3, m12, cos1Star, cos3) );
+    }
+  }
+
+  for(int x = 1; x <=meSquared4->GetNbinsX(); x++){
+    double m12 = meSquared4->GetXaxis()->GetBinCenter(x);
+    for(int y = 1; y <=meSquared4->GetNbinsY(); y++){
+      double cos1Star = meSquared4->GetYaxis()->GetBinCenter(y);
+      meSquared4->SetBinContent( x,y,  meIntegrator->meSquaredAtQ(Q4, m12, cos1Star, cos3) );
+    }
+  }
+  */
+
+  //////////////////////
+
+  //ROOT::Math::GSLMCIntegrator ig2("vegas", 1.e-12, 1.e-5, vegasPoints);
+  //ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par); 
+  //ig2.SetFunction(toIntegrate);
   
   const int nMassPoints = 29;
   double mH[nMassPoints] = {100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240};
@@ -359,7 +409,7 @@ int main(int argc, const char* argv[])
       properEvent = ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
 		      TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
 		      TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
-		      TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+		      TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
 		      TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
 		      genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
 		      genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
@@ -380,6 +430,7 @@ int main(int argc, const char* argv[])
       //jet6.SetPtEtaPhiM(95.5899 * pertBHad, 0.829954,3.10669,4.8);         // b from top hadr
       //jet7.SetPtEtaPhiM(32.805,             0.678347,-0.0951163,4.8);      // b1 from H
       //jet8.SetPtEtaPhiM(75.4309,            2.08021,2.75503,4.8);          // b2 from H
+
 
       vector<TLorentzVector> jets;
       jets.push_back( TOPLEPW1 );  
@@ -412,7 +463,6 @@ int main(int argc, const char* argv[])
       /////////////////////////////////////////////////////////////////////////////
 
       if(printP4) cout << ">>>" << endl;
-      meIntegrator->SetPar(par);
       if(printP4) cout << "Setup jets..." << endl;
       meIntegrator->setJets(&jets);
       if(printP4) cout << "Setup H mass..." << endl;
@@ -423,8 +473,15 @@ int main(int argc, const char* argv[])
       meIntegrator->initVersors(1);
       if(printP4) cout << "Setup TFs..." << endl;
       meIntegrator->initTF();
+      if(printP4) cout << "Build integrand..." << endl;
+      meIntegrator->setUseME (useME);
+      meIntegrator->setUseJac(useJac);
+      meIntegrator->setUseMET(useMET);
+      meIntegrator->setUseTF (useTF);
+      meIntegrator->setUsePDF(usePDF);
       if(printP4) cout << ">>>" << endl;
       
+
       /////////////////////////////////////////////////////////////////////////////
     
       double E1low   = (meIntegrator->getCachedTF("tfWjet1"))->GetXaxis()->GetXmin() * (1-enlargeE1);
@@ -459,10 +516,15 @@ int main(int argc, const char* argv[])
       double xL[4] = {  E1low,  Ptlow,   Philow,   Eh1low};
       double xU[4] = {  E1high, Pthigh , Phihigh,  Eh1high};
       
+      ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par);
+      ROOT::Math::GSLMCIntegrator ig2( ROOT::Math::IntegrationMultiDim::kVEGAS , 1.e-12, 1.e-5, vegasPoints);
+      ig2.SetFunction(toIntegrate);
+      meIntegrator->SetPar(par);
+
       hMass->Reset();
       for(int m = 0; m < nMassPoints ; m++){
-	meIntegrator->setMass( mH[m] );
-	//meIntegrator->setTopMass( mH[m], 80.19);
+	//meIntegrator->setMass( mH[m] );
+	meIntegrator->setTopMass( mH[m], 80.19);
 	double p = ig2.Integral(xL, xU);
 	 if(printP4) cout << "Mass " << mH[m] << " => prob  = " << p << endl;
 	hMass->Fill(mH[m], p);
@@ -470,7 +532,7 @@ int main(int argc, const char* argv[])
 
       hBestMass->Fill( hMass->GetBinCenter(hMass->GetMaximumBin())  );
 
-       if(printP4) cout << "Opening file to save histos" << endl;
+      if(printP4) cout << "Opening file to save histos" << endl;
       TFile* fout_tmp = TFile::Open(outFileName.c_str(),"UPDATE");
       TDirectory *dir = fout_tmp->mkdir(Form("Event_%d", counter));
       dir->cd();
@@ -480,6 +542,7 @@ int main(int argc, const char* argv[])
       (meIntegrator->getCachedPdf("pdfBetaWLep")) ->Write("pdfBetaWLep",TObject::kOverwrite);
       (meIntegrator->getCachedPdf("pdfGammaTTH")) ->Write("pdfGammaTTH",TObject::kOverwrite);
       (meIntegrator->getCachedPdf("pdf3D"))       ->Write("pdf3D",TObject::kOverwrite);
+      (meIntegrator->getCachedPdf("pdf2D"))       ->Write("pdf2D",TObject::kOverwrite);
       (meIntegrator->getCachedTF("tfWjet1"))      ->Write("tfWjet1",TObject::kOverwrite);
       (meIntegrator->getCachedTF("tfWjet2"))      ->Write("tfWjet2",TObject::kOverwrite);  
       (meIntegrator->getCachedTF("tfbHad"))       ->Write("tfbHad",TObject::kOverwrite);
@@ -503,7 +566,12 @@ int main(int argc, const char* argv[])
 
   TFile* fout_tmp = TFile::Open(outFileName.c_str(),"UPDATE");
   hBestMass->Write("hBestMass",TObject::kOverwrite);
-  hPdfLumi->Write("hPdfLumi",TObject::kOverwrite);
+  //hPdfLumi->Write("hPdfLumi",TObject::kOverwrite);
+  //meSquared1->Write("meSquared1",TObject::kOverwrite);
+  //meSquared2->Write("meSquared2",TObject::kOverwrite);
+  //meSquared3->Write("meSquared3",TObject::kOverwrite);
+  //meSquared4->Write("meSquared4",TObject::kOverwrite);
+
   fout_tmp->Close();
 
   //cout << "Closing file..." << endl;
