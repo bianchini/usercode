@@ -31,6 +31,7 @@
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TH3F.h"
+#include "TStopwatch.h"
 
 #include <string>
 #include <map>
@@ -184,8 +185,16 @@ class MEIntegratorNew {
   TH1F pdfBetaWHad_, pdfGammaWHad_, pdfBetaWLep_, pdfGammaWLep_, pdfGammaTTH_;
   TH2F pdf2D_;
   TH3F pdf3D_;
-  TH1F tfWjet1_, tfWjet2_, tfbHad_, tfbLep_, tfMetPt_, tfHiggs1_, tfHiggs2_;
-  TH2F tfMetPhi_;
+  TH1F* tfWjet1_;
+  TH1F* tfWjet2_;
+  TH1F* tfbHad_;
+  TH1F* tfbLep_;
+  TH1F* tfMetPt_;
+  TH1F* tfHiggs1_;
+  TH1F* tfHiggs2_;
+  TH2F* tfMetPhi_;
+
+  TStopwatch* clock_;
 
 };
 
@@ -195,6 +204,8 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   cout << "Begin constructor" << endl;
 
   LHAPDF::initPDFSet(0,"cteq65.LHgrid");
+
+  clock_ = new TStopwatch();
 
 
   par_     = param;
@@ -329,6 +340,7 @@ MEIntegratorNew::~MEIntegratorNew(){
 
   //out_->Close();
   //delete out_;
+  delete clock_;
 
   cout << "End destructor" << endl;
 
@@ -412,6 +424,8 @@ void MEIntegratorNew::adaptRange(TH1* f, float& xLow, float& xHigh, float quanti
 
 void MEIntegratorNew::createTFjet(string tfName, float eta, float pt, string flavor, float quantile, float margin){
 
+  //cout << "Creating " << tfName << endl;
+
   float xLow  =    0.;
   float xHigh = 1000.;
   float gevStep = 2.;
@@ -424,36 +438,68 @@ void MEIntegratorNew::createTFjet(string tfName, float eta, float pt, string fla
     gDirectory->Remove(gDirectory->FindObject("tf"));
   }
   
+  //clock_->Start();
   double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
   double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
-  double param0resp  = (jetParam_.find("param0resp"+flavor+bin))->second;
-  double param1resp  = (jetParam_.find("param1resp"+flavor+bin))->second;
+  double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
+  double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
 
   double trialWidth  = pt*TMath::Sqrt( param0resol*param0resol/pt + param1resol*param1resol/pt/pt);
+  //clock_->Stop();
+  //cout << "Eval parameters: " << clock_->RealTime() << endl;
 
-  TF1* tf = new TF1("tf",Form("TMath::Gaus( x, %f*[0]+%f , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", 
-			      param0resp, param1resp,
-			      param0resol*param0resol, param1resol*param1resol ),1, (pt+5*trialWidth));
+  //clock_->Start();
+  //TF1* tf = new TF1("tf",Form("TMath::Gaus( x, %f*[0]+%f , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0]) , 1) ", 
+  //			      param0resp, param1resp,
+  //		      param0resol*param0resol, param1resol*param1resol ),1, (pt+5*trialWidth));
   
-  //TF1* tf = new TF1("tf", "TMath::Gaus( x, [0] , 10 , 1)",1,1000); //toy
+  //TF1* tf = new TF1("tf", "1",1,1000); //toy
+  //clock_->Stop();
+  //cout << "Create TF1: " << clock_->RealTime() << endl;
 
+  //clock_->Start();
+  ////tf->SetNpx(100);
 
-
-  //tf->SetNpx(100);
+  /* OLD
   tf->SetParameter(0, pt );
   adaptRange(tf, xLow, xHigh, quantile, margin);
   if(xLow<0) xLow = 0.0;
-  
+  */
+
+  float meanTmp  = (pt*param0resp + param1resp);
+  float sigmaTmp = meanTmp*TMath::Sqrt( (param0resol*param0resol)/meanTmp + (param1resol*param1resol)/meanTmp/meanTmp );
+  int nSigmaLow  = 2;
+  int nSigmaHigh = tfName.find("Wjet1")!=string::npos || tfName.find("Higgs1")!=string::npos ?
+    3 : 4;
+
+  xLow    = TMath::Max( float(0.), meanTmp - nSigmaLow *(1+margin)*sigmaTmp  ); // -2 sigma
+  xHigh   = meanTmp + nSigmaHigh*(1+margin)*sigmaTmp   ;                 // +3/4 sigma
+  gevStep = sigmaTmp / 10.;
+
+  //clock_->Stop();
+  //cout << "Adapt range : " << clock_->RealTime() << endl;
+
+
   if(gDirectory->FindObject(("htf"+tfName).c_str())!=0){
     gDirectory->Remove(gDirectory->FindObject(("htf"+tfName).c_str()));
   }
 
+  //clock_->Start();
   TH1F* htf_ = new TH1F(("htf"+tfName).c_str(), "", int((xHigh-xLow)/gevStep), xLow, xHigh);
   for( int i = 1; i <= htf_->GetNbinsX(); i++){
     float binC = htf_->GetBinCenter(i);
+
+    double value = TMath::Gaus( pt , param0resp*binC+param1resp , binC*TMath::Sqrt( (param0resol*param0resol)/binC + (param1resol*param1resol)/binC/binC) , 1);
+    htf_->SetBinContent(i, value);
+    /* OLD
     tf->SetParameter(0, binC);
     htf_->SetBinContent(i, tf->Eval( pt ) );
+    */
   }
+  //clock_->Stop();
+  //cout << "Fill TH1 : " << clock_->RealTime() << endl;
+
+  //clock_->Start();
   if( transferFunctions_.find("tf"+tfName)!=transferFunctions_.end()){
     delete (transferFunctions_.find("tf"+tfName)->second);
     transferFunctions_.erase( transferFunctions_.find("tf"+tfName) );
@@ -463,29 +509,35 @@ void MEIntegratorNew::createTFjet(string tfName, float eta, float pt, string fla
     transferFunctions_["tf"+tfName] = htf_;
 
   if(tfName.find("Wjet1")!=string::npos)
-    tfWjet1_ = *htf_;
+    tfWjet1_ = htf_;
   else if (tfName.find("Wjet2")!=string::npos)
-    tfWjet2_ = *htf_;
+    tfWjet2_ = htf_;
   else if (tfName.find("bHad")!=string::npos)
-    tfbHad_ = *htf_;
+    tfbHad_ = htf_;
   else if (tfName.find("bLep")!=string::npos)
-    tfbLep_ = *htf_;
+    tfbLep_ = htf_;
   else if (tfName.find("Higgs1")!=string::npos)
-    tfHiggs1_ = *htf_;
+    tfHiggs1_ = htf_;
   else if (tfName.find("Higgs2")!=string::npos)
-    tfHiggs2_ = *htf_;
+    tfHiggs2_ = htf_;
   else{
     if(verbose_) cout << "Name in createTFjet is not valid" << endl;
   }
+  //clock_->Stop();
+  //cout << "Copy TH1 : " << clock_->RealTime() << endl;
+  //cout << "**** End ****" << endl;
 
-  delete tf;
+//delete tf;
 }
 
 
 void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quantile, float margin){
 
 
-  float xLowEt, xHighEt, xLowPhi, xHighPhi;
+  float xLowEt  =    0.;
+  float xHighEt = 1000.;
+  float xLowPhi =    0;
+  float xHighPhi= TMath::Pi();
   float gevStep = 4.;
   float etaStep = 0.04;
 
@@ -509,13 +561,13 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
   double param1EtWidth = (jetParam_.find("param1EtWidth"+bin))->second*(jetParam_.find("param1EtWidth"+bin))->second;
 
   TF1* tfMetPt   = new TF1(("tf"+tfName+"Pt").c_str(), Form("TMath::Gaus(x, (%f + %f*TMath::Exp(%f*[0]+%f) ),  [0]*TMath::Sqrt(%f/[0] + %f/[0]/[0])  , 1)",
-							    param0EtMean,param1EtMean,param2EtMean,param3EtMean,
-							    param0EtWidth,param1EtWidth
-							    ), -1000.,1000.); // x = reco - gen 
-  //tfMetPt->SetNpx(2000);
+  						    param0EtMean,param1EtMean,param2EtMean,param3EtMean,
+  						    param0EtWidth,param1EtWidth
+  						    ), -1000.,1000.); // x = reco - gen 
+  /* OLD 
+  ////tfMetPt->SetNpx(2000);
   tfMetPt->SetParameter(0, pt );
   adaptRange(tfMetPt, xLowEt, xHighEt, quantile, margin);
-
   if(xLowEt>0){
     xLowEt  += pt;
     xHighEt += pt;
@@ -524,6 +576,15 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
     xLowEt  =  0.;
     xHighEt += pt;
   }
+  */
+
+  float meanTmp    = (param0EtMean + param1EtMean*TMath::Exp(param2EtMean*pt+param3EtMean) );
+  float sigmaEtTmp = pt*TMath::Sqrt( (param0EtWidth)/pt + (param1EtWidth)/pt/pt );
+  int nSigmaEtLow  = 2;  
+  int nSigmaEtHigh = 3;  
+  xLowEt   = TMath::Max( pt + meanTmp - nSigmaEtLow *sigmaEtTmp , float(0.)) ; // -2 sigma
+  xHighEt  =             pt + meanTmp + nSigmaEtHigh*sigmaEtTmp  ;             // +3 sigma
+  gevStep  = sigmaEtTmp / 10.;
 
   if(gDirectory->FindObject(("htf"+tfName+"Pt").c_str())!=0){
     gDirectory->Remove(gDirectory->FindObject(("htf"+tfName+"Pt").c_str()));
@@ -543,7 +604,7 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
   else
     transferFunctions_["tf"+tfName+"Pt"] = htfMetPt_;
 
-  tfMetPt_ = *htfMetPt_;
+  tfMetPt_ = htfMetPt_;
   delete tfMetPt;
 
   if(gDirectory->FindObject(("tf"+tfName+"Phi").c_str())!=0){
@@ -558,11 +619,17 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
 							     param0PhiWidth,param1PhiWidth, param0PhiWidth,param1PhiWidth
 							     ), 0., TMath::Pi());  // x = |reco-gen| 
 
+  /* OLD
   //tfMetPhi->SetNpx(1000);
   tfMetPhi->SetParameter(0, pt );
   adaptRange(tfMetPhi, xLowPhi, xHighPhi, quantile, margin );
-
   if((TMath::Pi() - xHighPhi) < 0.2) xHighPhi =  TMath::Pi();
+  */
+
+  float sigmaPhiTmp = ( (param0PhiWidth)/pt + (param1PhiWidth)/pt/pt );
+  int nSigmaPhiHigh = 2;  
+  xHighPhi  = TMath::Min( nSigmaPhiHigh*sigmaPhiTmp , float(TMath::Pi()) )  ; // +2 sigma
+ 
 
 
   if(gDirectory->FindObject(("htf"+tfName+"Phi").c_str())!=0){
@@ -576,7 +643,7 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
     tfMetPhi->SetParameter(0, binCX);
      for( int j = 1; j <= htfMetPhi_->GetNbinsY(); j++){
        float binCY = htfMetPhi_->GetYaxis()->GetBinCenter(j);
-       //htfMetPhi_->SetBinContent(i,j, tfMetPhi->Eval( TMath::ACos(TMath::Cos( phi - binCY)) ) );
+       /////////htfMetPhi_->SetBinContent(i,j, tfMetPhi->Eval( TMath::ACos(TMath::Cos( phi - binCY)) ) );
        htfMetPhi_->SetBinContent(i,j, tfMetPhi->Eval( binCY ) );
      }
   }
@@ -588,7 +655,7 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
   else
     transferFunctions_["tf"+tfName+"Phi"] = htfMetPhi_;
 
-  tfMetPhi_ = *htfMetPhi_;
+  tfMetPhi_ = htfMetPhi_;
   delete tfMetPhi;
 
 
@@ -1614,24 +1681,24 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
     higgsJakobi( Eh1, Eh2 ) 
     ;
 
-  double tf1 = (W1Had.E()>=tfWjet1_.GetXaxis()->GetXmin() && W1Had.E()<=tfWjet1_.GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(&tfWjet1_)  ->Interpolate( W1Had.E() ) : 0.0;
-  double tf2 = (W2Had.E()>=tfWjet2_.GetXaxis()->GetXmin() && W2Had.E()<=tfWjet2_.GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(&tfWjet2_)  ->Interpolate( W2Had.E() ) : 0.0;
-  double tf3 = (bHad.E()>=tfbHad_.GetXaxis()->GetXmin() && bHad.E()<=tfbHad_.GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(&tfbHad_)   ->Interpolate( bHad.E()  ) : 0.0;
-  double tf4 = (bLep.E()>=tfbLep_.GetXaxis()->GetXmin() && bLep.E()<=tfbLep_.GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(&tfbLep_)->Interpolate( bLep.E()  ) : 0.0;
-  double tf5 = (higgs1.E()>=tfHiggs1_.GetXaxis()->GetXmin() && higgs1.E()<=tfHiggs1_.GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(&tfHiggs1_) ->Interpolate( higgs1.E()) : 0.0;
-  double tf6 = (higgs2.E()>=tfHiggs2_.GetXaxis()->GetXmin() && higgs2.E()<=tfHiggs2_.GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(&tfHiggs2_) ->Interpolate( higgs2.E()) : 0.0;
-  double tf7 = (WLepNu.Pt() >= tfMetPt_.GetXaxis()->GetXmin() && WLepNu.Pt() <= tfMetPt_.GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(&tfMetPt_)  ->Interpolate( WLepNu.Pt()) : 0.0;
+  double tf1 = (W1Had.E()>=tfWjet1_->GetXaxis()->GetXmin() && W1Had.E()<=tfWjet1_->GetXaxis()->GetXmax()) ?
+    const_cast<TH1F*>(tfWjet1_)  ->Interpolate( W1Had.E() ) : 0.0;
+  double tf2 = (W2Had.E()>=tfWjet2_->GetXaxis()->GetXmin() && W2Had.E()<=tfWjet2_->GetXaxis()->GetXmax()) ?
+    const_cast<TH1F*>(tfWjet2_)  ->Interpolate( W2Had.E() ) : 0.0;
+  double tf3 = (bHad.E()>=tfbHad_->GetXaxis()->GetXmin() && bHad.E()<=tfbHad_->GetXaxis()->GetXmax()) ?
+    const_cast<TH1F*>(tfbHad_)   ->Interpolate( bHad.E()  ) : 0.0;
+  double tf4 = (bLep.E()>=tfbLep_->GetXaxis()->GetXmin() && bLep.E()<=tfbLep_->GetXaxis()->GetXmax()) ?
+    const_cast<TH1F*>(tfbLep_)->Interpolate( bLep.E()  ) : 0.0;
+  double tf5 = (higgs1.E()>=tfHiggs1_->GetXaxis()->GetXmin() && higgs1.E()<=tfHiggs1_->GetXaxis()->GetXmax()) ?
+    const_cast<TH1F*>(tfHiggs1_) ->Interpolate( higgs1.E()) : 0.0;
+  double tf6 = (higgs2.E()>=tfHiggs2_->GetXaxis()->GetXmin() && higgs2.E()<=tfHiggs2_->GetXaxis()->GetXmax()) ?
+    const_cast<TH1F*>(tfHiggs2_) ->Interpolate( higgs2.E()) : 0.0;
+  double tf7 = (WLepNu.Pt() >= tfMetPt_->GetXaxis()->GetXmin() && WLepNu.Pt() <= tfMetPt_->GetXaxis()->GetXmax()) ?
+    const_cast<TH1F*>(tfMetPt_)  ->Interpolate( WLepNu.Pt()) : 0.0;
   double tf8 = 
-    (WLepNu.Pt() <= tfMetPhi_.GetXaxis()->GetXmax() && WLepNu.Pt() >= tfMetPhi_.GetXaxis()->GetXmin()) && 
-    (TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) <= tfMetPhi_.GetYaxis()->GetXmax() && TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) >= tfMetPhi_.GetYaxis()->GetXmin()) ?
-    const_cast<TH2F*>(&tfMetPhi_) ->Interpolate( WLepNu.Pt(), TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) ) : 0.0;
+    (WLepNu.Pt() <= tfMetPhi_->GetXaxis()->GetXmax() && WLepNu.Pt() >= tfMetPhi_->GetXaxis()->GetXmin()) && 
+    (TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) <= tfMetPhi_->GetYaxis()->GetXmax() && TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) >= tfMetPhi_->GetYaxis()->GetXmin()) ?
+    const_cast<TH2F*>(tfMetPhi_) ->Interpolate( WLepNu.Pt(), TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) ) : 0.0;
 
   double TFpart = 
     tf1 *

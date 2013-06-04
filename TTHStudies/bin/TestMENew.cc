@@ -19,6 +19,8 @@
 #include "Math/GenVector/LorentzVector.h"
 #include "TLorentzVector.h"
 #include "TVectorD.h"
+#include "TRandom3.h"
+#include "TStopwatch.h"
 
 #include "Math/Factory.h"
 #include "Math/Functor.h"
@@ -182,8 +184,13 @@ int main(int argc, const char* argv[])
   //delete fout
   gSystem->Exec(("rm "+outFileName).c_str());
 
+  TStopwatch* clock = new TStopwatch();
+  TRandom3*   ran   = new TRandom3();
 
-  int printP4 = 1;
+  int printP4          = 0;
+  int shiftMomenta     = 1;
+  int testMassScan     = 0;
+  int testPermutations = 1;
   int par = 4;
   MEIntegratorNew* meIntegrator = new MEIntegratorNew( pathToTF , par, int(verbose));
 
@@ -262,10 +269,27 @@ int main(int argc, const char* argv[])
   //ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par); 
   //ig2.SetFunction(toIntegrate);
   
-  const int nMassPoints = 29;
-  double mH[nMassPoints] = {100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240};
-  TH1F*  hMass     = new TH1F("hMass","",29, 97.5, 242.5);
-  TH1F*  hBestMass = new TH1F("hBestMass","",40, 50, 250);
+  //const int nMassPoints = 30;
+  //double mH[nMassPoints] = {95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240};
+  const int nMassPoints  = 18;                                                                                                                        
+  double mH[nMassPoints] = {90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175}; 
+ 
+  TH1F*  hMass         = new TH1F("hMass","",nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
+  TH1F*  hBestMass     = new TH1F("hBestMass","",40, 50, 250);
+  TH1F*  hMassProb     = new TH1F("hMassProb","",nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
+  TH1F*  hBestMassProb = new TH1F("hBestMassProb","",18, 87.5, 177.5);
+  TTree* tProb         = new TTree("tree","");
+  float prob_;
+  float mass_;
+  float initCpu_,initRea_,instCpu_, instRea_,evalCpu_,evalRea_;
+  tProb->Branch("prob",&prob_,"prob/F");
+  tProb->Branch("mass",&mass_,"mass/F");
+  tProb->Branch("initCpu",&initCpu_,"initCpu/F");
+  tProb->Branch("initRea",&initRea_,"initRea/F");
+  tProb->Branch("instCpu",&instCpu_,"instCpu/F");
+  tProb->Branch("instRea",&instRea_,"instRea/F");
+  tProb->Branch("evalCpu",&evalCpu_,"evalCpu/F");
+  tProb->Branch("evalRea",&evalRea_,"evalRea/F");
 
   ////////////////////////////////////////////////////////
 
@@ -298,9 +322,9 @@ int main(int argc, const char* argv[])
   ////////////////////////////////////////////////////////
 
 
-  for(unsigned int i = 0 ; i < mySampleFiles.size(); i++){
+  for(unsigned int sample = 0 ; sample < mySampleFiles.size(); sample++){
     
-    string currentName       = mySampleFiles[i];
+    string currentName       = mySampleFiles[sample];
 
     mySamples->OpenFile( currentName );
     cout << "Opening file " << currentName << endl;
@@ -430,135 +454,361 @@ int main(int argc, const char* argv[])
       //jet6.SetPtEtaPhiM(95.5899 * pertBHad, 0.829954,3.10669,4.8);         // b from top hadr
       //jet7.SetPtEtaPhiM(32.805,             0.678347,-0.0951163,4.8);      // b1 from H
       //jet8.SetPtEtaPhiM(75.4309,            2.08021,2.75503,4.8);          // b2 from H
+      if(testMassScan){
+
+	vector<TLorentzVector> jets;
+	jets.push_back( TOPLEPW1  );  
+	jets.push_back( TOPLEPW2  );  
+	jets.push_back( TOPLEPB   );
+	jets.push_back( TOPHADW1  );  
+	jets.push_back( TOPHADW2  );  
+	jets.push_back( TOPHADB   );
+	jets.push_back( genBLV    );
+	jets.push_back( genBbarLV );
+
+	if(printP4){
+	  cout << "*******START******" << endl;      
+	  cout << "SumEt = " << METtype1p2corr.sumet  << endl;
+	  cout << "lep:  jet1.SetPtEtaPhiM(" << TOPLEPW1.Pt() << "," <<  TOPLEPW1.Eta() << "," << TOPLEPW1.Phi() << "," << TOPLEPW1.M() << ")" << endl;
+	  cout << "met:  jet2.SetPtEtaPhiM(" << TOPLEPW2.Pt() << "," <<  TOPLEPW2.Eta() << "," << TOPLEPW2.Phi() << "," << TOPLEPW2.M() << ")" << endl;
+	  cout << "blep: jet3.SetPtEtaPhiM(" << TOPLEPB.Pt() << "," <<  TOPLEPB.Eta() << "," << TOPLEPB.Phi() << "," << TOPLEPB.M() << ")" << endl;
+	  cout << "w1:   jet4.SetPtEtaPhiM(" << TOPHADW1.Pt() << "," <<  TOPHADW1.Eta() << "," << TOPHADW1.Phi() << "," << TOPHADW1.M() << ")" << endl;
+	  cout << "w2:   jet5.SetPtEtaPhiM(" << TOPHADW2.Pt() << "," <<  TOPHADW2.Eta() << "," << TOPHADW2.Phi() << "," << TOPHADW2.M() << ")" << endl;
+	  cout << "bhad: jet6.SetPtEtaPhiM(" << TOPHADB.Pt() << "," <<  TOPHADB.Eta() << "," << TOPHADB.Phi() << "," << TOPHADB.M() << ")" << endl;
+	  cout << "h1:   jet7.SetPtEtaPhiM(" << genBLV.Pt() << "," <<  genBLV.Eta() << "," << genBLV.Phi() << "," << genBLV.M() << ")" << endl;
+	  cout << "h2:   jet8.SetPtEtaPhiM(" << genBbarLV.Pt() << "," <<  genBbarLV.Eta() << "," << genBbarLV.Phi() << "," << genBbarLV.M() << ")" << endl;	
+	  cout << "Top Lep mass = " << (TOPLEPW1+TOPLEPW2+TOPLEPB).M() << " <=> neutrino eta=0!!!" << endl;
+	  cout << "Top Had mass = " << (TOPHADW1+TOPHADW2+TOPHADB).M() << endl;
+	  cout << "Higgs mass = "   << (genBLV+genBbarLV).M() << endl;
+	  cout << "Neut cosTheta = " << neutCosTheta << endl;
+	}
 
 
-      vector<TLorentzVector> jets;
-      jets.push_back( TOPLEPW1 );  
-      jets.push_back( TOPLEPW2 );  
-      jets.push_back( TOPLEPB );
-      jets.push_back( TOPHADW1 );  
-      jets.push_back( TOPHADW2 );  
-      jets.push_back( TOPHADB );
-      jets.push_back( genBLV );
-      jets.push_back( genBbarLV );
+	if(shiftMomenta){
 
-      if(printP4){
-	cout << "*******START******" << endl;      
-	cout << "SumEt = " << METtype1p2corr.sumet  << endl;
-	cout << "lep:  jet1.SetPtEtaPhiM(" << TOPLEPW1.Pt() << "," <<  TOPLEPW1.Eta() << "," << TOPLEPW1.Phi() << "," << TOPLEPW1.M() << ")" << endl;
-	cout << "met:  jet2.SetPtEtaPhiM(" << TOPLEPW2.Pt() << "," <<  TOPLEPW2.Eta() << "," << TOPLEPW2.Phi() << "," << TOPLEPW2.M() << ")" << endl;
-	cout << "blep: jet3.SetPtEtaPhiM(" << TOPLEPB.Pt() << "," <<  TOPLEPB.Eta() << "," << TOPLEPB.Phi() << "," << TOPLEPB.M() << ")" << endl;
-	cout << "w1:   jet4.SetPtEtaPhiM(" << TOPHADW1.Pt() << "," <<  TOPHADW1.Eta() << "," << TOPHADW1.Phi() << "," << TOPHADW1.M() << ")" << endl;
-	cout << "w2:   jet5.SetPtEtaPhiM(" << TOPHADW2.Pt() << "," <<  TOPHADW2.Eta() << "," << TOPHADW2.Phi() << "," << TOPHADW2.M() << ")" << endl;
-	cout << "bhad: jet6.SetPtEtaPhiM(" << TOPHADB.Pt() << "," <<  TOPHADB.Eta() << "," << TOPHADB.Phi() << "," << TOPHADB.M() << ")" << endl;
-	cout << "h1:   jet7.SetPtEtaPhiM(" << genBLV.Pt() << "," <<  genBLV.Eta() << "," << genBLV.Phi() << "," << genBLV.M() << ")" << endl;
-	cout << "h2:   jet8.SetPtEtaPhiM(" << genBbarLV.Pt() << "," <<  genBbarLV.Eta() << "," << genBbarLV.Phi() << "," << genBbarLV.M() << ")" << endl;	
-	cout << "Top Lep mass = " << (TOPLEPW1+TOPLEPW2+TOPLEPB).M() << " <=> neutrino eta=0!!!" << endl;
-	cout << "Top Had mass = " << (TOPHADW1+TOPHADW2+TOPHADB).M() << endl;
-	cout << "Higgs mass = "   << (genBLV+genBbarLV).M() << endl;
-	cout << "Neut cosTheta = " << neutCosTheta << endl;
-      }
+	  /*
+	  meIntegrator->setJets(&jets);
+	  meIntegrator->initVersors(1);
+	  meIntegrator->initTF();
+	  
+	  double errWjet1  = (meIntegrator->getCachedTF("tfWjet1"))->GetRandom()  ;
+	  double errWjet2  = (meIntegrator->getCachedTF("tfWjet2"))->GetRandom()  ;
+	  double errbHad   = (meIntegrator->getCachedTF("tfbHad"))->GetRandom()   ;
+	  double errbLep   = (meIntegrator->getCachedTF("tfbLep"))->GetRandom()   ;
+	  double errHiggs1 = (meIntegrator->getCachedTF("tfHiggs1"))->GetRandom() ;
+	  double errHiggs2 = (meIntegrator->getCachedTF("tfHiggs2"))->GetRandom() ;
+	  double errMetPt  = (meIntegrator->getCachedTF("tfMetPt"))->GetRandom()  ;
+	  double errMetPhi = (((TH2F*)(meIntegrator->getCachedTF("tfMetPhi")))->ProjectionY("_py", 
+											    (meIntegrator->getCachedTF("tfMetPhi"))->GetXaxis()->FindBin( TOPLEPW2.Pt() ),
+											    (meIntegrator->getCachedTF("tfMetPhi"))->GetXaxis()->FindBin( TOPLEPW2.Pt() )  ))->GetRandom() ;
+	  
+	  meIntegrator->deleteTF();
+	  */
+	  double errWjet1 = ran->Gaus( TOPHADW1.E(),  0.15*TOPHADW1.E());
+	  double errWjet2 = ran->Gaus( TOPHADW2.E(),  0.15*TOPHADW2.E());
+	  double errbHad  = ran->Gaus( TOPHADB.E()  *0.93 ,  0.18*TOPHADB.E());
+	  double errbLep  = ran->Gaus( TOPLEPB.E()  *0.93 ,  0.18*TOPLEPB.E());
+	  double errHiggs1= ran->Gaus( genBLV.E()   *0.93,   0.18*genBLV.E());
+	  double errHiggs2= ran->Gaus( genBbarLV.E()*0.93,   0.18*genBbarLV.E());
+	  double errMetPx = TOPLEPW2.Px() + ran->Gaus(0.0, 20.);
+	  double errMetPy = TOPLEPW2.Py() + ran->Gaus(0.0, 20.);
+	  double errMetPz = TOPLEPW2.Pz() ;
 
+	  TLorentzVector TOPLEPW1scaled  (TOPLEPW1.Vect()   , TOPLEPW1.E());
+	  TLorentzVector TOPLEPW2scaled;
+	  TOPLEPW2scaled.SetPxPyPzE(errMetPx,errMetPy,errMetPz,sqrt(errMetPx*errMetPx + errMetPy*errMetPy + errMetPz*errMetPz));
+	  TLorentzVector TOPLEPBscaled  (TOPLEPB.Vect()  *(errbLep/TOPLEPB.E())  , errbLep);
+	  TLorentzVector TOPHADW1scaled (TOPHADW1.Vect() *(errWjet1/TOPHADW1.E()), errWjet1);
+	  TLorentzVector TOPHADW2scaled (TOPHADW2.Vect() *(errWjet2/TOPHADW2.E()), errWjet2);
+	  TLorentzVector TOPHADBscaled  (TOPHADB.Vect()  *(errbHad/TOPHADB.E())  , errbHad);
+	  TLorentzVector genBLVscaled   (genBLV.Vect()   *(errHiggs1/genBLV.E()) , errHiggs1);
+	  TLorentzVector genBbarLVscaled(genBbarLV.Vect()*(errHiggs2/genBbarLV.E()) , errHiggs2);
+	  
+	  if(printP4){
+	    cout << "*******START******" << endl;      
+	    cout << "SumEt = " << METtype1p2corr.sumet  << endl;
+	    cout << "lep   (scaled): jet1.SetPtEtaPhiM(" << TOPLEPW1scaled.Pt() << "," <<  TOPLEPW1scaled.Eta() << "," << TOPLEPW1scaled.Phi() << "," << TOPLEPW1scaled.M() << ")" << endl;
+	    cout << "met:  (scaled)  jet2.SetPtEtaPhiM(" << TOPLEPW2scaled.Pt() << "," <<  TOPLEPW2scaled.Eta() << "," << TOPLEPW2scaled.Phi() << "," << TOPLEPW2scaled.M() << ")" << endl;
+	    cout << "blep: (scaled)  jet3.SetPtEtaPhiM(" << TOPLEPBscaled.Pt() << "," <<  TOPLEPBscaled.Eta() << "," << TOPLEPBscaled.Phi() << "," << TOPLEPBscaled.M() << ")" << endl;
+	    cout << "w1:   (scaled)  jet4.SetPtEtaPhiM(" << TOPHADW1scaled.Pt() << "," <<  TOPHADW1scaled.Eta() << "," << TOPHADW1scaled.Phi() << "," << TOPHADW1scaled.M() << ")" << endl;
+	    cout << "w2:   (scaled)  jet5.SetPtEtaPhiM(" << TOPHADW2scaled.Pt() << "," <<  TOPHADW2scaled.Eta() << "," << TOPHADW2scaled.Phi() << "," << TOPHADW2scaled.M() << ")" << endl;
+	    cout << "bhad: (scaled)  jet6.SetPtEtaPhiM(" << TOPHADBscaled.Pt() << "," <<  TOPHADBscaled.Eta() << "," << TOPHADBscaled.Phi() << "," << TOPHADBscaled.M() << ")" << endl;
+	    cout << "h1:   (scaled)  jet7.SetPtEtaPhiM(" << genBLVscaled.Pt() << "," <<  genBLVscaled.Eta() << "," << genBLVscaled.Phi() << "," << genBLVscaled.M() << ")" << endl;
+	    cout << "h2:   (scaled)  jet8.SetPtEtaPhiM(" << genBbarLVscaled.Pt() << "," <<  genBbarLVscaled.Eta() << "," << genBbarLVscaled.Phi() << "," << genBbarLVscaled.M() << ")" << endl;	
+	    cout << "Top Lep mass (scaled) = " << (TOPLEPW1scaled+TOPLEPW2scaled+TOPLEPBscaled).M() << " <=> neutrino eta=0!!!" << endl;
+	    cout << "Top Had mass (scaled) = " << (TOPHADW1scaled+TOPHADW2scaled+TOPHADBscaled).M() << endl;
+	    cout << "Higgs mass (scaled) = "   << (genBLVscaled+genBbarLVscaled).M() << endl;
+	  }
 
-      /////////////////////////////////////////////////////////////////////////////
+	  jets.clear();
+	  jets.push_back( TOPLEPW1scaled  );  
+	  jets.push_back( TOPLEPW2scaled  );  
+	  jets.push_back( TOPLEPBscaled   );
+	  jets.push_back( TOPHADW1scaled  );  
+	  jets.push_back( TOPHADW2scaled  );  
+	  jets.push_back( TOPHADBscaled   );
+	  jets.push_back( genBLVscaled    );
+	  jets.push_back( genBbarLVscaled );
+	  
+	}
 
-      if(printP4) cout << ">>>" << endl;
-      if(printP4) cout << "Setup jets..." << endl;
-      meIntegrator->setJets(&jets);
-      if(printP4) cout << "Setup H mass..." << endl;
-      meIntegrator->setMass( met );
-      meIntegrator->setTopMass( 174.3 , 80.19);
-      meIntegrator->setSumEt( METtype1p2corr.sumet );
-      if(printP4) cout << "Setup versors..." << endl;
-      meIntegrator->initVersors(1);
-      if(printP4) cout << "Setup TFs..." << endl;
-      meIntegrator->initTF();
-      if(printP4) cout << "Build integrand..." << endl;
-      meIntegrator->setUseME (useME);
-      meIntegrator->setUseJac(useJac);
-      meIntegrator->setUseMET(useMET);
-      meIntegrator->setUseTF (useTF);
-      meIntegrator->setUsePDF(usePDF);
-      if(printP4) cout << ">>>" << endl;
+	/////////////////////////////////////////////////////////////////////////////
+	clock->Start();
+
+	if(printP4) cout << ">>>" << endl;
+	if(printP4) cout << "Setup jets..." << endl;
+	meIntegrator->setJets(&jets);
+	if(printP4) cout << "Setup H mass..." << endl;
+	meIntegrator->setMass( met );
+	meIntegrator->setTopMass( 174.3 , 80.19);
+	meIntegrator->setSumEt( METtype1p2corr.sumet );
+	if(printP4) cout << "Setup versors..." << endl;
+	meIntegrator->initVersors(1);
+	if(printP4) cout << "Setup TFs..." << endl;
+	meIntegrator->initTF();
+	if(printP4) cout << "Build integrand..." << endl;
+	meIntegrator->setUseME (useME);
+	meIntegrator->setUseJac(useJac);
+	meIntegrator->setUseMET(useMET);
+	meIntegrator->setUseTF (useTF);
+	meIntegrator->setUsePDF(usePDF);
+	if(printP4) cout << ">>>" << endl;
       
+	clock->Stop();
 
-      /////////////////////////////////////////////////////////////////////////////
+	initCpu_ = clock->CpuTime();
+	initRea_ = clock->RealTime();
+
+	clock->Reset();
+
+	/////////////////////////////////////////////////////////////////////////////
     
-      double E1low   = (meIntegrator->getCachedTF("tfWjet1"))->GetXaxis()->GetXmin() * (1-enlargeE1);
-      double E1high  = (meIntegrator->getCachedTF("tfWjet1"))->GetXaxis()->GetXmax() * (1+enlargeE1);
+	double E1low   = (meIntegrator->getCachedTF("tfWjet1"))->GetXaxis()->GetXmin() * (1-enlargeE1);
+	double E1high  = (meIntegrator->getCachedTF("tfWjet1"))->GetXaxis()->GetXmax() * (1+enlargeE1);
+	
+	double Ptlow   = (meIntegrator->getCachedTF("tfMetPt"))->GetXaxis()->GetXmin() * (1-enlargePt);
+	double Pthigh  = (meIntegrator->getCachedTF("tfMetPt"))->GetXaxis()->GetXmax() * (1+enlargePt);
+	
+	Ptlow  = -1; //0.781794 - 0.05;
+	Pthigh = +1; //0.781794 + 0.05;
       
-      double Ptlow   = (meIntegrator->getCachedTF("tfMetPt"))->GetXaxis()->GetXmin() * (1-enlargePt);
-      double Pthigh  = (meIntegrator->getCachedTF("tfMetPt"))->GetXaxis()->GetXmax() * (1+enlargePt);
-      
-      Ptlow  = -1; //0.781794 - 0.05;
-      Pthigh = +1; //0.781794 + 0.05;
-      
-      double Philow   = -(meIntegrator->getCachedTF("tfMetPhi"))->GetYaxis()->GetXmax();
-      double Phihigh  =  (meIntegrator->getCachedTF("tfMetPhi"))->GetYaxis()->GetXmax();
+	double Philow   = -(meIntegrator->getCachedTF("tfMetPhi"))->GetYaxis()->GetXmax();
+	double Phihigh  =  (meIntegrator->getCachedTF("tfMetPhi"))->GetYaxis()->GetXmax();
             
-      //Philow  = -TMath::Pi();
-      //Phihigh = +TMath::Pi();
+	//Philow  = -TMath::Pi();
+	//Phihigh = +TMath::Pi();
 
-      double Eh1low   = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmin() * (1-enlargeEh1);
-      double Eh1high  = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmax() * (1+enlargeEh1);
+	double Eh1low   = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmin() * (1-enlargeEh1);
+	double Eh1high  = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmax() * (1+enlargeEh1);
       
-      /////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////
       
-      if(printP4){
-	cout << "E1 :       ["  << E1low  << "," << E1high  << "]" << endl;
-	cout << "cosTheta : ["  << Ptlow  << "," << Pthigh  << "]" << endl;
-	cout << "Phi :      ["  << Philow << "," << Phihigh << "]" << endl;
-	cout << "Eh1 :      ["  << Eh1low << "," << Eh1high << "]" << endl;
+	if(printP4){
+	  cout << "E1 :       ["  << E1low  << "," << E1high  << "]" << endl;
+	  cout << "cosTheta : ["  << Ptlow  << "," << Pthigh  << "]" << endl;
+	  cout << "Phi :      ["  << Philow << "," << Phihigh << "]" << endl;
+	  cout << "Eh1 :      ["  << Eh1low << "," << Eh1high << "]" << endl;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////
+	
+	double xL[4] = {  E1low,  Ptlow,   Philow,   Eh1low};
+	double xU[4] = {  E1high, Pthigh , Phihigh,  Eh1high};
+      
+	clock->Start();
+
+	ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par);
+	ROOT::Math::GSLMCIntegrator ig2( ROOT::Math::IntegrationMultiDim::kVEGAS , 1.e-12, 1.e-5, vegasPoints);
+	ig2.SetFunction(toIntegrate);
+	meIntegrator->SetPar(par);
+
+	clock->Stop();
+
+	instCpu_ = clock->CpuTime();
+	instRea_ = clock->RealTime();
+
+	clock->Reset();
+
+	evalCpu_ = 0.;
+	evalRea_ = 0.;
+	hMass->Reset();
+	for(int m = 0; m < nMassPoints ; m++){
+	  meIntegrator->setMass( mH[m] );
+	  //meIntegrator->setTopMass( mH[m], 80.19);
+
+	  clock->Start();
+	  double p = ig2.Integral(xL, xU);
+	  clock->Stop();
+	  evalCpu_ += clock->CpuTime();
+	  evalRea_ += clock->RealTime();
+	  clock->Reset();
+
+	  if(printP4) cout << "Mass " << mH[m] << " => prob  = " << p << endl;
+	  hMass->Fill(mH[m], p);
+	  if(mH[m]>122.5 && mH[m]<127.5){
+	    prob_ = p;
+	    tProb->Fill();
+	  }
+	}
+
+	hBestMass->Fill( hMass->GetBinCenter(hMass->GetMaximumBin())  );
+
+	if(printP4) cout << "Opening file to save histos" << endl;
+	TFile* fout_tmp = TFile::Open(outFileName.c_str(),"UPDATE");
+	TDirectory *dir = fout_tmp->mkdir(Form("Event_%d", counter));
+	dir->cd();
+	(meIntegrator->getCachedPdf("pdfGammaWHad"))->Write("pdfGammaWHad",TObject::kOverwrite);
+	(meIntegrator->getCachedPdf("pdfBetaWHad")) ->Write("pdfBetaWHad",TObject::kOverwrite);
+	(meIntegrator->getCachedPdf("pdfGammaWLep"))->Write("pdfGammaWLep",TObject::kOverwrite);
+	(meIntegrator->getCachedPdf("pdfBetaWLep")) ->Write("pdfBetaWLep",TObject::kOverwrite);
+	(meIntegrator->getCachedPdf("pdfGammaTTH")) ->Write("pdfGammaTTH",TObject::kOverwrite);
+	(meIntegrator->getCachedPdf("pdf3D"))       ->Write("pdf3D",TObject::kOverwrite);
+	(meIntegrator->getCachedPdf("pdf2D"))       ->Write("pdf2D",TObject::kOverwrite);
+	(meIntegrator->getCachedTF("tfWjet1"))      ->Write("tfWjet1",TObject::kOverwrite);
+	(meIntegrator->getCachedTF("tfWjet2"))      ->Write("tfWjet2",TObject::kOverwrite);  
+	(meIntegrator->getCachedTF("tfbHad"))       ->Write("tfbHad",TObject::kOverwrite);
+	(meIntegrator->getCachedTF("tfbLep"))       ->Write("tfbLep",TObject::kOverwrite);
+	(meIntegrator->getCachedTF("tfHiggs1"))     ->Write("tfHiggs1",TObject::kOverwrite);
+	(meIntegrator->getCachedTF("tfHiggs2"))     ->Write("tfHiggs2",TObject::kOverwrite);
+	(meIntegrator->getCachedTF("tfMetPt"))      ->Write("tfMetPt",TObject::kOverwrite);
+	(meIntegrator->getCachedTF("tfMetPhi"))     ->Write("tfMetPhi",TObject::kOverwrite);
+	hMass->Write("hMass",TObject::kOverwrite);
+	if(printP4) cout << "Closing file to save histos" << endl;
+	fout_tmp->Close();
+	
+
+	meIntegrator->deleteTF();
+	if(printP4) cout << "*******END********" << endl;      
       }
+      //////////////////////////////////////////////////////////
+      // test permutations
+      if(testPermutations) {
 
-      /////////////////////////////////////////////////////////////////////////////
-      
-      double xL[4] = {  E1low,  Ptlow,   Philow,   Eh1low};
-      double xU[4] = {  E1high, Pthigh , Phihigh,  Eh1high};
-      
-      ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par);
-      ROOT::Math::GSLMCIntegrator ig2( ROOT::Math::IntegrationMultiDim::kVEGAS , 1.e-12, 1.e-5, vegasPoints);
-      ig2.SetFunction(toIntegrate);
-      meIntegrator->SetPar(par);
+	double errWjet1 = ran->Gaus( TOPHADW1.E(),         0.15*TOPHADW1.E());
+	double errWjet2 = ran->Gaus( TOPHADW2.E(),         0.15*TOPHADW2.E());
+	double errbHad  = ran->Gaus( TOPHADB.E()  *0.93 ,  0.18*TOPHADB.E());
+	double errbLep  = ran->Gaus( TOPLEPB.E()  *0.93 ,  0.18*TOPLEPB.E());
+	double errHiggs1= ran->Gaus( genBLV.E()   *0.93,   0.18*genBLV.E());
+	double errHiggs2= ran->Gaus( genBbarLV.E()*0.93,   0.18*genBbarLV.E());
+	double errMetPx = TOPLEPW2.Px() + ran->Gaus(0.0, 20.);
+	double errMetPy = TOPLEPW2.Py() + ran->Gaus(0.0, 20.);
+	double errMetPz = TOPLEPW2.Pz() ;
+	
+	TLorentzVector TOPLEPW1scaled  (TOPLEPW1.Vect()   , TOPLEPW1.E());
+	TLorentzVector TOPLEPW2scaled;
+	TOPLEPW2scaled.SetPxPyPzE(errMetPx,errMetPy,errMetPz,sqrt(errMetPx*errMetPx + errMetPy*errMetPy + errMetPz*errMetPz));
+	TLorentzVector TOPLEPBscaled  (TOPLEPB.Vect()  *(errbLep/TOPLEPB.E())  , errbLep);
+	TLorentzVector TOPHADW1scaled (TOPHADW1.Vect() *(errWjet1/TOPHADW1.E()), errWjet1);
+	TLorentzVector TOPHADW2scaled (TOPHADW2.Vect() *(errWjet2/TOPHADW2.E()), errWjet2);
+	TLorentzVector TOPHADBscaled  (TOPHADB.Vect()  *(errbHad/TOPHADB.E())  , errbHad);
+	TLorentzVector genBLVscaled   (genBLV.Vect()   *(errHiggs1/genBLV.E()) , errHiggs1);
+	TLorentzVector genBbarLVscaled(genBbarLV.Vect()*(errHiggs2/genBbarLV.E()) , errHiggs2);
+		    
+		   
 
-      hMass->Reset();
-      for(int m = 0; m < nMassPoints ; m++){
-	//meIntegrator->setMass( mH[m] );
-	meIntegrator->setTopMass( mH[m], 80.19);
-	double p = ig2.Integral(xL, xU);
-	 if(printP4) cout << "Mass " << mH[m] << " => prob  = " << p << endl;
-	hMass->Fill(mH[m], p);
+	hMassProb->Reset();
+	vector<TLorentzVector> bjets;
+	if(shiftMomenta==0){
+	  bjets.push_back( TOPLEPB );
+	  bjets.push_back( TOPHADB );
+	  bjets.push_back( genBLV );
+	  bjets.push_back( genBbarLV );
+	}
+	else{
+	  bjets.push_back( TOPLEPBscaled );
+	  bjets.push_back( TOPHADBscaled );
+	  bjets.push_back( genBLVscaled );
+	  bjets.push_back( genBbarLVscaled );
+	}
+
+
+	for(int m = 0; m < nMassPoints ; m++){
+	  cout << "Processing " << mH[m] << endl;
+	  meIntegrator->setMass( mH[m] );
+	  for(unsigned int pp1=0; pp1!=bjets.size(); pp1++){
+	    for(unsigned int pp2=0; pp2!=bjets.size(); pp2++){
+	      if(pp2==pp1) continue;
+	      for(unsigned int pp3=0; pp3!=bjets.size(); pp3++){
+		if(pp3==pp1 || pp3==pp2) continue;
+		for(unsigned int pp4=0; pp4!=bjets.size(); pp4++){
+		  if(pp4==pp1 || pp4==pp2 || pp4==pp3) continue;
+		  //cout << pp1 << pp2 << pp3 << pp4 << endl;
+
+		  //if(pp1==0 && pp2==1 && pp3==2 && pp4==3) continue;
+		  //if(pp1==0 && pp2==1 && pp3==3 && pp4==2) continue;
+
+		  vector<TLorentzVector> jets;
+		  if(shiftMomenta==0) {
+		    jets.push_back( TOPLEPW1 );
+		    jets.push_back( TOPLEPW2 );
+		  }
+		  else{
+		    jets.push_back( TOPLEPW1scaled );
+		    jets.push_back( TOPLEPW2scaled );
+		  }
+		  jets.push_back( bjets[pp1] );
+		  if(shiftMomenta==0) {
+		    jets.push_back( TOPHADW1 );
+		    jets.push_back( TOPHADW2 );
+		  }
+		  else{
+		    jets.push_back( TOPHADW1scaled );
+		    jets.push_back( TOPHADW2scaled );
+		  }
+		  jets.push_back( bjets[pp2] );
+		  jets.push_back( bjets[pp3] );
+		  jets.push_back( bjets[pp4] );
+
+		  meIntegrator->setJets(&jets);
+		  meIntegrator->initVersors(1);
+		  meIntegrator->initTF();
+		  	
+		  double E1low   = (meIntegrator->getCachedTF("tfWjet1"))->GetXaxis()->GetXmin() * (1-enlargeE1);
+		  double E1high  = (meIntegrator->getCachedTF("tfWjet1"))->GetXaxis()->GetXmax() * (1+enlargeE1);
+		  double Ptlow   = (meIntegrator->getCachedTF("tfMetPt"))->GetXaxis()->GetXmin() * (1-enlargePt);
+		  double Pthigh  = (meIntegrator->getCachedTF("tfMetPt"))->GetXaxis()->GetXmax() * (1+enlargePt);
+		  Ptlow  = -1; 
+		  Pthigh = +1; 
+		  double Philow   = -(meIntegrator->getCachedTF("tfMetPhi"))->GetYaxis()->GetXmax();
+		  double Phihigh  =  (meIntegrator->getCachedTF("tfMetPhi"))->GetYaxis()->GetXmax();
+		  double Eh1low   = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmin() * (1-enlargeEh1);
+		  double Eh1high  = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmax() * (1+enlargeEh1);	  
+
+		  double xL[4] = {  E1low,  Ptlow,   Philow,   Eh1low};
+		  double xU[4] = {  E1high, Pthigh , Phihigh,  Eh1high};
+
+		  ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par);
+		  ROOT::Math::GSLMCIntegrator ig2( ROOT::Math::IntegrationMultiDim::kVEGAS , 1.e-12, 1.e-5, vegasPoints);
+		  ig2.SetFunction(toIntegrate);
+		  meIntegrator->SetPar(par);
+
+		  double p = ig2.Integral(xL, xU);
+		
+		  float old = hMassProb->GetBinContent( hMassProb->FindBin(mH[m]) );
+		  hMassProb->SetBinContent( hMassProb->FindBin(mH[m]), old+p );
+	
+		  meIntegrator->deleteTF();	
+		}
+
+	      }
+	    }
+	  }
+	}// mass points
+        hBestMassProb->Fill( hMassProb->GetBinCenter(hMassProb->GetMaximumBin())  );	
+	mass_ = hMassProb->GetBinCenter(hMassProb->GetMaximumBin());
+
+	TFile* fout_tmp = TFile::Open(outFileName.c_str(),"UPDATE");
+	TDirectory *dir = fout_tmp->mkdir(Form("Event_%d", counter));
+	if(dir)
+	  dir->cd();
+	else
+	  fout_tmp->cd(Form("Event_%d", counter));
+	hMassProb->Write("hMassProb",TObject::kOverwrite);
+	fout_tmp->Close();
+	
       }
-
-      hBestMass->Fill( hMass->GetBinCenter(hMass->GetMaximumBin())  );
-
-      if(printP4) cout << "Opening file to save histos" << endl;
-      TFile* fout_tmp = TFile::Open(outFileName.c_str(),"UPDATE");
-      TDirectory *dir = fout_tmp->mkdir(Form("Event_%d", counter));
-      dir->cd();
-      (meIntegrator->getCachedPdf("pdfGammaWHad"))->Write("pdfGammaWHad",TObject::kOverwrite);
-      (meIntegrator->getCachedPdf("pdfBetaWHad")) ->Write("pdfBetaWHad",TObject::kOverwrite);
-      (meIntegrator->getCachedPdf("pdfGammaWLep"))->Write("pdfGammaWLep",TObject::kOverwrite);
-      (meIntegrator->getCachedPdf("pdfBetaWLep")) ->Write("pdfBetaWLep",TObject::kOverwrite);
-      (meIntegrator->getCachedPdf("pdfGammaTTH")) ->Write("pdfGammaTTH",TObject::kOverwrite);
-      (meIntegrator->getCachedPdf("pdf3D"))       ->Write("pdf3D",TObject::kOverwrite);
-      (meIntegrator->getCachedPdf("pdf2D"))       ->Write("pdf2D",TObject::kOverwrite);
-      (meIntegrator->getCachedTF("tfWjet1"))      ->Write("tfWjet1",TObject::kOverwrite);
-      (meIntegrator->getCachedTF("tfWjet2"))      ->Write("tfWjet2",TObject::kOverwrite);  
-      (meIntegrator->getCachedTF("tfbHad"))       ->Write("tfbHad",TObject::kOverwrite);
-      (meIntegrator->getCachedTF("tfbLep"))       ->Write("tfbLep",TObject::kOverwrite);
-      (meIntegrator->getCachedTF("tfHiggs1"))     ->Write("tfHiggs1",TObject::kOverwrite);
-      (meIntegrator->getCachedTF("tfHiggs2"))     ->Write("tfHiggs2",TObject::kOverwrite);
-      (meIntegrator->getCachedTF("tfMetPt"))      ->Write("tfMetPt",TObject::kOverwrite);
-      (meIntegrator->getCachedTF("tfMetPhi"))     ->Write("tfMetPhi",TObject::kOverwrite);
-      hMass->Write("hMass",TObject::kOverwrite);
-       if(printP4) cout << "Closing file to save histos" << endl;
-      fout_tmp->Close();
-
-
-      meIntegrator->deleteTF();
-      if(printP4) cout << "*******END********" << endl;      
-
+      //////////////////////////////////////////////////////////
+    
     }
     
   }
@@ -566,6 +816,8 @@ int main(int argc, const char* argv[])
 
   TFile* fout_tmp = TFile::Open(outFileName.c_str(),"UPDATE");
   hBestMass->Write("hBestMass",TObject::kOverwrite);
+  hBestMassProb->Write("hBestMassProb",TObject::kOverwrite);
+  tProb->Write("",TObject::kOverwrite );
   //hPdfLumi->Write("hPdfLumi",TObject::kOverwrite);
   //meSquared1->Write("meSquared1",TObject::kOverwrite);
   //meSquared2->Write("meSquared2",TObject::kOverwrite);
@@ -581,6 +833,7 @@ int main(int argc, const char* argv[])
   
   cout << "Delete meIntegrator..." << endl;
   delete meIntegrator;
+  delete clock; delete ran;
   cout << "Finished!!!" << endl;
   return 0;
   

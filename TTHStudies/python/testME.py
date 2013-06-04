@@ -27,6 +27,12 @@ process.fwliteInput = cms.PSet(
 
     vegasPoints   = cms.int32(500),
 
+    useME         = cms.int32(1),
+    useJac        = cms.int32(1),
+    useMET        = cms.int32(1),
+    useTF         = cms.int32(1),
+    usePDF        = cms.int32(1),
+    
     verbose       = cms.bool(False),
     met           = cms.double(120.),
     evLimits      = cms.vint32(1,100),
