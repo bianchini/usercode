@@ -171,6 +171,10 @@ int main(int argc, const char* argv[])
   int   useMET    ( in.getParameter<int>    ("useMET")     );
   int   useTF     ( in.getParameter<int>    ("useTF")      );
   int   usePDF    ( in.getParameter<int>    ("usePDF")     );
+  int   shiftMomenta    ( in.getParameter<int>    ("shiftMomenta")     );
+  int   testMassScan    ( in.getParameter<int>    ("testMassScan")     );
+  int   testPermutations( in.getParameter<int>    ("testPermutations") );
+  int   printP4         ( in.getParameter<int>    ("printP4")          );
 
   vector<int> evLimits( in.getParameter<vector<int> >  ("evLimits") );
   int evLow = evLimits[0];
@@ -187,10 +191,10 @@ int main(int argc, const char* argv[])
   TStopwatch* clock = new TStopwatch();
   TRandom3*   ran   = new TRandom3();
 
-  int printP4          = 0;
-  int shiftMomenta     = 1;
-  int testMassScan     = 0;
-  int testPermutations = 1;
+  //int printP4          = 0;
+  //int shiftMomenta     = 0;
+  //int testMassScan     = 0;
+  //int testPermutations = 1;
   int par = 4;
   MEIntegratorNew* meIntegrator = new MEIntegratorNew( pathToTF , par, int(verbose));
 
@@ -271,13 +275,22 @@ int main(int argc, const char* argv[])
   
   //const int nMassPoints = 30;
   //double mH[nMassPoints] = {95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240};
-  const int nMassPoints  = 18;                                                                                                                        
-  double mH[nMassPoints] = {90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175}; 
+  //const int nMassPoints  = 18;                                                                                                                        
+  //double mH[nMassPoints] = {90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175}; 
  
+  const int nMassPoints  = 21;                                                                                                                        
+  double mH[nMassPoints] = 
+    { /*50,  55,  60,  65,  70,  75,*/  80 , 85,  90, 95, 100, 105, 110, 
+      115, 120, 125, 130, 135, 140, 145, 150, 155, 
+      160, 165, 170, 175, 180//,190, 195, 200, 205, 210,
+			     //215, 220, 225, 230, 235, 240, 245, 250 
+    }; 
+
+
   TH1F*  hMass         = new TH1F("hMass","",nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
   TH1F*  hBestMass     = new TH1F("hBestMass","",40, 50, 250);
   TH1F*  hMassProb     = new TH1F("hMassProb","",nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
-  TH1F*  hBestMassProb = new TH1F("hBestMassProb","",18, 87.5, 177.5);
+  TH1F*  hBestMassProb = new TH1F("hBestMassProb","",41, 47.5, 252.5);
   TTree* tProb         = new TTree("tree","");
   float prob_;
   float mass_;
@@ -454,6 +467,16 @@ int main(int argc, const char* argv[])
       //jet6.SetPtEtaPhiM(95.5899 * pertBHad, 0.829954,3.10669,4.8);         // b from top hadr
       //jet7.SetPtEtaPhiM(32.805,             0.678347,-0.0951163,4.8);      // b1 from H
       //jet8.SetPtEtaPhiM(75.4309,            2.08021,2.75503,4.8);          // b2 from H
+
+      prob_    = 0.;
+      mass_    = -99;
+      initCpu_ = -99;
+      initRea_ = -99;
+      instCpu_ = -99;
+      evalCpu_ = -99;
+      evalCpu_ = -99;
+      evalRea_ = -99;
+
       if(testMassScan){
 
 	vector<TLorentzVector> jets;
@@ -549,9 +572,19 @@ int main(int argc, const char* argv[])
 	  jets.push_back( TOPHADBscaled   );
 	  jets.push_back( genBLVscaled    );
 	  jets.push_back( genBbarLVscaled );
+
+	  bool properScaledEvent = ( TOPLEPW1scaled.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				     TOPLEPBscaled.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				     TOPHADW1scaled.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				     TOPHADW2scaled.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+				     TOPHADBscaled.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+				     genBLVscaled.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				     genBbarLVscaled.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				     );
+	  if( !properScaledEvent ) continue;
 	  
 	}
-
+	
 	/////////////////////////////////////////////////////////////////////////////
 	clock->Start();
 
@@ -704,7 +737,15 @@ int main(int argc, const char* argv[])
 	TLorentzVector genBLVscaled   (genBLV.Vect()   *(errHiggs1/genBLV.E()) , errHiggs1);
 	TLorentzVector genBbarLVscaled(genBbarLV.Vect()*(errHiggs2/genBbarLV.E()) , errHiggs2);
 		    
-		   
+	bool properScaledEvent = ( TOPLEPW1scaled.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				   TOPLEPBscaled.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				   TOPHADW1scaled.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				   TOPHADW2scaled.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+				   TOPHADBscaled.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+				   genBLVscaled.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				   genBbarLVscaled.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				   );
+	if( !properScaledEvent ) continue;	   
 
 	hMassProb->Reset();
 	vector<TLorentzVector> bjets;
@@ -728,14 +769,20 @@ int main(int argc, const char* argv[])
 	  for(unsigned int pp1=0; pp1!=bjets.size(); pp1++){
 	    for(unsigned int pp2=0; pp2!=bjets.size(); pp2++){
 	      if(pp2==pp1) continue;
-	      for(unsigned int pp3=0; pp3!=bjets.size(); pp3++){
+	      for(unsigned int pp3=0; pp3!=bjets.size()-1; pp3++){
 		if(pp3==pp1 || pp3==pp2) continue;
-		for(unsigned int pp4=0; pp4!=bjets.size(); pp4++){
+		for(unsigned int pp4=pp3+1; pp4!=bjets.size(); pp4++){
 		  if(pp4==pp1 || pp4==pp2 || pp4==pp3) continue;
 		  //cout << pp1 << pp2 << pp3 << pp4 << endl;
 
 		  //if(pp1==0 && pp2==1 && pp3==2 && pp4==3) continue;
 		  //if(pp1==0 && pp2==1 && pp3==3 && pp4==2) continue;
+		  float massPair = (bjets[pp3]+bjets[pp4]).M(); 
+		  if( TMath::Abs( massPair - mH[m]) > 2*0.18*massPair ){
+		    //cout << "Pair mass: " << massPair << " - mass under test: " << mH[m] << endl; 
+		    continue; // 2sigmas away...
+		  }
+
 
 		  vector<TLorentzVector> jets;
 		  if(shiftMomenta==0) {
@@ -796,6 +843,7 @@ int main(int argc, const char* argv[])
 	}// mass points
         hBestMassProb->Fill( hMassProb->GetBinCenter(hMassProb->GetMaximumBin())  );	
 	mass_ = hMassProb->GetBinCenter(hMassProb->GetMaximumBin());
+	tProb->Fill();
 
 	TFile* fout_tmp = TFile::Open(outFileName.c_str(),"UPDATE");
 	TDirectory *dir = fout_tmp->mkdir(Form("Event_%d", counter));

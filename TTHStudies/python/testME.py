@@ -32,10 +32,15 @@ process.fwliteInput = cms.PSet(
     useMET        = cms.int32(1),
     useTF         = cms.int32(1),
     usePDF        = cms.int32(1),
+
+    shiftMomenta      = cms.int32(1),
+    testMassScan      = cms.int32(1),
+    testPermutations  = cms.int32(1),
+    printP4           = cms.int32(0),
     
     verbose       = cms.bool(False),
     met           = cms.double(120.),
-    evLimits      = cms.vint32(1,100),
+    evLimits      = cms.vint32(1,200),
 
 
     pertBLep      = cms.double(1.0),
