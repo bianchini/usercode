@@ -114,8 +114,8 @@ class MEIntegratorNew {
 
   void   topHadLostEnergies(double, double,  double,  double&, double&, double&, double&, int&) const;
   int    higgsEnergies     (double, double&, double&, int&) const;
-  double topHadJakobi    (double, double, double) const;
-  double topLepJakobi    (double, double , double, TLorentzVector*) const;
+  double topHadJakobi    (double, double,  double, TLorentzVector*) const;
+  double topLepJakobi    (double, double,  double, TLorentzVector*) const;
   double higgsJakobi     (double, double ) const;
   double topHadDensity   (double, double)  const;
   double topLepDensity   (double, double)  const;
@@ -1435,11 +1435,16 @@ TH1* MEIntegratorNew::getCachedTF( string tfName ) const {
 }
 
  
-double MEIntegratorNew::topHadJakobi( double Eq1, double Eq2, double EbHad)  const{
-  return (EbHad * Eq2 * Eq2 * Eq1 / (Mw_*Mw_ * ( Eq1 + Eq2 ) )) ;
+double MEIntegratorNew::topHadJakobi( double Eq1, double Eq2, double EbHad, TLorentzVector* WHad)  const{
+
+  double betaW = (WHad->BoostVector()).Mag();
+  double betaB = TMath::Sqrt(EbHad*EbHad - Mb_*Mb_) / EbHad;
+
+  return (EbHad * Eq2 * Eq2 * Eq1 / (Mw_*Mw_ * ( Eq1 + Eq2 ) ) / TMath::Abs( betaW/betaB * ((WHad->Vect()).Unit()).Dot(eBHad_) - 1) ) ;
 }
 
 double MEIntegratorNew::topLepJakobi( double Enu, double Elep, double EbLep, TLorentzVector* WLep)  const{
+
   double betaW = (WLep->BoostVector()).Mag();
   double betaB = TMath::Sqrt(EbLep*EbLep - Mb_*Mb_) / EbLep;
 
@@ -1676,7 +1681,7 @@ double MEIntegratorNew::probability(const double* x, int sign) const{
     ;
 
   double Jpart = 
-    topHadJakobi( Eq1,  Eq2, EbHad) * 
+    topHadJakobi( Eq1,  Eq2, EbHad, &WHad ) * 
     topLepJakobi( Enu, Elep, EbLep, &WLep ) * 
     higgsJakobi( Eh1, Eh2 ) 
     ;

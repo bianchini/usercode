@@ -21,6 +21,7 @@
 #include "TVectorD.h"
 #include "TRandom3.h"
 #include "TStopwatch.h"
+#include "TMatrixT.h"
 
 #include "Math/Factory.h"
 #include "Math/Functor.h"
@@ -166,6 +167,11 @@ int main(int argc, const char* argv[])
   float enlargeE1 ( in.getParameter<double> ("enlargeE1")  );
   float enlargeEh1( in.getParameter<double> ("enlargeEh1") );
   float enlargePt ( in.getParameter<double> ("enlargePt")  );
+
+  float scaleH  ( in.getParameter<double> ("scaleH")   );
+  float scaleL  ( in.getParameter<double> ("scaleL")   );
+  float scaleMET( in.getParameter<double> ("scaleMET") );
+
   int   useME     ( in.getParameter<int>    ("useME")      );
   int   useJac    ( in.getParameter<int>    ("useJac")     );
   int   useMET    ( in.getParameter<int>    ("useMET")     );
@@ -527,14 +533,14 @@ int main(int argc, const char* argv[])
 	  
 	  meIntegrator->deleteTF();
 	  */
-	  double errWjet1 = ran->Gaus( TOPHADW1.E(),  0.15*TOPHADW1.E());
-	  double errWjet2 = ran->Gaus( TOPHADW2.E(),  0.15*TOPHADW2.E());
-	  double errbHad  = ran->Gaus( TOPHADB.E()  *0.93 ,  0.18*TOPHADB.E());
-	  double errbLep  = ran->Gaus( TOPLEPB.E()  *0.93 ,  0.18*TOPLEPB.E());
-	  double errHiggs1= ran->Gaus( genBLV.E()   *0.93,   0.18*genBLV.E());
-	  double errHiggs2= ran->Gaus( genBbarLV.E()*0.93,   0.18*genBbarLV.E());
-	  double errMetPx = TOPLEPW2.Px() + ran->Gaus(0.0, 20.);
-	  double errMetPy = TOPLEPW2.Py() + ran->Gaus(0.0, 20.);
+	  double errWjet1 = ran->Gaus( TOPHADW1.E(),  scaleL*TOPHADW1.E());
+	  double errWjet2 = ran->Gaus( TOPHADW2.E(),  scaleL*TOPHADW2.E());
+	  double errbHad  = ran->Gaus( TOPHADB.E()  *0.93 ,  scaleH*TOPHADB.E());
+	  double errbLep  = ran->Gaus( TOPLEPB.E()  *0.93 ,  scaleH*TOPLEPB.E());
+	  double errHiggs1= ran->Gaus( genBLV.E()   *0.93,   scaleH*genBLV.E());
+	  double errHiggs2= ran->Gaus( genBbarLV.E()*0.93,   scaleH*genBbarLV.E());
+	  double errMetPx = TOPLEPW2.Px() + ran->Gaus(0.0, scaleMET);
+	  double errMetPy = TOPLEPW2.Py() + ran->Gaus(0.0, scaleMET);
 	  double errMetPz = TOPLEPW2.Pz() ;
 
 	  TLorentzVector TOPLEPW1scaled  (TOPLEPW1.Vect()   , TOPLEPW1.E());
@@ -581,7 +587,7 @@ int main(int argc, const char* argv[])
 				     genBLVscaled.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
 				     genBbarLVscaled.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
 				     );
-	  if( !properScaledEvent ) continue;
+	  if( shiftMomenta && !properScaledEvent ) continue;
 	  
 	}
 	
@@ -684,7 +690,15 @@ int main(int argc, const char* argv[])
 	  }
 	}
 
-	hBestMass->Fill( hMass->GetBinCenter(hMass->GetMaximumBin())  );
+	TF1* gaus = new TF1("gaus","gaus", 0,300);
+	//gaus->SetParameter(1, hMass->GetBinCenter(hMass->GetMaximumBin()) );
+	//gaus->SetParameter(2, 20. );
+	//hBestMass->Fill( hMass->GetBinCenter(hMass->GetMaximumBin())  );
+	hMass->Fit(gaus, "Q", "", 
+		   hMass->GetBinCenter(hMass->GetMaximumBin()) - 20, 
+		   hMass->GetBinCenter(hMass->GetMaximumBin()) + 20);
+	hBestMass->Fill( gaus->GetParameter(1)  );
+	delete gaus;
 
 	if(printP4) cout << "Opening file to save histos" << endl;
 	TFile* fout_tmp = TFile::Open(outFileName.c_str(),"UPDATE");
@@ -717,14 +731,14 @@ int main(int argc, const char* argv[])
       // test permutations
       if(testPermutations) {
 
-	double errWjet1 = ran->Gaus( TOPHADW1.E(),         0.15*TOPHADW1.E());
-	double errWjet2 = ran->Gaus( TOPHADW2.E(),         0.15*TOPHADW2.E());
-	double errbHad  = ran->Gaus( TOPHADB.E()  *0.93 ,  0.18*TOPHADB.E());
-	double errbLep  = ran->Gaus( TOPLEPB.E()  *0.93 ,  0.18*TOPLEPB.E());
-	double errHiggs1= ran->Gaus( genBLV.E()   *0.93,   0.18*genBLV.E());
-	double errHiggs2= ran->Gaus( genBbarLV.E()*0.93,   0.18*genBbarLV.E());
-	double errMetPx = TOPLEPW2.Px() + ran->Gaus(0.0, 20.);
-	double errMetPy = TOPLEPW2.Py() + ran->Gaus(0.0, 20.);
+	double errWjet1 = ran->Gaus( TOPHADW1.E(),         scaleL*TOPHADW1.E());
+	double errWjet2 = ran->Gaus( TOPHADW2.E(),         scaleL*TOPHADW2.E());
+	double errbHad  = ran->Gaus( TOPHADB.E()  *0.93 ,  scaleH*TOPHADB.E());
+	double errbLep  = ran->Gaus( TOPLEPB.E()  *0.93 ,  scaleH*TOPLEPB.E());
+	double errHiggs1= ran->Gaus( genBLV.E()   *0.93,   scaleH*genBLV.E());
+	double errHiggs2= ran->Gaus( genBbarLV.E()*0.93,   scaleH*genBbarLV.E());
+	double errMetPx = TOPLEPW2.Px() + ran->Gaus(0.0,   scaleMET);
+	double errMetPy = TOPLEPW2.Py() + ran->Gaus(0.0,   scaleMET);
 	double errMetPz = TOPLEPW2.Pz() ;
 	
 	TLorentzVector TOPLEPW1scaled  (TOPLEPW1.Vect()   , TOPLEPW1.E());
@@ -745,7 +759,7 @@ int main(int argc, const char* argv[])
 				   genBLVscaled.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
 				   genBbarLVscaled.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
 				   );
-	if( !properScaledEvent ) continue;	   
+	if( shiftMomenta && !properScaledEvent ) continue;	   
 
 	hMassProb->Reset();
 	vector<TLorentzVector> bjets;
@@ -775,10 +789,10 @@ int main(int argc, const char* argv[])
 		  if(pp4==pp1 || pp4==pp2 || pp4==pp3) continue;
 		  //cout << pp1 << pp2 << pp3 << pp4 << endl;
 
-		  //if(pp1==0 && pp2==1 && pp3==2 && pp4==3) continue;
-		  //if(pp1==0 && pp2==1 && pp3==3 && pp4==2) continue;
+		  if(/*pp1==0 && pp2==1 &&*/ pp3==2 && pp4==3) continue;
+		  if(/*pp1==0 && pp2==1 &&*/ pp3==3 && pp4==2) continue;
 		  float massPair = (bjets[pp3]+bjets[pp4]).M(); 
-		  if( TMath::Abs( massPair - mH[m]) > 2*0.18*massPair ){
+		  if( TMath::Abs( massPair - mH[m]) > 2.0*scaleH*massPair ){
 		    //cout << "Pair mass: " << massPair << " - mass under test: " << mH[m] << endl; 
 		    continue; // 2sigmas away...
 		  }
@@ -841,9 +855,190 @@ int main(int argc, const char* argv[])
 	    }
 	  }
 	}// mass points
-        hBestMassProb->Fill( hMassProb->GetBinCenter(hMassProb->GetMaximumBin())  );	
-	mass_ = hMassProb->GetBinCenter(hMassProb->GetMaximumBin());
+
+	/*
+	TF1* gaus = new TF1("gaus","gaus", 50,200);
+	//gaus->SetParameter(1, hMassProb->GetBinCenter(hMassProb->GetMaximumBin()) );
+	//gaus->SetParameter(2, 10. );
+	//hBestMass->Fill( hMass->GetBinCenter(hMass->GetMaximumBin())  );
+	hMassProb->Fit(gaus, "Q", "", 
+		       hMassProb->GetBinCenter(hMassProb->GetMaximumBin()) - 30, 
+		       hMassProb->GetBinCenter(hMassProb->GetMaximumBin()) + 30);
+	float newMean  = gaus->GetParameter(1);
+	float newSigma = gaus->GetParameter(2);
+	hMassProb->Fit(gaus, "Q", "", 
+		       newMean - 2*newSigma,
+		       newMean + 2*newSigma
+		       );
+	newMean  = gaus->GetParameter(1);
+	newSigma = gaus->GetParameter(2);
+	hMassProb->Fit(gaus, "Q", "", 
+		       newMean - 2*newSigma,
+		       newMean + 2*newSigma
+		       );
+	*/
+
+	float est = -99;
+	float a = -99;
+	float b = -99;
+	float c = -99;
+
+	int maxBin = hMassProb->GetMaximumBin();
+
+	if( maxBin<  hMassProb->GetNbinsX() && maxBin>1 ){
+
+	  double xD =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin()-1);
+	  double xC =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin());
+	  double xU =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin()+1);
+	  double yD =  hMassProb->GetBinContent(hMassProb->GetMaximumBin()-1);
+	  double yC =  hMassProb->GetBinContent(hMassProb->GetMaximumBin());
+	  double yU =  hMassProb->GetBinContent(hMassProb->GetMaximumBin()+1);
+	  
+	  TMatrixD A(3,3);
+	  const double elements[9] = 
+	    { 1, xD,  xD*xD,
+	      1, xC,  xC*xC,
+	      1, xU,  xU*xU 
+	    };
+	  A.SetMatrixArray(elements, "C");
+	  //A.Print("");
+	  TMatrixD AInv(3,3);
+	  double det;
+	  AInv = A.Invert(&det);
+	  //AInv.Print("");
+	  
+	  TMatrixD Y(3,1);
+	  const double yPos[3] = 
+	    { yD, yC, yU
+	    };
+	  Y.SetMatrixArray(yPos, "C");
+	  //Y.Print("");
+	  
+	  TMatrixD C(3,1);
+	  const double dummy[3] = 
+	    { 1., 1., 1.
+	    };
+	  C.SetMatrixArray(dummy,"C");
+	  C.Mult(AInv,Y);
+	  //C.Print("");
+	  
+	  a = C(2,0);
+	  b = C(1,0);
+	  c = C(0,0);
+	  //cout << "a = " << a << endl;
+	  //cout << "b = " << b << endl;
+	  //cout << "c = " << c << endl;
+	  //cout << "Estim. = " << -b/2/a << endl; 
+	  est = -b/2/a ;
+	}
+	else if(maxBin== hMassProb->GetNbinsX()){
+
+	  double xD =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin()-2);
+	  double xC =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin()-1);
+	  double xU =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin());
+	  double yD =  hMassProb->GetBinContent(hMassProb->GetMaximumBin()-2);
+	  double yC =  hMassProb->GetBinContent(hMassProb->GetMaximumBin()-1);
+	  double yU =  hMassProb->GetBinContent(hMassProb->GetMaximumBin());
+	  
+	  TMatrixD A(3,3);
+	  const double elements[9] = 
+	    { 1, xD,  xD*xD,
+	      1, xC,  xC*xC,
+	      1, xU,  xU*xU 
+	    };
+	  A.SetMatrixArray(elements, "C");
+	  //A.Print("");
+	  TMatrixD AInv(3,3);
+	  double det;
+	  AInv = A.Invert(&det);
+	  //AInv.Print("");
+	  
+	  TMatrixD Y(3,1);
+	  const double yPos[3] = 
+	    { yD, yC, yU
+	    };
+	  Y.SetMatrixArray(yPos, "C");
+	  //Y.Print("");
+	  
+	  TMatrixD C(3,1);
+	  const double dummy[3] = 
+	    { 1., 1., 1.
+	    };
+	  C.SetMatrixArray(dummy,"C");
+	  C.Mult(AInv,Y);
+	  //C.Print("");
+	  
+	  float a = C(2,0);
+	  float b = C(1,0);
+	  float c = C(0,0);
+	  //cout << "a = " << a << endl;
+	  //cout << "b = " << b << endl;
+	  //cout << "c = " << c << endl;
+	  //cout << "Estim. = " << -b/2/a << endl; 
+	  est = -b/2/a ;	  
+	}
+	else if(maxBin==1){
+
+	  double xD =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin());
+	  double xC =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin()+1);
+	  double xU =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin()+2);
+	  double yD =  hMassProb->GetBinContent(hMassProb->GetMaximumBin());
+	  double yC =  hMassProb->GetBinContent(hMassProb->GetMaximumBin()+1);
+	  double yU =  hMassProb->GetBinContent(hMassProb->GetMaximumBin()+2);
+	  
+	  TMatrixD A(3,3);
+	  const double elements[9] = 
+	    { 1, xD,  xD*xD,
+	      1, xC,  xC*xC,
+	      1, xU,  xU*xU 
+	    };
+	  A.SetMatrixArray(elements, "C");
+	  //A.Print("");
+	  TMatrixD AInv(3,3);
+	  double det;
+	  AInv = A.Invert(&det);
+	  //AInv.Print("");
+	  
+	  TMatrixD Y(3,1);
+	  const double yPos[3] = 
+	    { yD, yC, yU
+	    };
+	  Y.SetMatrixArray(yPos, "C");
+	  //Y.Print("");
+	  
+	  TMatrixD C(3,1);
+	  const double dummy[3] = 
+	    { 1., 1., 1.
+	    };
+	  C.SetMatrixArray(dummy,"C");
+	  C.Mult(AInv,Y);
+	  //C.Print("");
+	  
+	  a = C(2,0);
+	  b = C(1,0);
+	  c = C(0,0);
+	  //cout << "a = " << a << endl;
+	  //cout << "b = " << b << endl;
+	  //cout << "c = " << c << endl;
+	  //cout << "Estim. = " << -b/2/a << endl; 
+	  est = -b/2/a ;
+	}
+	else{
+	  est =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin());
+	}
+
+
+
+	hBestMassProb->Fill( est );
+	//hBestMassProb->Fill( gaus->GetParameter(1)  );
+        //hBestMassProb->Fill( hMassProb->GetBinCenter(hMassProb->GetMaximumBin())  );	
+	//mass_ = hMassProb->GetBinCenter(hMassProb->GetMaximumBin());
+	//mass_ = gaus->GetParameter(1);
+	//prob_ = gaus->Eval( gaus->GetParameter(1) );
+	mass_   = est;
+	prob_   = a*est*est + b*est + c;
 	tProb->Fill();
+	//delete gaus;
 
 	TFile* fout_tmp = TFile::Open(outFileName.c_str(),"UPDATE");
 	TDirectory *dir = fout_tmp->mkdir(Form("Event_%d", counter));
