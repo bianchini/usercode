@@ -245,6 +245,60 @@
   <use   name="roottmva"/>
   <use   name="classlib"/>
   <use   name="boost"/>
+  <use   name="lhapdf"/>
+</bin>
+
+
+<bin   file="TestMENew_bkg.cc" name="TestMENew_bkg">
+  <use   name="Bianchi/TTHStudies"/>
+  <use   name="DataFormats/FWLite"/>
+  <use   name="FWCore/FWLite"/>
+  <use   name="FWCore/PythonParameterSet"/>
+  <use   name="FWCore/Framework"/> 
+  <use   name="FWCore/MessageLogger"/>
+  <use   name="FWCore/Utilities"/>
+  <use   name="FWCore/ParameterSet"/>
+  <use   name="PhysicsTools/FWLite"/>
+  <use   name="PhysicsTools/Utilities"/>
+  <use   name="PhysicsTools/CandUtils"/>
+  <use   name="PhysicsTools/SelectorUtils"/>
+  <use   name="CommonTools/Utils"/>
+  <use   name="root"/>
+  <use   name="rootcintex"/>
+  <use   name="rootgraphics"/>
+  <use   name="roofit"/>
+  <use   name="rootminuit"/>
+  <use   name="rootminuit2"/>
+  <use   name="roottmva"/>
+  <use   name="classlib"/>
+  <use   name="boost"/>
+  <use   name="lhapdf"/>
+</bin>
+
+<bin   file="TestMECalcME.cc" name="TestMECalcME">
+  <use   name="Bianchi/TTHStudies"/>
+  <use   name="DataFormats/FWLite"/>
+  <use   name="FWCore/FWLite"/>
+  <use   name="FWCore/PythonParameterSet"/>
+  <use   name="FWCore/Framework"/> 
+  <use   name="FWCore/MessageLogger"/>
+  <use   name="FWCore/Utilities"/>
+  <use   name="FWCore/ParameterSet"/>
+  <use   name="PhysicsTools/FWLite"/>
+  <use   name="PhysicsTools/Utilities"/>
+  <use   name="PhysicsTools/CandUtils"/>
+  <use   name="PhysicsTools/SelectorUtils"/>
+  <use   name="CommonTools/Utils"/>
+  <use   name="root"/>
+  <use   name="rootcintex"/>
+  <use   name="rootgraphics"/>
+  <use   name="roofit"/>
+  <use   name="rootminuit"/>
+  <use   name="rootminuit2"/>
+  <use   name="roottmva"/>
+  <use   name="classlib"/>
+  <use   name="boost"/>
+  <use   name="lhapdf"/>
 </bin>
 
 <bin   file="TFProducer.cc" name="TFProducer">
@@ -270,4 +324,5 @@
   <use   name="roottmva"/>
   <use   name="classlib"/>
   <use   name="boost"/>
+
 </bin>

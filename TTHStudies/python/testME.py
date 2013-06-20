@@ -1,13 +1,15 @@
 import FWCore.ParameterSet.Types  as CfgTypes
 import FWCore.ParameterSet.Config as cms
 
-VType = "_VType2"
+VType     = "_VType2"
+xsecTT_SL = 103.0
 
 process = cms.Process("TestMENew")
 
 process.fwliteInput = cms.PSet(
 
-    outFileName   = cms.string("./root/TestMENew.root"),
+    outFileName   = cms.string("./root/TestMENew_ttjets.root"),
+    madweight     = cms.string("weights_ttjets"),
     pathToTF      = cms.string("./root/transferFunctions_partonE.root"),
     pathToFile    = cms.string("dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/store//user/bianchi/HBB_EDMNtuple/AllHDiJetPt"+VType+"/v2/"),
     ordering      = cms.string("DiJetPt_"),
@@ -16,12 +18,21 @@ process.fwliteInput = cms.PSet(
     samples       = cms.VPSet(
     
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('TTH_HToBB_M-125_8TeV-pythia6'+VType),
     nickName = cms.string('TTH125'),
     color    = cms.int32(2),
     xSec     = cms.double(0.1302*0.569)
     ),
+
+    cms.PSet(
+    skip     = cms.bool(False),  
+    name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
+    nickName = cms.string('TTJetsSemiLept'),
+    color    = cms.int32(41),
+    xSec     = cms.double(xsecTT_SL),
+    ),
+    
     
     ),
 
@@ -33,14 +44,14 @@ process.fwliteInput = cms.PSet(
     useTF         = cms.int32(1),
     usePDF        = cms.int32(1),
 
-    shiftMomenta      = cms.int32(1),
-    testMassScan      = cms.int32(1),
-    testPermutations  = cms.int32(1),
+    shiftMomenta      = cms.int32(0),
+    testMassScan      = cms.int32(0),
+    testPermutations  = cms.int32(0),
     printP4           = cms.int32(0),
     
     verbose       = cms.bool(False),
     met           = cms.double(120.),
-    evLimits      = cms.vint32(1,200),
+    evLimits      = cms.vint32(0,2000),
 
 
     pertBLep      = cms.double(1.0),
@@ -51,5 +62,9 @@ process.fwliteInput = cms.PSet(
     enlargeE1     = cms.double(0.),
     enlargeEh1    = cms.double(0.),
     enlargePt     = cms.double(0.),
+
+    scaleH        = cms.double(0.18),
+    scaleL        = cms.double(0.15),
+    scaleMET      = cms.double(20),
 
     )
