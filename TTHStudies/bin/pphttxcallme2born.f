@@ -1,4 +1,4 @@
-      subroutine pphttxcallme2born (M2, ccP)
+      subroutine pphttxcallme2born (M2, ccP, Mt, Mh)
 
       implicit none
 
@@ -13,6 +13,7 @@
       real*8 ,  dimension(0:3,5):: P
       real*8  ccP(20)
       real*8  M2
+      real*8  Mt, Mh
       integer i,j
 
       Mass_E  = 0d0
@@ -25,13 +26,15 @@
       Width_C = 0d0
       Mass_B  = 0d0 
       Width_B = 0d0 
-      Mass_T  = 172d0 
+c      Mass_T  = 172d0 
+      Mass_T  = Mt 
       Width_T = 0d0
       Mass_W  = 80.399d0 
       Width_W = 0d0 
       Mass_Z  = 91.118d0
       Width_Z = 0d0
-      Mass_H  = 120d0
+c      Mass_H  = 120d0
+      Mass_H  = Mh
       Width_H = 0d0
       Coupl_Alpha_QED = 1/128d0
       Coupl_Alpha_QCD = 0.1258086856923967d0
