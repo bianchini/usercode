@@ -1,3 +1,11 @@
+///////////////////////////////////////////////////
+//  Class that integrates over the tth phase-space
+//  compile with: > scram b -j 6 USER_CXXFLAGS="-lopenloops\ -lbar\ -lcoli\ -lopenloops_ppHtt_1tL\ -lpphttxcallme2born"
+//
+//
+//
+
+
 #ifndef MEINTEGRATORNEW_H
 #define MEINTEGRATORNEW_H
 
@@ -110,6 +118,7 @@ class MEIntegratorNew {
   void   setUseTF   (int);
   void   setUsePDF  (int);
   void   setTopFlags(int,int);
+  void   setWeightNorm(int);
   void   resetEvaluation();
 
   TH1*   getCachedPdf( string ) const;
@@ -143,6 +152,7 @@ class MEIntegratorNew {
   double tthDensity      (double, double, double, double)  const;
   double meSquaredAtQ    (double, double, double, double) const;
   double meSquaredOpenLoops (TLorentzVector*, TLorentzVector*, TLorentzVector*) const;
+  double xSection           () const;
   double evaluateCahchedPdf (TH1*, double, double, double)  const;
   double ggPdf              ( double, double, double) const; 
   double qqPdf              ( double, double, double) const; 
@@ -180,6 +190,7 @@ class MEIntegratorNew {
   IntegrationType intType_;
   int top1Flag_;  // +1 <=> top lep is top
   int top2Flag_;
+  int normalizeToXSec_;
   int par_;
   int verbose_;
   int usePtPhiParam_;
@@ -268,6 +279,8 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
 
   top1Flag_ = 0;
   top2Flag_ = 0;
+
+  normalizeToXSec_ = 1;
 
   TFile* file = TFile::Open(fileName.c_str(),"READ");
   w_ = (RooWorkspace*)file->Get("transferFuntions");
@@ -755,6 +768,10 @@ void MEIntegratorNew::setUsePDF  (int use){
 void MEIntegratorNew::setTopFlags(int flag1, int flag2){
   top1Flag_ = flag1;
   top2Flag_ = flag2;
+}
+
+void MEIntegratorNew::setWeightNorm(int norm){
+  normalizeToXSec_ = norm;
 }
 
 int MEIntegratorNew::topHadEnergies(double E1, double& E2, double& E3, double& cos1, double& cos2, int& errFlag ) const {
@@ -1674,8 +1691,8 @@ double MEIntegratorNew::meSquaredOpenLoops (TLorentzVector* top, TLorentzVector*
   h.Boost ( -boostPt );
 
   // fix for rounding
-  double hPx = -(t.Px()  + t.Px());
-  double hPy = -(tx.Py() + tx.Py());
+  double hPx = -(t.Px()  + tx.Px());
+  double hPy = -(t.Py()  + tx.Py());
   double hPz = h.Pz();
   h.SetPxPyPzE( hPx, hPy, hPz, sqrt(hPx*hPx + hPy*hPy + hPz*hPz + M_*M_) );
 
@@ -1692,9 +1709,33 @@ double MEIntegratorNew::meSquaredOpenLoops (TLorentzVector* top, TLorentzVector*
      t.E(),  t.Px(),  t.Py(),  t.Pz(),
     tx.E(), tx.Px(), tx.Py(), tx.Pz()
   };
+
+  if(verbose_){
+    cout << "h:  " << h.M() << endl;
+    cout << "t:  " << t.M() << endl;
+    cout << "tx: " << tx.M() << endl;
+  }
+
+
   pphttxcallme2born_(const_cast<double*>(&M2), ccP, const_cast<double*>(&Mtop_), const_cast<double*>(&M_));
+
+  if( normalizeToXSec_ ) M2 /= xSection();
+
   return M2;
 
+}
+
+double MEIntegratorNew::xSection() const{
+
+  double xsec = 1.0;
+  if( SqrtS_>7999 && SqrtS_<8001 ){
+    xsec = (1.03e+05 * TMath::Power(M_,-2.82));
+  }
+  else {
+    cout << "Cross-section not available" << endl;
+  }
+
+  return xsec;
 }
 
 
@@ -1825,7 +1866,7 @@ double MEIntegratorNew::probabilitySL2wj(const double* x, int sign) const{
   else if(top1Flag_ == -1 && top2Flag_ == +1)          // topLep = tx, topHad = t
     me2 = meSquaredOpenLoops( &topHad, &topLep, &higgs );
   else{
-    if(verbose_ || true) cout << "Undefined top flavors" << endl;
+    if(verbose_) cout << "Undefined top flavors" << endl;
     me2 = 1.;
   }
 

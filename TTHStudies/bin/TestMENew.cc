@@ -203,7 +203,8 @@ int main(int argc, const char* argv[])
   //int testPermutations = 1;
   int par = 4;
   MEIntegratorNew* meIntegrator = new MEIntegratorNew( pathToTF , par, int(verbose));
-
+  meIntegrator->setIntType( MEIntegratorNew::SL2wj );
+  meIntegrator->setWeightNorm( 1 ); // divide weights by xsec
 
   //////////////////////
   //TH1F*  hPdfLumi     = new TH1F("hPdfLumi","",42, 425 , 2525.);
@@ -284,11 +285,14 @@ int main(int argc, const char* argv[])
   //const int nMassPoints  = 18;                                                                                                                        
   //double mH[nMassPoints] = {90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175}; 
  
-  const int nMassPoints  = 21;                                                                                                                        
+
+  // 21 bins 80 - 180
+  const int nMassPoints  = 31;                                                                                                                        
   double mH[nMassPoints] = 
-    { /*50,  55,  60,  65,  70,  75,*/  80 , 85,  90, 95, 100, 105, 110, 
+    { /*50,  55, */ 60,  65,  70,  75,
+      80 , 85,  90, 95, 100, 105, 110, 
       115, 120, 125, 130, 135, 140, 145, 150, 155, 
-      160, 165, 170, 175, 180//,190, 195, 200, 205, 210,
+      160, 165, 170, 175, 180 ,185, 190, 195, 200, 205, 210
 			     //215, 220, 225, 230, 235, 240, 245, 250 
     }; 
 
@@ -353,13 +357,15 @@ int main(int argc, const char* argv[])
     genParticleInfo genB, genBbar;
     genTopInfo genTop, genTbar;
     metInfo METtype1p2corr;
- 
+    Float_t vLepton_charge [99];
+
     currentTree->SetBranchAddress("genB",   &genB);
     currentTree->SetBranchAddress("genBbar",&genBbar);
     currentTree->SetBranchAddress("genTop", &genTop);
     currentTree->SetBranchAddress("genTbar",&genTbar);
     currentTree->SetBranchAddress("METtype1p2corr",&METtype1p2corr);
- 
+    currentTree->SetBranchAddress("vLepton_charge",vLepton_charge);
+    
     int counter = 0;
     Long64_t nentries = currentTree->GetEntries();
     for (Long64_t i = 0; i < nentries ; i++){
@@ -605,7 +611,10 @@ int main(int argc, const char* argv[])
 	meIntegrator->initVersors(1);
 	if(printP4) cout << "Setup TFs..." << endl;
 	meIntegrator->initTF();
-	if(printP4) cout << "Build integrand..." << endl;
+	if(printP4) cout << "Build integrand..." << endl;	
+	meIntegrator->setTopFlags( vLepton_charge[0]==1 ? +1 : -1 , vLepton_charge[0]==1 ? -1 : +1 );
+	//meIntegrator->setTopFlags( 0, 0 );
+	cout << "Lep charge = " << vLepton_charge[0] << " => Top flags = (" << (vLepton_charge[0]==1 ? +1 : -1) << "," << (vLepton_charge[0]==1 ? -1 : +1) << ")" << endl;
 	meIntegrator->setUseME (useME);
 	meIntegrator->setUseJac(useJac);
 	meIntegrator->setUseMET(useMET);
@@ -678,8 +687,8 @@ int main(int argc, const char* argv[])
 	  clock->Start();
 	  double p = ig2.Integral(xL, xU);
 	  clock->Stop();
-	  evalCpu_ += clock->CpuTime();
-	  evalRea_ += clock->RealTime();
+	  evalCpu_ = clock->CpuTime();
+	  evalRea_ = clock->RealTime();
 	  clock->Reset();
 
 	  if(printP4) cout << "Mass " << mH[m] << " => prob  = " << p << endl;
@@ -727,6 +736,16 @@ int main(int argc, const char* argv[])
 	meIntegrator->deleteTF();
 	if(printP4) cout << "*******END********" << endl;      
       }
+
+      prob_    = 0.;
+      mass_    = -99;
+      initCpu_ = -99;
+      initRea_ = -99;
+      instCpu_ = -99;
+      evalCpu_ = -99;
+      evalCpu_ = -99;
+      evalRea_ = -99;
+
       //////////////////////////////////////////////////////////
       // test permutations
       if(testPermutations) {
@@ -789,8 +808,8 @@ int main(int argc, const char* argv[])
 		  if(pp4==pp1 || pp4==pp2 || pp4==pp3) continue;
 		  //cout << pp1 << pp2 << pp3 << pp4 << endl;
 
-		  if(/*pp1==0 && pp2==1 &&*/ pp3==2 && pp4==3) continue;
-		  if(/*pp1==0 && pp2==1 &&*/ pp3==3 && pp4==2) continue;
+		  //if(/*pp1==0 && pp2==1 &&*/ pp3==2 && pp4==3) continue;
+		  //if(/*pp1==0 && pp2==1 &&*/ pp3==3 && pp4==2) continue;
 		  float massPair = (bjets[pp3]+bjets[pp4]).M(); 
 		  if( TMath::Abs( massPair - mH[m]) > 2.0*scaleH*massPair ){
 		    //cout << "Pair mass: " << massPair << " - mass under test: " << mH[m] << endl; 
@@ -823,7 +842,8 @@ int main(int argc, const char* argv[])
 		  meIntegrator->setJets(&jets);
 		  meIntegrator->initVersors(1);
 		  meIntegrator->initTF();
-		  	
+		  meIntegrator->setTopFlags( vLepton_charge[0]==1 ? +1 : -1 , vLepton_charge[0]==1 ? -1 : +1 );
+
 		  double E1low   = (meIntegrator->getCachedTF("tfWjet1"))->GetXaxis()->GetXmin() * (1-enlargeE1);
 		  double E1high  = (meIntegrator->getCachedTF("tfWjet1"))->GetXaxis()->GetXmax() * (1+enlargeE1);
 		  double Ptlow   = (meIntegrator->getCachedTF("tfMetPt"))->GetXaxis()->GetXmin() * (1-enlargePt);
