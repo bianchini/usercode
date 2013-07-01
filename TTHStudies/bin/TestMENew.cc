@@ -186,6 +186,7 @@ int main(int argc, const char* argv[])
   int evLow = evLimits[0];
   int evHigh = evLimits[1];
 
+  int   mode         ( in.getUntrackedParameter<int>    ("mode", 0)          );
 
   //TFile* fout = 0;
   //fout = new TFile(outFileName.c_str(),"RECREATE");
@@ -196,14 +197,23 @@ int main(int argc, const char* argv[])
 
   TStopwatch* clock = new TStopwatch();
   TRandom3*   ran   = new TRandom3();
+  ran->SetSeed(4321);
 
   //int printP4          = 0;
   //int shiftMomenta     = 0;
   //int testMassScan     = 0;
   //int testPermutations = 1;
-  int par = 4;
+
+  int par = mode==0 ? 4 : 6;
   MEIntegratorNew* meIntegrator = new MEIntegratorNew( pathToTF , par, int(verbose));
-  meIntegrator->setIntType( MEIntegratorNew::SL2wj );
+  if(mode == 0)
+    meIntegrator->setIntType( MEIntegratorNew::SL2wj );
+  else if(mode == 1)
+    meIntegrator->setIntType( MEIntegratorNew::SL1wj );
+  else{
+    cout << "Unsupported mode... exit" << endl;
+    return 0;
+  }
   meIntegrator->setWeightNorm( 1 ); // divide weights by xsec
 
   //////////////////////
@@ -455,14 +465,90 @@ int main(int argc, const char* argv[])
 	properEvent=false;
       }
 
-      properEvent = ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
-		      TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
-		      TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
-		      TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
-		      TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
-		      genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
-		      genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
-		      );
+
+
+
+      double errWjet1 = ran->Gaus( TOPHADW1.E(),  scaleL*TOPHADW1.E());
+      double errWjet2 = ran->Gaus( TOPHADW2.E(),  scaleL*TOPHADW2.E());
+      double errbHad  = ran->Gaus( TOPHADB.E()  *0.93 ,  scaleH*TOPHADB.E());
+      double errbLep  = ran->Gaus( TOPLEPB.E()  *0.93 ,  scaleH*TOPLEPB.E());
+      double errHiggs1= ran->Gaus( genBLV.E()   *0.93,   scaleH*genBLV.E());
+      double errHiggs2= ran->Gaus( genBbarLV.E()*0.93,   scaleH*genBbarLV.E());
+      double errMetPx = TOPLEPW2.Px() + ran->Gaus(0.0, scaleMET);
+      double errMetPy = TOPLEPW2.Py() + ran->Gaus(0.0, scaleMET);
+      double errMetPz = TOPLEPW2.Pz() ;
+      
+      TLorentzVector TOPLEPW1scaled  (TOPLEPW1.Vect()   , TOPLEPW1.E());
+      TLorentzVector TOPLEPW2scaled;
+      TOPLEPW2scaled.SetPxPyPzE(errMetPx,errMetPy,errMetPz,sqrt(errMetPx*errMetPx + errMetPy*errMetPy + errMetPz*errMetPz));
+      TLorentzVector TOPLEPBscaled  (TOPLEPB.Vect()  *(errbLep/TOPLEPB.E())  , errbLep);
+      TLorentzVector TOPHADW1scaled (TOPHADW1.Vect() *(errWjet1/TOPHADW1.E()), errWjet1);
+      TLorentzVector TOPHADW2scaled (TOPHADW2.Vect() *(errWjet2/TOPHADW2.E()), errWjet2);
+      TLorentzVector TOPHADBscaled  (TOPHADB.Vect()  *(errbHad/TOPHADB.E())  , errbHad);
+      TLorentzVector genBLVscaled   (genBLV.Vect()   *(errHiggs1/genBLV.E()) , errHiggs1);
+      TLorentzVector genBbarLVscaled(genBbarLV.Vect()*(errHiggs2/genBbarLV.E()) , errHiggs2);
+
+
+      if(shiftMomenta==0){
+	if(mode==0)
+	  properEvent = ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+			  TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+			  TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+			  TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+			  TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+			  genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+			  genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+			  );
+	else if(mode==1)
+	  properEvent = (( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+			   TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+			   (TOPHADW1.Pt() < 30 || TMath::Abs(TOPHADW1.Eta()) >2.5) &&
+			   TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+			   TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+			   genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+			   genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+			   ) ||
+			 ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+			   TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+			   TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+			   (TOPHADW2.Pt() < 30 || TMath::Abs(TOPHADW2.Eta()) >2.5) &&
+			   TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+			   genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+			   genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+			   ) );
+	else{ }
+      }
+      else{
+	if(mode==0) 
+	  properEvent = ( TOPLEPW1scaled.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+			  TOPLEPBscaled.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+			  TOPHADW1scaled.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+			  TOPHADW2scaled.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+			  TOPHADBscaled.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+			  genBLVscaled.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+			  genBbarLVscaled.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+			  );
+	else if(mode==1)
+	  properEvent = (( TOPLEPW1scaled.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+			   TOPLEPBscaled.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+			   (TOPHADW1scaled.Pt() <30 || TMath::Abs(TOPHADW1.Eta()) >2.5) &&
+			   TOPHADW2scaled.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+			   TOPHADBscaled.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+			   genBLVscaled.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+			   genBbarLVscaled.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+			   ) ||
+			 ( TOPLEPW1scaled.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+			   TOPLEPBscaled.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+			   TOPHADW1scaled.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+			   (TOPHADW2scaled.Pt() <30 || TMath::Abs(TOPHADW2.Eta()) >2.5) &&
+			   TOPHADBscaled.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+			   genBLVscaled.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+			   genBbarLVscaled.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+			   )
+			 );
+	else{ }
+      }
+
 
       if(!properEvent) continue;
       counter++;
@@ -501,7 +587,7 @@ int main(int argc, const char* argv[])
 	jets.push_back( genBLV    );
 	jets.push_back( genBbarLV );
 
-	if(printP4){
+	if(printP4 && shiftMomenta==0){
 	  cout << "*******START******" << endl;      
 	  cout << "SumEt = " << METtype1p2corr.sumet  << endl;
 	  cout << "lep:  jet1.SetPtEtaPhiM(" << TOPLEPW1.Pt() << "," <<  TOPLEPW1.Eta() << "," << TOPLEPW1.Phi() << "," << TOPLEPW1.M() << ")" << endl;
@@ -538,7 +624,7 @@ int main(int argc, const char* argv[])
 											    (meIntegrator->getCachedTF("tfMetPhi"))->GetXaxis()->FindBin( TOPLEPW2.Pt() )  ))->GetRandom() ;
 	  
 	  meIntegrator->deleteTF();
-	  */
+	 
 	  double errWjet1 = ran->Gaus( TOPHADW1.E(),  scaleL*TOPHADW1.E());
 	  double errWjet2 = ran->Gaus( TOPHADW2.E(),  scaleL*TOPHADW2.E());
 	  double errbHad  = ran->Gaus( TOPHADB.E()  *0.93 ,  scaleH*TOPHADB.E());
@@ -558,7 +644,8 @@ int main(int argc, const char* argv[])
 	  TLorentzVector TOPHADBscaled  (TOPHADB.Vect()  *(errbHad/TOPHADB.E())  , errbHad);
 	  TLorentzVector genBLVscaled   (genBLV.Vect()   *(errHiggs1/genBLV.E()) , errHiggs1);
 	  TLorentzVector genBbarLVscaled(genBbarLV.Vect()*(errHiggs2/genBbarLV.E()) , errHiggs2);
-	  
+	  */
+  
 	  if(printP4){
 	    cout << "*******START******" << endl;      
 	    cout << "SumEt = " << METtype1p2corr.sumet  << endl;
@@ -585,24 +672,68 @@ int main(int argc, const char* argv[])
 	  jets.push_back( genBLVscaled    );
 	  jets.push_back( genBbarLVscaled );
 
-	  bool properScaledEvent = ( TOPLEPW1scaled.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
-				     TOPLEPBscaled.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
-				     TOPHADW1scaled.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
-				     TOPHADW2scaled.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
-				     TOPHADBscaled.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
-				     genBLVscaled.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
-				     genBbarLVscaled.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
-				     );
+	  /*
+	  bool properScaledEvent = false;
+	  if(mode==0) 
+	    properScaledEvent = ( TOPLEPW1scaled.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				  TOPLEPBscaled.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				  TOPHADW1scaled.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				  TOPHADW2scaled.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+				  TOPHADBscaled.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+				  genBLVscaled.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				  genBbarLVscaled.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				  );
+	  else if(mode==1)
+	    properScaledEvent = (( TOPLEPW1scaled.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				  TOPLEPBscaled.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				  (TOPHADW1scaled.Pt() <30 || TMath::Abs(TOPHADW1.Eta()) >2.5) &&
+				  TOPHADW2scaled.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+				  TOPHADBscaled.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+				  genBLVscaled.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				  genBbarLVscaled.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				  ) ||
+				 ( TOPLEPW1scaled.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				   TOPLEPBscaled.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				   TOPHADW1scaled.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				   (TOPHADW2scaled.Pt() <30 || TMath::Abs(TOPHADW2.Eta()) >2.5) &&
+				   TOPHADBscaled.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+				   genBLVscaled.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				   genBbarLVscaled.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				  )
+				 );
+	  else{ }
+
 	  if( shiftMomenta && !properScaledEvent ) continue;
-	  
+	  */	  
 	}
-	
+
+	if(mode==1){
+	  TLorentzVector w1 = jets[3];
+	  TLorentzVector w2 = jets[4];
+	  if( (w1.Pt()<30 || TMath::Abs(w1.Eta())>2.5) && (w2.Pt()>30 && TMath::Abs(w2.Eta())<2.5)){
+	    jets[3] = w2;
+	    jets[4] = w1;
+	  }
+	  else if( (w2.Pt()<30 || TMath::Abs(w2.Eta())>2.5) && (w1.Pt()>30 && TMath::Abs(w1.Eta())<2.5)){
+	    jets[3] = w1;
+	    jets[4] = w2;
+	  }
+	  else{
+	    cout << "Inconsistentcy of mode and jet selections" << endl;
+	    return 1;
+	  }
+	}
+
+
 	/////////////////////////////////////////////////////////////////////////////
 	clock->Start();
 
 	if(printP4) cout << ">>>" << endl;
 	if(printP4) cout << "Setup jets..." << endl;
 	meIntegrator->setJets(&jets);
+
+	if( !(meIntegrator->smearByTF(30.)) ) continue;
+
 	if(printP4) cout << "Setup H mass..." << endl;
 	meIntegrator->setMass( met );
 	meIntegrator->setTopMass( 174.3 , 80.19);
@@ -653,6 +784,10 @@ int main(int argc, const char* argv[])
       
 	if(printP4){
 	  cout << "E1 :       ["  << E1low  << "," << E1high  << "]" << endl;
+	  if(mode==1){
+	    cout << "cosThetaMiss : ["  << -1  << "," << 1  << "]" << endl;
+	    cout << "PhiMiss :      ["  << -TMath::Pi() << "," << TMath::Pi() << "]" << endl;	
+	  }
 	  cout << "cosTheta : ["  << Ptlow  << "," << Pthigh  << "]" << endl;
 	  cout << "Phi :      ["  << Philow << "," << Phihigh << "]" << endl;
 	  cout << "Eh1 :      ["  << Eh1low << "," << Eh1high << "]" << endl;
@@ -660,8 +795,12 @@ int main(int argc, const char* argv[])
 
 	/////////////////////////////////////////////////////////////////////////////
 	
-	double xL[4] = {  E1low,  Ptlow,   Philow,   Eh1low};
-	double xU[4] = {  E1high, Pthigh , Phihigh,  Eh1high};
+	double xLmode0[4] = {  E1low,  Ptlow,   Philow,   Eh1low};
+	double xUmode0[4] = {  E1high, Pthigh , Phihigh,  Eh1high};
+
+	double xLmode1[6] = {  E1low,  -1, -TMath::Pi(), Ptlow,   Philow,   Eh1low};
+	double xUmode1[6] = {  E1high, +1, +TMath::Pi(), Pthigh , Phihigh,  Eh1high};
+
       
 	clock->Start();
 
@@ -685,7 +824,13 @@ int main(int argc, const char* argv[])
 	  //meIntegrator->setTopMass( mH[m], 80.19);
 
 	  clock->Start();
-	  double p = ig2.Integral(xL, xU);
+	  double p = 0.;
+	  if(mode==0)
+	    p = ig2.Integral(xLmode0, xUmode0);
+	  else if(mode==1)
+	    p = ig2.Integral(xLmode1, xUmode1);
+	  else{ }
+
 	  clock->Stop();
 	  evalCpu_ = clock->CpuTime();
 	  evalRea_ = clock->RealTime();
@@ -750,6 +895,7 @@ int main(int argc, const char* argv[])
       // test permutations
       if(testPermutations) {
 
+	/*
 	double errWjet1 = ran->Gaus( TOPHADW1.E(),         scaleL*TOPHADW1.E());
 	double errWjet2 = ran->Gaus( TOPHADW2.E(),         scaleL*TOPHADW2.E());
 	double errbHad  = ran->Gaus( TOPHADB.E()  *0.93 ,  scaleH*TOPHADB.E());
@@ -770,15 +916,37 @@ int main(int argc, const char* argv[])
 	TLorentzVector genBLVscaled   (genBLV.Vect()   *(errHiggs1/genBLV.E()) , errHiggs1);
 	TLorentzVector genBbarLVscaled(genBbarLV.Vect()*(errHiggs2/genBbarLV.E()) , errHiggs2);
 		    
-	bool properScaledEvent = ( TOPLEPW1scaled.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
-				   TOPLEPBscaled.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
-				   TOPHADW1scaled.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
-				   TOPHADW2scaled.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
-				   TOPHADBscaled.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
-				   genBLVscaled.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
-				   genBbarLVscaled.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
-				   );
-	if( shiftMomenta && !properScaledEvent ) continue;	   
+	bool properScaledEvent = false;
+	if(mode==0) 
+	  properScaledEvent = ( TOPLEPW1scaled.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				TOPLEPBscaled.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				TOPHADW1scaled.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				TOPHADW2scaled.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+				TOPHADBscaled.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+				genBLVscaled.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				genBbarLVscaled.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				);
+	else if(mode==1)
+	  properScaledEvent = (( TOPLEPW1scaled.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				 TOPLEPBscaled.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				 (TOPHADW1scaled.Pt() <30 || TMath::Abs(TOPHADW1.Eta()) >2.5) &&
+				 TOPHADW2scaled.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+				 TOPHADBscaled.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+				 genBLVscaled.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				 genBbarLVscaled.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				 ) ||
+			       ( TOPLEPW1scaled.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				 TOPLEPBscaled.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				 TOPHADW1scaled.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				 (TOPHADW2scaled.Pt() <30 || TMath::Abs(TOPHADW2.Eta()) >2.5) &&
+				 TOPHADBscaled.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+				 genBLVscaled.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				 genBbarLVscaled.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				 )
+			       );
+
+	if( shiftMomenta && !properScaledEvent ) continue;
+	*/	   
 
 	hMassProb->Reset();
 	vector<TLorentzVector> bjets;
@@ -794,6 +962,40 @@ int main(int argc, const char* argv[])
 	  bjets.push_back( genBLVscaled );
 	  bjets.push_back( genBbarLVscaled );
 	}
+
+
+ 
+	if(printP4 && shiftMomenta==0){
+	  cout << "*******START******" << endl;      
+	  cout << "SumEt = " << METtype1p2corr.sumet  << endl;
+	  cout << "lep   (): jet1.SetPtEtaPhiM(" << TOPLEPW1.Pt() << "," <<  TOPLEPW1.Eta() << "," << TOPLEPW1.Phi() << "," << TOPLEPW1.M() << ")" << endl;
+	  cout << "met:  ()  jet2.SetPtEtaPhiM(" << TOPLEPW2.Pt() << "," <<  TOPLEPW2.Eta() << "," << TOPLEPW2.Phi() << "," << TOPLEPW2.M() << ")" << endl;
+	  cout << "blep: ()  jet3.SetPtEtaPhiM(" << TOPLEPB.Pt() << "," <<  TOPLEPB.Eta() << "," << TOPLEPB.Phi() << "," << TOPLEPB.M() << ")" << endl;
+	  cout << "w1:   ()  jet4.SetPtEtaPhiM(" << TOPHADW1.Pt() << "," <<  TOPHADW1.Eta() << "," << TOPHADW1.Phi() << "," << TOPHADW1.M() << ")" << endl;
+	  cout << "w2:   ()  jet5.SetPtEtaPhiM(" << TOPHADW2.Pt() << "," <<  TOPHADW2.Eta() << "," << TOPHADW2.Phi() << "," << TOPHADW2.M() << ")" << endl;
+	  cout << "bhad: ()  jet6.SetPtEtaPhiM(" << TOPHADB.Pt() << "," <<  TOPHADB.Eta() << "," << TOPHADB.Phi() << "," << TOPHADB.M() << ")" << endl;
+	  cout << "h1:   ()  jet7.SetPtEtaPhiM(" << genBLV.Pt() << "," <<  genBLV.Eta() << "," << genBLV.Phi() << "," << genBLV.M() << ")" << endl;
+	  cout << "h2:   ()  jet8.SetPtEtaPhiM(" << genBbarLV.Pt() << "," <<  genBbarLV.Eta() << "," << genBbarLV.Phi() << "," << genBbarLV.M() << ")" << endl;	
+	  cout << "Top Lep mass () = " << (TOPLEPW1+TOPLEPW2+TOPLEPB).M() << " <=> neutrino eta=0!!!" << endl;
+	  cout << "Top Had mass () = " << (TOPHADW1+TOPHADW2+TOPHADB).M() << endl;
+	  cout << "Higgs mass () = "   << (genBLV+genBbarLV).M() << endl;
+	}
+	if(printP4 && shiftMomenta==1){
+	  cout << "*******START******" << endl;      
+	  cout << "SumEt = " << METtype1p2corr.sumet  << endl;
+	  cout << "lep   (scaled): jet1.SetPtEtaPhiM(" << TOPLEPW1scaled.Pt() << "," <<  TOPLEPW1scaled.Eta() << "," << TOPLEPW1scaled.Phi() << "," << TOPLEPW1scaled.M() << ")" << endl;
+	  cout << "met:  (scaled)  jet2.SetPtEtaPhiM(" << TOPLEPW2scaled.Pt() << "," <<  TOPLEPW2scaled.Eta() << "," << TOPLEPW2scaled.Phi() << "," << TOPLEPW2scaled.M() << ")" << endl;
+	  cout << "blep: (scaled)  jet3.SetPtEtaPhiM(" << TOPLEPBscaled.Pt() << "," <<  TOPLEPBscaled.Eta() << "," << TOPLEPBscaled.Phi() << "," << TOPLEPBscaled.M() << ")" << endl;
+	  cout << "w1:   (scaled)  jet4.SetPtEtaPhiM(" << TOPHADW1scaled.Pt() << "," <<  TOPHADW1scaled.Eta() << "," << TOPHADW1scaled.Phi() << "," << TOPHADW1scaled.M() << ")" << endl;
+	  cout << "w2:   (scaled)  jet5.SetPtEtaPhiM(" << TOPHADW2scaled.Pt() << "," <<  TOPHADW2scaled.Eta() << "," << TOPHADW2scaled.Phi() << "," << TOPHADW2scaled.M() << ")" << endl;
+	  cout << "bhad: (scaled)  jet6.SetPtEtaPhiM(" << TOPHADBscaled.Pt() << "," <<  TOPHADBscaled.Eta() << "," << TOPHADBscaled.Phi() << "," << TOPHADBscaled.M() << ")" << endl;
+	  cout << "h1:   (scaled)  jet7.SetPtEtaPhiM(" << genBLVscaled.Pt() << "," <<  genBLVscaled.Eta() << "," << genBLVscaled.Phi() << "," << genBLVscaled.M() << ")" << endl;
+	  cout << "h2:   (scaled)  jet8.SetPtEtaPhiM(" << genBbarLVscaled.Pt() << "," <<  genBbarLVscaled.Eta() << "," << genBbarLVscaled.Phi() << "," << genBbarLVscaled.M() << ")" << endl;	
+	  cout << "Top Lep mass (scaled) = " << (TOPLEPW1scaled+TOPLEPW2scaled+TOPLEPBscaled).M() << " <=> neutrino eta=0!!!" << endl;
+	  cout << "Top Had mass (scaled) = " << (TOPHADW1scaled+TOPHADW2scaled+TOPHADBscaled).M() << endl;
+	  cout << "Higgs mass (scaled) = "   << (genBLVscaled+genBbarLVscaled).M() << endl;
+	}
+
 
 
 	for(int m = 0; m < nMassPoints ; m++){
@@ -839,10 +1041,35 @@ int main(int argc, const char* argv[])
 		  jets.push_back( bjets[pp3] );
 		  jets.push_back( bjets[pp4] );
 
+
+		  if(mode==1){
+		    TLorentzVector w1 = jets[3];
+		    TLorentzVector w2 = jets[4];
+		    if( (w1.Pt()<30 || TMath::Abs(w1.Eta())>2.5) && (w2.Pt()>30 && TMath::Abs(w2.Eta())<2.5)){
+		      jets[3] = w2;
+		      jets[4] = w1;
+		    }
+		    else if( (w2.Pt()<30 || TMath::Abs(w2.Eta())>2.5) && (w1.Pt()>30 && TMath::Abs(w1.Eta())<2.5)){
+		      jets[3] = w1;
+		      jets[4] = w2;
+		    }
+		    else{
+		      cout << "Inconsistentcy of mode and jet selections" << endl;
+		      continue;
+		    }
+		  }
+
+
+		  meIntegrator->setSumEt( METtype1p2corr.sumet );
 		  meIntegrator->setJets(&jets);
 		  meIntegrator->initVersors(1);
 		  meIntegrator->initTF();
 		  meIntegrator->setTopFlags( vLepton_charge[0]==1 ? +1 : -1 , vLepton_charge[0]==1 ? -1 : +1 );
+		  meIntegrator->setUseME (useME);
+		  meIntegrator->setUseJac(useJac);
+		  meIntegrator->setUseMET(useMET);
+		  meIntegrator->setUseTF (useTF);
+		  meIntegrator->setUsePDF(usePDF);
 
 		  double E1low   = (meIntegrator->getCachedTF("tfWjet1"))->GetXaxis()->GetXmin() * (1-enlargeE1);
 		  double E1high  = (meIntegrator->getCachedTF("tfWjet1"))->GetXaxis()->GetXmax() * (1+enlargeE1);
@@ -855,15 +1082,23 @@ int main(int argc, const char* argv[])
 		  double Eh1low   = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmin() * (1-enlargeEh1);
 		  double Eh1high  = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmax() * (1+enlargeEh1);	  
 
-		  double xL[4] = {  E1low,  Ptlow,   Philow,   Eh1low};
-		  double xU[4] = {  E1high, Pthigh , Phihigh,  Eh1high};
+		  double xLmode0[4] = {  E1low,  Ptlow,   Philow,   Eh1low};
+		  double xUmode0[4] = {  E1high, Pthigh , Phihigh,  Eh1high};
+
+		  double xLmode1[6] = {  E1low,   -1, -TMath::Pi(), Ptlow,   Philow,   Eh1low};
+		  double xUmode1[6] = {  E1high,  +1, +TMath::Pi(), Pthigh , Phihigh,  Eh1high};
 
 		  ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par);
 		  ROOT::Math::GSLMCIntegrator ig2( ROOT::Math::IntegrationMultiDim::kVEGAS , 1.e-12, 1.e-5, vegasPoints);
 		  ig2.SetFunction(toIntegrate);
 		  meIntegrator->SetPar(par);
 
-		  double p = ig2.Integral(xL, xU);
+		  double p = 0.;
+		  if(mode==0) 
+		    p = ig2.Integral(xLmode0, xUmode0);
+		  else if(mode==1)
+		    p = ig2.Integral(xLmode1, xUmode1);
+		  else{ }
 		
 		  float old = hMassProb->GetBinContent( hMassProb->FindBin(mH[m]) );
 		  hMassProb->SetBinContent( hMassProb->FindBin(mH[m]), old+p );

@@ -391,11 +391,14 @@ int main(int argc, const char* argv[])
   int   shiftMomenta    ( in.getParameter<int>    ("shiftMomenta")     );
   int   testMassScan    ( in.getParameter<int>    ("testMassScan")     );
   int   testPermutations( in.getParameter<int>    ("testPermutations") );
+  int   compAcceptance  ( in.getUntrackedParameter<int>    ("compAcceptance", 0) );
   int   printP4         ( in.getParameter<int>    ("printP4")          );
 
   vector<int> evLimits( in.getParameter<vector<int> >  ("evLimits") );
   int evLow = evLimits[0];
   int evHigh = evLimits[1];
+
+  int   mode         ( in.getUntrackedParameter<int>    ("mode", 0)          );
 
   ofstream out("./root/input.lhco");
   out.precision(8);
@@ -405,9 +408,17 @@ int main(int argc, const char* argv[])
   TStopwatch* clock = new TStopwatch();
   TRandom3*   ran   = new TRandom3();
 
-  int par = 4;
+  int par = mode==0 ? 4 : 6;
   MEIntegratorNew* meIntegrator = new MEIntegratorNew( pathToTF , par, int(verbose));
-
+  if(mode == 0)
+    meIntegrator->setIntType( MEIntegratorNew::SL2wj );
+  else if(mode == 1)
+    meIntegrator->setIntType( MEIntegratorNew::SL1wj );
+  else{
+    cout << "Unsupported mode... exit" << endl;
+    return 0;
+  }
+  meIntegrator->setWeightNorm( 1 ); // divide weights by xsec
 
   //const int nMassPoints = 30;
   //double mH[nMassPoints] = {95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240};
@@ -416,13 +427,13 @@ int main(int argc, const char* argv[])
  
 
   // 21 bins 80 - 180
-  const int nMassPoints  = 31;//27;                                                                                                                        
+  const int nMassPoints  = 39;//31;                                                                                                                        
   double mH[nMassPoints] = 
     { /*50,  55,  */60,  65,  70,  75,  
       80 , 85,  90, 95, 100, 105, 110, 
       115, 120, 125, 130, 135, 140, 145, 150, 155, 
-      160, 165, 170, 175, 180 ,185, 190, 195, 200, 205, 210
-			     //215, 220, 225, 230, 235, 240, 245, 250 
+      160, 165, 170, 175, 180 ,185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240, 245, 250 
+			     // 235, 240, 245, 250 
     }; 
 
 
@@ -514,7 +525,7 @@ int main(int argc, const char* argv[])
     //genParticleInfo genB, genBbar;
     //genTopInfo genTop, genTbar;
     JetByPt jet1, jet2, jet3, jet4, jet5, jet6, jet7, jet8, jet9, jet10;
-    int nvlep;
+    int nvlep, nSimBs;
     Float_t vLepton_mass[999];
     Float_t vLepton_pt  [999];
     Float_t vLepton_eta [999];
@@ -542,16 +553,22 @@ int main(int argc, const char* argv[])
     currentTree->SetBranchAddress("nvlep",  &nvlep);
     currentTree->SetBranchAddress("genB",   &genB);
     currentTree->SetBranchAddress("genBbar",&genBbar);
+    currentTree->SetBranchAddress("nSimBs", &nSimBs);
 
-    int counter = 0;
+
+    int counter    = 0;
+    int counterTot = 0;
     Long64_t nentries = currentTree->GetEntries();
     for (Long64_t i = 0; i < nentries ; i++){
 
-      if( !(counter>=evLow && counter<=evHigh) ) continue;
+      counterTot++;
+
+      if( (counter+1)>evHigh ) continue; // skip remaining events
       
       if(i%5000==0) cout << i << endl;
       currentTree->GetEntry(i);
       
+      if(compAcceptance) counterTot -= ((nSimBs>2) ? 0 : 1);
       //continue;
       
       TLorentzVector genBLV   ;
@@ -662,7 +679,7 @@ int main(int argc, const char* argv[])
        
       }
       
-      if( myJetsFilt.size()<6 || numJets30<6 || numJets30BtagM<4) continue;
+      if( myJetsFilt.size()<6 || numJets30<6 || numJets30BtagM<4) continue;   // RELAXED
       bool properEvent = true;
 
       properEvent = nvlep==1;
@@ -674,6 +691,11 @@ int main(int argc, const char* argv[])
      
       if(!properEvent) continue;
       counter++;
+
+      if(compAcceptance){
+	counter    -= ((nSimBs>2) ? 0 : 1);
+	continue;
+      }
 
       float nuPx = METtype1p2corr.et*TMath::Cos(METtype1p2corr.phi);
       float nuPy = METtype1p2corr.et*TMath::Sin(METtype1p2corr.phi);
@@ -695,6 +717,7 @@ int main(int argc, const char* argv[])
       evalRea_ = -99;
 
 
+      /*
       appendEventLHCO( counter, out,  leptonLV, vLepton_charge[0], neutrinoLV,  myJetsFilt, mapFilt, closestMbb_, closestMjj_, closestMbjj_);
 
       bool match_sgn = false;
@@ -772,6 +795,10 @@ int main(int argc, const char* argv[])
       hPt_ =  (genBLV+genBbarLV).Pt();
       if(match_sgn && match_bkg)  tMW->Fill();
       delete c;
+      */
+
+
+
 
 
       //////////////////////////////////////////////////////////
@@ -803,10 +830,10 @@ int main(int argc, const char* argv[])
 		      if(pp6==pp1 || pp6==pp2 || pp6==pp3 || pp6==pp4 || pp6==pp5) continue;
 
 
-		      if( !(  mapFilt[pp1].csv > 0.679 &&
-			      mapFilt[pp2].csv > 0.679 &&
-			      mapFilt[pp5].csv > 0.679 &&
-			      mapFilt[pp6].csv > 0.679 &&
+		      if( !(  mapFilt[pp1].csv > /*0.244*/0.679 &&
+			      mapFilt[pp2].csv > /*0.244*/0.679 &&
+			      mapFilt[pp5].csv > /*0.244*/0.679 &&
+			      mapFilt[pp6].csv > /*0.244*/0.679 &&
 			      mapFilt[pp3].csv < 999   &&
 			      mapFilt[pp4].csv < 999 
 			      ) ) continue;
@@ -832,6 +859,12 @@ int main(int argc, const char* argv[])
 		      meIntegrator->setJets(&jets);
 		      meIntegrator->initVersors(1);
 		      meIntegrator->initTF();
+		      meIntegrator->setTopFlags( vLepton_charge[0]==1 ? +1 : -1 , vLepton_charge[0]==1 ? -1 : +1 );
+		      meIntegrator->setUseME (useME);
+		      meIntegrator->setUseJac(useJac);
+		      meIntegrator->setUseMET(useMET);
+		      meIntegrator->setUseTF (useTF);
+		      meIntegrator->setUsePDF(usePDF);
 		      
 		      double E1low   = (meIntegrator->getCachedTF("tfWjet1"))->GetXaxis()->GetXmin() * (1-enlargeE1);
 		      double E1high  = (meIntegrator->getCachedTF("tfWjet1"))->GetXaxis()->GetXmax() * (1+enlargeE1);
@@ -844,15 +877,24 @@ int main(int argc, const char* argv[])
 		      double Eh1low   = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmin() * (1-enlargeEh1);
 		      double Eh1high  = (meIntegrator->getCachedTF("tfHiggs1"))->GetXaxis()->GetXmax() * (1+enlargeEh1);	  
 		      
-		      double xL[4] = {  E1low,  Ptlow,   Philow,   Eh1low};
-		      double xU[4] = {  E1high, Pthigh , Phihigh,  Eh1high};
+		      double xLmode0[4] = {  E1low,  Ptlow,   Philow,   Eh1low};
+		      double xUmode0[4] = {  E1high, Pthigh , Phihigh,  Eh1high};
+
+		      double xLmode1[6] = {  E1low,  -1, -TMath::Pi(), Ptlow,   Philow,   Eh1low};
+		      double xUmode1[6] = {  E1high, +1, +TMath::Pi(), Pthigh , Phihigh,  Eh1high};
+
 		      
 		      ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par);
 		      ROOT::Math::GSLMCIntegrator ig2( ROOT::Math::IntegrationMultiDim::kVEGAS , 1.e-12, 1.e-5, vegasPoints);
 		      ig2.SetFunction(toIntegrate);
 		      meIntegrator->SetPar(par);
 		      
-		      double p = ig2.Integral(xL, xU);
+		      double p = 0.;
+		      if(mode==0)
+			p = ig2.Integral(xLmode0, xUmode0);
+		      else if(mode==1)
+			p = ig2.Integral(xLmode1, xUmode1);
+		      else{ }		   
 		      
 		      float old = hMassProb->GetBinContent( hMassProb->FindBin(mH[m]) );
 		      hMassProb->SetBinContent( hMassProb->FindBin(mH[m]), old+p );
@@ -1036,7 +1078,9 @@ int main(int argc, const char* argv[])
       //////////////////////////////////////////////////////////
     
     }
-    
+   
+    cout << "Sample " << currentName << ": acceptance " << counter << "/" << counterTot << " = " << float(counter)/counterTot << endl;
+ 
   }
   
 

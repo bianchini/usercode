@@ -8,7 +8,7 @@ process = cms.Process("TestMENew")
 
 process.fwliteInput = cms.PSet(
 
-    outFileName   = cms.string("./root/TestMENew_ttjets.root"),
+    outFileName   = cms.string("./root/TestMENew_acc.root"),
     madweight     = cms.string("weights_ttjets"),
     pathToTF      = cms.string("./root/transferFunctions_partonE.root"),
     pathToFile    = cms.string("dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/store//user/bianchi/HBB_EDMNtuple/AllHDiJetPt"+VType+"/v2/"),
@@ -16,17 +16,80 @@ process.fwliteInput = cms.PSet(
     lumi          = cms.double(12.1),
 
     samples       = cms.VPSet(
+
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTH_HToBB_M-110_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH110'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1887*0.744)
+    ),
+
     
     cms.PSet(
     skip     = cms.bool(True),  
+    name     = cms.string('TTH_HToBB_M-115_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH115'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1663*0.703)
+    ),
+
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTH_HToBB_M-120_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH120'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1470*0.648)
+    ),
+
+
+    cms.PSet(
+    skip     = cms.bool(False),  
     name     = cms.string('TTH_HToBB_M-125_8TeV-pythia6'+VType),
     nickName = cms.string('TTH125'),
     color    = cms.int32(2),
     xSec     = cms.double(0.1302*0.569)
     ),
 
+
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
+    name     = cms.string('TTH_HToBB_M-130_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH130'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1157*0.494)
+    ),
+
+    
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTH_HToBB_M-135_8TeV-pythia6'+VType),
+    nickName = cms.string('TTH135'),
+    color    = cms.int32(2),
+    xSec     = cms.double(0.1031*0.404)
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTWJets_8TeV-madgraph'+VType),
+    nickName = cms.string('TTW'),
+    color    = cms.int32(18),
+    xSec     = cms.double(0.232),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('TTZJets_8TeV-madgraph'+VType),
+    nickName = cms.string('TTZ'),
+    color    = cms.int32(18),
+    xSec     = cms.double(0.2057),
+    ),
+
+
+    cms.PSet(
+    skip     = cms.bool(True),  
     name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsSemiLept'),
     color    = cms.int32(41),
@@ -37,22 +100,24 @@ process.fwliteInput = cms.PSet(
     ),
 
     vegasPoints   = cms.int32(500),
-
+    mode          = cms.untracked.int32(0),
+    
     useME         = cms.int32(1),
     useJac        = cms.int32(1),
     useMET        = cms.int32(1),
     useTF         = cms.int32(1),
     usePDF        = cms.int32(1),
 
-    shiftMomenta      = cms.int32(0),
-    testMassScan      = cms.int32(0),
-    testPermutations  = cms.int32(0),
-    printP4           = cms.int32(0),
+    shiftMomenta      = cms.int32(1),
+    testMassScan      = cms.int32(1),
+    testPermutations  = cms.int32(1),
+    printP4           = cms.int32(1),
     
-    verbose       = cms.bool(False),
+    compAcceptance    = cms.untracked.int32(0),
+    
+    verbose       = cms.bool(True),
     met           = cms.double(120.),
-    evLimits      = cms.vint32(0,2000),
-
+    evLimits      = cms.vint32(1,2),
 
     pertBLep      = cms.double(1.0),
     pertW1        = cms.double(1.0),
