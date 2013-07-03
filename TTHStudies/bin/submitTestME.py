@@ -12,10 +12,15 @@ import FWCore.ParameterSet.Config as cms
 
 
 def submitTest(script,
+               mode,
+               masses,
                useME, useJac, useMET, useTF, usePDF,
                shiftMomenta,testMassScan,testPermutations,
                scaleH,scaleL,scaleMET,
                evLow,evHigh):
+
+    print "Overload testME.py..."
+    os.system('cp ../python/testME.py ./')
 
     from testME import process
     
@@ -24,6 +29,8 @@ def submitTest(script,
     jobName    = 'job_'+script
 
     process.fwliteInput.outFileName      = cms.string('./root/TestMENew_'+script+'.root')
+    process.fwliteInput.mode             = cms.untracked.int32(mode)
+    process.fwliteInput.masses           = masses
     process.fwliteInput.useME            = cms.int32(useME)
     process.fwliteInput.useJac           = cms.int32(useJac)
     process.fwliteInput.useMET           = cms.int32(useMET)
@@ -65,23 +72,51 @@ def submitTest(script,
 ###########################################
 ###########################################
 
+masses = cms.vdouble(120)
 
-#submitTest('rec_default',   1,1,1,1,1,    1,1,1,   0.15,0.18, 20,    0,1000)
-#submitTest('rec_METup',     1,1,1,1,1,    1,1,1,   0.15,0.18, 40,    0,1000)
-#submitTest('rec_ScaleBup',  1,1,1,1,1,    1,1,1,   0.15,0.27, 40,    0,1000)
-#submitTest('rec_ScaleLup',  1,1,1,1,1,    1,1,1,   0.22,0.18, 40,    0,1000)
+#for i in range(40):
+#    #print "(%d,%d)" % (i*50+1, (i+1)*50)
+#    submitTest('rec_openloops_ttjets_p'+str(i+1), 0, masses,   1,1,1,1,1,    1,1,1,   0.15,0.18, 20,    i*100+1, (i+1)*100)
+
+#submitTest('rec_default_largerLR_range', 0, masses,   1,1,1,1,1,    1,1,1,   0.15,0.18, 20,    0,1000)
+#submitTest('rec_METup', 0, masses,     1,1,1,1,1,    1,1,1,   0.15,0.18, 40,    0,1000)
+#submitTest('rec_ScaleBup', 0, masses,  1,1,1,1,1,    1,1,1,   0.15,0.27, 40,    0,1000)
+#submitTest('rec_ScaleLup', 0, masses,  1,1,1,1,1,    1,1,1,   0.22,0.18, 40,    0,1000)
 #submitTest('rec_noJac'   ,   1,0,1,1,1,    1,1,1,   0.15,0.18, 20,    0,1000)
 
-submitTest('rec_default_noH',   1,1,1,1,1,    1,1,1,   0.15,0.18, 20,    0,1000)
+#submitTest('rec_default_noH', 0, masses,   1,1,1,1,1,    1,1,1,   0.15,0.18, 20,    0,1000)
 
-#submitTest('gen_default',   1,1,1,1,1,    0,1,1,  0.15,0.18, 20,      0,1000)
+#submitTest('gen_default_largerLR_range', 0, masses,   1,1,1,1,1,    0,1,1,  0.15,0.18, 20,      0,1000)
 #submitTest('gen_noME'   ,   0,1,1,1,1,    0,1,1,  0.15,0.18, 20,      0,1000)
 #submitTest('gen_noJac'  ,   1,0,1,1,1,    0,1,1,  0.15,0.18, 20,      0,1000)
-#submitTest('gen_noMET',     1,1,0,1,1,    0,1,1,  0.15,0.18, 20,      0,1000)
-#submitTest('gen_noTF',      1,1,1,0,1,    0,1,1,  0.15,0.18, 20,      0,1000)
-#submitTest('gen_noPDF',     1,1,1,1,0,    0,1,1,  0.15,0.18, 20,      0,1000)
+#submitTest('gen_noMET', 0, masses,     1,1,0,1,1,    0,1,1,  0.15,0.18, 20,      0,1000)
+#submitTest('gen_noTF', 0, masses,      1,1,1,0,1,    0,1,1,  0.15,0.18, 20,      0,1000)
+#submitTest('gen_noPDF', 0, masses,     1,1,1,1,0,    0,1,1,  0.15,0.18, 20,      0,1000)
+
+#submitTest('gen_openloops_SL1wj_p1', 0, masses,     1,1,1,1,1,   0,1,1,  0.15,0.18, 20,  1,20)
+#submitTest('gen_openloops_SL1wj_p2', 0, masses,     1,1,1,1,1,   0,1,1,  0.15,0.18, 20, 21,40)
+#submitTest('gen_openloops_SL1wj_p3', 0, masses,     1,1,1,1,1,   0,1,1,  0.15,0.18, 20, 41,60)
+#submitTest('gen_openloops_SL1wj_p4', 0, masses,     1,1,1,1,1,   0,1,1,  0.15,0.18, 20, 61,80)
+#submitTest('gen_openloops_SL1wj_p5', 0, masses,     1,1,1,1,1,   0,1,1,  0.15,0.18, 20, 81,100)
+
+#submitTest('rec_openloops_SL1wj_p1', 0, masses,     1,1,1,1,1,   1,1,1,  0.15,0.18, 20,  0,20)
+#submitTest('rec_openloops_SL1wj_p2', 0, masses,     1,1,1,1,1,   1,1,1,  0.15,0.18, 20, 21,40)
+#submitTest('rec_openloops_SL1wj_p3', 0, masses,     1,1,1,1,1,   1,1,1,  0.15,0.18, 20, 41,60)
+#submitTest('rec_openloops_SL1wj_p4', 0, masses,     1,1,1,1,1,   1,1,1,  0.15,0.18, 20, 61,80)
+#submitTest('rec_openloops_SL1wj_p5', 0, masses,     1,1,1,1,1,   1,1,1,  0.15,0.18, 20, 81,100)
 
 
-#submitTest('rec_noME_highstat'   ,0,1,1,1,1,1,1,1,201,1000)
-#submitTest('rec_noPDF_highstat'  ,1,1,1,1,0,1,1,1,201,1000)
+#submitTest('rec_noME_highstat'   ,0, 0,1,1,1,1,1,1,1,201,1000)
+#submitTest('rec_noPDF_highstat'  ,0, 1,1,1,1,0,1,1,1,201,1000)
 
+
+counter = 0;
+for i in [60,70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210]:
+#for i in [120, 130, 140, 150, 160, 170, 180, 190, 200, 210]:
+    counter = counter + 1
+    #print "(%d,%d)" % (i*50+1, (i+1)*50)
+    mymasses = cms.vdouble(i, i+5)
+    #print "(%d,%d)" % (i, i+5)
+    #print 'rec_XSec_p'+str(counter)
+    submitTest('rec_XSec_p'+str(counter), 2, mymasses,   1,1,1,1,1,    1,1,1,   0.15,0.18, 20,  1, 1)
+    submitTest('rec_Acc_p'+str(counter),  3, mymasses,   1,1,1,1,1,    1,1,1,   0.15,0.18, 20,  1, 1)

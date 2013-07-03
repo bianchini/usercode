@@ -8,7 +8,7 @@ process = cms.Process("TestMENew")
 
 process.fwliteInput = cms.PSet(
 
-    outFileName   = cms.string("./root/TestMENew_acc.root"),
+    outFileName   = cms.string("./root/TestMENew.root"),
     madweight     = cms.string("weights_ttjets"),
     pathToTF      = cms.string("./root/transferFunctions_partonE.root"),
     pathToFile    = cms.string("dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/store//user/bianchi/HBB_EDMNtuple/AllHDiJetPt"+VType+"/v2/"),
@@ -99,13 +99,18 @@ process.fwliteInput = cms.PSet(
     
     ),
 
-    vegasPoints   = cms.int32(500),
-    mode          = cms.untracked.int32(0),
+    vegasPoints   = cms.int32(6000000), #6000000
+    mode          = cms.untracked.int32(2),
+
+    functions     = cms.vstring('1.39e+23*x^(-2.81e+00)',
+                                '6.36e+17*TMath::Landau(x,6.71e+01,1.62e+01)',
+                                'x>=12 ? x^(-2.010e-01)*exp((-1.5785e-02)*x) : 4.184e-02*x'
+                                ),
     
     useME         = cms.int32(1),
     useJac        = cms.int32(1),
-    useMET        = cms.int32(1),
-    useTF         = cms.int32(1),
+    useMET        = cms.int32(0),
+    useTF         = cms.int32(0),
     usePDF        = cms.int32(1),
 
     shiftMomenta      = cms.int32(1),
@@ -115,9 +120,10 @@ process.fwliteInput = cms.PSet(
     
     compAcceptance    = cms.untracked.int32(0),
     
-    verbose       = cms.bool(True),
+    verbose       = cms.bool(False),
     met           = cms.double(120.),
-    evLimits      = cms.vint32(1,2),
+    masses        = cms.vdouble(120,125),
+    evLimits      = cms.vint32(1,1),
 
     pertBLep      = cms.double(1.0),
     pertW1        = cms.double(1.0),

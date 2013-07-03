@@ -39,6 +39,7 @@
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TH3F.h"
+#include "TString.h"
 #include "TStopwatch.h"
 #include "TRandom3.h"
 
@@ -94,6 +95,12 @@ class MEIntegratorNew {
     Unknown
   };
 
+  enum NormalizationType {
+    None = 0,
+    xSec,
+    Acc
+  };
+
   void   setIntType( IntegrationType );
   void   SetPar(int);
   void   setJets( vector<TLorentzVector>* );
@@ -123,7 +130,8 @@ class MEIntegratorNew {
   void   setUseTF   (int);
   void   setUsePDF  (int);
   void   setTopFlags(int,int);
-  void   setWeightNorm(int);
+  void   setWeightNorm(NormalizationType);
+  void   setNormFormulas(TString, TString, TString);
   void   resetEvaluation();
 
   TH1*   getCachedPdf( string ) const;
@@ -158,7 +166,7 @@ class MEIntegratorNew {
   double tthDensity      (double, double, double, double)  const;
   double meSquaredAtQ    (double, double, double, double) const;
   double meSquaredOpenLoops (TLorentzVector*, TLorentzVector*, TLorentzVector*) const;
-  double xSection           () const;
+  double xSection           (int) const;
   double evaluateCahchedPdf (TH1*, double, double, double)  const;
   double ggPdf              ( double, double, double) const; 
   double qqPdf              ( double, double, double) const; 
@@ -196,7 +204,7 @@ class MEIntegratorNew {
   IntegrationType intType_;
   int top1Flag_;  // +1 <=> top lep is top
   int top2Flag_;
-  int normalizeToXSec_;
+  NormalizationType normalizeToXSec_;
   int par_;
   int verbose_;
   int usePtPhiParam_;
@@ -234,6 +242,10 @@ class MEIntegratorNew {
   TH1F* tfHiggs1_;
   TH1F* tfHiggs2_;
   TH2F* tfMetPhi_;
+
+  TF1* xSecFormula_;
+  TF1* accFormula_;
+  TF1* tthPtFormula_;
 
   TStopwatch* clock_;
   TRandom3* ran_;
@@ -288,7 +300,11 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   top1Flag_ = 0;
   top2Flag_ = 0;
 
-  normalizeToXSec_ = 1;
+  normalizeToXSec_ = NormalizationType::None;
+
+  xSecFormula_  = 0;
+  accFormula_   = 0;
+  tthPtFormula_ = 0;
 
   TFile* file = TFile::Open(fileName.c_str(),"READ");
   w_ = (RooWorkspace*)file->Get("transferFuntions");
@@ -390,14 +406,20 @@ MEIntegratorNew::~MEIntegratorNew(){
   delete clock_;
   delete ran_;
 
+  if(xSecFormula_)  delete xSecFormula_;
+  if(accFormula_)   delete accFormula_;
+  if(tthPtFormula_) delete tthPtFormula_;
+
   cout << "End destructor" << endl;
 
 }
 
 void MEIntegratorNew::deleteTF(){
+
+  resetEvaluation();
+
   for(std::map<string, TH1*>::iterator it = transferFunctions_.begin(); it!=transferFunctions_.end(); it++){
     if(it->second){
-      //cout << "Deleted " << string((it->second)->GetName()) << endl;
       delete (it->second);
     }
   }
@@ -927,6 +949,7 @@ void MEIntegratorNew::setPartonLuminosity(TH1F* h){
 }
 
 void MEIntegratorNew::setMass(double mass){
+  resetEvaluation();
   M_    = mass;
   dMh2_ = (M_*M_-2*Mb_*Mb_)*0.5; 
 }
@@ -974,8 +997,13 @@ void MEIntegratorNew::setTopFlags(int flag1, int flag2){
   top2Flag_ = flag2;
 }
 
-void MEIntegratorNew::setWeightNorm(int norm){
+void MEIntegratorNew::setWeightNorm(NormalizationType norm){
   normalizeToXSec_ = norm;
+  cout << "*** MEIntegratorNew:  Weights will be divided by " ;
+  if( norm == None ) cout << "1" << endl;
+  if( norm == xSec ) cout << "the inclusive cross-section" << endl;
+  if( norm == Acc )  cout << "the cross-section in acceptance" << endl;
+  return;
 }
 
 int MEIntegratorNew::topHadEnergies(double E1, double& E2, double& E3, double& cos1, double& cos2, int& errFlag ) const {
@@ -1505,7 +1533,7 @@ double MEIntegratorNew::EvalPdf(const double* x) const {
 
 double MEIntegratorNew::Eval(const double* x) const {
 
-  //evaluation_++;
+  (const_cast<MEIntegratorNew*>(this)->evaluation_)++;
 
   double prob = 0.0;
   if(intType_ == IntegrationType::SL2wj )
@@ -1525,6 +1553,13 @@ double MEIntegratorNew::Eval(const double* x) const {
   }
 
   if ( TMath::IsNaN(prob) ) prob = 0.;
+
+  if(normalizeToXSec_ == NormalizationType::xSec) 
+    prob /=  xSection(0);
+  else if(normalizeToXSec_ == NormalizationType::Acc) 
+    prob /=  xSection(1);
+  else{}
+
   return prob;
 }
 
@@ -1786,15 +1821,17 @@ double MEIntegratorNew::topHadJakobi( double Eq1, double Eq2, double EbHad, TLor
   double betaW = (WHad->BoostVector()).Mag();
   double betaB = TMath::Sqrt(EbHad*EbHad - Mb_*Mb_) / EbHad;
 
-  return (EbHad * Eq2 * Eq2 * Eq1 / (Mw_*Mw_ * ( Eq1 + Eq2 ) ) / TMath::Abs( betaW/betaB * ((WHad->Vect()).Unit()).Dot(eBHad_) - 1) ) ;
+  return (2 * EbHad * Eq2 * Eq2 * Eq1 / (Mw_*Mw_ * ( Eq1 + Eq2 ) ) / TMath::Abs( betaW/betaB * ((WHad->Vect()).Unit()).Dot(eBHad_) - 1) ) ;
 }
 
 double MEIntegratorNew::topHadLostJakobi( double Eq1, double Eq2, double EbHad, TLorentzVector* WHad)  const{
 
-  double betaW = (WHad->BoostVector()).Mag();
-  double betaB = TMath::Sqrt(EbHad*EbHad - Mb_*Mb_) / EbHad;
+  //double betaW = (WHad->BoostVector()).Mag();
+  //double betaB = TMath::Sqrt(EbHad*EbHad - Mb_*Mb_) / EbHad;
+  //return (2 * EbHad * Eq2 * Eq2 * Eq1 / (Mw_*Mw_ * ( Eq1 + Eq2 ) ) / TMath::Abs( betaW/betaB * ((WHad->Vect()).Unit()).Dot(eBHad_) - 1) ) ;
 
-  return (2 * EbHad * Eq2 * Eq2 * Eq1 / (Mw_*Mw_ * ( Eq1 + Eq2 ) * Eq1) / TMath::Abs( betaW/betaB * ((WHad->Vect()).Unit()).Dot(eBHad_) - 1) ) ;
+  return topHadJakobi( Eq1, Eq2, EbHad, WHad);
+
 }
 
 double MEIntegratorNew::topLepJakobi( double Enu, double Elep, double EbLep, TLorentzVector* WLep)  const{
@@ -1802,7 +1839,7 @@ double MEIntegratorNew::topLepJakobi( double Enu, double Elep, double EbLep, TLo
   double betaW = (WLep->BoostVector()).Mag();
   double betaB = TMath::Sqrt(EbLep*EbLep - Mb_*Mb_) / EbLep;
 
-  return (2 * EbLep * Enu * Enu / (Mw_*Mw_ * ( Elep + Enu ) * Elep) / TMath::Abs( betaW/betaB * ((WLep->Vect()).Unit()).Dot(eBLep_) - 1) ) ;
+  return (2 * EbLep * Enu * Enu * Elep / (Mw_*Mw_ * ( Elep + Enu ) ) / TMath::Abs( betaW/betaB * ((WLep->Vect()).Unit()).Dot(eBLep_) - 1) ) ;
 }
 
 double MEIntegratorNew::higgsJakobi ( double Eh1, double Eh2)  const{
@@ -1935,23 +1972,41 @@ double MEIntegratorNew::meSquaredOpenLoops (TLorentzVector* top, TLorentzVector*
 
   pphttxcallme2born_(const_cast<double*>(&M2), ccP, const_cast<double*>(&Mtop_), const_cast<double*>(&M_));
 
-  if( normalizeToXSec_ ) M2 /= xSection();
-
   return M2;
 
 }
 
-double MEIntegratorNew::xSection() const{
+
+void MEIntegratorNew::setNormFormulas(TString fxSec, TString facc, TString fPt){
+
+  xSecFormula_  = new TF1("xSecFormula", fxSec.Data(), 20., 300.);
+  xSecFormula_->SetNpx(300);
+  accFormula_   = new TF1("accFormula",  facc.Data() , 20., 300.);
+  accFormula_->SetNpx(300);
+  tthPtFormula_ = new TF1("tthPtFormula",fPt.Data(),   0., 1000.);
+  tthPtFormula_->SetNpx(500);
+
+  cout << "Cross-section formula: " << string(xSecFormula_->GetTitle())  << endl;
+  cout << "Acceptance    formula: " << string(accFormula_->GetTitle())   << endl;
+  cout << "tth system    formula: " << string(tthPtFormula_->GetTitle()) << endl;
+
+}
+
+double MEIntegratorNew::xSection(int flag) const{
 
   double xsec = 1.0;
+  double acc  = 1.0;
   if( SqrtS_>7999 && SqrtS_<8001 ){
-    xsec = (1.03e+05 * TMath::Power(M_,-2.82));
+    //xsec = (1.03e+05 * TMath::Power(M_,-2.80));
+    //acc  = 1.0;
+    xsec = xSecFormula_!=0 ?  xSecFormula_->Eval(M_) : 1.0;
+    xsec = accFormula_!=0  ?  accFormula_->Eval(M_)  : 1.0;
   }
   else {
     cout << "Cross-section not available" << endl;
   }
 
-  return xsec;
+  return (flag==0 ? xsec : acc);
 }
 
 
@@ -2509,8 +2564,8 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
   double Eh1         = x[14];
   double cosThetah1  = x[15];
   double phih1       = x[16];
-  //double cosThetah2  = x[17]; // can eliminate
-  //double phih2       = x[18]; // can eliminate
+  double cosThetah2  = x[17]; // can eliminate
+  double phih2       = x[18]; // can eliminate
 
   TVector3 eB1(0.,0.,1.); 
   eB1.SetTheta( TMath::ACos( cosThetah1 ) );  
@@ -2518,11 +2573,11 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
   eB1.SetMag  ( 1.);  
   const_cast<MEIntegratorNew*>(this)->eB1_ = eB1; 
 
-/*   TVector3 eB2(0.,0.,1.); */
-/*   eB2.SetTheta( TMath::ACos( cosThetah2 ) );  */
-/*   eB2.SetPhi  ( phih2 );    */
-/*   eB2.SetMag  ( 1.);  */
-/*   eB2_ = eB2; */
+  TVector3 eB2(0.,0.,1.); 
+  eB2.SetTheta( TMath::ACos( cosThetah2 ) );  
+  eB2.SetPhi  ( phih2 );    
+  eB2.SetMag  ( 1.);  
+  const_cast<MEIntegratorNew*>(this)->eB2_ = eB2; 
 
 
   double Eq2, EbHad, cos1Had, cos2Had;
@@ -2561,7 +2616,7 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
   // impose balance
   TLorentzVector higgs1( eB1_*TMath::Sqrt(Eh1*Eh1 - Mb_*Mb_), Eh1);
   (const_cast<MEIntegratorNew*>(this)->jets_).push_back(  higgs1 );
-  const_cast<MEIntegratorNew*>(this)->eB2_ = -(topHad.Vect() + topLep.Vect() + higgs1.Vect()).Unit();
+  //const_cast<MEIntegratorNew*>(this)->eB2_ = -(topHad.Vect() + topLep.Vect() + higgs1.Vect()).Unit();
 
   double Eh2, cos1Higgs;
   int nSolHiggs = higgsEnergies( Eh1, Eh2, cos1Higgs, errFlag );
@@ -2578,8 +2633,8 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
   //cout << topHad.M() << ", " << ", " << WHad.M() << ", " << topLep.M() << ", " << WLep.M() << ", " << higgs.M() << endl;
 
   TLorentzVector tot = topHad+topLep+higgs;
-
-  cout << "Sum Pt = " << tot.Pt() << endl;
+  float SumPt  = tot.Pt() ;
+  //cout << "Sum Pt = " << tot.Pt() << endl;
 
   double me2 = 1.0;
   if(useME_==1 && top1Flag_ == +1 && top2Flag_ == -1)               // topLep = t,  topHad = tx
@@ -2591,7 +2646,7 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
     me2 = 1.;
   }
 
-  cout << "ME2 = " << me2 << endl;
+  //cout << "ME2 = " << me2 << endl;
 
   double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
   double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
@@ -2659,6 +2714,14 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
   //cout << "MEpart = " << MEpart << endl;
   //cout << "Jpart = " << Jpart << endl;
   //cout << "PDFpart = " << PDFpart << endl;
+
+  /////////////////////
+  // Approximate Empirical fit to tth pt spectrum [0]*x^([1])*exp([2]*x) for x > cutoff, then regularize to 0.
+  //( SumPt>=12. ? TMath::Power(SumPt, -2.01013e-01)*TMath::Exp((-1.57856e-02)*SumPt) : 4.184e-02*SumPt );
+
+  prob *= (tthPtFormula_!=0 ? tthPtFormula_->Eval(SumPt) : 1.0 );
+
+  /////////////////////
 
   if(useME_)   prob *= MEpart;
   if(useJac_)  prob *= Jpart;

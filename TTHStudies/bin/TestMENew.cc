@@ -182,6 +182,10 @@ int main(int argc, const char* argv[])
   int   testPermutations( in.getParameter<int>    ("testPermutations") );
   int   printP4         ( in.getParameter<int>    ("printP4")          );
 
+  vector<double> masses       ( in.getParameter<vector<double> >  ("masses")        );
+  vector<string> functions    ( in.getParameter<vector<string> >  ("functions")     );
+ 
+
   vector<int> evLimits( in.getParameter<vector<int> >  ("evLimits") );
   int evLow = evLimits[0];
   int evHigh = evLimits[1];
@@ -204,17 +208,108 @@ int main(int argc, const char* argv[])
   //int testMassScan     = 0;
   //int testPermutations = 1;
 
-  int par = mode==0 ? 4 : 6;
+
+  // 21 bins 80 - 180
+  const int nMassPoints  = 31;                                                                                                                        
+  double mH[nMassPoints] = 
+    { /*50,  55, */ 60,  65,  70,  75,
+      80 , 85,  90, 95, 100, 105, 110, 
+      115, 120, 125, 130, 135, 140, 145, 150, 155, 
+      160, 165, 170, 175, 180 ,185, 190, 195, 200, 205, 210
+      //215, 220, 225, 230, 235, 240, 245, 250 
+    }; 
+  
+
+  int par;
+  switch(mode){
+  case 0:
+    par = 4;
+    break;
+  case 1:
+    par = 6;
+    break;
+  case 2:
+    par = 19;
+    break;
+  case 3:
+    par = 19;
+    break;
+  default:
+    par = 4;
+    break;
+  }
+
   MEIntegratorNew* meIntegrator = new MEIntegratorNew( pathToTF , par, int(verbose));
   if(mode == 0)
     meIntegrator->setIntType( MEIntegratorNew::SL2wj );
   else if(mode == 1)
     meIntegrator->setIntType( MEIntegratorNew::SL1wj );
+  else if(mode == 2)
+    meIntegrator->setIntType( MEIntegratorNew::SLXSec );
+  else if(mode == 3)
+    meIntegrator->setIntType( MEIntegratorNew::SLAcc );
   else{
     cout << "Unsupported mode... exit" << endl;
     return 0;
   }
-  meIntegrator->setWeightNorm( 1 ); // divide weights by xsec
+  meIntegrator->setWeightNorm( MEIntegratorNew::None ); // divide weights by xsec
+  meIntegrator->setNormFormulas( TString(functions[0].c_str()),  
+				 TString(functions[1].c_str()),  
+				 TString(functions[2].c_str())  );
+
+  ///////////////////////////
+
+
+  TFile* fout_tmp0 = TFile::Open(outFileName.c_str(),"UPDATE");
+  TH1F*  hInt     = new TH1F("hInt","",nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);  
+ 
+  meIntegrator->setMass( met );
+  meIntegrator->setTopMass( 174.3 , 80.19);
+  meIntegrator->setUseME (useME);
+  meIntegrator->setUseJac(useJac);
+  meIntegrator->setUseMET(useMET);
+  meIntegrator->setUseTF (useTF);
+  meIntegrator->setUsePDF(usePDF);
+
+  double pi = TMath::Pi();
+  double p = 0.;
+  if(mode==2 || mode==3){
+    for(int m = 0; m < nMassPoints ; m++){
+
+      ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par);
+      ROOT::Math::GSLMCIntegrator ig2( ROOT::Math::IntegrationMultiDim::kVEGAS , 1.e-12, 1.e-5, vegasPoints);
+      ig2.SetFunction(toIntegrate);
+      meIntegrator->SetPar(par);
+
+      double xLmode2[19] = {  -1, -pi,    5.,-1.,-pi,-1, -pi,   5.,  -1, -pi, -1, -pi, -1, -pi,    5,-1, -pi, -1, -pi};
+      double xUmode2[19] = {   1., pi,  500., 1., pi, 1,  pi, 500.,   1,  pi,  1,  pi,  1,  pi,  500, 1,  pi,  1,  pi};
+
+      bool isThere = false;
+      for(unsigned int mm = 0; mm < masses.size() ; mm++){
+	if( TMath::Abs(mH[m]-masses[mm])<0.1 ) isThere = true;
+      }
+      if(!isThere) continue;
+
+      meIntegrator->setMass( mH[m] );
+      clock->Start();
+      p = ig2.Integral(xLmode2, xUmode2);
+      clock->Stop();
+      cout << "Mass  " << mH[m] << " => p = " << p << endl;
+      hInt->Fill( mH[m], p);
+      cout << "[Done in " << clock->RealTime()/60. << " min]" << endl;
+    }
+  }
+  cout << "Delete meIntegrator..." << endl;
+  delete meIntegrator;
+  delete clock; delete ran;
+  cout << "Finished!!!" << endl;
+
+  hInt->Write("hInt",TObject::kOverwrite);
+  fout_tmp0->Close();
+  return 0;
+  ///////////////////////////
+
+
 
   //////////////////////
   //TH1F*  hPdfLumi     = new TH1F("hPdfLumi","",42, 425 , 2525.);
@@ -296,15 +391,7 @@ int main(int argc, const char* argv[])
   //double mH[nMassPoints] = {90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175}; 
  
 
-  // 21 bins 80 - 180
-  const int nMassPoints  = 31;                                                                                                                        
-  double mH[nMassPoints] = 
-    { /*50,  55, */ 60,  65,  70,  75,
-      80 , 85,  90, 95, 100, 105, 110, 
-      115, 120, 125, 130, 135, 140, 145, 150, 155, 
-      160, 165, 170, 175, 180 ,185, 190, 195, 200, 205, 210
-			     //215, 220, 225, 230, 235, 240, 245, 250 
-    }; 
+  
 
 
   TH1F*  hMass         = new TH1F("hMass","",nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
@@ -731,15 +818,14 @@ int main(int argc, const char* argv[])
 	if(printP4) cout << ">>>" << endl;
 	if(printP4) cout << "Setup jets..." << endl;
 	meIntegrator->setJets(&jets);
-
-	if( !(meIntegrator->smearByTF(30.)) ) continue;
-
 	if(printP4) cout << "Setup H mass..." << endl;
 	meIntegrator->setMass( met );
 	meIntegrator->setTopMass( 174.3 , 80.19);
 	meIntegrator->setSumEt( METtype1p2corr.sumet );
 	if(printP4) cout << "Setup versors..." << endl;
-	meIntegrator->initVersors(1);
+	meIntegrator->initVersors(234567);
+	if(printP4) cout << "Smear by TF (?)" << endl;
+	if( !(meIntegrator->smearByTF(30.)) ) continue;
 	if(printP4) cout << "Setup TFs..." << endl;
 	meIntegrator->initTF();
 	if(printP4) cout << "Build integrand..." << endl;	
