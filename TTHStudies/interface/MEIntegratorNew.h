@@ -49,6 +49,8 @@
 
 
 #define DEBUG 0
+#define PI TMath::Pi()
+
 
 using namespace RooFit;
 using namespace std;
@@ -120,6 +122,7 @@ class MEIntegratorNew {
   void   setQ      (double);
   void   setTopMass(double, double);
   void   setSumEt  (double);
+  void   setMEtCov  (double, double, double);
   void   setPtPhiParam (int);
   void   setPartonLuminosity(TH1F*);
   bool   smearByTF(float);
@@ -147,6 +150,7 @@ class MEIntegratorNew {
   void   adaptRange(TH1*, float&, float&, float, float);
   void   createTFjet(string, float , float, string , float, float);
   void   createTFmet(string , float , float, float, float);
+  void   createTFmetFromCovM(string, float);
 
   int    topHadEnergies    (double, double&, double&, double&, double&, int&) const;
   int    topLepEnergies    (double, double,  double&, double&, double&, double&, int&) const;
@@ -243,6 +247,8 @@ class MEIntegratorNew {
   TH1F* tfHiggs2_;
   TH2F* tfMetPhi_;
 
+  double Vx_, Vy_, Vxy_, rho_;
+
   TF1* xSecFormula_;
   TF1* accFormula_;
   TF1* tthPtFormula_;
@@ -286,6 +292,10 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   Q_      =  500;
   dMh2_   =  (M_*M_-2*Mb_*Mb_)*0.5;
   SqrtS_  =  8000.;
+  Vx_     = -99;
+  Vy_     = -99;
+  Vxy_    = 0.;
+  rho_    = 0.;
 
   mash_             = 0;
   debugHisto1_      = 0;
@@ -524,7 +534,7 @@ void MEIntegratorNew::adaptRange(TF1* f, float& xLow, float& xHigh, float quanti
 
   double probSum[2] = {quantile, 1-quantile};
   double q[2];
-  int n = f->GetQuantiles(2,q,probSum);
+  f->GetQuantiles(2,q,probSum);
 
   if(margin<=1){
     xLow  = q[0]*(1-margin);
@@ -540,7 +550,7 @@ void MEIntegratorNew::adaptRange(TH1* f, float& xLow, float& xHigh, float quanti
 
   double probSum[2] = {quantile, 1-quantile};
   double q[2];
-  int n = f->GetQuantiles(2,q,probSum);
+  f->GetQuantiles(2,q,probSum);
 
   if(margin<=1){
     xLow  = q[0]*(1-margin);
@@ -575,7 +585,6 @@ void MEIntegratorNew::createTFjet(string tfName, float eta, float pt, string fla
   double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
   double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
 
-  double trialWidth  = pt*TMath::Sqrt( param0resol*param0resol/pt + param1resol*param1resol/pt/pt);
   //clock_->Stop();
   //cout << "Eval parameters: " << clock_->RealTime() << endl;
 
@@ -668,7 +677,7 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
   float xLowEt  =    0.;
   float xHighEt = 1000.;
   float xLowPhi =    0;
-  float xHighPhi= TMath::Pi();
+  float xHighPhi= PI;
   float gevStep = 4.;
   float etaStep = 0.04;
 
@@ -690,6 +699,7 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
   double param3EtMean  = (jetParam_.find("param3EtMean"+bin))->second;
   double param0EtWidth = (jetParam_.find("param0EtWidth"+bin))->second*(jetParam_.find("param0EtWidth"+bin))->second;
   double param1EtWidth = (jetParam_.find("param1EtWidth"+bin))->second*(jetParam_.find("param1EtWidth"+bin))->second;
+
 
   TF1* tfMetPt   = new TF1(("tf"+tfName+"Pt").c_str(), Form("TMath::Gaus(x, (%f + %f*TMath::Exp(%f*[0]+%f) ),  [0]*TMath::Sqrt(%f/[0] + %f/[0]/[0])  , 1)",
   						    param0EtMean,param1EtMean,param2EtMean,param3EtMean,
@@ -748,18 +758,18 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
 
   TF1* tfMetPhi   = new TF1(("tf"+tfName+"Phi").c_str(),Form("(2./(TMath::Erf(TMath::Pi()/ (%f/[0] + %f/[0]/[0]) )))*TMath::Gaus(x, 0.0, %f/[0] + %f/[0]/[0] ,1)",
 							     param0PhiWidth,param1PhiWidth, param0PhiWidth,param1PhiWidth
-							     ), 0., TMath::Pi());  // x = |reco-gen| 
+							     ), 0., PI);  // x = |reco-gen| 
 
   /* OLD
   //tfMetPhi->SetNpx(1000);
   tfMetPhi->SetParameter(0, pt );
   adaptRange(tfMetPhi, xLowPhi, xHighPhi, quantile, margin );
-  if((TMath::Pi() - xHighPhi) < 0.2) xHighPhi =  TMath::Pi();
+  if((PI - xHighPhi) < 0.2) xHighPhi =  PI;
   */
 
   float sigmaPhiTmp = ( (param0PhiWidth)/pt + (param1PhiWidth)/pt/pt );
   int nSigmaPhiHigh = 2;  
-  xHighPhi  = TMath::Min( nSigmaPhiHigh*sigmaPhiTmp , float(TMath::Pi()) )  ; // +2 sigma
+  xHighPhi  = TMath::Min( nSigmaPhiHigh*sigmaPhiTmp , float(PI) )  ; // +2 sigma
  
 
 
@@ -789,8 +799,6 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
   tfMetPhi_ = htfMetPhi_;
   delete tfMetPhi;
 
-
-
 }
  
 void MEIntegratorNew::initTF(){
@@ -802,57 +810,174 @@ void MEIntegratorNew::initTF(){
   createTFjet("Higgs1", eB1_.Eta(),    jets_[6].E(), "Heavy", 0.025, 0.30);
   createTFjet("Higgs2", eB2_.Eta(),    jets_[7].E(), "Heavy", 0.025, 0.30);
 
-  createTFmet("Met", jets_[1].Phi() , jets_[1].Pt() , 0.025, 0.50);
-
+  //createTFmet("Met", jets_[1].Phi() , jets_[1].Pt() , 0.025, 0.50);
+  
+  createTFmetFromCovM("Met", 0.95);
 }
+
+
+
+void MEIntegratorNew::createTFmetFromCovM(string tfName, float quantile)  {
+
+  
+  // DUMMY
+  TH1F* htfMetPt_ = new TH1F(("htf"+tfName+"Pt").c_str(), "", 1 , 0,1);
+  if( transferFunctions_.find("tf"+tfName+"Pt")!=transferFunctions_.end()){
+    delete (transferFunctions_.find("tf"+tfName+"Pt")->second);
+    transferFunctions_.erase( transferFunctions_.find("tf"+tfName+"Pt") );
+    transferFunctions_["tf"+tfName+"Pt"] = htfMetPt_;
+  }
+  else
+    transferFunctions_["tf"+tfName+"Pt"] = htfMetPt_;
+  
+  tfMetPt_ = htfMetPt_;
+
+
+  float xLowPhi = 0;
+  float xHighPhi= PI;
+  float phiStep = 0.04;
+
+  float Px  = jets_[1].Px();
+  float Py  = jets_[1].Py();
+  float Phi = jets_[1].Phi()>0 ? jets_[1].Phi() : 2*PI+jets_[1].Phi() ;
+  float chi2Cut = TMath::ChisquareQuantile(quantile ,2);
+
+  if(Vx_<0 || Vy_<0){
+    if(verbose_) cout << "Use MEt parametrization from root file" << endl;
+    double p0 = (jetParam_.find("param0PxWidthModel"))->second;
+    double p1 = (jetParam_.find("param1PxWidthModel"))->second;
+    double sigma = sumEt_*TMath::Sqrt(p0*p0/sumEt_ + p1*p1/sumEt_/sumEt_);
+    Vx_  = sigma;
+    Vy_  = sigma;
+    Vxy_ = 0.0;
+    rho_ = 0.0;
+  }
+
+  float PxMax = Px + TMath::Sqrt(Vx_*TMath::ChisquareQuantile(quantile ,1));
+  float PxMin = Px - TMath::Sqrt(Vx_*TMath::ChisquareQuantile(quantile ,1));
+  float PyMax = Py + TMath::Sqrt(Vy_*TMath::ChisquareQuantile(quantile ,1));
+  float PyMin = Py - TMath::Sqrt(Vy_*TMath::ChisquareQuantile(quantile ,1));
+
+  if( TMath::Abs(rho_)<1 ){
+    double tfAtZero = (1/(1-rho_*rho_))*( Px*Px/Vx_ + Py*Py/Vy_ - 2*rho_*Px*Py/TMath::Sqrt(Vx_*Vy_)  );
+    if( tfAtZero <= chi2Cut ){
+      if(verbose_) cout << "(0,0) is inside the 2-sigma CL => integrate over -pi/+pi" << endl;
+    }
+    else{
+      if(verbose_) cout << "(0,0) is outside the 2-sigma CL => find phi-window with interpolation..." << endl;
+
+      //find phiLow
+      for(unsigned int step = 0; step<= (unsigned int)(PI/phiStep); step++){
+	float phi = Phi - step*phiStep; 
+	float sin = TMath::Sin(phi); 
+	float cos = TMath::Cos(phi);
+	bool stopPhiScan = false;
+	bool crossing    = false;
+	bool exceeded    = false;
+	bool alreadyInTheBox = PxMax*PxMin<=0 &&  PyMax*PyMin<=0;
+	for(unsigned int stepP = 0; stepP<1000 && !exceeded && !crossing && !stopPhiScan; stepP++){
+	  
+	  if( alreadyInTheBox && (stepP*cos>PxMax ||  stepP*cos<PxMin || stepP*sin>PyMax ||  stepP*sin<PyMin)){
+	    exceeded = true;
+	    continue;
+	  }
+	  else if( !alreadyInTheBox && (stepP*cos>PxMax ||  stepP*cos<PxMin || stepP*sin>PyMax ||  stepP*sin<PyMin)){
+	    continue;
+	  }
+	  
+
+	  if( (1/(1-rho_*rho_))*( (stepP*cos-Px)*(stepP*cos-Px)/Vx_ + (stepP*sin-Py)*(stepP*sin-Py)/Vy_ - 2*rho_*(stepP*cos - Px)*(stepP*sin - Py)/TMath::Sqrt(Vx_*Vy_) ) < chi2Cut ){
+	    crossing = true;
+	  }
+
+	}
+	if(!crossing){
+	  xLowPhi     =  phi+0.5*phiStep;	 
+	  stopPhiScan = true;
+	}
+      }
+
+
+      //find phiHigh
+      for(unsigned int step = 0; step<= (unsigned int)(PI/phiStep); step++){
+	float phi = Phi + step*phiStep; 
+	float sin = TMath::Sin(phi); 
+	float cos = TMath::Cos(phi);
+	bool stopPhiScan = false;
+	bool crossing    = false;
+	bool exceeded    = false;
+	bool alreadyInTheBox = PxMax*PxMin<=0 &&  PyMax*PyMin<=0;
+	for(unsigned int stepP = 0; stepP<1000 && !exceeded && !crossing && !stopPhiScan; stepP++){
+	  
+	  if( alreadyInTheBox && (stepP*cos>PxMax ||  stepP*cos<PxMin || stepP*sin>PyMax ||  stepP*sin<PyMin)){
+	    exceeded = true;
+	    continue;
+	  }
+	  else if( !alreadyInTheBox && (stepP*cos>PxMax ||  stepP*cos<PxMin || stepP*sin>PyMax ||  stepP*sin<PyMin)){
+	    continue;
+	  }
+	  
+
+	  if( (1/(1-rho_*rho_))*( (stepP*cos-Px)*(stepP*cos-Px)/Vx_ + (stepP*sin-Py)*(stepP*sin-Py)/Vy_ - 2*rho_*(stepP*cos - Px)*(stepP*sin - Py)/TMath::Sqrt(Vx_*Vy_) ) < chi2Cut ){
+	    crossing = true;
+	  }
+
+	}
+	if(!crossing){
+	  xLowPhi     =  phi-0.5*phiStep;	 
+	  stopPhiScan = true;
+	}
+      }
+
+      xLowPhi  = -TMath::ACos(TMath::Cos( Phi - xLowPhi ));
+      xHighPhi = +TMath::ACos(TMath::Cos( Phi - xHighPhi));
+
+    }
+  }
+
+  
+  TH2F* htfMetPhi_ = new TH2F(("htf"+tfName+"Phi").c_str(), "", 1,0,1,  1, xLowPhi, xHighPhi);
+  if( transferFunctions_.find("tf"+tfName+"Phi")!=transferFunctions_.end()){
+    delete (transferFunctions_.find("tf"+tfName+"Phi")->second);
+    transferFunctions_.erase( transferFunctions_.find("tf"+tfName+"Phi") );
+    transferFunctions_["tf"+tfName+"Phi"] = htfMetPhi_;
+  }
+  else
+    transferFunctions_["tf"+tfName+"Phi"] = htfMetPhi_;
+  htfMetPhi_->Fill(0.5,  (xLowPhi+xHighPhi)/2.  );
+
+  tfMetPhi_ = htfMetPhi_;
+  
+}
+
+
 
 bool MEIntegratorNew::smearByTF(float ptCut){
 
-
-  string bin = "Bin0";
-  if (sumEt_ < 1200.) 
-    bin =  "Bin0";
-  else if ( sumEt_ > 1200. && sumEt_ < 1800.)
-    bin =  "Bin1";
-  else 
-    bin =  "Bin2";
-
-  double param0EtMean  = (jetParam_.find("param0EtMean"+bin))->second;
-  double param1EtMean  = (jetParam_.find("param1EtMean"+bin))->second;
-  double param2EtMean  = (jetParam_.find("param2EtMean"+bin))->second;
-  double param3EtMean  = (jetParam_.find("param3EtMean"+bin))->second;
-  double param0EtWidth = (jetParam_.find("param0EtWidth"+bin))->second*(jetParam_.find("param0EtWidth"+bin))->second;
-  double param1EtWidth = (jetParam_.find("param1EtWidth"+bin))->second*(jetParam_.find("param1EtWidth"+bin))->second;
-
-  if(gDirectory->FindObject("tfPt")!=0){
-    gDirectory->Remove(gDirectory->FindObject("tfPt"));
+  if(Vx_<0 || Vy_<0){
+    if(verbose_) cout << "Use MEt parametrization from root file" << endl;
+    double p0 = (jetParam_.find("param0PxWidthModel"))->second;
+    double p1 = (jetParam_.find("param1PxWidthModel"))->second;
+    double sigma = sumEt_*TMath::Sqrt(p0*p0/sumEt_ + p1*p1/sumEt_/sumEt_);
+    Vx_  = sigma;
+    Vy_  = sigma;
+    Vxy_ = 0.0;
+    rho_ = 0.0;
+  }
+ 
+  if(rho_<1){
+    cout << "MEt correlation has problems.. return" << endl;
+    return false;
   }
 
-  TF1* tfMetPt   = new TF1("tfPt", Form("TMath::Gaus(x, (%f + %f*TMath::Exp(%f*[0]+%f) ),  [0]*TMath::Sqrt(%f/[0] + %f/[0]/[0])  , 1)",
-					param0EtMean,param1EtMean,param2EtMean,param3EtMean,
-					param0EtWidth,param1EtWidth
-					), -1000.,1000.); // x = reco - gen 
-  tfMetPt->SetParameter(0, jets_[1].Pt() );
-  double sMetPt = TMath::Max( (tfMetPt->GetRandom() + jets_[1].Pt()), 0.0 );
-  delete tfMetPt;
+  double Px = ran_->Gaus( 0., 1.);
+  double Py = ran_->Gaus( 0., 1.);
 
-  double param0PhiWidth = (jetParam_.find("param0PhiWidth"+bin))->second;
-  double param1PhiWidth = (jetParam_.find("param1PhiWidth"+bin))->second;
+  Py = (1-rho_)*Py + rho_*Px;
 
-  if(gDirectory->FindObject("tfPhi")!=0){
-    gDirectory->Remove(gDirectory->FindObject("tfPhi"));
-  }
+  Px = jets_[1].Px() + TMath::Sqrt(Vx_)*Px;
+  Py = jets_[1].Py() + TMath::Sqrt(Vy_)*Py;
 
-  TF1* tfMetPhi   = new TF1("tfPhi",Form("(2./(TMath::Erf(TMath::Pi()/ (%f/[0] + %f/[0]/[0]) )))*TMath::Gaus(x, 0.0, %f/[0] + %f/[0]/[0] ,1)",
-					 param0PhiWidth,param1PhiWidth, param0PhiWidth,param1PhiWidth
-					 ), 0., TMath::Pi());  // x = |reco-gen| 
-  
-  tfMetPhi->SetParameter(0, sMetPt);
-  double sMetDPhi = tfMetPhi->GetRandom();
-  double sMetPhi  = (eMEt_.Phi())>0 ? eMEt_.Phi() + sMetDPhi : eMEt_.Phi() - sMetDPhi;
-  if( sMetPhi < -TMath::Pi() ) sMetPhi += (2*TMath::Pi());
-  if( sMetPhi >  TMath::Pi())  sMetPhi -= (2*TMath::Pi());
-  delete tfMetPhi;
 
   std::vector<double> vsE;
   for(unsigned int j = 2; j <8; j++){
@@ -871,34 +996,15 @@ bool MEIntegratorNew::smearByTF(float ptCut){
     double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
     double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
 
-    double trialWidth  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E());
-
-    //if(gDirectory->FindObject("tf")!=0){
-    //gDirectory->Remove(gDirectory->FindObject("tf"));
-    //}
-
     double p = ran_->Gaus( param0resp*jets_[j].E() + param1resp, jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E())  );
     p = TMath::Max(0.0,p);
-
-    /*
-    TF1* tf = new TF1("tf",Form("TMath::Gaus( x, %f*[0]+%f , [0]*TMath::Sqrt( %f/[0] + %f/[0]/[0])) ", 
-				param0resp, param1resp,
-				param0resol*param0resol, param1resol*param1resol ),1, (jets_[j].E()+5*trialWidth));
-    tf->SetParameter(0, jets_[j].E());
-    tf->SetNpx(1000);
-    if(verbose_ || true) cout << tf->Eval(jets_[j].E()) << ", " << tf->Eval(jets_[j].E()+10) << ", " << tf->Eval(jets_[j].E()-10) << "..." << endl;
-    double p = tf->GetRandom(0, jets_[j].E()+5*trialWidth );
-    */
  
     vsE.push_back( p );
-    
-    //if(verbose_ || true) cout << "sE (" << j << ") = " << sE[j] << endl;
-    //delete tf;
   }
 
   TLorentzVector sLep = jets_[0];
   TLorentzVector sNeut;
-  sNeut.SetPtEtaPhiM( sMetPt, 0.0, sMetPhi, 0.0);
+  sNeut.SetPxPyPzE( Px, Py, 0.0, TMath::Sqrt(Px*Px + Py*Py));
   TLorentzVector sBLep (  eBLep_*TMath::Sqrt(vsE[0]*vsE[0] - Mb_*Mb_), vsE[0] );
   TLorentzVector sW1Had(  eW1Had_*vsE[1], vsE[1]);
   TLorentzVector sW2Had(  eW2Had_*vsE[2], vsE[2]);
@@ -971,6 +1077,18 @@ void MEIntegratorNew::setTopMass(double massTop, double massW){
 void MEIntegratorNew::setSumEt(double sumEt){
   sumEt_ = sumEt;
 }
+
+void MEIntegratorNew::setMEtCov(double Vx, double Vy, double Vxy){
+  Vx_  = Vx;
+  Vy_  = Vy;
+  Vxy_ = Vxy;
+  rho_ = (Vx>0 && Vy>0) ? Vxy/TMath::Sqrt(Vx*Vy) : -99.;
+  if(rho_<-1 || rho_>1) 
+    cout << "Invalid Cov mtrix entries... please check them" << endl;
+  if(rho_>0.99 || rho_<-0.99) 
+    cout << "Highly correlated Px/Py can make the TF go crazy !!!" << endl;
+}
+
 
 void MEIntegratorNew::setPtPhiParam(int usePtPhiParam){
   usePtPhiParam_ =  usePtPhiParam;
@@ -1518,13 +1636,13 @@ double MEIntegratorNew::EvalPdf(const double* x) const {
 
   double lumiGG =  LHAPDF::xfx(0, x[0], Q_, 0) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, 0) 
     /x[0]/x[0]/x[0]/Q_/Q_; //SqrtS_/SqrtS_
-  double lumiQQ =  2*(LHAPDF::xfx(0, x[0], Q_, 1) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, -1) + 
-		      LHAPDF::xfx(0, x[0], Q_, 2) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, -2) + 
-		      LHAPDF::xfx(0, x[0], Q_, 3) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, -3) + 
-		      LHAPDF::xfx(0, x[0], Q_, 4) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, -4) +
-		      LHAPDF::xfx(0, x[0], Q_, 5) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, -5)
-		      ) 
-    /x[0]/x[0]/x[0]/Q_/Q_; //SqrtS_/SqrtS_
+  //double lumiQQ =  2*(LHAPDF::xfx(0, x[0], Q_, 1) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, -1) + 
+  //	      LHAPDF::xfx(0, x[0], Q_, 2) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, -2) + 
+  //	      LHAPDF::xfx(0, x[0], Q_, 3) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, -3) + 
+  //	      LHAPDF::xfx(0, x[0], Q_, 4) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, -4) +
+  //	      LHAPDF::xfx(0, x[0], Q_, 5) *  LHAPDF::xfx(0, Q_*Q_/x[0]/SqrtS_/SqrtS_, Q_, -5)
+  //	      ) 
+  ///x[0]/x[0]/x[0]/Q_/Q_; //SqrtS_/SqrtS_
 
   return lumiGG;  
 }
@@ -1860,15 +1978,15 @@ double MEIntegratorNew::evaluateCahchedPdf(TH1* h, double val1, double val2, dou
 	   (val2 <= h->GetYaxis()->GetBinCenter(1) || val2 >= h->GetYaxis()->GetBinCenter(h->GetNbinsY()) ) ||
 	   (val3 <= h->GetZaxis()->GetBinCenter(1) || val3 >= h->GetZaxis()->GetBinCenter(h->GetNbinsZ()) )
 	   ){
-    double newVal1 = val1;
-    double newVal2 = val2;
-    double newVal3 = val3;
-    if( val1 <= h->GetXaxis()->GetBinCenter(1) )              newVal1 = h->GetXaxis()->GetBinUpEdge(1);
-    if( val1 >= h->GetXaxis()->GetBinCenter(h->GetNbinsX()) ) newVal1 = h->GetXaxis()->GetBinLowEdge(h->GetNbinsX()); 
-    if( val2 <= h->GetYaxis()->GetBinCenter(1) )              newVal2 = h->GetYaxis()->GetBinUpEdge(1);
-    if( val2 >= h->GetYaxis()->GetBinCenter(h->GetNbinsY()) ) newVal2 = h->GetYaxis()->GetBinLowEdge(h->GetNbinsY()); 
-    if( val3 <= h->GetZaxis()->GetBinCenter(1) )              newVal3 = h->GetZaxis()->GetBinUpEdge(1);
-    if( val3 >= h->GetZaxis()->GetBinCenter(h->GetNbinsZ()) ) newVal3 = h->GetZaxis()->GetBinLowEdge(h->GetNbinsZ()); 
+    //double newVal1 = val1;
+    //double newVal2 = val2;
+    //double newVal3 = val3;
+    //if( val1 <= h->GetXaxis()->GetBinCenter(1) )              newVal1 = h->GetXaxis()->GetBinUpEdge(1);
+    //if( val1 >= h->GetXaxis()->GetBinCenter(h->GetNbinsX()) ) newVal1 = h->GetXaxis()->GetBinLowEdge(h->GetNbinsX()); 
+    //if( val2 <= h->GetYaxis()->GetBinCenter(1) )              newVal2 = h->GetYaxis()->GetBinUpEdge(1);
+    //if( val2 >= h->GetYaxis()->GetBinCenter(h->GetNbinsY()) ) newVal2 = h->GetYaxis()->GetBinLowEdge(h->GetNbinsY()); 
+    //if( val3 <= h->GetZaxis()->GetBinCenter(1) )              newVal3 = h->GetZaxis()->GetBinUpEdge(1);
+    //if( val3 >= h->GetZaxis()->GetBinCenter(h->GetNbinsZ()) ) newVal3 = h->GetZaxis()->GetBinLowEdge(h->GetNbinsZ()); 
     return 
       //h->Interpolate(newVal1 ,newVal2, newVal3);
       h->GetBinContent( h->FindBin(val1,val2,val3) );
@@ -2053,8 +2171,8 @@ double MEIntegratorNew::probabilitySL2wj(const double* x, int sign) const{
 
   // trasnform phiNu into an absolute phi:
   phiNu += eMEt_.Phi();
-  if( phiNu < -TMath::Pi() ) phiNu += (2*TMath::Pi());
-  if( phiNu >  TMath::Pi())  phiNu -= (2*TMath::Pi());
+  if( phiNu < -PI ) phiNu += (2*PI);
+  if( phiNu >  PI)  phiNu -= (2*PI);
 
 
   if(verbose_){
@@ -2069,28 +2187,20 @@ double MEIntegratorNew::probabilitySL2wj(const double* x, int sign) const{
   int nSolTopHad = topHadEnergies( Eq1, Eq2, EbHad, cos1Had, cos2Had, errFlag );
 
   if(errFlag){
-    if(verbose_) cout << "Problems with topHadEnergies" << endl;
+    if(verbose_) cout << "Problems with topHadEnergies (" << nSolTopHad << " solutions)" << endl;
     return 0.0;
   }
 
   TVector3 eNu(0.,0.,1.); // neutrino
-  double Enu, EbLep, cos1Lep, cos2Lep, Jacob;
-  if(usePtPhiParam_==0){
-    int nSolTopLep = topLepEnergies( phiNu, cosThetaNu, Enu, EbLep, cos1Lep, cos2Lep, errFlag  );
-    eNu.SetTheta( TMath::ACos( cosThetaNu ) ); 
-    eNu.SetPhi  ( phiNu );   
-    eNu.SetMag  ( 1.); 
-  }
-  //else{
-  //topLepEnergiesFromPtPhi(sign, phiNu, cosThetaNu, Enu, EbLep, cos1Lep, cos2Lep, Jacob, errFlag );
-  //eNu.SetTheta( TMath::ASin(cosThetaNu/Enu) ); 
-  //eNu.SetPhi  ( phiNu );   
-  //eNu.SetMag  ( 1.); 
-  //prob *= Jacob; // Jacobian  
-  //}
+  double Enu, EbLep, cos1Lep, cos2Lep /*Jacob*/;
+  int nSolTopLep = topLepEnergies( phiNu, cosThetaNu, Enu, EbLep, cos1Lep, cos2Lep, errFlag  );
+  eNu.SetTheta( TMath::ACos( cosThetaNu ) ); 
+  eNu.SetPhi  ( phiNu );   
+  eNu.SetMag  ( 1.); 
+
 
   if(errFlag){
-    if(verbose_) cout << "Problems with topLepEnergies" << endl;
+    if(verbose_) cout << "Problems with topLepEnergies (" << nSolTopLep << " solutions)" << endl;
     return 0.0;
   }
  
@@ -2098,7 +2208,7 @@ double MEIntegratorNew::probabilitySL2wj(const double* x, int sign) const{
   int nSolHiggs = higgsEnergies( Eh1, Eh2, cos1Higgs, errFlag );
   
   if(errFlag){
-    if(verbose_) cout << "Problems with higgsEnergies" << endl;
+    if(verbose_) cout << "Problems with higgsEnergies (" << nSolHiggs << " solutions)" << endl;
     return 0.0;
   }
 
@@ -2182,12 +2292,19 @@ double MEIntegratorNew::probabilitySL2wj(const double* x, int sign) const{
     const_cast<TH1F*>(tfHiggs1_) ->Interpolate( higgs1.E()) : 0.0;
   double tf6 = (higgs2.E()>=tfHiggs2_->GetXaxis()->GetXmin() && higgs2.E()<=tfHiggs2_->GetXaxis()->GetXmax()) ?
     const_cast<TH1F*>(tfHiggs2_) ->Interpolate( higgs2.E()) : 0.0;
-  double tf7 = (WLepNu.Pt() >= tfMetPt_->GetXaxis()->GetXmin() && WLepNu.Pt() <= tfMetPt_->GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(tfMetPt_)  ->Interpolate( WLepNu.Pt()) : 0.0;
-  double tf8 = 
-    (WLepNu.Pt() <= tfMetPhi_->GetXaxis()->GetXmax() && WLepNu.Pt() >= tfMetPhi_->GetXaxis()->GetXmin()) && 
-    (TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) <= tfMetPhi_->GetYaxis()->GetXmax() && TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) >= tfMetPhi_->GetYaxis()->GetXmin()) ?
-    const_cast<TH2F*>(tfMetPhi_) ->Interpolate( WLepNu.Pt(), TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) ) : 0.0;
+
+  //double tf7 = (WLepNu.Pt() >= tfMetPt_->GetXaxis()->GetXmin() && WLepNu.Pt() <= tfMetPt_->GetXaxis()->GetXmax()) ?
+  //const_cast<TH1F*>(tfMetPt_)  ->Interpolate( WLepNu.Pt()) : 0.0;
+  //double tf8 = 
+  //(WLepNu.Pt() <= tfMetPhi_->GetXaxis()->GetXmax() && WLepNu.Pt() >= tfMetPhi_->GetXaxis()->GetXmin()) && 
+  //(TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) <= tfMetPhi_->GetYaxis()->GetXmax() && TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) >= tfMetPhi_->GetYaxis()->GetXmin()) ?
+  //const_cast<TH2F*>(tfMetPhi_) ->Interpolate( WLepNu.Pt(), TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) ) : 0.0;
+
+  double dPx = WLepNu.Px() - jets_[1].Px();
+  double dPy = WLepNu.Py() - jets_[1].Py();
+  double tf7 = 
+    (Vx_*Vy_ - rho_*rho_*Vx_*Vy_)>0 ? 1./2./PI/TMath::Sqrt(Vx_*Vy_ - rho_*rho_*Vx_*Vy_)*TMath::Exp( 0.5*( 1/(1-rho_*rho_)*( dPx*dPx/Vx_ + dPy*dPy/Vy_ - 2*rho_*dPx*dPy*TMath::Sqrt(Vx_*Vy_) ) ) ) : 1.0 ;
+
 
   double TFpart = 
     tf1 *
@@ -2199,8 +2316,9 @@ double MEIntegratorNew::probabilitySL2wj(const double* x, int sign) const{
     ;
 
   double METpart =  
-    tf7*
-    tf8
+    //tf7*
+    //tf8
+    tf7
     ;
 
   double PDFpart = ggPdf( x1, x2 , Q);
@@ -2233,8 +2351,8 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
 
   // trasnform phiNu into an absolute phi:
   phiNu += eMEt_.Phi();
-  if( phiNu < -TMath::Pi() ) phiNu += (2*TMath::Pi());
-  if( phiNu >  TMath::Pi())  phiNu -= (2*TMath::Pi());
+  if( phiNu < -PI ) phiNu += (2*PI);
+  if( phiNu >  PI)  phiNu -= (2*PI);
 
 
   if(verbose_){
@@ -2251,7 +2369,7 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
   int nSolTopHad = topHadLostEnergies( phiNuq2, cosThetaq2, Eq2, Eq1, EbHad, cos1Had, cos2Had, errFlag );
 
   if(errFlag){
-    if(verbose_) cout << "Problems with topHadLostEnergies" << endl;
+    if(verbose_) cout << "Problems with topHadLostEnergies (" << nSolTopHad << " solutions)" << endl;
     return 0.0;
   }
 
@@ -2261,23 +2379,14 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
   eMiss.SetMag  ( 1.); 
 
   TVector3 eNu(0.,0.,1.); // neutrino
-  double Enu, EbLep, cos1Lep, cos2Lep, Jacob;
-  if(usePtPhiParam_==0){
-    int nSolTopLep = topLepEnergies( phiNu, cosThetaNu, Enu, EbLep, cos1Lep, cos2Lep, errFlag  );
-    eNu.SetTheta( TMath::ACos( cosThetaNu ) ); 
-    eNu.SetPhi  ( phiNu );   
-    eNu.SetMag  ( 1.); 
-  }
-  //else{
-  //topLepEnergiesFromPtPhi(sign, phiNu, cosThetaNu, Enu, EbLep, cos1Lep, cos2Lep, Jacob, errFlag );
-  //eNu.SetTheta( TMath::ASin(cosThetaNu/Enu) ); 
-  //eNu.SetPhi  ( phiNu );   
-  //eNu.SetMag  ( 1.); 
-  //prob *= Jacob; // Jacobian  
-  //}
+  double Enu, EbLep, cos1Lep, cos2Lep /*Jacob*/;
+  int nSolTopLep = topLepEnergies( phiNu, cosThetaNu, Enu, EbLep, cos1Lep, cos2Lep, errFlag  );
+  eNu.SetTheta( TMath::ACos( cosThetaNu ) ); 
+  eNu.SetPhi  ( phiNu );   
+  eNu.SetMag  ( 1.); 
 
   if(errFlag){
-    if(verbose_) cout << "Problems with topLepEnergies" << endl;
+    if(verbose_) cout << "Problems with topLepEnergies (" << nSolTopLep << " solutions)" << endl;
     return 0.0;
   }
  
@@ -2285,7 +2394,7 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
   int nSolHiggs = higgsEnergies( Eh1, Eh2, cos1Higgs, errFlag );
   
   if(errFlag){
-    if(verbose_) cout << "Problems with higgsEnergies" << endl;
+    if(verbose_) cout << "Problems with higgsEnergies (" << nSolHiggs << " solutions)" << endl;
     return 0.0;
   }
 
@@ -2374,13 +2483,20 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
     const_cast<TH1F*>(tfHiggs1_) ->Interpolate( higgs1.E()) : 0.0;
   double tf6 = (higgs2.E()>=tfHiggs2_->GetXaxis()->GetXmin() && higgs2.E()<=tfHiggs2_->GetXaxis()->GetXmax()) ?
     const_cast<TH1F*>(tfHiggs2_) ->Interpolate( higgs2.E()) : 0.0;
-  double tf7 = (WLepNu.Pt() >= tfMetPt_->GetXaxis()->GetXmin() && WLepNu.Pt() <= tfMetPt_->GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(tfMetPt_)  ->Interpolate( WLepNu.Pt()) : 0.0;
-  double tf8 = 
-    (WLepNu.Pt() <= tfMetPhi_->GetXaxis()->GetXmax() && WLepNu.Pt() >= tfMetPhi_->GetXaxis()->GetXmin()) && 
-    (TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) <= tfMetPhi_->GetYaxis()->GetXmax() && TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) >= tfMetPhi_->GetYaxis()->GetXmin()) ?
-    const_cast<TH2F*>(tfMetPhi_) ->Interpolate( WLepNu.Pt(), TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) ) : 0.0;
 
+  //double tf7 = (WLepNu.Pt() >= tfMetPt_->GetXaxis()->GetXmin() && WLepNu.Pt() <= tfMetPt_->GetXaxis()->GetXmax()) ?
+  //const_cast<TH1F*>(tfMetPt_)  ->Interpolate( WLepNu.Pt()) : 0.0;
+  //double tf8 = 
+  //(WLepNu.Pt() <= tfMetPhi_->GetXaxis()->GetXmax() && WLepNu.Pt() >= tfMetPhi_->GetXaxis()->GetXmin()) && 
+  //(TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) <= tfMetPhi_->GetYaxis()->GetXmax() && TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) >= tfMetPhi_->GetYaxis()->GetXmin()) ?
+  //const_cast<TH2F*>(tfMetPhi_) ->Interpolate( WLepNu.Pt(), TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) ) : 0.0;
+
+  double dPx = WLepNu.Px() - jets_[1].Px();
+  double dPy = WLepNu.Py() - jets_[1].Py();
+  double tf7 = (Vx_*Vy_ - rho_*rho_*Vx_*Vy_)>0 ? 
+    1./2./PI/TMath::Sqrt(Vx_*Vy_ - rho_*rho_*Vx_*Vy_)*TMath::Exp( 0.5*( 1/(1-rho_*rho_)*( dPx*dPx/Vx_ + dPy*dPy/Vy_ - 2*rho_*dPx*dPy*TMath::Sqrt(Vx_*Vy_) ) ) ) : 1.0 ;
+  
+  
   ///////////////////////////////////////////////////////////////////////////
   if( TMath::Abs(eMiss.Eta())<2.5 ){
 
@@ -2443,7 +2559,7 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
 
 
   double TFpart = 
-    tf1 *
+  tf1 *
     tf2 *
     tf3 *
     tf4 *
@@ -2452,8 +2568,9 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
     ;
 
   double METpart =  
-    tf7*
-    tf8
+    tf7
+    //tf7*
+    //tf8
     ;
 
   double PDFpart = ggPdf( x1, x2 , Q);
@@ -2584,7 +2701,7 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
   int nSolTopHad = topHadLostEnergies( phiq2, cosThetaq2, Eq2, Eq1, EbHad, cos1Had, cos2Had, errFlag );
 
   if(errFlag){
-    if(verbose_) cout << "Problems with topHadLostEnergies" << endl;
+    if(verbose_) cout << "Problems with topHadLostEnergies (" << nSolTopHad << " solutions)" << endl;
     return 0.0;
   }
 
@@ -2609,7 +2726,7 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
   TLorentzVector topLep = WLep + bLep;
 
   if(errFlag){
-    if(verbose_) cout << "Problems with topLepEnergies" << endl;
+    if(verbose_) cout << "Problems with topLepEnergies (" << nSolTopLep << " solutions)" << endl;
     return 0.0;
   }
 
@@ -2626,7 +2743,7 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
   TLorentzVector higgs = higgs1 + higgs2;
 
   if(errFlag){
-    if(verbose_) cout << "Problems with higgsEnergies" << endl;
+    if(verbose_) cout << "Problems with higgsEnergies (" << nSolHiggs << " solutions)" << endl;
     return 0.0;
   }
 

@@ -160,10 +160,10 @@ int main(int argc, const char* argv[])
   double lumi              ( in.getParameter<double>("lumi") );
 
   float met       ( in.getParameter<double> ("met")        );
-  float pertW1    ( in.getParameter<double> ("pertW1")     );
-  float pertW2    ( in.getParameter<double> ("pertW2")     );
-  float pertBHad  ( in.getParameter<double> ("pertBHad")   );
-  float pertBLep  ( in.getParameter<double> ("pertBLep")   );
+  //float pertW1    ( in.getParameter<double> ("pertW1")     );
+  //float pertW2    ( in.getParameter<double> ("pertW2")     );
+  //float pertBHad  ( in.getParameter<double> ("pertBHad")   );
+  //float pertBLep  ( in.getParameter<double> ("pertBLep")   );
   float enlargeE1 ( in.getParameter<double> ("enlargeE1")  );
   float enlargeEh1( in.getParameter<double> ("enlargeEh1") );
   float enlargePt ( in.getParameter<double> ("enlargePt")  );
@@ -1357,7 +1357,8 @@ int main(int argc, const char* argv[])
 	  
 	  a = C(2,0);
 	  b = C(1,0);
-	  c = C(0,0);
+	  //c = C(0,0);
+
 	  //cout << "a = " << a << endl;
 	  //cout << "b = " << b << endl;
 	  //cout << "c = " << c << endl;
