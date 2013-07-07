@@ -142,6 +142,7 @@ class MEIntegratorNew {
   TH2F*  getMash( );
   TH1F*  getDebugHisto( );
   void   debug();
+  void   printJetList();
 
   void   initVersors(int);
   void   initTF() ;
@@ -208,6 +209,7 @@ class MEIntegratorNew {
   // 7- b2 from H
 
   vector<TLorentzVector> jets_; 
+  vector<TLorentzVector> jets_backup_; 
   vector<float> bTagging_;
   TVector3 eLep_;
   TVector3 eBLep_;
@@ -280,7 +282,7 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
 
   clock_ = new TStopwatch();
   ran_ = new TRandom3();
-  ran_->SetSeed(1234);
+  ran_->SetSeed(65539);
 
   intType_       = SL2wj;
   par_           = param;
@@ -290,6 +292,7 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   evaluation_    = 0;
 
   jets_.    clear();
+  jets_backup_.clear();
   bTagging_.clear();
   initVersors(0);
 
@@ -517,17 +520,18 @@ void MEIntegratorNew::initVersors(int withJetList){
     }
 
     vector<TLorentzVector> newjets_;
-    newjets_.push_back( jets_[0] );
-    newjets_.push_back( jets_[1] );
-    newjets_.push_back( jets_[iBLep] );
-    newjets_.push_back( jets_[iW1Had] );
-    newjets_.push_back( jets_[iW2Had] );
-    newjets_.push_back( jets_[iBHad] );
-    newjets_.push_back( jets_[iB1] );
-    newjets_.push_back( jets_[iB2] );
+    newjets_.push_back( jets_backup_[0] );
+    newjets_.push_back( jets_backup_[1] );
+    newjets_.push_back( jets_backup_[iBLep] );
+    newjets_.push_back( jets_backup_[iW1Had] );
+    newjets_.push_back( jets_backup_[iW2Had] );
+    newjets_.push_back( jets_backup_[iBHad] );
+    newjets_.push_back( jets_backup_[iB1] );
+    newjets_.push_back( jets_backup_[iB2] );
 
     jets_.swap( newjets_ );
-    
+    newjets_.clear();
+
     eLep_  = (jets_[0].Vect()).Unit();
     eMEt_  = (jets_[1].Vect()).Unit();
     eBLep_ = (jets_[2].Vect()).Unit();
@@ -537,6 +541,7 @@ void MEIntegratorNew::initVersors(int withJetList){
     eB1_   = (jets_[6].Vect()).Unit();
     eB2_   = (jets_[7].Vect()).Unit();
 
+    if(verbose_) cout << "Permutation: " << iBLep << iW1Had << iW2Had << iBHad << iB1 << iB2 << endl;
 
   }
   else{cout << "Problems in MEIntegratorNew::initVersors" << endl;}
@@ -998,12 +1003,12 @@ pair<double, double> MEIntegratorNew::getNuPhiCI(float quantile)  {
   if( TMath::Abs(rho_)<1 ){
     double tfAtZero = (1/(1-rho_*rho_))*( Px*Px/Vx_ + Py*Py/Vy_ - 2*rho_*Px*Py/TMath::Sqrt(Vx_*Vy_)  );
     if( tfAtZero <= chi2Cut ){
-      //if(verbose_) 
-      cout << "(0,0) is inside the 2-sigma CL => integrate over -pi/+pi" << endl;
+      if(verbose_) 
+	cout << "(0,0) is inside the 2-sigma CL => integrate over -pi/+pi" << endl;
     }
     else{
-      //if(verbose_) 
-      cout << "(0,0) is outside the 2-sigma CL => find phi-window with interpolation..." << endl;
+      if(verbose_) 
+	cout << "(0,0) is outside the 2-sigma CL => find phi-window with interpolation..." << endl;
 
       //find phiLow
       bool stopPhiScan = false;
@@ -1108,7 +1113,7 @@ pair<double, double> MEIntegratorNew::getJetEnergyCI(float eta, float Erec, stri
   float sigma = Egen*TMath::Sqrt( (param0resol*param0resol)/Egen + (param1resol*param1resol)/Egen/Egen );
   double mean  = (Egen*param0resp + param1resp);
  
-  float GevStep = int(sigma/10.);
+  float GevStep = (sigma/10.);
   while( (Erec-mean)*(Erec-mean)/sigma/sigma < chi2Cut && Egen>0 && Egen<8000.){
     Egen -= GevStep;
     sigma = Egen*TMath::Sqrt( (param0resol*param0resol)/Egen + (param1resol*param1resol)/Egen/Egen );
@@ -1169,7 +1174,14 @@ bool MEIntegratorNew::compatibilityCheck(float quantile){
 
   double massLow  =  (h1Low+h2Low).M();
   double massHigh =  (h1High+h2High).M();
-  return (M_>=massLow && M_<=massHigh);
+
+  bool isCompatible = (M_>=massLow && M_<=massHigh);
+  if(!isCompatible){
+    if(verbose_) printf("%.0f CL for Mjj=%.0f is [-%.0f,+%.0f]; M=%.0f is outside\n",quantile*100, (jets_[6] + jets_[7]).M(), massLow, massHigh, M_);
+  }
+
+
+  return isCompatible;
 
 }
 
@@ -1254,7 +1266,7 @@ bool MEIntegratorNew::smearByTF(float ptCut){
   TLorentzVector sB1   (  eB1_  *TMath::Sqrt(vsE[4]*vsE[4] - Mb_*Mb_), vsE[4]);
   TLorentzVector sB2   (  eB2_  *TMath::Sqrt(vsE[5]*vsE[5] - Mb_*Mb_), vsE[5]);
 
-  if(verbose_ || true){    
+  if(verbose_ ){    
     cout << "lep   (input): jet0.SetPtEtaPhiM(" << jets_[0].Pt() << "," << jets_[0].Eta() << "," << jets_[0].Phi() << "," << jets_[0].M() << ")" << endl;
     cout << "met   (input): jet1.SetPtEtaPhiM(" << jets_[1].Pt() << "," << jets_[1].Eta() << "," << jets_[1].Phi() << "," << jets_[1].M() << ")" << endl;
     cout << "bLep  (input): jet2.SetPtEtaPhiM(" << jets_[2].Pt() << "," << jets_[2].Eta() << "," << jets_[2].Phi() << "," << jets_[2].M() << ")" << endl;
@@ -1293,7 +1305,7 @@ bool MEIntegratorNew::smearByTF(float ptCut){
   }
 
 
-  if(verbose_ || true){    
+  if(verbose_){    
     cout << "lep   (output): jet0.SetPtEtaPhiM(" << jets_[0].Pt() << "," << jets_[0].Eta() << "," << jets_[0].Phi() << "," << jets_[0].M() << ")" << endl;
     cout << "met   (output): jet1.SetPtEtaPhiM(" << jets_[1].Pt() << "," << jets_[1].Eta() << "," << jets_[1].Phi() << "," << jets_[1].M() << ")" << endl;
     cout << "bLep  (output): jet2.SetPtEtaPhiM(" << jets_[2].Pt() << "," << jets_[2].Eta() << "," << jets_[2].Phi() << "," << jets_[2].M() << ")" << endl;
@@ -1955,6 +1967,8 @@ double MEIntegratorNew::Eval(const double* x) const {
     prob /=  xSection(1);
   else{}
 
+  if(verbose_) cout << "#" << evaluation_ << ": " << prob << endl;
+
   return prob;
 }
 
@@ -1973,8 +1987,11 @@ void MEIntegratorNew::setJets( std::vector<TLorentzVector>* jets){
   resetEvaluation();
 
   jets_.clear();
-  for(unsigned int k = 0 ; k<jets->size() ; k++)
+  jets_backup_.clear();
+  for(unsigned int k = 0 ; k<jets->size() ; k++){
     jets_.push_back( (*jets)[k] );
+    jets_backup_.push_back( (*jets)[k] );
+  }
 }
 
 void MEIntegratorNew::setBtag( std::vector<float>* bTagging ){
@@ -2623,6 +2640,14 @@ double MEIntegratorNew::probabilitySL2wj(const double* x, int sign) const{
 
   ////////////////////////
 
+  if( TMath::IsNaN(prob) ){
+    if(verbose_){
+      cout << tf1 << ", " << tf2 << ", " << tf3 << ", "<< tf4 << ", "<< tf5 << ", "<< tf6 << ", " << tf7 << endl;
+      cout << MEpart << ", " << Jpart << ", " << PDFpart << endl;
+    }
+    prob = 0.;
+  }
+
   return prob;
 }
 
@@ -2735,17 +2760,6 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
     me2 = 1.;
   }
 
-  //topHad.Boost( -boostToCMS );
-  //topLep.Boost( -boostToCMS );
-  //higgs.Boost ( -boostToCMS );
-  //double cos3 = TMath::Cos((higgs.Vect()).Angle( boostToCMS ));
-  //TVector3 boostToTTCMS = (topLep+topHad).BoostVector();
-  //topLep.Boost( -boostToTTCMS );
-  //topHad.Boost( -boostToTTCMS );
-  //double cos1Star = TMath::Cos( (topLep.Vect()).Angle( boostToTTCMS ) );
-  //double m12      = (topHad+topLep).M();
-  //double Q        = tot.M();
-
   double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
   double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
   double Q  = (2*Mtop_ + M_)/2.;
@@ -2755,7 +2769,6 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
     topLepDensity(cos1Lep,cos2Lep) * 
     higgsDensity(cos1Higgs) *
     me2
-    //tthDensity( Q/SqrtS_ , m12, cos1Star, cos3)
     ;
 
   double Jpart = 
@@ -2764,29 +2777,9 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
     higgsJakobi(  Eh1, Eh2 ) 
     ;
 
-  /*
-  double tf1 = (W1Had.E()>=tfWjet1_->GetXaxis()->GetXmin() && W1Had.E()<=tfWjet1_->GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(tfWjet1_)  ->Interpolate( W1Had.E() ) : 0.0;
-  double tf2 = 1.0;
-  double tf3 = (bHad.E()>=tfbHad_->GetXaxis()->GetXmin() && bHad.E()<=tfbHad_->GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(tfbHad_)   ->Interpolate( bHad.E()  ) : 0.0;
-  double tf4 = (bLep.E()>=tfbLep_->GetXaxis()->GetXmin() && bLep.E()<=tfbLep_->GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(tfbLep_)->Interpolate( bLep.E()  ) : 0.0;
-  double tf5 = (higgs1.E()>=tfHiggs1_->GetXaxis()->GetXmin() && higgs1.E()<=tfHiggs1_->GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(tfHiggs1_) ->Interpolate( higgs1.E()) : 0.0;
-  double tf6 = (higgs2.E()>=tfHiggs2_->GetXaxis()->GetXmin() && higgs2.E()<=tfHiggs2_->GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(tfHiggs2_) ->Interpolate( higgs2.E()) : 0.0;
-  double tf7 = (WLepNu.Pt() >= tfMetPt_->GetXaxis()->GetXmin() && WLepNu.Pt() <= tfMetPt_->GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(tfMetPt_)  ->Interpolate( WLepNu.Pt()) : 0.0;
-  double tf8 = 
-    (WLepNu.Pt() <= tfMetPhi_->GetXaxis()->GetXmax() && WLepNu.Pt() >= tfMetPhi_->GetXaxis()->GetXmin()) && 
-    (TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) <= tfMetPhi_->GetYaxis()->GetXmax() && TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) >= tfMetPhi_->GetYaxis()->GetXmin()) ?
-    const_cast<TH2F*>(tfMetPhi_) ->Interpolate( WLepNu.Pt(), TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) ) : 0.0;
-  */
-
   double tf1 = jetEnergyTF( jets_[2].Eta(), jets_[2].E(),  bLep.E(),    "Heavy");
   double tf2 = jetEnergyTF( jets_[3].Eta(), jets_[3].E(),  W1Had.E(),   "Light");
-  double tf3 = jetEnergyTF( jets_[4].Eta(), jets_[4].E(),  W2Had.E(),   "Light");
+  double tf3 = 1.0;
   double tf4 = jetEnergyTF( jets_[5].Eta(), jets_[5].E(),  bHad.E(),    "Heavy");
   double tf5 = jetEnergyTF( jets_[6].Eta(), jets_[6].E(),  higgs1.E(),  "Heavy");
   double tf6 = jetEnergyTF( jets_[7].Eta(), jets_[7].E(),  higgs2.E(),  "Heavy");
@@ -2816,41 +2809,36 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
     double Width  = Eq2*TMath::Sqrt( param0resol*param0resol/Eq2 + param1resol*param1resol/Eq2/Eq2) * (Ptq2/Eq2);
     double Mean   = (Eq2*param0resp + param1resp) * (Ptq2/Eq2) ;
 
-    tf2 = 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 )  ;  
+    tf3 = 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 )  ;  
 
     if( deltaR(W2Had, WLepLep)< 0.5 ){
       if(verbose_) cout << "Overlap with lepton " << endl;
-      tf2 = (Ptq2 < 0.10*WLepLep.Pt()) ? 1.0 : 0.0; 
-    }
-    else if( deltaR(W2Had, W1Had)  < 0.5 ){
-      if(verbose_) cout << "Overlap with W1 " << endl;
-      tf2 = 1.;
-      tf1 = ((W1Had.E() +  W2Had.E())>=tfWjet1_->GetXaxis()->GetXmin() && (W1Had.E()+ W2Had.E())<=tfWjet1_->GetXaxis()->GetXmax()) ?
-	const_cast<TH1F*>(tfWjet1_)  ->Interpolate( W1Had.E() +  W2Had.E() ) : 0.0;
-    }
-    else if( deltaR(W2Had, bHad)  < 0.5 ){
-      if(verbose_) cout << "Overlap with bHad " << endl;
-      tf2 = 1.;
-      tf3 = ((bHad.E()+ W2Had.E())>=tfbHad_->GetXaxis()->GetXmin() && (bHad.E()+W2Had.E())<=tfbHad_->GetXaxis()->GetXmax()) ?
-	const_cast<TH1F*>(tfbHad_)   ->Interpolate( bHad.E() +  W2Had.E() ) : 0.0;
+      tf3 = (Ptq2 < 0.10*WLepLep.Pt()) ? 1.0 : 0.0; 
     }
     else if( deltaR(W2Had, bLep)  < 0.5 ){
       if(verbose_) cout << "Overlap with bLep " << endl;
-      tf2 = 1.;
-      tf4 = ((bLep.E()+ W2Had.E())>=tfbLep_->GetXaxis()->GetXmin() && (bLep.E()+W2Had.E())<=tfbLep_->GetXaxis()->GetXmax()) ?
-	const_cast<TH1F*>(tfbLep_)   ->Interpolate( bLep.E() +  W2Had.E() ) : 0.0;
+      tf3 = 1.;
+      tf1 = jetEnergyTF( jets_[2].Eta(), jets_[2].E(),  (bLep.E()+W2Had.E()),     "Heavy"); 
+    }
+    else if( deltaR(W2Had, W1Had)  < 0.5 ){
+      if(verbose_) cout << "Overlap with W1 " << endl;
+      tf3 = 1.;
+      tf2 = jetEnergyTF( jets_[3].Eta(), jets_[3].E(),  (W1Had.E()+W2Had.E()),    "Light"); 
+    }
+    else if( deltaR(W2Had, bHad)  < 0.5 ){
+      if(verbose_) cout << "Overlap with bHad " << endl;
+      tf3 = 1.;
+      tf4 = jetEnergyTF( jets_[5].Eta(), jets_[5].E(),  (bHad.E()+W2Had.E()),     "Heavy"); 
     }
     else if( deltaR(W2Had, higgs1) < 0.5 ){
       if(verbose_) cout << "Overlap with h1 " << endl;
-      tf2 = 1.;
-      tf5 = ((higgs1.E()+W2Had.E())>=tfHiggs1_->GetXaxis()->GetXmin() && (higgs1.E()+W2Had.E())<=tfHiggs1_->GetXaxis()->GetXmax()) ?
-	const_cast<TH1F*>(tfHiggs1_) ->Interpolate( higgs1.E() +  W2Had.E() ) : 0.0;
+      tf3 = 1.;
+      tf5 = jetEnergyTF( jets_[6].Eta(), jets_[6].E(),  (higgs1.E()+W2Had.E()),   "Heavy"); 
     }
     else if( deltaR(W2Had, higgs2) < 0.5 ){
       if(verbose_) cout << "Overlap with h2 " << endl;
-      tf2 = 1.;
-      tf6 = ((higgs2.E()+W2Had.E())>=tfHiggs2_->GetXaxis()->GetXmin() && (higgs2.E()+W2Had.E())<=tfHiggs2_->GetXaxis()->GetXmax()) ?
-	const_cast<TH1F*>(tfHiggs2_) ->Interpolate( higgs2.E() +  W2Had.E() ) : 0.0;
+      tf3 = 1.;
+      tf5 = jetEnergyTF( jets_[7].Eta(), jets_[7].E(),  (higgs2.E()+W2Had.E()),   "Heavy"); 
     }
     else{}
 
@@ -2859,7 +2847,7 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
 
 
   double TFpart = 
-  tf1 *
+    tf1 *
     tf2 *
     tf3 *
     tf4 *
@@ -2869,24 +2857,25 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
 
   double METpart =  
     tf7
-    //tf7*
-    //tf8
     ;
 
   double PDFpart = ggPdf( x1, x2 , Q);
 
   if(useME_)   prob *= MEpart;
-  if(verbose_) cout << prob << endl;
   if(useJac_)  prob *= Jpart;
-  if(verbose_) cout << prob << endl;
   if(useMET_)  prob *= METpart;
-  if(verbose_) cout << prob << endl;
   if(useTF_)   prob *= TFpart;
-  if(verbose_) cout << prob << endl;
   if(usePDF_)  prob *= PDFpart;
-  if(verbose_) cout << prob << endl;
 
   ////////////////////////
+
+  if( TMath::IsNaN(prob) ){
+    if(verbose_){
+      cout << tf1 << ", " << tf2 << ", " << tf3 << ", "<< tf4 << ", "<< tf5 << ", "<< tf6 << ", " << tf7 << endl;
+      cout << MEpart << ", " << Jpart << ", " << PDFpart << endl;
+    }
+    prob = 0.;
+  }
 
   return prob;
 }
@@ -3197,6 +3186,20 @@ void MEIntegratorNew::debug(){
 
   cout << "*** debug end *** " << endl;
 
+}
+
+
+void MEIntegratorNew::printJetList(){
+  cout << "******* START printJetList *******" << endl;
+  cout << "lep   : jet0.SetPtEtaPhiM(" << jets_[0].Pt() << "," << jets_[0].Eta() << "," << jets_[0].Phi() << "," << jets_[0].M() << ")" << endl;
+  cout << "met   : jet1.SetPtEtaPhiM(" << jets_[1].Pt() << "," << jets_[1].Eta() << "," << jets_[1].Phi() << "," << jets_[1].M() << ")" << endl;
+  cout << "bLep  : jet2.SetPtEtaPhiM(" << jets_[2].Pt() << "," << jets_[2].Eta() << "," << jets_[2].Phi() << "," << jets_[2].M() << ")" << endl;
+  cout << "w1    : jet3.SetPtEtaPhiM(" << jets_[3].Pt() << "," << jets_[3].Eta() << "," << jets_[3].Phi() << "," << jets_[3].M() << ")" << endl;
+  cout << "w2    : jet4.SetPtEtaPhiM(" << jets_[4].Pt() << "," << jets_[4].Eta() << "," << jets_[4].Phi() << "," << jets_[4].M() << ")" << endl;
+  cout << "bHad  : jet5.SetPtEtaPhiM(" << jets_[5].Pt() << "," << jets_[5].Eta() << "," << jets_[5].Phi() << "," << jets_[5].M() << ")" << endl;
+  cout << "h1    : jet6.SetPtEtaPhiM(" << jets_[6].Pt() << "," << jets_[6].Eta() << "," << jets_[6].Phi() << "," << jets_[6].M() << ")" << endl;
+  cout << "h2    : jet7.SetPtEtaPhiM(" << jets_[7].Pt() << "," << jets_[7].Eta() << "," << jets_[7].Phi() << "," << jets_[7].M() << ")" << endl;
+  cout << "******* END printJetList *******" << endl;
 }
 
 
