@@ -13,6 +13,7 @@
 #include "TTree.h"
 #include "TH1D.h"
 #include "TH2F.h"
+#include "THStack.h"
 #include "TF1.h"
 #include "TF2.h"
 #include "TGraph.h"
@@ -301,11 +302,12 @@ int main(int argc, const char* argv[])
   float scaleL  ( in.getParameter<double> ("scaleL")   );
   float scaleMET( in.getParameter<double> ("scaleMET") );
 
-  int   useME     ( in.getParameter<int>    ("useME")      );
-  int   useJac    ( in.getParameter<int>    ("useJac")     );
-  int   useMET    ( in.getParameter<int>    ("useMET")     );
-  int   useTF     ( in.getParameter<int>    ("useTF")      );
-  int   usePDF    ( in.getParameter<int>    ("usePDF")     );
+  int   switchoffOL( in.getUntrackedParameter<int>    ("switchoffOL", 0));
+  int   useME      ( in.getParameter<int>    ("useME")      );
+  int   useJac     ( in.getParameter<int>    ("useJac")     );
+  int   useMET     ( in.getParameter<int>    ("useMET")     );
+  int   useTF      ( in.getParameter<int>    ("useTF")      );
+  int   usePDF     ( in.getParameter<int>    ("usePDF")     );
 
   int   doParton      ( in.getParameter<int>    ("doParton")     );
   int   doSmear       ( in.getParameter<int>    ("doSmear")     );
@@ -348,13 +350,18 @@ int main(int argc, const char* argv[])
   TH1F*  hMass_rec         = new TH1F("m_good_rec","",        nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
   TH1F*  hMassProb_gen     = new TH1F("m_all_gen","",         nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
   TH1F*  hMassProb_rec     = new TH1F("m_all_rec","",         nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
+  //THStack*  sMassProbInt_gen  = new THStack("stack_m_all_gen", "Per permutation mass, GEN");
+  //THStack*  sMassProbInt_rec  = new THStack("stack_m_all_rec", "Per permutation mass, REC");
+
 
   TH1F*  hBestMass_gen        = new TH1F("m_best_good_gen","",   nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
   TH1F*  hBestMass_rec        = new TH1F("m_best_good_rec","",   nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
   TH1F*  hBestMassProb_gen    = new TH1F("m_best_all_gen","",    nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
   TH1F*  hBestMassProbInt_gen = new TH1F("m_bestInt_all_gen","", nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
+  TH1F*  hBestMassProbMax_gen = new TH1F("m_bestMax_all_gen","", nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
   TH1F*  hBestMassProb_rec    = new TH1F("m_best_all_rec","",    nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
   TH1F*  hBestMassProbInt_rec = new TH1F("m_bestInt_all_rec","", nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
+  TH1F*  hBestMassProbMax_rec = new TH1F("m_bestMax_all_rec","", nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
 
   TTree* tree  = new TTree("tree","");
 
@@ -378,14 +385,16 @@ int main(int argc, const char* argv[])
   float probGA_;
   float probAtSgnGA_;
   float probAtGoodGA_;
-  float massGA_, massIntGA_;
+  float massGA_, massIntGA_, massMaxGA_;
   float evalCpuGA_,evalReaGA_;
 
   float probRA_;
   float probAtSgnRA_;
   float probAtGoodRA_;
-  float massRA_,massIntRA_;
+  float massRA_,massIntRA_, massMaxRA_;
   float evalCpuRA_,evalReaRA_;
+
+  int matchByIntGA_, matchByMaxGA_, matchByIntRA_, matchByMaxRA_;
 
   tree->Branch("counter",                       &counter_,      "counter/I");
   tree->Branch("p_best_good_gen",               &probGG_,      "p_best_good_gen/F");
@@ -403,16 +412,21 @@ int main(int argc, const char* argv[])
   tree->Branch("p_good_all_gen",                &probAtGoodGA_,"p_good_all_gen/F");
   tree->Branch("m_best_all_gen",                &massGA_,      "mass_best_all_gen/F");
   tree->Branch("m_bestInt_all_gen",             &massIntGA_,   "mass_bestInt_all_gen/F");
+  tree->Branch("m_bestMax_all_gen",             &massMaxGA_,   "mass_bestMax_all_gen/F");
   tree->Branch("cputime_all_gen",               &evalCpuGA_,   "cputime_all_gen/F");
   tree->Branch("realtime_all_gen",              &evalReaGA_,   "realtime_all_gen/F");
   tree->Branch("p_best_all_rec",                &probRA_,      "p_best_all_rec/F");
   tree->Branch(Form("p_%d_all_rec",int(met)),   &probAtSgnRA_, Form("p_%d_all_rec/F",int(met)) );
-  tree->Branch("p_good_all_rec",                &probAtGoodGA_,"p_good_all_rec/F");
+  tree->Branch("p_good_all_rec",                &probAtGoodRA_,"p_good_all_rec/F");
   tree->Branch("m_best_all_rec",                &massRA_,      "mass_best_all_rec/F");
   tree->Branch("m_bestInt_all_rec",             &massIntRA_,   "mass_bestInt_all_rec/F");
+  tree->Branch("m_bestMax_all_rec",             &massMaxRA_,   "mass_bestMax_all_rec/F");
   tree->Branch("cputime_all_rec",               &evalCpuRA_,   "cputime_all_rec/F");
   tree->Branch("realtime_all_rec",              &evalReaRA_,   "realtime_all_rec/F");
-
+  tree->Branch("match_bestInt_all_gen",         &matchByIntGA_, "match_bestInt_all_gen/I");
+  tree->Branch("match_bestMax_all_gen",         &matchByMaxGA_, "match_bestMax_all_gen/I");
+  tree->Branch("match_bestInt_all_rec",         &matchByIntRA_, "match_bestInt_all_rec/I");
+  tree->Branch("match_bestMax_all_rec",         &matchByMaxRA_, "match_bestMax_all_rec/I");
 
  //  tree->Branch("prob_rec_good",            &probRG_,      "prob_rec_good/F");
 //   tree->Branch("probAtSgn_rec_good",       &probAtSgnRG_, "probAtSgn_rec_good/F");
@@ -441,16 +455,22 @@ int main(int argc, const char* argv[])
   int par;
   switch(mode){
   case 0:
-    par = 4;
+    par = 4;  // SL all partons
     break;
   case 1:
-    par = 6;
+    par = 6;  // SL, 1w lost
     break;
   case 2:
-    par = 19;
+    par = 6;  // SL, bhad lost
     break;
   case 3:
-    par = 19;
+    par = 6;  // SL, bLep lost
+    break;
+  case 4:
+    par = 19; // inclusive xsec
+    break;
+  case 5:
+    par = 19; // acceptance xsec
     break;
   default:
     par = 4;
@@ -464,8 +484,12 @@ int main(int argc, const char* argv[])
   else if(mode == 1)
     meIntegrator->setIntType( MEIntegratorNew::SL1wj );
   else if(mode == 2)
-    meIntegrator->setIntType( MEIntegratorNew::SLXSec );
+    meIntegrator->setIntType( MEIntegratorNew::SLNoBHad );
   else if(mode == 3)
+    meIntegrator->setIntType( MEIntegratorNew::SLNoBLep );
+  else if(mode== 4)
+    meIntegrator->setIntType( MEIntegratorNew::SLXSec );
+  else if(mode == 5)
     meIntegrator->setIntType( MEIntegratorNew::SLAcc );
   else{
     cout << "Unsupported mode... exit" << endl;
@@ -494,7 +518,10 @@ int main(int argc, const char* argv[])
   meIntegrator->setUseTF (useTF);
   meIntegrator->setUsePDF(usePDF);
 
-
+  if(switchoffOL){
+    meIntegrator->switchOffOL(); 
+    cout << "*** Switching off OpenLoops to speed-up the calculation ***" << endl;
+  }
  ////////////////////////////////////////////////////////
 
 
@@ -666,6 +693,24 @@ int main(int argc, const char* argv[])
 			 genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
 			 genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
 			 ) );
+      else if(mode==2)
+	properEvent = ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+			TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+			TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+			TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+			(TOPHADB.Pt() <30 || TMath::Abs(TOPHADB.Eta())  >2.5)&&
+			genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+			genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+			);
+      else if(mode==3)
+	properEvent = ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+			(TOPLEPB.Pt() <30 || TMath::Abs(TOPLEPB.Eta())  >2.5)&&
+			TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+			TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+			TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+			genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+			genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+			);
       else{ }	
       
 
@@ -737,6 +782,7 @@ int main(int argc, const char* argv[])
       probGA_      = 0;
       massGA_      = 0;
       massIntGA_   = 0;
+      massMaxGA_   = 0;
       evalCpuGA_   = 0;
       evalReaGA_   = 0;
       probAtSgnGA_ = 0;
@@ -749,12 +795,15 @@ int main(int argc, const char* argv[])
       probRA_      = 0;
       massRA_      = 0;
       massIntRA_   = 0;
+      massMaxRA_   = 0;
       evalCpuRA_   = 0;
       evalReaRA_   = 0;
       probAtSgnRA_ = 0;
       probAtGoodRA_= 0;
-
-
+      matchByIntGA_=0;
+      matchByMaxGA_=0;
+      matchByIntRA_=0;
+      matchByMaxRA_=0;
 
       if( doParton){
 
@@ -787,6 +836,12 @@ int main(int argc, const char* argv[])
 	  
 	  double xLmode1[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
 	  double xUmode1[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+
+	  double xLmode2[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+	  double xUmode2[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+
+	  double xLmode3[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+	  double xUmode3[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
 	  
 	  if( printP4 ){
 	    cout << "Integration range: " << endl;
@@ -795,6 +850,10 @@ int main(int argc, const char* argv[])
 		cout << "Var " << k << ": [" << xLmode0[k] << "," <<  xUmode0[k] << "]" << endl;
 	      else if(mode==1)
 		cout << "Var " << k << ": [" << xLmode1[k] << "," <<  xUmode1[k] << "]" << endl;
+	      else if(mode==2)
+		cout << "Var " << k << ": [" << xLmode2[k] << "," <<  xUmode2[k] << "]" << endl;
+	      else if(mode==3)
+		cout << "Var " << k << ": [" << xLmode3[k] << "," <<  xUmode3[k] << "]" << endl;
 	      else{}
 	    }	   
 	  }
@@ -814,6 +873,10 @@ int main(int argc, const char* argv[])
 	      p = ig2.Integral(xLmode0, xUmode0);
 	    else if(mode==1)
 	      p = ig2.Integral(xLmode1, xUmode1);
+	    else if(mode==2)
+	      p = ig2.Integral(xLmode2, xUmode2);
+	    else if(mode==3)
+	      p = ig2.Integral(xLmode3, xUmode3);
 	    else{ }
 	    
 	    if( TMath::IsNaN(p) ) p = 0.;
@@ -863,15 +926,29 @@ int main(int argc, const char* argv[])
 	     634572, 534672,     // ONE WRONG
 	     234675, 634275      // ONE WRONG
 	    };
-	  
+	  double permutMassReco[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+
 	  double permutProbInt [12] = {0,0,0,0,0,0,0,0,0,0,0,0};	  
 	  vector<TH1F*> histos;
 	  for(unsigned int it = 0; it<12; it++){
+	    if(gDirectory->FindObject(Form("hMass_%d",it))!=0){
+	      gDirectory->Remove(gDirectory->FindObject(Form("hMass_%d",it)));
+	    }
 	    TH1F* h = (TH1F*)hMass_gen->Clone(Form("hMass_%d",it));
 	    h->Reset();
 	    histos.push_back( h );
 	  }
-	  
+
+	  if(gDirectory->FindObject("stack_m_all_gen")!=0){
+	    gDirectory->Remove(gDirectory->FindObject("stack_m_all_gen"));
+	  }
+	  THStack*  sMassProbInt_gen  = new THStack("stack_m_all_gen", "Per permutation mass, GEN");
+	  TLegend* leg = new TLegend(0.63,0.48,0.85,0.85,NULL,"brNDC");
+	  leg->SetFillStyle(0);
+	  leg->SetBorderSize(0);
+	  leg->SetFillColor(10);
+	  leg->SetTextSize(0.03);
+	  TCanvas *c1 = new TCanvas("c_gen","canvas",10,30,650,600);
 
 	  for(int m = 0; m < nMassPoints ; m++){
 	    meIntegrator->setMass( mH[m] );
@@ -879,7 +956,10 @@ int main(int argc, const char* argv[])
 	    for(unsigned int pos = 0; pos < 12; pos++){
 	      meIntegrator->initVersors( permutations[pos] );
 	      
-	      if( !(meIntegrator->compatibilityCheck(0.95)) ){
+	      double mass, massLow, massHigh;
+	      bool skip = !(meIntegrator->compatibilityCheck(0.95, /*printP4*/ 0, mass, massLow, massHigh )) ;
+	      permutMassReco[pos] = mass;
+	      if( skip ){
 		continue;
 	      }
 	      
@@ -912,15 +992,28 @@ int main(int argc, const char* argv[])
 	      
 	      double xLmode1[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
 	      double xUmode1[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+
+	      double xLmode2[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+	      double xUmode2[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+
+	      double xLmode3[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+	      double xUmode3[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
 	      
-	      if( printP4 && false ){
-		cout << "Perm: " << permutations[pos] << endl;
+	      if( printP4 && false){
 		cout << "Integration range: " << endl;
-		for(unsigned int k = 0; k < 4; k++){
-		  cout << "Var " << k << ": [" << xLmode0[k] << "," <<  xUmode0[k] << "]" << endl;
+		for(unsigned int k = 0; k < (mode==0 ? 4 : 6); k++){
+		  if(mode==0) 
+		    cout << "Var " << k << ": [" << xLmode0[k] << "," <<  xUmode0[k] << "]" << endl;
+		  else if(mode==1)
+		    cout << "Var " << k << ": [" << xLmode1[k] << "," <<  xUmode1[k] << "]" << endl;
+		  else if(mode==2)
+		    cout << "Var " << k << ": [" << xLmode2[k] << "," <<  xUmode2[k] << "]" << endl;
+		  else if(mode==3)
+		    cout << "Var " << k << ": [" << xLmode3[k] << "," <<  xUmode3[k] << "]" << endl;
+		  else{}
 		}	   
-	      }
-	    
+	      }	
+
 	      clock->Start();
 
 	      ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par);
@@ -933,12 +1026,16 @@ int main(int argc, const char* argv[])
 		p = ig2.Integral(xLmode0, xUmode0);
 	      else if(mode==1)
 		p = ig2.Integral(xLmode1, xUmode1);
+	      else if(mode==2)
+		p = ig2.Integral(xLmode2, xUmode2);
+	      else if(mode==3)
+		p = ig2.Integral(xLmode3, xUmode3);
 	      else{ }
 	      
 	      if( TMath::IsNaN(p) ) p = 0.;
 
 	      permutProbInt[pos] += p;
-	      histos[ pos ]->Fill( mH[m], p);
+	      histos[ pos ]->SetBinContent( histos[ pos ]->FindBin(mH[m]), p);
 
 	      if( pos==0 && p>pTotAtSgn){
 		pTotAtSgn = p;
@@ -970,8 +1067,39 @@ int main(int argc, const char* argv[])
 	  }
 	  massIntGA_ = (getMaxValue( histos[permMax] )).first ;
 	  hBestMassProbInt_gen->Fill( massIntGA_ ); 
-	  histos.clear();
+	  matchByIntGA_ = (permMax==0 || permMax==1) ? 1 : 0;
 
+	  double maxMaxProb = 0.;
+	  unsigned int permMax2 = 0;
+
+	  //cout << "Histos size = " << histos.size() << endl;
+	  sMassProbInt_gen->Modified();
+	  for(unsigned int it = 0; it < histos.size(); it++){
+	    if( histos[it]->GetMaximum()>maxMaxProb ){
+	      maxMaxProb = histos[it]->GetMaximum();
+	      permMax2 = it;
+	    }
+	    if(it>0){
+	      histos[it]->SetFillStyle(3003);
+	      histos[it]->SetFillColor(it+30);
+	      histos[it]->SetLineColor(it+30);
+	      sMassProbInt_gen->Add( histos[it] );
+	      leg->AddEntry(histos[it], Form("%d (%.0f GeV)", permutations[it] , permutMassReco[it]), "F");
+	    }
+	  }
+	  if(histos.size()>0){
+	    histos[0]->SetFillStyle(3004);
+	    histos[0]->SetFillColor(2);
+	    histos[0]->SetLineColor(2);
+	    sMassProbInt_gen->Add( histos[0] );
+	    leg->AddEntry(histos[0], Form("%d (%.0f GeV)", permutations[0] , permutMassReco[0]), "F");	      
+	  }
+
+	  massMaxGA_ = (getMaxValue( histos[permMax2] )).first ;
+	  matchByMaxGA_ = (permMax2==0 || permMax2==1) ? 1 : 0;
+	  hBestMassProbMax_gen->Fill( massMaxGA_ ); 
+	  histos.clear();
+	  
 
 	  evalCpuGA_ /= combScanned;
 	  evalReaGA_ /= combScanned;
@@ -987,13 +1115,22 @@ int main(int argc, const char* argv[])
 	    TDirectory *dir = fout_tmp->mkdir(Form("Event_%d", counter));
 	    dir->cd();
 	    hMassProb_gen->Write("", TObject::kOverwrite);
+	    c1->cd();
+	    sMassProbInt_gen->Draw();
+	    leg->Draw();
+	    //sMassProbInt_gen->Write("", TObject::kOverwrite);
+	    c1->Write("", TObject::kOverwrite);
 	  }
 	  else{
 	    fout_tmp->cd(Form("Event_%d", counter));
 	    hMassProb_gen->Write("", TObject::kOverwrite);
+	    sMassProbInt_gen->Draw();
+	    leg->Draw();
+	    //sMassProbInt_gen->Write("", TObject::kOverwrite);
+	    c1->Write("", TObject::kOverwrite);
 	  }
 	  fout_tmp->Close();
-	
+	  delete sMassProbInt_gen; delete leg; delete c1;
 
 	}
 
@@ -1004,7 +1141,7 @@ int main(int argc, const char* argv[])
 
 	meIntegrator->initVersors(1);
 
-	if( meIntegrator->smearByTF(30.) ){
+	if( meIntegrator->smearByTF(30., printP4) ){
 	  
 	  if( doMassScan ){
 
@@ -1033,14 +1170,28 @@ int main(int argc, const char* argv[])
 	    
 	    double xLmode1[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
 	    double xUmode1[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+
+	    double xLmode2[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+	    double xUmode2[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+
+	    double xLmode3[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+	    double xUmode3[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
 	    
-	    if( printP4 ){
+	    if( printP4 && false){
 	      cout << "Integration range: " << endl;
-	      for(unsigned int k = 0; k < 4; k++){
-		cout << "Var " << k << ": [" << xLmode0[k] << "," <<  xUmode0[k] << "]" << endl;
+	      for(unsigned int k = 0; k < (mode==0 ? 4 : 6); k++){
+		if(mode==0) 
+		  cout << "Var " << k << ": [" << xLmode0[k] << "," <<  xUmode0[k] << "]" << endl;
+		else if(mode==1)
+		  cout << "Var " << k << ": [" << xLmode1[k] << "," <<  xUmode1[k] << "]" << endl;
+		else if(mode==2)
+		  cout << "Var " << k << ": [" << xLmode2[k] << "," <<  xUmode2[k] << "]" << endl;
+		else if(mode==3)
+		  cout << "Var " << k << ": [" << xLmode3[k] << "," <<  xUmode3[k] << "]" << endl;
+		else{}
 	      }	   
-	    }
-	    
+	    }	
+		    
 	    clock->Start();
 	    
 	    hMass_rec->Reset();
@@ -1056,6 +1207,10 @@ int main(int argc, const char* argv[])
 		p = ig2.Integral(xLmode0, xUmode0);
 	      else if(mode==1)
 		p = ig2.Integral(xLmode1, xUmode1);
+	      else if(mode==2)
+		p = ig2.Integral(xLmode2, xUmode2);
+	      else if(mode==3)
+		p = ig2.Integral(xLmode3, xUmode3);
 	      else{ }
 
 	      if( TMath::IsNaN(p) ) p = 0.;
@@ -1105,14 +1260,30 @@ int main(int argc, const char* argv[])
 	       634572, 534672,     // ONE WRONG
 	       234675, 634275      // ONE WRONG
 	      };
-	    
+	    double permutMassReco[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+
+
 	    double permutProbInt [12] = {0,0,0,0,0,0,0,0,0,0,0,0};	  
 	    vector<TH1F*> histos;
 	    for(unsigned int it = 0; it<12; it++){
+	      if(gDirectory->FindObject(Form("hMass_%d",it))!=0){
+		gDirectory->Remove(gDirectory->FindObject(Form("hMass_%d",it)));
+	      }
 	      TH1F* h = (TH1F*)hMass_rec->Clone(Form("hMass_%d",it));
 	      h->Reset();
 	      histos.push_back( h );
 	    }
+	    if(gDirectory->FindObject("stack_m_all_rec")!=0){
+	      gDirectory->Remove(gDirectory->FindObject("stack_m_all_rec"));
+	    }
+	    THStack*  sMassProbInt_rec  = new THStack("stack_m_all_rec", "Per permutation mass, REC");
+	    TLegend* leg = new TLegend(0.63,0.48,0.85,0.85,NULL,"brNDC");
+	    leg->SetFillStyle(0);
+	    leg->SetBorderSize(0);
+	    leg->SetFillColor(10);
+	    leg->SetTextSize(0.03);
+	    TCanvas *c1 = new TCanvas("c_rec","canvas",10,30,650,600);
+
 
 	    for(int m = 0; m < nMassPoints ; m++){
 	      meIntegrator->setMass( mH[m] );
@@ -1120,9 +1291,13 @@ int main(int argc, const char* argv[])
 	      for(unsigned int pos = 0; pos < 12; pos++){
 		meIntegrator->initVersors( permutations[pos] );
 		
-		if( !(meIntegrator->compatibilityCheck(0.95)) ){
+		double mass, massLow, massHigh;
+		bool skip = !(meIntegrator->compatibilityCheck(0.95, /*printP4*/ 0, mass, massLow, massHigh )) ;
+		permutMassReco[pos] = mass;
+		if( skip ){
 		  continue;
 		}
+
 		
 		combScanned++;
 		
@@ -1151,15 +1326,28 @@ int main(int argc, const char* argv[])
 		
 		double xLmode1[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
 		double xUmode1[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+
+		double xLmode2[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+		double xUmode2[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+
+		double xLmode3[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+		double xUmode3[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
 		
-		if( printP4 && false ){
-		  cout << "Perm: " << permutations[pos] << endl;
+		if( printP4 && false){
 		  cout << "Integration range: " << endl;
-		  for(unsigned int k = 0; k < 4; k++){
-		    cout << "Var " << k << ": [" << xLmode0[k] << "," <<  xUmode0[k] << "]" << endl;
+		  for(unsigned int k = 0; k < (mode==0 ? 4 : 6); k++){
+		    if(mode==0) 
+		      cout << "Var " << k << ": [" << xLmode0[k] << "," <<  xUmode0[k] << "]" << endl;
+		    else if(mode==1)
+		      cout << "Var " << k << ": [" << xLmode1[k] << "," <<  xUmode1[k] << "]" << endl;
+		    else if(mode==2)
+		      cout << "Var " << k << ": [" << xLmode2[k] << "," <<  xUmode2[k] << "]" << endl;
+		    else if(mode==3)
+		      cout << "Var " << k << ": [" << xLmode3[k] << "," <<  xUmode3[k] << "]" << endl;
+		    else{}
 		  }	   
-		}
-		
+		}	
+			
 		clock->Start();
 		
 		ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par);
@@ -1171,13 +1359,17 @@ int main(int argc, const char* argv[])
 		if(mode==0) 
 		  p = ig2.Integral(xLmode0, xUmode0);
 		else if(mode==1)
-		p = ig2.Integral(xLmode1, xUmode1);
+		  p = ig2.Integral(xLmode1, xUmode1);
+		else if(mode==2)
+		  p = ig2.Integral(xLmode2, xUmode2);
+		else if(mode==3)
+		  p = ig2.Integral(xLmode3, xUmode3);
 		else{ }
 		
 		if( TMath::IsNaN(p) ) p = 0.;
 
 		permutProbInt[pos] += p;
-		histos[ pos ]->Fill( mH[m], p);
+		histos[ pos ]->SetBinContent( histos[ pos ]->FindBin(mH[m]), p);
 
 		if( pos==0 && p>pTotAtSgn){
 		  pTotAtSgn = p;
@@ -1207,7 +1399,38 @@ int main(int argc, const char* argv[])
 	      }
 	    }
 	    massIntRA_ = (getMaxValue( histos[permMax] )).first ;
+	    matchByIntRA_ = (permMax==0 || permMax==1) ? 1 : 0;
 	    hBestMassProbInt_rec->Fill( massIntRA_ ); 
+
+	    double maxMaxProb = 0.;
+	    unsigned int permMax2 = 0;
+
+	    //cout << "Histos size = " << histos.size() << endl;
+	    sMassProbInt_rec->Modified();
+	    for(unsigned int it = 0; it < histos.size(); it++){
+	      if( histos[it]->GetMaximum()>maxMaxProb ){
+		maxMaxProb = histos[it]->GetMaximum();
+		permMax2 = it;
+	      }
+	      if(it>0){
+		histos[it]->SetFillStyle(3003);
+		histos[it]->SetFillColor(it+30);
+		histos[it]->SetLineColor(it+30);
+		sMassProbInt_rec->Add( histos[it] );
+		leg->AddEntry(histos[it], Form("%d (%.0f GeV)", permutations[it] , permutMassReco[it]), "F");
+	      }
+	    }
+	    if(histos.size()>0){
+	      histos[0]->SetFillStyle(3004);
+	      histos[0]->SetFillColor(2);
+	      histos[0]->SetLineColor(2);
+	      sMassProbInt_rec->Add( histos[0] );
+	      leg->AddEntry(histos[0], Form("%d (%.0f GeV)", permutations[0] , permutMassReco[0]), "F");	      
+	    }
+
+	    massMaxRA_ = (getMaxValue( histos[permMax2] )).first ;
+	    matchByMaxRA_ = (permMax2==0 || permMax2==1) ? 1 : 0;
+	    hBestMassProbMax_rec->Fill( massMaxRA_ ); 
 	    histos.clear();
 
 	    
@@ -1224,13 +1447,23 @@ int main(int argc, const char* argv[])
 	    if(gDirectory->GetKey(Form("Event_%d", counter)) == 0) {
 	      TDirectory *dir = fout_tmp->mkdir(Form("Event_%d", counter));
 	      dir->cd();
-	      hMassProb_gen->Write("", TObject::kOverwrite);
+	      hMassProb_rec->Write("", TObject::kOverwrite);
+	      c1->cd();
+	      sMassProbInt_rec->Draw();
+	      leg->Draw();
+	      //sMassProbInt_rec->Write("", TObject::kOverwrite);
+	      c1->Write("", TObject::kOverwrite);
 	    }
 	    else{
 	      fout_tmp->cd(Form("Event_%d", counter));
-	      hMassProb_gen->Write("", TObject::kOverwrite);
+	      hMassProb_rec->Write("", TObject::kOverwrite);
+	      sMassProbInt_rec->Draw();
+	      leg->Draw();
+	      //sMassProbInt_rec->Write("", TObject::kOverwrite);
+	      c1->Write("", TObject::kOverwrite);
 	    }
 	    fout_tmp->Close();
+	    delete sMassProbInt_rec; delete leg; delete c1;
 
 	  }
 	}
@@ -1250,9 +1483,11 @@ int main(int argc, const char* argv[])
   hBestMass_gen->Write       ("m_best_good_gen",        TObject::kOverwrite);
   hBestMassProb_gen->Write   ("m_best_all_gen",         TObject::kOverwrite);
   hBestMassProbInt_gen->Write("m_bestInt_all_gen",      TObject::kOverwrite);
+  hBestMassProbMax_gen->Write("m_bestMax_all_gen",      TObject::kOverwrite);
   hBestMass_rec->Write       ("m_best_good_rec",        TObject::kOverwrite);
   hBestMassProb_rec->Write   ("m_best_all_rec",         TObject::kOverwrite);
   hBestMassProbInt_rec->Write("m_bestInt_all_rec",      TObject::kOverwrite);
+  hBestMassProbMax_rec->Write("m_bestMax_all_rec",      TObject::kOverwrite);
 
   tree->Write("",TObject::kOverwrite );
   fout_tmp->Close();
