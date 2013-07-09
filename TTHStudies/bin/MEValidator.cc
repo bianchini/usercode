@@ -337,6 +337,68 @@ int main(int argc, const char* argv[])
   for( unsigned int m = 0; m < masses.size() ; m++)
     mH[m] = masses[m];
 
+
+  int nPermutations;
+  switch(mode){
+  case 0:
+    nPermutations = 12;
+    break;
+  case 1:
+    nPermutations = 12;
+    break;
+  case 2:
+    nPermutations = 3;
+    break;
+  case 3:
+    nPermutations = 3;
+    break;
+  default:
+    nPermutations = 12;
+    break;
+  }
+
+  int permutations_SL2wj[12] =  
+    {234567, 534267,     // CORRECT 
+     634725, 734625,     // ALL WRONG
+     534762, 734562,     // ONE WRONG
+     234765, 734265,     // ONE WRONG
+     634572, 534672,     // ONE WRONG
+     234675, 634275      // ONE WRONG
+    };
+
+  int permutations_SL1wj[12] =  
+    {234567, 534267,     // CORRECT 
+     634725, 734625,     // ALL WRONG
+     534762, 734562,     // ONE WRONG
+     234765, 734265,     // ONE WRONG
+     634572, 534672,     // ONE WRONG
+     234675, 634275      // ONE WRONG
+    };
+  int permutations_SLNoBHad[3] =  
+    {234567,     // CORRECT 
+     734562,     // ONE WRONG
+     634572      // ONE WRONG
+    };
+  int permutations_SLNoBLep[3] =
+    {
+      234567,      // CORRECT 
+      234765,      // ONE WRONG
+      234675       // ONE WRONG
+    };
+  
+  int permutations[nPermutations];
+  for(int per = 0; per < nPermutations; per++){
+    if(mode==0) 
+      permutations[per] = permutations_SL2wj[per];
+    else if(mode==1) 
+      permutations[per] = permutations_SL2wj[per];
+    else if(mode==2) 
+      permutations[per] = permutations_SLNoBHad[per];
+    else if(mode==3) 
+      permutations[per] = permutations_SLNoBLep[per];
+  }
+
+
   //{ /*50,  55,  */60,  65,  70,  75,  
   // 80 , 85,  90, 95, 100, 105, 110, 
   // 115, 120, 125, 130, 135, 140, 145, 150, 155, 
@@ -622,6 +684,9 @@ int main(int argc, const char* argv[])
       TLorentzVector HIGGS;
 
       float neutCosTheta;
+      int chargeTopLep = 0;
+      bool isSL = false;
+      bool isDL = false;
 
       bool properEvent = (genBLV.Pt()>0 && genBbarLV.Pt()>0 && topBLV.Pt()>0 && topW1LV.Pt()>0 && topW2LV.Pt()>0 && atopBLV.Pt()>0 && atopW1LV.Pt()>0 && atopW2LV.Pt()>0);
 
@@ -633,16 +698,19 @@ int main(int argc, const char* argv[])
 	TOPHADW2.SetPxPyPzE( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
 	TOPHADB.SetPxPyPzE( atopBLV.Px(),  atopBLV.Py(),   atopBLV.Pz(),  atopBLV.E());
 	if( abs(genTop.wdau1id)==11 || abs(genTop.wdau1id)==13 || abs(genTop.wdau1id)==15 ){
+	  chargeTopLep = genTop.wdau1id>0 ? 1 : -1;
 	  TOPLEPW1.SetPxPyPzE  ( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
 	  TOPLEPW2.SetPtEtaPhiM( topW2LV.Pt(), 0.0, topW2LV.Phi(), 0.0);
 	  neutCosTheta = TMath::Cos( topW2LV.Vect().Theta() );
 	}
 	else{
+	  chargeTopLep = genTop.wdau2id>0 ? 1 : -1;
 	  TOPLEPW2.SetPtEtaPhiM( topW1LV.Pt(), 0.0, topW1LV.Phi(), 0.0);
 	  TOPLEPW1.SetPxPyPzE  ( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
 	  neutCosTheta = TMath::Cos( topW1LV.Vect().Theta() );
 	}
 	TOPLEPB.SetPxPyPzE(  topBLV.Px(),  topBLV.Py(),   topBLV.Pz(), topBLV.E());
+	isSL = true;
       }
       else if(abs(genTop.wdau1id)<6 && abs(genTbar.wdau1id)>6){
 	TOPHAD.SetPxPyPzE( (topBLV+topW1LV+topW2LV).Px(), (topBLV+topW1LV+topW2LV).Py(), (topBLV+topW1LV+topW2LV).Pz(), (topBLV+topW1LV+topW2LV).E() );
@@ -651,66 +719,106 @@ int main(int argc, const char* argv[])
 	TOPHADW2.SetPxPyPzE( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
 	TOPHADB.SetPxPyPzE( topBLV.Px(),  topBLV.Py(),   topBLV.Pz(),  topBLV.E());
 	if( abs(genTbar.wdau1id)==11 || abs(genTbar.wdau1id)==13 || abs(genTbar.wdau1id)==15 ){
+	  chargeTopLep = genTbar.wdau1id>0 ? 1 : -1;	  
 	  TOPLEPW1.SetPxPyPzE  ( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
 	  TOPLEPW2.SetPtEtaPhiM( atopW2LV.Pt(), 0.0, atopW2LV.Phi(), 0.0);
 	  neutCosTheta = TMath::Cos( atopW2LV.Vect().Theta() );
 	}
 	else{
+	  chargeTopLep = genTbar.wdau2id>0 ? 1 : -1;	  
 	  TOPLEPW2.SetPtEtaPhiM( atopW1LV.Pt(), 0.0, atopW1LV.Phi(), 0.0);
 	  TOPLEPW1.SetPxPyPzE  ( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
 	  neutCosTheta = TMath::Cos( atopW1LV.Vect().Theta() );
 	}
 	TOPLEPB.SetPxPyPzE( atopBLV.Px(),  atopBLV.Py(),   atopBLV.Pz(),  atopBLV.E());
+	isSL = true;
+      }      
+      else if(abs(genTop.wdau1id)>6 && abs(genTbar.wdau1id)>6){
+	TOPHAD.SetPxPyPzE( (topBLV+topW1LV+topW2LV).Px(), (topBLV+topW1LV+topW2LV).Py(), (topBLV+topW1LV+topW2LV).Pz(), (topBLV+topW1LV+topW2LV).E() );
+	TOPLEP.SetPxPyPzE( (atopBLV+atopW1LV+atopW2LV).Px(), (atopBLV+atopW1LV+atopW2LV).Py(), (atopBLV+atopW1LV+atopW2LV).Pz(), (atopBLV+atopW1LV+atopW2LV).E() );
+	if( abs(genTop.wdau1id)==11 || abs(genTop.wdau1id)==13 || abs(genTop.wdau1id)==15 ){
+	  TOPHADW1.SetPxPyPzE  ( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
+	  TOPHADW2.SetPtEtaPhiM( topW2LV.Pt(), 0.0, topW2LV.Phi(), 0.0);
+	}
+	else{
+	  TOPHADW2.SetPtEtaPhiM( topW1LV.Pt(), 0.0, topW1LV.Phi(), 0.0);
+	  TOPHADW1.SetPxPyPzE  ( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
+	}
+	TOPHADB.SetPxPyPzE( topBLV.Px(),  topBLV.Py(),   topBLV.Pz(),  topBLV.E());
+	if( abs(genTbar.wdau1id)==11 || abs(genTbar.wdau1id)==13 || abs(genTbar.wdau1id)==15 ){
+	  chargeTopLep = genTbar.wdau1id>0 ? 1 : -1;	  
+	  TOPLEPW1.SetPxPyPzE  ( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
+	  TOPLEPW2.SetPtEtaPhiM( atopW2LV.Pt(), 0.0, atopW2LV.Phi(), 0.0);
+	  neutCosTheta = TMath::Cos( atopW2LV.Vect().Theta() );
+	}
+	else{
+	  chargeTopLep = genTbar.wdau2id>0 ? 1 : -1;	  
+	  TOPLEPW2.SetPtEtaPhiM( atopW1LV.Pt(), 0.0, atopW1LV.Phi(), 0.0);
+	  TOPLEPW1.SetPxPyPzE  ( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
+	  neutCosTheta = TMath::Cos( atopW1LV.Vect().Theta() );
+	}
+	TOPLEPB.SetPxPyPzE( atopBLV.Px(),  atopBLV.Py(),   atopBLV.Pz(),  atopBLV.E());
+	isDL = true;
       }      
       else{
 	properEvent=false;
       }
 
+      if(mode==6) TOPLEPW2 = TOPLEPW2+TOPHADW2;
+
 
       if(mode==0)
-	properEvent = ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
-			TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
-			TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
-			TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
-			TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
-			genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
-			genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
-			);
+	properEvent = isSL && ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+				TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+				genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				);
       else if(mode==1)
-	properEvent = (( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
-			 TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
-			 (TOPHADW1.Pt() < 30 || TMath::Abs(TOPHADW1.Eta()) >2.5) &&
-			 TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
-			 TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
-			 genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
-			 genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
-			 ) ||
-		       ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
-			 TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
-			 TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
-			 (TOPHADW2.Pt() < 30 || TMath::Abs(TOPHADW2.Eta()) >2.5) &&
-			 TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
-			 genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
-			 genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
-			 ) );
+	properEvent = isSL && (( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				 TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				 (TOPHADW1.Pt() < 30 || TMath::Abs(TOPHADW1.Eta()) >2.5) &&
+				 TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+				 TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+				 genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				 genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				 ) ||
+			       ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				 TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				 TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				 (TOPHADW2.Pt() < 30 || TMath::Abs(TOPHADW2.Eta()) >2.5) &&
+				 TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+				 genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				 genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				 ) );
       else if(mode==2)
-	properEvent = ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
-			TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
-			TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
-			TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
-			(TOPHADB.Pt() <30 || TMath::Abs(TOPHADB.Eta())  >2.5)&&
-			genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
-			genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
-			);
+	properEvent = isSL && ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+				(TOPHADB.Pt() <30 || TMath::Abs(TOPHADB.Eta())  >2.5)&&
+				genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				);
       else if(mode==3)
-	properEvent = ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
-			(TOPLEPB.Pt() <30 || TMath::Abs(TOPLEPB.Eta())  >2.5)&&
-			TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
-			TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
-			TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
-			genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
-			genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
-			);
+	properEvent = isSL && ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				(TOPLEPB.Pt() <30 || TMath::Abs(TOPLEPB.Eta())  >2.5)&&
+				TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+				TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+				genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				);
+      else if(mode==6)
+	properEvent = isDL && ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				TOPHADW1.Pt() >20 && TMath::Abs(TOPHADW1.Eta()) <2.1 &&
+				TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+				genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				);
       else{ }	
       
 
@@ -754,14 +862,14 @@ int main(int argc, const char* argv[])
       if(printP4){
 	cout << "******* INPUT ******" << endl;      
 	cout << "SumEt = " << METtype1p2corr.sumet  << endl;
-	cout << "lep:  jet1.SetPtEtaPhiM(" << TOPLEPW1.Pt() << "," <<  TOPLEPW1.Eta() << "," << TOPLEPW1.Phi() << "," << TOPLEPW1.M() << ")" << endl;
-	cout << "met:  jet2.SetPtEtaPhiM(" << TOPLEPW2.Pt() << "," <<  TOPLEPW2.Eta() << "," << TOPLEPW2.Phi() << "," << TOPLEPW2.M() << ")" << endl;
-	cout << "blep: jet3.SetPtEtaPhiM(" << TOPLEPB.Pt() << "," <<  TOPLEPB.Eta() << "," << TOPLEPB.Phi() << "," << TOPLEPB.M() << ")" << endl;
-	cout << "w1:   jet4.SetPtEtaPhiM(" << TOPHADW1.Pt() << "," <<  TOPHADW1.Eta() << "," << TOPHADW1.Phi() << "," << TOPHADW1.M() << ")" << endl;
-	cout << "w2:   jet5.SetPtEtaPhiM(" << TOPHADW2.Pt() << "," <<  TOPHADW2.Eta() << "," << TOPHADW2.Phi() << "," << TOPHADW2.M() << ")" << endl;
-	cout << "bhad: jet6.SetPtEtaPhiM(" << TOPHADB.Pt() << "," <<  TOPHADB.Eta() << "," << TOPHADB.Phi() << "," << TOPHADB.M() << ")" << endl;
-	cout << "h1:   jet7.SetPtEtaPhiM(" << genBLV.Pt() << "," <<  genBLV.Eta() << "," << genBLV.Phi() << "," << genBLV.M() << ")" << endl;
-	cout << "h2:   jet8.SetPtEtaPhiM(" << genBbarLV.Pt() << "," <<  genBbarLV.Eta() << "," << genBbarLV.Phi() << "," << genBbarLV.M() << ")" << endl;	
+	cout << "lep:  jet1.SetPtEtaPhiM(" << TOPLEPW1.Pt() << "," <<  TOPLEPW1.Eta()  << "," << TOPLEPW1.Phi() << "," << TOPLEPW1.M() << ")" << endl;
+	cout << "met:  jet2.SetPtEtaPhiM(" << TOPLEPW2.Pt() << "," <<  TOPLEPW2.Eta()  << "," << TOPLEPW2.Phi() << "," << TOPLEPW2.M() << ")" << endl;
+	cout << "blep: jet3.SetPtEtaPhiM(" << TOPLEPB.Pt() << ","  <<  TOPLEPB.Eta()   << "," << TOPLEPB.Phi()  << "," <<  TOPLEPB.M() << ")" << endl;
+	cout << "w1:   jet4.SetPtEtaPhiM(" << TOPHADW1.Pt() << "," <<  TOPHADW1.Eta()  << "," << TOPHADW1.Phi() << "," << TOPHADW1.M() << ")" << endl;
+	cout << "w2:   jet5.SetPtEtaPhiM(" << TOPHADW2.Pt() << "," <<  TOPHADW2.Eta()  << "," << TOPHADW2.Phi() << "," << TOPHADW2.M() << ")" << endl;
+	cout << "bhad: jet6.SetPtEtaPhiM(" << TOPHADB.Pt() << ","  <<  TOPHADB.Eta()   << "," << TOPHADB.Phi() << "," << TOPHADB.M() << ")" << endl;
+	cout << "h1:   jet7.SetPtEtaPhiM(" << genBLV.Pt() << ","   <<  genBLV.Eta()    << "," << genBLV.Phi() << "," << genBLV.M() << ")" << endl;
+	cout << "h2:   jet8.SetPtEtaPhiM(" << genBbarLV.Pt() << ","<<  genBbarLV.Eta() << "," << genBbarLV.Phi() << "," << genBbarLV.M() << ")" << endl;	
 	cout << "Top Lep mass = " << (TOPLEPW1+TOPLEPW2+TOPLEPB).M() << " <=> neutrino eta=0!!!" << endl;
 	cout << "Top Had mass = " << (TOPHADW1+TOPHADW2+TOPHADB).M() << endl;
 	cout << "Higgs mass = "   << (genBLV+genBbarLV).M() << endl;
@@ -772,7 +880,9 @@ int main(int argc, const char* argv[])
       meIntegrator->setJets(&jets);
       meIntegrator->setSumEt( METtype1p2corr.sumet );
       meIntegrator->setMEtCov(-99,-99,0);
-      meIntegrator->setTopFlags( vLepton_charge[0]==1 ? +1 : -1 , vLepton_charge[0]==1 ? -1 : +1 );
+      //meIntegrator->setTopFlags( vLepton_charge[0]==1 ? +1 : -1 , vLepton_charge[0]==1 ? -1 : +1 );
+      meIntegrator->setTopFlags( chargeTopLep>0 ? -1 : +1 , chargeTopLep>0 ? +1 : -1);
+      cout << vLepton_charge[0] << " ... " << (chargeTopLep>0 ? -1 : +1) << endl;
 
       probGG_      = 0;
       probAtSgnGG_ = 0;
@@ -917,20 +1027,15 @@ int main(int argc, const char* argv[])
 	
 	  double pTotAtSgn = 0.;
 	  int combScanned = 0;
-	
-	  int permutations[12] = 
-	    {234567, 534267,     // CORRECT 
-	     634725, 734625,     // ALL WRONG
-	     534762, 734562,     // ONE WRONG
-	     234765, 734265,     // ONE WRONG
-	     634572, 534672,     // ONE WRONG
-	     234675, 634275      // ONE WRONG
-	    };
-	  double permutMassReco[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+		 
+	  double permutMassReco[nPermutations];
+	  for(int k = 0; k < nPermutations; k++) permutMassReco[k] = 0.;
 
-	  double permutProbInt [12] = {0,0,0,0,0,0,0,0,0,0,0,0};	  
+	  double permutProbInt [nPermutations];
+	  for(int k = 0; k < nPermutations; k++) permutProbInt[k] = 0.;
+
 	  vector<TH1F*> histos;
-	  for(unsigned int it = 0; it<12; it++){
+	  for(unsigned int it = 0; it<(unsigned int)nPermutations; it++){
 	    if(gDirectory->FindObject(Form("hMass_%d",it))!=0){
 	      gDirectory->Remove(gDirectory->FindObject(Form("hMass_%d",it)));
 	    }
@@ -953,7 +1058,7 @@ int main(int argc, const char* argv[])
 	  for(int m = 0; m < nMassPoints ; m++){
 	    meIntegrator->setMass( mH[m] );
 	    
-	    for(unsigned int pos = 0; pos < 12; pos++){
+	    for(unsigned int pos = 0; pos < (unsigned int)nPermutations ; pos++){
 	      meIntegrator->initVersors( permutations[pos] );
 	      
 	      double mass, massLow, massHigh;
@@ -1058,7 +1163,7 @@ int main(int argc, const char* argv[])
 	  
 	  double maxIntProb = 0.;
 	  unsigned int permMax = 0;
-	  for(unsigned int it = 0; it<12; it++){
+	  for(unsigned int it = 0; it<(unsigned int)nPermutations; it++){
 	    //cout << "Permut " << it << " has int p = " << permutProbInt[it] << endl;
 	    if( permutProbInt[it]>maxIntProb ){
 	      maxIntProb = permutProbInt[it];
@@ -1072,7 +1177,7 @@ int main(int argc, const char* argv[])
 	  double maxMaxProb = 0.;
 	  unsigned int permMax2 = 0;
 
-	  //cout << "Histos size = " << histos.size() << endl;
+	  cout << "# of permutations considered: = " << histos.size() << endl;
 	  sMassProbInt_gen->Modified();
 	  for(unsigned int it = 0; it < histos.size(); it++){
 	    if( histos[it]->GetMaximum()>maxMaxProb ){
@@ -1252,20 +1357,16 @@ int main(int argc, const char* argv[])
 	    double pTotAtSgn = 0.;
 	    int combScanned = 0;
 	    
-	    int permutations[12] = 
-	      {234567, 534267,     // CORRECT 
-	       634725, 734625,     // ALL WRONG
-	       534762, 734562,     // ONE WRONG
-	       234765, 734265,     // ONE WRONG
-	       634572, 534672,     // ONE WRONG
-	       234675, 634275      // ONE WRONG
-	      };
-	    double permutMassReco[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+	 
+	    double permutMassReco[nPermutations];
+	    for(int k = 0; k < nPermutations; k++) permutMassReco[k] = 0.;
+	    
+	    double permutProbInt [nPermutations];
+	    for(int k = 0; k < nPermutations; k++) permutProbInt[k] = 0.;
 
 
-	    double permutProbInt [12] = {0,0,0,0,0,0,0,0,0,0,0,0};	  
 	    vector<TH1F*> histos;
-	    for(unsigned int it = 0; it<12; it++){
+	    for(unsigned int it = 0; it<(unsigned int)nPermutations; it++){
 	      if(gDirectory->FindObject(Form("hMass_%d",it))!=0){
 		gDirectory->Remove(gDirectory->FindObject(Form("hMass_%d",it)));
 	      }
@@ -1288,7 +1389,7 @@ int main(int argc, const char* argv[])
 	    for(int m = 0; m < nMassPoints ; m++){
 	      meIntegrator->setMass( mH[m] );
 	      
-	      for(unsigned int pos = 0; pos < 12; pos++){
+	      for(unsigned int pos = 0; pos < (unsigned int)nPermutations; pos++){
 		meIntegrator->initVersors( permutations[pos] );
 		
 		double mass, massLow, massHigh;
@@ -1392,7 +1493,7 @@ int main(int argc, const char* argv[])
 
 	    double maxIntProb = 0.;
 	    unsigned int permMax = 0;
-	    for(unsigned int it = 0; it<12; it++){
+	    for(unsigned int it = 0; it<(unsigned int)nPermutations; it++){
 	      if( permutProbInt[it]>maxIntProb ){
 		maxIntProb = permutProbInt[it];
 		permMax = it;

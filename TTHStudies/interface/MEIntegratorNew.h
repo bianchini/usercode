@@ -114,6 +114,7 @@ class MEIntegratorNew {
   double        probabilitySL1wj(const double*, int) const;
   double        probabilitySLNoBHad(const double*, int) const;
   double        probabilitySLNoBLep(const double*, int) const;
+  double        probabilityDL(const double*, int) const;
   double        probabilitySLUnconstrained(const double*, int ) const;
   unsigned int  findMatch(double, double) const;
   void   saveJetParam( string );
@@ -173,6 +174,7 @@ class MEIntegratorNew {
 
   int    topHadEnergies     (double, double&, double&, double&, double&, int&) const;
   int    topLepEnergies     (double, double,  double&, double&, double&, double&, int&) const;
+  int    topLep2Energies    (double, double,  double&, double&, double&, double&, int&) const;
   int    topLepBLostEnergies(double, double,  double, double, double&, double&, double&, double&, int&) const;
   void   topLepEnergiesFromPtPhi    (int, double, double,  double&, double&, double&, double&, double&, int&) const;
   void   topLepEnergiesFromEbPhi    (int, double, double,  double&, double&, double&, double&, int& ) const ;
@@ -1281,6 +1283,8 @@ bool MEIntegratorNew::smearByTF(float ptCut, int print){
   sNeut.SetPxPyPzE( Px, Py, 0.0, TMath::Sqrt(Px*Px + Py*Py));
   TLorentzVector sBLep (  eBLep_*TMath::Sqrt(vsE[0]*vsE[0] - Mb_*Mb_), vsE[0] );
   TLorentzVector sW1Had(  eW1Had_*vsE[1], vsE[1]);
+  if( intType_ == DL )
+    sW1Had = jets_[3];
   TLorentzVector sW2Had(  eW2Had_*vsE[2], vsE[2]);
   TLorentzVector sBHad (  eBHad_*TMath::Sqrt(vsE[3]*vsE[3] - Mb_*Mb_), vsE[3]);
   TLorentzVector sB1   (  eB1_  *TMath::Sqrt(vsE[4]*vsE[4] - Mb_*Mb_), vsE[4]);
@@ -1358,7 +1362,9 @@ bool MEIntegratorNew::smearByTF(float ptCut, int print){
     return (sBLep.Pt()>ptCut && sW1Had.Pt()>ptCut && sW2Had.Pt()>ptCut /*&& sBHad.Pt()>ptCut*/ && sB1.Pt()>ptCut && sB2.Pt()>ptCut);
   else if( intType_ == SLNoBLep )
     return (/*sBLep.Pt()>ptCut &&*/ sW1Had.Pt()>ptCut && sW2Had.Pt()>ptCut && sBHad.Pt()>ptCut && sB1.Pt()>ptCut && sB2.Pt()>ptCut);
-
+  else if( intType_ == DL )
+    return (sBLep.Pt()>ptCut /*&& sW1Had.Pt()>ptCut && sW2Had.Pt()>ptCut*/ && sBHad.Pt()>ptCut && sB1.Pt()>ptCut && sB2.Pt()>ptCut);
+  else{}
 
 
   return true;
@@ -1781,6 +1787,99 @@ int MEIntegratorNew::topLepEnergies(double nuPhi, double nuTheta, double& Enu, d
 }
 
 
+
+int MEIntegratorNew::topLep2Energies(double nuPhi, double nuTheta, double& Enu, double& Eb, double& cos1, double& cos2, int& errFlag ) const{
+
+  int nSol = 0;
+
+  double Elep =  jets_[3].E(); // W1Had for DL contains the 2nd lepton
+
+  TVector3 e3(0.,0.,1.); // neutrino
+  e3.SetTheta( TMath::ACos( nuTheta ) ); 
+  e3.SetPhi  ( nuPhi);   
+  e3.SetMag  ( 1.);  
+
+  double a12 = eW1Had_.Angle(eBLep_); // lep - b
+  double a13 = eW1Had_.Angle(e3);     // lep - nu
+  double a23 = eBLep_.Angle(e3);    // b   - nu
+  
+  Enu = Mw_*Mw_/ Elep / (4*TMath::Sin(a13/2.)*TMath::Sin(a13/2.));
+  
+  double a = Elep+Enu;
+  double b = Elep*TMath::Cos(a12)+Enu*TMath::Cos(a23);
+
+  if( (dM2_*dM2_ - (a*a - b*b)*Mb_*Mb_) < 0){
+    errFlag = 1;
+    return nSol;
+  }
+
+  double E3_1 =  (a*dM2_ + b*TMath::Sqrt(dM2_*dM2_ - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b) ;
+  double E3_2 =  (a*dM2_ - b*TMath::Sqrt(dM2_*dM2_ - (a*a - b*b)*Mb_*Mb_))/(a*a - b*b) ;
+
+  double E3tmp1 = -999.;
+  double E3tmp2 = -999.;
+
+  if( b>0 ){
+    if(E3_1>dM2_/a){
+      E3tmp1 = E3_1;
+      nSol++;
+    }
+    if(E3_2>dM2_/a){
+      E3tmp2 = E3_2;
+      nSol++;
+    }
+  }
+  else{
+    if(E3_1<dM2_/a){
+      E3tmp1 = E3_1;
+      nSol++;
+    }
+    if(E3_2<dM2_/a){
+      E3tmp2 = E3_2;
+      nSol++;
+    }
+  }
+  
+  if( E3tmp1>0 && E3tmp2>0 )
+    Eb = TMath::Max( E3tmp1,E3tmp2 );
+  else if( E3tmp1>0 &&  E3tmp2<0)
+    Eb = E3tmp1;
+  else if( E3tmp1<0 &&  E3tmp2>0)
+    Eb = E3tmp2;
+  else{
+    errFlag = 1;
+    return nSol;
+  }
+
+
+  if(Eb<Mb_){
+    errFlag = 1;
+    return nSol;
+  }
+
+  TLorentzVector wLep( eW1Had_*Elep,   Elep);
+  TLorentzVector blv ( eBLep_*(TMath::Sqrt(Eb*Eb - Mb_*Mb_)), Eb);
+  TLorentzVector wNu ( (e3.Unit())*Enu,    Enu);
+
+
+  TVector3 boost = (wLep+wNu+blv).BoostVector();
+  wLep.Boost ( -boost );
+  wNu.Boost  ( -boost );
+  blv.Boost  ( -boost );
+
+  cos1 = TMath::Cos( blv.Angle(boost) );
+    
+  TVector3 boostW = (wLep+wNu).BoostVector();
+  wLep.Boost( -boostW );
+  wNu.Boost ( -boostW );
+    
+  cos2 = TMath::Cos( wLep.Angle(boostW) );
+  
+  return nSol;
+}
+
+
+
 int MEIntegratorNew::topLepBLostEnergies(double nuPhi, double nuTheta, double phiBLep, double cosThetaBLep,  double& Enu, double& Eb, double& cos1, double& cos2, int& errFlag ) const{
 
   int nSol = 0;
@@ -2188,6 +2287,9 @@ double MEIntegratorNew::Eval(const double* x) const {
   }
   else if(intType_ == IntegrationType::SLNoBLep){
     prob = probabilitySLNoBLep(x,0);     
+  }
+  else if(intType_ == IntegrationType::DL){
+    prob = probabilityDL(x,0);     
   }
   else if(intType_ == IntegrationType::SLXSec){
     prob = probabilitySLUnconstrained(x,0);     
@@ -3595,6 +3697,168 @@ double MEIntegratorNew::probabilitySLNoBLep(const double* x, int sign) const{
   if( TMath::IsNaN(prob) ){
     if(verbose_){
       cout << tf1 << ", " << tf2 << ", " << tf3 << ", "<< tf4 << ", "<< tf5 << ", "<< tf6 << ", " << tf7 << endl;
+      cout << MEpart << ", " << Jpart << ", " << PDFpart << endl;
+    }
+    prob = 0.;
+  }
+
+  return prob;
+}
+
+
+
+
+double MEIntegratorNew::probabilityDL(const double* x, int sign) const{
+
+  int errFlag = 0;
+  double prob = 1.0;
+  
+  double cosThetaNu1  = x[0];
+  double phiNu1       = x[1];
+  double cosThetaNu2  = x[2];
+  double phiNu2       = x[3];
+  double Eh1          = x[4];
+
+  double Elep1 = jets_[0].P();
+  double Elep2 = jets_[3].P();
+
+  // trasnform phiNu into an absolute phi:
+  //phiNu += eMEt_.Phi();
+  //if( phiNu < -PI ) phiNu += (2*PI);
+  //if( phiNu >  PI)  phiNu -= (2*PI);
+
+
+  if(verbose_){
+    cout << "#" << evaluation_ << endl;
+    cout << "cosThetaNu1 = " << cosThetaNu1 << endl; 
+    cout << "phiNu1 = "      << phiNu1  << endl; 
+    cout << "cosThetaNu2 = " << cosThetaNu2 << endl; 
+    cout << "phiNu2 = "      << phiNu2  << endl; 
+    cout << "Eh1 = "         << Eh1  << endl; 
+  }
+
+
+  TVector3 eNu1(0.,0.,1.); // neutrino
+  double Enu1, EbLep1, cos1Lep1, cos2Lep1;
+  int nSolTopLep1 = topLepEnergies( phiNu1, cosThetaNu1, Enu1, EbLep1, cos1Lep1, cos2Lep1, errFlag  );
+  eNu1.SetTheta( TMath::ACos( cosThetaNu1 ) ); 
+  eNu1.SetPhi  ( phiNu1 );   
+  eNu1.SetMag  ( 1.); 
+
+  if(errFlag){
+    if(verbose_) cout << "Problems with topLepEnergies (" << nSolTopLep1 << " solutions)" << endl;
+    return 0.0;
+  }
+
+  TVector3 eNu2(0.,0.,1.); // neutrino
+  double Enu2, EbLep2, cos1Lep2, cos2Lep2;
+  int nSolTopLep2 = topLep2Energies( phiNu2, cosThetaNu2, Enu2, EbLep2, cos1Lep2, cos2Lep2, errFlag  );
+  eNu2.SetTheta( TMath::ACos( cosThetaNu2 ) ); 
+  eNu2.SetPhi  ( phiNu2 );   
+  eNu2.SetMag  ( 1.); 
+
+  if(errFlag){
+    if(verbose_) cout << "Problems with topLepEnergies2 (" << nSolTopLep2 << " solutions)" << endl;
+    return 0.0;
+  }
+ 
+  double Eh2, cos1Higgs;
+  int nSolHiggs = higgsEnergies( Eh1, Eh2, cos1Higgs, errFlag );
+  
+  if(errFlag){
+    if(verbose_) cout << "Problems with higgsEnergies (" << nSolHiggs << " solutions)" << endl;
+    return 0.0;
+  }
+
+  if(verbose_){
+    cout << "********" << endl;
+  }
+
+  TLorentzVector WLep1Lep( eLep_*Elep1, Elep1 );
+  TLorentzVector WLep1Nu ( eNu1*Enu1,   Enu1 );
+  TLorentzVector WLep1 = WLep1Lep + WLep1Nu;
+  TLorentzVector bLep1   ( eBLep_*TMath::Sqrt(EbLep1*EbLep1 - Mb_*Mb_), EbLep1 );
+  TLorentzVector topLep1 = WLep1 + bLep1;
+
+  TLorentzVector WLep2Lep( eW1Had_*Elep2, Elep2 );
+  TLorentzVector WLep2Nu ( eNu2*Enu2,     Enu2 );
+  TLorentzVector WLep2 = WLep2Lep + WLep2Nu;
+  TLorentzVector bLep2   ( eBHad_*TMath::Sqrt(EbLep2*EbLep2 - Mb_*Mb_), EbLep2 );
+  TLorentzVector topLep2 = WLep2 + bLep2;
+
+
+  TLorentzVector higgs1(  eB1_*TMath::Sqrt(Eh1*Eh1 -  Mb_*Mb_), Eh1);
+  TLorentzVector higgs2(  eB2_*TMath::Sqrt(Eh2*Eh2 -  Mb_*Mb_), Eh2);
+  TLorentzVector higgs = higgs1 + higgs2;
+
+  TLorentzVector tot = topLep1+topLep2+higgs;
+
+
+  double me2;
+  if(useME_==1 && top1Flag_ == +1 && top2Flag_ == -1)               // topLep = t,  topHad = tx
+    me2 = meSquaredOpenLoops( &topLep1, &topLep2, &higgs );
+  else if(useME_==1 && top1Flag_ == -1 && top2Flag_ == +1)          // topLep = tx, topHad = t
+    me2 = meSquaredOpenLoops( &topLep1, &topLep2, &higgs );
+  else{
+    if(verbose_) cout << "Undefined top flavors" << endl;
+    me2 = 1.;
+  }
+
+  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
+  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
+  double Q  = (2*Mtop_ + M_)/2.;
+
+  double MEpart = 
+    topLepDensity(cos1Lep1,cos2Lep1) * 
+    topLepDensity(cos1Lep2,cos2Lep2) * 
+    higgsDensity(cos1Higgs) *
+    me2
+    ;
+
+  double Jpart = 
+    topLepJakobi( Enu1, Elep1, EbLep1, &WLep1 ) * 
+    topLepJakobi( Enu2, Elep2, EbLep2, &WLep2 ) * 
+    higgsJakobi( Eh1, Eh2 ) 
+    ;
+
+  double tf1 = jetEnergyTF( jets_[2].Eta(), jets_[2].E(),  bLep1.E(),   "Heavy");
+  double tf4 = jetEnergyTF( jets_[5].Eta(), jets_[5].E(),  bLep2.E(),   "Heavy");
+  double tf5 = jetEnergyTF( jets_[6].Eta(), jets_[6].E(),  higgs1.E(),  "Heavy");
+  double tf6 = jetEnergyTF( jets_[7].Eta(), jets_[7].E(),  higgs2.E(),  "Heavy");
+
+  double dPx = (WLep1Nu+WLep2Nu).Px() - jets_[1].Px();
+  double dPy = (WLep1Nu+WLep2Nu).Py() - jets_[1].Py();
+  double tf7 = 
+    (Vx_*Vy_ - rho_*rho_*Vx_*Vy_)>0 ? 1./2./PI/TMath::Sqrt(Vx_*Vy_ - rho_*rho_*Vx_*Vy_)*TMath::Exp( -0.5*( 1/(1-rho_*rho_)*( dPx*dPx/Vx_ + dPy*dPy/Vy_ - 2*rho_*dPx*dPy/TMath::Sqrt(Vx_*Vy_) ) ) ) : 1.0 ;
+
+  //cout << "dPx= " << dPx << endl;
+  //cout << "dPy= " << dPy << endl;
+  //cout << " ==> " << tf7 << endl;
+
+  double TFpart = 
+    tf1 *
+    tf4 *
+    tf5 *
+    tf6
+    ;
+
+  double METpart =  
+    tf7
+    ;
+
+  double PDFpart = ggPdf( x1, x2 , Q);
+
+  if(useME_)  prob *= MEpart;
+  if(useJac_) prob *= Jpart;
+  if(useMET_) prob *= METpart;
+  if(useTF_)  prob *= TFpart;
+  if(usePDF_) prob *= PDFpart;
+
+  ////////////////////////
+
+  if( TMath::IsNaN(prob) ){
+    if(verbose_){
+      cout << tf1 << ", " << tf4 << ", "<< tf5 << ", "<< tf6 << ", " << tf7 << endl;
       cout << MEpart << ", " << Jpart << ", " << PDFpart << endl;
     }
     prob = 0.;
