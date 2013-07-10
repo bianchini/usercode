@@ -19,7 +19,9 @@ def submitMEValidate(script,
                      doParton, doSmear, doMassScan, doPermutations,
                      met,
                      masses,
-                     evLow,evHigh):
+                     evLow,evHigh
+                     scaleL=1., scaleH=1., scaleMET=1.
+                     ):
 
     print "Overload meValidator.py..."
     os.system('cp ../python/meValidator.py ./')
@@ -47,6 +49,10 @@ def submitMEValidate(script,
     process.fwliteInput.masses           = masses
     process.fwliteInput.evLimits         = cms.vint32(evLow,evHigh)
 
+    process.fwliteInput.scaleL           = cms.double(scaleL)
+    process.fwliteInput.scaleH           = cms.double(scaleH)
+    process.fwliteInput.scaleMET         = cms.double(scaleMET)
+   
     out = open(jobName+'.py','w')
     out.write(process.dumpPython())
    
@@ -75,36 +81,79 @@ def submitMEValidate(script,
 ###########################################
 ###########################################
 
+doSYST      = True
+doSL2wj     = False
+doSL1wj     = False
+doSLNoBHad  = False
+doSLNoBLep  = False
+doDL        = False
+
+
 masses = cms.vdouble(60,  65,  70,  75, 80 , 85,  90, 95, 100, 105, 110, 
                      115, 120, 125, 130, 135, 140, 145, 150, 155, 
                      160, 165, 170, 175, 180 ,185, 190, 195, 200, 205, 210, 215, 220, 225, 230, 235, 240, 245, 250)
 
-'''
-counter = 0
-for i in range(20):
-    counter = counter + 1
-    submitMEValidate('SL2wj_gen_acc_p'+str(counter),     2000, 0, 2, 1,1,1,1,1,  1,0,1,1,  125,  masses,  i*25+1, (i+1)*25 )
-    submitMEValidate('SL2wj_rec_acc_p'+str(counter),     2000, 0, 2, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*25+1, (i+1)*25 )
-    submitMEValidate('SL2wj_gen_unnorm_p'+str(counter),  2000, 0, 0, 1,1,1,1,1,  1,0,1,1,  125,  masses,  i*25+1, (i+1)*25 )
-    submitMEValidate('SL2wj_rec_unnorm_p'+str(counter),  2000, 0, 0, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*25+1, (i+1)*25 )
+# SYSTEMATICS
+if doSYST:
+    counter = 0
+    for i in range(20):
+        counter = counter + 1
+        submitMEValidate('SL2wj_rec_acc_jUp_p'+str(counter),    2000, 0, 2, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*25+1, (i+1)*25 , 1.25, 1.,   1.   )
+        submitMEValidate('SL2wj_rec_acc_bUp_p'+str(counter),    2000, 0, 2, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*25+1, (i+1)*25 , 1.  , 1.25, 1.   )
+        submitMEValidate('SL2wj_rec_acc_METUp_p'+str(counter),  2000, 0, 2, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*25+1, (i+1)*25 , 1.  , 1.,   1.25 )
+        submitMEValidate('SL2wj_gen_acc_noME_p' +str(counter),  2000, 0, 2, 0,1,1,1,1,  1,0,1,1,  125,  masses,  i*25+1, (i+1)*25 )
+        submitMEValidate('SL2wj_gen_acc_noJac_p'+str(counter),  2000, 0, 2, 1,0,1,1,1,  1,0,1,1,  125,  masses,  i*25+1, (i+1)*25 )
+        submitMEValidate('SL2wj_gen_acc_noMET_p'+str(counter),  2000, 0, 2, 1,1,0,1,1,  1,0,1,1,  125,  masses,  i*25+1, (i+1)*25 )
+        submitMEValidate('SL2wj_gen_acc_noTF_p' +str(counter),  2000, 0, 2, 1,1,1,0,1,  1,0,1,1,  125,  masses,  i*25+1, (i+1)*25 )
+        submitMEValidate('SL2wj_gen_acc_noPDF_p'+str(counter),  2000, 0, 2, 1,1,1,1,0,  1,0,1,1,  125,  masses,  i*25+1, (i+1)*25 )
 
-counter = 0
-for i in range(20):
-    counter = counter + 1
-    submitMEValidate('SL1wj_gen_acc_p'+str(counter),     4000, 1, 2, 1,1,1,1,1,  1,0,1,1,  125,  masses,  i*10+1, (i+1)*10 )
-    submitMEValidate('SL1wj_rec_acc_p'+str(counter),     4000, 1, 2, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*10+1, (i+1)*10 )
-'''
+# SL2wj 
+if doSL2wj:
+    counter = 0
+    for i in range(20):
+        counter = counter + 1
+        submitMEValidate('SL2wj_gen_acc_p'+str(counter),      2000, 0, 2, 1,1,1,1,1,  1,0,1,1,  125,  masses,  i*25+1, (i+1)*25 )
+        submitMEValidate('SL2wj_rec_acc_p'+str(counter),      2000, 0, 2, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*25+1, (i+1)*25 )
+        submitMEValidate('SL2wj_gen_unnorm_p'+str(counter),   2000, 0, 0, 1,1,1,1,1,  1,0,1,1,  125,  masses,  i*25+1, (i+1)*25 )
+        submitMEValidate('SL2wj_rec_unnorm_p'+str(counter),   2000, 0, 0, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*25+1, (i+1)*25 )
 
-counter = 0
-for i in range(20):
-    counter = counter + 1
-    submitMEValidate('SLNoBHad_gen_acc_p'+str(counter),   10000, 2, 2, 1,1,1,1,1,  1,0,1,1,  125,  masses,  i*10+1, (i+1)*10 )
-    submitMEValidate('SLNoBHad_rec_acc_p'+str(counter),   10000, 2, 2, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*10+1, (i+1)*10 )
+# SL1wj
+if doSL1wj:
+    counter = 0
+    for i in range(25):
+        counter = counter + 1
+        submitMEValidate('SL1wj_gen_acc_p'+str(counter),      4000, 1, 2, 1,1,1,1,1,  1,0,1,1,  125,  masses,  i*20+1, (i+1)*20 )
+        submitMEValidate('SL1wj_rec_acc_p'+str(counter),      4000, 1, 2, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*20+1, (i+1)*20 )
+        submitMEValidate('SL1wj_gen_unnorm_p'+str(counter),   4000, 1, 0, 1,1,1,1,1,  1,0,1,1,  125,  masses,  i*20+1, (i+1)*20 )
+        submitMEValidate('SL1wj_rec_unnorm_p'+str(counter),   4000, 1, 0, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*20+1, (i+1)*20 )
 
-counter = 0
-for i in range(20):
-    counter = counter + 1
-    submitMEValidate('SLNoBLep_gen_acc_p'+str(counter),   10000, 3, 2, 1,1,1,1,1,  1,0,1,1,  125,  masses,  i*10+1, (i+1)*10 )
-    submitMEValidate('SLNoBLep_rec_acc_p'+str(counter),   10000, 3, 2, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*10+1, (i+1)*10 )
-                
-    
+# SLNoBHad
+if doSLNoBHad:
+    counter = 0
+    for i in range(25):
+        counter = counter + 1
+        submitMEValidate('SLNoBHad_gen_acc_p'+str(counter),   10000, 2, 2, 1,1,1,1,1,  1,0,1,1,  125,  masses,  i*20+1, (i+1)*20 )
+        submitMEValidate('SLNoBHad_rec_acc_p'+str(counter),   10000, 2, 2, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*20+1, (i+1)*20 )
+        submitMEValidate('SLNoBHad_gen_unnorm_p'+str(counter),10000, 2, 0, 1,1,1,1,1,  1,0,1,1,  125,  masses,  i*20+1, (i+1)*20 )
+        submitMEValidate('SLNoBHad_rec_unnorm_p'+str(counter),10000, 2, 0, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*20+1, (i+1)*20 )
+
+# SLNoBLep
+if doSLNoBLep:
+    counter = 0
+    for i in range(25):
+        counter = counter + 1
+        submitMEValidate('SLNoBLep_gen_acc_p'+str(counter),   10000, 3, 2, 1,1,1,1,1,  1,0,1,1,  125,  masses,  i*20+1, (i+1)*20 )
+        submitMEValidate('SLNoBLep_rec_acc_p'+str(counter),   10000, 3, 2, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*20+1, (i+1)*20 )
+        submitMEValidate('SLNoBLep_gen_unnorm_p'+str(counter),10000, 3, 0, 1,1,1,1,1,  1,0,1,1,  125,  masses,  i*20+1, (i+1)*20 )
+        submitMEValidate('SLNoBLep_rec_unnorm_p'+str(counter),10000, 3, 0, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*20+1, (i+1)*20 )
+        
+#DL
+if doDL:
+    counter = 0
+    for i in range(25):
+        counter = counter + 1
+        submitMEValidate('DL_gen_acc_p'+str(counter),         10000, 6, 2, 1,1,1,1,1,  1,0,1,1,  125,  masses,  i*20+1, (i+1)*20 )
+        submitMEValidate('DL_rec_acc_p'+str(counter),         10000, 6, 2, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*20+1, (i+1)*20 )
+        submitMEValidate('DL_gen_unnorm_p'+str(counter),      10000, 6, 2, 1,1,1,1,1,  1,0,1,1,  125,  masses,  i*20+1, (i+1)*20 )
+        submitMEValidate('DL_rec_unnorm_p'+str(counter),      10000, 6, 2, 1,1,1,1,1,  0,1,1,1,  125,  masses,  i*20+1, (i+1)*20 )
+

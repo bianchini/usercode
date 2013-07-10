@@ -117,7 +117,7 @@ class MEIntegratorNew {
   double        probabilityDL(const double*, int) const;
   double        probabilitySLUnconstrained(const double*, int ) const;
   unsigned int  findMatch(double, double) const;
-  void   saveJetParam( string );
+  void   initTFparameters(float,float,float,float,float);
   void   cachePdf( string , string , int );
   void   cachePdf( string , string , string, int,    int );
   void   cachePdf( string , string , string, string, int, int, int );
@@ -192,8 +192,8 @@ class MEIntegratorNew {
   double topHadDensity   (double, double)  const;
   double topLepDensity   (double, double)  const;
   double higgsDensity    (double)  const;
-  double tthDensity      (double, double, double, double)  const;
-  double meSquaredAtQ    (double, double, double, double) const;
+  //double tthDensity      (double, double, double, double)  const;
+  //double meSquaredAtQ    (double, double, double, double) const;
   double meSquaredOpenLoops (TLorentzVector*, TLorentzVector*, TLorentzVector*) const;
   double xSection           (int) const;
   double evaluateCahchedPdf (TH1*, double, double, double)  const;
@@ -261,7 +261,7 @@ class MEIntegratorNew {
 
   TH1F* debugHisto1_;
   TH1F* partonLuminosity_;
-  TH1F pdfBetaWHad_, pdfGammaWHad_, pdfBetaWLep_, pdfGammaWLep_, pdfGammaTTH_;
+  TH1F pdfBetaWHad_, pdfGammaWHad_, pdfBetaWLep_, pdfGammaWLep_;//, pdfGammaTTH_;
   TH2F pdf2D_;
   TH3F pdf3D_;
   TH1F* tfWjet1_;
@@ -354,6 +354,7 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
     jetParam_[ string(var->GetName()) ] = var->getVal();
   }
 
+  /*
   int nBinsX = 27;
   TArrayF binsX(nBinsX+1);
   cout << "Making histograms with " << nBinsX << " bins:" << endl;
@@ -392,22 +393,23 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   //binsGammaTT[1] = -0.5;
   //binsGammaTT[2] =  0.5;
   //binsGammaTT[3] =  1.01;
+  */
 
   cachePdf( "pdfGammaWHad",     "GammaW",    100);
   cachePdf( "pdfBetaWHad",      "BetaW",     100);
   cachePdf( "pdfGammaWLep",     "GammaWLep", 100);
   cachePdf( "pdfBetaWLep",      "BetaWLep",  100);
-  cachePdf( "pdfGammaTTH",      "GammaTTH",  100);
-  cachePdf( "pdf3D",            "X1", "MassTT","GammaTT", binsX, binsMassTT, binsGammaTT);
-  cachePdf( "pdf2D",            "X1", "MassTT", binsX, binsMassTT);
+  //cachePdf( "pdfGammaTTH",      "GammaTTH",  100);
+  //cachePdf( "pdf3D",            "X1", "MassTT","GammaTT", binsX, binsMassTT, binsGammaTT);
+  //cachePdf( "pdf2D",            "X1", "MassTT", binsX, binsMassTT);
 
   pdfGammaWHad_ = *((TH1F*)this->getCachedPdf("pdfGammaWHad"));
   pdfBetaWHad_  = *((TH1F*)this->getCachedPdf("pdfBetaWHad"));
   pdfBetaWLep_  = *((TH1F*)this->getCachedPdf("pdfBetaWLep"));
   pdfGammaWLep_ = *((TH1F*)this->getCachedPdf("pdfGammaWLep"));
-  pdfGammaTTH_  = *((TH1F*)this->getCachedPdf("pdfGammaTTH"));
-  pdf3D_        = *((TH3F*)this->getCachedPdf("pdf3D"));
-  pdf2D_        = *((TH2F*)this->getCachedPdf("pdf2D"));
+  //pdfGammaTTH_  = *((TH1F*)this->getCachedPdf("pdfGammaTTH"));
+  //pdf3D_        = *((TH3F*)this->getCachedPdf("pdf3D"));
+  //pdf2D_        = *((TH2F*)this->getCachedPdf("pdf2D"));
 
   
   cout << "End constructor" << endl;
@@ -1799,9 +1801,9 @@ int MEIntegratorNew::topLep2Energies(double nuPhi, double nuTheta, double& Enu, 
   e3.SetPhi  ( nuPhi);   
   e3.SetMag  ( 1.);  
 
-  double a12 = eW1Had_.Angle(eBLep_); // lep - b
+  double a12 = eW1Had_.Angle(eBHad_); // lep - b
   double a13 = eW1Had_.Angle(e3);     // lep - nu
-  double a23 = eBLep_.Angle(e3);    // b   - nu
+  double a23 = eBHad_.Angle(e3);    // b   - nu
   
   Enu = Mw_*Mw_/ Elep / (4*TMath::Sin(a13/2.)*TMath::Sin(a13/2.));
   
@@ -1858,7 +1860,7 @@ int MEIntegratorNew::topLep2Energies(double nuPhi, double nuTheta, double& Enu, 
   }
 
   TLorentzVector wLep( eW1Had_*Elep,   Elep);
-  TLorentzVector blv ( eBLep_*(TMath::Sqrt(Eb*Eb - Mb_*Mb_)), Eb);
+  TLorentzVector blv ( eBHad_*(TMath::Sqrt(Eb*Eb - Mb_*Mb_)), Eb);
   TLorentzVector wNu ( (e3.Unit())*Enu,    Enu);
 
 
@@ -2389,11 +2391,35 @@ TH1F* MEIntegratorNew::getDebugHisto(){
   return debugHisto1_;
 }
 
-void MEIntegratorNew::saveJetParam( string paramName){
+void MEIntegratorNew::initTFparameters( float mu_l, float s_l, float mu_b, float s_b , float s_met){
 
+  cout << "TF parameters will be initialized from RooWorkspace" << endl;
+  cout << " ==> Light-jets (mu,sigma) will be changed to (" << mu_l << ","  << s_l   << ") times the nominal value !!!" << endl;
+  cout << " ==> Heavy-jets (mu,sigma) will be changed to (" << mu_b << ","  << s_b   << ") times the nominal value !!!" << endl;
+  cout << " ==> MEt (s_Px,s_Py) will be changed to ("       << s_met << "," << s_met << ") times the nominal value !!!" << endl;
+
+
+  RooArgSet allVars = w_->allVars();
+  TIterator* iter   = allVars.createIterator();
+  RooRealVar* var   = 0;
+  while( (var = (RooRealVar*)(*iter)() ) ){
+    string varname = string(var->GetName());
+    float shift = 1.0;
+    if     ( varname.find("resolLight")     !=string::npos ) shift *=  s_l;
+    else if( varname.find("param0respLight")!=string::npos ) shift *= mu_l;
+    else if( varname.find("resolHeavy")     !=string::npos ) shift *=  s_b;
+    else if( varname.find("param0respHeavy")!=string::npos ) shift *= mu_b;
+    else if( varname.find("PxWidthModel")   !=string::npos ) shift *= s_met;
+    else{}
+    jetParam_[ varname ] = (var->getVal()*shift);
+    if((verbose_ || true) && TMath::Abs(shift-1)>0.01 ) 
+      cout << "Parameter " << varname << " shifted by " << shift << " times its nominal value" << endl;
+  }
+
+  /*
   RooRealVar* var = w_->var(paramName.c_str());
   jetParam_[ paramName ] = var->getVal();
-
+  */
 }
 
 void MEIntegratorNew::cachePdf( string pdfName, string varName, int nBins){
@@ -2667,6 +2693,7 @@ double MEIntegratorNew::higgsDensity ( double cos1 )  const{
 }
 
 
+/*
 double MEIntegratorNew::meSquaredAtQ( double Q, double m12, double cos1Star, double cos3)  const{
 
   double p1Star = (m12*m12 - 4*Mtop_*Mtop_) >=0 ? 
@@ -2688,6 +2715,7 @@ double MEIntegratorNew::meSquaredAtQ( double Q, double m12, double cos1Star, dou
 
   return (diffCrossSec*val2/lumi/p1Star/p3);
 }
+*/
 
 
 double MEIntegratorNew::meSquaredOpenLoops (TLorentzVector* top, TLorentzVector* atop, TLorentzVector* higgs) const{
@@ -2771,7 +2799,7 @@ double MEIntegratorNew::xSection(int flag) const{
   return (flag==0 ? xsec : acc);
 }
 
-
+/*
 double MEIntegratorNew::tthDensity ( double Q, double m12, double cos1Star, double cos3)  const{
 
   
@@ -2794,7 +2822,7 @@ double MEIntegratorNew::tthDensity ( double Q, double m12, double cos1Star, doub
   
 
 }
-
+*/
 
 void MEIntegratorNew::resetEvaluation(){
   evaluation_ = 0;
@@ -2915,7 +2943,6 @@ double MEIntegratorNew::probabilitySL2wj(const double* x, int sign) const{
     topLepDensity(cos1Lep,cos2Lep) * 
     higgsDensity(cos1Higgs) *
     me2
-    //tthDensity( Q/SqrtS_ , m12, cos1Star, cos3)
     ;
 
   double Jpart = 
@@ -2923,27 +2950,6 @@ double MEIntegratorNew::probabilitySL2wj(const double* x, int sign) const{
     topLepJakobi( Enu, Elep, EbLep, &WLep ) * 
     higgsJakobi( Eh1, Eh2 ) 
     ;
-
-  /*
-  double tf1 = (W1Had.E()>=tfWjet1_->GetXaxis()->GetXmin() && W1Had.E()<=tfWjet1_->GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(tfWjet1_)  ->Interpolate( W1Had.E() ) : 0.0;
-  double tf2 = (W2Had.E()>=tfWjet2_->GetXaxis()->GetXmin() && W2Had.E()<=tfWjet2_->GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(tfWjet2_)  ->Interpolate( W2Had.E() ) : 0.0;
-  double tf3 = (bHad.E()>=tfbHad_->GetXaxis()->GetXmin() && bHad.E()<=tfbHad_->GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(tfbHad_)   ->Interpolate( bHad.E()  ) : 0.0;
-  double tf4 = (bLep.E()>=tfbLep_->GetXaxis()->GetXmin() && bLep.E()<=tfbLep_->GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(tfbLep_)->Interpolate( bLep.E()  ) : 0.0;
-  double tf5 = (higgs1.E()>=tfHiggs1_->GetXaxis()->GetXmin() && higgs1.E()<=tfHiggs1_->GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(tfHiggs1_) ->Interpolate( higgs1.E()) : 0.0;
-  double tf6 = (higgs2.E()>=tfHiggs2_->GetXaxis()->GetXmin() && higgs2.E()<=tfHiggs2_->GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(tfHiggs2_) ->Interpolate( higgs2.E()) : 0.0;
-  double tf7 = (WLepNu.Pt() >= tfMetPt_->GetXaxis()->GetXmin() && WLepNu.Pt() <= tfMetPt_->GetXaxis()->GetXmax()) ?
-    const_cast<TH1F*>(tfMetPt_)  ->Interpolate( WLepNu.Pt()) : 0.0;
-  double tf8 = 
-    (WLepNu.Pt() <= tfMetPhi_->GetXaxis()->GetXmax() && WLepNu.Pt() >= tfMetPhi_->GetXaxis()->GetXmin()) && 
-    (TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) <= tfMetPhi_->GetYaxis()->GetXmax() && TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) >= tfMetPhi_->GetYaxis()->GetXmin()) ?
-    const_cast<TH2F*>(tfMetPhi_) ->Interpolate( WLepNu.Pt(), TMath::ACos(TMath::Cos(WLepNu.Phi()-jets_[1].Phi())) ) : 0.0;
-  */
 
   double tf1 = jetEnergyTF( jets_[2].Eta(), jets_[2].E(),  bLep.E(),    "Heavy");
   double tf2 = jetEnergyTF( jets_[3].Eta(), jets_[3].E(),  W1Had.E(),   "Light");
@@ -3780,12 +3786,21 @@ double MEIntegratorNew::probabilityDL(const double* x, int sign) const{
   TLorentzVector bLep1   ( eBLep_*TMath::Sqrt(EbLep1*EbLep1 - Mb_*Mb_), EbLep1 );
   TLorentzVector topLep1 = WLep1 + bLep1;
 
+ if(verbose_ ){
+    cout << "W   lep1 mass = " << WLep1.M() << endl;
+    cout << "Top lep1 mass = " << topLep1.M() << endl;
+  }
+
   TLorentzVector WLep2Lep( eW1Had_*Elep2, Elep2 );
   TLorentzVector WLep2Nu ( eNu2*Enu2,     Enu2 );
   TLorentzVector WLep2 = WLep2Lep + WLep2Nu;
   TLorentzVector bLep2   ( eBHad_*TMath::Sqrt(EbLep2*EbLep2 - Mb_*Mb_), EbLep2 );
   TLorentzVector topLep2 = WLep2 + bLep2;
 
+  if(verbose_ ){
+    cout << "W   lep2 mass = " << WLep2.M() << endl;
+    cout << "Top lep2 mass = " << topLep2.M() << endl;
+  }
 
   TLorentzVector higgs1(  eB1_*TMath::Sqrt(Eh1*Eh1 -  Mb_*Mb_), Eh1);
   TLorentzVector higgs2(  eB2_*TMath::Sqrt(Eh2*Eh2 -  Mb_*Mb_), Eh2);

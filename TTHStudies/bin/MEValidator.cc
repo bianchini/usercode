@@ -78,6 +78,7 @@
 #include "Bianchi/TTHStudies/interface/CalcME.h"
 
 #define GENJETDR 0.3
+#define N_TRIES_MAX 10
 #define VERBOSE  false
 #define PI TMath::Pi()
 
@@ -291,13 +292,6 @@ int main(int argc, const char* argv[])
 
   float met       ( in.getParameter<double> ("met")        );
 
-  float pertW1    ( in.getParameter<double> ("pertW1")     );
-  float pertW2    ( in.getParameter<double> ("pertW2")     );
-  float pertBHad  ( in.getParameter<double> ("pertBHad")   );
-  float pertBLep  ( in.getParameter<double> ("pertBLep")   );
-  float pertB1    ( in.getParameter<double> ("pertW1")     );
-  float pertB2    ( in.getParameter<double> ("pertW2")     );
-
   float scaleH  ( in.getParameter<double> ("scaleH")   );
   float scaleL  ( in.getParameter<double> ("scaleL")   );
   float scaleMET( in.getParameter<double> ("scaleMET") );
@@ -352,6 +346,9 @@ int main(int argc, const char* argv[])
   case 3:
     nPermutations = 3;
     break;
+  case 6:
+    nPermutations = 12;
+    break;
   default:
     nPermutations = 12;
     break;
@@ -385,17 +382,29 @@ int main(int argc, const char* argv[])
       234765,      // ONE WRONG
       234675       // ONE WRONG
     };
+
+  int permutations_DL[12] =  
+    {234567, 534267,     // CORRECT 
+     634725, 734625,     // ALL WRONG
+     534762, 734562,     // ONE WRONG
+     234765, 734265,     // ONE WRONG
+     634572, 534672,     // ONE WRONG
+     234675, 634275      // ONE WRONG
+    };
   
+
   int permutations[nPermutations];
   for(int per = 0; per < nPermutations; per++){
     if(mode==0) 
       permutations[per] = permutations_SL2wj[per];
     else if(mode==1) 
-      permutations[per] = permutations_SL2wj[per];
+      permutations[per] = permutations_SL1wj[per];
     else if(mode==2) 
       permutations[per] = permutations_SLNoBHad[per];
     else if(mode==3) 
       permutations[per] = permutations_SLNoBLep[per];
+    else if(mode==6) 
+      permutations[per] = permutations_DL[per];
   }
 
 
@@ -427,11 +436,6 @@ int main(int argc, const char* argv[])
 
   TTree* tree  = new TTree("tree","");
 
-  //TTree* tGenGoodComb  = new TTree("tree","");
-  //TTree* tGenAllComb   = new TTree("tree","");
-  //TTree* tRecGoodComb  = new TTree("tree","");
-  //TTree* tRecAllComb   = new TTree("tree","");
- 
   int counter_;
 
   float probGG_;
@@ -448,67 +452,54 @@ int main(int argc, const char* argv[])
   float probAtSgnGA_;
   float probAtGoodGA_;
   float massGA_, massIntGA_, massMaxGA_;
+  float probMaxGA_,probIntGA_ ;
   float evalCpuGA_,evalReaGA_;
 
   float probRA_;
   float probAtSgnRA_;
   float probAtGoodRA_;
   float massRA_,massIntRA_, massMaxRA_;
+  float probMaxRA_,probIntRA_ ;
   float evalCpuRA_,evalReaRA_;
 
   int matchByIntGA_, matchByMaxGA_, matchByIntRA_, matchByMaxRA_;
 
   tree->Branch("counter",                       &counter_,      "counter/I");
-  tree->Branch("p_best_good_gen",               &probGG_,      "p_best_good_gen/F");
+  tree->Branch("p_best_good_gen",               &probGG_,       "p_best_good_gen/F");
   tree->Branch(Form("p_%d_good_gen",int(met)),  &probAtSgnGG_, Form("p_%d_good_gen/F",int(met)) );
-  tree->Branch("m_best_good_gen",               &massGG_,      "mass_best_good_gen/F");
-  tree->Branch("cputime_good_gen",              &evalCpuGG_,   "cputime_good_gen/F");
-  tree->Branch("realtime_good_gen",             &evalReaGG_,   "realtime_good_gen/F");
-  tree->Branch("p_best_good_rec",               &probRG_,      "p_best_good_rec/F");
+  tree->Branch("m_best_good_gen",               &massGG_,       "m_best_good_gen/F");
+  tree->Branch("cputime_good_gen",              &evalCpuGG_,    "cputime_good_gen/F");
+  tree->Branch("realtime_good_gen",             &evalReaGG_,    "realtime_good_gen/F");
+  tree->Branch("p_best_good_rec",               &probRG_,       "p_best_good_rec/F");
   tree->Branch(Form("p_%d_good_rec",int(met)),  &probAtSgnRG_, Form("p_%d_good_rec/F",int(met)) );
-  tree->Branch("m_best_good_rec",               &massRG_,      "mass_best_good_rec/F");
-  tree->Branch("cputime_good_rec",              &evalCpuRG_,   "cputime_good_rec/F");
-  tree->Branch("realtime_good_rec",             &evalReaRG_,   "realtime_good_rec/F");
-  tree->Branch("p_best_all_gen",                &probGA_,      "p_best_all_gen/F");
+  tree->Branch("m_best_good_rec",               &massRG_,       "m_best_good_rec/F");
+  tree->Branch("cputime_good_rec",              &evalCpuRG_,    "cputime_good_rec/F");
+  tree->Branch("realtime_good_rec",             &evalReaRG_,    "realtime_good_rec/F");
+  tree->Branch("p_best_all_gen",                &probGA_,       "p_best_all_gen/F");
   tree->Branch(Form("p_%d_all_gen",int(met)),   &probAtSgnGA_, Form("p_%d_all_gen/F",int(met)) );
-  tree->Branch("p_good_all_gen",                &probAtGoodGA_,"p_good_all_gen/F");
-  tree->Branch("m_best_all_gen",                &massGA_,      "mass_best_all_gen/F");
-  tree->Branch("m_bestInt_all_gen",             &massIntGA_,   "mass_bestInt_all_gen/F");
-  tree->Branch("m_bestMax_all_gen",             &massMaxGA_,   "mass_bestMax_all_gen/F");
-  tree->Branch("cputime_all_gen",               &evalCpuGA_,   "cputime_all_gen/F");
-  tree->Branch("realtime_all_gen",              &evalReaGA_,   "realtime_all_gen/F");
-  tree->Branch("p_best_all_rec",                &probRA_,      "p_best_all_rec/F");
+  tree->Branch("p_good_all_gen",                &probAtGoodGA_, "p_good_all_gen/F");
+  tree->Branch("m_best_all_gen",                &massGA_,       "m_best_all_gen/F");
+  tree->Branch("m_bestInt_all_gen",             &massIntGA_,    "m_bestInt_all_gen/F");
+  tree->Branch("m_bestMax_all_gen",             &massMaxGA_,    "m_bestMax_all_gen/F");
+  tree->Branch("p_bestInt_all_gen",             &probIntGA_,    "p_bestInt_all_gen/F");
+  tree->Branch("p_bestMax_all_gen",             &probMaxGA_,    "p_bestMax_all_gen/F");
+  tree->Branch("cputime_all_gen",               &evalCpuGA_,    "cputime_all_gen/F");
+  tree->Branch("realtime_all_gen",              &evalReaGA_,    "realtime_all_gen/F");
+  tree->Branch("p_best_all_rec",                &probRA_,       "p_best_all_rec/F");
   tree->Branch(Form("p_%d_all_rec",int(met)),   &probAtSgnRA_, Form("p_%d_all_rec/F",int(met)) );
-  tree->Branch("p_good_all_rec",                &probAtGoodRA_,"p_good_all_rec/F");
-  tree->Branch("m_best_all_rec",                &massRA_,      "mass_best_all_rec/F");
-  tree->Branch("m_bestInt_all_rec",             &massIntRA_,   "mass_bestInt_all_rec/F");
-  tree->Branch("m_bestMax_all_rec",             &massMaxRA_,   "mass_bestMax_all_rec/F");
-  tree->Branch("cputime_all_rec",               &evalCpuRA_,   "cputime_all_rec/F");
-  tree->Branch("realtime_all_rec",              &evalReaRA_,   "realtime_all_rec/F");
+  tree->Branch("p_good_all_rec",                &probAtGoodRA_, "p_good_all_rec/F");
+  tree->Branch("m_best_all_rec",                &massRA_,       "m_best_all_rec/F");
+  tree->Branch("m_bestInt_all_rec",             &massIntRA_,    "m_bestInt_all_rec/F");
+  tree->Branch("m_bestMax_all_rec",             &massMaxRA_,    "m_bestMax_all_rec/F");
+  tree->Branch("p_bestInt_all_rec",             &probIntRA_,    "p_bestInt_all_rec/F");
+  tree->Branch("p_bestMax_all_rec",             &probMaxRA_,    "p_bestMax_all_rec/F");
+  tree->Branch("cputime_all_rec",               &evalCpuRA_,    "cputime_all_rec/F");
+  tree->Branch("realtime_all_rec",              &evalReaRA_,    "realtime_all_rec/F");
   tree->Branch("match_bestInt_all_gen",         &matchByIntGA_, "match_bestInt_all_gen/I");
   tree->Branch("match_bestMax_all_gen",         &matchByMaxGA_, "match_bestMax_all_gen/I");
   tree->Branch("match_bestInt_all_rec",         &matchByIntRA_, "match_bestInt_all_rec/I");
   tree->Branch("match_bestMax_all_rec",         &matchByMaxRA_, "match_bestMax_all_rec/I");
 
- //  tree->Branch("prob_rec_good",            &probRG_,      "prob_rec_good/F");
-//   tree->Branch("probAtSgn_rec_good",       &probAtSgnRG_, "probAtSgn_rec_good/F");
-//   tree->Branch("mass_rec_good",            &massRG_,      "mass_rec_good/F");
-//   tree->Branch("evalCpu_rec_good",         &evalCpuRG_,   "evalCpu_rec_good/F");
-//   tree->Branch("evalRea_rec_good",         &evalReaRG_,   "evalRea_rec_good/F");
-
-//   tree->Branch("prob_gen_all",            &probGA_,      "prob_gen_all/F");
-//   tree->Branch("probAtSgn_gen_all",       &probAtSgnGA_, "probAtSgn_gen_all/F");
-//   tree->Branch("probAtGood_gen_all",      &probAtGoodGA_, "probAtGood_gen_all/F");
-//   tree->Branch("mass_gen_all",            &massGA_,      "mass_gen_all/F");
-//   tree->Branch("evalCpu_gen_all",         &evalCpuGA_,   "evalCpu_gen_all/F");
-//   tree->Branch("evalRea_gen_all",         &evalReaGA_,   "evalRea_gen_all/F");
-
-//   tree->Branch("prob_rec_all",            &probRA_,      "prob_rec_all/F");
-//   tree->Branch("probAtSgn_rec_all",       &probAtSgnRA_, "probAtSgn_rec_all/F");
-//   tree->Branch("probAtGood_rec_all",      &probAtGoodRA_, "probAtGood_rec_all/F");
-//   tree->Branch("mass_rec_all",            &massRA_,      "mass_rec_all/F");
-//   tree->Branch("evalCpu_rec_all",         &evalCpuRA_,   "evalCpu_rec_all/F");
-//   tree->Branch("evalRea_rec_all",         &evalReaRA_,   "evalRea_rec_all/F");
 
   ///////////////////////////////////////////////////////
 
@@ -534,6 +525,9 @@ int main(int argc, const char* argv[])
   case 5:
     par = 19; // acceptance xsec
     break;
+  case 6:
+    par = 5;  // DL
+    break;
   default:
     par = 4;
     break;
@@ -553,6 +547,8 @@ int main(int argc, const char* argv[])
     meIntegrator->setIntType( MEIntegratorNew::SLXSec );
   else if(mode == 5)
     meIntegrator->setIntType( MEIntegratorNew::SLAcc );
+  else if(mode == 6)
+    meIntegrator->setIntType( MEIntegratorNew::DL );
   else{
     cout << "Unsupported mode... exit" << endl;
     delete meIntegrator;
@@ -579,6 +575,8 @@ int main(int argc, const char* argv[])
   meIntegrator->setUseMET(useMET);
   meIntegrator->setUseTF (useTF);
   meIntegrator->setUsePDF(usePDF);
+
+  meIntegrator->initTFparameters(1.0,scaleL,1.0,scaleH, scaleMET);
 
   if(switchoffOL){
     meIntegrator->switchOffOL(); 
@@ -882,7 +880,6 @@ int main(int argc, const char* argv[])
       meIntegrator->setMEtCov(-99,-99,0);
       //meIntegrator->setTopFlags( vLepton_charge[0]==1 ? +1 : -1 , vLepton_charge[0]==1 ? -1 : +1 );
       meIntegrator->setTopFlags( chargeTopLep>0 ? -1 : +1 , chargeTopLep>0 ? +1 : -1);
-      cout << vLepton_charge[0] << " ... " << (chargeTopLep>0 ? -1 : +1) << endl;
 
       probGG_      = 0;
       probAtSgnGG_ = 0;
@@ -893,6 +890,8 @@ int main(int argc, const char* argv[])
       massGA_      = 0;
       massIntGA_   = 0;
       massMaxGA_   = 0;
+      probIntGA_   = 0;
+      probMaxGA_   = 0;
       evalCpuGA_   = 0;
       evalReaGA_   = 0;
       probAtSgnGA_ = 0;
@@ -906,6 +905,8 @@ int main(int argc, const char* argv[])
       massRA_      = 0;
       massIntRA_   = 0;
       massMaxRA_   = 0;
+      probIntRA_   = 0;
+      probMaxRA_   = 0;
       evalCpuRA_   = 0;
       evalReaRA_   = 0;
       probAtSgnRA_ = 0;
@@ -925,7 +926,7 @@ int main(int argc, const char* argv[])
 	  pair<double, double> range_x1 =  make_pair(-1,1);
 	  pair<double, double> range_x2 =  make_pair(-PI,PI);
 	  pair<double, double> range_x3 =  make_pair(-1,1);
-	  pair<double, double> range_x4 = (meIntegrator->getNuPhiCI(0.95));
+	  pair<double, double> range_x4 = useMET ? (meIntegrator->getNuPhiCI(0.95)) : make_pair(-PI,PI);
 	  pair<double, double> range_x5 = (meIntegrator->getB1EnergyCI(0.95));
 	  
 	  double x0L = range_x0.first;
@@ -952,10 +953,15 @@ int main(int argc, const char* argv[])
 
 	  double xLmode3[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
 	  double xUmode3[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+
+	  double xLmode6[5] = {x1L, x2L, x1L, x2L, x5L};
+	  double xUmode6[5] = {x1U, x2U, x1U, x2U, x5U};
 	  
 	  if( printP4 ){
 	    cout << "Integration range: " << endl;
-	    for(unsigned int k = 0; k < (mode==0 ? 4 : 6); k++){
+	    
+	    
+	    for(unsigned int k = 0; k < (unsigned int)par; k++){
 	      if(mode==0) 
 		cout << "Var " << k << ": [" << xLmode0[k] << "," <<  xUmode0[k] << "]" << endl;
 	      else if(mode==1)
@@ -964,15 +970,19 @@ int main(int argc, const char* argv[])
 		cout << "Var " << k << ": [" << xLmode2[k] << "," <<  xUmode2[k] << "]" << endl;
 	      else if(mode==3)
 		cout << "Var " << k << ": [" << xLmode3[k] << "," <<  xUmode3[k] << "]" << endl;
+	      else if(mode==6)
+		cout << "Var " << k << ": [" << xLmode6[k] << "," <<  xUmode6[k] << "]" << endl;
 	      else{}
 	    }	   
 	  }
-	
-	  clock->Start();
 	  
 	  hMass_gen->Reset();
 	  for(int m = 0; m < nMassPoints ; m++){
+
 	    meIntegrator->setMass( mH[m] );
+
+	    clock->Start();
+
 	    ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par);
 	    ROOT::Math::GSLMCIntegrator ig2( ROOT::Math::IntegrationMultiDim::kVEGAS , 1.e-12, 1.e-5, vegasPoints);
 	    ig2.SetFunction(toIntegrate);
@@ -987,16 +997,22 @@ int main(int argc, const char* argv[])
 	      p = ig2.Integral(xLmode2, xUmode2);
 	    else if(mode==3)
 	      p = ig2.Integral(xLmode3, xUmode3);
+	    else if(mode==6)
+	      p = ig2.Integral(xLmode6, xUmode6);
 	    else{ }
+
+	    clock->Stop();
 	    
 	    if( TMath::IsNaN(p) ) p = 0.;
 
-	    clock->Stop();
 	    evalCpuGG_ += clock->CpuTime();
 	    evalReaGG_ += clock->RealTime();
+
 	    if(printP4) cout << "Mass " << mH[m] << " => prob  = " << p << endl;
 	    hMass_gen->Fill(mH[m], p);
+
 	    if( mH[m]<met+0.5 && mH[m]>met-0.5) probAtSgnGG_ += p;
+
 	    clock->Reset();
 	  }
 	  evalCpuGG_ /= nMassPoints;
@@ -1076,7 +1092,7 @@ int main(int argc, const char* argv[])
 	      pair<double, double> range_x1 =  make_pair(-1,1);
 	      pair<double, double> range_x2 =  make_pair(-PI,PI);
 	      pair<double, double> range_x3 =  make_pair(-1,1);
-	      pair<double, double> range_x4 = (meIntegrator->getNuPhiCI(0.95));
+	      pair<double, double> range_x4 = useMET ? (meIntegrator->getNuPhiCI(0.95)) : make_pair(-PI,PI);
 	      pair<double, double> range_x5 = (meIntegrator->getB1EnergyCI(0.95));
 	      
 	      double x0L = range_x0.first;
@@ -1103,10 +1119,13 @@ int main(int argc, const char* argv[])
 
 	      double xLmode3[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
 	      double xUmode3[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+
+	      double xLmode6[5] = {x1L, x2L, x1L, x2L, x5L};
+	      double xUmode6[5] = {x1U, x2U, x1U, x2U, x5U};
 	      
 	      if( printP4 && false){
 		cout << "Integration range: " << endl;
-		for(unsigned int k = 0; k < (mode==0 ? 4 : 6); k++){
+		for(unsigned int k = 0; k < (unsigned int)par; k++){
 		  if(mode==0) 
 		    cout << "Var " << k << ": [" << xLmode0[k] << "," <<  xUmode0[k] << "]" << endl;
 		  else if(mode==1)
@@ -1115,6 +1134,8 @@ int main(int argc, const char* argv[])
 		    cout << "Var " << k << ": [" << xLmode2[k] << "," <<  xUmode2[k] << "]" << endl;
 		  else if(mode==3)
 		    cout << "Var " << k << ": [" << xLmode3[k] << "," <<  xUmode3[k] << "]" << endl;
+		  else if(mode==6)
+		    cout << "Var " << k << ": [" << xLmode6[k] << "," <<  xUmode6[k] << "]" << endl;
 		  else{}
 		}	   
 	      }	
@@ -1135,8 +1156,12 @@ int main(int argc, const char* argv[])
 		p = ig2.Integral(xLmode2, xUmode2);
 	      else if(mode==3)
 		p = ig2.Integral(xLmode3, xUmode3);
+	      else if(mode==6)
+		p = ig2.Integral(xLmode6, xUmode6);
 	      else{ }
 	      
+	      clock->Stop();
+
 	      if( TMath::IsNaN(p) ) p = 0.;
 
 	      permutProbInt[pos] += p;
@@ -1146,7 +1171,6 @@ int main(int argc, const char* argv[])
 		pTotAtSgn = p;
 	      }	       
 
-	      clock->Stop();
 	      evalCpuGA_ += clock->CpuTime();
 	      evalReaGA_ += clock->RealTime();
 	      
@@ -1170,9 +1194,18 @@ int main(int argc, const char* argv[])
 	      permMax = it;
 	    }
 	  }
-	  massIntGA_ = (getMaxValue( histos[permMax] )).first ;
+	  
+	  pair<double,double> bestInt = (getMaxValue( histos[permMax] ));
+	  massIntGA_ = bestInt.first;
+	  probIntGA_ = bestInt.second;
+
 	  hBestMassProbInt_gen->Fill( massIntGA_ ); 
-	  matchByIntGA_ = (permMax==0 || permMax==1) ? 1 : 0;
+
+	  if(mode==0 || mode==1 || mode==6) 
+	    matchByIntGA_ = (permMax==0 || permMax==1) ? 1 : 0;
+	  else if(mode==2 || mode==3)
+	    matchByIntGA_ = (permMax==0) ? 1 : 0;
+	  else{}
 
 	  double maxMaxProb = 0.;
 	  unsigned int permMax2 = 0;
@@ -1200,14 +1233,22 @@ int main(int argc, const char* argv[])
 	    leg->AddEntry(histos[0], Form("%d (%.0f GeV)", permutations[0] , permutMassReco[0]), "F");	      
 	  }
 
-	  massMaxGA_ = (getMaxValue( histos[permMax2] )).first ;
-	  matchByMaxGA_ = (permMax2==0 || permMax2==1) ? 1 : 0;
+	  pair<double,double> bestMax = (getMaxValue( histos[permMax2] ));
+	  massMaxGA_ =  bestMax.first ;
+	  probMaxGA_ =  bestMax.second;
+
+	  if(mode==0 || mode==1 || mode==6) 
+	    matchByMaxGA_ = (permMax2==0 || permMax2==1) ? 1 : 0;
+	  else if(mode==2 || mode==3)
+	    matchByMaxGA_ = (permMax2==0) ? 1 : 0;
+	  else{}
+
 	  hBestMassProbMax_gen->Fill( massMaxGA_ ); 
 	  histos.clear();
 	  
 
-	  evalCpuGA_ /= combScanned;
-	  evalReaGA_ /= combScanned;
+	  evalCpuGA_ /= nMassPoints;//combScanned;
+	  evalReaGA_ /= nMassPoints;//combScanned;
 	  probAtGoodGA_ = pTotAtSgn;
 	
 	  pair<double,double> bestMass = getMaxValue(hMassProb_gen);
@@ -1246,7 +1287,20 @@ int main(int argc, const char* argv[])
 
 	meIntegrator->initVersors(1);
 
-	if( meIntegrator->smearByTF(30., printP4) ){
+	bool passes = false;
+	int ntries  = 0;
+	while( ntries<N_TRIES_MAX && !passes){
+	  meIntegrator->setJets(&jets);
+	  passes = meIntegrator->smearByTF(30., printP4);
+	  ntries++;
+	  if(passes && printP4) 
+	    cout << "Smearing succedes at the " << ntries << "th attempt" << endl;
+	  else if(printP4 && !passes) 
+	    cout << "Smearing fails... let's try again!" << endl;
+	  else{}
+	}
+
+	if( passes ){
 	  
 	  if( doMassScan ){
 
@@ -1254,7 +1308,7 @@ int main(int argc, const char* argv[])
 	    pair<double, double> range_x1 =  make_pair(-1,1);
 	    pair<double, double> range_x2 =  make_pair(-PI,PI);
 	    pair<double, double> range_x3 =  make_pair(-1,1);
-	    pair<double, double> range_x4 = (meIntegrator->getNuPhiCI(0.95));
+	    pair<double, double> range_x4 = useMET ? (meIntegrator->getNuPhiCI(0.95)) : make_pair(-PI,PI);
 	    pair<double, double> range_x5 = (meIntegrator->getB1EnergyCI(0.95));
 	    
 	    double x0L = range_x0.first;
@@ -1281,10 +1335,13 @@ int main(int argc, const char* argv[])
 
 	    double xLmode3[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
 	    double xUmode3[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+
+	    double xLmode6[5] = {x1L, x2L, x1L, x2L, x5L};
+	    double xUmode6[5] = {x1U, x2U, x1U, x2U, x5U};
 	    
 	    if( printP4 && false){
 	      cout << "Integration range: " << endl;
-	      for(unsigned int k = 0; k < (mode==0 ? 4 : 6); k++){
+	      for(unsigned int k = 0; k < (unsigned int)par; k++){
 		if(mode==0) 
 		  cout << "Var " << k << ": [" << xLmode0[k] << "," <<  xUmode0[k] << "]" << endl;
 		else if(mode==1)
@@ -1293,15 +1350,19 @@ int main(int argc, const char* argv[])
 		  cout << "Var " << k << ": [" << xLmode2[k] << "," <<  xUmode2[k] << "]" << endl;
 		else if(mode==3)
 		  cout << "Var " << k << ": [" << xLmode3[k] << "," <<  xUmode3[k] << "]" << endl;
+		else if(mode==6)
+		  cout << "Var " << k << ": [" << xLmode6[k] << "," <<  xUmode6[k] << "]" << endl;
 		else{}
 	      }	   
-	    }	
-		    
-	    clock->Start();
+	    }			   
 	    
 	    hMass_rec->Reset();
 	    for(int m = 0; m < nMassPoints ; m++){
+
 	      meIntegrator->setMass( mH[m] );
+
+	      clock->Start();
+
 	      ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par);
 	      ROOT::Math::GSLMCIntegrator ig2( ROOT::Math::IntegrationMultiDim::kVEGAS , 1.e-12, 1.e-5, vegasPoints);
 	      ig2.SetFunction(toIntegrate);
@@ -1316,16 +1377,22 @@ int main(int argc, const char* argv[])
 		p = ig2.Integral(xLmode2, xUmode2);
 	      else if(mode==3)
 		p = ig2.Integral(xLmode3, xUmode3);
+	      else if(mode==6)
+		p = ig2.Integral(xLmode6, xUmode6);
 	      else{ }
 
-	      if( TMath::IsNaN(p) ) p = 0.;
-	      
 	      clock->Stop();
+
+	      if( TMath::IsNaN(p) ) p = 0.;	     
+
 	      evalCpuRG_ += clock->CpuTime();
 	      evalReaRG_ += clock->RealTime();
+
 	      if(printP4) cout << "Mass " << mH[m] << " => prob  = " << p << endl;
 	      hMass_rec->Fill(mH[m], p);
+
 	      if( mH[m]<met+0.5 && mH[m]>met-0.5) probAtSgnRG_ += p;
+
 	      clock->Reset();
 	    }
 	    evalCpuRG_ /= nMassPoints;
@@ -1406,7 +1473,7 @@ int main(int argc, const char* argv[])
 		pair<double, double> range_x1 =  make_pair(-1,1);
 		pair<double, double> range_x2 =  make_pair(-PI,PI);
 		pair<double, double> range_x3 =  make_pair(-1,1);
-		pair<double, double> range_x4 = (meIntegrator->getNuPhiCI(0.95));
+		pair<double, double> range_x4 = useMET ? (meIntegrator->getNuPhiCI(0.95)) : make_pair(-PI,PI);
 		pair<double, double> range_x5 = (meIntegrator->getB1EnergyCI(0.95));
 		
 		double x0L = range_x0.first;
@@ -1434,9 +1501,12 @@ int main(int argc, const char* argv[])
 		double xLmode3[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
 		double xUmode3[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
 		
+		double xLmode6[5] = {x1L, x2L, x1L, x2L, x5L};
+		double xUmode6[5] = {x1U, x2U, x1U, x2U, x5U};
+
 		if( printP4 && false){
 		  cout << "Integration range: " << endl;
-		  for(unsigned int k = 0; k < (mode==0 ? 4 : 6); k++){
+		  for(unsigned int k = 0; k < (unsigned int)par; k++){
 		    if(mode==0) 
 		      cout << "Var " << k << ": [" << xLmode0[k] << "," <<  xUmode0[k] << "]" << endl;
 		    else if(mode==1)
@@ -1445,6 +1515,8 @@ int main(int argc, const char* argv[])
 		      cout << "Var " << k << ": [" << xLmode2[k] << "," <<  xUmode2[k] << "]" << endl;
 		    else if(mode==3)
 		      cout << "Var " << k << ": [" << xLmode3[k] << "," <<  xUmode3[k] << "]" << endl;
+		    else if(mode==6)
+		      cout << "Var " << k << ": [" << xLmode6[k] << "," <<  xUmode6[k] << "]" << endl;
 		    else{}
 		  }	   
 		}	
@@ -1465,8 +1537,12 @@ int main(int argc, const char* argv[])
 		  p = ig2.Integral(xLmode2, xUmode2);
 		else if(mode==3)
 		  p = ig2.Integral(xLmode3, xUmode3);
+		else if(mode==6)
+		  p = ig2.Integral(xLmode6, xUmode6);
 		else{ }
 		
+		clock->Stop();
+
 		if( TMath::IsNaN(p) ) p = 0.;
 
 		permutProbInt[pos] += p;
@@ -1476,7 +1552,6 @@ int main(int argc, const char* argv[])
 		  pTotAtSgn = p;
 		}
 		
-		clock->Stop();
 		evalCpuRA_ += clock->CpuTime();
 		evalReaRA_ += clock->RealTime();
 		
@@ -1499,9 +1574,18 @@ int main(int argc, const char* argv[])
 		permMax = it;
 	      }
 	    }
-	    massIntRA_ = (getMaxValue( histos[permMax] )).first ;
-	    matchByIntRA_ = (permMax==0 || permMax==1) ? 1 : 0;
+
+	    pair<double,double> bestInt = (getMaxValue( histos[permMax] ));
+	    massIntRA_ = bestInt.first;
+	    probIntRA_ = bestInt.second;
+
 	    hBestMassProbInt_rec->Fill( massIntRA_ ); 
+
+	    if(mode==0 || mode==1 || mode==6) 
+	      matchByIntRA_ = (permMax==0 || permMax==1) ? 1 : 0;
+	    else if(mode==2 || mode==3)
+	      matchByIntRA_ = (permMax==0) ? 1 : 0;
+	    else{}
 
 	    double maxMaxProb = 0.;
 	    unsigned int permMax2 = 0;
@@ -1529,14 +1613,22 @@ int main(int argc, const char* argv[])
 	      leg->AddEntry(histos[0], Form("%d (%.0f GeV)", permutations[0] , permutMassReco[0]), "F");	      
 	    }
 
-	    massMaxRA_ = (getMaxValue( histos[permMax2] )).first ;
-	    matchByMaxRA_ = (permMax2==0 || permMax2==1) ? 1 : 0;
+	    pair<double,double> bestMax = (getMaxValue( histos[permMax2] ));
+	    massMaxRA_ =  bestMax.first ;
+	    probMaxRA_ =  bestMax.second;
+
+	    if(mode==0 || mode==1 || mode==6) 
+	      matchByMaxRA_ = (permMax2==0 || permMax2==1) ? 1 : 0;
+	    else if(mode==2 || mode==3)
+	      matchByMaxRA_ = (permMax2==0) ? 1 : 0;
+	    else{}
+
 	    hBestMassProbMax_rec->Fill( massMaxRA_ ); 
 	    histos.clear();
 
 	    
-	    evalCpuRA_ /= combScanned;
-	    evalReaRA_ /= combScanned;
+	    evalCpuRA_ /= nMassPoints;//combScanned;
+	    evalReaRA_ /= nMassPoints;//combScanned;
 	    probAtGoodRA_ = pTotAtSgn;
 	    
 	    pair<double,double> bestMass = getMaxValue(hMassProb_rec);
