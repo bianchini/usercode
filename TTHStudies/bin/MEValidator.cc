@@ -451,18 +451,18 @@ int main(int argc, const char* argv[])
   float probGA_;
   float probAtSgnGA_;
   float probAtGoodGA_;
-  float massGA_, massIntGA_, massMaxGA_;
-  float probMaxGA_,probIntGA_ ;
+  float massGA_, massIntGA_, massMaxGA_, massIntModGA_;
+  float probMaxGA_,probIntGA_ , probIntModGA_ ;
   float evalCpuGA_,evalReaGA_;
 
   float probRA_;
   float probAtSgnRA_;
   float probAtGoodRA_;
-  float massRA_,massIntRA_, massMaxRA_;
-  float probMaxRA_,probIntRA_ ;
+  float massRA_,massIntRA_, massMaxRA_,massIntModRA_;
+  float probMaxRA_,probIntRA_, probIntModRA_ ;
   float evalCpuRA_,evalReaRA_;
 
-  int matchByIntGA_, matchByMaxGA_, matchByIntRA_, matchByMaxRA_;
+  int matchByIntGA_, matchByIntModGA_, matchByMaxGA_, matchByIntRA_, matchByIntModRA_, matchByMaxRA_;
 
   tree->Branch("counter",                       &counter_,      "counter/I");
   tree->Branch("p_best_good_gen",               &probGG_,       "p_best_good_gen/F");
@@ -480,8 +480,10 @@ int main(int argc, const char* argv[])
   tree->Branch("p_good_all_gen",                &probAtGoodGA_, "p_good_all_gen/F");
   tree->Branch("m_best_all_gen",                &massGA_,       "m_best_all_gen/F");
   tree->Branch("m_bestInt_all_gen",             &massIntGA_,    "m_bestInt_all_gen/F");
+  tree->Branch("m_bestIntMod_all_gen",          &massIntModGA_, "m_bestIntMod_all_gen/F");
   tree->Branch("m_bestMax_all_gen",             &massMaxGA_,    "m_bestMax_all_gen/F");
   tree->Branch("p_bestInt_all_gen",             &probIntGA_,    "p_bestInt_all_gen/F");
+  tree->Branch("p_bestIntMod_all_gen",          &probIntModGA_, "p_bestIntMod_all_gen/F");
   tree->Branch("p_bestMax_all_gen",             &probMaxGA_,    "p_bestMax_all_gen/F");
   tree->Branch("cputime_all_gen",               &evalCpuGA_,    "cputime_all_gen/F");
   tree->Branch("realtime_all_gen",              &evalReaGA_,    "realtime_all_gen/F");
@@ -490,14 +492,18 @@ int main(int argc, const char* argv[])
   tree->Branch("p_good_all_rec",                &probAtGoodRA_, "p_good_all_rec/F");
   tree->Branch("m_best_all_rec",                &massRA_,       "m_best_all_rec/F");
   tree->Branch("m_bestInt_all_rec",             &massIntRA_,    "m_bestInt_all_rec/F");
+  tree->Branch("m_bestIntMod_all_rec",          &massIntModRA_, "m_bestIntMod_all_rec/F");
   tree->Branch("m_bestMax_all_rec",             &massMaxRA_,    "m_bestMax_all_rec/F");
   tree->Branch("p_bestInt_all_rec",             &probIntRA_,    "p_bestInt_all_rec/F");
+  tree->Branch("p_bestIntMod_all_rec",          &probIntModRA_, "p_bestIntMod_all_rec/F");
   tree->Branch("p_bestMax_all_rec",             &probMaxRA_,    "p_bestMax_all_rec/F");
   tree->Branch("cputime_all_rec",               &evalCpuRA_,    "cputime_all_rec/F");
   tree->Branch("realtime_all_rec",              &evalReaRA_,    "realtime_all_rec/F");
   tree->Branch("match_bestInt_all_gen",         &matchByIntGA_, "match_bestInt_all_gen/I");
+  tree->Branch("match_bestIntMod_all_gen",      &matchByIntModGA_,"match_bestIntMod_all_gen/I");
   tree->Branch("match_bestMax_all_gen",         &matchByMaxGA_, "match_bestMax_all_gen/I");
   tree->Branch("match_bestInt_all_rec",         &matchByIntRA_, "match_bestInt_all_rec/I");
+  tree->Branch("match_bestIntMod_all_rec",      &matchByIntModRA_,"match_bestIntMod_all_rec/I");
   tree->Branch("match_bestMax_all_rec",         &matchByMaxRA_, "match_bestMax_all_rec/I");
 
 
@@ -889,8 +895,10 @@ int main(int argc, const char* argv[])
       probGA_      = 0;
       massGA_      = 0;
       massIntGA_   = 0;
+      massIntModGA_= 0;
       massMaxGA_   = 0;
       probIntGA_   = 0;
+      probIntModGA_= 0;
       probMaxGA_   = 0;
       evalCpuGA_   = 0;
       evalReaGA_   = 0;
@@ -904,17 +912,21 @@ int main(int argc, const char* argv[])
       probRA_      = 0;
       massRA_      = 0;
       massIntRA_   = 0;
+      massIntModRA_= 0;
       massMaxRA_   = 0;
       probIntRA_   = 0;
+      probIntModRA_= 0;
       probMaxRA_   = 0;
       evalCpuRA_   = 0;
       evalReaRA_   = 0;
       probAtSgnRA_ = 0;
       probAtGoodRA_= 0;
-      matchByIntGA_=0;
-      matchByMaxGA_=0;
-      matchByIntRA_=0;
-      matchByMaxRA_=0;
+      matchByIntGA_   = 0;
+      matchByIntModGA_= 0;
+      matchByMaxGA_   = 0;
+      matchByIntRA_   = 0;
+      matchByIntModRA_= 0;
+      matchByMaxRA_   = 0;
 
       if( doParton){
 
@@ -1165,6 +1177,7 @@ int main(int argc, const char* argv[])
 	      if( TMath::IsNaN(p) ) p = 0.;
 
 	      permutProbInt[pos] += p;
+
 	      histos[ pos ]->SetBinContent( histos[ pos ]->FindBin(mH[m]), p);
 
 	      if( pos==0 && p>pTotAtSgn){
@@ -1185,24 +1198,46 @@ int main(int argc, const char* argv[])
 	    if(printP4) cout << "M = " << mH[m]  << " => p = " << hMassProb_gen->GetBinContent( hMassProb_gen->FindBin(mH[m]) ) << endl; 
 	  }
 	  
-	  double maxIntProb = 0.;
-	  unsigned int permMax = 0;
+	  double maxIntProb     = 0.;
+	  unsigned int permMax  = 0;
+
 	  for(unsigned int it = 0; it<(unsigned int)nPermutations; it++){
 	    //cout << "Permut " << it << " has int p = " << permutProbInt[it] << endl;
 	    if( permutProbInt[it]>maxIntProb ){
 	      maxIntProb = permutProbInt[it];
 	      permMax = it;
+	    }	 
+	  }
+
+	  double maxIntProbMod  = 0.;
+	  unsigned int permMax3 = 0;
+
+	  if(mode==0 || mode==2 || mode==6){
+	    for(unsigned int it = 0; it<(unsigned int)(nPermutations-1); it++){
+	      if(it%2==0){
+		if( (permutProbInt[it]+permutProbInt[it+1])>maxIntProbMod ){
+		  maxIntProbMod = (permutProbInt[it]+permutProbInt[it+1]);
+		  permMax3 = it;
+		}
+	      }
 	    }
 	  }
 	  
-	  pair<double,double> bestInt = (getMaxValue( histos[permMax] ));
+	  pair<double,double> bestInt    = (getMaxValue( histos[permMax] ));
 	  massIntGA_ = bestInt.first;
 	  probIntGA_ = bestInt.second;
 
+	  pair<double,double> bestIntMod = (getMaxValue( histos[permMax3] ));
+	  massIntModGA_ = bestIntMod.first;
+	  probIntModGA_ = bestIntMod.second;
+
+
 	  hBestMassProbInt_gen->Fill( massIntGA_ ); 
 
-	  if(mode==0 || mode==1 || mode==6) 
-	    matchByIntGA_ = (permMax==0 || permMax==1) ? 1 : 0;
+	  if(mode==0 || mode==1 || mode==6){
+	    matchByIntGA_    = (permMax==0 || permMax==1) ? 1 : 0;
+	    matchByIntModGA_ = (permMax3==0) ? 1 : 0;
+	  }
 	  else if(mode==2 || mode==3)
 	    matchByIntGA_ = (permMax==0) ? 1 : 0;
 	  else{}
@@ -1575,14 +1610,34 @@ int main(int argc, const char* argv[])
 	      }
 	    }
 
+	    double maxIntProbMod  = 0.;
+	    unsigned int permMax3 = 0;
+	    
+	    if(mode==0 || mode==2 || mode==6){
+	      for(unsigned int it = 0; it<(unsigned int)(nPermutations-1); it++){
+		if(it%2==0){
+		  if( (permutProbInt[it]+permutProbInt[it+1])>maxIntProbMod ){
+		    maxIntProbMod = (permutProbInt[it]+permutProbInt[it+1]);
+		    permMax3 = it;
+		  }
+		}
+	      }
+	    }
+
 	    pair<double,double> bestInt = (getMaxValue( histos[permMax] ));
 	    massIntRA_ = bestInt.first;
 	    probIntRA_ = bestInt.second;
 
+	    pair<double,double> bestIntMod = (getMaxValue( histos[permMax3] ));
+	    massIntModRA_ = bestIntMod.first;
+	    probIntModRA_ = bestIntMod.second;
+
 	    hBestMassProbInt_rec->Fill( massIntRA_ ); 
 
-	    if(mode==0 || mode==1 || mode==6) 
+	    if(mode==0 || mode==1 || mode==6){
 	      matchByIntRA_ = (permMax==0 || permMax==1) ? 1 : 0;
+	      matchByIntModRA_ = (permMax3==0) ? 1 : 0;
+	    }
 	    else if(mode==2 || mode==3)
 	      matchByIntRA_ = (permMax==0) ? 1 : 0;
 	    else{}
