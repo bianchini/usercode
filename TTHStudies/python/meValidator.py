@@ -108,14 +108,15 @@ process.fwliteInput = cms.PSet(
     vegasPoints   = cms.int32(1000),
 
     mode          = cms.untracked.int32(0),
-
+    newVars       = cms.untracked.int32(0),
+    
     norm          = cms.untracked.int32(2),
     functions     = cms.vstring('1.39e+23*x^(-2.81e+00)',
                                 '7.84e+17*TMath::Landau(x,6.17e+01,1.61e+01)',
                                 'x>=12 ? x^(-2.010e-01)*exp((-1.5785e-02)*x) : 4.184e-02*x'
                                 ),
 
-    switchoffOL   = cms.untracked.int32(0),
+    switchoffOL   = cms.untracked.int32(0), ###### CHECK HERE
 
     useME         = cms.int32(1),
     useJac        = cms.int32(1),
@@ -123,21 +124,21 @@ process.fwliteInput = cms.PSet(
     useTF         = cms.int32(1),
     usePDF        = cms.int32(1),
 
-    doParton        = cms.int32(1),
-    doSmear         = cms.int32(0),   
-    doMassScan      = cms.int32(1),
-    doPermutations  = cms.int32(0),
+    doParton        = cms.int32(0),
+    doSmear         = cms.int32(1),   
+    doMassScan      = cms.int32(0),
+    doPermutations  = cms.int32(1),
     
     printP4         = cms.int32(0),
     
     verbose       = cms.bool(False),
 
     met           = cms.double(125.),
-    masses        = cms.vdouble(60,  65,  70,  75, 80 , 85,  90, 95, 100, 105, 110, 
-                                115, 120, 125, 130, 135, 140, 145, 150, 155, 
-                                160, 165, 170, 175, 180 ,185, 190, 195, 200, 205, 210, 215, 220, 225, 230),
-    #masses        = cms.vdouble(125),
-    evLimits      = cms.vint32(1,1),
+    #masses        = cms.vdouble(60,  65,  70,  75, 80 , 85,  90, 95, 100, 105, 110, 
+    #                            115, 120, 125, 130, 135, 140, 145, 150, 155, 
+    #                            160, 165, 170, 175, 180 ,185, 190, 195, 200, 205, 210, 215, 220, 225, 230),
+    masses        = cms.vdouble(60),
+    evLimits      = cms.vint32(1,10),
 
     scaleH        = cms.double(1.0),
     scaleL        = cms.double(1.0),

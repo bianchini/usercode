@@ -312,6 +312,8 @@ int main(int argc, const char* argv[])
   int   mode            ( in.getUntrackedParameter<int>    ("mode", 0) );
   int   norm            ( in.getUntrackedParameter<int>    ("norm", 0) );
 
+  int   newVars         ( in.getUntrackedParameter<int>    ("newVars", 0) );
+
   vector<double> masses       ( in.getParameter<vector<double> >  ("masses")        );
   vector<string> functions    ( in.getParameter<vector<string> >  ("functions")     );
 
@@ -451,18 +453,18 @@ int main(int argc, const char* argv[])
   float probGA_;
   float probAtSgnGA_;
   float probAtGoodGA_;
-  float massGA_, massIntGA_, massMaxGA_, massIntModGA_;
-  float probMaxGA_,probIntGA_ , probIntModGA_ ;
+  float massGA_, massIntGA_, massMaxGA_, massMaxModGA_, massIntModGA_;
+  float probMaxGA_,probMaxModGA_,probIntGA_ , probIntModGA_ ;
   float evalCpuGA_,evalReaGA_;
 
   float probRA_;
   float probAtSgnRA_;
   float probAtGoodRA_;
-  float massRA_,massIntRA_, massMaxRA_,massIntModRA_;
-  float probMaxRA_,probIntRA_, probIntModRA_ ;
+  float massRA_,massIntRA_, massMaxRA_,massMaxModRA_, massIntModRA_;
+  float probMaxRA_,probMaxModRA_,probIntRA_, probIntModRA_ ;
   float evalCpuRA_,evalReaRA_;
 
-  int matchByIntGA_, matchByIntModGA_, matchByMaxGA_, matchByIntRA_, matchByIntModRA_, matchByMaxRA_;
+  int matchByIntGA_, matchByIntModGA_, matchByMaxGA_, matchByMaxModGA_, matchByIntRA_, matchByIntModRA_, matchByMaxRA_, matchByMaxModRA_;
 
   tree->Branch("counter",                       &counter_,      "counter/I");
   tree->Branch("p_best_good_gen",               &probGG_,       "p_best_good_gen/F");
@@ -480,11 +482,13 @@ int main(int argc, const char* argv[])
   tree->Branch("p_good_all_gen",                &probAtGoodGA_, "p_good_all_gen/F");
   tree->Branch("m_best_all_gen",                &massGA_,       "m_best_all_gen/F");
   tree->Branch("m_bestInt_all_gen",             &massIntGA_,    "m_bestInt_all_gen/F");
-  tree->Branch("m_bestIntMod_all_gen",          &massIntModGA_, "m_bestIntMod_all_gen/F");
+  if(newVars) tree->Branch("m_bestIntMod_all_gen",          &massIntModGA_, "m_bestIntMod_all_gen/F");
   tree->Branch("m_bestMax_all_gen",             &massMaxGA_,    "m_bestMax_all_gen/F");
+  if(newVars) tree->Branch("m_bestMaxMod_all_gen",          &massMaxModGA_, "m_bestMaxMod_all_gen/F");
   tree->Branch("p_bestInt_all_gen",             &probIntGA_,    "p_bestInt_all_gen/F");
-  tree->Branch("p_bestIntMod_all_gen",          &probIntModGA_, "p_bestIntMod_all_gen/F");
+  if(newVars) tree->Branch("p_bestIntMod_all_gen",          &probIntModGA_, "p_bestIntMod_all_gen/F");
   tree->Branch("p_bestMax_all_gen",             &probMaxGA_,    "p_bestMax_all_gen/F");
+  if(newVars) tree->Branch("p_bestMaxMod_all_gen",          &probMaxModGA_, "p_bestMaxMod_all_gen/F");
   tree->Branch("cputime_all_gen",               &evalCpuGA_,    "cputime_all_gen/F");
   tree->Branch("realtime_all_gen",              &evalReaGA_,    "realtime_all_gen/F");
   tree->Branch("p_best_all_rec",                &probRA_,       "p_best_all_rec/F");
@@ -492,19 +496,23 @@ int main(int argc, const char* argv[])
   tree->Branch("p_good_all_rec",                &probAtGoodRA_, "p_good_all_rec/F");
   tree->Branch("m_best_all_rec",                &massRA_,       "m_best_all_rec/F");
   tree->Branch("m_bestInt_all_rec",             &massIntRA_,    "m_bestInt_all_rec/F");
-  tree->Branch("m_bestIntMod_all_rec",          &massIntModRA_, "m_bestIntMod_all_rec/F");
+  if(newVars) tree->Branch("m_bestIntMod_all_rec",          &massIntModRA_, "m_bestIntMod_all_rec/F");
   tree->Branch("m_bestMax_all_rec",             &massMaxRA_,    "m_bestMax_all_rec/F");
+  if(newVars) tree->Branch("m_bestMaxMod_all_rec",          &massMaxModRA_, "m_bestMaxMod_all_rec/F");
   tree->Branch("p_bestInt_all_rec",             &probIntRA_,    "p_bestInt_all_rec/F");
-  tree->Branch("p_bestIntMod_all_rec",          &probIntModRA_, "p_bestIntMod_all_rec/F");
+  if(newVars) tree->Branch("p_bestIntMod_all_rec",          &probIntModRA_, "p_bestIntMod_all_rec/F");
   tree->Branch("p_bestMax_all_rec",             &probMaxRA_,    "p_bestMax_all_rec/F");
+  if(newVars) tree->Branch("p_bestMaxMod_all_rec",          &probMaxModRA_, "p_bestMaxMod_all_rec/F");
   tree->Branch("cputime_all_rec",               &evalCpuRA_,    "cputime_all_rec/F");
   tree->Branch("realtime_all_rec",              &evalReaRA_,    "realtime_all_rec/F");
   tree->Branch("match_bestInt_all_gen",         &matchByIntGA_, "match_bestInt_all_gen/I");
-  tree->Branch("match_bestIntMod_all_gen",      &matchByIntModGA_,"match_bestIntMod_all_gen/I");
-  tree->Branch("match_bestMax_all_gen",         &matchByMaxGA_, "match_bestMax_all_gen/I");
-  tree->Branch("match_bestInt_all_rec",         &matchByIntRA_, "match_bestInt_all_rec/I");
-  tree->Branch("match_bestIntMod_all_rec",      &matchByIntModRA_,"match_bestIntMod_all_rec/I");
-  tree->Branch("match_bestMax_all_rec",         &matchByMaxRA_, "match_bestMax_all_rec/I");
+  if(newVars) tree->Branch("match_bestIntMod_all_gen",      &matchByIntModGA_,"match_bestIntMod_all_gen/I");
+  tree->Branch("match_bestMax_all_gen",         &matchByMaxGA_,   "match_bestMax_all_gen/I");
+  if(newVars) tree->Branch("match_bestMaxMod_all_gen",      &matchByMaxModGA_,"match_bestMaxMod_all_gen/I");
+  tree->Branch("match_bestInt_all_rec",         &matchByIntRA_,   "match_bestInt_all_rec/I");
+  if(newVars) tree->Branch("match_bestIntMod_all_rec",      &matchByIntModRA_,"match_bestIntMod_all_rec/I");
+  tree->Branch("match_bestMax_all_rec",         &matchByMaxRA_,   "match_bestMax_all_rec/I");
+  if(newVars) tree->Branch("match_bestMaxMod_all_rec",      &matchByMaxModRA_,"match_bestMaxMod_all_rec/I");
 
 
   ///////////////////////////////////////////////////////
@@ -897,9 +905,11 @@ int main(int argc, const char* argv[])
       massIntGA_   = 0;
       massIntModGA_= 0;
       massMaxGA_   = 0;
+      massMaxModGA_= 0;
       probIntGA_   = 0;
       probIntModGA_= 0;
       probMaxGA_   = 0;
+      probMaxModGA_= 0;
       evalCpuGA_   = 0;
       evalReaGA_   = 0;
       probAtSgnGA_ = 0;
@@ -914,9 +924,11 @@ int main(int argc, const char* argv[])
       massIntRA_   = 0;
       massIntModRA_= 0;
       massMaxRA_   = 0;
+      massMaxModRA_= 0;
       probIntRA_   = 0;
       probIntModRA_= 0;
       probMaxRA_   = 0;
+      probMaxModRA_= 0;
       evalCpuRA_   = 0;
       evalReaRA_   = 0;
       probAtSgnRA_ = 0;
@@ -924,9 +936,11 @@ int main(int argc, const char* argv[])
       matchByIntGA_   = 0;
       matchByIntModGA_= 0;
       matchByMaxGA_   = 0;
+      matchByMaxModGA_= 0;
       matchByIntRA_   = 0;
       matchByIntModRA_= 0;
       matchByMaxRA_   = 0;
+      matchByMaxModRA_= 0;
 
       if( doParton){
 
@@ -1202,7 +1216,7 @@ int main(int argc, const char* argv[])
 	  unsigned int permMax  = 0;
 
 	  for(unsigned int it = 0; it<(unsigned int)nPermutations; it++){
-	    //cout << "Permut " << it << " has int p = " << permutProbInt[it] << endl;
+	    if(printP4) cout << "Permut #" << it << " has int p = " << permutProbInt[it] << endl;
 	    if( permutProbInt[it]>maxIntProb ){
 	      maxIntProb = permutProbInt[it];
 	      permMax = it;
@@ -1215,6 +1229,7 @@ int main(int argc, const char* argv[])
 	  if(mode==0 || mode==2 || mode==6){
 	    for(unsigned int it = 0; it<(unsigned int)(nPermutations-1); it++){
 	      if(it%2==0){
+		if(printP4) cout << "Permut #" << it << "+#" << it+1 <<  "  has int p = " << permutProbInt[it] << " => " << (permutProbInt[it]+permutProbInt[it+1]) << endl;
 		if( (permutProbInt[it]+permutProbInt[it+1])>maxIntProbMod ){
 		  maxIntProbMod = (permutProbInt[it]+permutProbInt[it+1]);
 		  permMax3 = it;
@@ -1227,7 +1242,12 @@ int main(int argc, const char* argv[])
 	  massIntGA_ = bestInt.first;
 	  probIntGA_ = bestInt.second;
 
-	  pair<double,double> bestIntMod = (getMaxValue( histos[permMax3] ));
+	  if(gDirectory->FindObject("hSumIntMod")!=0){
+	    gDirectory->Remove(gDirectory->FindObject("hSumIntMod"));
+	  }
+	  TH1F* hSumIntMod = (TH1F*)histos[permMax3]->Clone("hSumIntMod");
+	  hSumIntMod->Add(histos[permMax3+1]);
+	  pair<double,double> bestIntMod = (getMaxValue(  hSumIntMod ));
 	  massIntModGA_ = bestIntMod.first;
 	  probIntModGA_ = bestIntMod.second;
 
@@ -1272,8 +1292,38 @@ int main(int argc, const char* argv[])
 	  massMaxGA_ =  bestMax.first ;
 	  probMaxGA_ =  bestMax.second;
 
-	  if(mode==0 || mode==1 || mode==6) 
-	    matchByMaxGA_ = (permMax2==0 || permMax2==1) ? 1 : 0;
+	  double maxMaxModProb = 0.;
+	  unsigned int permMax4 = 0;
+
+	  if(mode==0 || mode==2 || mode==6){
+	    for(unsigned int it = 0; it < (unsigned int)(histos.size()-1); it++){
+	      if(it%2==0){
+		if(gDirectory->FindObject("hSum")!=0){
+		  gDirectory->Remove(gDirectory->FindObject("hSum"));
+		}
+		TH1F* hSum = (TH1F*)histos[it]->Clone("hSum");
+		hSum->Add(histos[it+1] );
+		if( hSum->GetMaximum() > maxMaxModProb ){
+		  maxMaxModProb =  hSum->GetMaximum();
+		  permMax4 = it;
+		}
+	      }
+	    }
+	  }
+
+	  if(gDirectory->FindObject("hSumMaxMod")!=0){
+	    gDirectory->Remove(gDirectory->FindObject("hSumMaxMod"));
+	  }
+	  TH1F* hSumMaxMod = (TH1F*)histos[permMax4]->Clone("hSumMaxMod");
+	  hSumMaxMod->Add(histos[permMax4+1]);
+	  pair<double,double> bestMaxMod = (getMaxValue( hSumMaxMod ));
+	  massMaxModGA_ =  bestMaxMod.first ;
+	  probMaxModGA_ =  bestMaxMod.second;
+
+	  if(mode==0 || mode==1 || mode==6){
+	    matchByMaxGA_    = (permMax2==0 || permMax2==1) ? 1 : 0;
+	    matchByMaxModGA_ = (permMax4==0) ? 1 : 0;
+	  }
 	  else if(mode==2 || mode==3)
 	    matchByMaxGA_ = (permMax2==0) ? 1 : 0;
 	  else{}
@@ -1604,6 +1654,7 @@ int main(int argc, const char* argv[])
 	    double maxIntProb = 0.;
 	    unsigned int permMax = 0;
 	    for(unsigned int it = 0; it<(unsigned int)nPermutations; it++){
+	      if(printP4) cout << "Permut #" << it << " has int p = " << permutProbInt[it] << endl;
 	      if( permutProbInt[it]>maxIntProb ){
 		maxIntProb = permutProbInt[it];
 		permMax = it;
@@ -1616,6 +1667,7 @@ int main(int argc, const char* argv[])
 	    if(mode==0 || mode==2 || mode==6){
 	      for(unsigned int it = 0; it<(unsigned int)(nPermutations-1); it++){
 		if(it%2==0){
+		if(printP4) cout << "Permut #" << it << "+#" << it+1 <<  "  has int p = " << permutProbInt[it] << " => " << (permutProbInt[it]+permutProbInt[it+1]) << endl;		
 		  if( (permutProbInt[it]+permutProbInt[it+1])>maxIntProbMod ){
 		    maxIntProbMod = (permutProbInt[it]+permutProbInt[it+1]);
 		    permMax3 = it;
@@ -1628,7 +1680,12 @@ int main(int argc, const char* argv[])
 	    massIntRA_ = bestInt.first;
 	    probIntRA_ = bestInt.second;
 
-	    pair<double,double> bestIntMod = (getMaxValue( histos[permMax3] ));
+	    if(gDirectory->FindObject("hSumIntMod")!=0){
+	      gDirectory->Remove(gDirectory->FindObject("hSumIntMod"));
+	    }
+	    TH1F* hSumIntMod = (TH1F*)histos[permMax3]->Clone("hSumIntMod");
+	    hSumIntMod->Add(histos[permMax3+1]);	  
+	    pair<double,double> bestIntMod = (getMaxValue( hSumIntMod ));
 	    massIntModRA_ = bestIntMod.first;
 	    probIntModRA_ = bestIntMod.second;
 
@@ -1672,8 +1729,39 @@ int main(int argc, const char* argv[])
 	    massMaxRA_ =  bestMax.first ;
 	    probMaxRA_ =  bestMax.second;
 
-	    if(mode==0 || mode==1 || mode==6) 
-	      matchByMaxRA_ = (permMax2==0 || permMax2==1) ? 1 : 0;
+	    double maxMaxModProb = 0.;
+	    unsigned int permMax4 = 0;
+
+	    if(mode==0 || mode==2 || mode==6){
+	      for(unsigned int it = 0; it < (unsigned int)(histos.size()-1); it++){
+		if(it%2==0){
+		  if(gDirectory->FindObject("hSum")!=0){
+		    gDirectory->Remove(gDirectory->FindObject("hSum"));
+		  }
+		  TH1F* hSum = (TH1F*)histos[it]->Clone("hSum");
+		  hSum->Add(histos[it+1] );
+		  if( hSum->GetMaximum() > maxMaxModProb ){
+		    maxMaxModProb =  hSum->GetMaximum();
+		    permMax4 = it;
+		  }
+		}
+	      }
+	    }
+
+	    if(gDirectory->FindObject("hSumMaxMod")!=0){
+	      gDirectory->Remove(gDirectory->FindObject("hSumMaxMod"));
+	    }
+	    TH1F* hSumMaxMod = (TH1F*)histos[permMax4]->Clone("hSumMaxMod");
+	    hSumMaxMod->Add(histos[permMax4+1]);
+	    pair<double,double> bestMaxMod = (getMaxValue( hSumMaxMod ));
+	    massMaxModRA_ =  bestMaxMod.first ;
+	    probMaxModRA_ =  bestMaxMod.second;
+
+	    
+	    if(mode==0 || mode==1 || mode==6){
+	      matchByMaxRA_    = (permMax2==0 || permMax2==1) ? 1 : 0;
+	      matchByMaxModRA_ = (permMax4==0) ? 1 : 0;
+	    }
 	    else if(mode==2 || mode==3)
 	      matchByMaxRA_ = (permMax2==0) ? 1 : 0;
 	    else{}
