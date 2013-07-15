@@ -30,7 +30,7 @@
 #include "TVector3.h"
 #include "TLorentzVector.h"
 
-#define SAVEPLOTS 1
+#define SAVEPLOTS 0
 
 
 void plot_BestMass(TString fname  = "gen_default",
@@ -76,7 +76,7 @@ void plot_BestMass(TString fname  = "gen_default",
   hBestMass->SetLineWidth(2);
   hBestMass->SetLineColor(color);
   hBestMass->SetTitle("");
-  hBestMass->SetXTitle("M (GeV)");
+  hBestMass->SetXTitle("#bar{M} (GeV)");
   hBestMass->SetYTitle("P(M)");
   
   TLegend* leg = new TLegend(0.48,0.65,0.78,0.85,NULL,"brNDC");
@@ -295,7 +295,8 @@ void plot_param(TString header = "Light jet TF",
     obj = iter();
   }
   TF1 *func = hBestMass->GetFunction(fname);
-
+  cout << "Param 0: " << func->GetParameter(0) << endl;
+  cout << "Param 1: " << func->GetParameter(1) << endl;
 
   hBestMass->SetMarkerStyle(kFullCircle);
   hBestMass->SetMarkerColor(kBlue);
@@ -332,6 +333,193 @@ void plot_param(TString header = "Light jet TF",
   return;
 }
 
+
+void plot_P_plot(string mode = "SL2wj", string norm = "acc",
+		 string level = "gen",
+		 string mass = "bestInt",
+		 string cat  = "SL(4,2)",
+		 int event = 1){
+		 
+  gStyle->SetOptStat(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetCanvasBorderMode(0);
+  gStyle->SetCanvasColor(0);
+  gStyle->SetPadBorderMode(0);
+  gStyle->SetPadColor(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetTitleBorderSize(0);
+  gStyle->SetTitleH(0.07);
+  gStyle->SetTitleFontSize(0.1);
+  gStyle->SetTitleStyle(0);
+  gStyle->SetTitleOffset(1.3,"y");
+
+
+  TFile *f = TFile::Open(("MEValidator_"+mode+"_"+level+"_"+norm+".root").c_str(),"READ");
+  TCanvas* c_gen = (TCanvas*)f->Get(Form("Event_%d/c_%s",event, level.c_str()));
+  if(!c_gen) return;
+  else cout << "Found!" << endl;
+  c_gen->Draw();
+  THStack* srec = (THStack*)(c_gen->FindObject(("stack_m_all_"+level).c_str()));
+  if( srec!=0 ) cout << "Found!" << endl;
+
+  string what = "dummy";
+  if(level.find("rec")!=string::npos) what = "smeared";
+  if(level.find("gen")!=string::npos) what = "partons";
+
+  srec->SetTitle(("t#bar{t}h(125) "+cat+", "+what).c_str());
+  srec->GetXaxis()->SetTitle("M (GeV)");
+  srec->GetXaxis()->SetTitleSize(0.05);
+  srec->GetXaxis()->SetTitleOffset(0.92);
+  srec->GetYaxis()->SetTitle("P(M|Y_{p})");
+  srec->GetYaxis()->SetTitleSize(0.05);
+  srec->GetYaxis()->SetTitleOffset(0.85);
+
+  //srec->Draw("");
+  //TH1F* hStack = (TH1F*)srec->GetHistogram();
+  //if( hStack!=0 )  cout << "Found!" << endl;
+  //hStack->SetXTitle("#bar{M} (GeV)");
+  //TLegend* leg = (TLegend*)(c_gen->FindObject("leg"));
+  //if( leg!=0 ) cout << "Found!" << endl;
+
+  //c_gen->Draw("");
+
+  /*
+  TH1F* hStack = 0;
+  hStack = (TH1F*)srec->GetHistogram();
+  if(!hStack) return;
+  hStack->SetXTitle("#bar{M} (GeV)");
+  hStack->SetYTitle("units");
+  hStack->SetTitleSize(0.05,"Y");
+  hStack->SetTitleSize(0.05,"X");
+  hStack->SetTitleOffset(0.92,"X");
+  hStack->SetTitleOffset(0.98,"Y");
+  hStack->SetTitle("");
+  hStack->SetMaximum( hStack->GetMaximum()*1.2);
+  hStack->Draw();
+  */
+
+  string num(Form("%d",event));
+
+  if(SAVEPLOTS){
+    c_gen->SaveAs(("plots/Plot_"+mode+"_"+level+"_"+norm+"_"+mass+"_"+num+".png").c_str());
+    c_gen->SaveAs(("plots/Plot_"+mode+"_"+level+"_"+norm+"_"+mass+"_"+num+".pdf").c_str());
+  }
+
+  return;
+
+
+  
+  
+
+}
+
+void plot_xsection(string cat  = ""){
+		 
+  gStyle->SetOptStat(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetCanvasBorderMode(0);
+  gStyle->SetCanvasColor(0);
+  gStyle->SetPadBorderMode(0);
+  gStyle->SetPadColor(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetTitleBorderSize(0);
+  gStyle->SetTitleH(0.07);
+  gStyle->SetTitleFontSize(0.1);
+  gStyle->SetTitleStyle(0);
+  gStyle->SetTitleOffset(1.3,"y");
+
+
+  TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
+  c1->SetGrid(0,0);
+  c1->SetFillStyle(4000);
+  c1->SetFillColor(10);
+  c1->SetTicky();
+  c1->SetObjectStat(0);
+  c1->SetLogy(1);
+
+
+  TLegend* leg = new TLegend(0.52,0.60,0.82,0.88,NULL,"brNDC");
+  leg->SetFillStyle(0);
+  leg->SetBorderSize(0);
+  leg->SetFillColor(10);
+  leg->SetTextSize(0.04); 
+
+  TPaveText *pt = new TPaveText(.52,.22,.82,.35,"brNDC");
+  pt->SetFillStyle(0);
+  pt->SetBorderSize(0);
+  pt->SetFillColor(10);
+  pt->SetTextSize(0.04); 
+
+
+  TFile *fxsec = TFile::Open("root_TestMENew/TestMENew_rec_XSec_v2.root","READ");
+  TFile *facc  = TFile::Open("root_TestMENew/TestMENew_rec_Acc_v3.root", "READ");
+
+  TH1F* hxsec = (TH1F*)fxsec->Get("hInt");
+  hxsec->SetXTitle("#bar{M} (GeV)");
+  hxsec->SetYTitle("#sigma (a.u.)");
+  hxsec->SetTitleSize(0.05,"Y");
+  hxsec->SetTitleSize(0.05,"X");
+  hxsec->SetTitleOffset(0.92,"X");
+  hxsec->SetTitleOffset(0.98,"Y");
+
+  TH1F* hacc  = (TH1F*)facc->Get("hInt");
+
+  hxsec->SetLineColor(kRed);
+  hxsec->SetLineStyle(kSolid);
+  hxsec->SetLineWidth(3);
+  hxsec->SetFillStyle(3002);
+  hxsec->SetFillColor(kRed);
+  hxsec->SetMaximum( hxsec->GetMaximum()*1.2 );
+  hxsec->SetMinimum( 8e15);
+
+  hacc->SetLineColor(kBlue);
+  hacc->SetLineStyle(kSolid);
+  hacc->SetLineWidth(3);
+  hacc->SetFillStyle(3002);
+  hacc->SetFillColor(kBlue);
+  hacc->SetMaximum( hacc->GetMaximum()*1.2 );
+
+
+  hxsec->Draw("HIST");
+  hacc->Draw("HISTSAME");
+
+  leg->SetHeader(("t#bar{t}H(125)"+cat).c_str());
+  leg->AddEntry(hxsec, "#sigma(M) from [4]", "F");
+  leg->AddEntry(hacc,  "#sigma(M)#timesA from [4]", "F");
+
+  TF1* fxxsec = new TF1("fxxsec", "9.06355e+18*TMath::Landau(x,5.47665e+01,1.05552e+01)", 50, 300);
+  fxxsec->SetLineColor(kRed);
+  TF1* fxacc  = new TF1("fxacc", "7.84e+17*TMath::Landau(x,6.17e+01,1.61e+01)", 50, 300);
+  fxacc->SetLineColor(kBlue);
+
+  fxxsec->Draw("SAME");
+  fxacc->Draw("SAME");
+
+
+  TH1F* htrue = (TH1F*)hxsec->Clone("htrue");
+  htrue->Reset();
+  htrue->Fill(80, 0.4277);
+  htrue->Fill(100,0.2433);
+  htrue->Fill(120,0.1459 );
+  htrue->Fill(140,0.09150 );
+  htrue->Fill(160,0.05978 );
+  htrue->Fill(180,0.04061 );
+  htrue->Fill(200,0.02858 );
+
+  htrue->SetMarkerStyle(34);
+  htrue->SetMarkerSize(2.0);
+  htrue->SetMarkerColor(38);
+  htrue->Scale(hxsec->GetBinContent(hxsec->FindBin(80))/htrue->GetBinContent(htrue->FindBin(80)));
+  htrue->Draw("PSAME");
+
+  leg->AddEntry(htrue, "#sigma(M) from Ref. [?]", "P");
+  leg->Draw();
+
+  if(SAVEPLOTS){
+    c1->SaveAs("plots/Plot_xsection.pdf");
+    c1->SaveAs("plots/Plot_xsection.png");
+  }
+}
 
 void plot_genreco(string mode = "SL2wj", string norm = "acc",
 		  string mass = "bestInt",
@@ -381,13 +569,14 @@ void plot_genreco(string mode = "SL2wj", string norm = "acc",
   TTree* tgen = (TTree*)fgen->Get("tree");
   TTree* trec = (TTree*)frec->Get("tree");
 
-  TH1F* hgen_good = new TH1F("hgen_good","; M (GeV); units", nBins, xLow, xHigh);
+  TH1F* hgen_good = new TH1F("hgen_good","; #bar{M} (GeV); units", nBins, xLow, xHigh);
   hgen_good->SetLineColor(kRed);
   hgen_good->SetLineStyle(kSolid);
   hgen_good->SetLineWidth(3);
   hgen_good->SetFillStyle(3002);
   hgen_good->SetFillColor(kRed);
-  TH1F* hgen_bad  = new TH1F("hgen_bad", "; M (GeV); units", nBins, xLow, xHigh);
+  hgen_good->SetMaximum( hgen_good->GetMaximum()*1.2 );
+  TH1F* hgen_bad  = new TH1F("hgen_bad", "; #bar{M} (GeV); units", nBins, xLow, xHigh);
   hgen_bad->SetLineColor(kRed+2);
   hgen_bad->SetLineStyle(kDashed);
   hgen_bad->SetLineWidth(2);
@@ -404,18 +593,20 @@ void plot_genreco(string mode = "SL2wj", string norm = "acc",
   sgen->Add(hgen_bad);
   sgen->Add(hgen_good);
 
-  TH1F* hrec_good = new TH1F("hrec_good","; M (GeV); units", nBins, xLow, xHigh);
+  TH1F* hrec_good = new TH1F("hrec_good","; #bar{M} (GeV); units", nBins, xLow, xHigh);
   hrec_good->SetLineColor(kBlue);
   hrec_good->SetLineStyle(kSolid);
   hrec_good->SetLineWidth(3);
   hrec_good->SetFillStyle(3354);
   hrec_good->SetFillColor(kBlue);
-  TH1F* hrec_bad  = new TH1F("hrec_bad", "; M (GeV); units", nBins, xLow, xHigh);
+  hrec_good->Sumw2();
+  TH1F* hrec_bad  = new TH1F("hrec_bad", "; #bar{M} (GeV); units", nBins, xLow, xHigh);
   hrec_bad->SetLineColor(kBlue+2);
   hrec_bad->SetLineStyle(kDashed);
   hrec_bad->SetLineWidth(2);
   hrec_bad->SetFillStyle(3354);
   hrec_bad->SetFillColor(kBlue+2);
+  hrec_bad->Sumw2();
 
   trec->Draw( ("m_"+mass+"_all_rec>>hrec_good").c_str(),  ("match_"+mass+"_all_rec==1").c_str());
   trec->Draw( ("m_"+mass+"_all_rec>>hrec_bad" ).c_str(),  ("match_"+mass+"_all_rec==0").c_str());
@@ -429,17 +620,18 @@ void plot_genreco(string mode = "SL2wj", string norm = "acc",
   srec->Add(hrec_good);
 
   sgen->Draw("HIST");
-  srec->Draw("HISTSAME");
+  srec->Draw("HISTESAME");
   hgen_bad->Draw("HISTSAME");
   
   TH1F* hStack = (TH1F*)sgen->GetHistogram();
-  hStack->SetXTitle("M (GeV)");
+  hStack->SetXTitle("#bar{M} (GeV)");
   hStack->SetYTitle("units");
   hStack->SetTitleSize(0.05,"Y");
   hStack->SetTitleSize(0.05,"X");
   hStack->SetTitleOffset(0.92,"X");
   hStack->SetTitleOffset(0.98,"Y");
   hStack->SetTitle(Form("Match efficiency: %.0f%% (partons), %.0f%% (smeared)", hgen_good->Integral()*100, hrec_good->Integral()*100  ));
+  hStack->SetMaximum( hStack->GetMaximum()*1.2);
 
   leg->SetHeader(("t#bar{t}H(125), "+cat).c_str());
   leg->AddEntry(hgen_good, "partons, good" ,  "F");
@@ -465,6 +657,288 @@ void plot_genreco(string mode = "SL2wj", string norm = "acc",
 
   return;
 }
+
+
+void plot_genreco_prob(int gen = 1, 
+		       string mode = "SL2wj", string norm = "acc",
+		       string mass = "bestInt",
+		       string cat  = "SL(4,2)",
+		       int  nBins  = 20, 
+		       float xLow  = 50,
+		       float xHigh = 250){
+
+  gStyle->SetOptStat(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetCanvasBorderMode(0);
+  gStyle->SetCanvasColor(0);
+  gStyle->SetPadBorderMode(0);
+  gStyle->SetPadColor(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetTitleBorderSize(0);
+  gStyle->SetTitleH(0.07);
+  gStyle->SetTitleFontSize(0.1);
+  gStyle->SetTitleStyle(0);
+  gStyle->SetTitleOffset(1.3,"y");
+
+
+  TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
+  c1->SetGrid(0,0);
+  c1->SetFillStyle(4000);
+  c1->SetFillColor(10);
+  c1->SetTicky();
+  c1->SetObjectStat(0);
+
+
+  TLegend* leg = new TLegend(0.52,0.60,0.82,0.88,NULL,"brNDC");
+  leg->SetFillStyle(0);
+  leg->SetBorderSize(0);
+  leg->SetFillColor(10);
+  leg->SetTextSize(0.04); 
+
+  TPaveText *pt = new TPaveText(.52,.22,.82,.35,"brNDC");
+  pt->SetFillStyle(0);
+  pt->SetBorderSize(0);
+  pt->SetFillColor(10);
+  pt->SetTextSize(0.04); 
+
+
+  TFile *fgen = TFile::Open(("MEValidator_"+mode+"_gen_"+norm+".root").c_str(),"READ");
+  TFile *frec = TFile::Open(("MEValidator_"+mode+"_rec_"+norm+".root").c_str(),"READ");
+
+  TTree* tgen = (TTree*)fgen->Get("tree");
+  TTree* trec = (TTree*)frec->Get("tree");
+
+  TH1F* hgen_good = new TH1F("hgen_good","; -2Log(P(#bar{M}|Y); units", nBins, xLow, xHigh);
+  hgen_good->SetLineColor(kRed);
+  hgen_good->SetLineStyle(kSolid);
+  hgen_good->SetLineWidth(3);
+  hgen_good->SetFillStyle(3002);
+  hgen_good->SetFillColor(kRed);
+  hgen_good->SetMaximum( hgen_good->GetMaximum()*1.2 );
+  TH1F* hgen_bad  = new TH1F("hgen_bad", "; -2Log(P(#bar{M}|Y); units", nBins, xLow, xHigh);
+  hgen_bad->SetLineColor(kRed+2);
+  hgen_bad->SetLineStyle(kDashed);
+  hgen_bad->SetLineWidth(2);
+  hgen_bad->SetFillStyle(3002);
+  hgen_bad->SetFillColor(kRed+2);
+
+  tgen->Draw( ("-2*TMath::Log(p_"+mass+"_all_gen)>>hgen_good").c_str(),  ("p_"+mass+"_all_gen>0 && match_"+mass+"_all_gen==1").c_str());
+  tgen->Draw( ("-2*TMath::Log(p_"+mass+"_all_gen)>>hgen_bad" ).c_str(),  ("p_"+mass+"_all_gen>0 && match_"+mass+"_all_gen==0").c_str());
+  float normgen = hgen_good->Integral() + hgen_bad->Integral();
+  hgen_good->Scale(1./normgen);
+  hgen_bad ->Scale(1./normgen);
+
+  THStack*  sgen =  new THStack("gen","");
+  sgen->Add(hgen_bad);
+  sgen->Add(hgen_good);
+
+  TH1F* hrec_good = new TH1F("hrec_good","; -2Log(P(#bar{M}|Y); units", nBins, xLow, xHigh);
+  hrec_good->SetLineColor(kBlue);
+  hrec_good->SetLineStyle(kSolid);
+  hrec_good->SetLineWidth(3);
+  hrec_good->SetFillStyle(3354);
+  hrec_good->SetFillColor(kBlue);
+  hrec_good->Sumw2();
+  TH1F* hrec_bad  = new TH1F("hrec_bad", "; -2Log(P(#bar{M}|Y); units", nBins, xLow, xHigh);
+  hrec_bad->SetLineColor(kBlue+2);
+  hrec_bad->SetLineStyle(kDashed);
+  hrec_bad->SetLineWidth(2);
+  hrec_bad->SetFillStyle(3354);
+  hrec_bad->SetFillColor(kBlue+2);
+  hrec_bad->Sumw2();
+
+  trec->Draw( ("-2*TMath::Log(p_"+mass+"_all_rec)>>hrec_good").c_str(),  ("p_"+mass+"_all_rec>0 && match_"+mass+"_all_rec==1").c_str());
+  trec->Draw( ("-2*TMath::Log(p_"+mass+"_all_rec)>>hrec_bad" ).c_str(),  ("p_"+mass+"_all_rec>0 && match_"+mass+"_all_rec==0").c_str());
+  float normrec = hrec_good->Integral() + hrec_bad->Integral();
+  hrec_good->Scale(1./normrec);
+  hrec_bad ->Scale(1./normrec);
+
+
+  THStack*  srec =  new THStack("rec","");
+  srec->Add(hrec_bad);
+  srec->Add(hrec_good);
+
+  if(gen){
+    sgen->Draw("HIST");
+    hgen_bad->Draw("HISTSAME");
+  }
+  else
+    srec->Draw("HISTE");
+  
+  TH1F* hStack = 0;
+  if(gen) 
+    hStack = (TH1F*)sgen->GetHistogram();
+  else
+    hStack = (TH1F*)srec->GetHistogram();
+
+  hStack->SetXTitle("-2Log(P(#bar{M}|Y))");
+  hStack->SetYTitle("units");
+  hStack->SetTitleSize(0.05,"Y");
+  hStack->SetTitleSize(0.05,"X");
+  hStack->SetTitleOffset(0.92,"X");
+  hStack->SetTitleOffset(0.98,"Y");
+  hStack->SetTitle(Form("Match efficiency: %.0f%% (partons), %.0f%% (smeared)", hgen_good->Integral()*100, hrec_good->Integral()*100  ));
+  hStack->SetMaximum( hStack->GetMaximum()*1.2);
+
+  leg->SetHeader(("t#bar{t}H(125), "+cat).c_str());
+  if(gen){
+    leg->AddEntry(hgen_good, "partons, good" ,  "F");
+    leg->AddEntry(hgen_bad,  "partons, wrong",  "F");
+  }
+  else{
+    leg->AddEntry(hrec_good, "smeared, good",   "F");
+    leg->AddEntry(hrec_bad,  "smeared, wrong",  "F");
+  }
+
+  leg->Draw();
+  //sgen->Draw("HISTSAME");
+
+  pt->AddText("Good matching:");
+  if(gen) 
+    pt->AddText(Form("partons: %.0f%%",hgen_good->Integral()*100 ))->SetTextColor(kRed);
+  else
+    pt->AddText(Form("smeared: %.0f%%",hrec_good->Integral()*100 ))->SetTextColor(kBlue);
+  pt->SetTextAlign(31);
+
+  //pt->Draw();
+
+  string level = gen==1 ? "gen" : "rec" ;
+
+  if(SAVEPLOTS){
+    c1->SaveAs(("plots/Plot_"+mode+"_"+norm+"_"+mass+"_prob_"+level+".png").c_str());
+    c1->SaveAs(("plots/Plot_"+mode+"_"+norm+"_"+mass+"_prob_"+level+".pdf").c_str());
+  }
+
+
+  return;
+}
+
+
+
+
+
+void plot_genreco_good(string mode = "SL2wj", string norm = "acc",
+		       string cat  = "SL(4,2)",
+		       int  nBins  = 30, 
+		       float xLow  = 50,
+		       float xHigh = 250){
+
+  gStyle->SetOptStat(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetCanvasBorderMode(0);
+  gStyle->SetCanvasColor(0);
+  gStyle->SetPadBorderMode(0);
+  gStyle->SetPadColor(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetTitleBorderSize(0);
+  gStyle->SetTitleH(0.07);
+  gStyle->SetTitleFontSize(0.1);
+  gStyle->SetTitleStyle(0);
+  gStyle->SetTitleOffset(1.3,"y");
+
+
+  TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
+  c1->SetGrid(0,0);
+  c1->SetFillStyle(4000);
+  c1->SetFillColor(10);
+  c1->SetTicky();
+  c1->SetObjectStat(0);
+
+
+  TLegend* leg = new TLegend(0.52,0.60,0.82,0.88,NULL,"brNDC");
+  leg->SetFillStyle(0);
+  leg->SetBorderSize(0);
+  leg->SetFillColor(10);
+  leg->SetTextSize(0.04); 
+
+  TPaveText *pt = new TPaveText(.52,.22,.82,.35,"brNDC");
+  pt->SetFillStyle(0);
+  pt->SetBorderSize(0);
+  pt->SetFillColor(10);
+  pt->SetTextSize(0.04); 
+
+
+  TFile *fgen = TFile::Open(("MEValidator_"+mode+"_gen_"+norm+".root").c_str(),"READ");
+  TFile *frec = TFile::Open(("MEValidator_"+mode+"_rec_"+norm+".root").c_str(),"READ");
+
+  TTree* tgen = (TTree*)fgen->Get("tree");
+  TTree* trec = (TTree*)frec->Get("tree");
+
+  TH1F* hgen_good = new TH1F("hgen_good","; #bar{M} (GeV); units", nBins, xLow, xHigh);
+  hgen_good->SetLineColor(kRed);
+  hgen_good->SetLineStyle(kSolid);
+  hgen_good->SetLineWidth(3);
+  hgen_good->SetFillStyle(3002);
+  hgen_good->SetFillColor(kRed);
+
+  tgen->Draw( "m_best_good_gen>>hgen_good" );
+  float normgen = hgen_good->Integral() ;
+  hgen_good->Scale(1./normgen);
+  TF1* gaus_gen = new TF1("gaus_gen","gaus",50,250);
+  gaus_gen->SetNpx(1000);
+  gaus_gen->SetLineColor(kRed);
+  gaus_gen->SetParameter(1,hgen_good->GetMean() );
+  hgen_good->Fit(gaus_gen, "", "", hgen_good->GetMean()-30, hgen_good->GetMean()+30 );
+  hgen_good->SetMaximum( hgen_good->GetMaximum()*1.2);
+
+  THStack*  sgen =  new THStack("gen","");
+  sgen->Add(hgen_good);
+
+  TH1F* hrec_good = new TH1F("hrec_good","; #bar{M} (GeV); units", nBins, xLow, xHigh);
+  hrec_good->SetLineColor(kBlue);
+  hrec_good->SetLineStyle(kSolid);
+  hrec_good->SetLineWidth(3);
+  hrec_good->SetFillStyle(3354);
+  hrec_good->SetFillColor(kBlue);
+
+  hrec_good->Sumw2();
+  trec->Draw( "m_best_good_rec>>hrec_good" );
+  float normrec = hrec_good->Integral();
+  hrec_good->Scale(1./normrec);
+  TF1* gaus_rec = new TF1("gaus_rec","gaus",50,250);
+  gaus_rec->SetLineColor(kBlue);
+  gaus_rec->SetParameter(1,hrec_good->GetMean() );
+  hrec_good->Fit(gaus_rec, "", "", hrec_good->GetMean()-30, hrec_good->GetMean()+30 );
+
+
+  THStack*  srec =  new THStack("rec","");
+  srec->Add(hrec_good);
+
+  sgen->Draw("HIST");
+  srec->Draw("HISTESAME");
+  gaus_gen->Draw("SAME");
+  gaus_rec->Draw("SAME");
+  
+  TH1F* hStack = (TH1F*)sgen->GetHistogram();
+  hStack->SetXTitle("#bar{M} (GeV)");
+  hStack->SetYTitle("units");
+  hStack->SetTitleSize(0.05,"Y");
+  hStack->SetTitleSize(0.05,"X");
+  hStack->SetTitleOffset(0.92,"X");
+  hStack->SetTitleOffset(0.98,"Y");
+
+  leg->SetHeader(("t#bar{t}H(125), "+cat).c_str());
+  leg->AddEntry(hgen_good, "partons" ,  "F");
+  leg->AddEntry(hrec_good, "smeared",   "F");
+
+  leg->Draw();
+  //sgen->Draw("HISTSAME");
+
+  pt->AddText("Gaussian fit:");
+  pt->AddText(Form("#mu=%.0f, #sigma =  %.1f GeV", gaus_gen->GetParameter(1),gaus_gen->GetParameter(2)  ))->SetTextColor(kRed);
+  pt->AddText(Form("#mu=%.0f, #sigma = %.1f GeV",  gaus_rec->GetParameter(1),gaus_rec->GetParameter(2)))->SetTextColor(kBlue);
+  pt->SetTextAlign(11);
+  pt->Draw();
+
+  if(SAVEPLOTS){
+    c1->SaveAs(("plots/Plot_"+mode+"_"+norm+"_good_gen_vs_reco.png").c_str());
+    c1->SaveAs(("plots/Plot_"+mode+"_"+norm+"_good_gen_vs_reco.pdf").c_str());
+  }
+
+
+  return;
+}
+
 
 
 
@@ -512,19 +986,50 @@ void plot_masses(string mode = "SL2wj",
   pt->SetTextSize(0.04); 
 
 
+  string what = "dummy";
+  if(level.find("rec")!=string::npos) what = "smeared";
+  if(level.find("gen")!=string::npos) what = "partons";
+
+  string mass_1 = "dummy";
+  int old_1 = 0;
+  if(mass1.find("Int")!=string::npos) 
+    mass_1 = "max_{p}#left{#intP(M|Y_{p})dM#right}";
+  else if(mass1.find("Max")!=string::npos) 
+    mass_1 = "max_{p,M}#left{P(M|Y_{p})#right}";
+  else{
+    mass_1 = "max_{M}#left{#sum_{P}P(M|Y_{p})#right}";
+    old_1  = 1;
+  }
+
+ 
+  string mass_2 = "dummy";
+  int old_2 = 0;
+  if(mass2.find("Int")!=string::npos) 
+    mass_2 = "max_{p}#left{#intP(M|Y_{p})dM#right}";
+  else if(mass2.find("Max")!=string::npos) 
+    mass_2 = "max_{p,M}#left{P(M|Y_{p})#right}";
+  else{
+    mass_2 = "max_{M}#left{#sumP(M|Y_{p})#right}";
+    old_2  = 1;
+  }
+
+
   TFile *fgen = TFile::Open(("MEValidator_"+mode+"_"+level+"_"+norm+".root").c_str(),"READ");
   TFile *frec = TFile::Open(("MEValidator_"+mode+"_"+level+"_"+norm+".root").c_str(),"READ");
 
   TTree* tgen = (TTree*)fgen->Get("tree");
   TTree* trec = (TTree*)frec->Get("tree");
 
-  TH1F* hgen_good = new TH1F("hgen_good","; M (GeV); units", nBins, xLow, xHigh);
+  TH1F* hgen_good = new TH1F("hgen_good","; #bar{M} (GeV); units", nBins, xLow, xHigh);
   hgen_good->SetLineColor(kRed);
   hgen_good->SetLineStyle(kSolid);
   hgen_good->SetLineWidth(3);
   hgen_good->SetFillStyle(3002);
   hgen_good->SetFillColor(kRed);
  
+  hgen_good->Sumw2();
+  if(old_1<0.5) tgen->Draw( ("m_"+mass1+"_all_"+level+">>hgen_good").c_str(),  ("m_"+mass1+"_all_"+level+">0 && match_"+mass1+"_all_"+level+">0").c_str());
+  float match1 = hgen_good->Integral() ; hgen_good->Reset();
   tgen->Draw( ("m_"+mass1+"_all_"+level+">>hgen_good").c_str(),  ("m_"+mass1+"_all_"+level+">0").c_str());
 
   float normgen = hgen_good->Integral() ;
@@ -533,15 +1038,17 @@ void plot_masses(string mode = "SL2wj",
   THStack*  sgen =  new THStack("gen","");
   sgen->Add(hgen_good);
 
-  TH1F* hrec_good = new TH1F("hrec_good","; M (GeV); units", nBins, xLow, xHigh);
+  TH1F* hrec_good = new TH1F("hrec_good","; #bar{M} (GeV); units", nBins, xLow, xHigh);
   hrec_good->SetLineColor(kBlue);
   hrec_good->SetLineStyle(kSolid);
   hrec_good->SetLineWidth(3);
   hrec_good->SetFillStyle(3354);
   hrec_good->SetFillColor(kBlue);
 
+  hrec_good->Sumw2();
+  if(old_2<0.5) trec->Draw( ("m_"+mass2+"_all_"+level+">>hrec_good").c_str(),  ("m_"+mass2+"_all_"+level+">0 && match_"+mass2+"_all_"+level+">0").c_str());
+  float match2 = hrec_good->Integral() ; hrec_good->Reset();
   trec->Draw( ("m_"+mass2+"_all_"+level+">>hrec_good").c_str(),  ("m_"+mass2+"_all_"+level+">0").c_str());
-
   float normrec = hrec_good->Integral() ;
   hrec_good->Scale(1./normrec);
 
@@ -549,38 +1056,17 @@ void plot_masses(string mode = "SL2wj",
   THStack*  srec =  new THStack("rec","");
   srec->Add(hrec_good);
 
-  sgen->Draw("HIST");
-  srec->Draw("HISTSAME");
+  sgen->Draw("HISTE");
+  srec->Draw("HISTESAME");
    
   TH1F* hStack = (TH1F*)sgen->GetHistogram();
-  hStack->SetXTitle("M (GeV)");
+  hStack->SetXTitle("#bar{M} (GeV)");
   hStack->SetYTitle("units");
   hStack->SetTitleSize(0.05,"Y");
   hStack->SetTitleSize(0.05,"X");
   hStack->SetTitleOffset(0.92,"X");
   hStack->SetTitleOffset(0.98,"Y");
   hStack->SetTitle(Form("Match efficiency: %.0f%% (partons), %.0f%% (smeared)", hgen_good->Integral()*100, hrec_good->Integral()*100  ));
-
-  string what = "dummy";
-  if(level.find("rec")!=string::npos) what = "smeared";
-  if(level.find("gen")!=string::npos) what = "partons";
-
-  string mass_1 = "dummy";
-  if(mass1.find("Int")!=string::npos) 
-    mass_1 = "max_{p}#left{#intP(M|Y_{p})dM#right}";
-  else if(mass1.find("Max")!=string::npos) 
-    mass_1 = "max_{p,M}#left{P(M|Y_{p})#right}";
-  else
-    mass_1 = "max_{M}#left{#sumP(M|Y_{p})#right}";
-
- 
-  string mass_2 = "dummy";
-  if(mass2.find("Int")!=string::npos) 
-    mass_2 = "max_{p}#left{#intP(M|Y_{p})dM#right}";
-  else if(mass2.find("Max")!=string::npos) 
-    mass_2 = "max_{p,M}#left{P(M|Y_{p})#right}";
-  else
-    mass_2 = "max_{M}#left{#sumP(M|Y_{p})#right}";
 
 
 
@@ -592,11 +1078,11 @@ void plot_masses(string mode = "SL2wj",
   //sgen->Draw("HISTSAME");
 
   pt->AddText("Good matching:");
-  pt->AddText(Form("partons: %.0f%%",hgen_good->Integral()*100 ))->SetTextColor(kRed);
-  pt->AddText(Form("smeared: %.0f%%",hrec_good->Integral()*100 ))->SetTextColor(kBlue);
+  if(old_1<0.5) pt->AddText(Form("%.0f%%",match1/normgen*100 ))->SetTextColor(kRed);
+  if(old_2<0.5) pt->AddText(Form("%.0f%%",match2/normrec*100 ))->SetTextColor(kBlue);
   pt->SetTextAlign(31);
 
-  //pt->Draw();
+  pt->Draw();
 
   if(SAVEPLOTS){
     c1->SaveAs(("plots/Plot_"+mode+"_"+norm+"_"+mass1+"_vs_"+mass2+".png").c_str());
@@ -606,6 +1092,157 @@ void plot_masses(string mode = "SL2wj",
 
   return;
 }
+
+
+void plot_norm(string mode = "SL2wj", 
+	       string norm1 = "acc",
+	       string norm2 = "unnorm",
+	       string level = "gen",
+	       string mass = "bestInt",
+	       string cat  = "SL(4,2)",
+	       int  nBins  = 20, 
+	       float xLow  = 50,
+	       float xHigh = 250){
+
+  gStyle->SetOptStat(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetCanvasBorderMode(0);
+  gStyle->SetCanvasColor(0);
+  gStyle->SetPadBorderMode(0);
+  gStyle->SetPadColor(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetTitleBorderSize(0);
+  gStyle->SetTitleH(0.07);
+  gStyle->SetTitleFontSize(0.1);
+  gStyle->SetTitleStyle(0);
+  gStyle->SetTitleOffset(1.3,"y");
+
+
+  TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
+  c1->SetGrid(0,0);
+  c1->SetFillStyle(4000);
+  c1->SetFillColor(10);
+  c1->SetTicky();
+  c1->SetObjectStat(0);
+
+
+  TLegend* leg = new TLegend(0.50,0.60,0.80,0.88,NULL,"brNDC");
+  leg->SetFillStyle(0);
+  leg->SetBorderSize(0);
+  leg->SetFillColor(10);
+  leg->SetTextSize(0.04); 
+
+  TPaveText *pt = new TPaveText(.52,.22,.82,.35,"brNDC");
+  pt->SetFillStyle(0);
+  pt->SetBorderSize(0);
+  pt->SetFillColor(10);
+  pt->SetTextSize(0.04); 
+
+  int old = 1;
+  if(mass.find("Int")!=string::npos || mass.find("Max")!=string::npos) old = 0;
+
+  string what = "dummy";
+  if(level.find("rec")!=string::npos) what = "smeared";
+  if(level.find("gen")!=string::npos) what = "partons";
+
+  string norm_1 = "dummy";
+  if(norm1.find("acc")!=string::npos) 
+    norm_1 = "N= #sigma(M)#times A";
+  else if(norm1.find("unnorm")!=string::npos) 
+    norm_1 = "N=1";
+  else{
+  }
+
+ 
+  string norm_2 = "dummy";
+  if(norm2.find("acc")!=string::npos) 
+    norm_2 = "N= #sigma(M)#timesAcc";
+  else if(norm2.find("unnorm")!=string::npos) 
+    norm_2 = "N=1";
+  else{
+  }
+
+ 
+
+  TFile *fgen = TFile::Open(("MEValidator_"+mode+"_"+level+"_"+norm1+".root").c_str(),"READ");
+  TFile *frec = TFile::Open(("MEValidator_"+mode+"_"+level+"_"+norm2+".root").c_str(),"READ");
+
+  TTree* tgen = (TTree*)fgen->Get("tree");
+  TTree* trec = (TTree*)frec->Get("tree");
+
+  TH1F* hgen_good = new TH1F("hgen_good","; #bar{M} (GeV); units", nBins, xLow, xHigh);
+  hgen_good->SetLineColor(kRed);
+  hgen_good->SetLineStyle(kSolid);
+  hgen_good->SetLineWidth(3);
+  hgen_good->SetFillStyle(3002);
+  hgen_good->SetFillColor(kRed);
+ 
+  hgen_good->Sumw2();
+  if(old<0.5) tgen->Draw( ("m_"+mass+"_all_"+level+">>hgen_good").c_str(),  ("m_"+mass+"_all_"+level+">0 && match_"+mass+"_all_"+level+">0").c_str());
+  float match1 = hgen_good->Integral() ; hgen_good->Reset();
+  tgen->Draw( ("m_"+mass+"_all_"+level+">>hgen_good").c_str(),  ("m_"+mass+"_all_"+level+">0").c_str());
+
+  float normgen = hgen_good->Integral() ;
+  hgen_good->Scale(1./normgen);
+
+  THStack*  sgen =  new THStack("gen","");
+  sgen->Add(hgen_good);
+
+  TH1F* hrec_good = new TH1F("hrec_good","; #bar{M} (GeV); units", nBins, xLow, xHigh);
+  hrec_good->SetLineColor(kBlue);
+  hrec_good->SetLineStyle(kSolid);
+  hrec_good->SetLineWidth(3);
+  hrec_good->SetFillStyle(3354);
+  hrec_good->SetFillColor(kBlue);
+
+  hrec_good->Sumw2();
+  if(old<0.5) trec->Draw( ("m_"+mass+"_all_"+level+">>hrec_good").c_str(),  ("m_"+mass+"_all_"+level+">0 && match_"+mass+"_all_"+level+">0").c_str());
+  float match2 = hrec_good->Integral() ; hrec_good->Reset();
+  trec->Draw( ("m_"+mass+"_all_"+level+">>hrec_good").c_str(),  ("m_"+mass+"_all_"+level+">0").c_str());
+  float normrec = hrec_good->Integral() ;
+  hrec_good->Scale(1./normrec);
+
+
+  THStack*  srec =  new THStack("rec","");
+  srec->Add(hrec_good);
+
+  sgen->Draw("HISTE");
+  srec->Draw("HISTESAME");
+   
+  TH1F* hStack = (TH1F*)sgen->GetHistogram();
+  hStack->SetXTitle("#bar{M} (GeV)");
+  hStack->SetYTitle("units");
+  hStack->SetTitleSize(0.05,"Y");
+  hStack->SetTitleSize(0.05,"X");
+  hStack->SetTitleOffset(0.92,"X");
+  hStack->SetTitleOffset(0.98,"Y");
+  hStack->SetTitle(Form("Match efficiency: %.0f%% (partons), %.0f%% (smeared)", hgen_good->Integral()*100, hrec_good->Integral()*100  ));
+  hStack->SetMaximum( hStack->GetMaximum()*1.2);
+
+
+  leg->SetHeader(("t#bar{t}H(125), "+cat).c_str());
+  leg->AddEntry(hgen_good, (norm_1).c_str() ,  "F");
+  leg->AddEntry(hrec_good, (norm_2).c_str(),   "F");
+
+  leg->Draw();
+  //sgen->Draw("HISTSAME");
+
+  pt->AddText("Good matching:");
+  if(old<0.5) pt->AddText(Form("%.0f%%",match1/normgen*100 ))->SetTextColor(kRed);
+  if(old<0.5) pt->AddText(Form("%.0f%%",match2/normrec*100 ))->SetTextColor(kBlue);
+  pt->SetTextAlign(31);
+
+  if(old<0.5) pt->Draw();
+
+  if(SAVEPLOTS){
+    c1->SaveAs(("plots/Plot_"+mode+"_"+mass+"_"+norm1+"_vs_"+norm2+".png").c_str());
+    c1->SaveAs(("plots/Plot_"+mode+"_"+mass+"_"+norm1+"_vs_"+norm2+".pdf").c_str());
+  }
+
+
+  return;
+}
+
 
 
 
@@ -666,18 +1303,25 @@ void plot_systematics(int syst = 0, string mode = "SL2wj", string norm = "acc",
   files.push_back(fgen_jUp);
   files.push_back(fgen_bUp);
   files.push_back(fgen_METUp);
-
+  
   vector<TH1F*> histos;
 
-  TH1F* h = new TH1F("h","; M (GeV); units", nBins, xLow, xHigh);
+  TH1F* h = new TH1F("h","; #bar{M} (GeV); units", nBins, xLow, xHigh);
   h->SetTitleSize(0.05,"Y");
   h->SetTitleSize(0.05,"X");
   h->SetTitleOffset(0.92,"X");
   h->SetTitleOffset(0.98,"Y");
 
   for(unsigned int k = 0; k < files.size(); k++){
-    TTree* t = (TTree*)files[k]->Get("tree");
     TH1F*  h2 = (TH1F*)h->Clone(Form("h_%d",k));
+
+    if(!files[k]){
+      histos.push_back( 0 );
+      continue;
+    }
+
+    TTree* t = (TTree*)files[k]->Get("tree");
+    h2->Sumw2();
     if(k<6 && syst<6)
       t->Draw( Form("m_%s_all_gen>>h_%d", mass.c_str(), k) ,  ("m_"+mass+"_all_gen>0").c_str());
     else if( k<6 && syst>5)
@@ -706,18 +1350,22 @@ void plot_systematics(int syst = 0, string mode = "SL2wj", string norm = "acc",
 
   float max = 0;
   for( unsigned int k = 0; k < histos.size(); k++ ){
+    if( !histos[k] ) continue;
     if( histos[k]->GetMaximum()>max) max =  histos[k]->GetMaximum();
   }
 
   string name = "dummy";
 
   for(unsigned int k = 0; k < histos.size(); k++){
+
+    if( !histos[k] ) continue;
+
     histos[k]->GetYaxis()->SetRangeUser(0, max*1.2);
 
     if(k==0) 
       histos[k]->Draw("HIST");
     else if(k>0 && k==syst)
-      histos[k]->Draw("HISTSAME");
+      histos[k]->Draw("HISTESAME");
     else{};
 
     if( (string(files[k]->GetName())).find("noME.")!=string::npos )
@@ -790,17 +1438,17 @@ void makeAll(){
   plot_masses("SLNoBLep","unnorm","gen","bestInt","best","SL(3,2) partons",20,50,250);
   plot_masses("DL","unnorm","gen","bestInt","best","DL(4,N) partons",20,50,250);
 
-  plot_masses("SL2wj","acc","rec","bestInt","best","SL(4,2) partons",20,50,250);
-  plot_masses("SL1wj","acc","rec","bestInt","best","SL(4,1) partons",20,50,250);
-  plot_masses("SLNoBHad","acc","rec","bestInt","best","SL(3,2) partons",20,50,250);
-  plot_masses("SLNoBLep","acc","rec","bestInt","best","SL(3,2) partons",20,50,250);
-  plot_masses("DL","acc","rec","bestInt","best","DL(4,N) partons",20,50,250);
+  //plot_masses("SL2wj","acc","rec","bestInt","best","SL(4,2) partons",15,50,250);
+  //plot_masses("SL1wj","acc","rec","bestInt","best","SL(4,1) partons",15,50,250);
+  //plot_masses("SLNoBHad","acc","rec","bestInt","best","SL(3,2) partons",15,50,250);
+  //plot_masses("SLNoBLep","acc","rec","bestInt","best","SL(3,2) partons",15,50,250);
+  //plot_masses("DL","acc","rec","bestInt","best","DL(4,N) partons",15,50,250);
 
-  plot_masses("SL2wj","unnorm","rec","bestInt","best","SL(4,2) partons",20,50,250);
-  plot_masses("SL1wj","unnorm","rec","bestInt","best","SL(4,1) partons",20,50,250);
-  plot_masses("SLNoBHad","unnorm","rec","bestInt","best","SL(3,2) partons",20,50,250);
-  plot_masses("SLNoBLep","unnorm","rec","bestInt","best","SL(3,2) partons",20,50,250);
-  plot_masses("DL","unnorm","rec","bestInt","best","DL(4,N) partons",20,50,250);
+  //plot_masses("SL2wj","unnorm","rec","bestInt","best","SL(4,2) partons",15,50,250);
+  //plot_masses("SL1wj","unnorm","rec","bestInt","best","SL(4,1) partons",15,50,250);
+  //plot_masses("SLNoBHad","unnorm","rec","bestInt","best","SL(3,2) partons",15,50,250);
+  //plot_masses("SLNoBLep","unnorm","rec","bestInt","best","SL(3,2) partons",15,50,250);
+  //plot_masses("DL","unnorm","rec","bestInt","best","DL(4,N) partons",15,50,250);
 
 
   plot_masses("SL2wj","acc","gen","bestInt","bestMax","SL(4,2) partons",20,50,250);
@@ -815,18 +1463,61 @@ void makeAll(){
   plot_masses("SLNoBLep","unnorm","gen","bestInt","bestMax","SL(3,2) partons",20,50,250);
   plot_masses("DL","unnorm","gen","bestInt","bestMax","DL(4,N) partons",20,50,250);
 
-  plot_masses("SL2wj","acc","rec","bestInt","bestMax","SL(4,2) partons",20,50,250);
-  plot_masses("SL1wj","acc","rec","bestInt","bestMax","SL(4,1) partons",20,50,250);
-  plot_masses("SLNoBHad","acc","rec","bestInt","bestMax","SL(3,2) partons",20,50,250);
-  plot_masses("SLNoBLep","acc","rec","bestInt","bestMax","SL(3,2) partons",20,50,250);
-  plot_masses("DL","acc","rec","bestInt","bestMax","DL(4,N) partons",20,50,250);
+  //plot_masses("SL2wj","acc","rec","bestInt","bestMax","SL(4,2) partons",15,50,250);
+  //plot_masses("SL1wj","acc","rec","bestInt","bestMax","SL(4,1) partons",15,50,250);
+  //plot_masses("SLNoBHad","acc","rec","bestInt","bestMax","SL(3,2) partons",15,50,250);
+  //plot_masses("SLNoBLep","acc","rec","bestInt","bestMax","SL(3,2) partons",15,50,250);
+  //plot_masses("DL","acc","rec","bestInt","bestMax","DL(4,N) partons",15,50,250);
 
-  plot_masses("SL2wj","unnorm","rec","bestInt","bestMax","SL(4,2) partons",20,50,250);
-  plot_masses("SL1wj","unnorm","rec","bestInt","bestMax","SL(4,1) partons",20,50,250);
-  plot_masses("SLNoBHad","unnorm","rec","bestInt","bestMax","SL(3,2) partons",20,50,250);
-  plot_masses("SLNoBLep","unnorm","rec","bestInt","bestMax","SL(3,2) partons",20,50,250);
-  plot_masses("DL","unnorm","rec","bestInt","bestMax","DL(4,N) partons",20,50,250);
+  //plot_masses("SL2wj","unnorm","rec","bestInt","bestMax","SL(4,2) partons",15,50,250);
+  //plot_masses("SL1wj","unnorm","rec","bestInt","bestMax","SL(4,1) partons",15,50,250);
+  //plot_masses("SLNoBHad","unnorm","rec","bestInt","bestMax","SL(3,2) partons",15,50,250);
+  //plot_masses("SLNoBLep","unnorm","rec","bestInt","bestMax","SL(3,2) partons",15,50,250);
+  //plot_masses("DL","unnorm","rec","bestInt","bestMax","DL(4,N) partons",15,50,250);
 
+  plot_norm("SL2wj",   "acc","unnorm", "gen", "bestInt", "SL(4,2) partons",30,50,250);
+  plot_norm("SL1wj",   "acc","unnorm", "gen", "bestInt", "SL(4,1) partons",30,50,250);
+  plot_norm("SLNoBHad","acc","unnorm", "gen", "bestInt", "SL(3,1) partons",30,50,250);
+  plot_norm("SLNoBLep","acc","unnorm", "gen", "bestInt", "SL(3,1) partons",30,50,250);
+  plot_norm("DL",      "unnorm","acc", "gen", "bestInt", "DL(4,N) partons",30,50,250);
+
+  plot_genreco_good("SL2wj","acc","SL(4,2)",     30,  60, 250);
+  plot_genreco_good("SL1wj","acc","SL(4,1)",     30,  60, 250);
+  plot_genreco_good("SLNoBLep","acc","SL(3,2)",  30,  60, 250);
+  plot_genreco_good("SLNoBHad","acc","SL(3,2)",  30,  60, 250);
+  plot_genreco_good("DL","acc","DL(4,N)",        30,  60, 250);
+
+  plot_genreco_good("SL2wj","unnorm","SL(4,2)",     30,  60, 250);
+  plot_genreco_good("SL1wj","unnorm","SL(4,1)",     30,  60, 250);
+  plot_genreco_good("SLNoBLep","unnorm","SL(3,2)",  30,  60, 250);
+  plot_genreco_good("SLNoBHad","unnorm","SL(3,2)",  30,  60, 250);
+  plot_genreco_good("DL","unnorm","DL(4,N)",        30,  60, 250);
+
+
+  plot_genreco_prob(0, "SL2wj",  "acc",   "bestInt",  "SL(4,2)", 20, 80, 160);
+  plot_genreco_prob(1, "SL2wj",  "acc",   "bestInt",  "SL(4,2)", 20, 80, 160);
+  plot_genreco_prob(0, "SL2wj",  "unnorm","bestInt",  "SL(4,2)", 25,  0, 100);
+  plot_genreco_prob(1, "SL2wj",  "unnorm","bestInt",  "SL(4,2)", 25,  0, 100);
+
+  plot_genreco_prob(0, "SL1wj",  "acc",   "bestInt",  "SL(4,1)", 20, 80, 160);
+  plot_genreco_prob(1, "SL1wj",  "acc",   "bestInt",  "SL(4,1)", 20, 80, 160);
+  plot_genreco_prob(0, "SL1wj",  "unnorm","bestInt",  "SL(4,1)", 25,  0, 100);
+  plot_genreco_prob(1, "SL1wj",  "unnorm","bestInt",  "SL(4,1)", 25,  0, 100);
+
+  plot_genreco_prob(0, "SLNoBHad",  "acc",   "bestInt",  "SL(3,2)", 20, 80, 160);
+  plot_genreco_prob(1, "SLNoBHad",  "acc",   "bestInt",  "SL(3,2)", 20, 80, 160);
+  plot_genreco_prob(0, "SLNoBHad",  "unnorm","bestInt",  "SL(3,2)", 25,  0, 100);
+  plot_genreco_prob(1, "SLNoBHad",  "unnorm","bestInt",  "SL(3,2)", 25,  0, 100);
+
+  plot_genreco_prob(0, "SLNoBLep",  "acc",   "bestInt",  "SL(3,2)", 20, 80, 160);
+  plot_genreco_prob(1, "SLNoBLep",  "acc",   "bestInt",  "SL(3,2)", 20, 80, 160);
+  plot_genreco_prob(0, "SLNoBLep",  "unnorm","bestInt",  "SL(3,2)", 25,  0, 100);
+  plot_genreco_prob(1, "SLNoBLep",  "unnorm","bestInt",  "SL(3,2)", 25,  0, 100);
+
+  plot_genreco_prob(0, "DL",  "acc",   "bestInt",  "DL(4,N)", 20, 80, 160);
+  plot_genreco_prob(1, "DL",  "acc",   "bestInt",  "DL(4,N)", 20, 80, 160);
+  plot_genreco_prob(0, "DL",  "unnorm","bestInt",  "DL(4,N)", 25,  0, 100);
+  plot_genreco_prob(1, "DL",  "unnorm","bestInt",  "DL(4,N)", 25,  0, 100);
 
   //plot_param("udcsg 0<|#eta|<1.5", "parton E (GeV)",   "#sigma^{j}(E)", "resolLightBin0", 30,  180, 0, 30, "");
   //plot_param("udcsg 1.5<|#eta|<2.5", "parton E (GeV)", "#sigma^{j}(E)", "resolLightBin1", 30,  180, 0, 30, "");
@@ -861,11 +1552,11 @@ void makeAll(){
   //plot_TF2d("gen_default","MET TF", "#nu p_{T} (GeV)","#phi", "TF(#phi|#hat{#phi},p_{T})","tfMetPhi");
 
   /*
-  plot_TF1d("rec_default","P(M|Y_{good})", "M (GeV)","signal","hMass", 1);
-  plot_TF1d("rec_default","P(M|Y)", "M (GeV)","signal","hMassProb", 1, "_2peak_BAD");
-  plot_TF1d("rec_default","P(M|Y)", "M (GeV)","signal","hMassProb", 3, "_2peak_GOOD");
-  plot_TF1d("rec_default","P(M|Y)", "M (GeV)","signal","hMassProb", 4, "_1peak_GOOD");
-  plot_TF1d("rec_default","P(M|Y)", "M (GeV)","signal","hMassProb", 34,"_3peak_BAD");
+  plot_TF1d("rec_default","P(M|Y_{good})", "#bar{M} (GeV)","signal","hMass", 1);
+  plot_TF1d("rec_default","P(M|Y)", "#bar{M} (GeV)","signal","hMassProb", 1, "_2peak_BAD");
+  plot_TF1d("rec_default","P(M|Y)", "#bar{M} (GeV)","signal","hMassProb", 3, "_2peak_GOOD");
+  plot_TF1d("rec_default","P(M|Y)", "#bar{M} (GeV)","signal","hMassProb", 4, "_1peak_GOOD");
+  plot_TF1d("rec_default","P(M|Y)", "#bar{M} (GeV)","signal","hMassProb", 34,"_3peak_BAD");
 
   return;
 
