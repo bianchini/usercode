@@ -1102,7 +1102,9 @@ void plot_norm(string mode = "SL2wj",
 	       string cat  = "SL(4,2)",
 	       int  nBins  = 20, 
 	       float xLow  = 50,
-	       float xHigh = 250){
+	       float xHigh = 250,
+	       int match = 1
+	       ){
 
   gStyle->SetOptStat(0);
   gStyle->SetTitleFillColor(0);
@@ -1162,6 +1164,7 @@ void plot_norm(string mode = "SL2wj",
   else{
   }
 
+  string sign = match>0.5 ? ">" : "<" ;
  
 
   TFile *fgen = TFile::Open(("MEValidator_"+mode+"_"+level+"_"+norm1+".root").c_str(),"READ");
@@ -1178,9 +1181,9 @@ void plot_norm(string mode = "SL2wj",
   hgen_good->SetFillColor(kRed);
  
   hgen_good->Sumw2();
-  if(old<0.5) tgen->Draw( ("m_"+mass+"_all_"+level+">>hgen_good").c_str(),  ("m_"+mass+"_all_"+level+">0 && match_"+mass+"_all_"+level+">0").c_str());
+  if(old<0.5) tgen->Draw( ("m_"+mass+"_all_"+level+">>hgen_good").c_str(),  ("m_"+mass+"_all_"+level+">0 && match_"+mass+"_all_"+level+">-0.5").c_str());
   float match1 = hgen_good->Integral() ; hgen_good->Reset();
-  tgen->Draw( ("m_"+mass+"_all_"+level+">>hgen_good").c_str(),  ("m_"+mass+"_all_"+level+">0").c_str());
+  tgen->Draw( ("m_"+mass+"_all_"+level+">>hgen_good").c_str(),  ("m_"+mass+"_all_"+level+">0 && match_"+mass+"_all_"+level+sign+"0.5").c_str());
 
   float normgen = hgen_good->Integral() ;
   hgen_good->Scale(1./normgen);
@@ -1196,9 +1199,9 @@ void plot_norm(string mode = "SL2wj",
   hrec_good->SetFillColor(kBlue);
 
   hrec_good->Sumw2();
-  if(old<0.5) trec->Draw( ("m_"+mass+"_all_"+level+">>hrec_good").c_str(),  ("m_"+mass+"_all_"+level+">0 && match_"+mass+"_all_"+level+">0").c_str());
+  if(old<0.5) trec->Draw( ("m_"+mass+"_all_"+level+">>hrec_good").c_str(),  ("m_"+mass+"_all_"+level+">0 && match_"+mass+"_all_"+level+">-0.5").c_str());
   float match2 = hrec_good->Integral() ; hrec_good->Reset();
-  trec->Draw( ("m_"+mass+"_all_"+level+">>hrec_good").c_str(),  ("m_"+mass+"_all_"+level+">0").c_str());
+  trec->Draw( ("m_"+mass+"_all_"+level+">>hrec_good").c_str(),  ("m_"+mass+"_all_"+level+">0 && match_"+mass+"_all_"+level+sign+"0.5").c_str());
   float normrec = hrec_good->Integral() ;
   hrec_good->Scale(1./normrec);
 
@@ -1206,8 +1209,14 @@ void plot_norm(string mode = "SL2wj",
   THStack*  srec =  new THStack("rec","");
   srec->Add(hrec_good);
 
-  sgen->Draw("HISTE");
-  srec->Draw("HISTESAME");
+  if(hgen_good->GetMaximum() > hrec_good->GetMaximum()){
+    sgen->Draw("HISTE");
+    srec->Draw("HISTESAME");
+  }
+  else{
+    srec->Draw("HISTE");
+    sgen->Draw("HISTESAME");
+  }
    
   TH1F* hStack = (TH1F*)sgen->GetHistogram();
   hStack->SetXTitle("#bar{M} (GeV)");
@@ -1216,7 +1225,7 @@ void plot_norm(string mode = "SL2wj",
   hStack->SetTitleSize(0.05,"X");
   hStack->SetTitleOffset(0.92,"X");
   hStack->SetTitleOffset(0.98,"Y");
-  hStack->SetTitle(Form("Match efficiency: %.0f%% (partons), %.0f%% (smeared)", hgen_good->Integral()*100, hrec_good->Integral()*100  ));
+  hStack->SetTitle(Form("Match efficiency: %.0f%% (partons), %.0f%% (smeared)" ,hgen_good->Integral()*100, hrec_good->Integral()*100  ));
   hStack->SetMaximum( hStack->GetMaximum()*1.2);
 
 
@@ -1228,15 +1237,16 @@ void plot_norm(string mode = "SL2wj",
   //sgen->Draw("HISTSAME");
 
   pt->AddText("Good matching:");
-  if(old<0.5) pt->AddText(Form("%.0f%%",match1/normgen*100 ))->SetTextColor(kRed);
-  if(old<0.5) pt->AddText(Form("%.0f%%",match2/normrec*100 ))->SetTextColor(kBlue);
+  if(old<0.5) pt->AddText(Form("%.0f%%",match>0.5 ? (1/match1*normgen*100) : (1-1/match1*normgen)*100 ))->SetTextColor(kRed);
+  if(old<0.5) pt->AddText(Form("%.0f%%",match>0.5 ? (1/match2*normrec*100) : (1-1/match2*normrec)*100 ))->SetTextColor(kBlue);
   pt->SetTextAlign(31);
 
   if(old<0.5) pt->Draw();
 
+  string isMatch = match>0.5 ? "match" : "unmatch" ;
   if(SAVEPLOTS){
-    c1->SaveAs(("plots/Plot_"+mode+"_"+mass+"_"+norm1+"_vs_"+norm2+".png").c_str());
-    c1->SaveAs(("plots/Plot_"+mode+"_"+mass+"_"+norm1+"_vs_"+norm2+".pdf").c_str());
+    c1->SaveAs(("plots/Plot_"+mode+"_"+mass+"_"+norm1+"_vs_"+norm2+"_"+isMatch+".png").c_str());
+    c1->SaveAs(("plots/Plot_"+mode+"_"+mass+"_"+norm1+"_vs_"+norm2+"_"+isMatch+".pdf").c_str());
   }
 
 
@@ -1405,6 +1415,25 @@ void plot_systematics(int syst = 0, string mode = "SL2wj", string norm = "acc",
 
 void makeAll(){
 
+  plot_P_plot("SL2wj","acc","gen","bestInt","SL(4,2)",1);
+  plot_P_plot("SL2wj","acc","gen","bestInt","SL(4,2)",2);
+  plot_P_plot("SL2wj","acc","gen","bestInt","SL(4,2)",6);
+  plot_P_plot("SL2wj","acc","gen","bestInt","SL(4,2)",7);
+  plot_P_plot("SL2wj","acc","gen","bestInt","SL(4,2)",8);
+  plot_P_plot("SL1wj","acc","gen","bestInt","SL(4,1)",1);
+  plot_P_plot("SL1wj","acc","gen","bestInt","SL(4,1)",4);
+  plot_P_plot("SL1wj","acc","gen","bestInt","SL(4,1)",5);
+  plot_P_plot("SLNoBHad","acc","gen","bestInt","SL(3,2) no b_{h}",1);
+  plot_P_plot("SLNoBHad","acc","gen","bestInt","SL(3,2) no b_{h}",4);
+  plot_P_plot("SLNoBHad","acc","gen","bestInt","SL(3,2) no b_{h}",5);
+  plot_P_plot("SLNoBLep","acc","gen","bestInt","SL(3,2) no b_{l}",4);
+  plot_P_plot("DL",      "acc","gen","bestInt","DL(4,N)",1);
+  plot_P_plot("DL",      "acc","gen","bestInt","DL(4,N)",2);
+  plot_P_plot("DL",      "acc","gen","bestInt","DL(4,N)",4);
+  plot_P_plot("DL",      "acc","gen","bestInt","DL(4,N)",5);
+  plot_P_plot("DL",      "acc","gen","bestInt","DL(4,N)",6);
+  plot_P_plot("DL",      "acc","gen","bestInt","DL(4,N)",7);
+
   plot_genreco("SL2wj",   "acc","bestInt","SL(4,2)",           25,50,250);
   plot_genreco("SL1wj",   "acc","bestInt","SL(4,2)",           25,50,250);
   plot_genreco("SLNoBHad","acc","bestInt","SL(3,2) no b_{q}",  25,50,250);
@@ -1425,6 +1454,10 @@ void makeAll(){
   plot_systematics(6, "SL2wj",  "acc", "bestInt", "SL(4,2) smeared", 15, 50, 250);
   plot_systematics(7, "SL2wj",  "acc", "bestInt", "SL(4,2) smeared", 15, 50, 250);
   plot_systematics(8, "SL2wj",  "acc", "bestInt", "SL(4,2) smeared", 15, 50, 250);
+
+  plot_systematics(6, "SL1wj",  "acc", "bestInt", "SL(4,1) smeared", 15, 50, 250);
+  plot_systematics(7, "SL1wj",  "acc", "bestInt", "SL(4,1) smeared", 15, 50, 250);
+  plot_systematics(8, "SL1wj",  "acc", "bestInt", "SL(4,1) smeared", 15, 50, 250);
 
   plot_masses("SL2wj","acc","gen","bestInt","best","SL(4,2) partons",20,50,250);
   plot_masses("SL1wj","acc","gen","bestInt","best","SL(4,1) partons",20,50,250);
@@ -1475,11 +1508,27 @@ void makeAll(){
   //plot_masses("SLNoBLep","unnorm","rec","bestInt","bestMax","SL(3,2) partons",15,50,250);
   //plot_masses("DL","unnorm","rec","bestInt","bestMax","DL(4,N) partons",15,50,250);
 
-  plot_norm("SL2wj",   "acc","unnorm", "gen", "bestInt", "SL(4,2) partons",30,50,250);
-  plot_norm("SL1wj",   "acc","unnorm", "gen", "bestInt", "SL(4,1) partons",30,50,250);
-  plot_norm("SLNoBHad","acc","unnorm", "gen", "bestInt", "SL(3,1) partons",30,50,250);
-  plot_norm("SLNoBLep","acc","unnorm", "gen", "bestInt", "SL(3,1) partons",30,50,250);
-  plot_norm("DL",      "unnorm","acc", "gen", "bestInt", "DL(4,N) partons",30,50,250);
+  plot_norm("SL2wj",   "acc","unnorm", "gen", "bestInt", "SL(4,2) partons",30,50,250,1);
+  plot_norm("SL1wj",   "acc","unnorm", "gen", "bestInt", "SL(4,1) partons",30,50,250,1);
+  plot_norm("SLNoBHad","acc","unnorm", "gen", "bestInt", "SL(3,1) partons",30,50,250,1);
+  plot_norm("SLNoBLep","acc","unnorm", "gen", "bestInt", "SL(3,1) partons",30,50,250,1);
+  plot_norm("DL",      "unnorm","acc", "gen", "bestInt", "DL(4,N) partons",30,50,250,1);
+  plot_norm("SL2wj",   "acc","unnorm", "gen", "bestInt", "SL(4,2) partons",15,50,250,0);
+  plot_norm("SL1wj",   "acc","unnorm", "gen", "bestInt", "SL(4,1) partons",15,50,250,0);
+  plot_norm("SLNoBHad","acc","unnorm", "gen", "bestInt", "SL(3,1) partons",15,50,250,0);
+  plot_norm("SLNoBLep","acc","unnorm", "gen", "bestInt", "SL(3,1) partons",15,50,250,0);
+  plot_norm("DL",      "unnorm","acc", "gen", "bestInt", "DL(4,N) partons",15,50,250,0);
+  plot_norm("SL2wj",   "acc","unnorm", "rec", "bestInt", "SL(4,2) partons",30,50,250,1);
+  plot_norm("SL1wj",   "acc","unnorm", "rec", "bestInt", "SL(4,1) partons",30,50,250,1);
+  plot_norm("SLNoBHad","acc","unnorm", "rec", "bestInt", "SL(3,1) partons",30,50,250,1);
+  plot_norm("SLNoBLep","acc","unnorm", "rec", "bestInt", "SL(3,1) partons",30,50,250,1);
+  plot_norm("DL",      "unnorm","acc", "rec", "bestInt", "DL(4,N) partons",30,50,250,1);
+  plot_norm("SL2wj",   "acc","unnorm", "rec", "bestInt", "SL(4,2) partons",15,50,250,0);
+  plot_norm("SL1wj",   "acc","unnorm", "rec", "bestInt", "SL(4,1) partons",15,50,250,0);
+  plot_norm("SLNoBHad","acc","unnorm", "rec", "bestInt", "SL(3,1) partons",15,50,250,0);
+  plot_norm("SLNoBLep","acc","unnorm", "rec", "bestInt", "SL(3,1) partons",15,50,250,0);
+  plot_norm("DL",      "unnorm","acc", "rec", "bestInt", "DL(4,N) partons",15,50,250,0);
+
 
   plot_genreco_good("SL2wj","acc","SL(4,2)",     30,  60, 250);
   plot_genreco_good("SL1wj","acc","SL(4,1)",     30,  60, 250);
