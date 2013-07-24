@@ -348,6 +348,12 @@ int main(int argc, const char* argv[])
   case 3:
     nPermutations = 3;
     break;
+  case 4:
+    nPermutations = 6;
+    break;
+  case 5:
+    nPermutations = 12;
+    break;
   case 6:
     nPermutations = 12;
     break;
@@ -384,6 +390,33 @@ int main(int argc, const char* argv[])
       234765,      // ONE WRONG
       234675       // ONE WRONG
     };
+  int permutations_SLNoHiggs[6] =
+    {
+      234567,      // ONE CORRECT
+      534267,      // ONE CORRECT
+      534627,      // ALL WRONG
+      634527,      // ALL WRONG
+      234657,      // ALL WRONG
+      634257       // ALL WRONG
+    };
+
+  int permutations_SL3b[12] =  
+    {234567, 534267,     // CORRECT 
+     634725, 734625,     // ALL WRONG
+     534762, 734562,     // ONE WRONG
+     234765, 734265,     // ONE WRONG
+     634572, 534672,     // ONE WRONG
+     234675, 634275      // ONE WRONG
+    };
+
+  int permutations_SL3b_equivalent[12] =  
+    {234576, 534276,     // CORRECT 
+     634752, 734652,     // ALL WRONG
+     534726, 734526,     // ONE WRONG
+     234756, 734256,     // ONE WRONG
+     634527, 534627,     // ONE WRONG
+     234657, 634257      // ONE WRONG
+    };
 
   int permutations_DL[12] =  
     {234567, 534267,     // CORRECT 
@@ -405,6 +438,10 @@ int main(int argc, const char* argv[])
       permutations[per] = permutations_SLNoBHad[per];
     else if(mode==3) 
       permutations[per] = permutations_SLNoBLep[per];
+    else if(mode==4) 
+      permutations[per] = permutations_SLNoHiggs[per];
+    else if(mode==5) 
+      permutations[per] = permutations_SL3b[per];
     else if(mode==6) 
       permutations[per] = permutations_DL[per];
   }
@@ -425,7 +462,8 @@ int main(int argc, const char* argv[])
   TH1F*  hMassProb_rec     = new TH1F("m_all_rec","",         nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
   //THStack*  sMassProbInt_gen  = new THStack("stack_m_all_gen", "Per permutation mass, GEN");
   //THStack*  sMassProbInt_rec  = new THStack("stack_m_all_rec", "Per permutation mass, REC");
-
+  TH1F*  hInt     = new TH1F("hInt","",nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);  
+ 
 
   TH1F*  hBestMass_gen        = new TH1F("m_best_good_gen","",   nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
   TH1F*  hBestMass_rec        = new TH1F("m_best_good_rec","",   nMassPoints, mH[0]-2.5, mH[nMassPoints-1]+2.5);
@@ -439,6 +477,7 @@ int main(int argc, const char* argv[])
   TTree* tree  = new TTree("tree","");
 
   int counter_;
+  int type_;
 
   float probGG_;
   float probAtSgnGG_;
@@ -457,6 +496,8 @@ int main(int argc, const char* argv[])
   float probMaxGA_,probMaxModGA_,probIntGA_ , probIntModGA_ ;
   float evalCpuGA_,evalReaGA_;
 
+  int posIntGA_,posIntRA_,posMaxGA_,posMaxRA_;
+
   float probRA_;
   float probAtSgnRA_;
   float probAtGoodRA_;
@@ -467,6 +508,7 @@ int main(int argc, const char* argv[])
   int matchByIntGA_, matchByIntModGA_, matchByMaxGA_, matchByMaxModGA_, matchByIntRA_, matchByIntModRA_, matchByMaxRA_, matchByMaxModRA_;
 
   tree->Branch("counter",                       &counter_,      "counter/I");
+   if(newVars) tree->Branch("type",                          &type_,         "type/I");
   tree->Branch("p_best_good_gen",               &probGG_,       "p_best_good_gen/F");
   tree->Branch(Form("p_%d_good_gen",int(met)),  &probAtSgnGG_, Form("p_%d_good_gen/F",int(met)) );
   tree->Branch("m_best_good_gen",               &massGG_,       "m_best_good_gen/F");
@@ -482,8 +524,10 @@ int main(int argc, const char* argv[])
   tree->Branch("p_good_all_gen",                &probAtGoodGA_, "p_good_all_gen/F");
   tree->Branch("m_best_all_gen",                &massGA_,       "m_best_all_gen/F");
   tree->Branch("m_bestInt_all_gen",             &massIntGA_,    "m_bestInt_all_gen/F");
+  if(newVars) tree->Branch("pos_bestInt_all_gen",           &posIntGA_,     "pos_bestInt_all_gen/I");
   if(newVars) tree->Branch("m_bestIntMod_all_gen",          &massIntModGA_, "m_bestIntMod_all_gen/F");
   tree->Branch("m_bestMax_all_gen",             &massMaxGA_,    "m_bestMax_all_gen/F");
+  if(newVars) tree->Branch("pos_bestMax_all_gen",           &posMaxGA_,     "pos_bestMax_all_gen/I");
   if(newVars) tree->Branch("m_bestMaxMod_all_gen",          &massMaxModGA_, "m_bestMaxMod_all_gen/F");
   tree->Branch("p_bestInt_all_gen",             &probIntGA_,    "p_bestInt_all_gen/F");
   if(newVars) tree->Branch("p_bestIntMod_all_gen",          &probIntModGA_, "p_bestIntMod_all_gen/F");
@@ -496,12 +540,14 @@ int main(int argc, const char* argv[])
   tree->Branch("p_good_all_rec",                &probAtGoodRA_, "p_good_all_rec/F");
   tree->Branch("m_best_all_rec",                &massRA_,       "m_best_all_rec/F");
   tree->Branch("m_bestInt_all_rec",             &massIntRA_,    "m_bestInt_all_rec/F");
+  if(newVars) tree->Branch("pos_bestInt_all_rec",           &posIntRA_,     "pos_bestInt_all_rec/I");
   if(newVars) tree->Branch("m_bestIntMod_all_rec",          &massIntModRA_, "m_bestIntMod_all_rec/F");
   tree->Branch("m_bestMax_all_rec",             &massMaxRA_,    "m_bestMax_all_rec/F");
   if(newVars) tree->Branch("m_bestMaxMod_all_rec",          &massMaxModRA_, "m_bestMaxMod_all_rec/F");
   tree->Branch("p_bestInt_all_rec",             &probIntRA_,    "p_bestInt_all_rec/F");
   if(newVars) tree->Branch("p_bestIntMod_all_rec",          &probIntModRA_, "p_bestIntMod_all_rec/F");
   tree->Branch("p_bestMax_all_rec",             &probMaxRA_,    "p_bestMax_all_rec/F");
+  if(newVars) tree->Branch("pos_bestMax_all_rec",           &posMaxRA_,     "pos_bestMax_all_rec/I");  
   if(newVars) tree->Branch("p_bestMaxMod_all_rec",          &probMaxModRA_, "p_bestMaxMod_all_rec/F");
   tree->Branch("cputime_all_rec",               &evalCpuRA_,    "cputime_all_rec/F");
   tree->Branch("realtime_all_rec",              &evalReaRA_,    "realtime_all_rec/F");
@@ -534,19 +580,21 @@ int main(int argc, const char* argv[])
     par = 6;  // SL, bLep lost
     break;
   case 4:
-    par = 19; // inclusive xsec
+    par = 6;  // SL, higgs2 lost
     break;
   case 5:
-    par = 19; // acceptance xsec
+    par = 6;  // SL, 3b
     break;
   case 6:
     par = 5;  // DL
     break;
+  case 7:
+    par = 19; // inclusive xsec
+    break;
   default:
-    par = 4;
+    par = 19;
     break;
   }
-
 
   MEIntegratorNew* meIntegrator = new MEIntegratorNew( pathToTF , par, int(verbose));
   if(mode == 0)
@@ -557,12 +605,26 @@ int main(int argc, const char* argv[])
     meIntegrator->setIntType( MEIntegratorNew::SLNoBHad );
   else if(mode == 3)
     meIntegrator->setIntType( MEIntegratorNew::SLNoBLep );
-  else if(mode== 4)
-    meIntegrator->setIntType( MEIntegratorNew::SLXSec );
+  else if(mode == 4)
+    meIntegrator->setIntType( MEIntegratorNew::SLNoHiggs );
   else if(mode == 5)
-    meIntegrator->setIntType( MEIntegratorNew::SLAcc );
+    meIntegrator->setIntType( MEIntegratorNew::SL3b );
   else if(mode == 6)
     meIntegrator->setIntType( MEIntegratorNew::DL );
+  else if(mode == 7)
+    meIntegrator->setIntType( MEIntegratorNew::SLXSec );
+  else if(mode == 8)
+    meIntegrator->setIntType( MEIntegratorNew::SLAcc );
+  else if(mode == 9)
+    meIntegrator->setIntType( MEIntegratorNew::SLAcc2wj );
+  else if(mode == 10)
+    meIntegrator->setIntType( MEIntegratorNew::SLAcc1wj );
+  else if(mode == 11)
+    meIntegrator->setIntType( MEIntegratorNew::SLAccNoBHad );
+  else if(mode == 12)
+    meIntegrator->setIntType( MEIntegratorNew::SLAccNoBLep );
+  else if(mode == 13)
+    meIntegrator->setIntType( MEIntegratorNew::SLAccNoHiggs );
   else{
     cout << "Unsupported mode... exit" << endl;
     delete meIntegrator;
@@ -581,7 +643,11 @@ int main(int argc, const char* argv[])
   }
   meIntegrator->setNormFormulas( TString(functions[0].c_str()),  
 				 TString(functions[1].c_str()),  
-				 TString(functions[2].c_str()));
+				 TString(functions[2].c_str()),
+				 TString(functions[3].c_str()),  
+				 TString(functions[4].c_str()),  
+				 TString(functions[5].c_str())
+				 );
 
   meIntegrator->setTopMass( 174.3 , 80.19);
   meIntegrator->setUseME (useME);
@@ -596,7 +662,84 @@ int main(int argc, const char* argv[])
     meIntegrator->switchOffOL(); 
     cout << "*** Switching off OpenLoops to speed-up the calculation ***" << endl;
   }
- ////////////////////////////////////////////////////////
+
+
+  if(doMassScan && mode==5){
+    cout << "Mode 5 works only when testing the permutations... exit" << endl;
+    delete meIntegrator;
+    return 0;
+  }
+
+
+  ////////////////////////////////////////////////////////
+  if(mode>6){
+
+    double CTl = TMath::Cos(2*TMath::ATan(TMath::Exp(-2.1)));
+    double CTj = TMath::Cos(2*TMath::ATan(TMath::Exp(-2.5)));
+
+    cout << "Mode " << mode << ": cos theta l (j) will be restricted to +/-" << CTl << " (" << CTj << ")" << endl; 
+
+    for(int m = 0; m < nMassPoints ; m++){
+
+      ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, par);
+      ROOT::Math::GSLMCIntegrator ig2( ROOT::Math::IntegrationMultiDim::kVEGAS , 1.e-12, 1.e-5, vegasPoints);
+      ig2.SetFunction(toIntegrate);
+      meIntegrator->SetPar(par);
+
+      double xLmode[19]    = {    -1, -PI,    5.,-1.,-PI,-1, -PI,   5.,  -1, -PI, -1, -PI, -1, -PI,    5,-1, -PI, -1, -PI};
+      double xUmode[19]    = {     1., PI,  500., 1., PI, 1,  PI, 500.,   1,  PI,  1,  PI,  1,  PI,  500, 1,  PI,  1,  PI};
+
+      double xLmode9[19]   = {  -CTl, -PI,   20.,-1.,-PI,-CTj, -PI,  20.,  -CTj, -PI, -CTj, -PI, -CTj, -PI,   20,-CTj, -PI, -CTj, -PI};
+      double xUmode9[19]   = {   CTl,  PI,  500., 1., PI, CTj,  PI, 500.,   CTj,  PI,  CTj,  PI,  CTj,  PI,  500, CTj,  PI,  CTj,  PI};
+
+      double xLmode10[19]  = {  -CTl, -PI,   20.,-1.,-PI,-CTj, -PI,   5.,  -1, -PI, -1, -PI, -CTj, -PI,   20,-CTj, -PI, -CTj, -PI};
+      double xUmode10[19]  = {   CTl,  PI,  500., 1., PI, CTj,  PI, 500.,   1,  PI,  1,  PI,  CTj,  PI,  500, CTj,  PI,  CTj,  PI};
+
+      double xLmode11[19]  = {  -CTl, -PI,   20.,-1.,-PI,-CTj, -PI,  20.,  -CTj, -PI, -CTj, -PI, -1, -PI,   20,-CTj, -PI, -CTj, -PI};
+      double xUmode11[19]  = {   CTl,  PI,  500., 1., PI, CTj,  PI, 500.,   CTj,  PI,  CTj,  PI,  1,  PI,  500, CTj,  PI,  CTj,  PI};
+
+      double xLmode12[19]  = {  -CTl, -PI,   20.,-1.,-PI,-1, -PI,    20.,  -CTj, -PI, -CTj, -PI, -CTj, -PI,   20,-CTj, -PI, -CTj, -PI};
+      double xUmode12[19]  = {   CTl,  PI,  500., 1., PI, 1,  PI,   500.,   CTj,  PI,  CTj,  PI,  CTj,  PI,  500, CTj,  PI,  CTj,  PI};
+
+      double xLmode13[19]  = {  -CTl, -PI,   20.,-1.,-PI,-1, -PI,    20.,  -CTj, -PI, -CTj, -PI, -CTj, -PI,   20,-1, -PI, -1, -PI};
+      double xUmode13[19]  = {   CTl,  PI,  500., 1., PI, 1,  PI,   500.,   CTj,  PI,  CTj,  PI,  CTj,  PI,  500, 1,  PI,  1,  PI};
+
+      meIntegrator->setMass( mH[m] );
+
+      clock->Start();
+      double p = 0.;
+      if(mode == 7 || mode == 8)
+	p = ig2.Integral(xLmode, xUmode);
+      else if(mode == 9)
+	p = ig2.Integral(xLmode9, xUmode9);
+      else if(mode == 10)
+	p = ig2.Integral(xLmode10, xUmode10);
+      else if(mode == 11)
+	p = ig2.Integral(xLmode11, xUmode11);
+      else if(mode == 12)
+	p = ig2.Integral(xLmode12, xUmode12);
+      else if(mode == 13)
+	p = ig2.Integral(xLmode13, xUmode13);
+      else{}
+
+      clock->Stop();
+
+      cout << "Mass  " << mH[m] << " => p = " << p << endl;
+      hInt->Fill( mH[m], p);
+      cout << "[Done in " << clock->RealTime()/60. << " min]" << endl;
+    }
+
+    cout << "Delete meIntegrator..." << endl;
+    delete meIntegrator;
+    delete clock; delete ran;
+    cout << "Finished!!!" << endl;
+    
+    TFile* fout_tmp0 = TFile::Open(outFileName.c_str(),"UPDATE");
+    hInt->Write("hInt",TObject::kOverwrite);
+    fout_tmp0->Close();
+    return 0;
+  }
+  ////////////////////////////////////////////////////////
 
 
   bool openAllFiles  = false;
@@ -678,10 +821,10 @@ int main(int argc, const char* argv[])
 	atopW1LV.SetPtEtaPhiM( genTbar.wdau1pt,genTbar.wdau1eta, genTbar.wdau1phi,genTbar.wdau1mass);
 	atopW2LV.SetPtEtaPhiM( genTbar.wdau2pt,genTbar.wdau2eta,genTbar.wdau2phi,genTbar.wdau2mass);
       }
-      if(genB.mass>0 && genB.momid==25){
+      if(genB.mass>0 && (genB.momid==25 || genB.momid==23)){
 	genBLV.SetPtEtaPhiM(genB.pt,genB.eta ,genB.phi, genB.mass );
       }
-      if(genBbar.mass>0 && genBbar.momid==25){
+      if(genBbar.mass>0 && (genBbar.momid==25 || genBbar.momid==23)){
 	genBbarLV.SetPtEtaPhiM(genBbar.pt,genBbar.eta ,genBbar.phi, genBbar.mass );
       }
   
@@ -701,6 +844,7 @@ int main(int argc, const char* argv[])
       bool isDL = false;
 
       bool properEvent = (genBLV.Pt()>0 && genBbarLV.Pt()>0 && topBLV.Pt()>0 && topW1LV.Pt()>0 && topW2LV.Pt()>0 && atopBLV.Pt()>0 && atopW1LV.Pt()>0 && atopW2LV.Pt()>0);
+      if(!properEvent) continue;
 
       HIGGS.SetPxPyPzE( (genBLV+genBbarLV).Px(), (genBLV+genBbarLV).Py(),(genBLV+genBbarLV).Pz(),(genBLV+genBbarLV).E());
       if( abs(genTop.wdau1id)>6 && abs(genTbar.wdau1id)<6){
@@ -778,7 +922,6 @@ int main(int argc, const char* argv[])
 
       if(mode==6) TOPLEPW2 = TOPLEPW2+TOPHADW2;
 
-
       if(mode==0)
 	properEvent = isSL && ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
 				TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
@@ -788,7 +931,7 @@ int main(int argc, const char* argv[])
 				genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
 				genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
 				);
-      else if(mode==1)
+      if(mode==1)
 	properEvent = isSL && (( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
 				 TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
 				 (TOPHADW1.Pt() < 30 || TMath::Abs(TOPHADW1.Eta()) >2.5) &&
@@ -805,7 +948,7 @@ int main(int argc, const char* argv[])
 				 genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
 				 genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
 				 ) );
-      else if(mode==2)
+      if(mode==2){
 	properEvent = isSL && ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
 				TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
 				TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
@@ -814,7 +957,8 @@ int main(int argc, const char* argv[])
 				genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
 				genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
 				);
-      else if(mode==3)
+      }
+      if(mode==3){
 	properEvent = isSL && ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
 				(TOPLEPB.Pt() <30 || TMath::Abs(TOPLEPB.Eta())  >2.5)&&
 				TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
@@ -823,7 +967,62 @@ int main(int argc, const char* argv[])
 				genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
 				genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
 				);
-      else if(mode==6)
+      }
+      if(mode==4){
+	properEvent = isSL && (( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				 TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				 TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				 TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&				
+				 TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&		       
+				 (genBLV.Pt()  < 30 || TMath::Abs(genBLV.Eta())  >2.5)  &&
+				 genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5 
+				 ) ||
+			       ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				 TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				 TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				 TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+				 TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&			
+				 genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				 (genBbarLV.Pt()< 30 || TMath::Abs(genBbarLV.Eta())>2.5)
+				 ) );
+      }
+      if(mode==5){
+	properEvent = isSL && (( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+				(TOPHADB.Pt() <30 || TMath::Abs(TOPHADB.Eta())  >2.5)&&
+				genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				 ) ||
+			       ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				(TOPLEPB.Pt() <30 || TMath::Abs(TOPLEPB.Eta())  >2.5)&&
+				 TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				 TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+				 TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&
+				 genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				 genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
+				 ) ||
+			       (( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				  TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				  TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				  TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&				
+				  TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&		       
+				  (genBLV.Pt()  < 30 || TMath::Abs(genBLV.Eta())  >2.5)  &&
+				  genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5 
+				  ) ||
+				( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
+				  TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
+				  TOPHADW1.Pt() >30 && TMath::Abs(TOPHADW1.Eta()) <2.5 &&
+				  TOPHADW2.Pt() >30 && TMath::Abs(TOPHADW2.Eta()) <2.5 &&
+				  TOPHADB.Pt()  >30 && TMath::Abs(TOPHADB.Eta())  <2.5 &&			
+				  genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
+				  (genBbarLV.Pt()< 30 || TMath::Abs(genBbarLV.Eta())>2.5)
+				  ) )
+			       );
+      }
+
+      if(mode==6)
 	properEvent = isDL && ( TOPLEPW1.Pt() >20 && TMath::Abs(TOPLEPW1.Eta()) <2.1 &&
 				TOPLEPB.Pt()  >30 && TMath::Abs(TOPLEPB.Eta())  <2.5 &&
 				TOPHADW1.Pt() >20 && TMath::Abs(TOPHADW1.Eta()) <2.1 &&
@@ -831,7 +1030,6 @@ int main(int argc, const char* argv[])
 				genBLV.Pt()   >30 && TMath::Abs(genBLV.Eta())   <2.5 &&
 				genBbarLV.Pt()>30 && TMath::Abs(genBbarLV.Eta())<2.5
 				);
-      else{ }	
       
 
       if(!properEvent) continue;
@@ -841,6 +1039,7 @@ int main(int argc, const char* argv[])
       cout << "Processing event # " << counter << endl;
 
       counter_ = counter;
+      type_    = mode;
 
       vector<TLorentzVector> jets;
       jets.push_back( TOPLEPW1  );  
@@ -852,12 +1051,15 @@ int main(int argc, const char* argv[])
       jets.push_back( genBLV    );
       jets.push_back( genBbarLV );
 
+      int swapW = 0;
+      int swapH = 0;
       if(mode==1){
 	TLorentzVector w1 = jets[3];
 	TLorentzVector w2 = jets[4];
 	if( (w1.Pt()<30 || TMath::Abs(w1.Eta())>2.5) && (w2.Pt()>30 && TMath::Abs(w2.Eta())<2.5)){
 	  jets[3] = w2;
 	  jets[4] = w1;
+	  swapW = 1;
 	}
 	else if( (w2.Pt()<30 || TMath::Abs(w2.Eta())>2.5) && (w1.Pt()>30 && TMath::Abs(w1.Eta())<2.5)){
 	  jets[3] = w1;
@@ -870,6 +1072,41 @@ int main(int argc, const char* argv[])
 	}
       }
 
+      if(mode==4){
+	TLorentzVector h1 = jets[6];
+	TLorentzVector h2 = jets[7];
+	if( (h1.Pt()<30 || TMath::Abs(h1.Eta())>2.5) && (h2.Pt()>30 && TMath::Abs(h2.Eta())<2.5)){
+	  jets[6] = h2;
+	  jets[7] = h1;
+	  swapH = 1;
+	}
+	else if( (h2.Pt()<30 || TMath::Abs(h2.Eta())>2.5) && (h1.Pt()>30 && TMath::Abs(h1.Eta())<2.5)){
+	  jets[6] = h1;
+	  jets[7] = h2;
+	}
+	else{
+	  cout << "Inconsistentcy of mode and jet selections" << endl;
+	  delete meIntegrator;
+	  return 1;
+	}
+      }
+
+      if(mode==5){
+	TLorentzVector h1 = jets[6];
+	TLorentzVector h2 = jets[7];
+	if( (h1.Pt()<30 || TMath::Abs(h1.Eta())>2.5) && (h2.Pt()>30 && TMath::Abs(h2.Eta())<2.5)){
+	  jets[6] = h2;
+	  jets[7] = h1;
+	  swapH = 1;
+	}
+	else if( (h2.Pt()<30 || TMath::Abs(h2.Eta())>2.5) && (h1.Pt()>30 && TMath::Abs(h1.Eta())<2.5)){
+	  jets[6] = h1;
+	  jets[7] = h2;
+	}
+	else{}
+      }
+
+
       
       if(printP4){
 	cout << "******* INPUT ******" << endl;      
@@ -877,11 +1114,23 @@ int main(int argc, const char* argv[])
 	cout << "lep:  jet1.SetPtEtaPhiM(" << TOPLEPW1.Pt() << "," <<  TOPLEPW1.Eta()  << "," << TOPLEPW1.Phi() << "," << TOPLEPW1.M() << ")" << endl;
 	cout << "met:  jet2.SetPtEtaPhiM(" << TOPLEPW2.Pt() << "," <<  TOPLEPW2.Eta()  << "," << TOPLEPW2.Phi() << "," << TOPLEPW2.M() << ")" << endl;
 	cout << "blep: jet3.SetPtEtaPhiM(" << TOPLEPB.Pt() << ","  <<  TOPLEPB.Eta()   << "," << TOPLEPB.Phi()  << "," <<  TOPLEPB.M() << ")" << endl;
-	cout << "w1:   jet4.SetPtEtaPhiM(" << TOPHADW1.Pt() << "," <<  TOPHADW1.Eta()  << "," << TOPHADW1.Phi() << "," << TOPHADW1.M() << ")" << endl;
-	cout << "w2:   jet5.SetPtEtaPhiM(" << TOPHADW2.Pt() << "," <<  TOPHADW2.Eta()  << "," << TOPHADW2.Phi() << "," << TOPHADW2.M() << ")" << endl;
+	if(swapW){
+	  cout << "w2:   jet5.SetPtEtaPhiM(" << TOPHADW2.Pt() << "," <<  TOPHADW2.Eta()  << "," << TOPHADW2.Phi() << "," << TOPHADW2.M() << ")" << endl;
+	  cout << "w1:   jet4.SetPtEtaPhiM(" << TOPHADW1.Pt() << "," <<  TOPHADW1.Eta()  << "," << TOPHADW1.Phi() << "," << TOPHADW1.M() << ")" << endl;
+	}
+	else{
+	  cout << "w1:   jet4.SetPtEtaPhiM(" << TOPHADW1.Pt() << "," <<  TOPHADW1.Eta()  << "," << TOPHADW1.Phi() << "," << TOPHADW1.M() << ")" << endl;
+	  cout << "w2:   jet5.SetPtEtaPhiM(" << TOPHADW2.Pt() << "," <<  TOPHADW2.Eta()  << "," << TOPHADW2.Phi() << "," << TOPHADW2.M() << ")" << endl;
+	}
 	cout << "bhad: jet6.SetPtEtaPhiM(" << TOPHADB.Pt() << ","  <<  TOPHADB.Eta()   << "," << TOPHADB.Phi() << "," << TOPHADB.M() << ")" << endl;
-	cout << "h1:   jet7.SetPtEtaPhiM(" << genBLV.Pt() << ","   <<  genBLV.Eta()    << "," << genBLV.Phi() << "," << genBLV.M() << ")" << endl;
-	cout << "h2:   jet8.SetPtEtaPhiM(" << genBbarLV.Pt() << ","<<  genBbarLV.Eta() << "," << genBbarLV.Phi() << "," << genBbarLV.M() << ")" << endl;	
+	if(swapH){
+	  cout << "h2:   jet8.SetPtEtaPhiM(" << genBbarLV.Pt() << ","<<  genBbarLV.Eta() << "," << genBbarLV.Phi() << "," << genBbarLV.M() << ")" << endl;	
+	  cout << "h1:   jet7.SetPtEtaPhiM(" << genBLV.Pt() << ","   <<  genBLV.Eta()    << "," << genBLV.Phi() << "," << genBLV.M() << ")" << endl;
+	}
+	else{
+	  cout << "h1:   jet7.SetPtEtaPhiM(" << genBLV.Pt() << ","   <<  genBLV.Eta()    << "," << genBLV.Phi() << "," << genBLV.M() << ")" << endl;
+	  cout << "h2:   jet8.SetPtEtaPhiM(" << genBbarLV.Pt() << ","<<  genBbarLV.Eta() << "," << genBbarLV.Phi() << "," << genBbarLV.M() << ")" << endl;	
+	}
 	cout << "Top Lep mass = " << (TOPLEPW1+TOPLEPW2+TOPLEPB).M() << " <=> neutrino eta=0!!!" << endl;
 	cout << "Top Had mass = " << (TOPHADW1+TOPHADW2+TOPHADB).M() << endl;
 	cout << "Higgs mass = "   << (genBLV+genBbarLV).M() << endl;
@@ -944,6 +1193,28 @@ int main(int argc, const char* argv[])
 
       if( doParton){
 
+	if(mode == 5){
+	  meIntegrator->setIntType( MEIntegratorNew::SL3b );
+	  TLorentzVector bLep =  meIntegrator->jetAt(2);
+	  TLorentzVector bHad =  meIntegrator->jetAt(5);
+	  TLorentzVector hig1 =  meIntegrator->jetAt(6);
+	  TLorentzVector hig2 =  meIntegrator->jetAt(7);
+	  if( (bLep.Pt()<30 || TMath::Abs(bLep.Eta())>2.5) && (bHad.Pt()>30 && TMath::Abs(bHad.Eta())<2.5) && (hig1.Pt()>30 && TMath::Abs(hig1.Eta())<2.5)  && (hig2.Pt()>30 && TMath::Abs(hig2.Eta())<2.5)){
+	    type_ = 3;
+	  }
+	  else if( (bLep.Pt()>30 && TMath::Abs(bLep.Eta())<2.5) && (bHad.Pt()<30 || TMath::Abs(bHad.Eta())>2.5) && (hig1.Pt()>30 && TMath::Abs(hig1.Eta())<2.5)  && (hig2.Pt()>30 && TMath::Abs(hig2.Eta())<2.5)){
+	    type_ = 2;
+	  }
+	  else if( (bLep.Pt()>30 && TMath::Abs(bLep.Eta())<2.5) && (bHad.Pt()>30 && TMath::Abs(bHad.Eta())<2.5) && (hig1.Pt()>30 && TMath::Abs(hig1.Eta())<2.5)  && (hig2.Pt()<30 || TMath::Abs(hig2.Eta())>2.5)){
+	    type_ = 4;
+	  }
+	  else if((bLep.Pt()>30 && TMath::Abs(bLep.Eta())<2.5) && (bHad.Pt()>30 && TMath::Abs(bHad.Eta())<2.5) && (hig1.Pt()<30 || TMath::Abs(hig1.Eta())>2.5)  && (hig2.Pt()>30 && TMath::Abs(hig2.Eta())<2.5)){
+	    type_ = 4;
+	  }
+	  else{}
+	}
+
+
 	if( doMassScan ){
 	
 	  meIntegrator->initVersors(1);
@@ -980,6 +1251,9 @@ int main(int argc, const char* argv[])
 	  double xLmode3[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
 	  double xUmode3[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
 
+	  double xLmode4[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+	  double xUmode4[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+
 	  double xLmode6[5] = {x1L, x2L, x1L, x2L, x5L};
 	  double xUmode6[5] = {x1U, x2U, x1U, x2U, x5U};
 	  
@@ -996,6 +1270,8 @@ int main(int argc, const char* argv[])
 		cout << "Var " << k << ": [" << xLmode2[k] << "," <<  xUmode2[k] << "]" << endl;
 	      else if(mode==3)
 		cout << "Var " << k << ": [" << xLmode3[k] << "," <<  xUmode3[k] << "]" << endl;
+	      else if(mode==4)
+		cout << "Var " << k << ": [" << xLmode4[k] << "," <<  xUmode4[k] << "]" << endl;
 	      else if(mode==6)
 		cout << "Var " << k << ": [" << xLmode6[k] << "," <<  xUmode6[k] << "]" << endl;
 	      else{}
@@ -1023,6 +1299,8 @@ int main(int argc, const char* argv[])
 	      p = ig2.Integral(xLmode2, xUmode2);
 	    else if(mode==3)
 	      p = ig2.Integral(xLmode3, xUmode3);
+	    else if(mode==4)
+	      p = ig2.Integral(xLmode4, xUmode4);
 	    else if(mode==6)
 	      p = ig2.Integral(xLmode6, xUmode6);
 	    else{ }
@@ -1102,11 +1380,45 @@ int main(int argc, const char* argv[])
 	    
 	    for(unsigned int pos = 0; pos < (unsigned int)nPermutations ; pos++){
 	      meIntegrator->initVersors( permutations[pos] );
+
+	      int mode5HiggsLost = 0;
+	      if( mode==5 ){ // figure out which b is missing, then set the correspinding int mode
+		TLorentzVector bLep =  meIntegrator->jetAt(2);
+		TLorentzVector bHad =  meIntegrator->jetAt(5);
+		TLorentzVector hig1 =  meIntegrator->jetAt(6);
+		TLorentzVector hig2 =  meIntegrator->jetAt(7);
+		if( (bLep.Pt()<30 || TMath::Abs(bLep.Eta())>2.5) && (bHad.Pt()>30 && TMath::Abs(bHad.Eta())<2.5) && (hig1.Pt()>30 && TMath::Abs(hig1.Eta())<2.5)  && (hig2.Pt()>30 && TMath::Abs(hig2.Eta())<2.5)){
+		  if(printP4) cout << "Permutation " << permutations[pos] << " has assigned a jet with (pt,eta)=(" << bLep.Pt() << "," << bLep.Eta() << ") to the bLep: setting mode SLNoBLep" << endl;
+		  meIntegrator->setIntType( MEIntegratorNew::SLNoBLep );
+		}
+		else if( (bLep.Pt()>30 && TMath::Abs(bLep.Eta())<2.5) && (bHad.Pt()<30 || TMath::Abs(bHad.Eta())>2.5) && (hig1.Pt()>30 && TMath::Abs(hig1.Eta())<2.5)  && (hig2.Pt()>30 && TMath::Abs(hig2.Eta())<2.5)){
+		   if(printP4)  cout << "Permutation " << permutations[pos] << " has assigned a jet with (pt,eta)=(" << bHad.Pt() << "," << bHad.Eta() << ") to the bHad: setting mode SLNoBHad" << endl;
+		  meIntegrator->setIntType( MEIntegratorNew::SLNoBHad );
+		}
+		else if( (bLep.Pt()>30 && TMath::Abs(bLep.Eta())<2.5) && (bHad.Pt()>30 && TMath::Abs(bHad.Eta())<2.5) && (hig1.Pt()>30 && TMath::Abs(hig1.Eta())<2.5)  && (hig2.Pt()<30 || TMath::Abs(hig2.Eta())>2.5)){
+		   if(printP4)  cout << "Permutation " << permutations[pos] << " has assigned a jet with (pt,eta)=(" << hig2.Pt() << "," << hig2.Eta() << ") to  Higgs2: setting mode SLNoHiggs" << endl;
+		  meIntegrator->setIntType( MEIntegratorNew::SLNoHiggs );
+		  mode5HiggsLost = 1;
+		}
+		else if((bLep.Pt()>30 && TMath::Abs(bLep.Eta())<2.5) && (bHad.Pt()>30 && TMath::Abs(bHad.Eta())<2.5) && (hig1.Pt()<30 || TMath::Abs(hig1.Eta())>2.5)  && (hig2.Pt()>30 && TMath::Abs(hig2.Eta())<2.5)){
+		  meIntegrator->initVersors( permutations_SL3b_equivalent[pos] );
+		  hig1 =  meIntegrator->jetAt(6);
+		  hig2 =  meIntegrator->jetAt(7);
+		   if(printP4)  cout << "Permutation " << permutations_SL3b_equivalent[pos] << " has assigned a jet with (pt,eta)=(" << hig2.Pt() << "," << hig2.Eta() << ") to  Higgs2: setting mode SLNoHiggs" << endl;
+		  meIntegrator->setIntType( MEIntegratorNew::SLNoHiggs );
+		  mode5HiggsLost = 1;
+		}
+		else{
+		  cout << "Mode " << mode << ": inconsistency between mode and jet list" << endl;
+		  continue;
+		}
+	      } 
+
 	      
 	      double mass, massLow, massHigh;
 	      bool skip = !(meIntegrator->compatibilityCheck(0.95, /*printP4*/ 0, mass, massLow, massHigh )) ;
 	      permutMassReco[pos] = mass;
-	      if( skip ){
+	      if( skip && !(mode==4 || (mode==5 && mode5HiggsLost))){
 		continue;
 	      }
 	      
@@ -1146,6 +1458,9 @@ int main(int argc, const char* argv[])
 	      double xLmode3[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
 	      double xUmode3[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
 
+	      double xLmode4[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+	      double xUmode4[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+
 	      double xLmode6[5] = {x1L, x2L, x1L, x2L, x5L};
 	      double xUmode6[5] = {x1U, x2U, x1U, x2U, x5U};
 	      
@@ -1160,6 +1475,8 @@ int main(int argc, const char* argv[])
 		    cout << "Var " << k << ": [" << xLmode2[k] << "," <<  xUmode2[k] << "]" << endl;
 		  else if(mode==3)
 		    cout << "Var " << k << ": [" << xLmode3[k] << "," <<  xUmode3[k] << "]" << endl;
+		  else if(mode==4 || mode==5)
+		    cout << "Var " << k << ": [" << xLmode4[k] << "," <<  xUmode4[k] << "]" << endl;
 		  else if(mode==6)
 		    cout << "Var " << k << ": [" << xLmode6[k] << "," <<  xUmode6[k] << "]" << endl;
 		  else{}
@@ -1182,6 +1499,8 @@ int main(int argc, const char* argv[])
 		p = ig2.Integral(xLmode2, xUmode2);
 	      else if(mode==3)
 		p = ig2.Integral(xLmode3, xUmode3);
+	      else if(mode==4 || mode==5)
+		p = ig2.Integral(xLmode4, xUmode4);
 	      else if(mode==6)
 		p = ig2.Integral(xLmode6, xUmode6);
 	      else{ }
@@ -1214,9 +1533,15 @@ int main(int argc, const char* argv[])
 	  
 	  double maxIntProb     = 0.;
 	  unsigned int permMax  = 0;
-
+	  int posMax = 0;
 	  for(unsigned int it = 0; it<(unsigned int)nPermutations; it++){
 	    if(printP4) cout << "Permut #" << it << " has int p = " << permutProbInt[it] << endl;
+	    if(mode==0 || mode==1 || mode==5 || mode==6){
+	      if( permutProbInt[it] > TMath::Max(permutProbInt[0],permutProbInt[1]) ) posMax++;
+	    }
+	    if(mode==2 || mode==3){
+	      if( permutProbInt[it] > permutProbInt[0] ) posMax++;
+	    }
 	    if( permutProbInt[it]>maxIntProb ){
 	      maxIntProb = permutProbInt[it];
 	      permMax = it;
@@ -1225,11 +1550,10 @@ int main(int argc, const char* argv[])
 
 	  double maxIntProbMod  = 0.;
 	  unsigned int permMax3 = 0;
-
-	  if(mode==0 || mode==2 || mode==6){
+	  if(mode==0 || mode==1 || mode==6 || mode==5){
 	    for(unsigned int it = 0; it<(unsigned int)(nPermutations-1); it++){
 	      if(it%2==0){
-		if(printP4) cout << "Permut #" << it << "+#" << it+1 <<  "  has int p = " << permutProbInt[it] << " => " << (permutProbInt[it]+permutProbInt[it+1]) << endl;
+		if(printP4) cout << "Permut #" << it << "+#" << it+1 <<  "  has int p = " << permutProbInt[it] << " => " << (permutProbInt[it]+permutProbInt[it+1]) << endl;		
 		if( (permutProbInt[it]+permutProbInt[it+1])>maxIntProbMod ){
 		  maxIntProbMod = (permutProbInt[it]+permutProbInt[it+1]);
 		  permMax3 = it;
@@ -1241,6 +1565,7 @@ int main(int argc, const char* argv[])
 	  pair<double,double> bestInt    = (getMaxValue( histos[permMax] ));
 	  massIntGA_ = bestInt.first;
 	  probIntGA_ = bestInt.second;
+	  posIntGA_  = posMax;
 
 	  if(gDirectory->FindObject("hSumIntMod")!=0){
 	    gDirectory->Remove(gDirectory->FindObject("hSumIntMod"));
@@ -1254,7 +1579,7 @@ int main(int argc, const char* argv[])
 
 	  hBestMassProbInt_gen->Fill( massIntGA_ ); 
 
-	  if(mode==0 || mode==1 || mode==6){
+	  if(mode==0 || mode==1 || mode==6 || mode==4 || mode==5){
 	    matchByIntGA_    = (permMax==0 || permMax==1) ? 1 : 0;
 	    matchByIntModGA_ = (permMax3==0) ? 1 : 0;
 	  }
@@ -1264,10 +1589,17 @@ int main(int argc, const char* argv[])
 
 	  double maxMaxProb = 0.;
 	  unsigned int permMax2 = 0;
+	  posMax = 0;
 
 	  cout << "# of permutations considered: = " << histos.size() << endl;
 	  sMassProbInt_gen->Modified();
 	  for(unsigned int it = 0; it < histos.size(); it++){
+	    if(mode==0 || mode==1 || mode==5 || mode==6){
+	      if( histos[it]->GetMaximum() > TMath::Max(histos[0]->GetMaximum(),histos[1]->GetMaximum()) ) posMax++;
+	    }
+	    if(mode==2 || mode==3){
+	      if( histos[it]->GetMaximum() > histos[0]->GetMaximum() ) posMax++;
+	    }
 	    if( histos[it]->GetMaximum()>maxMaxProb ){
 	      maxMaxProb = histos[it]->GetMaximum();
 	      permMax2 = it;
@@ -1291,11 +1623,12 @@ int main(int argc, const char* argv[])
 	  pair<double,double> bestMax = (getMaxValue( histos[permMax2] ));
 	  massMaxGA_ =  bestMax.first ;
 	  probMaxGA_ =  bestMax.second;
+	  posMaxGA_  = posMax;
 
 	  double maxMaxModProb = 0.;
 	  unsigned int permMax4 = 0;
 
-	  if(mode==0 || mode==2 || mode==6){
+	  if(mode==0 || mode==1 || mode==6 || mode==5){
 	    for(unsigned int it = 0; it < (unsigned int)(histos.size()-1); it++){
 	      if(it%2==0){
 		if(gDirectory->FindObject("hSum")!=0){
@@ -1320,7 +1653,7 @@ int main(int argc, const char* argv[])
 	  massMaxModGA_ =  bestMaxMod.first ;
 	  probMaxModGA_ =  bestMaxMod.second;
 
-	  if(mode==0 || mode==1 || mode==6){
+	  if(mode==0 || mode==1 || mode==6 || mode==4 || mode==5){
 	    matchByMaxGA_    = (permMax2==0 || permMax2==1) ? 1 : 0;
 	    matchByMaxModGA_ = (permMax4==0) ? 1 : 0;
 	  }
@@ -1370,6 +1703,8 @@ int main(int argc, const char* argv[])
 
       if( doSmear ){
 
+	if(mode == 5)
+	  meIntegrator->setIntType( MEIntegratorNew::SL3b );
 	meIntegrator->initVersors(1);
 
 	bool passes = false;
@@ -1384,6 +1719,27 @@ int main(int argc, const char* argv[])
 	    cout << "Smearing fails... let's try again!" << endl;
 	  else{}
 	}
+	
+	if(mode == 5){
+	  TLorentzVector bLep =  meIntegrator->jetAt(2);
+	  TLorentzVector bHad =  meIntegrator->jetAt(5);
+	  TLorentzVector hig1 =  meIntegrator->jetAt(6);
+	  TLorentzVector hig2 =  meIntegrator->jetAt(7);
+	  if( (bLep.Pt()<30 || TMath::Abs(bLep.Eta())>2.5) && (bHad.Pt()>30 && TMath::Abs(bHad.Eta())<2.5) && (hig1.Pt()>30 && TMath::Abs(hig1.Eta())<2.5)  && (hig2.Pt()>30 && TMath::Abs(hig2.Eta())<2.5)){
+	    type_ = 3;
+	  }
+	  else if( (bLep.Pt()>30 && TMath::Abs(bLep.Eta())<2.5) && (bHad.Pt()<30 || TMath::Abs(bHad.Eta())>2.5) && (hig1.Pt()>30 && TMath::Abs(hig1.Eta())<2.5)  && (hig2.Pt()>30 && TMath::Abs(hig2.Eta())<2.5)){
+	    type_ = 2;
+	  }
+	  else if( (bLep.Pt()>30 && TMath::Abs(bLep.Eta())<2.5) && (bHad.Pt()>30 && TMath::Abs(bHad.Eta())<2.5) && (hig1.Pt()>30 && TMath::Abs(hig1.Eta())<2.5)  && (hig2.Pt()<30 || TMath::Abs(hig2.Eta())>2.5)){
+	    type_ = 4;
+	  }
+	  else if((bLep.Pt()>30 && TMath::Abs(bLep.Eta())<2.5) && (bHad.Pt()>30 && TMath::Abs(bHad.Eta())<2.5) && (hig1.Pt()<30 || TMath::Abs(hig1.Eta())>2.5)  && (hig2.Pt()>30 && TMath::Abs(hig2.Eta())<2.5)){
+	    type_ = 4;
+	  }
+	  else{}
+	}
+
 
 	if( passes ){
 	  
@@ -1421,6 +1777,9 @@ int main(int argc, const char* argv[])
 	    double xLmode3[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
 	    double xUmode3[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
 
+	    double xLmode4[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+	    double xUmode4[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+
 	    double xLmode6[5] = {x1L, x2L, x1L, x2L, x5L};
 	    double xUmode6[5] = {x1U, x2U, x1U, x2U, x5U};
 	    
@@ -1435,6 +1794,8 @@ int main(int argc, const char* argv[])
 		  cout << "Var " << k << ": [" << xLmode2[k] << "," <<  xUmode2[k] << "]" << endl;
 		else if(mode==3)
 		  cout << "Var " << k << ": [" << xLmode3[k] << "," <<  xUmode3[k] << "]" << endl;
+		else if(mode==4)
+		  cout << "Var " << k << ": [" << xLmode4[k] << "," <<  xUmode4[k] << "]" << endl;
 		else if(mode==6)
 		  cout << "Var " << k << ": [" << xLmode6[k] << "," <<  xUmode6[k] << "]" << endl;
 		else{}
@@ -1462,6 +1823,8 @@ int main(int argc, const char* argv[])
 		p = ig2.Integral(xLmode2, xUmode2);
 	      else if(mode==3)
 		p = ig2.Integral(xLmode3, xUmode3);
+	      else if(mode==4)
+		p = ig2.Integral(xLmode4, xUmode4);
 	      else if(mode==6)
 		p = ig2.Integral(xLmode6, xUmode6);
 	      else{ }
@@ -1544,10 +1907,43 @@ int main(int argc, const char* argv[])
 	      for(unsigned int pos = 0; pos < (unsigned int)nPermutations; pos++){
 		meIntegrator->initVersors( permutations[pos] );
 		
+		int mode5HiggsLost = 0;
+		if( mode==5 ){ // figure out which b is missing, then set the correspinding int mode
+		  TLorentzVector bLep =  meIntegrator->jetAt(2);
+		  TLorentzVector bHad =  meIntegrator->jetAt(5);
+		  TLorentzVector hig1 =  meIntegrator->jetAt(6);
+		  TLorentzVector hig2 =  meIntegrator->jetAt(7);
+		  if( (bLep.Pt()<30 || TMath::Abs(bLep.Eta())>2.5) && (bHad.Pt()>30 && TMath::Abs(bHad.Eta())<2.5) && (hig1.Pt()>30 && TMath::Abs(hig1.Eta())<2.5)  && (hig2.Pt()>30 && TMath::Abs(hig2.Eta())<2.5)){
+		    if(printP4) cout << "Permutation " << permutations[pos] << " has assigned a jet with (pt,eta)=(" << bLep.Pt() << "," << bLep.Eta() << ") to the bLep: setting mode SLNoBLep" << endl;
+		    meIntegrator->setIntType( MEIntegratorNew::SLNoBLep );
+		  }
+		  else if( (bLep.Pt()>30 && TMath::Abs(bLep.Eta())<2.5) && (bHad.Pt()<30 || TMath::Abs(bHad.Eta())>2.5) && (hig1.Pt()>30 && TMath::Abs(hig1.Eta())<2.5)  && (hig2.Pt()>30 && TMath::Abs(hig2.Eta())<2.5)){
+		    if(printP4)  cout << "Permutation " << permutations[pos] << " has assigned a jet with (pt,eta)=(" << bHad.Pt() << "," << bHad.Eta() << ") to the bHad: setting mode SLNoBHad" << endl;
+		    meIntegrator->setIntType( MEIntegratorNew::SLNoBHad );
+		  }
+		  else if( (bLep.Pt()>30 && TMath::Abs(bLep.Eta())<2.5) && (bHad.Pt()>30 && TMath::Abs(bHad.Eta())<2.5) && (hig1.Pt()>30 && TMath::Abs(hig1.Eta())<2.5)  && (hig2.Pt()<30 || TMath::Abs(hig2.Eta())>2.5)){
+		    if(printP4)  cout << "Permutation " << permutations[pos] << " has assigned a jet with (pt,eta)=(" << hig2.Pt() << "," << hig2.Eta() << ") to  Higgs2: setting mode SLNoHiggs" << endl;
+		    meIntegrator->setIntType( MEIntegratorNew::SLNoHiggs );
+		    mode5HiggsLost = 1;		  
+		  }
+		  else if((bLep.Pt()>30 && TMath::Abs(bLep.Eta())<2.5) && (bHad.Pt()>30 && TMath::Abs(bHad.Eta())<2.5) && (hig1.Pt()<30 || TMath::Abs(hig1.Eta())>2.5)  && (hig2.Pt()>30 && TMath::Abs(hig2.Eta())<2.5)){
+		    meIntegrator->initVersors( permutations_SL3b_equivalent[pos] );
+		    hig1 =  meIntegrator->jetAt(6);
+		    hig2 =  meIntegrator->jetAt(7);
+		    if(printP4)  cout << "Permutation " << permutations_SL3b_equivalent[pos] << " has assigned a jet with (pt,eta)=(" << hig2.Pt() << "," << hig2.Eta() << ") to  Higgs2: setting mode SLNoHiggs" << endl;
+		    meIntegrator->setIntType( MEIntegratorNew::SLNoHiggs );
+		    mode5HiggsLost = 1;
+		  }
+		  else{
+		    cout << "Mode " << mode << ": inconsistency between mode and jet list" << endl;
+		    continue;
+		  }
+		} 
+		
 		double mass, massLow, massHigh;
 		bool skip = !(meIntegrator->compatibilityCheck(0.95, /*printP4*/ 0, mass, massLow, massHigh )) ;
 		permutMassReco[pos] = mass;
-		if( skip ){
+		if( skip && !(mode==4 || (mode==5 && mode5HiggsLost)) ){
 		  continue;
 		}
 
@@ -1585,6 +1981,9 @@ int main(int argc, const char* argv[])
 
 		double xLmode3[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
 		double xUmode3[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+
+		double xLmode4[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+		double xUmode4[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
 		
 		double xLmode6[5] = {x1L, x2L, x1L, x2L, x5L};
 		double xUmode6[5] = {x1U, x2U, x1U, x2U, x5U};
@@ -1600,6 +1999,8 @@ int main(int argc, const char* argv[])
 		      cout << "Var " << k << ": [" << xLmode2[k] << "," <<  xUmode2[k] << "]" << endl;
 		    else if(mode==3)
 		      cout << "Var " << k << ": [" << xLmode3[k] << "," <<  xUmode3[k] << "]" << endl;
+		    else if(mode==4 || mode==5)
+		      cout << "Var " << k << ": [" << xLmode4[k] << "," <<  xUmode4[k] << "]" << endl;
 		    else if(mode==6)
 		      cout << "Var " << k << ": [" << xLmode6[k] << "," <<  xUmode6[k] << "]" << endl;
 		    else{}
@@ -1622,6 +2023,8 @@ int main(int argc, const char* argv[])
 		  p = ig2.Integral(xLmode2, xUmode2);
 		else if(mode==3)
 		  p = ig2.Integral(xLmode3, xUmode3);
+		else if(mode==4 || mode==5)
+		  p = ig2.Integral(xLmode4, xUmode4);
 		else if(mode==6)
 		  p = ig2.Integral(xLmode6, xUmode6);
 		else{ }
@@ -1653,8 +2056,15 @@ int main(int argc, const char* argv[])
 
 	    double maxIntProb = 0.;
 	    unsigned int permMax = 0;
+	    int posMax = 0;
 	    for(unsigned int it = 0; it<(unsigned int)nPermutations; it++){
 	      if(printP4) cout << "Permut #" << it << " has int p = " << permutProbInt[it] << endl;
+	      if(mode==0 || mode==1 || mode==5 || mode==6){
+		if( permutProbInt[it] > TMath::Max(permutProbInt[0],permutProbInt[1]) ) posMax++;
+	      }
+	      if(mode==2 || mode==3){
+		if( permutProbInt[it] > permutProbInt[0] ) posMax++;
+	      }
 	      if( permutProbInt[it]>maxIntProb ){
 		maxIntProb = permutProbInt[it];
 		permMax = it;
@@ -1664,7 +2074,7 @@ int main(int argc, const char* argv[])
 	    double maxIntProbMod  = 0.;
 	    unsigned int permMax3 = 0;
 	    
-	    if(mode==0 || mode==2 || mode==6){
+	    if(mode==0 || mode==1 || mode==6 || mode==5){
 	      for(unsigned int it = 0; it<(unsigned int)(nPermutations-1); it++){
 		if(it%2==0){
 		if(printP4) cout << "Permut #" << it << "+#" << it+1 <<  "  has int p = " << permutProbInt[it] << " => " << (permutProbInt[it]+permutProbInt[it+1]) << endl;		
@@ -1679,6 +2089,7 @@ int main(int argc, const char* argv[])
 	    pair<double,double> bestInt = (getMaxValue( histos[permMax] ));
 	    massIntRA_ = bestInt.first;
 	    probIntRA_ = bestInt.second;
+	    posIntRA_  = posMax;
 
 	    if(gDirectory->FindObject("hSumIntMod")!=0){
 	      gDirectory->Remove(gDirectory->FindObject("hSumIntMod"));
@@ -1691,7 +2102,7 @@ int main(int argc, const char* argv[])
 
 	    hBestMassProbInt_rec->Fill( massIntRA_ ); 
 
-	    if(mode==0 || mode==1 || mode==6){
+	    if(mode==0 || mode==1 || mode==6 || mode==4 || mode==5){
 	      matchByIntRA_ = (permMax==0 || permMax==1) ? 1 : 0;
 	      matchByIntModRA_ = (permMax3==0) ? 1 : 0;
 	    }
@@ -1701,10 +2112,17 @@ int main(int argc, const char* argv[])
 
 	    double maxMaxProb = 0.;
 	    unsigned int permMax2 = 0;
+	    posMax = 0;
 
 	    //cout << "Histos size = " << histos.size() << endl;
 	    sMassProbInt_rec->Modified();
 	    for(unsigned int it = 0; it < histos.size(); it++){
+	      if(mode==0 || mode==1 || mode==5 || mode==6){
+		if( histos[it]->GetMaximum() > TMath::Max(histos[0]->GetMaximum(),histos[1]->GetMaximum()) ) posMax++;
+	      }
+	      if(mode==2 || mode==3){
+		if( histos[it]->GetMaximum() > histos[0]->GetMaximum() ) posMax++;
+	      }
 	      if( histos[it]->GetMaximum()>maxMaxProb ){
 		maxMaxProb = histos[it]->GetMaximum();
 		permMax2 = it;
@@ -1728,11 +2146,12 @@ int main(int argc, const char* argv[])
 	    pair<double,double> bestMax = (getMaxValue( histos[permMax2] ));
 	    massMaxRA_ =  bestMax.first ;
 	    probMaxRA_ =  bestMax.second;
-
+	    posMaxRA_  = posMax;
+	  
 	    double maxMaxModProb = 0.;
 	    unsigned int permMax4 = 0;
 
-	    if(mode==0 || mode==2 || mode==6){
+	    if(mode==0 || mode==2 || mode==6 || mode==5){
 	      for(unsigned int it = 0; it < (unsigned int)(histos.size()-1); it++){
 		if(it%2==0){
 		  if(gDirectory->FindObject("hSum")!=0){
@@ -1758,7 +2177,7 @@ int main(int argc, const char* argv[])
 	    probMaxModRA_ =  bestMaxMod.second;
 
 	    
-	    if(mode==0 || mode==1 || mode==6){
+	    if(mode==0 || mode==1 || mode==6 || mode==4 || mode==5){
 	      matchByMaxRA_    = (permMax2==0 || permMax2==1) ? 1 : 0;
 	      matchByMaxModRA_ = (permMax4==0) ? 1 : 0;
 	    }
