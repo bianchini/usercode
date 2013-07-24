@@ -93,9 +93,16 @@ class MEIntegratorNew {
     SL1wj,
     SLNoBHad,
     SLNoBLep,
+    SLNoHiggs,
+    SL3b,
+    DL,
     SLXSec,
     SLAcc,
-    DL,
+    SLAcc2wj,
+    SLAcc1wj,
+    SLAccNoBHad,
+    SLAccNoBLep,
+    SLAccNoHiggs,
     Unknown
   };
 
@@ -114,6 +121,7 @@ class MEIntegratorNew {
   double        probabilitySL1wj(const double*, int) const;
   double        probabilitySLNoBHad(const double*, int) const;
   double        probabilitySLNoBLep(const double*, int) const;
+  double        probabilitySLNoHiggs(const double*, int) const;
   double        probabilityDL(const double*, int) const;
   double        probabilitySLUnconstrained(const double*, int ) const;
   unsigned int  findMatch(double, double) const;
@@ -140,7 +148,7 @@ class MEIntegratorNew {
   void   setUsePDF  (int);
   void   setTopFlags(int,int);
   void   setWeightNorm(NormalizationType);
-  void   setNormFormulas(TString, TString, TString);
+  void   setNormFormulas(TString, TString, TString, TString, TString, TString);
   void   resetEvaluation();
 
   TH1*   getCachedPdf( string ) const;
@@ -167,6 +175,8 @@ class MEIntegratorNew {
   pair<double,double> getBHadEnergyCI (float);
   pair<double,double> getB1EnergyCI   (float);
   pair<double,double> getB2EnergyCI   (float);
+
+  TLorentzVector jetAt(unsigned int);
 
   bool compatibilityCheck(float, int, double&, double&, double&);  
 
@@ -276,7 +286,11 @@ class MEIntegratorNew {
   double Vx_, Vy_, Vxy_, rho_;
 
   TF1* xSecFormula_;
-  TF1* accFormula_;
+  TF1* accSL2wjFormula_;
+  TF1* accSL1wjFormula_;
+  TF1* accSLNoBHadFormula_;
+  TF1* accSLNoHiggsFormula_;
+
   TF1* tthPtFormula_;
 
   TStopwatch* clock_;
@@ -339,9 +353,12 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
 
   normalizeToXSec_ = NormalizationType::None;
 
-  xSecFormula_  = 0;
-  accFormula_   = 0;
-  tthPtFormula_ = 0;
+  xSecFormula_         = 0;
+  accSL2wjFormula_     = 0;
+  accSL1wjFormula_     = 0;
+  accSLNoBHadFormula_  = 0;
+  accSLNoHiggsFormula_ = 0;
+  tthPtFormula_        = 0;
 
   TFile* file = TFile::Open(fileName.c_str(),"READ");
   w_ = (RooWorkspace*)file->Get("transferFuntions");
@@ -354,63 +371,15 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
     jetParam_[ string(var->GetName()) ] = var->getVal();
   }
 
-  /*
-  int nBinsX = 27;
-  TArrayF binsX(nBinsX+1);
-  cout << "Making histograms with " << nBinsX << " bins:" << endl;
-  binsX[0] = 0.; binsX[1] = 0.06;  
-  for(int k = 2; k < 21; k++)
-    binsX[k] = 0.06 + (k-1)*0.005;
-  binsX[21] = 0.17;  binsX[22] = 0.18;  binsX[23] = 0.19;  binsX[24] = 0.20;
-  binsX[25] = 0.225; binsX[26] = 0.25;  binsX[27] = 0.30; 
-
-  int nBinsMassTT = 23;
-  TArrayF binsMassTT(nBinsMassTT+1);
-  cout << "Making histograms with " << nBinsMassTT << " bins:" << endl;
-  binsMassTT[0] = 350;
-  for(int k = 1; k < 19; k++)
-    binsMassTT[k] = 350 + 25*k;
-  binsMassTT[19] = 900;  binsMassTT[20] = 1000; binsMassTT[21] = 1200; binsMassTT[22] = 1400;
-  binsMassTT[23] = 2000;
-
-
-  int nBinsMassTT2 = 42;
-  TArrayF binsMassTT2(nBinsMassTT2+1);
-  cout << "Making histograms with " << nBinsMassTT2 << " bins:" << endl;
-  binsMassTT2[0] = 350;
-  for(int k = 1; k < 38; k++)
-    binsMassTT2[k] = 350 + 12.5*k;
-  binsMassTT2[38] = 900;  binsMassTT2[39] = 1000; binsMassTT2[40] = 1200; binsMassTT2[41] = 1400;
-  binsMassTT2[42] = 2000;
-
-
-  int nBinsGammaTT = 10;
-  TArrayF binsGammaTT(nBinsGammaTT+1);
-  cout << "Making histograms with " << nBinsGammaTT << " bins:" << endl;
-  for(int k = 0; k < 11; k++)
-    binsGammaTT[k] = -1.01 + k*0.2;
-  //binsGammaTT[0] = -1.01;
-  //binsGammaTT[1] = -0.5;
-  //binsGammaTT[2] =  0.5;
-  //binsGammaTT[3] =  1.01;
-  */
-
   cachePdf( "pdfGammaWHad",     "GammaW",    100);
   cachePdf( "pdfBetaWHad",      "BetaW",     100);
   cachePdf( "pdfGammaWLep",     "GammaWLep", 100);
   cachePdf( "pdfBetaWLep",      "BetaWLep",  100);
-  //cachePdf( "pdfGammaTTH",      "GammaTTH",  100);
-  //cachePdf( "pdf3D",            "X1", "MassTT","GammaTT", binsX, binsMassTT, binsGammaTT);
-  //cachePdf( "pdf2D",            "X1", "MassTT", binsX, binsMassTT);
 
   pdfGammaWHad_ = *((TH1F*)this->getCachedPdf("pdfGammaWHad"));
   pdfBetaWHad_  = *((TH1F*)this->getCachedPdf("pdfBetaWHad"));
   pdfBetaWLep_  = *((TH1F*)this->getCachedPdf("pdfBetaWLep"));
   pdfGammaWLep_ = *((TH1F*)this->getCachedPdf("pdfGammaWLep"));
-  //pdfGammaTTH_  = *((TH1F*)this->getCachedPdf("pdfGammaTTH"));
-  //pdf3D_        = *((TH3F*)this->getCachedPdf("pdf3D"));
-  //pdf2D_        = *((TH2F*)this->getCachedPdf("pdf2D"));
-
   
   cout << "End constructor" << endl;
 
@@ -445,9 +414,12 @@ MEIntegratorNew::~MEIntegratorNew(){
   delete clock_;
   delete ran_;
 
-  if(xSecFormula_)  delete xSecFormula_;
-  if(accFormula_)   delete accFormula_;
-  if(tthPtFormula_) delete tthPtFormula_;
+  if(xSecFormula_)        delete xSecFormula_;
+  if(accSL2wjFormula_)    delete accSL2wjFormula_;
+  if(accSL1wjFormula_)    delete accSL1wjFormula_;
+  if(accSLNoBHadFormula_) delete accSLNoBHadFormula_;
+  if(accSLNoHiggsFormula_)delete accSLNoHiggsFormula_;
+  if(tthPtFormula_)       delete tthPtFormula_;
 
   cout << "End destructor" << endl;
 
@@ -1172,6 +1144,14 @@ pair<double, double> MEIntegratorNew::getB2EnergyCI( float quantile ){
   return getJetEnergyCI( jets_[7].Eta(), jets_[7].E(), "Heavy", quantile);
 }
 
+
+TLorentzVector MEIntegratorNew::jetAt(unsigned int pos){
+  if( pos>7) return TLorentzVector(TVector3(1,0,0), 1);
+  else return jets_[pos];
+}
+
+
+
 bool MEIntegratorNew::compatibilityCheck(float quantile, int print, double& mass, double& massLow, double& massHigh){
 
   pair<double,double> boundsH1 = getB1EnergyCI(quantile);
@@ -1341,7 +1321,48 @@ bool MEIntegratorNew::smearByTF(float ptCut, int print){
     }
     else{
       cout << "smearByTF: Inconsistentcy of mode and jet selections" << endl;
+      return false;
     }
+  }
+
+
+  if(intType_ == SLNoHiggs ){
+    TLorentzVector h1 = jets_[6];
+    TLorentzVector h2 = jets_[7];
+    if( (h1.Pt()<ptCut || TMath::Abs(h1.Eta())>2.5) && (h2.Pt()>ptCut && TMath::Abs(h2.Eta())<2.5)){
+      jets_[6] = h2;
+      jets_[7] = h1;
+      jets_backup_[6] = h2;
+      jets_backup_[7] = h1;
+    }
+    else if( (h2.Pt()<ptCut || TMath::Abs(h2.Eta())>2.5) && (h1.Pt()>ptCut && TMath::Abs(h1.Eta())<2.5)){
+      jets_[6] = h1;
+      jets_[7] = h2;
+      jets_backup_[6] = h1;
+      jets_backup_[7] = h2;
+    }
+    else{
+      cout << "smearByTF: Inconsistentcy of mode and jet selections" << endl;
+      return false;
+    }
+  }
+
+  if(intType_ == SL3b ){
+    TLorentzVector h1 = jets_[6];
+    TLorentzVector h2 = jets_[7];
+    if( (h1.Pt()<ptCut || TMath::Abs(h1.Eta())>2.5) && (h2.Pt()>ptCut && TMath::Abs(h2.Eta())<2.5)){
+      jets_[6] = h2;
+      jets_[7] = h1;
+      jets_backup_[6] = h2;
+      jets_backup_[7] = h1;
+    }
+    else if( (h2.Pt()<ptCut || TMath::Abs(h2.Eta())>2.5) && (h1.Pt()>ptCut && TMath::Abs(h1.Eta())<2.5)){
+      jets_[6] = h1;
+      jets_[7] = h2;
+      jets_backup_[6] = h1;
+      jets_backup_[7] = h2;
+    }
+    else{}
   }
 
 
@@ -1358,16 +1379,28 @@ bool MEIntegratorNew::smearByTF(float ptCut, int print){
 
   if(intType_ == SL2wj) 
     return (sBLep.Pt()>ptCut && sW1Had.Pt()>ptCut && sW2Had.Pt()>ptCut && sBHad.Pt()>ptCut && sB1.Pt()>ptCut && sB2.Pt()>ptCut);
+  
   else if( intType_ == SL1wj )
-    return (sBLep.Pt()>ptCut && sW1Had.Pt()>ptCut /*&& sW2Had.Pt()>ptCut*/ && sBHad.Pt()>ptCut && sB1.Pt()>ptCut && sB2.Pt()>ptCut);
+    return (sBLep.Pt()>ptCut && ( (jets_[3].Pt()>ptCut && TMath::Abs(jets_[3].Eta())<2.5) && (jets_[4].Pt()<ptCut || TMath::Abs(jets_[4].Eta())>2.5) ) && sBHad.Pt()>ptCut && sB1.Pt()>ptCut && sB2.Pt()>ptCut);
+
   else if( intType_ == SLNoBHad )
-    return (sBLep.Pt()>ptCut && sW1Had.Pt()>ptCut && sW2Had.Pt()>ptCut /*&& sBHad.Pt()>ptCut*/ && sB1.Pt()>ptCut && sB2.Pt()>ptCut);
+    return (sBLep.Pt()>ptCut && sW1Had.Pt()>ptCut && sW2Had.Pt()>ptCut && (sBHad.Pt()<ptCut || TMath::Abs(sBHad.Eta())>2.5) && sB1.Pt()>ptCut && sB2.Pt()>ptCut);
+
   else if( intType_ == SLNoBLep )
-    return (/*sBLep.Pt()>ptCut &&*/ sW1Had.Pt()>ptCut && sW2Had.Pt()>ptCut && sBHad.Pt()>ptCut && sB1.Pt()>ptCut && sB2.Pt()>ptCut);
+    return ( (sBLep.Pt()<ptCut || TMath::Abs(sBLep.Eta())>2.5) && sW1Had.Pt()>ptCut && sW2Had.Pt()>ptCut && sBHad.Pt()>ptCut && sB1.Pt()>ptCut && sB2.Pt()>ptCut);
+
+  else if( intType_ == SLNoHiggs )
+    return (sBLep.Pt()>ptCut && sW1Had.Pt()>ptCut && sW2Had.Pt()>ptCut && sBHad.Pt()>ptCut && ( (jets_[6].Pt()>ptCut && TMath::Abs(jets_[6].Eta())<2.5) && (jets_[7].Pt()<ptCut || TMath::Abs(jets_[7].Eta())>2.5) ) );
+
+  else if( intType_ == SL3b )
+    return ( ( sBLep.Pt()>ptCut && sW1Had.Pt()>ptCut && sW2Had.Pt()>ptCut && (sBHad.Pt()<ptCut || TMath::Abs(sBHad.Eta())>2.5) && sB1.Pt()>ptCut && sB2.Pt()>ptCut)  ||
+	     ((sBLep.Pt()<ptCut || TMath::Abs(sBLep.Eta())>2.5) && sW1Had.Pt()>ptCut && sW2Had.Pt()>ptCut && sBHad.Pt()>ptCut && sB1.Pt()>ptCut && sB2.Pt()>ptCut) ||
+	     ( sBLep.Pt()>ptCut && sW1Had.Pt()>ptCut && sW2Had.Pt()>ptCut && sBHad.Pt()>ptCut && ( (jets_[6].Pt()>ptCut && TMath::Abs(jets_[6].Eta())<2.5) && (jets_[7].Pt()<ptCut || TMath::Abs(jets_[7].Eta())>2.5) ) ) );
+
   else if( intType_ == DL )
     return (sBLep.Pt()>ptCut /*&& sW1Had.Pt()>ptCut && sW2Had.Pt()>ptCut*/ && sBHad.Pt()>ptCut && sB1.Pt()>ptCut && sB2.Pt()>ptCut);
-  else{}
 
+  else{}
 
   return true;
 }
@@ -2290,13 +2323,18 @@ double MEIntegratorNew::Eval(const double* x) const {
   else if(intType_ == IntegrationType::SLNoBLep){
     prob = probabilitySLNoBLep(x,0);     
   }
+  else if(intType_ == IntegrationType::SLNoHiggs){
+    prob = probabilitySLNoHiggs(x,0);     
+  }
   else if(intType_ == IntegrationType::DL){
     prob = probabilityDL(x,0);     
   }
   else if(intType_ == IntegrationType::SLXSec){
     prob = probabilitySLUnconstrained(x,0);     
   }
-  else if(intType_ == IntegrationType::SLAcc){
+  else if( (intType_ == IntegrationType::SLAcc)       || (intType_ == IntegrationType::SLAcc2wj)    ||
+	   (intType_ == IntegrationType::SLAcc1wj)    || (intType_ == IntegrationType::SLAccNoBHad) ||
+	   (intType_ == IntegrationType::SLAccNoBLep) || (intType_ == IntegrationType::SLAccNoHiggs) ){
     prob = probabilitySLUnconstrained(x,1);     
   }
   else{
@@ -2413,7 +2451,7 @@ void MEIntegratorNew::initTFparameters( float mu_l, float s_l, float mu_b, float
     else{}
     jetParam_[ varname ] = (var->getVal()*shift);
     if((verbose_ || true) && TMath::Abs(shift-1)>0.01 ) 
-      cout << "Parameter " << varname << " shifted by " << shift << " times its nominal value" << endl;
+      cout << "Parameter " << varname << " shifted by " << shift << " times its nominal value of " << var->getVal() << endl;
   }
 
   /*
@@ -2767,18 +2805,32 @@ double MEIntegratorNew::meSquaredOpenLoops (TLorentzVector* top, TLorentzVector*
 }
 
 
-void MEIntegratorNew::setNormFormulas(TString fxSec, TString facc, TString fPt){
+void MEIntegratorNew::setNormFormulas(TString fxSec, TString facc1, TString facc2, TString facc3, TString facc4, TString fPt){
 
   xSecFormula_  = new TF1("xSecFormula", fxSec.Data(), 20., 300.);
   xSecFormula_->SetNpx(300);
-  accFormula_   = new TF1("accFormula",  facc.Data() , 20., 300.);
-  accFormula_->SetNpx(300);
+
+  accSL2wjFormula_   = new TF1("accSL2wjFormula",  facc1.Data() , 20., 300.);
+  accSL2wjFormula_->SetNpx(300);
+
+  accSL1wjFormula_   = new TF1("accSL1wjFormula",  facc2.Data() , 20., 300.);
+  accSL1wjFormula_->SetNpx(300);
+
+  accSLNoBHadFormula_   = new TF1("accSLNoBHadFormula",  facc3.Data() , 20., 300.);
+  accSLNoBHadFormula_->SetNpx(300);
+
+  accSLNoHiggsFormula_   = new TF1("accSLNoHiggsFormula",  facc4.Data() , 20., 300.);
+  accSLNoHiggsFormula_->SetNpx(300);
+  
   tthPtFormula_ = new TF1("tthPtFormula",fPt.Data(),   0., 1000.);
   tthPtFormula_->SetNpx(500);
 
-  cout << "Cross-section formula: " << string(xSecFormula_->GetTitle())  << endl;
-  cout << "Acceptance    formula: " << string(accFormula_->GetTitle())   << endl;
-  cout << "tth system    formula: " << string(tthPtFormula_->GetTitle()) << endl;
+  cout << "Cross-section formula:       " << string(xSecFormula_->GetTitle())  << endl;
+  cout << "Acceptance SLw2j formula:    " << string(accSL2wjFormula_->GetTitle())   << endl;
+  cout << "Acceptance SLw1j formula:    " << string(accSL1wjFormula_->GetTitle())   << endl;
+  cout << "Acceptance SLNoBHad formula: " << string(accSLNoBHadFormula_->GetTitle())   << endl;
+  cout << "Acceptance SLNoHiggs formula:" << string(accSLNoHiggsFormula_->GetTitle())   << endl;
+  cout << "tth system formula:          " << string(tthPtFormula_->GetTitle()) << endl;
 
 }
 
@@ -2787,10 +2839,18 @@ double MEIntegratorNew::xSection(int flag) const{
   double xsec = 1.0;
   double acc  = 1.0;
   if( SqrtS_>7999 && SqrtS_<8001 ){
-    //xsec = (1.03e+05 * TMath::Power(M_,-2.80));
-    //acc  = 1.0;
+
     xsec = xSecFormula_!=0 ?  xSecFormula_->Eval(M_) : 1.0;
-    acc  = accFormula_!=0  ?  accFormula_->Eval(M_)  : 1.0;
+
+    if( intType_ == SL2wj && accSL2wjFormula_)
+      acc  = accSL2wjFormula_->Eval(M_) ;
+    else if( (intType_ == SL1wj || intType_ == DL) && accSL1wjFormula_)
+      acc  = accSL1wjFormula_->Eval(M_) ;
+    else if( (intType_ == SLNoBHad || intType_ == SLNoBLep) && accSLNoBHadFormula_)
+      acc  = accSLNoBHadFormula_->Eval(M_) ;
+    else if( intType_ == SLNoHiggs && accSLNoHiggsFormula_)
+      acc  = accSLNoHiggsFormula_->Eval(M_) ;
+
   }
   else {
     cout << "Cross-section not available" << endl;
@@ -2799,30 +2859,7 @@ double MEIntegratorNew::xSection(int flag) const{
   return (flag==0 ? xsec : acc);
 }
 
-/*
-double MEIntegratorNew::tthDensity ( double Q, double m12, double cos1Star, double cos3)  const{
 
-  
-  double p1Star = (m12*m12 - 4*Mtop_*Mtop_) >=0 ? 
-    TMath::Sqrt((m12*m12 - 4*Mtop_*Mtop_))/2. : -999.;
-  double p3     = (Q*Q - (m12+M_)*(m12+M_)) >=0 && (Q*Q - (m12 - M_)*(m12 - M_)) >=0 ? 
-    TMath::Sqrt((Q*Q - (m12+M_)*(m12+M_) )*( Q*Q - (m12 - M_)*(m12 - M_)))/2./Q : -999;
-
-  if( TMath::IsNaN(p1Star) || TMath::IsNaN(p3) || p1Star<=0 || p3 <=0){
-    if(verbose_) cout << "tthDensity evaluated for non-acceptable values of p1Star and/or p3" << endl;
-    return 0.0;
-  }
-
-  //cout << Q/SqrtS_ << ", " << m12 << ", " <<  cos1Star << endl;
-  double val1 = evaluateCahchedPdf(const_cast<TH3F*>(&pdf3D_), Q/SqrtS_, m12, cos1Star );
-  //const_cast<TH3F*>(&pdf3D_)->Interpolate(Q/SqrtS_, m12, cos1Star);
-  double val2 = const_cast<TH1F*>(&pdfGammaTTH_)->Interpolate( cos3 );
-
-  return (val1*val2)/p1Star/p3;
-  
-
-}
-*/
 
 void MEIntegratorNew::resetEvaluation(){
   evaluation_ = 0;
@@ -3713,6 +3750,245 @@ double MEIntegratorNew::probabilitySLNoBLep(const double* x, int sign) const{
 
 
 
+double MEIntegratorNew::probabilitySLNoHiggs(const double* x, int sign) const{
+
+  int errFlag = 0;
+  double prob = 1.0;
+  
+  double Eq1           = x[0];
+  double cosThetaB2    = x[1];
+  double phiB2         = x[2];
+  double cosThetaNu    = x[3];
+  double phiNu         = x[4];
+  double Eh1           = x[5];
+
+  double Elep = jets_[0].P();
+
+  // trasnform phiNu into an absolute phi:
+  phiNu += eMEt_.Phi();
+  if( phiNu < -PI ) phiNu += (2*PI);
+  if( phiNu >  PI)  phiNu -= (2*PI);
+
+
+  if(verbose_){
+    cout << "#" << evaluation_ << endl;
+    cout << "Eq1 =          "  << Eq1 << endl; 
+    cout << "cosThetaB2 = "  << cosThetaB2 << endl;
+    cout << "phiNuB2 =    "  << phiB2 << endl;
+    cout << "cosThetaNu =   "  << cosThetaNu << endl; 
+    cout << "phiNu =        "  << phiNu  << endl; 
+    cout << "Eh1 =          "  << Eh1  << endl; 
+  }
+
+  double Eq2, EbHad, cos1Had, cos2Had;
+  int nSolTopHad = topHadEnergies( Eq1, Eq2, EbHad, cos1Had, cos2Had, errFlag );
+
+  if(errFlag){
+    if(verbose_) cout << "Problems with topHadLostEnergies (" << nSolTopHad << " solutions)" << endl;
+    return 0.0;
+  }
+
+  TVector3 eNu(0.,0.,1.); // neutrino
+  double Enu, EbLep, cos1Lep, cos2Lep /*Jacob*/;
+  int nSolTopLep = topLepEnergies( phiNu, cosThetaNu, Enu, EbLep, cos1Lep, cos2Lep, errFlag  );
+  eNu.SetTheta( TMath::ACos( cosThetaNu ) ); 
+  eNu.SetPhi  ( phiNu );   
+  eNu.SetMag  ( 1.); 
+
+  if(errFlag){
+    if(verbose_) cout << "Problems with topLepEnergies (" << nSolTopLep << " solutions)" << endl;
+    return 0.0;
+  }
+
+
+  (const_cast<MEIntegratorNew*>(this)->eB2_).SetTheta( TMath::ACos( cosThetaB2 ) ); 
+  (const_cast<MEIntegratorNew*>(this)->eB2_).SetPhi  ( phiB2 );   
+  (const_cast<MEIntegratorNew*>(this)->eB2_).SetMag  ( 1.); 
+
+  double Eh2, cos1Higgs;
+  int nSolHiggs = higgsEnergies( Eh1, Eh2, cos1Higgs, errFlag );
+  
+  if(errFlag){
+    if(verbose_) cout << "Problems with higgsEnergies (" << nSolHiggs << " solutions)" << endl;
+    return 0.0;
+  }
+
+  if(verbose_){
+    cout << "EbHad = " << EbHad << " (Pt = " << EbHad*TMath::Sin(eBHad_.Theta()) << ")" << endl;
+    cout << "EbLep = " << EbLep << " (Pt = " << EbLep*TMath::Sin(eBLep_.Theta()) << ")" << endl;
+    cout << "Enu = " << Enu << " (Pt = " << Enu*sqrt(1-cosThetaNu*cosThetaNu) << ")"  << endl;
+    cout << "cos1Had = " << cos1Had << endl;
+    cout << "cos2Had = " << cos2Had << endl;
+    cout << "********" << endl;
+  }
+
+  TLorentzVector W1Had( eW1Had_*Eq1,  Eq1 );
+  TLorentzVector W2Had( eW2Had_*Eq2,  Eq2 );
+  TLorentzVector WHad = W1Had + W2Had;
+  TLorentzVector bHad ( eBHad_*TMath::Sqrt(EbHad*EbHad - Mb_*Mb_), EbHad );
+  TLorentzVector topHad = WHad + bHad;
+
+  if(verbose_ ){
+    cout << "W   had mass = " << WHad.M() << endl;
+    cout << "Top had mass = " << topHad.M() << endl;
+  }
+
+  TLorentzVector WLepLep = jets_[0];
+  TLorentzVector WLepNu( eNu*Enu, Enu);
+  TLorentzVector WLep = WLepLep + WLepNu;
+  TLorentzVector bLep  ( eBLep_*TMath::Sqrt(EbLep*EbLep - Mb_*Mb_), EbLep );
+  TLorentzVector topLep = WLep + bLep;
+
+  if(verbose_ ){
+    cout << "W   lep mass = " << WLep.M() << endl;
+    cout << "Top lep mass = " << topLep.M() << endl;
+  }
+
+  TLorentzVector higgs1(  eB1_*TMath::Sqrt(Eh1*Eh1 -  Mb_*Mb_), Eh1);
+  TLorentzVector higgs2(  eB2_*TMath::Sqrt(Eh2*Eh2 -  Mb_*Mb_), Eh2);
+  TLorentzVector higgs = higgs1 + higgs2;
+  
+  if(verbose_ ){
+    cout << "H   had mass = " << higgs.M() << endl;
+  }
+
+
+  TLorentzVector tot = topHad+topLep+higgs;
+
+  TVector3 boostToCMS  = tot.BoostVector();
+
+  double me2 = 1.0;
+  if(useME_==1 && top1Flag_ == +1 && top2Flag_ == -1)               // topLep = t,  topHad = tx
+    me2 = meSquaredOpenLoops( &topLep, &topHad, &higgs );
+  else if(useME_==1 && top1Flag_ == -1 && top2Flag_ == +1)          // topLep = tx, topHad = t
+    me2 = meSquaredOpenLoops( &topHad, &topLep, &higgs );
+  else{
+    if(useME_==1 && verbose_) cout << "Undefined top flavors" << endl;
+    me2 = 1.;
+  }
+
+  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
+  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
+  double Q  = (2*Mtop_ + M_)/2.;
+
+  double MEpart = 
+    topHadDensity(cos1Had,cos2Had) * 
+    topLepDensity(cos1Lep,cos2Lep) * 
+    higgsDensity(cos1Higgs) *
+    me2
+    ;
+
+  double Jpart = 
+    topHadBLostJakobi( Eq1,  Eq2, EbHad, &WHad ) * 
+    topLepJakobi( Enu, Elep, EbLep, &WLep ) * 
+    higgsJakobi(  Eh1, Eh2 ) 
+    ;
+
+  double tf1 = jetEnergyTF( jets_[2].Eta(), jets_[2].E(),  bLep.E(),    "Heavy");
+  double tf2 = jetEnergyTF( jets_[3].Eta(), jets_[3].E(),  W1Had.E(),   "Light");
+  double tf3 = jetEnergyTF( jets_[4].Eta(), jets_[4].E(),  W2Had.E(),   "Light");
+  double tf4 = jetEnergyTF( jets_[5].Eta(), jets_[5].E(),  bHad.E(),    "Heavy");
+  double tf5 = jetEnergyTF( jets_[6].Eta(), jets_[6].E(),  higgs1.E(),  "Heavy");
+  double tf6 = 1.0;
+
+  double dPx = WLepNu.Px() - jets_[1].Px();
+  double dPy = WLepNu.Py() - jets_[1].Py();
+  double tf7 = (Vx_*Vy_ - rho_*rho_*Vx_*Vy_)>0 ? 
+    1./2./PI/TMath::Sqrt(Vx_*Vy_ - rho_*rho_*Vx_*Vy_)*TMath::Exp( -0.5*( 1/(1-rho_*rho_)*( dPx*dPx/Vx_ + dPy*dPy/Vy_ - 2*rho_*dPx*dPy/TMath::Sqrt(Vx_*Vy_) ) ) ) : 1.0 ;
+  
+  
+  ///////////////////////////////////////////////////////////////////////////
+  if( TMath::Abs(higgs2.Eta())<2.5 ){
+
+    double PtB2 = higgs2.Pt();
+
+    string bin = "Bin0";
+    if(  TMath::Abs( higgs2.Eta() )<1.0 ) 
+      bin = "Bin0";
+    else 
+      bin = "Bin1";
+
+    double param0resol = (jetParam_.find("param0resolHeavy"+bin))->second;
+    double param1resol = (jetParam_.find("param1resolHeavy"+bin))->second;
+    double param0resp  = (jetParam_.find("param0respHeavy" +bin))->second;
+    double param1resp  = (jetParam_.find("param1respHeavy" +bin))->second;
+
+    double Width  = Eh2*TMath::Sqrt( param0resol*param0resol/Eh2 + param1resol*param1resol/Eh2/Eh2) * (PtB2/Eh2);
+    double Mean   = (Eh2*param0resp + param1resp) * (PtB2/Eh2) ;
+
+    tf6 = 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 )  ;  
+
+    if( deltaR(higgs2, WLepLep)< 0.5 ){
+      if(verbose_) cout << "Overlap with lepton " << endl;
+      tf6 = (PtB2 < 0.10*WLepLep.Pt()) ? 1.0 : 0.0; 
+    }
+    else if( deltaR(higgs2, bLep)  < 0.5 ){
+      if(verbose_) cout << "Overlap with bLep " << endl;
+      tf6 = 1.;
+      tf1 = jetEnergyTF( jets_[2].Eta(), jets_[2].E(),  (bLep.E()+higgs2.E()),     "Heavy"); 
+    }
+    else if( deltaR(higgs2, W1Had)  < 0.5 ){
+      if(verbose_) cout << "Overlap with W1 " << endl;
+      tf6 = 1.;
+      tf2 = jetEnergyTF( jets_[3].Eta(), jets_[3].E(),  (W1Had.E()+higgs2.E()),    "Light"); 
+    }
+    else if( deltaR(higgs2, W2Had)  < 0.5 ){
+      if(verbose_) cout << "Overlap with W2 " << endl;
+      tf6 = 1.;
+      tf3 = jetEnergyTF( jets_[4].Eta(), jets_[4].E(),  (W2Had.E()+higgs2.E()),    "Light"); 
+    }
+    else if( deltaR(higgs2, bHad)  < 0.5 ){
+      if(verbose_) cout << "Overlap with bHad " << endl;
+      tf6 = 1.;
+      tf4 = jetEnergyTF( jets_[5].Eta(), jets_[5].E(),  (bHad.E()+higgs2.E()),     "Heavy"); 
+    }
+    else if( deltaR(higgs2, higgs1) < 0.5 ){
+      if(verbose_) cout << "Overlap with h1 " << endl;
+      tf6 = 1.;
+      tf5 = jetEnergyTF( jets_[6].Eta(), jets_[6].E(),  (higgs1.E()+higgs2.E()),   "Heavy"); 
+    }
+    else{}
+
+  }
+  ///////////////////////////////////////////////////////////////////////////
+
+
+  double TFpart = 
+    tf1 *
+    tf2 *
+    tf3 *
+    tf4 *
+    tf5 *
+    tf6
+    ;
+
+  double METpart =  
+    tf7
+    ;
+
+  double PDFpart = ggPdf( x1, x2 , Q);
+
+  if(useME_)   prob *= MEpart;
+  if(useJac_)  prob *= Jpart;
+  if(useMET_)  prob *= METpart;
+  if(useTF_)   prob *= TFpart;
+  if(usePDF_)  prob *= PDFpart;
+
+  ////////////////////////
+
+  if( TMath::IsNaN(prob) ){
+    if(verbose_){
+      cout << tf1 << ", " << tf2 << ", " << tf3 << ", "<< tf4 << ", "<< tf5 << ", "<< tf6 << ", " << tf7 << endl;
+      cout << MEpart << ", " << Jpart << ", " << PDFpart << endl;
+    }
+    prob = 0.;
+  }
+
+  return prob;
+}
+
+
+
 
 double MEIntegratorNew::probabilityDL(const double* x, int sign) const{
 
@@ -4071,8 +4347,10 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
     higgsJakobi(  Eh1, Eh2 ) 
     ;
 
+
+
   double AccPart = 1.0;
-  if( acceptance ){
+  if( acceptance==1 ){
 
     // no overlap
     for( unsigned int j = 2; j < 7; j++){
@@ -4088,32 +4366,235 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
 
     //lep pt
     if( jets_[0].Pt()<20 || TMath::Abs(jets_[0].Eta())>2.1 ) AccPart *= 0.0; 
-    
-    // jet resolution
-    for(unsigned int j = 2; j <8; j++){
 
-      if(TMath::Abs(jets_[j].Eta())>2.5) continue;
 
-      string flavor = "Light";
-      if(j==2 || j>=5) flavor = "Heavy";
-      
-      string bin = "Bin0";
-      if(  TMath::Abs( jets_[j].Eta() )<1.0 ) 
-	bin = "Bin0";
+    if( intType_ == SLAcc ){
+
+      for(unsigned int j = 2; j <8; j++){
+	
+	if(TMath::Abs(jets_[j].Eta())>2.5) continue;
+	
+	string flavor = "Light";
+	if(j==2 || j>=5) flavor = "Heavy";
+	
+	string bin = "Bin0";
+	if(  TMath::Abs( jets_[j].Eta() )<1.0 ) 
+	  bin = "Bin0";
+	else 
+	  bin = "Bin1";    
+	
+	double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
+	double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+	double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
+	double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
+	
+	double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
+	
+	AccPart *= (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
+      }
+
+    }
+    else if( intType_ == SLAcc2wj){
+
+      for(unsigned int j = 2; j <8; j++){
+	
+	if(TMath::Abs(jets_[j].Eta())>2.5){
+	  AccPart *= 0.0;
+	  continue;
+	}
+	
+	string flavor = "Light";
+	if(j==2 || j>=5) flavor = "Heavy";
+	
+	string bin = "Bin0";
+	if(  TMath::Abs( jets_[j].Eta() )<1.0 ) 
+	  bin = "Bin0";
+	else 
+	  bin = "Bin1";    
+	
+	double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
+	double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+	double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
+	double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
+	
+	double Width  =  jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
+	
+	AccPart *= (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
+      }
+
+    }
+    else if( intType_ == SLAcc1wj){     
+
+      double AccW1 = 1.0;
+      double AccW2 = 1.0;
+      for(unsigned int j = 2; j <8; j++){
+
+	if(j!=3 && j!=4 && TMath::Abs(jets_[j].Eta())>2.5){
+	  AccPart *= 0.0;
+	  continue;
+	}
+	
+	string flavor = "Light";
+	if(j==2 || j>=5) flavor = "Heavy";
+	
+	string bin = "Bin0";
+	if(  TMath::Abs( jets_[j].Eta() )<1.0 ) 
+	  bin = "Bin0";
+	else 
+	  bin = "Bin1";    
+	
+	double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
+	double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+	double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
+	double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
+	
+	double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
+	
+	if(j!=3 && j!=4)
+	  AccPart *= (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
+	else{
+	  if(j==3) 
+	    AccW1 *= (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
+	  else  
+	    AccW2 *= (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
+	}
+      }
+
+      if( TMath::Abs(jets_[3].Eta())>2.5 && TMath::Abs(jets_[4].Eta())>2.5 ) 
+	AccPart *= 0.0;
+      else if( TMath::Abs(jets_[3].Eta())<2.5 && TMath::Abs(jets_[4].Eta())>2.5 ) 
+	AccPart *= AccW1;
+      else if( TMath::Abs(jets_[3].Eta())>2.5 && TMath::Abs(jets_[4].Eta())<2.5 ) 
+	AccPart *= AccW2;
       else 
-	bin = "Bin1";    
-      
-      double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
-      double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
-      double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
-      double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
-      
-      double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[0].Theta() );
-      double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[0].Theta() ) ;
+	AccPart *= ( AccW1*(1-AccW2) +  (1-AccW1)*AccW2 );
 
-      AccPart *= (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
+    }
+    else if( intType_ == SLAccNoBHad ){     
+
+      for(unsigned int j = 2; j <8; j++){
+
+	if(j!=5 && TMath::Abs(jets_[j].Eta())>2.5){
+	  AccPart *= 0.0;
+	  continue;
+	}
+	
+	string flavor = "Light";
+	if(j==2 || j>=5) flavor = "Heavy";
+	
+	string bin = "Bin0";
+	if(  TMath::Abs( jets_[j].Eta() )<1.0 ) 
+	  bin = "Bin0";
+	else 
+	  bin = "Bin1";    
+	
+	double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
+	double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+	double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
+	double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
+	
+	double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
+
+	if(j!=5)	
+	  AccPart *= (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
+	else if( j==5 && TMath::Abs( jets_[j].Eta() )>2.5 )
+	  AccPart *= 1.0;
+	else if( j==5 && TMath::Abs( jets_[j].Eta() )<2.5 )
+	  AccPart *= 1 - (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
+	else{}
+
+      }
+      
+    }
+    else if( intType_ == SLAccNoBLep){     
+
+      for(unsigned int j = 2; j <8; j++){
+
+	if(j!=2 && TMath::Abs(jets_[j].Eta())>2.5){
+	  AccPart *= 0.0;
+	  continue;
+	}
+	
+	string flavor = "Light";
+	if(j==2 || j>=5) flavor = "Heavy";
+	
+	string bin = "Bin0";
+	if(  TMath::Abs( jets_[j].Eta() )<1.0 ) 
+	  bin = "Bin0";
+	else 
+	  bin = "Bin1";    
+	
+	double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
+	double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+	double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
+	double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
+	
+	double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
+
+	if(j!=2)	
+	  AccPart *= (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
+	else if( j==2 && TMath::Abs( jets_[j].Eta() )>2.5 )
+	  AccPart *= 1.0;
+	else if( j==2 && TMath::Abs( jets_[j].Eta() )<2.5 )
+	  AccPart *= 1 - (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
+	else{}
+      }
+      
+    }
+    else if( intType_ == SLAccNoHiggs){     
+
+      double AccH1 = 1.0;
+      double AccH2 = 1.0;
+      for(unsigned int j = 2; j <8; j++){
+
+	if(j!=6 && j!=7 && TMath::Abs(jets_[j].Eta())>2.5){
+	  AccPart *= 0.0;
+	  continue;
+	}
+	
+	string flavor = "Light";
+	if(j==2 || j>=5) flavor = "Heavy";
+	
+	string bin = "Bin0";
+	if(  TMath::Abs( jets_[j].Eta() )<1.0 ) 
+	  bin = "Bin0";
+	else 
+	  bin = "Bin1";    
+	
+	double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
+	double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+	double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
+	double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
+	
+	double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
+	
+	if(j!=6 && j!=7)
+	  AccPart *= (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
+	else{
+	  if(j==6) 
+	    AccH1 *= (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
+	  else  
+	    AccH2 *= (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
+	}
+      }
+
+      if( TMath::Abs(jets_[6].Eta())>2.5 && TMath::Abs(jets_[7].Eta())>2.5 ) 
+	AccPart *= 0.0;
+      else if( TMath::Abs(jets_[6].Eta())<2.5 && TMath::Abs(jets_[7].Eta())>2.5 ) 
+	AccPart *= AccH1;
+      else if( TMath::Abs(jets_[6].Eta())>2.5 && TMath::Abs(jets_[7].Eta())<2.5 ) 
+	AccPart *= AccH2;
+      else 
+	AccPart *= ( AccH1*(1-AccH2) +  (1-AccH1)*AccH2 );
     }
   }
+
   prob *= AccPart;
 
   double PDFpart = ggPdf( x1, x2 , Q);
