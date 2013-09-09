@@ -333,7 +333,7 @@ plots_aNNInputs = cms.VPSet(
     variable  = cms.string("aveDeltaRbTag"),
     xTitle    = cms.string("avg #Delta R(tag,tag)"),
     yTitle    = cms.string("Events"),
-    histoName = cms.string(""),
+    histoName = cms.string("aveDeltaRbTag"),
     cut       = cms.string(""),
     logy      = cms.int32(0),
     ),

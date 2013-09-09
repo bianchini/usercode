@@ -20,7 +20,7 @@ process.fwliteInput = cms.PSet(
     samples       = cms.VPSet(
     
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('TTH_HToBB_M-125_8TeV-pythia6'+VType),
     nickName = cms.string('TTH125'),
     color    = cms.int32(2),
@@ -28,7 +28,7 @@ process.fwliteInput = cms.PSet(
     ),
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsSemiLept'),
     color    = cms.int32(41),

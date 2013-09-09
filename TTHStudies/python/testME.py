@@ -99,11 +99,11 @@ process.fwliteInput = cms.PSet(
     
     ),
 
-    vegasPoints   = cms.int32(6000000), #6000000
+    vegasPoints   = cms.int32(15000000), #6000000
     mode          = cms.untracked.int32(2),
 
     functions     = cms.vstring('1.39e+23*x^(-2.81e+00)',
-                                '6.36e+17*TMath::Landau(x,6.71e+01,1.62e+01)',
+                                '7.84e+17*TMath::Landau(x,6.17e+01,1.61e+01)',
                                 'x>=12 ? x^(-2.010e-01)*exp((-1.5785e-02)*x) : 4.184e-02*x'
                                 ),
     

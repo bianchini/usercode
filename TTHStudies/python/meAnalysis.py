@@ -1,15 +1,16 @@
 import FWCore.ParameterSet.Types  as CfgTypes
 import FWCore.ParameterSet.Config as cms
 
-VType     = "_VType2"
-xsecTT_SL = 103.0
+VType     = "_VType1"
 
-process = cms.Process("MEValidator")
+xsecTT_SL = 103.0
+xsecTT_FL = 24.8
+
+process = cms.Process("MEAnalysis")
 
 process.fwliteInput = cms.PSet(
 
-
-    outFileName   = cms.string("./root/MEValidator_test.root"),
+    outFileName   = cms.string("./root/MEAnalysis.root"),
     pathToTF      = cms.string("./root/transferFunctions_partonE.root"),
     pathToFile    = cms.string("dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/store//user/bianchi/HBB_EDMNtuple/AllHDiJetPt"+VType+"/v2/"),
     ordering      = cms.string("DiJetPt_"),
@@ -17,6 +18,102 @@ process.fwliteInput = cms.PSet(
 
     samples       = cms.VPSet(
 
+    cms.PSet(
+    skip     = cms.bool(True),
+    name     = cms.string('DYJetsToLL_M-10To50_TuneZ2Star_8TeV-madgraph'+VType),
+    nickName = cms.string('DYJets10to50'),
+    color    = cms.int32(18),
+    xSec     = cms.double(12765.)
+    ),
+ 
+    cms.PSet(
+    skip     = cms.bool(True),
+    name     = cms.string('DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball'+VType),
+    nickName = cms.string('DYJets50'),
+    color    = cms.int32(19),
+    xSec     = cms.double(3503.71)
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('WJetsToLNu_TuneZ2Star_8TeV-madgraph-tarball'+VType),
+    nickName = cms.string('WJets'),
+    color    = cms.int32(29),
+    xSec     = cms.double(37509.0),
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('T_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola'+VType),
+    nickName = cms.string('TtW'),
+    color    = cms.int32(6),
+    xSec     = cms.double(11.1)
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('T_t-channel_TuneZ2star_8TeV-powheg-tauola'+VType),
+    nickName = cms.string('Tt'),
+    color    = cms.int32(6),
+    xSec     = cms.double(56.4)
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('T_s-channel_TuneZ2star_8TeV-powheg-tauola'+VType),
+    nickName = cms.string('Ts'),
+    color    = cms.int32(6),
+    xSec     = cms.double(3.79)
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('Tbar_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola'+VType),
+    nickName = cms.string('TbartW'),
+    color    = cms.int32(6),
+    xSec     = cms.double(11.1)
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('Tbar_t-channel_TuneZ2star_8TeV-powheg-tauola'+VType),
+    nickName = cms.string('Tbart'),
+    color    = cms.int32(6),
+    xSec     = cms.double(30.7)
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('Tbar_s-channel_TuneZ2star_8TeV-powheg-tauola'+VType),
+    nickName = cms.string('Tbars'),
+    color    = cms.int32(6),
+    xSec     = cms.double(1.76)
+    ),
+
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('WW_TuneZ2star_8TeV_pythia6_tauola'+VType),
+    nickName = cms.string('WW'),
+    color    = cms.int32(4),
+    xSec     = cms.double(56.75)
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('WZ_TuneZ2star_8TeV_pythia6_tauola'+VType),
+    nickName = cms.string('WZ'),
+    color    = cms.int32(4),
+    xSec     = cms.double(33.85)
+    ),
+
+    cms.PSet(
+    skip     = cms.bool(True),  
+    name     = cms.string('ZZ_TuneZ2star_8TeV_pythia6_tauola'+VType),
+    nickName = cms.string('ZZ'),
+    color    = cms.int32(4),
+    xSec     = cms.double(8.297)
+    ),
 
     cms.PSet(
     skip     = cms.bool(True),  
@@ -46,7 +143,7 @@ process.fwliteInput = cms.PSet(
 
 
     cms.PSet(
-    skip     = cms.bool(True),  
+    skip     = cms.bool(False),  
     name     = cms.string('TTH_HToBB_M-125_8TeV-pythia6'+VType),
     nickName = cms.string('TTH125'),
     color    = cms.int32(2),
@@ -89,7 +186,7 @@ process.fwliteInput = cms.PSet(
 
 
     cms.PSet(
-    skip     = cms.bool(False),  
+    skip     = cms.bool(True),  
     name     = cms.string('TTJets_SemiLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsSemiLept'),
     color    = cms.int32(41),
@@ -101,8 +198,9 @@ process.fwliteInput = cms.PSet(
     name     = cms.string('TTJets_FullLeptMGDecays_8TeV-madgraph-part'+VType),
     nickName = cms.string('TTJetsFullLept'),
     color    = cms.int32(41),
-    xSec     = cms.double(xsecTT_SL),
+    xSec     = cms.double(xsecTT_FL),
     ),
+    
     
     ),
 
@@ -114,18 +212,14 @@ process.fwliteInput = cms.PSet(
     #SL1wj     4000
     #DL       10000
     
-    vegasPoints   = cms.int32(2000),
-
-    mode          = cms.untracked.int32(6),
-    newVars       = cms.untracked.int32(1),
-
     hypo          = cms.untracked.int32(0),
     SoB           = cms.untracked.int32(1),
-    doBkgWithWorkaraound  = cms.untracked.int32(1),
 
     maxChi2       = cms.untracked.double(2.5), # 2.5
-    
+  
     norm          = cms.untracked.int32(0),
+
+
     #functions     = cms.vstring('1.39e+23*x^(-2.81e+00)',
     #                            '7.84e+17*TMath::Landau(x,6.17e+01,1.61e+01)',
     #                            'x>=12 ? x^(-2.010e-01)*exp((-1.5785e-02)*x) : 4.184e-02*x'
@@ -139,6 +233,15 @@ process.fwliteInput = cms.PSet(
     'x>=12 ? x^(-2.010e-01)*exp((-1.5785e-02)*x) : 4.184e-02*x'),           # tth Pt
  
     switchoffOL   = cms.untracked.int32(0), ###### CHECK HERE
+    speedup       = cms.untracked.int32(0), ###### CHECK HERE
+
+    doType0       = cms.untracked.int32(0),  #SL(4,2) W-tag
+    doType1       = cms.untracked.int32(0),  #SL(4,2) no W-tag
+    doType2       = cms.untracked.int32(0),  #SL(4,1)
+    doType3       = cms.untracked.int32(0),  #SL(4,3) : two flags, W-tag OR no W-tag
+    doType4       = cms.untracked.int32(0),  #SL(3,2)
+    doType6       = cms.untracked.int32(1),  #DL(4,X)
+    doType7       = cms.untracked.int32(1),  #DL(3M+1L,X)
 
     useME         = cms.int32(1),
     useJac        = cms.int32(1),
@@ -146,25 +249,30 @@ process.fwliteInput = cms.PSet(
     useTF         = cms.int32(1),
     usePDF        = cms.int32(1),
 
-    doParton        = cms.int32(0),
-    doSmear         = cms.int32(1),   
-    doMassScan      = cms.int32(0),
-    doPermutations  = cms.int32(1),
+    printP4         = cms.int32(0),
     
-    printP4       = cms.int32(0),    
     verbose       = cms.bool(False),
 
     met           = cms.double(125.),
 
+    MwL           = cms.untracked.double(60),   #60
+    MwH           = cms.untracked.double(100),  #100
+
+    MhL           = cms.untracked.double(110),
+    MhH           = cms.untracked.double(140),
+    
     #masses        = cms.vdouble(60,  65,  70,  75, 80 , 85,  90, 95, 100, 105, 110, 
     #                            115, 120, 125, 130, 135, 140, 145, 150, 155, 
     #                            160, 165, 170, 175, 180 ,185, 190, 195, 200, 205, 210, 215, 220, 225, 230),
     masses        = cms.vdouble(125),
 
-    evLimits      = cms.vint32(1,10),
 
-    scaleH        = cms.double(1.0),
-    scaleL        = cms.double(1.0),
-    scaleMET      = cms.double(1.0),
+    fixNumberOfEventsPerJob    = cms.untracked.int32(0),
+    evLimits                   = cms.vint32(0,-1),
+
+    doCSVup    = cms.untracked.int32(0),
+    doCSVdown  = cms.untracked.int32(0),
+    doJECup    = cms.untracked.int32(0),
+    doJECdown  = cms.untracked.int32(0),
 
     )

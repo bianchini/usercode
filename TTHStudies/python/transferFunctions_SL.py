@@ -5,8 +5,8 @@ process = cms.Process("TFuncSL")
 
 process.fwliteInput = cms.PSet(
 
-    outFileName   = cms.string("transferFunctions_SL.root"),
-    pathToFile    = cms.string("./topKinFitterSL_6j4b.root"),
+    pathToFile    = cms.string("./root/treeProducer_new.root"),
+    outFileName   = cms.string("transferFunctions_partonE_recoil.root"),
     verbose       = cms.bool(False),
     
     

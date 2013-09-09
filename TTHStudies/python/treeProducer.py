@@ -14,8 +14,10 @@ process.fwliteInput = cms.PSet(
     pathToFile    = cms.string("dcap://t3se01.psi.ch:22125//pnfs/psi.ch/cms/trivcat/store//user/bianchi/HBB_EDMNtuple/AllHDiJetPt"+VType+"/v2/"),
     ordering      = cms.string("DiJetPt_"),
     lumi          = cms.double(12.1),
-    verbose             = cms.bool(False),
+    verbose       = cms.bool(False),
     computeCMSVariables = cms.bool(True),
+    printP4       = cms.bool(True),
+    toPrint       = cms.int32(10),
 
     cut = cms.string(""),
     
