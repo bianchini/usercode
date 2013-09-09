@@ -189,11 +189,11 @@ pair<TMatrixD,TMatrixD> CalcME::Slash(TLorentzVector v){
  
   TMatrixD Re( Gamma(0).first );
   Re          *= (v[3]);
-  Re          += ( Gamma(1).first  *= (v[0]) );
-  Re          += ( Gamma(3).first  *= (v[2]) );
+  Re          += ( Gamma(1).first  *= (-v[0]) );
+  Re          += ( Gamma(3).first  *= (-v[2]) );
 
   TMatrixD Im( Gamma(2).second );
-  Im          *= (v[1]);
+  Im          *= (-v[1]);
 
   return make_pair(Re,Im);
 
@@ -220,7 +220,7 @@ pair<TMatrixD,TMatrixD> CalcME::A0s(int mu, int nu, int dagger){
 
   TMatrixD ReB( Gamma(4).second  );
   ReB += (Slash(t2_).first *= (-1));
-  ReB += (Slash(h_).first *= (-1));
+  ReB += (Slash(h_).first  *= (-1));
   ReB += (Gamma(4).first *= Mt_);
   ReB *= (1./(2*t2_.Dot(h_) + Mh2_));
 
@@ -228,7 +228,7 @@ pair<TMatrixD,TMatrixD> CalcME::A0s(int mu, int nu, int dagger){
 
   TMatrixD ImB( Gamma(4).second );
   ImB += (Slash(t2_).second *= (-1));
-  ImB += (Slash(h_).second *= (-1));
+  ImB += (Slash(h_).second  *= (-1));
   ImB *= (1./(2*t2_.Dot(h_) + Mh2_));
 
   TMatrixD ReTot(Gamma(4).second) ; // null
@@ -296,9 +296,14 @@ pair<TMatrixD,TMatrixD> CalcME::A0s(int mu, int nu, int dagger){
     }
 
     //cout << "ReG,ImG : " << endl;
+    double V = 
+      (  q1_[alphaLV] -   q2_[alphaLV])*(Gamma(5).first)(mu,nu)    + 
+      (  q1_[muLV]    + 2*q2_[muLV])   *(Gamma(5).first)(nu,alpha) -
+      (2*q1_[nuLV]    +   q2_[nuLV])   *(Gamma(5).first)(mu,alpha) ;
+    V /= (2*q1_.Dot(q2_));
 
-    TMatrixD ReG( Gamma(alpha).first );
-    TMatrixD ImG( Gamma(alpha).second);
+    TMatrixD ReG( Gamma(alpha).first  * (Gamma(5).first)(alpha,alpha) );
+    TMatrixD ImG( Gamma(alpha).second * (Gamma(5).first)(alpha,alpha) );
 
     //cout << "Fill ReTot... " << endl;
 
@@ -308,21 +313,25 @@ pair<TMatrixD,TMatrixD> CalcME::A0s(int mu, int nu, int dagger){
       ReTotTmp.Mult( ReA, ReG );
     else
       ReTotTmp.Mult( ReG, ReA );
+    ReTotTmp  *= V;
     ReTot    += ReTotTmp;
     if(dagger==0)
       ReTotTmp.Mult(ReG,ReB);
     else
       ReTotTmp.Mult(ReB,ReG);
+    ReTotTmp  *= V;
     ReTot    += ReTotTmp;
     if(dagger==0)
       ReTotTmp.Mult(ImA,ImG);
     else
       ReTotTmp.Mult(ImG,ImA);
+    ReTotTmp  *= V;
     ReTot    -= ReTotTmp; 
     if(dagger==0)
       ReTotTmp.Mult(ImG,ImB);
     else
       ReTotTmp.Mult(ImB,ImG);
+    ReTotTmp  *= V;
     ReTot    -= ReTotTmp;
 
     //cout << "Fill ImTot... " << endl;
@@ -333,31 +342,27 @@ pair<TMatrixD,TMatrixD> CalcME::A0s(int mu, int nu, int dagger){
       ImTotTmp.Mult( ReA, ImG);
     else
       ImTotTmp.Mult( ImG, ReA);
+    ImTotTmp *= V;
     ImTot   +=  ImTotTmp;
     if(dagger==0)
       ImTotTmp.Mult(ImG,ReB);
     else
       ImTotTmp.Mult(ReB,ImG);
+    ImTotTmp *= V;
     ImTot   +=  ImTotTmp;
     if(dagger==0)
       ImTotTmp.Mult(ImA,ReG);
     else
       ImTotTmp.Mult(ReG,ImA);
+    ImTotTmp *= V;
     ImTot   +=  ImTotTmp ;
     if(dagger==0)
       ImTotTmp.Mult(ReG,ImB);
     else
       ImTotTmp.Mult(ImB,ReG);
+    ImTotTmp *= V;
     ImTot   +=  ImTotTmp;
 
-    double V = 
-      (  q1_[alphaLV] -   q2_[alphaLV])*(Gamma(5).first)(mu,nu)    + 
-      (  q1_[muLV]    + 2*q2_[muLV])   *(Gamma(5).first)(nu,alpha) -
-      (2*q1_[muLV]    +   q2_[nuLV])   *(Gamma(5).first)(mu,alpha) ;
-    V /= (2*q1_.Dot(q2_));
-
-    ReTot *= V;
-    ImTot *= V;
   }
 
   return make_pair(ReTot,ImTot);
@@ -369,19 +374,23 @@ pair<TMatrixD,TMatrixD> CalcME::A0s(int mu, int nu, int dagger){
 pair<TMatrixD,TMatrixD> CalcME::Product4(TMatrixD ReA, TMatrixD ReB, TMatrixD ReC, TMatrixD ReD,
 					 TMatrixD ImA, TMatrixD ImB, TMatrixD ImC, TMatrixD ImD){
 
-  TMatrixD m1 ( Product4Real(ReA,ReB,ReC,ReD) );
-  TMatrixD m2 ( Product4Real(ImA,ImB,ReC,ReD) );
+  TMatrixD m1 ( Product4Real(ReA,ReB,ReC,ReD) ); // Re Re Re Re
+
+  TMatrixD m2 ( Product4Real(ImA,ImB,ReC,ReD) ); // Im Im Re Re
   TMatrixD m3 ( Product4Real(ImA,ReB,ImC,ReD) );
   TMatrixD m4 ( Product4Real(ImA,ReB,ReC,ImD) );
   TMatrixD m5 ( Product4Real(ReA,ImB,ImC,ReD) );
   TMatrixD m6 ( Product4Real(ReA,ImB,ReC,ImD) );
   TMatrixD m7 ( Product4Real(ReA,ReB,ImC,ImD) );
-  TMatrixD m8 ( Product4Real(ImA,ImB,ImC,ImD) );
-  TMatrixD m9 ( Product4Real(ImA,ReB,ReC,ReD) );
+
+  TMatrixD m8 ( Product4Real(ImA,ImB,ImC,ImD) ); // Im Im Im Im
+
+  TMatrixD m9 ( Product4Real(ImA,ReB,ReC,ReD) ); // Im Re Re Re
   TMatrixD m10( Product4Real(ReA,ImB,ReC,ReD) );
   TMatrixD m11( Product4Real(ReA,ReB,ImC,ReD) );
   TMatrixD m12( Product4Real(ReA,ReB,ReC,ImD) );
-  TMatrixD m13( Product4Real(ImA,ImB,ImC,ReD) );
+
+  TMatrixD m13( Product4Real(ImA,ImB,ImC,ReD) ); // Im Im Im Re
   TMatrixD m14( Product4Real(ImA,ImB,ReC,ImD) );
   TMatrixD m15( Product4Real(ImA,ReB,ImC,ImD) );
   TMatrixD m16( Product4Real(ReA,ImB,ImC,ImD) );
@@ -579,6 +588,7 @@ double CalcME::Trace(int mu, int nu, int alpha, int beta){
 
   TMatrixD Re1( Gamma(4).second ); 
   Re1 += Product4(ReA,ReB,ReC,ReD, ImA, ImB, ImC,ImD).first ; //second
+  Re1.Mult( ReB, ReD);
 
   TMatrixD Re2( Gamma(4).second ); 
   Re2 += Product4(ReE,ReB,ReF,ReD, ImE, ImB, ImF,ImD).first ; //second
@@ -587,14 +597,48 @@ double CalcME::Trace(int mu, int nu, int alpha, int beta){
   Re3 += Product4(ReG,ReB,ReH,ReD, ImG, ImB, ImH,ImD).first ; //second
 
   double trace1 = Re1(0,0)+Re1(1,1)+Re1(2,2)+Re1(3,3);
-  double trace2 = Re2(0,0)+Re2(1,1)+Re2(2,2)+Re2(3,3);
-  double trace3 = Re3(0,0)+Re3(1,1)+Re3(2,2)+Re3(3,3);
+  //double trace2 = Re2(0,0)+Re2(1,1)+Re2(2,2)+Re2(3,3);
+  //double trace3 = Re3(0,0)+Re3(1,1)+Re3(2,2)+Re3(3,3);
 
-  return (12*trace1 + 2/3.*trace2 - 13*trace3);
+
+  /////////////////////////////////////////////// TEST ////////////////////////////////////
+
+  TMatrixD ReDeb( Gamma(4).second ); 
+  TMatrixD ReDebTmp( Gamma(4).first ); 
+  ReB.Print("");
+  ReD.Print("");
+  ImB.Print("");
+  ImD.Print("");
+  ReDebTmp.Mult(ReB,ReD);
+  ReDeb += ReDebTmp;
+  ReDebTmp.Mult(ImB,ImD);
+  ReDeb -= ReDebTmp;
+  ReDeb.Print("");
+
+  cout << "Trace of the Re part: " <<  ReDeb(0,0)+ReDeb(1,1)+ReDeb(2,2)+ReDeb(3,3) << endl;
+  trace1 = ReDeb(0,0)+ReDeb(1,1)+ReDeb(2,2)+ReDeb(3,3);
+
+  TMatrixD ImDeb( Gamma(4).second ); 
+  TMatrixD ImDebTmp( Gamma(4).first ); 
+  ImDebTmp.Mult(ReB,ImD);
+  ImDeb += ImDebTmp;
+  ImDebTmp.Mult(ImB,ReD);
+  ImDeb += ImDebTmp;
+  ImDeb.Print("");
+
+  cout << "Trace of the Im part: " << (ImDeb(0,0)+ImDeb(1,1)+ImDeb(2,2)+ImDeb(3,3)) << endl;
+  trace1 += (ImDeb(0,0)+ImDeb(1,1)+ImDeb(2,2)+ImDeb(3,3));
+  ///////////////////////////////////////////////
+
+  return //(12*trace1 + 2/3.*trace2 - 13*trace3);
+    trace1;
 
 }
 
 double CalcME::meSquared(){
+
+
+  return Trace(0,0,0,0);
 
   double me = 0.0;
 

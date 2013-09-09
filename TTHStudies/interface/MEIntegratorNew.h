@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////
 //  Class that integrates over the tth phase-space
-//  compile with: > scram b -j 6 USER_CXXFLAGS="-lopenloops\ -lbar\ -lcoli\ -lopenloops_ppHtt_1tL\ -lpphttxcallme2born"
+//  compile with: > scram b  -j 6 USER_CXXFLAGS="-lopenloops\ -lbar\ -lcoli\ -lopenloops_ppHtt_1tL\ -lpphttxcallme2born\ -lppttxbbxcallme2born"
 //
 //
 //
@@ -77,6 +77,10 @@ extern "C" {
   void pphttxcallme2born_( double*, double[20],  double*, double* );
 }
 
+extern "C" {
+  void ppttxbbxcallme2born_( double*, double[24],  double*, double* );
+}
+
 
 class MEIntegratorNew {
 
@@ -113,6 +117,7 @@ class MEIntegratorNew {
   };
 
   void   setIntType( IntegrationType );
+  void   setHypo( int );
   void   SetPar(int);
   void   setJets( vector<TLorentzVector>* );
   void   setBtag( std::vector<float>* );
@@ -151,6 +156,8 @@ class MEIntegratorNew {
   void   setNormFormulas(TString, TString, TString, TString, TString, TString);
   void   resetEvaluation();
 
+  void   setConstrainToRecoil  (int);
+
   TH1*   getCachedPdf( string ) const;
   TH1*   getCachedTF ( string ) const;
   TH2F*  getMash( );
@@ -178,7 +185,9 @@ class MEIntegratorNew {
 
   TLorentzVector jetAt(unsigned int);
 
-  bool compatibilityCheck(float, int, double&, double&, double&);  
+  bool compatibilityCheck       (float, int, double&, double&, double&);  
+  bool compatibilityCheck_WHad  (float, int, double&, double&, double&);  
+  bool compatibilityCheck_TopHad(float, int, double&, double&, double&);  
 
   double jetEnergyTF(float, double, double, string) const;
 
@@ -204,7 +213,8 @@ class MEIntegratorNew {
   double higgsDensity    (double)  const;
   //double tthDensity      (double, double, double, double)  const;
   //double meSquaredAtQ    (double, double, double, double) const;
-  double meSquaredOpenLoops (TLorentzVector*, TLorentzVector*, TLorentzVector*) const;
+  double meSquaredOpenLoops      (TLorentzVector*, TLorentzVector*, TLorentzVector*, double&, double&) const;
+  double meSquaredOpenLoops_ttbb (TLorentzVector*, TLorentzVector*, TLorentzVector*, TLorentzVector*, double&, double&) const;
   double xSection           (int) const;
   double evaluateCahchedPdf (TH1*, double, double, double)  const;
   double ggPdf              ( double, double, double) const; 
@@ -245,9 +255,13 @@ class MEIntegratorNew {
   int top1Flag_;  // +1 <=> top lep is top
   int top2Flag_;
   NormalizationType normalizeToXSec_;
+  int hypo_;
+
+
   int par_;
   int verbose_;
   int usePtPhiParam_;
+  int constrainToRecoil_;
   int evaluation_;
   double M_;
   float Q_;
@@ -321,6 +335,8 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   bTagging_.clear();
   initVersors(0);
 
+  constrainToRecoil_ = 0;
+
   Mtop_   =  174.3;
   Mb_     =  4.8;
   Mw_     =  80.19;
@@ -350,6 +366,8 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
 
   top1Flag_ = 0;
   top2Flag_ = 0;
+
+  hypo_ = 0;
 
   normalizeToXSec_ = NormalizationType::None;
 
@@ -1171,13 +1189,72 @@ bool MEIntegratorNew::compatibilityCheck(float quantile, int print, double& mass
 
   bool isCompatible = (M_>=massLow && M_<=massHigh);
   if(!isCompatible){
-    if(verbose_ || print) printf("%.0f CL for Mjj=%.0f is [-%.0f,+%.0f]; M=%.0f is outside\n",quantile*100, mass , massLow, massHigh, M_);
+    if(verbose_ || print) printf("H-Comp: %.0f CL for Mjj=%.0f is [-%.0f,+%.0f]; M=%.0f is outside\n",quantile*100, mass , massLow, massHigh, M_);
   }
 
 
   return isCompatible;
 
 }
+
+bool MEIntegratorNew::compatibilityCheck_WHad(float quantile, int print, double& mass, double& massLow, double& massHigh){
+
+  pair<double,double> boundsW1 = getW1JetEnergyCI(quantile);
+  pair<double,double> boundsW2 = getW2JetEnergyCI(quantile);
+
+  TLorentzVector w1Low, w2Low;
+  w1Low.SetPtEtaPhiM( (boundsW1.first/jets_[3].E())*jets_[3].Pt(), jets_[3].Eta(), jets_[3].Phi(), (boundsW1.first/jets_[3].E())*jets_[3].M()  );
+  w2Low.SetPtEtaPhiM( (boundsW2.first/jets_[4].E())*jets_[4].Pt(), jets_[4].Eta(), jets_[4].Phi(), (boundsW2.first/jets_[4].E())*jets_[4].M()  );
+
+  TLorentzVector w1High, w2High;
+  w1High.SetPtEtaPhiM( (boundsW1.second/jets_[3].E())*jets_[3].Pt(), jets_[3].Eta(), jets_[3].Phi(), (boundsW1.second/jets_[3].E())*jets_[3].M()  );
+  w2High.SetPtEtaPhiM( (boundsW2.second/jets_[4].E())*jets_[4].Pt(), jets_[4].Eta(), jets_[4].Phi(), (boundsW2.second/jets_[4].E())*jets_[4].M()  );
+
+  mass     =  (jets_[3] + jets_[4]).M();
+  massLow  =  (w1Low+w2Low).M();
+  massHigh =  (w1High+w2High).M();
+
+  bool isCompatible = (Mw_>=massLow && Mw_<=massHigh);
+  if(!isCompatible){
+    if(verbose_ || print) printf("W-Comp: %.0f CL for Mjj=%.0f is [-%.0f,+%.0f]; M=%.0f is outside\n",quantile*100, mass , massLow, massHigh, Mw_);
+  }
+
+
+  return isCompatible;
+
+}
+
+bool MEIntegratorNew::compatibilityCheck_TopHad(float quantile, int print, double& mass, double& massLow, double& massHigh){
+
+  pair<double,double> boundsW1   = getW1JetEnergyCI (quantile);
+  pair<double,double> boundsW2   = getW2JetEnergyCI (quantile);
+  pair<double,double> boundsBHad = getBHadEnergyCI  (quantile);
+
+  TLorentzVector w1Low, w2Low, bHadLow;
+  w1Low.SetPtEtaPhiM  ( (boundsW1.first/jets_[3].E())*jets_[3].Pt(),   jets_[3].Eta(), jets_[3].Phi(), (boundsW1.first/jets_[3].E())  *jets_[3].M()  );
+  w2Low.SetPtEtaPhiM  ( (boundsW2.first/jets_[4].E())*jets_[4].Pt(),   jets_[4].Eta(), jets_[4].Phi(), (boundsW2.first/jets_[4].E())  *jets_[4].M()  );
+  bHadLow.SetPtEtaPhiM( (boundsBHad.first/jets_[5].E())*jets_[5].Pt(), jets_[5].Eta(), jets_[5].Phi(), (boundsBHad.first/jets_[5].E())*jets_[5].M()  );
+
+  TLorentzVector w1High, w2High, bHadHigh;
+  w1High.SetPtEtaPhiM  ( (boundsW1.second/jets_[3].E())*jets_[3].Pt(),   jets_[3].Eta(), jets_[3].Phi(), (boundsW1.second/jets_[3].E())  *jets_[3].M()  );
+  w2High.SetPtEtaPhiM  ( (boundsW2.second/jets_[4].E())*jets_[4].Pt(),   jets_[4].Eta(), jets_[4].Phi(), (boundsW2.second/jets_[4].E())  *jets_[4].M()  );
+  bHadHigh.SetPtEtaPhiM( (boundsBHad.second/jets_[5].E())*jets_[5].Pt(), jets_[5].Eta(), jets_[5].Phi(), (boundsBHad.second/jets_[5].E())*jets_[5].M()  );
+
+  mass     =  (jets_[3] + jets_[4] + jets_[5]).M();
+  massLow  =  (w1Low+w2Low+bHadLow).M();
+  massHigh =  (w1High+w2High+bHadHigh).M();
+
+  bool isCompatible = (Mtop_>=massLow && Mtop_<=massHigh);
+  if(!isCompatible){
+    if(verbose_ || print) printf("T-Comp: %.0f CL for Mjj=%.0f is [-%.0f,+%.0f]; M=%.0f is outside\n",quantile*100, mass , massLow, massHigh, Mtop_);
+  }
+
+
+  return isCompatible;
+
+}
+
+
 
 
 double MEIntegratorNew::jetEnergyTF(float eta, double Erec, double Egen, string flavor) const{
@@ -1220,12 +1297,40 @@ bool MEIntegratorNew::smearByTF(float ptCut, int print){
 
   double Px = ran_->Gaus( 0., 1.);
   double Py = ran_->Gaus( 0., 1.);
-
   Py = TMath::Sqrt(1-rho_*rho_)*Py + rho_*Px;
 
   Px = jets_[1].Px() + TMath::Sqrt(Vx_)*Px;
   Py = jets_[1].Py() + TMath::Sqrt(Vy_)*Py;
 
+  if( constrainToRecoil_ ){
+  // smear the recoil
+    if(intType_ == SL2wj){
+      Px =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]+jets_[4]+jets_[5]+jets_[6]+jets_[7]).Px() + TMath::Sqrt(Vx_)*Px ;
+      Py =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]+jets_[4]+jets_[5]+jets_[6]+jets_[7]).Py() + TMath::Sqrt(Vy_)*Py ;
+    }
+    if(intType_ == SL1wj){
+      Px =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]/*+jets_[4]*/+jets_[5]+jets_[6]+jets_[7]).Px() + TMath::Sqrt(Vx_)*Px ;
+      Py =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]/*+jets_[4]*/+jets_[5]+jets_[6]+jets_[7]).Py() + TMath::Sqrt(Vy_)*Py ;
+    }
+    if(intType_ == SLNoBHad){
+      Px =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]+jets_[4]/*+jets_[5]*/+jets_[6]+jets_[7]).Px() + TMath::Sqrt(Vx_)*Px ;
+      Py =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]+jets_[4]/*+jets_[5]*/+jets_[6]+jets_[7]).Py() + TMath::Sqrt(Vy_)*Py ;
+    }
+    if(intType_ == SLNoBLep){
+      Px =  -(jets_[0]+jets_[1]/*+jets_[2]*/+jets_[3]+jets_[4]+jets_[5]+jets_[6]+jets_[7]).Px() + TMath::Sqrt(Vx_)*Px ;
+      Py =  -(jets_[0]+jets_[1]/*+jets_[2]*/+jets_[3]+jets_[4]+jets_[5]+jets_[6]+jets_[7]).Py() + TMath::Sqrt(Vy_)*Py ;
+    }
+    if(intType_ == SLNoHiggs || intType_ == SL3b ){
+      Px =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]+jets_[4]+jets_[5]+jets_[6]/*+jets_[7]*/).Px() + TMath::Sqrt(Vx_)*Px ;
+      Py =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]+jets_[4]+jets_[5]+jets_[6]/*+jets_[7]*/).Py() + TMath::Sqrt(Vy_)*Py ;
+    }
+    if(intType_ == DL){
+      Px =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]/*+jets_[4]*/+jets_[5]+jets_[6]+jets_[7]).Px() + TMath::Sqrt(Vx_)*Px;
+      Py =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]/*+jets_[4]*/+jets_[5]+jets_[6]+jets_[7]).Py() + TMath::Sqrt(Vy_)*Py;
+    }
+  }
+
+  //cout << "Px gen = " << Px << endl;
 
   ////////// DEBUG /////////////
   //Px = jets_[1].Px() ;
@@ -1261,8 +1366,7 @@ bool MEIntegratorNew::smearByTF(float ptCut, int print){
   }
 
   TLorentzVector sLep = jets_[0];
-  TLorentzVector sNeut;
-  sNeut.SetPxPyPzE( Px, Py, 0.0, TMath::Sqrt(Px*Px + Py*Py));
+
   TLorentzVector sBLep (  eBLep_*TMath::Sqrt(vsE[0]*vsE[0] - Mb_*Mb_), vsE[0] );
   TLorentzVector sW1Had(  eW1Had_*vsE[1], vsE[1]);
   if( intType_ == DL )
@@ -1271,6 +1375,39 @@ bool MEIntegratorNew::smearByTF(float ptCut, int print){
   TLorentzVector sBHad (  eBHad_*TMath::Sqrt(vsE[3]*vsE[3] - Mb_*Mb_), vsE[3]);
   TLorentzVector sB1   (  eB1_  *TMath::Sqrt(vsE[4]*vsE[4] - Mb_*Mb_), vsE[4]);
   TLorentzVector sB2   (  eB2_  *TMath::Sqrt(vsE[5]*vsE[5] - Mb_*Mb_), vsE[5]);
+  
+  TLorentzVector sNeut;
+  sNeut.SetPxPyPzE( Px, Py, 0.0, TMath::Sqrt(Px*Px + Py*Py));
+
+  if( constrainToRecoil_ ){
+    double nuX = Px;
+    double nuY = Py;
+    if( intType_ == SL2wj ){
+      nuX = -(Px+sLep.Px()+sBLep.Px()+sW1Had.Px()+sW2Had.Px()+sBHad.Px()+sB1.Px()+sB2.Px()); 
+      nuY = -(Py+sLep.Py()+sBLep.Py()+sW1Had.Py()+sW2Had.Py()+sBHad.Py()+sB1.Py()+sB2.Py()); 
+    }
+    if( intType_ == SL1wj ){
+      nuX = -(Px+sLep.Px()+sBLep.Px()+sW1Had.Px()/*+sW2Had.Px()*/+sBHad.Px()+sB1.Px()+sB2.Px()); 
+      nuY = -(Py+sLep.Py()+sBLep.Py()+sW1Had.Py()/*+sW2Had.Py()*/+sBHad.Py()+sB1.Py()+sB2.Py()); 
+    }
+    if( intType_ == SLNoBHad ){
+      nuX = -(Px+sLep.Px()+sBLep.Px()+sW1Had.Px()+sW2Had.Px()/*+sBHad.Px()*/+sB1.Px()+sB2.Px()); 
+      nuY = -(Py+sLep.Py()+sBLep.Py()+sW1Had.Py()+sW2Had.Py()/*+sBHad.Py()*/+sB1.Py()+sB2.Py()); 
+    }
+    if( intType_ == SLNoBLep ){
+      nuX = -(Px+sLep.Px()/*+sBLep.Px()*/+sW1Had.Px()+sW2Had.Px()+sBHad.Px()+sB1.Px()+sB2.Px()); 
+      nuY = -(Py+sLep.Py()/*+sBLep.Py()*/+sW1Had.Py()+sW2Had.Py()+sBHad.Py()+sB1.Py()+sB2.Py()); 
+    }
+    if( intType_ == SLNoHiggs || intType_ == SL3b ){
+      nuX = -(Px+sLep.Px()+sBLep.Px()+sW1Had.Px()+sW2Had.Px()+sBHad.Px()+sB1.Px()/*+sB2.Px()*/); 
+      nuY = -(Py+sLep.Py()+sBLep.Py()+sW1Had.Py()+sW2Had.Py()+sBHad.Py()+sB1.Py()/*+sB2.Py()*/); 
+    }
+    if( intType_ == DL ){
+      nuX = -(Px+sLep.Px()+sBLep.Px()+sW1Had.Px()/*+sW2Had.Px()*/+sBHad.Px()+sB1.Px()+sB2.Px()); 
+      nuY = -(Py+sLep.Py()+sBLep.Py()+sW1Had.Py()/*+sW2Had.Py()*/+sBHad.Py()+sB1.Py()+sB2.Py()); 
+    }
+    sNeut.SetPxPyPzE( nuX, nuY, 0.,  TMath::Sqrt(nuX*nuX + nuY*nuY) );
+  }
 
   if(verbose_ || print ){    
     cout << "lep   (input): jet0.SetPtEtaPhiM(" << jets_[0].Pt() << "," << jets_[0].Eta() << "," << jets_[0].Phi() << "," << jets_[0].M() << ")" << endl;
@@ -1449,10 +1586,10 @@ void MEIntegratorNew::setMEtCov(double Vx, double Vy, double Vxy){
     Vy_  = sigma*sigma;
     Vxy_ = 0.0;
     rho_ = 0.0;
-    cout << "s_x = s_y = " << sqrt(Vx_) << " (GeV), rho = 0" << endl;
+    //cout << "s_x = s_y = " << sqrt(Vx_) << " (GeV), rho = 0" << endl;
   }
   else{
-    cout << "s_x = " << sqrt(Vx_) << ", s_y = " << sqrt(Vy_) << " (GeV), rho = " << rho_ << endl;
+    //cout << "s_x = " << sqrt(Vx_) << ", s_y = " << sqrt(Vy_) << " (GeV), rho = " << rho_ << endl;
   }
 
   if(rho_<-1 || rho_>1) 
@@ -1466,6 +1603,10 @@ void MEIntegratorNew::setMEtCov(double Vx, double Vy, double Vxy){
 
 void MEIntegratorNew::setPtPhiParam(int usePtPhiParam){
   usePtPhiParam_ =  usePtPhiParam;
+}
+
+void MEIntegratorNew::setConstrainToRecoil(int constrain){
+  constrainToRecoil_ = constrain;
 }
 
 
@@ -2364,6 +2505,9 @@ void MEIntegratorNew::setIntType( IntegrationType type ){
   intType_ = type;
 }
 
+void MEIntegratorNew::setHypo( int hyp ){
+  hypo_ = hyp;
+}
 
 void MEIntegratorNew::setJets( std::vector<TLorentzVector>* jets){
 
@@ -2731,32 +2875,8 @@ double MEIntegratorNew::higgsDensity ( double cos1 )  const{
 }
 
 
-/*
-double MEIntegratorNew::meSquaredAtQ( double Q, double m12, double cos1Star, double cos3)  const{
 
-  double p1Star = (m12*m12 - 4*Mtop_*Mtop_) >=0 ? 
-    TMath::Sqrt((m12*m12 - 4*Mtop_*Mtop_))/2. : -999.;
-  double p3     = (Q*Q - (m12+M_)*(m12+M_)) >=0 && (Q*Q - (m12 - M_)*(m12 - M_)) >=0 ? 
-    TMath::Sqrt((Q*Q - (m12+M_)*(m12+M_) )*( Q*Q - (m12 - M_)*(m12 - M_)))/2./Q : -999;
-
-  if( TMath::IsNaN(p1Star) || TMath::IsNaN(p3) || p1Star<=0 || p3 <=0){
-    if(verbose_) cout << "tthDensity evaluated for non-acceptable values of p1Star and/or p3" << endl;
-    return 0.0;
-  }
-
-  double diffCrossSec = const_cast<TH2F*>(&pdf2D_) ->Interpolate( Q/SqrtS_, m12);// tthDensity(Q, m12, cos1Star, cos3);
-  double lumi = 1.0;
-  if(partonLuminosity_)
-    lumi = partonLuminosity_->Interpolate( Q );
-  
-  double val2 = const_cast<TH1F*>(&pdfGammaTTH_)->Interpolate( cos3 );
-
-  return (diffCrossSec*val2/lumi/p1Star/p3);
-}
-*/
-
-
-double MEIntegratorNew::meSquaredOpenLoops (TLorentzVector* top, TLorentzVector* atop, TLorentzVector* higgs) const{
+double MEIntegratorNew::meSquaredOpenLoops (TLorentzVector* top, TLorentzVector* atop, TLorentzVector* higgs, double& x1, double& x2) const{
 
   
   TLorentzVector t, tx, h;
@@ -2782,6 +2902,9 @@ double MEIntegratorNew::meSquaredOpenLoops (TLorentzVector* top, TLorentzVector*
   TLorentzVector g1 = TLorentzVector(0.,0.,  (E+Pz)/2., (E+Pz)/2.); 
   TLorentzVector g2 = TLorentzVector(0.,0., -(E-Pz)/2., (E-Pz)/2.); 
    
+  x1 = ( Pz + E)/SqrtS_;
+  x2 = (-Pz + E)/SqrtS_;
+
   double M2;
   double ccP[20] = {
     g1.E(), g1.Px(), g1.Py(), g1.Pz(),
@@ -2797,12 +2920,67 @@ double MEIntegratorNew::meSquaredOpenLoops (TLorentzVector* top, TLorentzVector*
     cout << "tx: " << tx.M() << endl;
   }
 
-
   pphttxcallme2born_(const_cast<double*>(&M2), ccP, const_cast<double*>(&Mtop_), const_cast<double*>(&M_));
 
   return M2;
 
 }
+
+double MEIntegratorNew::meSquaredOpenLoops_ttbb (TLorentzVector* top, TLorentzVector* atop, TLorentzVector* b1, TLorentzVector* b2, double& x1, double& x2) const{
+
+  
+  TLorentzVector t, tx, b, bx;
+  t. SetPtEtaPhiM(   top->Pt(),  top->Eta(),   top->Phi(), Mtop_);
+  tx.SetPtEtaPhiM(  atop->Pt(), atop->Eta(),  atop->Phi(), Mtop_);
+  b. SetPtEtaPhiM(    b1->Pt(),   b1->Eta(),    b1->Phi(),  0.   );
+  bx.SetPtEtaPhiM(    b2->Pt(),   b2->Eta(),    b2->Phi(),  0.   );
+
+  TLorentzVector vSum = t+tx+b+bx;
+  TVector3 boostPt( vSum.Px()/vSum.E(), vSum.Py()/vSum.E(), 0.0 );
+
+  t.Boost ( -boostPt );
+  tx.Boost( -boostPt );
+  b.Boost ( -boostPt );
+  bx.Boost( -boostPt );
+
+  // fix for rounding
+  double bPx = -(t.Px()  + tx.Px() + bx.Px());
+  double bPy = -(t.Py()  + tx.Py() + bx.Py());
+  double bPz = b.Pz();
+  b.SetPxPyPzE( bPx, bPy, bPz, sqrt(bPx*bPx + bPy*bPy + bPz*bPz ) );
+
+  double E  = t.E() +tx.E() + b.E() + bx.E();
+  double Pz = t.Pz()+tx.Pz()+ b.Pz()+ bx.Pz();
+  TLorentzVector g1 = TLorentzVector(0.,0.,  (E+Pz)/2., (E+Pz)/2.); 
+  TLorentzVector g2 = TLorentzVector(0.,0., -(E-Pz)/2., (E-Pz)/2.); 
+   
+  x1 = ( Pz + E)/SqrtS_;
+  x2 = (-Pz + E)/SqrtS_;
+
+  double M2;
+  double ccP[24] = {
+    g1.E(), g1.Px(), g1.Py(), g1.Pz(),
+    g2.E(), g2.Px(), g2.Py(), g2.Pz(),
+     t.E(),  t.Px(),  t.Py(),  t.Pz(),
+    tx.E(), tx.Px(), tx.Py(), tx.Pz(),
+     b.E(),  b.Px(),  b.Py(),  b.Pz(),
+    bx.E(), bx.Px(), bx.Py(), bx.Pz(),
+  };
+
+  if(verbose_){
+    cout << "b:  " << b.M() << endl;
+    cout << "bx:  "<< bx.M() << endl;
+    cout << "t:  " << t.M() << endl;
+    cout << "tx: " << tx.M() << endl;
+  }
+
+
+  ppttxbbxcallme2born_(const_cast<double*>(&M2), ccP, const_cast<double*>(&Mtop_), const_cast<double*>(&M_));
+
+  return M2;
+
+}
+
 
 
 void MEIntegratorNew::setNormFormulas(TString fxSec, TString facc1, TString facc2, TString facc3, TString facc4, TString fPt){
@@ -2868,6 +3046,8 @@ void MEIntegratorNew::resetEvaluation(){
 
 double MEIntegratorNew::probabilitySL2wj(const double* x, int sign) const{
 
+  //default hypo_ = 0 (SGN)
+
   int errFlag = 0;
   double prob = 1.0;
   
@@ -2916,12 +3096,18 @@ double MEIntegratorNew::probabilitySL2wj(const double* x, int sign) const{
   double Eh2, cos1Higgs;
   int nSolHiggs = higgsEnergies( Eh1, Eh2, cos1Higgs, errFlag );
   
-  if(errFlag){
+  if(errFlag && hypo_==0){
     if(verbose_) cout << "Problems with higgsEnergies (" << nSolHiggs << " solutions)" << endl;
     return 0.0;
   }
 
+  if(hypo_==1){
+    Eh2       =  x[4];
+    cos1Higgs = 1.; // dummy
+  }
+
   if(verbose_){
+    cout << "Eh2 = "         << Eh2  << endl; 
     cout << "EbHad = " << EbHad << " (Pt = " << EbHad*TMath::Sin(eBHad_.Theta()) << ")" << endl;
     cout << "EbLep = " << EbLep << " (Pt = " << EbLep*TMath::Sin(eBLep_.Theta()) << ")" << endl;
     cout << "Enu = " << Enu << " (Pt = " << Enu*sqrt(1-cosThetaNu*cosThetaNu) << ")"  << endl;
@@ -2950,42 +3136,33 @@ double MEIntegratorNew::probabilitySL2wj(const double* x, int sign) const{
 
   TVector3 boostToCMS  = tot.BoostVector();
 
+  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
+  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
+  double Q  = (2*Mtop_ + M_)/2.;
+
+  //cout << "x1 (NLO) = " << x1 << ", x2 (NLO) = " << x2 << endl;
+
   double me2;
   if(useME_==1 && top1Flag_ == +1 && top2Flag_ == -1)               // topLep = t,  topHad = tx
-    me2 = meSquaredOpenLoops( &topLep, &topHad, &higgs );
+    me2 = hypo_==0 ? meSquaredOpenLoops( &topLep, &topHad, &higgs, x1, x2 ) : meSquaredOpenLoops_ttbb( &topLep, &topHad, &higgs1, &higgs2, x1, x2 );
   else if(useME_==1 && top1Flag_ == -1 && top2Flag_ == +1)          // topLep = tx, topHad = t
-    me2 = meSquaredOpenLoops( &topHad, &topLep, &higgs );
+    me2 = hypo_==0 ? meSquaredOpenLoops( &topHad, &topLep, &higgs, x1, x2 ) : meSquaredOpenLoops_ttbb( &topHad, &topLep, &higgs1, &higgs2, x1, x2 );
   else{
     if(verbose_) cout << "Undefined top flavors" << endl;
     me2 = 1.;
   }
 
-  //topHad.Boost( -boostToCMS );
-  //topLep.Boost( -boostToCMS );
-  //higgs.Boost ( -boostToCMS );
-  //double cos3 = TMath::Cos((higgs.Vect()).Angle( boostToCMS ));
-  //TVector3 boostToTTCMS = (topLep+topHad).BoostVector();
-  //topLep.Boost( -boostToTTCMS );
-  //topHad.Boost( -boostToTTCMS );
-  //double cos1Star = TMath::Cos( (topLep.Vect()).Angle( boostToTTCMS ) );
-  //double m12      = (topHad+topLep).M();
-  //double Q        = tot.M();
-
-  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
-  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
-  double Q  = (2*Mtop_ + M_)/2.;
-
   double MEpart = 
     topHadDensity(cos1Had,cos2Had) * 
     topLepDensity(cos1Lep,cos2Lep) * 
-    higgsDensity(cos1Higgs) *
+    (hypo_==0 ? higgsDensity(cos1Higgs) : 1.0)*
     me2
     ;
 
   double Jpart = 
     topHadJakobi( Eq1,  Eq2, EbHad, &WHad ) * 
     topLepJakobi( Enu, Elep, EbLep, &WLep ) * 
-    higgsJakobi( Eh1, Eh2 ) 
+    (hypo_==0 ? higgsJakobi( Eh1, Eh2 ) : Eh1*Eh2/4) 
     ;
 
   double tf1 = jetEnergyTF( jets_[2].Eta(), jets_[2].E(),  bLep.E(),    "Heavy");
@@ -2998,6 +3175,11 @@ double MEIntegratorNew::probabilitySL2wj(const double* x, int sign) const{
 
   double dPx = WLepNu.Px() - jets_[1].Px();
   double dPy = WLepNu.Py() - jets_[1].Py();
+  if( constrainToRecoil_ ){
+    dPx =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]+jets_[4]+jets_[5]+jets_[6]+jets_[7]).Px() + tot.Px() ;
+    dPy =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]+jets_[4]+jets_[5]+jets_[6]+jets_[7]).Py() + tot.Py() ;
+  }
+
   double tf7 = 
     (Vx_*Vy_ - rho_*rho_*Vx_*Vy_)>0 ? 1./2./PI/TMath::Sqrt(Vx_*Vy_ - rho_*rho_*Vx_*Vy_)*TMath::Exp( -0.5*( 1/(1-rho_*rho_)*( dPx*dPx/Vx_ + dPy*dPy/Vy_ - 2*rho_*dPx*dPy/TMath::Sqrt(Vx_*Vy_) ) ) ) : 1.0 ;
 
@@ -3015,8 +3197,6 @@ double MEIntegratorNew::probabilitySL2wj(const double* x, int sign) const{
     ;
 
   double METpart =  
-    //tf7*
-    //tf8
     tf7
     ;
 
@@ -3100,9 +3280,14 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
   double Eh2, cos1Higgs;
   int nSolHiggs = higgsEnergies( Eh1, Eh2, cos1Higgs, errFlag );
   
-  if(errFlag){
+  if(errFlag && hypo_==0){
     if(verbose_) cout << "Problems with higgsEnergies (" << nSolHiggs << " solutions)" << endl;
     return 0.0;
+  }
+
+  if(hypo_==1){
+    Eh2       =  x[6];
+    cos1Higgs = 1.; // dummy
   }
 
   if(verbose_){
@@ -3138,33 +3323,34 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
 
   TLorentzVector tot = topHad+topLep+higgs;
 
+  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
+  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
+  double Q  = (2*Mtop_ + M_)/2.;
+
   TVector3 boostToCMS  = tot.BoostVector();
 
   double me2 = 1.0;
   if(useME_==1 && top1Flag_ == +1 && top2Flag_ == -1)               // topLep = t,  topHad = tx
-    me2 = meSquaredOpenLoops( &topLep, &topHad, &higgs );
+    me2 = hypo_==0 ? meSquaredOpenLoops( &topLep, &topHad, &higgs, x1, x2 ) : meSquaredOpenLoops_ttbb( &topLep, &topHad, &higgs1, &higgs2, x1, x2 );
   else if(useME_==1 && top1Flag_ == -1 && top2Flag_ == +1)          // topLep = tx, topHad = t
-    me2 = meSquaredOpenLoops( &topHad, &topLep, &higgs );
+    me2 = hypo_==0 ? meSquaredOpenLoops( &topHad, &topLep, &higgs, x1, x2 ) : meSquaredOpenLoops_ttbb( &topLep, &topHad, &higgs1, &higgs2, x1, x2 );
   else{
     if(useME_==1 && verbose_) cout << "Undefined top flavors" << endl;
     me2 = 1.;
   }
 
-  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
-  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
-  double Q  = (2*Mtop_ + M_)/2.;
 
   double MEpart = 
     topHadDensity(cos1Had,cos2Had) * 
     topLepDensity(cos1Lep,cos2Lep) * 
-    higgsDensity(cos1Higgs) *
+    (hypo_==0 ? higgsDensity(cos1Higgs) : 1.0)*
     me2
     ;
 
   double Jpart = 
     topHadLostJakobi( Eq1,  Eq2, EbHad, &WHad ) * 
     topLepJakobi( Enu, Elep, EbLep, &WLep ) * 
-    higgsJakobi(  Eh1, Eh2 ) 
+    (hypo_==0 ? higgsJakobi( Eh1, Eh2 ) : Eh1*Eh2/4) 
     ;
 
   double tf1 = jetEnergyTF( jets_[2].Eta(), jets_[2].E(),  bLep.E(),    "Heavy");
@@ -3176,6 +3362,11 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
 
   double dPx = WLepNu.Px() - jets_[1].Px();
   double dPy = WLepNu.Py() - jets_[1].Py();
+  if( constrainToRecoil_ ){
+    dPx =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]/*+jets_[4]*/+jets_[5]+jets_[6]+jets_[7]).Px() + (tot-W2Had).Px() ;
+    dPy =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]/*+jets_[4]*/+jets_[5]+jets_[6]+jets_[7]).Py() + (tot-W2Had).Py() ;
+  }
+
   double tf7 = (Vx_*Vy_ - rho_*rho_*Vx_*Vy_)>0 ? 
     1./2./PI/TMath::Sqrt(Vx_*Vy_ - rho_*rho_*Vx_*Vy_)*TMath::Exp( -0.5*( 1/(1-rho_*rho_)*( dPx*dPx/Vx_ + dPy*dPy/Vy_ - 2*rho_*dPx*dPy/TMath::Sqrt(Vx_*Vy_) ) ) ) : 1.0 ;
   
@@ -3329,9 +3520,14 @@ double MEIntegratorNew::probabilitySLNoBHad(const double* x, int sign) const{
   double Eh2, cos1Higgs;
   int nSolHiggs = higgsEnergies( Eh1, Eh2, cos1Higgs, errFlag );
   
-  if(errFlag){
+  if(errFlag && hypo_==0){
     if(verbose_) cout << "Problems with higgsEnergies (" << nSolHiggs << " solutions)" << endl;
     return 0.0;
+  }
+
+  if(hypo_==1){
+    Eh2       =  x[6];
+    cos1Higgs = 1.; // dummy
   }
 
   if(verbose_){
@@ -3370,40 +3566,40 @@ double MEIntegratorNew::probabilitySLNoBHad(const double* x, int sign) const{
   TLorentzVector higgs2(  eB2_*TMath::Sqrt(Eh2*Eh2 -  Mb_*Mb_), Eh2);
   TLorentzVector higgs = higgs1 + higgs2;
 
- if(verbose_ ){
+  if(verbose_ ){
     cout << "H   had mass = " << higgs.M() << endl;
   }
 
 
   TLorentzVector tot = topHad+topLep+higgs;
 
+  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
+  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
+  double Q  = (2*Mtop_ + M_)/2.;
+
   TVector3 boostToCMS  = tot.BoostVector();
 
   double me2 = 1.0;
   if(useME_==1 && top1Flag_ == +1 && top2Flag_ == -1)               // topLep = t,  topHad = tx
-    me2 = meSquaredOpenLoops( &topLep, &topHad, &higgs );
+    me2 =  hypo_==0 ? meSquaredOpenLoops( &topLep, &topHad, &higgs, x1, x2  ) : meSquaredOpenLoops_ttbb( &topLep, &topHad, &higgs1, &higgs2, x1, x2 );
   else if(useME_==1 && top1Flag_ == -1 && top2Flag_ == +1)          // topLep = tx, topHad = t
-    me2 = meSquaredOpenLoops( &topHad, &topLep, &higgs );
+    me2 =  hypo_==0 ? meSquaredOpenLoops( &topHad, &topLep, &higgs, x1, x2  ) : meSquaredOpenLoops_ttbb( &topLep, &topHad, &higgs1, &higgs2, x1, x2 );
   else{
     if(useME_==1 && verbose_) cout << "Undefined top flavors" << endl;
     me2 = 1.;
   }
 
-  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
-  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
-  double Q  = (2*Mtop_ + M_)/2.;
-
   double MEpart = 
     topHadDensity(cos1Had,cos2Had) * 
     topLepDensity(cos1Lep,cos2Lep) * 
-    higgsDensity(cos1Higgs) *
+    (hypo_==0 ? higgsDensity(cos1Higgs) : 1.0)*
     me2
     ;
 
   double Jpart = 
     topHadBLostJakobi( Eq1,  Eq2, EbHad, &WHad ) * 
     topLepJakobi( Enu, Elep, EbLep, &WLep ) * 
-    higgsJakobi(  Eh1, Eh2 ) 
+    (hypo_==0 ? higgsJakobi( Eh1, Eh2 ) : Eh1*Eh2/4) 
     ;
 
   double tf1 = jetEnergyTF( jets_[2].Eta(), jets_[2].E(),  bLep.E(),    "Heavy");
@@ -3415,6 +3611,11 @@ double MEIntegratorNew::probabilitySLNoBHad(const double* x, int sign) const{
 
   double dPx = WLepNu.Px() - jets_[1].Px();
   double dPy = WLepNu.Py() - jets_[1].Py();
+  if( constrainToRecoil_ ){
+    dPx =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]+jets_[4]/*+jets_[5]*/+jets_[6]+jets_[7]).Px() + (tot-bHad).Px() ;
+    dPy =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]+jets_[4]/*+jets_[5]*/+jets_[6]+jets_[7]).Py() + (tot-bHad).Py() ;
+  }
+
   double tf7 = (Vx_*Vy_ - rho_*rho_*Vx_*Vy_)>0 ? 
     1./2./PI/TMath::Sqrt(Vx_*Vy_ - rho_*rho_*Vx_*Vy_)*TMath::Exp( -0.5*( 1/(1-rho_*rho_)*( dPx*dPx/Vx_ + dPy*dPy/Vy_ - 2*rho_*dPx*dPy/TMath::Sqrt(Vx_*Vy_) ) ) ) : 1.0 ;
   
@@ -3568,9 +3769,14 @@ double MEIntegratorNew::probabilitySLNoBLep(const double* x, int sign) const{
   double Eh2, cos1Higgs;
   int nSolHiggs = higgsEnergies( Eh1, Eh2, cos1Higgs, errFlag );
   
-  if(errFlag){
+  if(errFlag && hypo_==0){
     if(verbose_) cout << "Problems with higgsEnergies (" << nSolHiggs << " solutions)" << endl;
     return 0.0;
+  }
+
+  if(hypo_==1){
+    Eh2       =  x[6];
+    cos1Higgs = 1.; // dummy
   }
 
   if(verbose_){
@@ -3616,33 +3822,33 @@ double MEIntegratorNew::probabilitySLNoBLep(const double* x, int sign) const{
 
   TLorentzVector tot = topHad+topLep+higgs;
 
+  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
+  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
+  double Q  = (2*Mtop_ + M_)/2.;
+
   TVector3 boostToCMS  = tot.BoostVector();
 
   double me2 = 1.0;
   if(useME_==1 && top1Flag_ == +1 && top2Flag_ == -1)               // topLep = t,  topHad = tx
-    me2 = meSquaredOpenLoops( &topLep, &topHad, &higgs );
+    me2 =  hypo_==0 ? meSquaredOpenLoops( &topLep, &topHad, &higgs, x1, x2  ): meSquaredOpenLoops_ttbb( &topLep, &topHad, &higgs1, &higgs2, x1, x2 );
   else if(useME_==1 && top1Flag_ == -1 && top2Flag_ == +1)          // topLep = tx, topHad = t
-    me2 = meSquaredOpenLoops( &topHad, &topLep, &higgs );
+    me2 =  hypo_==0 ? meSquaredOpenLoops( &topHad, &topLep, &higgs, x1, x2  ): meSquaredOpenLoops_ttbb( &topLep, &topHad, &higgs1, &higgs2, x1, x2 );
   else{
     if(useME_==1 && verbose_) cout << "Undefined top flavors" << endl;
     me2 = 1.;
   }
 
-  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
-  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
-  double Q  = (2*Mtop_ + M_)/2.;
-
   double MEpart = 
     topHadDensity(cos1Had,cos2Had) * 
     topLepDensity(cos1Lep,cos2Lep) * 
-    higgsDensity(cos1Higgs) *
+    (hypo_==0 ? higgsDensity(cos1Higgs) : 1.0)*
     me2
     ;
 
   double Jpart = 
     topHadJakobi( Eq1,  Eq2, EbHad, &WHad ) * 
     topLepBLostJakobi( Enu, Elep, EbLep, &WLep ) * 
-    higgsJakobi(  Eh1, Eh2 ) 
+    (hypo_==0 ? higgsJakobi( Eh1, Eh2 ) : Eh1*Eh2/4) 
     ;
 
   double tf1 = 1.0;
@@ -3654,6 +3860,11 @@ double MEIntegratorNew::probabilitySLNoBLep(const double* x, int sign) const{
 
   double dPx = WLepNu.Px() - jets_[1].Px();
   double dPy = WLepNu.Py() - jets_[1].Py();
+  if( constrainToRecoil_ ){
+    dPx =  -(jets_[0]+jets_[1]/*+jets_[2]*/+jets_[3]+jets_[4]+jets_[5]+jets_[6]+jets_[7]).Px() + (tot-bLep).Px() ;
+    dPy =  -(jets_[0]+jets_[1]/*+jets_[2]*/+jets_[3]+jets_[4]+jets_[5]+jets_[6]+jets_[7]).Py() + (tot-bLep).Py() ;
+  }
+
   double tf7 = (Vx_*Vy_ - rho_*rho_*Vx_*Vy_)>0 ? 
     1./2./PI/TMath::Sqrt(Vx_*Vy_ - rho_*rho_*Vx_*Vy_)*TMath::Exp( -0.5*( 1/(1-rho_*rho_)*( dPx*dPx/Vx_ + dPy*dPy/Vy_ - 2*rho_*dPx*dPy/TMath::Sqrt(Vx_*Vy_) ) ) ) : 1.0 ;
   
@@ -3808,9 +4019,14 @@ double MEIntegratorNew::probabilitySLNoHiggs(const double* x, int sign) const{
   double Eh2, cos1Higgs;
   int nSolHiggs = higgsEnergies( Eh1, Eh2, cos1Higgs, errFlag );
   
-  if(errFlag){
+  if(errFlag && hypo_==0){
     if(verbose_) cout << "Problems with higgsEnergies (" << nSolHiggs << " solutions)" << endl;
     return 0.0;
+  }
+
+  if(hypo_==1){
+    Eh2       =  x[6];
+    cos1Higgs = 1.; // dummy
   }
 
   if(verbose_){
@@ -3855,33 +4071,33 @@ double MEIntegratorNew::probabilitySLNoHiggs(const double* x, int sign) const{
 
   TLorentzVector tot = topHad+topLep+higgs;
 
+  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
+  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
+  double Q  = (2*Mtop_ + M_)/2.;
+
   TVector3 boostToCMS  = tot.BoostVector();
 
   double me2 = 1.0;
   if(useME_==1 && top1Flag_ == +1 && top2Flag_ == -1)               // topLep = t,  topHad = tx
-    me2 = meSquaredOpenLoops( &topLep, &topHad, &higgs );
+    me2 =  hypo_==0 ? meSquaredOpenLoops( &topLep, &topHad, &higgs, x1, x2  ): meSquaredOpenLoops_ttbb( &topLep, &topHad, &higgs1, &higgs2, x1, x2 );
   else if(useME_==1 && top1Flag_ == -1 && top2Flag_ == +1)          // topLep = tx, topHad = t
-    me2 = meSquaredOpenLoops( &topHad, &topLep, &higgs );
+    me2 =  hypo_==0 ? meSquaredOpenLoops( &topHad, &topLep, &higgs, x1, x2  ): meSquaredOpenLoops_ttbb( &topLep, &topHad, &higgs1, &higgs2, x1, x2 );
   else{
     if(useME_==1 && verbose_) cout << "Undefined top flavors" << endl;
     me2 = 1.;
   }
 
-  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
-  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
-  double Q  = (2*Mtop_ + M_)/2.;
-
   double MEpart = 
     topHadDensity(cos1Had,cos2Had) * 
     topLepDensity(cos1Lep,cos2Lep) * 
-    higgsDensity(cos1Higgs) *
+    (hypo_==0 ? higgsDensity(cos1Higgs) : 1.0)*
     me2
     ;
 
   double Jpart = 
     topHadBLostJakobi( Eq1,  Eq2, EbHad, &WHad ) * 
     topLepJakobi( Enu, Elep, EbLep, &WLep ) * 
-    higgsJakobi(  Eh1, Eh2 ) 
+    (hypo_==0 ? higgsJakobi( Eh1, Eh2 ) : Eh1*Eh2/4) 
     ;
 
   double tf1 = jetEnergyTF( jets_[2].Eta(), jets_[2].E(),  bLep.E(),    "Heavy");
@@ -3893,6 +4109,11 @@ double MEIntegratorNew::probabilitySLNoHiggs(const double* x, int sign) const{
 
   double dPx = WLepNu.Px() - jets_[1].Px();
   double dPy = WLepNu.Py() - jets_[1].Py();
+  if( constrainToRecoil_ ){
+    dPx =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]+jets_[4]+jets_[5]+jets_[6]/*+jets_[7]*/).Px() + (tot-higgs2).Px() ;
+    dPy =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]+jets_[4]+jets_[5]+jets_[6]/*+jets_[7]*/).Py() + (tot-higgs2).Py() ;
+  }
+
   double tf7 = (Vx_*Vy_ - rho_*rho_*Vx_*Vy_)>0 ? 
     1./2./PI/TMath::Sqrt(Vx_*Vy_ - rho_*rho_*Vx_*Vy_)*TMath::Exp( -0.5*( 1/(1-rho_*rho_)*( dPx*dPx/Vx_ + dPy*dPy/Vy_ - 2*rho_*dPx*dPy/TMath::Sqrt(Vx_*Vy_) ) ) ) : 1.0 ;
   
@@ -4047,9 +4268,14 @@ double MEIntegratorNew::probabilityDL(const double* x, int sign) const{
   double Eh2, cos1Higgs;
   int nSolHiggs = higgsEnergies( Eh1, Eh2, cos1Higgs, errFlag );
   
-  if(errFlag){
+  if(errFlag && hypo_==0){
     if(verbose_) cout << "Problems with higgsEnergies (" << nSolHiggs << " solutions)" << endl;
     return 0.0;
+  }
+
+  if(hypo_==1){
+    Eh2       =  x[5];
+    cos1Higgs = 1.; // dummy
   }
 
   if(verbose_){
@@ -4084,32 +4310,31 @@ double MEIntegratorNew::probabilityDL(const double* x, int sign) const{
 
   TLorentzVector tot = topLep1+topLep2+higgs;
 
+  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
+  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
+  double Q  = (2*Mtop_ + M_)/2.;
 
   double me2;
   if(useME_==1 && top1Flag_ == +1 && top2Flag_ == -1)               // topLep = t,  topHad = tx
-    me2 = meSquaredOpenLoops( &topLep1, &topLep2, &higgs );
+    me2 =  hypo_==0 ? meSquaredOpenLoops( &topLep1, &topLep2, &higgs, x1, x2 ): meSquaredOpenLoops_ttbb( &topLep1, &topLep2, &higgs1, &higgs2, x1, x2 );
   else if(useME_==1 && top1Flag_ == -1 && top2Flag_ == +1)          // topLep = tx, topHad = t
-    me2 = meSquaredOpenLoops( &topLep1, &topLep2, &higgs );
+    me2 =  hypo_==0 ? meSquaredOpenLoops( &topLep1, &topLep2, &higgs, x1, x2 ): meSquaredOpenLoops_ttbb( &topLep1, &topLep2, &higgs1, &higgs2, x1, x2 );
   else{
     if(verbose_) cout << "Undefined top flavors" << endl;
     me2 = 1.;
   }
 
-  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
-  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
-  double Q  = (2*Mtop_ + M_)/2.;
-
   double MEpart = 
     topLepDensity(cos1Lep1,cos2Lep1) * 
     topLepDensity(cos1Lep2,cos2Lep2) * 
-    higgsDensity(cos1Higgs) *
+    (hypo_==0 ? higgsDensity(cos1Higgs) : 1.0)*
     me2
     ;
 
   double Jpart = 
     topLepJakobi( Enu1, Elep1, EbLep1, &WLep1 ) * 
     topLepJakobi( Enu2, Elep2, EbLep2, &WLep2 ) * 
-    higgsJakobi( Eh1, Eh2 ) 
+    (hypo_==0 ? higgsJakobi( Eh1, Eh2 ) : Eh1*Eh2/4) 
     ;
 
   double tf1 = jetEnergyTF( jets_[2].Eta(), jets_[2].E(),  bLep1.E(),   "Heavy");
@@ -4119,6 +4344,11 @@ double MEIntegratorNew::probabilityDL(const double* x, int sign) const{
 
   double dPx = (WLep1Nu+WLep2Nu).Px() - jets_[1].Px();
   double dPy = (WLep1Nu+WLep2Nu).Py() - jets_[1].Py();
+  if( constrainToRecoil_ ){
+    dPx =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]/*+jets_[4]*/+jets_[5]+jets_[6]+jets_[7]).Px() + (tot).Px() ;
+    dPy =  -(jets_[0]+jets_[1]+jets_[2]+jets_[3]/*+jets_[4]*/+jets_[5]+jets_[6]+jets_[7]).Py() + (tot).Py() ;
+  }
+
   double tf7 = 
     (Vx_*Vy_ - rho_*rho_*Vx_*Vy_)>0 ? 1./2./PI/TMath::Sqrt(Vx_*Vy_ - rho_*rho_*Vx_*Vy_)*TMath::Exp( -0.5*( 1/(1-rho_*rho_)*( dPx*dPx/Vx_ + dPy*dPy/Vy_ - 2*rho_*dPx*dPy/TMath::Sqrt(Vx_*Vy_) ) ) ) : 1.0 ;
 
@@ -4304,26 +4534,39 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
   double Eh2, cos1Higgs;
   int nSolHiggs = higgsEnergies( Eh1, Eh2, cos1Higgs, errFlag );
   
+  if(hypo_==1){
+    Eh2       =  x[19];
+    cos1Higgs = 1.; // dummy
+  }
+
   TLorentzVector higgs2( eB2_*TMath::Sqrt(Eh2*Eh2 - Mb_*Mb_), Eh2);
   (const_cast<MEIntegratorNew*>(this)->jets_).push_back( higgs2 );
   TLorentzVector higgs = higgs1 + higgs2;
 
-  if(errFlag){
+  if(errFlag && hypo_==0){
     if(verbose_) cout << "Problems with higgsEnergies (" << nSolHiggs << " solutions)" << endl;
     return 0.0;
+  }
+  if(hypo_==1){
+    if( deltaR(higgs1,higgs2)<0.5 ||  higgs1.Pt()<20 || higgs2.Pt()<20)  return 0.0;
   }
 
   //cout << topHad.M() << ", " << ", " << WHad.M() << ", " << topLep.M() << ", " << WLep.M() << ", " << higgs.M() << endl;
 
   TLorentzVector tot = topHad+topLep+higgs;
+
+  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
+  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
+  double Q  = (2*Mtop_ + M_)/2.;
+
   float SumPt  = tot.Pt() ;
   //cout << "Sum Pt = " << tot.Pt() << endl;
 
   double me2 = 1.0;
   if(useME_==1 && top1Flag_ == +1 && top2Flag_ == -1)               // topLep = t,  topHad = tx
-    me2 = meSquaredOpenLoops( &topLep, &topHad, &higgs );
+    me2 = hypo_==0 ? meSquaredOpenLoops( &topLep, &topHad, &higgs, x1, x2 ) : meSquaredOpenLoops_ttbb( &topLep, &topHad, &higgs1, &higgs2, x1, x2 );
   else if(useME_==1 && top1Flag_ == -1 && top2Flag_ == +1)          // topLep = tx, topHad = t
-    me2 = meSquaredOpenLoops( &topHad, &topLep, &higgs );
+    me2 = hypo_==0 ? meSquaredOpenLoops( &topHad, &topLep, &higgs, x1, x2 ) : meSquaredOpenLoops_ttbb( &topHad, &topLep, &higgs1, &higgs2, x1, x2 );
   else{
     if(useME_==1 && verbose_) cout << "Undefined top flavors" << endl;
     me2 = 1.;
@@ -4331,20 +4574,16 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
 
   //cout << "ME2 = " << me2 << endl;
 
-  double x1 = (  tot.Pz() + tot.E() )/SqrtS_;
-  double x2 = ( -tot.Pz() + tot.E() )/SqrtS_;
-  double Q  = (2*Mtop_ + M_)/2.;
-
   double MEpart = 
     topHadDensity(cos1Had,cos2Had) * 
     topLepDensity(cos1Lep,cos2Lep) * 
-    higgsDensity(cos1Higgs) *
+    (hypo_==0 ? higgsDensity(cos1Higgs) : 1.0) *
     me2 ;
   
   double Jpart = 
     topHadLostJakobi( Eq1,  Eq2, EbHad, &WHad ) * 
     topLepJakobi( Enu, Elep, EbLep, &WLep ) * 
-    higgsJakobi(  Eh1, Eh2 ) 
+    (hypo_==0 ? higgsJakobi(  Eh1, Eh2 ) : Eh1*Eh2/4) 
     ;
 
 

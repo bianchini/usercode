@@ -56,8 +56,8 @@ class MEIntegrator {
   void   setJets( vector<TLorentzVector>* );
   void   setBtag( std::vector<float>* );
   void   createMash();
-  double probability(const double*) const;
-  unsigned int   findMatch(double, double) const;
+  double        probability(const double*) const;
+  unsigned int  findMatch(double, double) const;
   void   saveJetParam( string );
   void   cachePdf( string , string , int );
   TH1F*  getCachedPdf( string ) const;
