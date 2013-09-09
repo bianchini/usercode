@@ -1,27 +1,4 @@
-
-<bin   file="Integrator.cc" name="Integrator">
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="FWCore/Framework"/> 
-  <use   name="FWCore/MessageLogger"/>
-  <use   name="FWCore/Utilities"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="PhysicsTools/Utilities"/>
-  <use   name="root"/>
-  <use   name="rootcintex"/>
-  <use   name="rootgraphics"/>
-  <use   name="roofit"/>
-  <use   name="rootminuit"/>
-  <use   name="rootminuit2"/>
-  <use   name="roottmva"/>
-  <use   name="classlib"/>
-</bin>
-
-
-
-<bin   file="PlotZmm.cc" name="PlotZmm">
+<bin   file="TestMENew.cc" name="TestMENew">
   <use   name="Bianchi/TTHStudies"/>
   <use   name="DataFormats/FWLite"/>
   <use   name="FWCore/FWLite"/>
@@ -32,6 +9,7 @@
   <use   name="FWCore/ParameterSet"/>
   <use   name="PhysicsTools/FWLite"/>
   <use   name="PhysicsTools/Utilities"/>
+  <use   name="PhysicsTools/CandUtils"/>
   <use   name="PhysicsTools/SelectorUtils"/>
   <use   name="CommonTools/Utils"/>
   <use   name="root"/>
@@ -43,6 +21,111 @@
   <use   name="roottmva"/>
   <use   name="classlib"/>
   <use   name="boost"/>
+  <use   name="lhapdf"/>
+</bin>
+
+
+<bin   file="TFProducer.cc" name="TFProducer">
+  <use   name="Bianchi/TTHStudies"/>
+  <use   name="DataFormats/FWLite"/>
+  <use   name="FWCore/FWLite"/>
+  <use   name="FWCore/PythonParameterSet"/>
+  <use   name="FWCore/Framework"/> 
+  <use   name="FWCore/MessageLogger"/>
+  <use   name="FWCore/Utilities"/>
+  <use   name="FWCore/ParameterSet"/>
+  <use   name="PhysicsTools/FWLite"/>
+  <use   name="PhysicsTools/Utilities"/>
+  <use   name="PhysicsTools/CandUtils"/>
+  <use   name="PhysicsTools/SelectorUtils"/>
+  <use   name="CommonTools/Utils"/>
+  <use   name="root"/>
+  <use   name="rootcintex"/>
+  <use   name="rootgraphics"/>
+  <use   name="roofit"/>
+  <use   name="rootminuit"/>
+  <use   name="rootminuit2"/>
+  <use   name="roottmva"/>
+  <use   name="classlib"/>
+  <use   name="boost"/>
+</bin>
+
+
+<bin   file="TreeProducer.cc" name="TreeProducer">
+  <use   name="Bianchi/TTHStudies"/>
+  <use   name="DataFormats/FWLite"/>
+  <use   name="FWCore/FWLite"/>
+  <use   name="FWCore/PythonParameterSet"/>
+  <use   name="FWCore/Framework"/> 
+  <use   name="FWCore/MessageLogger"/>
+  <use   name="FWCore/Utilities"/>
+  <use   name="FWCore/ParameterSet"/>
+  <use   name="PhysicsTools/FWLite"/>
+  <use   name="PhysicsTools/Utilities"/>
+  <use   name="PhysicsTools/CandUtils"/>
+  <use   name="PhysicsTools/SelectorUtils"/>
+  <use   name="CommonTools/Utils"/>
+  <use   name="root"/>
+  <use   name="rootcintex"/>
+  <use   name="rootgraphics"/>
+  <use   name="roofit"/>
+  <use   name="rootminuit"/>
+  <use   name="rootminuit2"/>
+  <use   name="roottmva"/>
+  <use   name="classlib"/>
+  <use   name="boost"/>
+</bin>
+
+<bin   file="MEValidator.cc" name="MEValidator">
+  <use   name="Bianchi/TTHStudies"/>
+  <use   name="DataFormats/FWLite"/>
+  <use   name="FWCore/FWLite"/>
+  <use   name="FWCore/PythonParameterSet"/>
+  <use   name="FWCore/Framework"/> 
+  <use   name="FWCore/MessageLogger"/>
+  <use   name="FWCore/Utilities"/>
+  <use   name="FWCore/ParameterSet"/>
+  <use   name="PhysicsTools/FWLite"/>
+  <use   name="PhysicsTools/Utilities"/>
+  <use   name="PhysicsTools/CandUtils"/>
+  <use   name="PhysicsTools/SelectorUtils"/>
+  <use   name="CommonTools/Utils"/>
+  <use   name="root"/>
+  <use   name="rootcintex"/>
+  <use   name="rootgraphics"/>
+  <use   name="roofit"/>
+  <use   name="rootminuit"/>
+  <use   name="rootminuit2"/>
+  <use   name="roottmva"/>
+  <use   name="classlib"/>
+  <use   name="boost"/>
+  <use   name="lhapdf"/>
+</bin>
+
+<bin   file="MEAnalysis.cc" name="MEAnalysis">
+  <use   name="Bianchi/TTHStudies"/>
+  <use   name="DataFormats/FWLite"/>
+  <use   name="FWCore/FWLite"/>
+  <use   name="FWCore/PythonParameterSet"/>
+  <use   name="FWCore/Framework"/> 
+  <use   name="FWCore/MessageLogger"/>
+  <use   name="FWCore/Utilities"/>
+  <use   name="FWCore/ParameterSet"/>
+  <use   name="PhysicsTools/FWLite"/>
+  <use   name="PhysicsTools/Utilities"/>
+  <use   name="PhysicsTools/CandUtils"/>
+  <use   name="PhysicsTools/SelectorUtils"/>
+  <use   name="CommonTools/Utils"/>
+  <use   name="root"/>
+  <use   name="rootcintex"/>
+  <use   name="rootgraphics"/>
+  <use   name="roofit"/>
+  <use   name="rootminuit"/>
+  <use   name="rootminuit2"/>
+  <use   name="roottmva"/>
+  <use   name="classlib"/>
+  <use   name="boost"/>
+  <use   name="lhapdf"/>
 </bin>
 
 <bin   file="Skim.cc" name="Skim">
@@ -119,210 +202,4 @@
   <use   name="roottmva"/>
   <use   name="classlib"/>
   <use   name="boost"/>
-</bin>
-
-<bin   file="TopKinFitter_SL.cc" name="TopKinFitter_SL">
-  <use   name="Bianchi/TTHStudies"/>
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="FWCore/Framework"/> 
-  <use   name="FWCore/MessageLogger"/>
-  <use   name="FWCore/Utilities"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="PhysicsTools/Utilities"/>
-  <use   name="PhysicsTools/CandUtils"/>
-  <use   name="PhysicsTools/SelectorUtils"/>
-  <use   name="CommonTools/Utils"/>
-  <use   name="root"/>
-  <use   name="rootcintex"/>
-  <use   name="rootgraphics"/>
-  <use   name="roofit"/>
-  <use   name="rootminuit"/>
-  <use   name="rootminuit2"/>
-  <use   name="roottmva"/>
-  <use   name="classlib"/>
-  <use   name="boost"/>
-  <use   name="TopQuarkAnalysis/TopKinFitter"/>
-</bin>
-
-<bin   file="TreeProducer.cc" name="TreeProducer">
-  <use   name="Bianchi/TTHStudies"/>
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="FWCore/Framework"/> 
-  <use   name="FWCore/MessageLogger"/>
-  <use   name="FWCore/Utilities"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="PhysicsTools/Utilities"/>
-  <use   name="PhysicsTools/CandUtils"/>
-  <use   name="PhysicsTools/SelectorUtils"/>
-  <use   name="CommonTools/Utils"/>
-  <use   name="root"/>
-  <use   name="rootcintex"/>
-  <use   name="rootgraphics"/>
-  <use   name="roofit"/>
-  <use   name="rootminuit"/>
-  <use   name="rootminuit2"/>
-  <use   name="roottmva"/>
-  <use   name="classlib"/>
-  <use   name="boost"/>
-</bin>
-
-<bin   file="TransferFunctions_SL.cc" name="TransferFunctions_SL">
-  <use   name="Bianchi/TTHStudies"/>
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="FWCore/Framework"/> 
-  <use   name="FWCore/MessageLogger"/>
-  <use   name="FWCore/Utilities"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="PhysicsTools/Utilities"/>
-  <use   name="PhysicsTools/CandUtils"/>
-  <use   name="PhysicsTools/SelectorUtils"/>
-  <use   name="CommonTools/Utils"/>
-  <use   name="root"/>
-  <use   name="rootcintex"/>
-  <use   name="rootgraphics"/>
-  <use   name="roofit"/>
-  <use   name="rootminuit"/>
-  <use   name="rootminuit2"/>
-  <use   name="roottmva"/>
-  <use   name="classlib"/>
-  <use   name="boost"/>
-</bin>
-
-<bin   file="TestME.cc" name="TestME">
-  <use   name="Bianchi/TTHStudies"/>
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="FWCore/Framework"/> 
-  <use   name="FWCore/MessageLogger"/>
-  <use   name="FWCore/Utilities"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="PhysicsTools/Utilities"/>
-  <use   name="PhysicsTools/CandUtils"/>
-  <use   name="PhysicsTools/SelectorUtils"/>
-  <use   name="CommonTools/Utils"/>
-  <use   name="root"/>
-  <use   name="rootcintex"/>
-  <use   name="rootgraphics"/>
-  <use   name="roofit"/>
-  <use   name="rootminuit"/>
-  <use   name="rootminuit2"/>
-  <use   name="roottmva"/>
-  <use   name="classlib"/>
-  <use   name="boost"/>
-</bin>
-
-<bin   file="TestMENew.cc" name="TestMENew">
-  <use   name="Bianchi/TTHStudies"/>
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="FWCore/Framework"/> 
-  <use   name="FWCore/MessageLogger"/>
-  <use   name="FWCore/Utilities"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="PhysicsTools/Utilities"/>
-  <use   name="PhysicsTools/CandUtils"/>
-  <use   name="PhysicsTools/SelectorUtils"/>
-  <use   name="CommonTools/Utils"/>
-  <use   name="root"/>
-  <use   name="rootcintex"/>
-  <use   name="rootgraphics"/>
-  <use   name="roofit"/>
-  <use   name="rootminuit"/>
-  <use   name="rootminuit2"/>
-  <use   name="roottmva"/>
-  <use   name="classlib"/>
-  <use   name="boost"/>
-  <use   name="lhapdf"/>
-</bin>
-
-
-<bin   file="TestMENew_bkg.cc" name="TestMENew_bkg">
-  <use   name="Bianchi/TTHStudies"/>
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="FWCore/Framework"/> 
-  <use   name="FWCore/MessageLogger"/>
-  <use   name="FWCore/Utilities"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="PhysicsTools/Utilities"/>
-  <use   name="PhysicsTools/CandUtils"/>
-  <use   name="PhysicsTools/SelectorUtils"/>
-  <use   name="CommonTools/Utils"/>
-  <use   name="root"/>
-  <use   name="rootcintex"/>
-  <use   name="rootgraphics"/>
-  <use   name="roofit"/>
-  <use   name="rootminuit"/>
-  <use   name="rootminuit2"/>
-  <use   name="roottmva"/>
-  <use   name="classlib"/>
-  <use   name="boost"/>
-  <use   name="lhapdf"/>
-</bin>
-
-<bin   file="TestMECalcME.cc" name="TestMECalcME">
-  <use   name="Bianchi/TTHStudies"/>
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="FWCore/Framework"/> 
-  <use   name="FWCore/MessageLogger"/>
-  <use   name="FWCore/Utilities"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="PhysicsTools/Utilities"/>
-  <use   name="PhysicsTools/CandUtils"/>
-  <use   name="PhysicsTools/SelectorUtils"/>
-  <use   name="CommonTools/Utils"/>
-  <use   name="root"/>
-  <use   name="rootcintex"/>
-  <use   name="rootgraphics"/>
-  <use   name="roofit"/>
-  <use   name="rootminuit"/>
-  <use   name="rootminuit2"/>
-  <use   name="roottmva"/>
-  <use   name="classlib"/>
-  <use   name="boost"/>
-  <use   name="lhapdf"/>
-</bin>
-
-<bin   file="TFProducer.cc" name="TFProducer">
-  <use   name="Bianchi/TTHStudies"/>
-  <use   name="DataFormats/FWLite"/>
-  <use   name="FWCore/FWLite"/>
-  <use   name="FWCore/PythonParameterSet"/>
-  <use   name="FWCore/Framework"/> 
-  <use   name="FWCore/MessageLogger"/>
-  <use   name="FWCore/Utilities"/>
-  <use   name="FWCore/ParameterSet"/>
-  <use   name="PhysicsTools/FWLite"/>
-  <use   name="PhysicsTools/Utilities"/>
-  <use   name="PhysicsTools/CandUtils"/>
-  <use   name="PhysicsTools/SelectorUtils"/>
-  <use   name="CommonTools/Utils"/>
-  <use   name="root"/>
-  <use   name="rootcintex"/>
-  <use   name="rootgraphics"/>
-  <use   name="roofit"/>
-  <use   name="rootminuit"/>
-  <use   name="rootminuit2"/>
-  <use   name="roottmva"/>
-  <use   name="classlib"/>
-  <use   name="boost"/>
-
 </bin>
