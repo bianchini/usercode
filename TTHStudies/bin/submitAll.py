@@ -178,7 +178,7 @@ samples = [
     #['Tbar_t-channel_TuneZ2star_8TeV-powheg-tauola', 'Tbart'],
     #['Tbar_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola', 'TbartW'],
     #['TTJets_HadronicMGDecays_8TeV-madgraph-part', 'TTJetsFullHad'],
-    #['TTJets_FullLeptMGDecays_8TeV-madgraph-part', 'TTJetsFullLept'],
+    ['TTJets_FullLeptMGDecays_8TeV-madgraph-part', 'TTJetsFullLept'],
     #['TTJets_SemiLeptMGDecays_8TeV-madgraph-part', 'TTJetsSemiLept'],
     #['WJetsToLNu_PtW-100_TuneZ2star_8TeV-madgraph',     'WJets100'],
     #['WJetsToLNu_PtW-70To100_TuneZ2star_8TeV-madgraph', 'WJets70100'],
@@ -205,23 +205,23 @@ samples = [
     #['TTH_HToBB_M-110_8TeV-pythia6','TTH110'],
     #['TTH_HToBB_M-115_8TeV-pythia6','TTH115'],
     #['TTH_HToBB_M-120_8TeV-pythia6','TTH120'],
-    ['TTH_HToBB_M-125_8TeV-pythia6','TTH125'],
+    #['TTH_HToBB_M-125_8TeV-pythia6','TTH125'],
     #['TTH_HToBB_M-130_8TeV-pythia6','TTH130'],
     #['TTH_HToBB_M-135_8TeV-pythia6','TTH135'],
     #['TTWJets_8TeV-madgraph','TTW'],
     #['TTZJets_8TeV-madgraph','TTZ'],
-    #['WJetsToLNu_TuneZ2Star_8TeV-madgraph-tarball','WJets']
+    #['WJetsToLNu_TuneZ2Star_8TeV-madgraph-tarball','WJets'],
     #['DYJetsToLL_M-10To50_TuneZ2Star_8TeV-madgraph','DYJets10to50']
     ]
 
 skims = [
-    #['VType0','numJets30bTag>=1&&Vtype==0&&numJets30>=2&&jet1.pt>30&&jet2.pt>30'],
-    #['VType1','numJets30bTag>=1&&Vtype==1&&numJets30>=2&&jet1.pt>30&&jet2.pt>30'],
-    #['VType2','numJets30bTag>=1&&Vtype==2&&numJets30>=3&&jet1.pt>30&&jet2.pt>30&&jet3.pt>30'],
-    #['VType3','numJets30bTag>=1&&Vtype==3&&numJets30>=3&&jet1.pt>30&&jet2.pt>30&&jet3.pt>30']
+    #['VType0','numJets30bTag>=2&&Vtype==0&&numJets30>=2&&jet1.pt>30&&jet2.pt>30'],
+    ['VType1','numJets30bTag>=2&&Vtype==1&&numJets30>=2&&jet1.pt>30&&jet2.pt>30'],
+    #['VType2','numJets30bTag>=2&&Vtype==2&&numJets30>=3&&jet1.pt>30&&jet2.pt>30&&jet3.pt>30'],
+    #['VType3','numJets30bTag>=2&&Vtype==3&&numJets30>=3&&jet1.pt>30&&jet2.pt>30&&jet3.pt>30']
     ]
 #skims = []
 
 #processAll(samples)
-processAllBatch(samples, skims, True)
+processAllBatch(samples, skims, False)
 #processAllDebugBatch(samples)

@@ -22,22 +22,22 @@ process.fwliteInput = cms.PSet(
 
     cms.PSet(
     name = cms.string("VType0"),
-    cut  = cms.string("numJets30bTag>=1 && Vtype==0 && numJets30>=2 && pt1>30 && pt2>30")
+    cut  = cms.string("numJets30bTag>=1 && Vtype==0 && numJets30>=2 && jet1.pt>30 && jet2.pt>30")
     ),
 
     cms.PSet(
     name = cms.string("VType1"),
-    cut  = cms.string("numJets30bTag>=1 && Vtype==1 && numJets30>=2 && pt1>30 && pt2>30")
+    cut  = cms.string("numJets30bTag>=1 && Vtype==1 && numJets30>=2 && jet1.pt>30 && jet2.pt>30")
     ),
 
     cms.PSet(
     name = cms.string("VType2"),
-    cut  = cms.string("numJets30bTag>=1 && Vtype==2 && numJets30>=3 && pt1>30 && pt2>30 && pt3>30")
+    cut  = cms.string("numJets30bTag>=1 && Vtype==2 && numJets30>=3 && jet1.pt>30 && jet2.pt>30 && jet3.pt>30")
     ),
 
     cms.PSet(
     name = cms.string("VType3"),
-    cut  = cms.string("numJets30bTag>=1 && Vtype==3 && numJets30>=3 && pt1>30 && pt2>30 && pt3>30")
+    cut  = cms.string("numJets30bTag>=1 && Vtype==3 && numJets30>=3 && jet1.pt>30 && jet2.pt>30 && jet3.pt>30")
     ),
 
 

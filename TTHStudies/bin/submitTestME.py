@@ -111,12 +111,12 @@ masses = cms.vdouble(120)
 
 
 counter = 0;
-for i in [60,70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210]:
-#for i in [120, 130, 140, 150, 160, 170, 180, 190, 200, 210]:
+#for i in [60,70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210]:
+for i in [60,65,70,75,80,85,90,95,100,105,110,115,120, 125,130, 135,140, 145,150,155, 160, 165,170,175, 180,185, 190, 195,200, 205,210]:
     counter = counter + 1
     #print "(%d,%d)" % (i*50+1, (i+1)*50)
-    mymasses = cms.vdouble(i, i+5)
+    mymasses = cms.vdouble(i)
     #print "(%d,%d)" % (i, i+5)
     #print 'rec_XSec_p'+str(counter)
-    submitTest('rec_XSec_p'+str(counter), 2, mymasses,   1,1,1,1,1,    1,1,1,   0.15,0.18, 20,  1, 1)
+    #submitTest('rec_XSec_p'+str(counter), 2, mymasses,   1,1,1,1,1,    1,1,1,   0.15,0.18, 20,  1, 1)
     submitTest('rec_Acc_p'+str(counter),  3, mymasses,   1,1,1,1,1,    1,1,1,   0.15,0.18, 20,  1, 1)

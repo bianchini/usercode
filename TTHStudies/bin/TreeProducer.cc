@@ -137,7 +137,7 @@ int main(int argc, const char* argv[])
 
   AutoLibraryLoader::enable();
 
-  fwlite::TFileService fs = fwlite::TFileService("./root/treeProducer.root");
+  fwlite::TFileService fs = fwlite::TFileService("./root/treeProducer_new.root");
   TTree* genTree          = fs.make<TTree>("genTree","event tree");
   TTree* genJetLightTree  = fs.make<TTree>("genJetLightTree","event tree");
   TTree* genEventTree     = fs.make<TTree>("genEventTree","event tree");
@@ -183,6 +183,8 @@ int main(int argc, const char* argv[])
   float impEtReco;
   float impPhiReco;
   float impSumEt;
+  float px, pxReco, py, pyReco, puWeight;
+  float recoilPx, recoilRecoPx, recoilPy, recoilRecoPy;
 
   float ptRecoHeavy;
   float phiRecoHeavy;
@@ -237,8 +239,17 @@ int main(int argc, const char* argv[])
   genEventTree->Branch("phiReco",  &phiReco,"phiReco/F");
   genEventTree->Branch("impEtReco",  &impEtReco, "impEtReco/F");
   genEventTree->Branch("impPhiReco", &impPhiReco,"impPhiReco/F");
-  genEventTree->Branch("impSumEt",    &impSumEt,   "impSumEt/F");
+  genEventTree->Branch("impSumEt",   &impSumEt,   "impSumEt/F");
+  genEventTree->Branch("px",       &px,    "px/F");
+  genEventTree->Branch("pxReco",   &pxReco,"pxReco/F");
+  genEventTree->Branch("py",       &py,    "py/F");
+  genEventTree->Branch("pyReco",   &pyReco,"pyReco/F");
+  genEventTree->Branch("puWeight", &puWeight,"puWeight/F");
 
+  genEventTree->Branch("recoilPx",       &recoilPx,     "recoilPx/F");
+  genEventTree->Branch("recoilRecoPx",   &recoilRecoPx, "recoilRecoPx/F");
+  genEventTree->Branch("recoilPy",       &recoilPy,     "recoilPy/F");
+  genEventTree->Branch("recoilRecoPy",   &recoilRecoPy, "recoilRecoPy/F");
 
   genJetHeavyTree->Branch("ptReco",   &ptRecoHeavy, "ptReco/F");
   genJetHeavyTree->Branch("etaReco",  &etaRecoHeavy, "etaReco/F");
@@ -257,8 +268,8 @@ int main(int argc, const char* argv[])
 
   const edm::VParameterSet& samples = in.getParameter<edm::VParameterSet>("samples") ;
 
-  std::string pathToFile( in.getParameter<std::string>("pathToFile" ) );
-  std::string ordering(   in.getParameter<std::string>("ordering" ) );
+  std::string pathToFile   (in.getParameter<std::string>("pathToFile" ) );
+  std::string ordering     (in.getParameter<std::string>("ordering" ) );
   double lumi              (in.getParameter<double>("lumi") );
   bool verbose             (in.getParameter<bool>("verbose") );
   bool computeCMSVariables (in.getParameter<bool>("computeCMSVariables") );
@@ -308,6 +319,7 @@ int main(int argc, const char* argv[])
     genParticleInfo genB, genBbar;
     genTopInfo genTop, genTbar;
     metInfo METtype1p2corr;
+    float PUweight;
 
     currentTree->SetBranchAddress("jet1",   &jet1);
     currentTree->SetBranchAddress("jet2",   &jet2);
@@ -330,7 +342,7 @@ int main(int argc, const char* argv[])
     currentTree->SetBranchAddress("aJet_genEta",  aJetsgeneta);
     currentTree->SetBranchAddress("hJet_genPhi",  hJetsgenphi);
     currentTree->SetBranchAddress("aJet_genPhi",  aJetsgenphi);
-
+    currentTree->SetBranchAddress("PUweight", &PUweight);
 
     int printed = 0;
     Long64_t nentries = currentTree->GetEntries();
@@ -535,7 +547,14 @@ int main(int argc, const char* argv[])
       etaHeavy=-99;
       phiHeavy=-99;
       massRecoHeavy=-99;
-
+      recoilPx=-999;
+      recoilRecoPx=-999;
+      recoilPy=-999;
+      recoilRecoPy=-999;
+      et=-999;
+      phi=-999;
+      px=-999;
+      py=-999;
       //////////////////////////////////////////////////
       // met
       //////////////////////////////////////////////////
@@ -544,34 +563,153 @@ int main(int argc, const char* argv[])
       etReco  = METtype1p2corr.et;
       phiReco = METtype1p2corr.phi;
 
-
       TVector3 recoMEt( etReco*TMath::Cos(phiReco), etReco*TMath::Sin(phiReco), 0.0) ;
       //recoMEt.SetPtEtaPhiM( etReco, 0.0, phiReco, 0.0);
       impSumEt   = sumEt;
       //impEtReco  = etReco;
       //impPhiReco = phiReco;
 
+      pxReco   = recoMEt.Px();
+      pyReco   = recoMEt.Py();
+      puWeight = PUweight;
+
+      
+      if(genBLV.Pt()>0 && genBbarLV.Pt()>0 && topBLV.Pt()>0 && topW1LV.Pt()>0 && topW2LV.Pt()>0 && atopBLV.Pt()>0 && atopW1LV.Pt()>0 && atopW2LV.Pt()>0){
+
+	float rPx = 0;
+	float rPy = 0;
+
+	TLorentzVector TOPHADW1;
+	TLorentzVector TOPHADW2;
+	TLorentzVector TOPHADB;
+	TLorentzVector TOPLEPW1;
+	TLorentzVector TOPLEPW2;
+	TLorentzVector TOPLEPB;
+
+	int properEvent = 1;
+       
+	if( abs(genTop.wdau1id)>6 && abs(genTbar.wdau1id)<6){
+	  TOPHADW1.SetPxPyPzE( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
+	  TOPHADW2.SetPxPyPzE( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
+	  TOPHADB.SetPxPyPzE ( atopBLV.Px(),  atopBLV.Py(),   atopBLV.Pz(),  atopBLV.E());
+	  if(abs(genTop.wdau1id)==11 || abs(genTop.wdau1id)==13 || abs(genTop.wdau1id)==15){
+	    TOPLEPW1.SetPxPyPzE( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
+	    TOPLEPW2.SetPxPyPzE( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
+	    if(abs(genTop.wdau1id)!=13) properEvent=0;
+	  }
+	  else{
+	    TOPLEPW2.SetPxPyPzE( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
+	    TOPLEPW1.SetPxPyPzE( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
+	    if(abs(genTop.wdau2id)!=13) properEvent=0;	    
+	  }
+	  TOPLEPB.SetPxPyPzE(  topBLV.Px(),  topBLV.Py(),   topBLV.Pz(), topBLV.E());
+	}
+	else if(abs(genTop.wdau1id)<6 && abs(genTbar.wdau1id)>6){
+	  TOPHADW1.SetPxPyPzE( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
+	  TOPHADW2.SetPxPyPzE( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
+	  TOPHADB.SetPxPyPzE ( topBLV.Px(),  topBLV.Py(),   topBLV.Pz(),  topBLV.E());
+	  if(abs(genTbar.wdau1id)==11 || abs(genTbar.wdau1id)==13 || abs(genTbar.wdau1id)==15){
+	    TOPLEPW1.SetPxPyPzE( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
+	    TOPLEPW2.SetPxPyPzE( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
+	    if(abs(genTbar.wdau1id)!=13) properEvent=0;	    
+	  }
+	  else{
+	    TOPLEPW2.SetPxPyPzE( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
+	    TOPLEPW1.SetPxPyPzE( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
+	    if(abs(genTbar.wdau2id)!=13) properEvent=0;	    
+	  }
+	  TOPLEPB.SetPxPyPzE( atopBLV.Px(),  atopBLV.Py(),   atopBLV.Pz(),  atopBLV.E());
+	}	
+	else{properEvent=0;}
+
+	TVector3  direction = -(TOPHADW1+TOPHADW2+TOPHADB+TOPLEPW1+TOPLEPW2+TOPLEPB+genBLV+genBbarLV).Vect(); 
+	direction.SetZ(0.);
+	TVector3 axis  =  direction.Unit();
+	TVector3 axis2(axis.Py(), -axis.Px() );
+
+	axis  = TVector3(1,0,0);
+	axis2 = TVector3(0,1,0);
+
+	int nmatches = 0;
+	for(unsigned int k = 0; k < myJetsFilt.size(); k++){ 
+	  TLorentzVector jet = myJetsFilt[k];
+	  if( match(jet,TOPHADW1 ) ){
+	    rPx += jet.Vect().Dot(axis);  rPy += jet.Vect().Dot(axis2);
+	    nmatches++;
+	  }
+	  else if( match(jet,TOPHADW2 ) ){
+	    rPx += jet.Vect().Dot(axis);  rPy += jet.Vect().Dot(axis2);
+	    nmatches++;
+	  }
+	  else if( match(jet, TOPHADB) ){
+	    rPx += jet.Vect().Dot(axis);  rPy += jet.Vect().Dot(axis2);
+	    nmatches++;
+	  }
+	  else if( match(jet, TOPLEPB) ){
+	    rPx += jet.Vect().Dot(axis);  rPy += jet.Vect().Dot(axis2);
+	    nmatches++;
+	  }
+	  else if( match(jet, genBLV) ){
+	    rPx += jet.Vect().Dot(axis);  rPy += jet.Vect().Dot(axis2);
+	    nmatches++;
+	  }
+	  else if( match(jet, genBbarLV) ){
+	    rPx += jet.Vect().Dot(axis);  rPy += jet.Vect().Dot(axis2);
+	    nmatches++;
+	  }
+	  else{}
+	} 
+	rPx += TOPLEPW1.Vect().Dot(axis);  rPy += TOPLEPW1.Vect().Dot(axis2);
+	rPx += recoMEt.Dot(axis);          rPy += recoMEt.Dot(axis2);
+
+	//cout << TOPLEPW1.M() << endl;
+	recoilPx     = (properEvent && nmatches==6) ? -(TOPHADW1+TOPHADW2+TOPHADB+TOPLEPW1+TOPLEPW2+TOPLEPB+genBLV+genBbarLV).Vect().Dot(axis)  : -999; 
+	recoilRecoPx = (properEvent && nmatches==6) ? -rPx  : -999; 
+	recoilPy     = (properEvent && nmatches==6) ? -(TOPHADW1+TOPHADW2+TOPHADB+TOPLEPW1+TOPLEPW2+TOPLEPB+genBLV+genBbarLV).Vect().Dot(axis2)  : -999; 
+	recoilRecoPy = (properEvent && nmatches==6) ? -rPy  : -999; 
+
+	et  = (properEvent && nmatches==6) ? TOPLEPW2.Pt() : -999;
+	phi = (properEvent && nmatches==6) ? TOPLEPW2.Phi(): -999;
+	px  = (properEvent && nmatches==6) ? TOPLEPW2.Px(): -999;
+	py  = (properEvent && nmatches==6) ? TOPLEPW2.Py(): -999;
+
+      }
+    
+
+
+           
       if(abs(genTop.wdau1id)==12 || abs(genTop.wdau1id)==14 || abs(genTop.wdau1id)==16){
 	et  = genTop.wdau1pt;
 	phi = genTop.wdau1phi;
+	px  = et*TMath::Cos( phi );
+	py  = et*TMath::Sin( phi );
       }
       else if(abs(genTop.wdau2id)==12 || abs(genTop.wdau2id)==14 || abs(genTop.wdau2id)==16){
 	et  = genTop.wdau2pt;
 	phi = genTop.wdau2phi;
+	px  = et*TMath::Cos( phi );
+	py  = et*TMath::Sin( phi );
       }
       else if(abs(genTbar.wdau1id)==12 || abs(genTbar.wdau1id)==14 || abs(genTbar.wdau1id)==16){
 	et  = genTbar.wdau1pt;
 	phi = genTbar.wdau1phi;
+	px  = et*TMath::Cos( phi );
+	py  = et*TMath::Sin( phi );
       }
       else if(abs(genTbar.wdau2id)==12 || abs(genTbar.wdau2id)==14 || abs(genTbar.wdau2id)==16){
 	et  = genTbar.wdau2pt;
 	phi = genTbar.wdau2phi;
+	px  = et*TMath::Cos( phi );
+	py  = et*TMath::Sin( phi );
       }
       else{
 	et  = -99;
 	phi = -99;
+	px  = -99;
+	py  = -99;
       }
- 
+      
+
       //genEventTree->Fill();
 
       ///////////////////////////////////////////////////
@@ -767,7 +905,7 @@ int main(int argc, const char* argv[])
 	etaRecoHeavy=-99;
 	phiRecoHeavy=-99;
       }
-      ptHeavy       = genBbarLV.E()>0 ? genBbarLV.E() : -999;
+      ptHeavy       = genBbarLV.E()>0 ? genBbarLV.E()  : -999;
       etaHeavy      = genBbarLV.E()>0 ? genBbarLV.Eta(): -999;
       phiHeavy      = genBbarLV.E()>0 ? genBbarLV.Phi(): -999;
       if(genBbarLV.E()>0) genJetHeavyTree->Fill();
@@ -929,14 +1067,19 @@ int main(int argc, const char* argv[])
 
 
 	  if(printP4 && printed<toPrint){
-	    cout << "jet1.SetPtEtaPhiM(" << TOPLEPW1.Pt() << "," <<  TOPLEPW1.Eta() << "," << TOPLEPW1.Phi() << "," << TOPLEPW1.M() << endl;
-	    cout << "jet2.SetPtEtaPhiM(" << TOPLEPW2.Pt() << "," <<  TOPLEPW2.Eta() << "," << TOPLEPW2.Phi() << "," << TOPLEPW2.M() << endl;
-	    cout << "jet3.SetPtEtaPhiM(" << TOPLEPB.Pt() << "," <<  TOPLEPB.Eta() << "," << TOPLEPB.Phi() << "," << TOPLEPB.M() << endl;
-	    cout << "jet4.SetPtEtaPhiM(" << TOPHADW1.Pt() << "," <<  TOPHADW1.Eta() << "," << TOPHADW1.Phi() << "," << TOPHADW1.M() << endl;
-	    cout << "jet5.SetPtEtaPhiM(" << TOPHADW2.Pt() << "," <<  TOPHADW2.Eta() << "," << TOPHADW2.Phi() << "," << TOPHADW2.M() << endl;
-	    cout << "jet6.SetPtEtaPhiM(" << TOPHADB.Pt() << "," <<  TOPHADB.Eta() << "," << TOPHADB.Phi() << "," << TOPHADB.M() << endl;
-	    cout << "jet7.SetPtEtaPhiM(" << genBLV.Pt() << "," <<  genBLV.Eta() << "," << genBLV.Phi() << "," << genBLV.M() << endl;
-	    cout << "jet8.SetPtEtaPhiM(" << genBbarLV.Pt() << "," <<  genBbarLV.Eta() << "," << genBbarLV.Phi() << "," << genBbarLV.M() << endl;
+	    cout << "jet1.SetPtEtaPhiM(" << TOPLEPW1.Pt() << "," <<  TOPLEPW1.Eta() << "," << TOPLEPW1.Phi() << "," << TOPLEPW1.M() << ")" << endl;
+	    cout << "jet2.SetPtEtaPhiM(" << TOPLEPW2.Pt() << "," <<  TOPLEPW2.Eta() << "," << TOPLEPW2.Phi() << "," << TOPLEPW2.M() << ")" << endl;
+	    cout << "jet3.SetPtEtaPhiM(" << TOPLEPB.Pt() << "," <<  TOPLEPB.Eta() << "," << TOPLEPB.Phi() << "," << TOPLEPB.M() << ")" << endl;
+	    cout << "jet4.SetPtEtaPhiM(" << TOPHADW1.Pt() << "," <<  TOPHADW1.Eta() << "," << TOPHADW1.Phi() << "," << TOPHADW1.M() << ")" << endl;
+	    cout << "jet5.SetPtEtaPhiM(" << TOPHADW2.Pt() << "," <<  TOPHADW2.Eta() << "," << TOPHADW2.Phi() << "," << TOPHADW2.M() << ")" << endl;
+	    cout << "jet6.SetPtEtaPhiM(" << TOPHADB.Pt() << "," <<  TOPHADB.Eta() << "," << TOPHADB.Phi() << "," << TOPHADB.M() << ")" << endl;
+	    cout << "jet7.SetPtEtaPhiM(" << genBLV.Pt() << "," <<  genBLV.Eta() << "," << genBLV.Phi() << "," << genBLV.M() << ")" << endl;
+	    cout << "jet8.SetPtEtaPhiM(" << genBbarLV.Pt() << "," <<  genBbarLV.Eta() << "," << genBbarLV.Phi() << "," << genBbarLV.M() << ")" << endl;
+
+	    cout << "Top Lep mass = " << (TOPLEPW1+TOPLEPW2+TOPLEPB).M() << endl;
+	    cout << "Top Had mass = " << (TOPHADW1+TOPHADW2+TOPHADB).M() << endl;
+	    cout << "Higgs mass = "   << (genBLV+genBbarLV).M() << endl;
+	    cout << "******************" << endl;
 	    printed++;
 	  }
 

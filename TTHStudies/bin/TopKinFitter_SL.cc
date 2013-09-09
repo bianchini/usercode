@@ -227,9 +227,17 @@ int main(int argc, const char* argv[])
   float DeltaTTH    ;
   float PtHStar ;
   float DphiHStar ;
+  float GammaTT;
+  float MassTT;
   float BetaW  ;
   float GammaW  ;
   float DeltaW  ;
+  float BetaWLep  ;
+  float GammaWLep  ;
+  float DeltaWLep  ;
+  float PxT, PyT, PzT;
+  float PxH, PyH, PzH;
+  //float M12;
 
   float ptRecoLight;
   float phiRecoLight;
@@ -316,12 +324,25 @@ int main(int argc, const char* argv[])
   genTree->Branch("PhiTTH",   &PhiTTH, "PhiTTH/F");
   genTree->Branch("BetaTTH",  &BetaTTH,     "BetaTTH/F");
   genTree->Branch("GammaTTH", &GammaTTH,     "GammaTTH/F");
+  genTree->Branch("GammaTT",  &GammaTT,      "GammaTT/F");
   genTree->Branch("DeltaTTH", &DeltaTTH,     "DeltaTTH/F");
   genTree->Branch("PtHStar",  &PtHStar,       "PtHStar/F");
   genTree->Branch("DphiHStar",&DphiHStar,    "DphiHStar/F");
+  genTree->Branch("MassTT",   &MassTT,       "MassTT/F");
   genTree->Branch("BetaW",    &BetaW,        "BetaW/F");
   genTree->Branch("GammaW",   &GammaW,       "GammaW/F");
   genTree->Branch("DeltaW",   &DeltaW,       "DeltaW/F");
+  genTree->Branch("BetaWLep", &BetaWLep,     "BetaWLep/F");
+  genTree->Branch("GammaWLep",&GammaWLep,    "GammaWLep/F");
+  genTree->Branch("DeltaWLep",&DeltaWLep,    "DeltaWLep/F");
+
+
+  genTree->Branch("PxT",   &PxT,       "PxT/F");
+  genTree->Branch("PyT",   &PyT,       "PyT/F");
+  genTree->Branch("PzT",   &PzT,       "PzT/F");
+  genTree->Branch("PxH",   &PxH,       "PxH/F");
+  genTree->Branch("PyH",   &PyH,       "PyH/F");
+  genTree->Branch("PzH",   &PzH,       "PzH/F");
 
   genJetLightTree->Branch("ptReco",   &ptRecoLight, "ptReco/F");
   genJetLightTree->Branch("etaReco",  &etaRecoLight, "etaReco/F");
@@ -1454,12 +1475,17 @@ int main(int argc, const char* argv[])
       PhiTTH   = -99;
       BetaTTH   = -99;
       GammaTTH     = -99;
+      GammaTT      = -99;
       DeltaTTH     = -99;
       PtHStar  = -99;
+      MassTT   = -99;
       DphiHStar  = -99;
       BetaW   = -99;
       GammaW   = -99;
       DeltaW   = -99;
+      BetaWLep = -99;
+      GammaWLep = -99;
+      DeltaWLep = -99;
 
       if(computeCMSVariables && genBLV.Pt()>0 && genBbarLV.Pt()>0 && topBLV.Pt()>0 && topW1LV.Pt()>0 && topW2LV.Pt()>0 && atopBLV.Pt()>0 && atopW1LV.Pt()>0 && atopW2LV.Pt()>0){
 
@@ -1468,6 +1494,9 @@ int main(int argc, const char* argv[])
 	TLorentzVector TOPHADW1;
 	TLorentzVector TOPHADW2;
 	TLorentzVector TOPHADB;
+	TLorentzVector TOPLEPW1;
+	TLorentzVector TOPLEPW2;
+	TLorentzVector TOPLEPB;
 	TLorentzVector HIGGS;
 
 	int properEvent = 1;
@@ -1478,6 +1507,9 @@ int main(int argc, const char* argv[])
 	  TOPHADW1.SetPxPyPzE( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
 	  TOPHADW2.SetPxPyPzE( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
 	  TOPHADB.SetPxPyPzE( atopBLV.Px(),  atopBLV.Py(),   atopBLV.Pz(),  atopBLV.E());
+	  TOPLEPW1.SetPxPyPzE( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
+	  TOPLEPW2.SetPxPyPzE( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
+	  TOPLEPB.SetPxPyPzE(  topBLV.Px(),  topBLV.Py(),   topBLV.Pz(), topBLV.E());
 	}
 	else if(abs(genTop.wdau1id)<6 && abs(genTbar.wdau1id)>6){
 	  TOPHAD.SetPxPyPzE( (topBLV+topW1LV+topW2LV).Px(), (topBLV+topW1LV+topW2LV).Py(), (topBLV+topW1LV+topW2LV).Pz(), (topBLV+topW1LV+topW2LV).E() );
@@ -1485,7 +1517,11 @@ int main(int argc, const char* argv[])
 	  TOPHADW1.SetPxPyPzE( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
 	  TOPHADW2.SetPxPyPzE( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
 	  TOPHADB.SetPxPyPzE( topBLV.Px(),  topBLV.Py(),   topBLV.Pz(),  topBLV.E());
+	  TOPLEPW1.SetPxPyPzE( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
+	  TOPLEPW2.SetPxPyPzE( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
+	  TOPLEPB.SetPxPyPzE( atopBLV.Px(),  atopBLV.Py(),   atopBLV.Pz(),  atopBLV.E());
 	}
+	
 	else{properEvent=0;}
 	HIGGS.SetPxPyPzE( (genBLV+genBbarLV).Px(), (genBLV+genBbarLV).Py(),(genBLV+genBbarLV).Pz(),(genBLV+genBbarLV).E());
 
@@ -1495,13 +1531,14 @@ int main(int argc, const char* argv[])
 	  TLorentzVector TOT = TOPLEP+TOPHAD+HIGGS;
 	  TVector3 boostToCMS(TOT.Px()/TOT.E(), TOT.Py()/TOT.E(), TOT.Pz()/TOT.E());
 	  TVector3 boostToTopHadCMS(TOPHAD.Px()/TOPHAD.E(), TOPHAD.Py()/TOPHAD.E(), TOPHAD.Pz()/TOPHAD.E());
+	  TVector3 boostToTopLepCMS(TOPLEP.Px()/TOPLEP.E(), TOPLEP.Py()/TOPLEP.E(), TOPLEP.Pz()/TOPLEP.E());
 
-	PtTTH  = TOT.Pt();
-	PhiTTH = TMath::Cos(TOT.Phi());
-	PzTTH  = TOT.Pz();
-	X1 = (  TOT.Pz() + TOT.E() )/TMath::Sqrt(8000*8000.);
-	X2 = ( -TOT.Pz() + TOT.E() )/TMath::Sqrt(8000*8000.);
-
+	  PtTTH  = TOT.Pt();
+	  PhiTTH = TMath::Cos(TOT.Phi());
+	  PzTTH  = TOT.Pz();
+	  X1 = (  TOT.Pz() + TOT.E() )/TMath::Sqrt(8000*8000.);
+	  X2 = ( -TOT.Pz() + TOT.E() )/TMath::Sqrt(8000*8000.);
+	  
 	//trasform
 	float tmp1 = X1;
 	float tmp2 = X2;
@@ -1511,7 +1548,14 @@ int main(int argc, const char* argv[])
 	TOPLEP.Boost(-boostToCMS);
 	TOPHAD.Boost(-boostToCMS);
 	HIGGS .Boost(-boostToCMS);
-	
+
+	PxT = TOPLEP.Px();
+	PyT = TOPLEP.Py();
+	PzT = TOPLEP.Pz();
+	PxH = HIGGS.Px();
+	PyH = HIGGS.Py();
+	PzH = HIGGS.Pz();
+
 	if(TOPLEP.Mag()<=0 || TOPHAD.Mag()<=0) cout << "Error: null momentum" << endl;
 
 	TVector3 decayPlane    = ((TOPHAD.Vect()).Cross(TOPLEP.Vect())).Unit();
@@ -1531,24 +1575,49 @@ int main(int argc, const char* argv[])
 	PtHStar   = HIGGS.P()/TOT.M();
 	DphiHStar = TMath::Cos((HIGGS.Vect()).Angle(TOPLEP.Vect()));
 
+	TOPLEP.Boost( -(TOPLEP+TOPHAD).BoostVector() ) ;
+	TOPHAD.Boost( -(TOPLEP+TOPHAD).BoostVector() ) ;
+
+	GammaTT  = TMath::Cos( (TOPLEP.Vect()).Angle( (TOPLEP+TOPHAD).BoostVector() ) );
+	MassTT   = (TOPLEP+TOPHAD).M();
+
 	//////////////////////////
+	int chLep = 0;
+	if(abs(genTop.wdau1id)==11  || abs(genTop.wdau1id)==13  || abs(genTop.wdau1id)==15 ||
+	   abs(genTbar.wdau1id)==11 || abs(genTbar.wdau1id)==13 || abs(genTbar.wdau1id)==15  )
+	  chLep = 1;
+	else if(abs(genTop.wdau2id) ==11  || abs(genTop.wdau2id)==13  || abs(genTop.wdau2id)==15 ||
+		abs(genTbar.wdau2id)==11  || abs(genTbar.wdau2id)==13 || abs(genTbar.wdau2id)==15  )
+	  chLep = 2;
+	else{}
+
 	if( abs(genTop.wdau1id)>6 && abs(genTbar.wdau1id)<6){
 	  TOPHAD.SetPxPyPzE( (atopBLV+atopW1LV+atopW2LV).Px(), (atopBLV+atopW1LV+atopW2LV).Py(), (atopBLV+atopW1LV+atopW2LV).Pz(), (atopBLV+atopW1LV+atopW2LV).E() );
 	  TOPHADW1.SetPxPyPzE( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
 	  TOPHADW2.SetPxPyPzE( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
 	  TOPHADB.SetPxPyPzE( atopBLV.Px(),  atopBLV.Py(),   atopBLV.Pz(),  atopBLV.E());
+	  TOPLEP.SetPxPyPzE( (topBLV+topW1LV+topW2LV).Px(), (topBLV+topW1LV+topW2LV).Py(), (topBLV+topW1LV+topW2LV).Pz(), (topBLV+topW1LV+topW2LV).E() );
+	  TOPLEPW1.SetPxPyPzE( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
+	  TOPLEPW2.SetPxPyPzE( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
+	  TOPLEPB.SetPxPyPzE( topBLV.Px(),  topBLV.Py(),   topBLV.Pz(),  topBLV.E());
 	}
 	else{
 	  TOPHAD.SetPxPyPzE( (topBLV+topW1LV+topW2LV).Px(), (topBLV+topW1LV+topW2LV).Py(), (topBLV+topW1LV+topW2LV).Pz(), (topBLV+topW1LV+topW2LV).E() );
 	  TOPHADW1.SetPxPyPzE( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
 	  TOPHADW2.SetPxPyPzE( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
 	  TOPHADB.SetPxPyPzE( topBLV.Px(),  topBLV.Py(),   topBLV.Pz(),  topBLV.E());
+	  TOPLEP.SetPxPyPzE( (atopBLV+atopW1LV+atopW2LV).Px(), (atopBLV+atopW1LV+atopW2LV).Py(), (atopBLV+atopW1LV+atopW2LV).Pz(), (atopBLV+atopW1LV+atopW2LV).E() );
+	  TOPLEPW1.SetPxPyPzE( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
+	  TOPLEPW2.SetPxPyPzE( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
+	  TOPLEPB.SetPxPyPzE( atopBLV.Px(),  atopBLV.Py(),   atopBLV.Pz(),  atopBLV.E());
 	}
 
 	//TOPHAD.Boost(-boostToTopHadCMS);
 	TOPHADW1.Boost(-boostToTopHadCMS);
 	TOPHADW2.Boost(-boostToTopHadCMS);
-	TOPHADB.Boost(-boostToTopHadCMS);
+	TOPHADB.Boost( -boostToTopHadCMS);
+
+	TVector3 decayTPlane = (TOPHADB.Vect()).Cross( (TOPHADW1).Vect()  ).Unit();
 
 	TVector3 boostToWHadCMS((TOPHADW1+TOPHADW2).Px()/(TOPHADW1+TOPHADW2).E(), (TOPHADW1+TOPHADW2).Py()/(TOPHADW1+TOPHADW2).E(), (TOPHADW1+TOPHADW2).Pz()/(TOPHADW1+TOPHADW2).E());
 	TOPHADW1.Boost(-boostToWHadCMS);
@@ -1558,9 +1627,31 @@ int main(int argc, const char* argv[])
 	//cout << "W1: " << TOPHADW1.E() << " W1: " << TOPHADW2.E() << endl;
 
 	BetaW     = TMath::Cos((TOPHADB.Vect()).Angle( boostToTopHadCMS  ));
-	DeltaW    = 0.0;
+	DeltaW    = TMath::Cos( decayTPlane.Angle( boostToTopHadCMS )  );
 	GammaW    = TMath::Cos( (TOPHADW1.Vect()).Angle(boostToWHadCMS) );
 
+
+	///////////////////////////
+
+	TOPLEPW1.Boost(-boostToTopLepCMS);
+	TOPLEPW2.Boost(-boostToTopLepCMS);
+	TOPLEPB.Boost( -boostToTopLepCMS);
+
+	TVector3 boostToWLepCMS((TOPLEPW1+TOPLEPW2).Px()/(TOPLEPW1+TOPLEPW2).E(), (TOPLEPW1+TOPLEPW2).Py()/(TOPLEPW1+TOPLEPW2).E(), (TOPLEPW1+TOPLEPW2).Pz()/(TOPLEPW1+TOPLEPW2).E());
+	TOPLEPW1.Boost(-boostToWLepCMS);
+	TOPLEPW2.Boost(-boostToWLepCMS);
+
+	//cout << TOPLEPB.P() << endl;
+	//cout << "W1: " << TOPLEPW1.E() << " W1: " << TOPLEPW2.E() << endl;
+
+	BetaWLep     = TMath::Cos( (TOPLEPB.Vect()).Angle( boostToTopLepCMS  ));
+	DeltaWLep    = 0.0;
+	if( chLep==1)
+	  GammaWLep    = TMath::Cos( (TOPLEPW1.Vect()).Angle(boostToWLepCMS) );
+	else if( chLep==2)
+	  GammaWLep    = TMath::Cos( (TOPLEPW2.Vect()).Angle(boostToWLepCMS) );
+	else
+	  GammaWLep = -99;
 	///////
 
 

@@ -8,7 +8,7 @@
      &     Coupl_Alpha_QED, Coupl_Alpha_QCD
       integer :: last_switch, amp_switch, amp_switch_rescue,
      &     use_coli_cache, check_Ward_tree, check_Ward_loop,
-     &     out_symmetry
+     &     out_symmetry, leading_colour
 
       real*8 ,  dimension(0:3,5):: P
       real*8  ccP(20)
@@ -45,6 +45,7 @@ c      Mass_H  = 120d0
       check_Ward_tree = 0
       check_Ward_loop = 0
       out_symmetry = 1
+      leading_colour = 0
 
 c      do i = 1, 20
 c      print *, "=> " , ccP(i)
@@ -61,7 +62,8 @@ c      print *, "P(i,j) ", P(i,j)
      & Mass_W, Width_W, Mass_Z, Width_Z, Mass_H, Width_H,
      & Coupl_Alpha_QED, Coupl_Alpha_QCD,
      & last_switch, amp_switch, amp_switch_rescue,
-     & use_coli_cache, check_Ward_tree, check_Ward_loop, out_symmetry)
+     & use_coli_cache, check_Ward_tree, check_Ward_loop, out_symmetry,
+     & leading_colour)
 c      print *, "Param init"
       call set_permutation_ppHtt_ttxHgg_1([4, 5, 3, 2, 1])
 c      print *, "set_permut"

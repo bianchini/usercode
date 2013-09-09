@@ -314,13 +314,13 @@ int main(int argc, const char* argv[])
 
   RooRealVar csvRecoLight("csvReco","csv", -0.1, 1.1);
   RooDataSet datasetBtagLight("datasetBtagLight","dataset", RooArgSet(csvRecoLight), Import( *treeJetsLight ) );
-  RooKeysPdf pdfCsvLight("pdfCsvLight","", csvRecoLight, datasetBtagLight);
-  w->import( pdfCsvLight );
+  //RooKeysPdf pdfCsvLight("pdfCsvLight","", csvRecoLight, datasetBtagLight);
+  //w->import( pdfCsvLight );
 
   RooRealVar csvRecoHeavy("csvReco","csv", -0.1, 1.1);
   RooDataSet datasetBtagHeavy("datasetBtagHeavy","dataset", RooArgSet(csvRecoHeavy), Import( *treeJetsHeavy ) );
-  RooKeysPdf pdfCsvHeavy("pdfCsvHeavy","", csvRecoHeavy, datasetBtagHeavy);
-  w->import( pdfCsvHeavy );
+  //RooKeysPdf pdfCsvHeavy("pdfCsvHeavy","", csvRecoHeavy, datasetBtagHeavy);
+  //w->import( pdfCsvHeavy );
 
 
 
@@ -334,8 +334,15 @@ int main(int argc, const char* argv[])
   RooRealVar GammaW   ("GammaW","GammaW",-1,1);  
   RooRealVar DeltaW   ("DeltaW","DeltaW",-1,1);  
 
+  RooRealVar PxT      ("PxT","PxT",-600,600);  
+  RooRealVar PyT      ("PyT","PyT",-600,600);  
+  RooRealVar PzT      ("PzT","PzT",-600,600);
+  RooRealVar PxH      ("PxH","PxH",-600,600);  
+  RooRealVar PyH      ("PyH","PyH",-600,600);  
+  RooRealVar PzH      ("PzH","PzH",-600,600);  
 
   RooDataSet dataset("dataset","dataset", RooArgSet(v1,v2, PtTTH, PhiTTH,PtHStar,DphiHStar,BetaW,GammaW,DeltaW), Import( *tree ) );
+  RooDataSet datasetCMS("datasetCMS","dataset", RooArgSet(PxH,PyH,PzH,PxT,PyT,PzT), Import( *tree ) );
 
   // v1)
   ///////////////////////////////////////////////////////////////////////////////
@@ -491,6 +498,41 @@ int main(int argc, const char* argv[])
   ///////////////////////////////////////////////////////////////////////////////
 
 
+  // v9)
+  ///////////////////////////////////////////////////////////////////////////////
+  /*
+  RooNDKeysPdf pdfCMS("pdfCMS","pdfCMS", RooArgList(PxT,PyT,PzT,PxH,PyH,PzH), datasetCMS);
+
+  PxT.setVal( 20. );
+  PyT.setVal( -20. );
+  PzT.setVal( 20. );
+  PxH.setVal( -20. );
+  PyH.setVal( 20. );
+  PzH.setVal( -20. );
+  
+  cout << "Comb PDF: " <<  pdfCMS.getVal( RooArgSet(*(&PxT),*(&PyT),*(&PzT),*(&PxH),*(&PyH),*(&PzH)) ) << endl;
+
+  PxT.setVal( 20. );
+  PyT.setVal( -20. );
+  PzT.setVal( 20. );
+  PxH.setVal( -20. );
+  PyH.setVal( 200. );
+  PzH.setVal( -20. );
+  
+  cout << "Comb PDF: " <<  pdfCMS.getVal( RooArgSet(*(&PxT),*(&PyT),*(&PzT),*(&PxH),*(&PyH),*(&PzH)) ) << endl;
+
+  PxT.setVal( 20. );
+  PyT.setVal( -20. );
+  PzT.setVal( 20. );
+  PxH.setVal( -20. );
+  PyH.setVal( 500. );
+  PzH.setVal( -20. );
+  
+  cout << "Comb PDF: " <<  pdfCMS.getVal( RooArgSet(*(&PxT),*(&PyT),*(&PzT),*(&PxH),*(&PyH),*(&PzH)) ) << endl;
+
+  //w->import(pdf2DStar);
+  */
+  ///////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -510,12 +552,12 @@ int main(int argc, const char* argv[])
   TCanvas *c1CsvLight = new TCanvas("c1CsvLight","canvas",10,30,650,600);
   RooPlot* plotCsvLight = csvRecoLight.frame(Bins(20),Title("cvs light"));
   datasetBtagLight.plotOn(plotCsvLight);
-  pdfCsvLight.plotOn(plotCsvLight);
+  //pdfCsvLight.plotOn(plotCsvLight);
 
   TCanvas *c1CsvHeavy = new TCanvas("c1CsvHeavy","canvas",10,30,650,600);
   RooPlot* plotCsvHeavy = csvRecoHeavy.frame(Bins(20),Title("cvs heavy"));
   datasetBtagHeavy.plotOn(plotCsvHeavy);
-  pdfCsvHeavy.plotOn(plotCsvHeavy);
+  //pdfCsvHeavy.plotOn(plotCsvHeavy);
 
   TCanvas *c1V1 = new TCanvas("c1V1","canvas",10,30,650,600);
   RooPlot* plotV1 = v1.frame(Bins(20),Title("v1"));
@@ -554,7 +596,7 @@ int main(int argc, const char* argv[])
 
 
   
-  fout = new TFile("ControlPlots.root","UPDATE");
+  fout = new TFile("./root/ControlPlots.root","UPDATE");
   fout->cd();
 
   c1CsvLight->cd();

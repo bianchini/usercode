@@ -22,7 +22,7 @@ process.fwliteInput = cms.PSet(
 
     lumi          = cms.double(12.1),
     verbose       = cms.bool(False),
-    eventsToDebug = cms.int32(200),
+    eventsToDebug = cms.int32(-1),
 
     lumisToProcess      = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange()),
     

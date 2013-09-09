@@ -253,9 +253,9 @@ int main(int argc, const char* argv[])
     return 0;
   }
   meIntegrator->setWeightNorm( MEIntegratorNew::None ); // divide weights by xsec
-  meIntegrator->setNormFormulas( TString(functions[0].c_str()),  
-				 TString(functions[1].c_str()),  
-				 TString(functions[2].c_str())  );
+  //meIntegrator->setNormFormulas( TString(functions[0].c_str()),  
+  //			 TString(functions[1].c_str()),  
+  //			 TString(functions[2].c_str())  );
 
   ///////////////////////////
 
@@ -825,7 +825,7 @@ int main(int argc, const char* argv[])
 	if(printP4) cout << "Setup versors..." << endl;
 	meIntegrator->initVersors(234567);
 	if(printP4) cout << "Smear by TF (?)" << endl;
-	if( !(meIntegrator->smearByTF(30.)) ) continue;
+	if( !(meIntegrator->smearByTF(30., 1)) ) continue;
 	if(printP4) cout << "Setup TFs..." << endl;
 	meIntegrator->initTF();
 	if(printP4) cout << "Build integrand..." << endl;	

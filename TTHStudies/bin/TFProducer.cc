@@ -725,6 +725,32 @@ int main(int argc, const char* argv[])
   w->import(  param0PhiWidthBin2);
   w->import(  param1PhiWidthBin2);
 
+  ///////////////////////////////////////////////////////////////////////////////////////////
+
+  float sumEtBins[11] = {500,750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000};
+  TH1F* hWidthsPxResol = new TH1F("hWidthsPxResol", "", 10, 500, 3000);
+  for(unsigned int it = 0; it<10 ; it++){
+    TH1F* hPx = new TH1F("hPx","",100,-200,200);
+    treeEvent->Draw("(recoilPx-recoilRecoPx)>>hPx",Form("(recoilPx>-998 && sumEt>=%f && sumEt<%f)", sumEtBins[it],  sumEtBins[it+1])); // check here!
+    TF1* pxResol = new TF1("pxResol","gaus", -100,100);
+    if(hPx->Integral()<10) continue;
+    cout << "Fit " << sumEtBins[it] << "," << sumEtBins[it+1] << endl;
+    hPx->Fit(pxResol);
+    hWidthsPxResol->SetBinContent(it+1, pxResol->GetParameter(2));
+    hWidthsPxResol->SetBinError  (it+1, pxResol->GetParError(2));
+    delete hPx; delete pxResol;
+  }
+  TF1* hWidthsPxResolModel = new TF1("hWidthsPxResolModel", "x*sqrt([0]*[0]/x + [1]*[1]/x/x)", 500, 3000);
+  cout << "Fit model" << endl;
+  hWidthsPxResol->Fit( hWidthsPxResolModel );
+  cout << "Fited model" << endl;
+  RooRealVar param0PxWidthModel("param0PxWidthModel","", hWidthsPxResolModel->GetParameter(0) );
+  RooRealVar param1PxWidthModel("param1PxWidthModel","", hWidthsPxResolModel->GetParameter(1) );
+  w->import( param0PxWidthModel );
+  w->import( param1PxWidthModel );
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+
   /*
   for(int b = 1; b <= h2Et_0->GetNbinsX(); b++){
     int counter = 0.;
@@ -1135,6 +1161,7 @@ int main(int argc, const char* argv[])
   fout = new TFile("ControlPlots.root","RECREATE");
   fout->cd();
 
+  hWidthsPxResol->Write("",TObject::kOverwrite);
   h2Et_0->Write("",TObject::kOverwrite);
   h2Et_1->Write("",TObject::kOverwrite);
   h2Et_2->Write("",TObject::kOverwrite);
