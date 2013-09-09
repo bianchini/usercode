@@ -1,9 +1,16 @@
 ///////////////////////////////////////////////////
+//  Author:  L. Bianchini (ETHZ)
+//
 //  Class that integrates over the tth phase-space
-//  compile with: > scram b  -j 6 USER_CXXFLAGS="-lopenloops\ -lbar\ -lcoli\ -lopenloops_ppHtt_1tL\ -lpphttxcallme2born\ -lppttxbbxcallme2born"
+//  
+//  generate fortran binaries with:
+//  > gfortran -shared -fPIC -o libpphttxcallme2born.so pphttxcallme2born.f -O2 -L../../../../lib/slc5_amd64_gcc462/  -lopenloops_ppHtt_1tL -lopenloops -lcoli 
 //
+//  compile with: 
+//  > scram b  -j 6 USER_CXXFLAGS="-lopenloops\ -lbar\ -lcoli\ -lpphttxcallme2born\ -lppttxbbxcallme2born"
+//  
 //
-//
+///////////////////////////////////////////////////
 
 
 #ifndef MEINTEGRATORNEW_H
