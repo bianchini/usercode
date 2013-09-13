@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Types  as CfgTypes
 import FWCore.ParameterSet.Config as cms
 
-VType     = "_VType2"
+VType     = "_VType3"
 
 xsecTT_SL = 103.0
 xsecTT_FL = 24.8

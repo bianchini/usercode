@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Types  as CfgTypes
 import FWCore.ParameterSet.Config as cms
 
-VType     = "_VType2"
+VType     = "_VType1"
 
 xsecTT_SL = 103.0
 xsecTT_FL = 24.8
@@ -236,13 +236,13 @@ process.fwliteInput = cms.PSet(
     switchoffOL   = cms.untracked.int32(0), ###### CHECK HERE
     speedup       = cms.untracked.int32(0), ###### CHECK HERE
 
-    doType0       = cms.untracked.int32(1),  #SL(4,2)  W-tag
-    doType1       = cms.untracked.int32(1),  #SL(4,2)  no W-tag
-    doType2       = cms.untracked.int32(1),  #SL(4,1): two flags, W-tag OR no W-tag
-    doType3       = cms.untracked.int32(1),  #SL(4,3) 
+    doType0       = cms.untracked.int32(0),  #SL(4,2)  W-tag
+    doType1       = cms.untracked.int32(0),  #SL(4,2)  no W-tag
+    doType2       = cms.untracked.int32(0),  #SL(4,1): two flags, W-tag OR no W-tag
+    doType3       = cms.untracked.int32(0),  #SL(4,3) 
     doType4       = cms.untracked.int32(0),  #SL(3,2)
-    doType6       = cms.untracked.int32(0),  #DL(4,X)
-    doType7       = cms.untracked.int32(0),  #DL(3M+1L,X)
+    doType6       = cms.untracked.int32(1),  #DL(4,X)
+    doType7       = cms.untracked.int32(1),  #DL(3M+1L,X)
 
     useME         = cms.int32(1),
     useJac        = cms.int32(1),
