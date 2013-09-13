@@ -2,8 +2,8 @@
 
 ls -ltr
 
-./hadd.sh  SL_$1_$2_TTJetsSemiLept
-#./hadd.sh  SL_$1_$2_TTJetsFullLept
+#./hadd.sh  SL_$1_$2_TTJetsSemiLept
+./hadd.sh  SL_$1_$2_TTJetsFullLept
 ./hadd.sh  SL_$1_$2_TTH125
 ./hadd.sh  SL_$1_$2_TTZ
 ./hadd.sh  SL_$1_$2_DYJets10to50
@@ -32,3 +32,22 @@ rm  MEAnalysis_SL_$1_$2_ZZ.root MEAnalysis_SL_$1_$2_WW.root MEAnalysis_SL_$1_$2_
 
 hadd -f  MEAnalysis_SL_$1_$2_TTV.root MEAnalysis_SL_$1_$2_TTZ.root MEAnalysis_SL_$1_$2_TTW.root
 rm MEAnalysis_SL_$1_$2_TTZ.root MEAnalysis_SL_$1_$2_TTW.root
+
+
+# syst
+hadd -f MEAnalysis_SL_$1_csvDown_v5_TTH125.root MEAnalysis_SL_$1_csvDown_v5_TTH125_p*.root
+rm MEAnalysis_SL_$1_csvDown_v5_TTH125_p*.root
+hadd -f MEAnalysis_SL_$1_csvUp_v5_TTH125.root MEAnalysis_SL_$1_csvUp_v5_TTH125_p*.root
+rm MEAnalysis_SL_$1_csvUp_v5_TTH125_p*.root
+hadd -f MEAnalysis_SL_$1_JECDown_v5_TTH125.root MEAnalysis_SL_$1_JECDown_v5_TTH125_p*.root
+rm MEAnalysis_SL_$1_JECDown_v5_TTH125_p*.root
+hadd -f MEAnalysis_SL_$1_JECUp_v5_TTH125.root MEAnalysis_SL_$1_JECUp_v5_TTH125_p*.root
+rm MEAnalysis_SL_$1_JECUp_v5_TTH125_p*.root
+hadd -f MEAnalysis_SL_$1_csvDown_v5_TTJetsFullLept.root MEAnalysis_SL_$1_csvDown_v5_TTJetsFullLept_p*.root
+rm MEAnalysis_SL_$1_csvDown_v5_TTJetsFullLept_p*.root
+hadd -f MEAnalysis_SL_$1_csvUp_v5_TTJetsFullLept.root MEAnalysis_SL_$1_csvUp_v5_TTJetsFullLept_p*.root
+rm MEAnalysis_SL_$1_csvUp_v5_TTJetsFullLept_p*.root
+hadd -f MEAnalysis_SL_$1_JECDown_v5_TTJetsFullLept.root MEAnalysis_SL_$1_JECDown_v5_TTJetsFullLept_p*.root
+rm MEAnalysis_SL_$1_JECDown_v5_TTJetsFullLept_p*.root
+hadd -f MEAnalysis_SL_$1_JECUp_v5_TTJetsFullLept.root MEAnalysis_SL_$1_JECUp_v5_TTJetsFullLept_p*.root
+rm MEAnalysis_SL_$1_JECUp_v5_TTJetsFullLept_p*.root
