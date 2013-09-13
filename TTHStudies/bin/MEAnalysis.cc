@@ -163,6 +163,29 @@ typedef struct
 } genParticleInfo;
 
 
+void commitVariables( TLorentzVector b1_, TLorentzVector b2_, float csv1_, float csv2_,
+		      float& dR,   float& dPhi, float& dEta, float& Mjj, 
+		      float& Pt,   float& Eta,
+		      float& pt1,  float& pt2,  float& eta1, float& eta2,
+		      float& csv1, float& csv2){
+  
+  dR   = deltaR(b1_,b2_);
+  dPhi = TMath::ACos( TMath::Cos(b1_.Phi()-b2_.Phi()) ); 
+  dEta = TMath::Abs(b1_.Eta() - b2_.Eta());
+  Mjj  = (b1_+b2_).M();
+  Pt   = (b1_+b2_).Pt();
+  Eta  = (b1_+b2_).Eta();
+  pt1  = b1_.Pt();
+  pt2  = b2_.Pt();
+  eta1 = b1_.Eta();
+  eta2 = b2_.Eta();
+  csv1 = csv1_;
+  csv2 = csv2_;
+
+  return;
+
+}
+
 
 
 
@@ -186,6 +209,8 @@ int main(int argc, const char* argv[])
   std::string pathToFile   ( in.getParameter<std::string>  ("pathToFile" ) );
   std::string ordering     ( in.getParameter<std::string>  ("ordering" ) );
   std::string pathToTF     ( in.getParameter<std::string>  ("pathToTF"   ) );
+  std::string pathToCP     ( in.getParameter<std::string>  ("pathToCP"   ) );
+
   bool verbose             ( in.getParameter<bool>  ("verbose") );
   double lumi              ( in.getParameter<double>("lumi") );
 
@@ -207,6 +232,9 @@ int main(int argc, const char* argv[])
   int   doType4    ( in.getUntrackedParameter<int>    ("doType4", 0));
   int   doType6    ( in.getUntrackedParameter<int>    ("doType6", 0));
   int   doType7    ( in.getUntrackedParameter<int>    ("doType7", 0));
+
+  int doubleGaussianB  ( in.getUntrackedParameter<int> ("doubleGaussianB", 0));
+  int useBtag          ( in.getUntrackedParameter<int> ("useBtag", 0));
 
 
   int   useME      ( in.getParameter<int>    ("useME")      );
@@ -242,6 +270,18 @@ int main(int argc, const char* argv[])
   TRandom3*   ran   = new TRandom3();
   ran->SetSeed(4321);
 
+  TFile* fCP = TFile::Open(pathToCP.c_str(),"READ");
+  map<string,TH1F*> btagger; 
+  if( useBtag && fCP!=0 ){
+    btagger["b_Bin0"] = fCP->Get("csv_b_Bin0__csvReco")!=0 ? (TH1F*)fCP->Get("csv_b_Bin0__csvReco") : 0;
+    btagger["b_Bin1"] = fCP->Get("csv_b_Bin1__csvReco")!=0 ? (TH1F*)fCP->Get("csv_b_Bin1__csvReco") : 0;
+    btagger["l_Bin0"] = fCP->Get("csv_l_Bin0__csvReco")!=0 ? (TH1F*)fCP->Get("csv_l_Bin0__csvReco") : 0;
+    btagger["l_Bin1"] = fCP->Get("csv_l_Bin1__csvReco")!=0 ? (TH1F*)fCP->Get("csv_l_Bin1__csvReco") : 0;
+  }
+  else if( useBtag && fCP!=0 ){
+    cout << "Cound not find " << pathToCP << ": exit" << endl;
+    return 0;
+  }
 
   const int nMassPoints  = masses.size();
   double mH[nMassPoints];
@@ -351,7 +391,15 @@ int main(int argc, const char* argv[])
   float csvH_[4];
   float probAtSgn_;
   float probAtSgn_alt_;
+
+  float probAtSgn_ttbb_;
+  float probAtSgn_alt_ttbb_;
+  float probAtSgn_alt_ttjj_;
+
   float weight_;
+
+  float dR_,dPhi_,dEta_,Mjj_,Pt_,Eta_,pt1_,pt2_,eta1_,eta2_,csv1_,csv2_;
+
 
   tree->Branch("counter",  &counter_, "counter/I");
   tree->Branch("matchesH", &matchesH_, "matchesH/I");
@@ -383,11 +431,25 @@ int main(int argc, const char* argv[])
   tree->Branch("flag_type4",  &flag_type4_, "flag_type4/I");
   tree->Branch("flag_type6",  &flag_type6_, "flag_type6/I");
 
-
+  tree->Branch("dR",       &dR_,    "dR/F");
+  tree->Branch("dPhi",     &dPhi_,  "dPhi/F");
+  tree->Branch("dEta",     &dEta_,  "dEta/F");
+  tree->Branch("Mjj",      &Mjj_,   "Mjj/F");
+  tree->Branch("Pt",       &Pt_,    "Pt/F");
+  tree->Branch("Eta",      &Eta_,   "Eta/F");
+  tree->Branch("pt1",      &pt1_,   "pt1/F");
+  tree->Branch("pt2",      &pt2_,   "pt2/F");
+  tree->Branch("eta1",     &eta1_,  "eta1/F");
+  tree->Branch("eta2",     &eta2_,  "eta2/F");
+  tree->Branch("csv1",     &csv1_,  "csv1/F");
+  tree->Branch("csv2",     &csv2_,  "csv2/F");
 
   tree->Branch(Form("p_%d_all_s",int(met)),   &probAtSgn_,     Form("p_%d_all_s/F",int(met)) );
   tree->Branch(Form("p_%d_all_b",int(met)),   &probAtSgn_alt_, Form("p_%d_all_b/F",int(met)) );
 
+  tree->Branch(Form("p_%d_all_s_ttbb",int(met)),   &probAtSgn_ttbb_,     Form("p_%d_all_s_ttbb/F",int(met)) );
+  tree->Branch(Form("p_%d_all_b_ttbb",int(met)),   &probAtSgn_alt_ttbb_, Form("p_%d_all_b_ttbb/F",int(met)) );
+  tree->Branch(Form("p_%d_all_b_ttjj",int(met)),   &probAtSgn_alt_ttjj_, Form("p_%d_all_b_ttjj/F",int(met)) );
 
   ///////////////////////////////////////////////////////
 
@@ -418,6 +480,8 @@ int main(int argc, const char* argv[])
   meIntegrator->setUseMET(useMET);
   meIntegrator->setUseTF (useTF);
   meIntegrator->setUsePDF(usePDF);
+
+  meIntegrator->setUseRefinedTF(doubleGaussianB);
 
   meIntegrator->initTFparameters(1.0,1.0,1.0,1.0, 1.0);
 
@@ -885,8 +949,13 @@ int main(int argc, const char* argv[])
 
       if( !(properEventSL || properEventDL) || !atLeastFourJets ) continue;
 
-      probAtSgn_     = 0;
-      probAtSgn_alt_ = 0;      
+      probAtSgn_          = 0.;
+      probAtSgn_alt_      = 0.;
+      probAtSgn_ttbb_     = 0.;
+      probAtSgn_alt_ttbb_ = 0.;
+      probAtSgn_alt_ttjj_ = 0.;
+
+
       matchesH_   = -99;
       matchesW_   = -99;
       matchesT_   = -99;
@@ -918,6 +987,8 @@ int main(int argc, const char* argv[])
       nCTop_      = -99;
 
       time_       = -99;
+
+      dR_=-99;dPhi_=-99;dEta_=-99;Mjj_=-99;Pt_=-99;Eta_=-99;pt1_=-99;pt2_=-99;eta1_=-99;eta2_=-99;csv1_=-99;csv2_=-99;
 
       /////////////////////////////////////////////////////
 
@@ -1016,7 +1087,10 @@ int main(int argc, const char* argv[])
 	else if( !btag_L && wL1!=999 && wL2!=999) wL3 = k; 
 	else{}
       }
+
+
       vector<TLorentzVector> jets;
+      std::map< unsigned int, unsigned int> pos_to_index;
 
 
       if(properEventSL && numJets30BtagM==4 && numJets30UntagM>=2 && (doType0 || doType1 || doType3)){
@@ -1153,6 +1227,14 @@ int main(int argc, const char* argv[])
 	  jets.push_back( myJetsFilt[b3]   );
 	  jets.push_back( myJetsFilt[b4]   );
 	  
+	  pos_to_index.clear();
+	  pos_to_index[2] = b1;
+	  pos_to_index[3] = w1;
+	  pos_to_index[4] = w2;
+	  pos_to_index[5] = b2;
+	  pos_to_index[6] = b3;
+	  pos_to_index[7] = b4;
+
 	  meIntegrator->setJets(&jets);
 
 	  if( WMass>MwL && WMass<MwH ){
@@ -1185,6 +1267,15 @@ int main(int argc, const char* argv[])
 	      jets.push_back( myJetsFilt[b2]   );
 	      jets.push_back( myJetsFilt[b3]   );
 	      jets.push_back( myJetsFilt[b4]   );
+
+	      pos_to_index.clear();
+	      pos_to_index[2] = b1;
+	      pos_to_index[3] = w2;
+	      pos_to_index[4] = w1;
+	      pos_to_index[5] = b2;
+	      pos_to_index[6] = b3;
+	      pos_to_index[7] = b4;
+
 	      meIntegrator->setJets(&jets);	
 	    }
 	    cout << "Doing iteration " << iter 
@@ -1290,11 +1381,140 @@ int main(int argc, const char* argv[])
 				    
 		
 		    if( TMath::IsNaN(p) ) p = 0.;
+
+
+		    if( useBtag ){
+		      
+		      int bLep_pos    = (permutations_SL2wj[pos])/100000;
+		      int index_bLep  =  mapFilt[pos_to_index[bLep_pos]].index;
+		      float csv_bLep_nominal  =  index_bLep>=0 ? hJet_csv_nominal[index_bLep]  : aJet_csv_nominal[-index_bLep-1];
+		      float csv_bLep_upBC     =  index_bLep>=0 ? hJet_csv_upBC   [index_bLep]  : aJet_csv_upBC   [-index_bLep-1];
+		      float csv_bLep_downBC   =  index_bLep>=0 ? hJet_csv_downBC [index_bLep]  : aJet_csv_downBC [-index_bLep-1];
+		      float csv_bLep_upL      =  index_bLep>=0 ? hJet_csv_upL    [index_bLep]  : aJet_csv_upL    [-index_bLep-1];
+		      float csv_bLep_downL    =  index_bLep>=0 ? hJet_csv_downL  [index_bLep]  : aJet_csv_downL  [-index_bLep-1];
+		      float csv_bLep = csv_bLep_nominal;
+		      if( doCSVup )   csv_bLep = TMath::Max(csv_bLep_upBC,   csv_bLep_upL);
+		      if( doCSVdown ) csv_bLep = TMath::Min(csv_bLep_downBC, csv_bLep_downL);
+
+		      int bHad_pos    = (permutations_SL2wj[pos])%1000/100;
+		      int index_bHad  =  mapFilt[pos_to_index[bHad_pos]].index;
+		      //float csv_bHad  =  index_bHad>=0 ? hJet_csv_nominal[index_bHad]  : aJet_csv_nominal[-index_bHad-1];
+		      float csv_bHad_nominal  =  index_bHad>=0 ? hJet_csv_nominal[index_bHad]  : aJet_csv_nominal[-index_bHad-1];
+		      float csv_bHad_upBC     =  index_bHad>=0 ? hJet_csv_upBC   [index_bHad]  : aJet_csv_upBC   [-index_bHad-1];
+		      float csv_bHad_downBC   =  index_bHad>=0 ? hJet_csv_downBC [index_bHad]  : aJet_csv_downBC [-index_bHad-1];
+		      float csv_bHad_upL      =  index_bHad>=0 ? hJet_csv_upL    [index_bHad]  : aJet_csv_upL    [-index_bHad-1];
+		      float csv_bHad_downL    =  index_bHad>=0 ? hJet_csv_downL  [index_bHad]  : aJet_csv_downL  [-index_bHad-1];
+		      float csv_bHad = csv_bHad_nominal;
+		      if( doCSVup )   csv_bHad = TMath::Max(csv_bHad_upBC,   csv_bHad_upL);
+		      if( doCSVdown ) csv_bHad = TMath::Min(csv_bHad_downBC, csv_bHad_downL);
+
+		      int b1_pos    =   (permutations_SL2wj[pos])%100/10;
+		      int index_b1  =  mapFilt[pos_to_index[b1_pos]].index;
+		      //float csv_b1  =  index_b1>=0 ? hJet_csv_nominal[index_b1]  : aJet_csv_nominal[-index_b1-1];
+		      float csv_b1_nominal  =  index_b1>=0 ? hJet_csv_nominal[index_b1]  : aJet_csv_nominal[-index_b1-1];
+		      float csv_b1_upBC     =  index_b1>=0 ? hJet_csv_upBC   [index_b1]  : aJet_csv_upBC   [-index_b1-1];
+		      float csv_b1_downBC   =  index_b1>=0 ? hJet_csv_downBC [index_b1]  : aJet_csv_downBC [-index_b1-1];
+		      float csv_b1_upL      =  index_b1>=0 ? hJet_csv_upL    [index_b1]  : aJet_csv_upL    [-index_b1-1];
+		      float csv_b1_downL    =  index_b1>=0 ? hJet_csv_downL  [index_b1]  : aJet_csv_downL  [-index_b1-1];
+		      float csv_b1 = csv_b1_nominal;
+		      if( doCSVup )   csv_b1 = TMath::Max(csv_b1_upBC,   csv_b1_upL);
+		      if( doCSVdown ) csv_b1 = TMath::Min(csv_b1_downBC, csv_b1_downL);
+
+		      int b2_pos    = (permutations_SL2wj[pos])%10;
+		      int index_b2  =  mapFilt[pos_to_index[b2_pos]].index;
+		      //float csv_b2  =  index_b2>=0 ? hJet_csv_nominal[index_b2]  : aJet_csv_nominal[-index_b2-1];
+		      float csv_b2_nominal  =  index_b2>=0 ? hJet_csv_nominal[index_b2]  : aJet_csv_nominal[-index_b2-1];
+		      float csv_b2_upBC     =  index_b2>=0 ? hJet_csv_upBC   [index_b2]  : aJet_csv_upBC   [-index_b2-1];
+		      float csv_b2_downBC   =  index_b2>=0 ? hJet_csv_downBC [index_b2]  : aJet_csv_downBC [-index_b2-1];
+		      float csv_b2_upL      =  index_b2>=0 ? hJet_csv_upL    [index_b2]  : aJet_csv_upL    [-index_b2-1];
+		      float csv_b2_downL    =  index_b2>=0 ? hJet_csv_downL  [index_b2]  : aJet_csv_downL  [-index_b2-1];
+		      float csv_b2 = csv_b2_nominal;
+		      if( doCSVup )   csv_b2 = TMath::Max(csv_b2_upBC,   csv_b2_upL);
+		      if( doCSVdown ) csv_b2 = TMath::Min(csv_b2_downBC, csv_b2_downL);
+
+		      
+		      string bin_bLep = TMath::Abs( (meIntegrator->jetAt(2)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
+		      double p_b_bLep =  btagger["b_"+bin_bLep]!=0 ?  btagger["b_"+bin_bLep]->GetBinContent( btagger["b_"+bin_bLep]->FindBin( csv_bLep ) ) : 1.;
+		      
+		      string bin_bHad = TMath::Abs( (meIntegrator->jetAt(5)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
+		      double p_b_bHad =  btagger["b_"+bin_bHad]!=0 ?  btagger["b_"+bin_bHad]->GetBinContent( btagger["b_"+bin_bHad]->FindBin( csv_bHad ) ) : 1.;
+
+		      string bin_b1   = TMath::Abs( (meIntegrator->jetAt(6)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
+		      double p_b_b1   =  btagger["b_"+bin_b1]!=0 ?  btagger["b_"+bin_b1]->GetBinContent( btagger["b_"+bin_b1]->FindBin( csv_b1 ) ) : 1.;
+		      double p_j_b1   =  btagger["l_"+bin_b1]!=0 ?  btagger["l_"+bin_b1]->GetBinContent( btagger["l_"+bin_b1]->FindBin( csv_b1 ) ) : 1.;
+
+		      string bin_b2   = TMath::Abs( (meIntegrator->jetAt(7)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
+		      double p_b_b2   =  btagger["b_"+bin_b2]!=0 ?  btagger["b_"+bin_b2]->GetBinContent( btagger["b_"+bin_b2]->FindBin( csv_b2 ) ) : 1.;
+		      double p_j_b2   =  btagger["l_"+bin_b2]!=0 ?  btagger["l_"+bin_b2]->GetBinContent( btagger["l_"+bin_b2]->FindBin( csv_b2 ) ) : 1.;
+		      
+		      //cout << "bLep_pos " << bLep_pos << " -- correspond to " << index_bLep << " with csv="<< csv_bLep << ": prob under b hyp: " << p_b_bLep << endl;
+		      //cout << "bHad_pos " << bHad_pos << " -- correspond to " << index_bHad << " with csv="<< csv_bHad << ": prob under b hyp: " << p_b_bHad <<  endl;
+		      //cout << "b1_pos " << b1_pos << " -- correspond to " << index_b1 << " with csv="<< csv_b1         << ": prob under b hyp: " << p_b_b1 << ", under j hyp: " << p_j_b1 <<  endl;
+		      //cout << "b2_pos " << b2_pos << " -- correspond to " << index_b2 << " with csv="<< csv_b2         << ": prob under b hyp: " << p_b_b2 << ", under j hyp: " << p_j_b2 << endl;		      
+
+		      if( mH[m]<met+0.5 && mH[m]>met-0.5){
+			if(hyp==0){
+			  probAtSgn_ttbb_         += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2);
+			}
+			else{
+			  probAtSgn_alt_ttbb_     += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2);
+			  probAtSgn_alt_ttjj_     += ( p * p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2);
+			}
+		      }
+		      
+		    }
+
+
+
+
+		    if( p>= maxP_s && hyp==0 ){
+
+		      int lastTwoDigits = (permutations_SL2wj[pos])%100;
+		      int higgs1 = lastTwoDigits/(10);
+		      int higgs2 = lastTwoDigits%10;
+
+		      //cout << "pos=" << permutations_SL2wj[pos] << " => " << higgs1 << "," << higgs2 << endl;
+
+		      if( higgs1 == 2)
+			higgs1 = b1;		      
+		      else if(  higgs1 == 5 )
+			higgs1 = b2;
+		      else if(  higgs1 == 6 )
+			higgs1 = b3;
+		      else if(  higgs1 == 7 )
+			higgs1 = b4;
+		      else{ cout << "What happened?" << endl; }
+		      if( higgs2 == 2)
+			higgs2 = b1;		      
+		      else if(  higgs2 == 5 )
+			higgs2 = b2;
+		      else if(  higgs2 == 6 )
+			higgs2 = b3;
+		      else if(  higgs2 == 7 )
+			higgs2 = b4;
+		      else{ cout << "What happened?" << endl; }
+			
+		      //cout << "Corrspond to " << higgs1 << "," << higgs2 << endl;
+
+		      int index1 =  mapFilt[higgs1].index;		      
+		      int index2 =  mapFilt[higgs2].index;		      
+
+		      float csv_1 = index1>=0 ? hJet_csv_nominal[index1]  : aJet_csv_nominal[-index1-1];
+		      float csv_2 = index2>=0 ? hJet_csv_nominal[index2]  : aJet_csv_nominal[-index2-1];
+
+		      //cout << "Deug 1: " << mapFilt[higgs1].pt << " --- " << (meIntegrator->jetAt(6)).Pt() << endl;
+		      //cout << "Deug 2: " << mapFilt[higgs2].pt << " --- " << (meIntegrator->jetAt(7)).Pt() << endl;
+
+		      commitVariables( meIntegrator->jetAt(6), meIntegrator->jetAt(7), csv_1, csv_2,
+				       dR_,dPhi_,dEta_,Mjj_,Pt_,Eta_,pt1_,pt2_,eta1_,eta2_,csv1_,csv2_);
+		    }
+
 		  
 		    if( mH[m]<met+0.5 && mH[m]>met-0.5){
 		      if(hyp==0)  probAtSgn_     += p;
 		      else        probAtSgn_alt_ += p;
 		    }
+
 		  }		  
 		}
 		
@@ -1360,6 +1580,14 @@ int main(int argc, const char* argv[])
 	  jets.push_back( myJetsFilt[b2]   );
 	  jets.push_back( myJetsFilt[b3]   );
 	  jets.push_back( myJetsFilt[b4]   );
+
+	  pos_to_index.clear();
+	  pos_to_index[2] = b1;
+	  pos_to_index[3] = ind1;
+	  pos_to_index[4] = ind2;
+	  pos_to_index[5] = b2;
+	  pos_to_index[6] = b3;
+	  pos_to_index[7] = b4;
 	
 	  meIntegrator->setJets(&jets);
 
@@ -1457,7 +1685,123 @@ int main(int argc, const char* argv[])
 		  }		   
 				    
 		  if( TMath::IsNaN(p) ) p = 0.;
+
+
+		  if( useBtag ){
+		      
+		    int bLep_pos    = (permutations_SL2wj[pos])/100000;
+		    int index_bLep  =  mapFilt[pos_to_index[bLep_pos]].index;
+		    float csv_bLep_nominal  =  index_bLep>=0 ? hJet_csv_nominal[index_bLep]  : aJet_csv_nominal[-index_bLep-1];
+		    float csv_bLep_upBC     =  index_bLep>=0 ? hJet_csv_upBC   [index_bLep]  : aJet_csv_upBC   [-index_bLep-1];
+		    float csv_bLep_downBC   =  index_bLep>=0 ? hJet_csv_downBC [index_bLep]  : aJet_csv_downBC [-index_bLep-1];
+		    float csv_bLep_upL      =  index_bLep>=0 ? hJet_csv_upL    [index_bLep]  : aJet_csv_upL    [-index_bLep-1];
+		    float csv_bLep_downL    =  index_bLep>=0 ? hJet_csv_downL  [index_bLep]  : aJet_csv_downL  [-index_bLep-1];
+		    float csv_bLep = csv_bLep_nominal;
+		    if( doCSVup )   csv_bLep = TMath::Max(csv_bLep_upBC,   csv_bLep_upL);
+		    if( doCSVdown ) csv_bLep = TMath::Min(csv_bLep_downBC, csv_bLep_downL);
+		    
+		    int bHad_pos    = (permutations_SL2wj[pos])%1000/100;
+		    int index_bHad  =  mapFilt[pos_to_index[bHad_pos]].index;
+		    //float csv_bHad  =  index_bHad>=0 ? hJet_csv_nominal[index_bHad]  : aJet_csv_nominal[-index_bHad-1];
+		    float csv_bHad_nominal  =  index_bHad>=0 ? hJet_csv_nominal[index_bHad]  : aJet_csv_nominal[-index_bHad-1];
+		    float csv_bHad_upBC     =  index_bHad>=0 ? hJet_csv_upBC   [index_bHad]  : aJet_csv_upBC   [-index_bHad-1];
+		    float csv_bHad_downBC   =  index_bHad>=0 ? hJet_csv_downBC [index_bHad]  : aJet_csv_downBC [-index_bHad-1];
+		    float csv_bHad_upL      =  index_bHad>=0 ? hJet_csv_upL    [index_bHad]  : aJet_csv_upL    [-index_bHad-1];
+		    float csv_bHad_downL    =  index_bHad>=0 ? hJet_csv_downL  [index_bHad]  : aJet_csv_downL  [-index_bHad-1];
+		    float csv_bHad = csv_bHad_nominal;
+		    if( doCSVup )   csv_bHad = TMath::Max(csv_bHad_upBC,   csv_bHad_upL);
+		    if( doCSVdown ) csv_bHad = TMath::Min(csv_bHad_downBC, csv_bHad_downL);
+		    
+		    int b1_pos    =   (permutations_SL2wj[pos])%100/10;
+		    int index_b1  =  mapFilt[pos_to_index[b1_pos]].index;
+		    //float csv_b1  =  index_b1>=0 ? hJet_csv_nominal[index_b1]  : aJet_csv_nominal[-index_b1-1];
+		    float csv_b1_nominal  =  index_b1>=0 ? hJet_csv_nominal[index_b1]  : aJet_csv_nominal[-index_b1-1];
+		    float csv_b1_upBC     =  index_b1>=0 ? hJet_csv_upBC   [index_b1]  : aJet_csv_upBC   [-index_b1-1];
+		    float csv_b1_downBC   =  index_b1>=0 ? hJet_csv_downBC [index_b1]  : aJet_csv_downBC [-index_b1-1];
+		    float csv_b1_upL      =  index_b1>=0 ? hJet_csv_upL    [index_b1]  : aJet_csv_upL    [-index_b1-1];
+		    float csv_b1_downL    =  index_b1>=0 ? hJet_csv_downL  [index_b1]  : aJet_csv_downL  [-index_b1-1];
+		    float csv_b1 = csv_b1_nominal;
+		    if( doCSVup )   csv_b1 = TMath::Max(csv_b1_upBC,   csv_b1_upL);
+		    if( doCSVdown ) csv_b1 = TMath::Min(csv_b1_downBC, csv_b1_downL);
+		    
+		    int b2_pos    = (permutations_SL2wj[pos])%10;
+		    int index_b2  =  mapFilt[pos_to_index[b2_pos]].index;
+		    //float csv_b2  =  index_b2>=0 ? hJet_csv_nominal[index_b2]  : aJet_csv_nominal[-index_b2-1];
+		    float csv_b2_nominal  =  index_b2>=0 ? hJet_csv_nominal[index_b2]  : aJet_csv_nominal[-index_b2-1];
+		    float csv_b2_upBC     =  index_b2>=0 ? hJet_csv_upBC   [index_b2]  : aJet_csv_upBC   [-index_b2-1];
+		    float csv_b2_downBC   =  index_b2>=0 ? hJet_csv_downBC [index_b2]  : aJet_csv_downBC [-index_b2-1];
+		    float csv_b2_upL      =  index_b2>=0 ? hJet_csv_upL    [index_b2]  : aJet_csv_upL    [-index_b2-1];
+		    float csv_b2_downL    =  index_b2>=0 ? hJet_csv_downL  [index_b2]  : aJet_csv_downL  [-index_b2-1];
+		    float csv_b2 = csv_b2_nominal;
+		    if( doCSVup )   csv_b2 = TMath::Max(csv_b2_upBC,   csv_b2_upL);
+		    if( doCSVdown ) csv_b2 = TMath::Min(csv_b2_downBC, csv_b2_downL);
+	    
+
+		    string bin_bLep = TMath::Abs( (meIntegrator->jetAt(2)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
+		    double p_b_bLep =  btagger["b_"+bin_bLep]!=0 ?  btagger["b_"+bin_bLep]->GetBinContent( btagger["b_"+bin_bLep]->FindBin( csv_bLep ) ) : 1.;		    
+		    
+		    string bin_bHad = TMath::Abs( (meIntegrator->jetAt(5)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
+		    double p_b_bHad =  btagger["b_"+bin_bHad]!=0 ?  btagger["b_"+bin_bHad]->GetBinContent( btagger["b_"+bin_bHad]->FindBin( csv_bHad ) ) : 1.;
+		    
+		    string bin_b1   = TMath::Abs( (meIntegrator->jetAt(6)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
+		    double p_b_b1   =  btagger["b_"+bin_b1]!=0 ?  btagger["b_"+bin_b1]->GetBinContent( btagger["b_"+bin_b1]->FindBin( csv_b1 ) ) : 1.;
+		    double p_j_b1   =  btagger["l_"+bin_b1]!=0 ?  btagger["l_"+bin_b1]->GetBinContent( btagger["l_"+bin_b1]->FindBin( csv_b1 ) ) : 1.;
+		    
+		    string bin_b2   = TMath::Abs( (meIntegrator->jetAt(7)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
+		    double p_b_b2   =  btagger["b_"+bin_b2]!=0 ?  btagger["b_"+bin_b2]->GetBinContent( btagger["b_"+bin_b2]->FindBin( csv_b2 ) ) : 1.;
+		    double p_j_b2   =  btagger["l_"+bin_b2]!=0 ?  btagger["l_"+bin_b2]->GetBinContent( btagger["l_"+bin_b2]->FindBin( csv_b2 ) ) : 1.;
+		    
+		    //cout << "bLep_pos " << bLep_pos << " -- correspond to " << index_bLep << " with csv="<< csv_bLep << ": prob under b hyp: " << p_b_bLep << endl;
+		    //cout << "bHad_pos " << bHad_pos << " -- correspond to " << index_bHad << " with csv="<< csv_bHad << ": prob under b hyp: " << p_b_bHad <<  endl;
+		    //cout << "b1_pos " << b1_pos << " -- correspond to " << index_b1 << " with csv="<< csv_b1         << ": prob under b hyp: " << p_b_b1 << ", under j hyp: " << p_j_b1 <<  endl;
+		    //cout << "b2_pos " << b2_pos << " -- correspond to " << index_b2 << " with csv="<< csv_b2         << ": prob under b hyp: " << p_b_b2 << ", under j hyp: " << p_j_b2 << endl;		      
+
+		    if( mH[m]<met+0.5 && mH[m]>met-0.5){
+		      if(hyp==0){
+			probAtSgn_ttbb_         += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2);
+		      }
+		      else{
+			probAtSgn_alt_ttbb_     += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2);
+			probAtSgn_alt_ttjj_     += ( p * p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2);
+		      }
+		      }		    
+		  }
+
 		  
+		  if( p>= maxP_s && hyp==0 ){
+		    int lastTwoDigits = (permutations_SL2wj[pos])%100;
+		    int higgs1 = lastTwoDigits/(10);
+		    int higgs2 = lastTwoDigits%10;		    
+		    //cout << "pos=" << permutations_SL2wj[pos] << " => " << higgs1 << "," << higgs2 << endl;		    
+		    if( higgs1 == 2)
+		      higgs1 = b1;		      
+		    else if(  higgs1 == 5 )
+		      higgs1 = b2;
+		    else if(  higgs1 == 6 )
+		      higgs1 = b3;
+		    else if(  higgs1 == 7 )
+		      higgs1 = b4;
+		    else{ cout << "What happened?" << endl; }
+		    if( higgs2 == 2)
+		      higgs2 = b1;		      
+		    else if(  higgs2 == 5 )
+		      higgs2 = b2;
+		    else if(  higgs2 == 6 )
+		      higgs2 = b3;
+		    else if(  higgs2 == 7 )
+		      higgs2 = b4;
+		    else{ cout << "What happened?" << endl; }		    
+		    //cout << "Corrspond to " << higgs1 << "," << higgs2 << endl;		    
+		    int index1 =  mapFilt[higgs1].index;		      
+		    int index2 =  mapFilt[higgs2].index;		      		    
+		    float csv_1 = index1>=0 ? hJet_csv_nominal[index1]  : aJet_csv_nominal[-index1-1];
+		    float csv_2 = index2>=0 ? hJet_csv_nominal[index2]  : aJet_csv_nominal[-index2-1];		    
+		    //cout << "Deug 1: " << mapFilt[higgs1].pt << " --- " << (meIntegrator->jetAt(6)).Pt() << endl;
+		    //cout << "Deug 2: " << mapFilt[higgs2].pt << " --- " << (meIntegrator->jetAt(7)).Pt() << endl;		    
+		    commitVariables( meIntegrator->jetAt(6), meIntegrator->jetAt(7), csv_1, csv_2,
+				     dR_,dPhi_,dEta_,Mjj_,Pt_,Eta_,pt1_,pt2_,eta1_,eta2_,csv1_,csv2_);
+		  }
+
 		  if( mH[m]<met+0.5 && mH[m]>met-0.5){
 		    if(hyp==0)  probAtSgn_     += p;
 		    else        probAtSgn_alt_ += p;
@@ -1601,6 +1945,14 @@ int main(int argc, const char* argv[])
 	jets.push_back( myJetsFilt[b2]   );
 	jets.push_back( myJetsFilt[b3]   );
 	jets.push_back( myJetsFilt[b4]   );
+
+	pos_to_index.clear();
+	pos_to_index[2] = b1;
+	pos_to_index[3] = w1;
+	pos_to_index[4] = w1;
+	pos_to_index[5] = b2;
+	pos_to_index[6] = b3;
+	pos_to_index[7] = b4;
 	  
 	meIntegrator->setJets(&jets);
 
@@ -1696,6 +2048,122 @@ int main(int argc, const char* argv[])
 	    
 		if( TMath::IsNaN(p) ) p = 0.;
 		
+
+		if( useBtag ){
+		  
+		  int bLep_pos    = (permutations_SL1wj[pos])/100000;
+		  int index_bLep  =  mapFilt[pos_to_index[bLep_pos]].index;
+		  float csv_bLep_nominal  =  index_bLep>=0 ? hJet_csv_nominal[index_bLep]  : aJet_csv_nominal[-index_bLep-1];
+		  float csv_bLep_upBC     =  index_bLep>=0 ? hJet_csv_upBC   [index_bLep]  : aJet_csv_upBC   [-index_bLep-1];
+		  float csv_bLep_downBC   =  index_bLep>=0 ? hJet_csv_downBC [index_bLep]  : aJet_csv_downBC [-index_bLep-1];
+		  float csv_bLep_upL      =  index_bLep>=0 ? hJet_csv_upL    [index_bLep]  : aJet_csv_upL    [-index_bLep-1];
+		  float csv_bLep_downL    =  index_bLep>=0 ? hJet_csv_downL  [index_bLep]  : aJet_csv_downL  [-index_bLep-1];
+		  float csv_bLep = csv_bLep_nominal;
+		  if( doCSVup )   csv_bLep = TMath::Max(csv_bLep_upBC,   csv_bLep_upL);
+		  if( doCSVdown ) csv_bLep = TMath::Min(csv_bLep_downBC, csv_bLep_downL);
+		      
+		  int bHad_pos    = (permutations_SL1wj[pos])%1000/100;
+		  int index_bHad  =  mapFilt[pos_to_index[bHad_pos]].index;
+		  //float csv_bHad  =  index_bHad>=0 ? hJet_csv_nominal[index_bHad]  : aJet_csv_nominal[-index_bHad-1];
+		  float csv_bHad_nominal  =  index_bHad>=0 ? hJet_csv_nominal[index_bHad]  : aJet_csv_nominal[-index_bHad-1];
+		  float csv_bHad_upBC     =  index_bHad>=0 ? hJet_csv_upBC   [index_bHad]  : aJet_csv_upBC   [-index_bHad-1];
+		  float csv_bHad_downBC   =  index_bHad>=0 ? hJet_csv_downBC [index_bHad]  : aJet_csv_downBC [-index_bHad-1];
+		  float csv_bHad_upL      =  index_bHad>=0 ? hJet_csv_upL    [index_bHad]  : aJet_csv_upL    [-index_bHad-1];
+		  float csv_bHad_downL    =  index_bHad>=0 ? hJet_csv_downL  [index_bHad]  : aJet_csv_downL  [-index_bHad-1];
+		  float csv_bHad = csv_bHad_nominal;
+		  if( doCSVup )   csv_bHad = TMath::Max(csv_bHad_upBC,   csv_bHad_upL);
+		  if( doCSVdown ) csv_bHad = TMath::Min(csv_bHad_downBC, csv_bHad_downL);
+		  
+		  int b1_pos    =   (permutations_SL1wj[pos])%100/10;
+		  int index_b1  =  mapFilt[pos_to_index[b1_pos]].index;
+		  //float csv_b1  =  index_b1>=0 ? hJet_csv_nominal[index_b1]  : aJet_csv_nominal[-index_b1-1];
+		  float csv_b1_nominal  =  index_b1>=0 ? hJet_csv_nominal[index_b1]  : aJet_csv_nominal[-index_b1-1];
+		  float csv_b1_upBC     =  index_b1>=0 ? hJet_csv_upBC   [index_b1]  : aJet_csv_upBC   [-index_b1-1];
+		  float csv_b1_downBC   =  index_b1>=0 ? hJet_csv_downBC [index_b1]  : aJet_csv_downBC [-index_b1-1];
+		  float csv_b1_upL      =  index_b1>=0 ? hJet_csv_upL    [index_b1]  : aJet_csv_upL    [-index_b1-1];
+		  float csv_b1_downL    =  index_b1>=0 ? hJet_csv_downL  [index_b1]  : aJet_csv_downL  [-index_b1-1];
+		  float csv_b1 = csv_b1_nominal;
+		  if( doCSVup )   csv_b1 = TMath::Max(csv_b1_upBC,   csv_b1_upL);
+		  if( doCSVdown ) csv_b1 = TMath::Min(csv_b1_downBC, csv_b1_downL);
+		  
+		  int b2_pos    = (permutations_SL1wj[pos])%10;
+		  int index_b2  =  mapFilt[pos_to_index[b2_pos]].index;
+		  //float csv_b2  =  index_b2>=0 ? hJet_csv_nominal[index_b2]  : aJet_csv_nominal[-index_b2-1];
+		  float csv_b2_nominal  =  index_b2>=0 ? hJet_csv_nominal[index_b2]  : aJet_csv_nominal[-index_b2-1];
+		  float csv_b2_upBC     =  index_b2>=0 ? hJet_csv_upBC   [index_b2]  : aJet_csv_upBC   [-index_b2-1];
+		  float csv_b2_downBC   =  index_b2>=0 ? hJet_csv_downBC [index_b2]  : aJet_csv_downBC [-index_b2-1];
+		  float csv_b2_upL      =  index_b2>=0 ? hJet_csv_upL    [index_b2]  : aJet_csv_upL    [-index_b2-1];
+		  float csv_b2_downL    =  index_b2>=0 ? hJet_csv_downL  [index_b2]  : aJet_csv_downL  [-index_b2-1];
+		  float csv_b2 = csv_b2_nominal;
+		  if( doCSVup )   csv_b2 = TMath::Max(csv_b2_upBC,   csv_b2_upL);
+		  if( doCSVdown ) csv_b2 = TMath::Min(csv_b2_downBC, csv_b2_downL);
+		  		  
+		  
+		  string bin_bLep = TMath::Abs( (meIntegrator->jetAt(2)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
+		  double p_b_bLep =  btagger["b_"+bin_bLep]!=0 ?  btagger["b_"+bin_bLep]->GetBinContent( btagger["b_"+bin_bLep]->FindBin( csv_bLep ) ) : 1.;		  
+		  
+		  string bin_bHad = TMath::Abs( (meIntegrator->jetAt(5)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
+		  double p_b_bHad =  btagger["b_"+bin_bHad]!=0 ?  btagger["b_"+bin_bHad]->GetBinContent( btagger["b_"+bin_bHad]->FindBin( csv_bHad ) ) : 1.;
+		  
+		  string bin_b1   = TMath::Abs( (meIntegrator->jetAt(6)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
+		  double p_b_b1   =  btagger["b_"+bin_b1]!=0 ?  btagger["b_"+bin_b1]->GetBinContent( btagger["b_"+bin_b1]->FindBin( csv_b1 ) ) : 1.;
+		  double p_j_b1   =  btagger["l_"+bin_b1]!=0 ?  btagger["l_"+bin_b1]->GetBinContent( btagger["l_"+bin_b1]->FindBin( csv_b1 ) ) : 1.;
+		  
+		  string bin_b2   = TMath::Abs( (meIntegrator->jetAt(7)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
+		  double p_b_b2   =  btagger["b_"+bin_b2]!=0 ?  btagger["b_"+bin_b2]->GetBinContent( btagger["b_"+bin_b2]->FindBin( csv_b2 ) ) : 1.;
+		  double p_j_b2   =  btagger["l_"+bin_b2]!=0 ?  btagger["l_"+bin_b2]->GetBinContent( btagger["l_"+bin_b2]->FindBin( csv_b2 ) ) : 1.;
+		  
+		  //cout << "bLep_pos " << bLep_pos << " -- correspond to " << index_bLep << " with csv="<< csv_bLep << ": prob under b hyp: " << p_b_bLep << endl;
+		  //cout << "bHad_pos " << bHad_pos << " -- correspond to " << index_bHad << " with csv="<< csv_bHad << ": prob under b hyp: " << p_b_bHad <<  endl;
+		  //cout << "b1_pos " << b1_pos << " -- correspond to " << index_b1 << " with csv="<< csv_b1         << ": prob under b hyp: " << p_b_b1 << ", under j hyp: " << p_j_b1 <<  endl;
+		  //cout << "b2_pos " << b2_pos << " -- correspond to " << index_b2 << " with csv="<< csv_b2         << ": prob under b hyp: " << p_b_b2 << ", under j hyp: " << p_j_b2 << endl;		      
+		  
+		  if( mH[m]<met+0.5 && mH[m]>met-0.5){
+		    if(hyp==0){
+		      probAtSgn_ttbb_         += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2);
+		    }
+		    else{
+			  probAtSgn_alt_ttbb_     += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2);
+			  probAtSgn_alt_ttjj_     += ( p * p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2);
+		    }
+		  }
+		  
+		}
+
+		if( p>= maxP_s && hyp==0 ){
+		  int lastTwoDigits = (permutations_SL1wj[pos])%100;
+		  int higgs1 = lastTwoDigits/(10);
+		  int higgs2 = lastTwoDigits%10;		    
+		  //cout << "pos=" << permutations_SL2wj[pos] << " => " << higgs1 << "," << higgs2 << endl;		    
+		  if( higgs1 == 2)
+		    higgs1 = b1;		      
+		  else if(  higgs1 == 5 )
+		    higgs1 = b2;
+		  else if(  higgs1 == 6 )
+		    higgs1 = b3;
+		  else if(  higgs1 == 7 )
+		    higgs1 = b4;
+		  else{ cout << "What happened?" << endl; }
+		  if( higgs2 == 2)
+		    higgs2 = b1;		      
+		  else if(  higgs2 == 5 )
+		    higgs2 = b2;
+		  else if(  higgs2 == 6 )
+		    higgs2 = b3;
+		  else if(  higgs2 == 7 )
+		    higgs2 = b4;
+		  else{ cout << "What happened?" << endl; }		    
+		  //cout << "Corrspond to " << higgs1 << "," << higgs2 << endl;		    
+		  int index1 =  mapFilt[higgs1].index;		      
+		  int index2 =  mapFilt[higgs2].index;		      		    
+		  float csv_1 = index1>=0 ? hJet_csv_nominal[index1]  : aJet_csv_nominal[-index1-1];
+		  float csv_2 = index2>=0 ? hJet_csv_nominal[index2]  : aJet_csv_nominal[-index2-1];		    
+		  //cout << "Deug 1: " << mapFilt[higgs1].pt << " --- " << (meIntegrator->jetAt(6)).Pt() << endl;
+		  //cout << "Deug 2: " << mapFilt[higgs2].pt << " --- " << (meIntegrator->jetAt(7)).Pt() << endl;		    
+		  commitVariables( meIntegrator->jetAt(6), meIntegrator->jetAt(7), csv_1, csv_2,
+				   dR_,dPhi_,dEta_,Mjj_,Pt_,Eta_,pt1_,pt2_,eta1_,eta2_,csv1_,csv2_);
+		}
+
 		if( mH[m]<met+0.5 && mH[m]>met-0.5){
 		  if(hyp==0)  probAtSgn_     += p;
 		  else        probAtSgn_alt_ += p;
@@ -2601,6 +3069,41 @@ int main(int argc, const char* argv[])
 		}
 		
 		if( TMath::IsNaN(p) ) p = 0.;
+
+  
+		if( p>= maxP_s && hyp==0 ){
+		  int lastTwoDigits = (permutations_DL[pos])%100;
+		  int higgs1 = lastTwoDigits/(10);
+		  int higgs2 = lastTwoDigits%10;		    
+		  //cout << "pos=" << permutations_SL2wj[pos] << " => " << higgs1 << "," << higgs2 << endl;		    
+		  if( higgs1 == 2)
+		    higgs1 = b1;		      
+		  else if(  higgs1 == 5 )
+		    higgs1 = b2;
+		  else if(  higgs1 == 6 )
+		    higgs1 = b3;
+		  else if(  higgs1 == 7 )
+		    higgs1 = b4;
+		  else{ cout << "What happened?" << endl; }
+		  if( higgs2 == 2)
+		    higgs2 = b1;		      
+		  else if(  higgs2 == 5 )
+		    higgs2 = b2;
+		  else if(  higgs2 == 6 )
+		    higgs2 = b3;
+		  else if(  higgs2 == 7 )
+		    higgs2 = b4;
+		  else{ cout << "What happened?" << endl; }		    
+		  //cout << "Corrspond to " << higgs1 << "," << higgs2 << endl;		    
+		  int index1 =  mapFilt[higgs1].index;		      
+		  int index2 =  mapFilt[higgs2].index;		      		    
+		  float csv_1 = index1>=0 ? hJet_csv_nominal[index1]  : aJet_csv_nominal[-index1-1];
+		  float csv_2 = index2>=0 ? hJet_csv_nominal[index2]  : aJet_csv_nominal[-index2-1];		    
+		  //cout << "Deug 1: " << mapFilt[higgs1].pt << " --- " << (meIntegrator->jetAt(6)).Pt() << endl;
+		  //cout << "Deug 2: " << mapFilt[higgs2].pt << " --- " << (meIntegrator->jetAt(7)).Pt() << endl;		    
+		  commitVariables( meIntegrator->jetAt(6), meIntegrator->jetAt(7), csv_1, csv_2,
+				   dR_,dPhi_,dEta_,Mjj_,Pt_,Eta_,pt1_,pt2_,eta1_,eta2_,csv1_,csv2_);
+		}
 
 		if( mH[m]<met+0.5 && mH[m]>met-0.5){
 		  if(hyp==0)  probAtSgn_     += p;

@@ -14,27 +14,27 @@ import FWCore.ParameterSet.Config as cms
 doTest     = False
 doAnalysis = True
 
-doSL = False
-doDL = True
+doSL = True
+doDL = False
 
 type = "DUMMY"
 if doDL:
     type = "_VType1"
 if doSL:
-    type = "_VType3"
+    type = "_VType2"
 
 masses = cms.vdouble(125)
 
-#analysis = "nominal"
-#analysis = "csvUp"
-#analysis = "csvDown"
-#analysis = "JECUp"
-analysis = "JECDown"
+analysis = "nominal_v5"
+#analysis = "csvUp_v5"
+#analysis = "csvDown_v5"
+#analysis = "JECUp_v5"
+#analysis = "JECDown_v5"
 
 doCSVup    =  cms.untracked.int32(0)
 doCSVdown  =  cms.untracked.int32(0)
 doJECup    =  cms.untracked.int32(0)
-doJECdown  =  cms.untracked.int32(1)
+doJECdown  =  cms.untracked.int32(0)
 
 def submitMEAnalysis(script,
                      sample,
@@ -219,7 +219,7 @@ if doAnalysis:
          evs_per_job = 300
     for i in range(num_of_jobs):
         counter = counter + 1
-        submitMEAnalysis('SL'+type+'_'+analysis+'_'+sample+'_p'+str(counter), sample , 0, 1,1,1,1,1,  125,  masses,   i*evs_per_job+1, (i+1)*evs_per_job )
+        #submitMEAnalysis('SL'+type+'_'+analysis+'_'+sample+'_p'+str(counter), sample , 0, 1,1,1,1,1,  125,  masses,   i*evs_per_job+1, (i+1)*evs_per_job )
 
     # TTZ
     sample  = 'TTZ'
@@ -234,7 +234,9 @@ if doAnalysis:
          evs_per_job = 500
     for i in range(num_of_jobs):
         counter = counter + 1
-        #submitMEAnalysis('SL'+type+'_'+analysis+'_'+sample+'_p'+str(counter), sample , 0, 1,1,1,1,1,  125,  masses,  i*evs_per_job+1, (i+1)*evs_per_job )
+        if counter!=7:
+            continue
+        submitMEAnalysis('SL'+type+'_'+analysis+'_'+sample+'_p'+str(counter), sample , 0, 1,1,1,1,1,  125,  masses,  i*evs_per_job+1, (i+1)*evs_per_job )
 
    # TTW
     sample  = 'TTW'
@@ -248,8 +250,8 @@ if doAnalysis:
     counter = 0
     for i in range(150):
         counter = counter + 1
-        if doSL:
-            submitMEAnalysis('SL'+type+'_'+analysis+'_'+sample+'_p'+str(counter), sample , 0, 1,1,1,1,1,  125,  masses,  i*25000+1, (i+1)*25000 )
+        #if doSL:
+        #    submitMEAnalysis('SL'+type+'_'+analysis+'_'+sample+'_p'+str(counter), sample , 0, 1,1,1,1,1,  125,  masses,  i*25000+1, (i+1)*25000 )
             
 
     # TTJetsFullLept
