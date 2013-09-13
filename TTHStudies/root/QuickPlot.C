@@ -39,7 +39,7 @@ void plot_analysis(TString cat   ="SL_VType2_nominal",
 		   string header="type==0",
 		   TString title = "",
 		   TString fname= "type0",
-		   float fact = 1.5
+		   float fact = 1, float fact2 = 1
 		   ){
 
   gStyle->SetOptStat(0);
@@ -70,8 +70,9 @@ void plot_analysis(TString cat   ="SL_VType2_nominal",
   leg->SetTextSize(0.04); 
 
   //TTJetsSemiLept
-  TFile* fS = TFile::Open("MEAnalysis_"+cat+"_nominal_TTJetsSemiLept.root");
-  TFile* fB = TFile::Open("MEAnalysis_"+cat+"_JECUp_TTJetsSemiLept.root");
+  TFile* fS = TFile::Open("MEAnalysis_"+cat+"_VType0_nominal_TTJetsFullLept.root");
+  //TFile* fS = TFile::Open("MEAnalysis_"+cat+"_VType2_nominal_v5_TTJetsSemiLept.root");
+  TFile* fB = TFile::Open("MEAnalysis_"+cat+"_VType0_nominal_v5_TTJetsFullLept.root");
 
   TTree* tS = (TTree*)fS->Get("tree");
   TTree* tB = (TTree*)fB->Get("tree");
@@ -95,10 +96,17 @@ void plot_analysis(TString cat   ="SL_VType2_nominal",
   tS->Draw(Form("p_125_all_s/(p_125_all_s+p_125_all_b/100/%f)>>hS", fact), TCut(header.c_str()));
   tB->Draw(Form("p_125_all_s/(p_125_all_s+p_125_all_b/100/%f)>>hB", fact), TCut(header.c_str()));
 
+  //tS->Draw(Form("p_125_all_b_ttbb/((p_125_all_b_ttbb+%f*p_125_all_b_ttjj))>>hS", fact), TCut((header+" && nSimBs>2" ).c_str()));
+  //tB->Draw(Form("p_125_all_b_ttbb/((p_125_all_b_ttbb+%f*p_125_all_b_ttjj))>>hB", fact), TCut((header+" && nSimBs==2").c_str()));
+
+  //tS->Draw(Form("p_125_all_s_ttbb/(p_125_all_s_ttbb+%f*p_125_all_b_ttbb+%f*p_125_all_b_ttjj)>>hS", fact, fact2), TCut((header+" && nSimBs>=2" ).c_str()));
+  //tB->Draw(Form("p_125_all_s_ttbb/(p_125_all_s_ttbb+%f*p_125_all_b_ttbb+%f*p_125_all_b_ttjj)>>hB", fact, fact2), TCut((header+" && nSimBs>=2").c_str()));
+
+
   if(hS->GetMaximum()>=hB->GetMaximum()){
     //hS->Scale( 1./hS->Integral());
     //hB->Scale( 1./hB->Integral());
-    //hS->SetMaximum(0.5);
+    //hS->SetMaximum(0.8);
     hS->SetMinimum(0.);
     hS->Draw("HISTE");
     hB->Draw("HISTESAME");
@@ -106,7 +114,7 @@ void plot_analysis(TString cat   ="SL_VType2_nominal",
   else{
     //hS->Scale( 1./hS->Integral());
     //hB->Scale( 1./hB->Integral());
-    //hB->SetMaximum(0.5);
+    //hB->SetMaximum(0.8);
     hB->SetMinimum(0.);
     hB->Draw("HISTE");
     hS->Draw("HISTESAME");
@@ -244,10 +252,13 @@ void plot_syst(TString cat   = "SL_VType2",
 
 void plot_category(string cat = "SL_VType2_nominal", 
 		   string  cut = "type==0",
-		   float fact = 1.5,
+		   float fact1 = 0.02,
+		   float fact2 = 0.,
 		   float lumiScale = 3.2,
 		   string header = "",
-		   string fname  = ""
+		   string fname  = "",
+		   int newvar = 1,
+		   int nBins  = 6
 		   ){
 
   gStyle->SetOptStat(0);
@@ -277,7 +288,7 @@ void plot_category(string cat = "SL_VType2_nominal",
   leg->SetFillColor(10);
   leg->SetTextSize(0.04); 
 
-  TH1F* hS = new TH1F("hS","Simulation 8 TeV", 6,0,1);
+  TH1F* hS = new TH1F("hS","Simulation 8 TeV", nBins,0,1);
   hS->SetLineWidth(3);
   hS->SetLineStyle(kDashed);
   hS->SetLineColor(kRed);
@@ -303,25 +314,26 @@ void plot_category(string cat = "SL_VType2_nominal",
 //   }
 //   samples.push_back("TTH125");
 
+  string version = "_v5";
 
   vector<string> samples;
   if( cat.find("SL")!=string::npos ){
-    samples.push_back("nominal_SingleT");
-    samples.push_back("nominal_TTV");
-    samples.push_back("nominal_EWK");
-    samples.push_back("nominal_DiBoson");
-    samples.push_back("nominal_TTJetsSemiLept");
-    samples.push_back("nominal_TTJetsSemiLept");
-    samples.push_back("nominal_TTH125");
+    samples.push_back("nominal"+version+"_SingleT");
+    samples.push_back("nominal"+version+"_TTV");
+    //samples.push_back("nominal"+version+"_EWK");
+    //samples.push_back("nominal"+version+"_DiBoson");
+    samples.push_back("nominal"+version+"_TTJetsSemiLept");
+    samples.push_back("nominal"+version+"_TTJetsSemiLept");
+    samples.push_back("nominal"+version+"_TTH125");
   }
   if( cat.find("DL")!=string::npos ){
-    samples.push_back("nominal_SingleT");
-    samples.push_back("nominal_TTV");
-    samples.push_back("nominal_EWK");
-    samples.push_back("nominal_DiBoson");
-    samples.push_back("nominal_TTJetsFullLept");
-    samples.push_back("nominal_TTJetsFullLept");
-    samples.push_back("nominal_TTH125");
+    samples.push_back("nominal"+version+"_SingleT");
+    samples.push_back("nominal"+version+"_TTV");
+    //samples.push_back("nominal"+version+"_EWK");
+    //samples.push_back("nominal"+version+"_DiBoson");
+    samples.push_back("nominal"+version+"_TTJetsFullLept");
+    samples.push_back("nominal"+version+"_TTJetsFullLept");
+    samples.push_back("nominal"+version+"_TTH125");
   }
 
   int countTTJets  = 0;
@@ -350,8 +362,11 @@ void plot_category(string cat = "SL_VType2_nominal",
       tcut = tcut&&TCut("nSimBs<=2");
     }
 
-    TH1F* h = new TH1F(("h_"+samples[sample]).c_str(),"Simulation 8 TeV L=19.5 fb^{-1}; events; L_{S}/{L_{S}+L_{B}}", 6,0,1);
-    tree->Draw(Form("p_125_all_s/(p_125_all_s+p_125_all_b/100/%f)>>h_%s", fact, samples[sample].c_str()), "weight"*tcut);
+    TH1F* h = new TH1F(("h_"+samples[sample]).c_str(),"Simulation 8 TeV L=19.5 fb^{-1}; events; L_{S}/{L_{S}+L_{B}}", nBins,0,1);
+    if(newvar)
+      tree->Draw(Form("p_125_all_s_ttbb/(p_125_all_s_ttbb+%f*((1-%f)*p_125_all_b_ttbb+%f*p_125_all_b_ttjj))>>h_%s", fact1, fact2, fact2, samples[sample].c_str()), "weight"*tcut);
+    else
+      tree->Draw(Form("p_125_all_s/(p_125_all_s+%f*p_125_all_b)>>h_%s", fact1, samples[sample].c_str()), "weight"*tcut);
 
     //h->Scale(1./hcounter->GetBinContent(1) * lumiScale);
 
@@ -372,10 +387,10 @@ void plot_category(string cat = "SL_VType2_nominal",
 	h->SetFillColor( 17 );
       }
       else if(countTTJets==2){
-	h->SetLineColor( 19 );
+	h->SetLineColor( 18 );
 	//h->SetLineWidth( 0 );
 	leg->AddEntry(h, "t#bar{t}+jets LF", "F");
-	h->SetFillColor( 19 );
+	h->SetFillColor( 18 );
       }
     }
     if( samples[sample].find("SingleT") != string::npos ){
@@ -415,7 +430,7 @@ void plot_category(string cat = "SL_VType2_nominal",
 
   cout << "Signal = " << hS->Integral()/5. << endl;
 
-  c1->SaveAs(  (fname+".png").c_str() );
+  c1->SaveAs(  (fname+version+".png").c_str() );
 
 }
 
@@ -423,61 +438,77 @@ void plot_category(string cat = "SL_VType2_nominal",
 
 void plotAll(){
 
+
   plot_category( "SL", 
 		 "type==0",
-		 0.5,
+		 0.02, 0.50,
 		 19.5/12.1,
-		 "1l + 4b + 2j, W-tag",
-		 "Plot_SL_type0"
+		 "Cat1 (4b2j W-tag)",
+		 "Plot_SL_Cat1",
+		 1,
+		 8
 		 );
 
   plot_category( "SL", 
 		 "type==1",
-		 0.5,
+		 0.02, 0.70,
 		 19.5/12.1,
-		 "1l + 4b + 2j, !W-tag",
-		 "Plot_SL_type1"
+		 "Cat2 (4b2j !W-tag)",
+		 "Plot_SL_Cat2",
+		 1,
+		 8
 		 );
 
   plot_category( "SL", 
 		 "type==2 && flag_type2>0",
-		 0.5,
+		 0.02, 0.80,
 		 19.5/12.1,
-		 "1l + 4b + 1j, W-tag",
-		 "Plot_SL_type2_1"
+		 "Cat3 (4b1j W-tag)",
+		 "Plot_SL_Cat3",
+		 1,
+		 8
 		 );
 
   plot_category( "SL", 
 		 "type==2 && flag_type2<0",
-		 0.5,
+		 0.02, 0.70,
 		 19.5/12.1,
-		 "1l + 4b + 1j, !W-tag",
-		 "Plot_SL_type2_2"
+		 "Cat4 (4b1j !W-tag)",
+		 "Plot_SL_Cat4",
+		 1,
+		 8
 		 );
 
   plot_category( "SL", 
 		 "type==3",
-		 0.5,
+		 0.02, 0.50,
 		 19.5/12.1,
-		 "1l + 4b + 3j",
-		 "Plot_SL_type3"
+		 "Cat5 (4b3j)",
+		 "Plot_SL_Cat5",
+		 1,
+		 8
 		 );
 
+  
   plot_category( "DL", 
 		 "type==6",
-		 0.5,
+		 0.02, 0,
 		 19.5/12.1 * 2,
-		 "2l + 4b, tight",
-		 "Plot_SL_type6"
+		 "Cat6 (4b), tight",
+		 "Plot_DL_Cat6",
+		 0,
+		 6
 		 );
 
   plot_category( "DL", 
 		 "type==7",
-		 0.5,
+		 0.02, 0,
 		 19.5/12.1 * 2,
-		 "2l + 4b, loose",
-		 "Plot_SL_type7"
+		 "Cat7 (4b), loose",
+		 "Plot_DL_Cat7",
+		 0,
+		 6
 		 );
-
+  
 
 }
