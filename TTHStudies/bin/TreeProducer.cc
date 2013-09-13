@@ -174,6 +174,7 @@ int main(int argc, const char* argv[])
   float etaLight;
   float phiLight;
   float massRecoLight;
+  int flavor;
 
   float sumEt;
   float et;
@@ -231,6 +232,8 @@ int main(int argc, const char* argv[])
   genJetLightTree->Branch("eta",      &etaLight,    "eta/F");
   genJetLightTree->Branch("phi",      &phiLight,    "phi/F");
   genJetLightTree->Branch("massReco", &massRecoLight,   "massReco/F");
+  genJetLightTree->Branch("flavor",   &flavor,   "flavor/I");
+
 
   genEventTree->Branch("sumEt",    &sumEt,   "sumEt/F");
   genEventTree->Branch("et",       &et,    "et/F");
@@ -315,6 +318,9 @@ int main(int argc, const char* argv[])
     float aJetsgeneta[999];
     float hJetsgenphi[999];
     float aJetsgenphi[999];
+    float hJetscsvnominal[999];
+    float aJetscsvnominal[999];
+    
     JetByPt jet1, jet2, jet3, jet4, jet5, jet6, jet7, jet8, jet9, jet10;
     genParticleInfo genB, genBbar;
     genTopInfo genTop, genTbar;
@@ -343,6 +349,8 @@ int main(int argc, const char* argv[])
     currentTree->SetBranchAddress("hJet_genPhi",  hJetsgenphi);
     currentTree->SetBranchAddress("aJet_genPhi",  aJetsgenphi);
     currentTree->SetBranchAddress("PUweight", &PUweight);
+    currentTree->SetBranchAddress("hJet_csv_nominal", hJetscsvnominal);
+    currentTree->SetBranchAddress("aJet_csv_nominal", aJetscsvnominal);
 
     int printed = 0;
     Long64_t nentries = currentTree->GetEntries();
@@ -535,6 +543,7 @@ int main(int argc, const char* argv[])
       etaRecoLight=-99;
       phiRecoLight=-99;
       csvRecoLight=-99;
+      flavor=-99;
       ptLight=-99;
       etaLight=-99;
       phiLight=-99;
@@ -555,6 +564,7 @@ int main(int argc, const char* argv[])
       phi=-999;
       px=-999;
       py=-999;
+
       //////////////////////////////////////////////////
       // met
       //////////////////////////////////////////////////
@@ -678,35 +688,43 @@ int main(int argc, const char* argv[])
 
 
            
-      if(abs(genTop.wdau1id)==12 || abs(genTop.wdau1id)==14 || abs(genTop.wdau1id)==16){
+      if( (abs(genTop.wdau1id)==12 || abs(genTop.wdau1id)==14 || abs(genTop.wdau1id)==16) &&
+	  abs(genTbar.wdau1id)<6
+	  ){
 	et  = genTop.wdau1pt;
 	phi = genTop.wdau1phi;
 	px  = et*TMath::Cos( phi );
 	py  = et*TMath::Sin( phi );
       }
-      else if(abs(genTop.wdau2id)==12 || abs(genTop.wdau2id)==14 || abs(genTop.wdau2id)==16){
+      else if((abs(genTop.wdau2id)==12 || abs(genTop.wdau2id)==14 || abs(genTop.wdau2id)==16) &&
+	      abs(genTbar.wdau1id)<6
+	      ){
 	et  = genTop.wdau2pt;
 	phi = genTop.wdau2phi;
 	px  = et*TMath::Cos( phi );
 	py  = et*TMath::Sin( phi );
       }
-      else if(abs(genTbar.wdau1id)==12 || abs(genTbar.wdau1id)==14 || abs(genTbar.wdau1id)==16){
+      else if((abs(genTbar.wdau1id)==12 || abs(genTbar.wdau1id)==14 || abs(genTbar.wdau1id)==16) &&
+	      abs(genTop.wdau1id)<6
+	      ){
 	et  = genTbar.wdau1pt;
 	phi = genTbar.wdau1phi;
 	px  = et*TMath::Cos( phi );
 	py  = et*TMath::Sin( phi );
       }
-      else if(abs(genTbar.wdau2id)==12 || abs(genTbar.wdau2id)==14 || abs(genTbar.wdau2id)==16){
+      else if((abs(genTbar.wdau2id)==12 || abs(genTbar.wdau2id)==14 || abs(genTbar.wdau2id)==16) &&
+	      abs(genTop.wdau1id)<6  
+	      ){
 	et  = genTbar.wdau2pt;
 	phi = genTbar.wdau2phi;
 	px  = et*TMath::Cos( phi );
 	py  = et*TMath::Sin( phi );
       }
       else{
-	et  = -99;
-	phi = -99;
-	px  = -99;
-	py  = -99;
+	et  = -999;
+	phi = -999;
+	px  = -999;
+	py  = -999;
       }
       
 
@@ -751,7 +769,9 @@ int main(int argc, const char* argv[])
 	etaRecoHeavy   = myJetsFilt[indexB].Eta();
 	phiRecoHeavy   = myJetsFilt[indexB].Phi();
 	massRecoHeavy  = myJetsFilt[indexB].M();
-	csvRecoHeavy   = mapFilt[indexB].csv>0 ? mapFilt[indexB].csv : 0.0 ;
+
+	//csvRecoHeavy   = mapFilt[indexB].csv>0 ? mapFilt[indexB].csv : 0.0 ;
+	csvRecoHeavy   = mapFilt[indexB].index>0 ?  hJetscsvnominal[mapFilt[indexB].index]  : aJetscsvnominal[-mapFilt[indexB].index-1];
 	
 	float dPx = mapFilt[indexB].index>=0 ? 
 	  hJetsgenpt[mapFilt[indexB].index]*TMath::Cos(  hJetsgenphi[mapFilt[indexB].index] ) - myJetsFilt[indexB].Px():
@@ -788,7 +808,8 @@ int main(int argc, const char* argv[])
 	//ptRecoHeavy    = mapFilt[indexBbar].index>=0 ? hJetsgenpt[mapFilt[indexBbar].index] :  aJetsgenpt[-mapFilt[indexBbar].index-1] ;	 
 	ptRecoHeavy    = myJetsFilt[indexBbar].E();
 	massRecoHeavy  = myJetsFilt[indexBbar].M();
-	csvRecoHeavy   = mapFilt[indexBbar].csv>0 ? mapFilt[indexBbar].csv : 0.0 ;
+	//csvRecoHeavy   = mapFilt[indexBbar].csv>0 ? mapFilt[indexBbar].csv : 0.0 ;
+	csvRecoHeavy   = mapFilt[indexBbar].index>0 ?  hJetscsvnominal[mapFilt[indexBbar].index]  : aJetscsvnominal[-mapFilt[indexBbar].index-1];
 	etaRecoHeavy   = myJetsFilt[indexBbar].Eta();
 	phiRecoHeavy   = myJetsFilt[indexBbar].Phi();
 
@@ -830,7 +851,8 @@ int main(int argc, const char* argv[])
 	//ptRecoHeavy    = mapFilt[indexH1].index>=0 ? hJetsgenpt[mapFilt[indexH1].index] :  aJetsgenpt[-mapFilt[indexH1].index-1] ;	 
 	ptRecoHeavy    = myJetsFilt[indexH1].E();
 	massRecoHeavy  = myJetsFilt[indexH1].M();
-	csvRecoHeavy   = mapFilt[indexH1].csv>0 ? mapFilt[indexH1].csv : 0.0 ;
+	//csvRecoHeavy   = mapFilt[indexH1].csv>0 ? mapFilt[indexH1].csv : 0.0 ;
+	csvRecoHeavy   = mapFilt[indexH1].index>0 ?  hJetscsvnominal[mapFilt[indexH1].index]  : aJetscsvnominal[-mapFilt[indexH1].index-1];
 	etaRecoHeavy   = myJetsFilt[indexH1].Eta();
 	phiRecoHeavy   = myJetsFilt[indexH1].Phi();
 	
@@ -873,7 +895,8 @@ int main(int argc, const char* argv[])
 	//ptRecoHeavy    = mapFilt[indexH2].index>=0 ? hJetsgenpt[mapFilt[indexH2].index] :  aJetsgenpt[-mapFilt[indexH2].index-1] ;	 
 	ptRecoHeavy    = myJetsFilt[indexH2].E();
 	massRecoHeavy  = myJetsFilt[indexH2].M();
-	csvRecoHeavy   = mapFilt[indexH2].csv>0 ? mapFilt[indexH2].csv : 0.0 ;
+	//csvRecoHeavy   = mapFilt[indexH2].csv>0 ? mapFilt[indexH2].csv : 0.0 ;
+	csvRecoHeavy   = mapFilt[indexH2].index>0 ?  hJetscsvnominal[mapFilt[indexH2].index]  : aJetscsvnominal[-mapFilt[indexH2].index-1];
 	etaRecoHeavy   = myJetsFilt[indexH2].Eta();
 	phiRecoHeavy   = myJetsFilt[indexH2].Phi();
 
@@ -921,8 +944,9 @@ int main(int argc, const char* argv[])
 	etaRecoLight   = myJetsFilt[indexW1].Eta();
 	phiRecoLight   = myJetsFilt[indexW1].Phi();
 	massRecoLight  = myJetsFilt[indexW1].M();
-	csvRecoLight   = mapFilt[indexW1].csv>0 ? mapFilt[indexW1].csv : 0.0 ;
-	
+	//csvRecoLight   = mapFilt[indexW1].csv>0 ? mapFilt[indexW1].csv : 0.0 ;
+	csvRecoLight   = mapFilt[indexW1].index>0 ?  hJetscsvnominal[mapFilt[indexW1].index]  : aJetscsvnominal[-mapFilt[indexW1].index-1];
+	flavor =  mapFilt[indexW1].flavor;
 	
 	float dPx = mapFilt[indexW1].index>=0 ? 
 	  hJetsgenpt[mapFilt[indexW1].index]*TMath::Cos(  hJetsgenphi[mapFilt[indexW1].index] ) - myJetsFilt[indexW1].Px():
@@ -937,35 +961,38 @@ int main(int argc, const char* argv[])
 	  genPtLight  = aJetsgenpt[-mapFilt[indexW1].index-1];
 	else{}
 
-	  TVector3 shift(dPx ,dPy , 0.0);
-	  
-	  if(indexW1!=indexBbar && indexW1!=indexB && indexW1!=indexH1 &&  indexW1!=indexH2) {
-	    recoMEt  -= shift;
-	    impSumEt += (wCand1.E()-myJetsFilt[indexW1].E());
-	  }
-
-
-	}
-	else{
-	  ptRecoLight=-99;
-	  csvRecoLight=-99;
-	  massRecoLight=-99;
-	  etaRecoLight=-99;
-	  phiRecoLight=-99;
-	}
-	ptLight       = wCand1.E();
-	etaLight      = wCand1.Eta();
-	phiLight      = wCand1.Phi();
-	if(wCand1.E()>0) genJetLightTree->Fill();
+	TVector3 shift(dPx ,dPy , 0.0);
 	
-	genPtLight = -99;
-	if(indexW2!=999 && indexW2!=indexB && indexW2!=indexBbar && indexW2!=indexH1 && indexW2!=indexH2 && indexW2!=indexW1){
-	  //ptRecoLight    = mapFilt[indexW2].index>=0 ? hJetsgenpt[mapFilt[indexW2].index] :  aJetsgenpt[-mapFilt[indexW2].index-1] ;
-	  ptRecoLight    = myJetsFilt[indexW2].E();
-	  massRecoLight  = myJetsFilt[indexW2].M();
-	  etaRecoLight   = myJetsFilt[indexW2].Eta();
-	  phiRecoLight   = myJetsFilt[indexW2].Phi();
-	  csvRecoLight   =  mapFilt[indexW2].csv>0 ? mapFilt[indexW2].csv : 0.0 ;
+	if(indexW1!=indexBbar && indexW1!=indexB && indexW1!=indexH1 &&  indexW1!=indexH2) {
+	  recoMEt  -= shift;
+	  impSumEt += (wCand1.E()-myJetsFilt[indexW1].E());
+	}
+	
+	
+      }
+      else{
+	ptRecoLight=-99;
+	csvRecoLight=-99;
+	massRecoLight=-99;
+	etaRecoLight=-99;
+	phiRecoLight=-99;
+	flavor=-99;
+      }
+      ptLight       = wCand1.E();
+      etaLight      = wCand1.Eta();
+      phiLight      = wCand1.Phi();
+      if(wCand1.E()>0) genJetLightTree->Fill();
+      
+      genPtLight = -99;
+      if(indexW2!=999 && indexW2!=indexB && indexW2!=indexBbar && indexW2!=indexH1 && indexW2!=indexH2 && indexW2!=indexW1){
+	//ptRecoLight    = mapFilt[indexW2].index>=0 ? hJetsgenpt[mapFilt[indexW2].index] :  aJetsgenpt[-mapFilt[indexW2].index-1] ;
+	ptRecoLight    = myJetsFilt[indexW2].E();
+	massRecoLight  = myJetsFilt[indexW2].M();
+	etaRecoLight   = myJetsFilt[indexW2].Eta();
+	phiRecoLight   = myJetsFilt[indexW2].Phi();
+	//csvRecoLight   =  mapFilt[indexW2].csv>0 ? mapFilt[indexW2].csv : 0.0 ;
+	csvRecoLight   = mapFilt[indexW2].index>0 ?  hJetscsvnominal[mapFilt[indexW2].index]  : aJetscsvnominal[-mapFilt[indexW2].index-1];
+	flavor =  mapFilt[indexW2].flavor;
 
 	  float dPx = mapFilt[indexW2].index>=0 ? 
 	    hJetsgenpt[mapFilt[indexW2].index]*TMath::Cos(  hJetsgenphi[mapFilt[indexW2].index] ) - myJetsFilt[indexW2].Px():
@@ -993,6 +1020,7 @@ int main(int argc, const char* argv[])
 	  massRecoLight=-99;
 	  etaRecoLight=-99;
 	  phiRecoLight=-99;
+	  flavor = -99;
 	}	
 	ptLight       = wCand2.E();
 	etaLight      = wCand2.Eta();
