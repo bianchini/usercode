@@ -1,16 +1,9 @@
 ///////////////////////////////////////////////////
-//  Author:  L. Bianchini (ETHZ)
-//
 //  Class that integrates over the tth phase-space
-//  
-//  generate fortran binaries with:
-//  > gfortran -shared -fPIC -o libpphttxcallme2born.so pphttxcallme2born.f -O2 -L../../../../lib/slc5_amd64_gcc462/  -lopenloops_ppHtt_1tL -lopenloops -lcoli 
+//  compile with: > scram b  -j 6 USER_CXXFLAGS="-lopenloops\ -lbar\ -lcoli\ -lopenloops_ppHtt_1tL\ -lpphttxcallme2born\ -lppttxbbxcallme2born"
 //
-//  compile with: 
-//  > scram b  -j 6 USER_CXXFLAGS="-lopenloops\ -lbar\ -lcoli\ -lpphttxcallme2born\ -lppttxbbxcallme2born"
-//  
 //
-///////////////////////////////////////////////////
+//
 
 
 #ifndef MEINTEGRATORNEW_H
@@ -164,6 +157,7 @@ class MEIntegratorNew {
   void   resetEvaluation();
 
   void   setConstrainToRecoil  (int);
+  void   setUseRefinedTF       (int);
 
   TH1*   getCachedPdf( string ) const;
   TH1*   getCachedTF ( string ) const;
@@ -263,7 +257,7 @@ class MEIntegratorNew {
   int top2Flag_;
   NormalizationType normalizeToXSec_;
   int hypo_;
-
+  int useRefinedTF_;
 
   int par_;
   int verbose_;
@@ -343,6 +337,7 @@ MEIntegratorNew::MEIntegratorNew( string fileName , int param , int verbose ) {
   initVersors(0);
 
   constrainToRecoil_ = 0;
+  useRefinedTF_      = 0;
 
   Mtop_   =  174.3;
   Mb_     =  4.8;
@@ -595,6 +590,8 @@ void MEIntegratorNew::adaptRange(TH1* f, float& xLow, float& xHigh, float quanti
 
 void MEIntegratorNew::createTFjet(string tfName, float eta, float pt, string flavor, float quantile, float margin){
 
+  cout << "MEIntegratorNew::createTFjet is deprecated..." << endl;
+  return;
   //cout << "Creating " << tfName << endl;
 
   float xLow  =    0.;
@@ -703,6 +700,8 @@ void MEIntegratorNew::createTFjet(string tfName, float eta, float pt, string fla
 
 void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quantile, float margin){
 
+  cout << "MEIntegratorNew::createTFmet is deprecated..." << endl;
+  return;
 
   float xLowEt  =    0.;
   float xHighEt = 1000.;
@@ -833,6 +832,9 @@ void MEIntegratorNew::createTFmet(string tfName, float phi, float pt, float quan
  
 void MEIntegratorNew::initTF(){
 
+  cout << "MEIntegratorNew::initTF is deprecated..." << endl;
+  return;
+
   createTFjet("Wjet1",  eW1Had_.Eta(), jets_[3].E(), "Light", 0.025, 0.30);
   createTFjet("Wjet2",  eW2Had_.Eta(), jets_[4].E(), "Light", 0.025, 0.30);
   createTFjet("bHad",   eBHad_.Eta(),  jets_[5].E(), "Heavy", 0.025, 0.30);
@@ -849,7 +851,9 @@ void MEIntegratorNew::initTF(){
 
 void MEIntegratorNew::createTFmetFromCovM(string tfName, float quantile)  {
 
-  
+  cout << "MEIntegratorNew::createTFmetFromCovM is deprecated..." << endl;
+  return;
+
   // DUMMY
   TH1F* htfMetPt_ = new TH1F(("htf"+tfName+"Pt").c_str(), "", 1 , 0,1);
   if( transferFunctions_.find("tf"+tfName+"Pt")!=transferFunctions_.end()){
@@ -1114,30 +1118,44 @@ pair<double, double> MEIntegratorNew::getJetEnergyCI(float eta, float Erec, stri
   if(  TMath::Abs( eta )<1.0 ) bin = "Bin0";
   else bin = "Bin1";
 
+  float Egen  = Erec;
+  float sigma = 0.;
+  double mean = 0.; 
+
   double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
   double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+  double param2resol = (jetParam_.find("param2resol"+flavor+bin))->second;
   double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
   double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
+  
+  //sigma = Egen*TMath::Sqrt( (param0resol*param0resol)/Egen + (param1resol*param1resol)/Egen/Egen );
+  //mean  = (Egen*param0resp + param1resp);
+  sigma = TMath::Sqrt( (param0resol*param0resol) + Egen*(param1resol*param1resol) + Egen*Egen*(param2resol*param2resol) ); 
+  mean  = (Egen*param0resp + param1resp);
 
-  float Egen  = Erec;
-  float sigma = Egen*TMath::Sqrt( (param0resol*param0resol)/Egen + (param1resol*param1resol)/Egen/Egen );
-  double mean  = (Egen*param0resp + param1resp);
- 
+
   float GevStep = (sigma/10.);
   while( (Erec-mean)*(Erec-mean)/sigma/sigma < chi2Cut && Egen>0 && Egen<8000.){
     Egen -= GevStep;
-    sigma = Egen*TMath::Sqrt( (param0resol*param0resol)/Egen + (param1resol*param1resol)/Egen/Egen );
+    sigma = TMath::Sqrt( (param0resol*param0resol) + Egen*(param1resol*param1resol) + Egen*Egen*(param2resol*param2resol) ); 
     mean  = (Egen*param0resp + param1resp);
+    //sigma = Egen*TMath::Sqrt( (param0resol*param0resol)/Egen + (param1resol*param1resol)/Egen/Egen );
+    //mean  = (Egen*param0resp + param1resp);
   }
   Elow = Egen;
 
   Egen  = Erec;
-  sigma = Egen*TMath::Sqrt( (param0resol*param0resol)/Egen + (param1resol*param1resol)/Egen/Egen );
+  sigma = TMath::Sqrt( (param0resol*param0resol) + Egen*(param1resol*param1resol) + Egen*Egen*(param2resol*param2resol) ); 
   mean  = (Egen*param0resp + param1resp);
+  //sigma = Egen*TMath::Sqrt( (param0resol*param0resol)/Egen + (param1resol*param1resol)/Egen/Egen );
+  //mean  = (Egen*param0resp + param1resp);
+
   while( (Erec-mean)*(Erec-mean)/sigma/sigma < chi2Cut && Egen>0 && Egen<8000.){
     Egen += GevStep;
-    sigma = Egen*TMath::Sqrt( (param0resol*param0resol)/Egen + (param1resol*param1resol)/Egen/Egen );
+    sigma = TMath::Sqrt( (param0resol*param0resol) + Egen*(param1resol*param1resol) + Egen*Egen*(param2resol*param2resol) ); 
     mean  = (Egen*param0resp + param1resp);
+    //sigma = Egen*TMath::Sqrt( (param0resol*param0resol)/Egen + (param1resol*param1resol)/Egen/Egen );
+    //mean  = (Egen*param0resp + param1resp);
   }
   Ehigh = Egen;
 
@@ -1270,15 +1288,45 @@ double MEIntegratorNew::jetEnergyTF(float eta, double Erec, double Egen, string 
   if(  TMath::Abs( eta )<1.0 ) bin = "Bin0";
   else bin = "Bin1";
   
-  double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
-  double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
-  double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
-  double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
+  if( useRefinedTF_==0 || flavor.find("Light")!=string::npos){
 
-  double sigma = Egen*TMath::Sqrt( (param0resol*param0resol)/Egen + (param1resol*param1resol)/Egen/Egen );
-  double mean  = (Egen*param0resp + param1resp);
+    double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
+    double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+    double param2resol = (jetParam_.find("param2resol"+flavor+bin))->second;
+    double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
+    double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
+    
+    double sigma = TMath::Sqrt( (param0resol*param0resol) + Egen*(param1resol*param1resol) + Egen*Egen*(param2resol*param2resol) ); 
+    double mean  = (Egen*param0resp + param1resp);
+    
+    return ( TMath::Gaus(Erec, mean, sigma, 1) );
+  }
+  else if( useRefinedTF_==1 && flavor.find("Heavy")!=string::npos ){
 
-  return ( TMath::Gaus(Erec, mean, sigma, 1) );
+    double param0resolG1 = (jetParam_.find("param0resolG1"+flavor+bin))->second;
+    double param1resolG1 = (jetParam_.find("param1resolG1"+flavor+bin))->second;
+    double param2resolG1 = (jetParam_.find("param2resolG1"+flavor+bin))->second;
+    double param0resolG2 = (jetParam_.find("param0resolG2"+flavor+bin))->second;
+    double param1resolG2 = (jetParam_.find("param1resolG2"+flavor+bin))->second;
+    double param2resolG2 = (jetParam_.find("param2resolG2"+flavor+bin))->second;
+    double param0respG1  = (jetParam_.find("param0respG1"+flavor+bin))->second;
+    double param1respG1  = (jetParam_.find("param1respG1"+flavor+bin))->second;
+    double param0respG2  = (jetParam_.find("param0respG2"+flavor+bin))->second;
+    double param1respG2  = (jetParam_.find("param1respG2"+flavor+bin))->second;
+
+    double sigma1 = TMath::Sqrt( param0resolG1*param0resolG1 + Egen*param1resolG1*param1resolG1 + Egen*Egen*param2resolG1*param2resolG1);
+    double mean1  = param0respG1*Egen + param1respG1;
+
+    double sigma2 = TMath::Sqrt( param0resolG2*param0resolG2 + Egen*param1resolG2*param1resolG2 + Egen*Egen*param2resolG2*param2resolG2);
+    double mean2  = param0respG2*Egen + param1respG2;
+
+    return (0.65*TMath::Gaus(Erec, mean1, sigma1, 1) + 0.35*TMath::Gaus(Erec, mean2, sigma2, 1));
+
+  }
+  else{}
+
+
+  return 1.0;
 }
 
 
@@ -1359,12 +1407,18 @@ bool MEIntegratorNew::smearByTF(float ptCut, int print){
 
     double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
     double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+    double param2resol = (jetParam_.find("param2resol"+flavor+bin))->second;
+
     double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
     double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
 
     /////////////// DEBUG ///////////////
+    //double p = ran_->Gaus( param0resp*jets_[j].E() + param1resp, 
+    //		   jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E())  );
     double p = ran_->Gaus( param0resp*jets_[j].E() + param1resp, 
-			   jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E())  );
+			   TMath::Sqrt( (param0resol*param0resol) + 
+					jets_[j].E()*(param1resol*param1resol) + 
+					jets_[j].E()*jets_[j].E()*(param2resol*param2resol) ) );
     /////////////////////////////////////
 
     p = TMath::Max(0.0,p);
@@ -1615,6 +1669,11 @@ void MEIntegratorNew::setPtPhiParam(int usePtPhiParam){
 void MEIntegratorNew::setConstrainToRecoil(int constrain){
   constrainToRecoil_ = constrain;
 }
+
+void MEIntegratorNew::setUseRefinedTF(int use){
+  useRefinedTF_ = use;
+}
+
 
 
 void MEIntegratorNew::switchOffOL(){
@@ -3391,10 +3450,13 @@ double MEIntegratorNew::probabilitySL1wj(const double* x, int sign) const{
 
     double param0resol = (jetParam_.find("param0resolLight"+bin))->second;
     double param1resol = (jetParam_.find("param1resolLight"+bin))->second;
+    double param2resol = (jetParam_.find("param2resolLight"+bin))->second;
     double param0resp  = (jetParam_.find("param0respLight" +bin))->second;
     double param1resp  = (jetParam_.find("param1respLight" +bin))->second;
 
-    double Width  = Eq2*TMath::Sqrt( param0resol*param0resol/Eq2 + param1resol*param1resol/Eq2/Eq2) * (Ptq2/Eq2);
+    //double Width  = Eq2*TMath::Sqrt( param0resol*param0resol/Eq2 + param1resol*param1resol/Eq2/Eq2) * (Ptq2/Eq2);
+    //double Mean   = (Eq2*param0resp + param1resp) * (Ptq2/Eq2) ;
+    double Width  = TMath::Sqrt( (param0resol*param0resol) + Eq2*(param1resol*param1resol) + Eq2*Eq2*(param2resol*param2resol) ) * (Ptq2/Eq2);
     double Mean   = (Eq2*param0resp + param1resp) * (Ptq2/Eq2) ;
 
     tf3 = 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 )  ;  
@@ -3640,10 +3702,14 @@ double MEIntegratorNew::probabilitySLNoBHad(const double* x, int sign) const{
 
     double param0resol = (jetParam_.find("param0resolHeavy"+bin))->second;
     double param1resol = (jetParam_.find("param1resolHeavy"+bin))->second;
+    double param2resol = (jetParam_.find("param2resolHeavy"+bin))->second;
     double param0resp  = (jetParam_.find("param0respHeavy" +bin))->second;
     double param1resp  = (jetParam_.find("param1respHeavy" +bin))->second;
 
-    double Width  = EbHad*TMath::Sqrt( param0resol*param0resol/EbHad + param1resol*param1resol/EbHad/EbHad) * (PtBHad/EbHad);
+    //double Width  = EbHad*TMath::Sqrt( param0resol*param0resol/EbHad + param1resol*param1resol/EbHad/EbHad) * (PtBHad/EbHad);
+    //double Mean   = (EbHad*param0resp + param1resp) * (PtBHad/EbHad) ;
+
+    double Width  = TMath::Sqrt( (param0resol*param0resol) + EbHad*(param1resol*param1resol) + EbHad*EbHad*(param2resol*param2resol) ) * (PtBHad/EbHad);
     double Mean   = (EbHad*param0resp + param1resp) * (PtBHad/EbHad) ;
 
     tf4 = 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 )  ;  
@@ -3889,10 +3955,13 @@ double MEIntegratorNew::probabilitySLNoBLep(const double* x, int sign) const{
 
     double param0resol = (jetParam_.find("param0resolHeavy"+bin))->second;
     double param1resol = (jetParam_.find("param1resolHeavy"+bin))->second;
+    double param2resol = (jetParam_.find("param2resolHeavy"+bin))->second;
     double param0resp  = (jetParam_.find("param0respHeavy" +bin))->second;
     double param1resp  = (jetParam_.find("param1respHeavy" +bin))->second;
 
-    double Width  = EbLep*TMath::Sqrt( param0resol*param0resol/EbLep + param1resol*param1resol/EbLep/EbLep) * (PtBLep/EbLep);
+    //double Width  = EbLep*TMath::Sqrt( param0resol*param0resol/EbLep + param1resol*param1resol/EbLep/EbLep) * (PtBLep/EbLep);
+    //double Mean   = (EbLep*param0resp + param1resp) * (PtBLep/EbLep) ;
+    double Width  = TMath::Sqrt( (param0resol*param0resol) + EbLep*(param1resol*param1resol) + EbLep*EbLep*(param2resol*param2resol) ) * (PtBLep/EbLep);
     double Mean   = (EbLep*param0resp + param1resp) * (PtBLep/EbLep) ;
 
     tf1 = 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 )  ;  
@@ -4138,10 +4207,13 @@ double MEIntegratorNew::probabilitySLNoHiggs(const double* x, int sign) const{
 
     double param0resol = (jetParam_.find("param0resolHeavy"+bin))->second;
     double param1resol = (jetParam_.find("param1resolHeavy"+bin))->second;
+    double param2resol = (jetParam_.find("param2resolHeavy"+bin))->second;
     double param0resp  = (jetParam_.find("param0respHeavy" +bin))->second;
     double param1resp  = (jetParam_.find("param1respHeavy" +bin))->second;
 
-    double Width  = Eh2*TMath::Sqrt( param0resol*param0resol/Eh2 + param1resol*param1resol/Eh2/Eh2) * (PtB2/Eh2);
+    //double Width  = Eh2*TMath::Sqrt( param0resol*param0resol/Eh2 + param1resol*param1resol/Eh2/Eh2) * (PtB2/Eh2);
+    //double Mean   = (Eh2*param0resp + param1resp) * (PtB2/Eh2) ;
+    double Width  = TMath::Sqrt( (param0resol*param0resol) + Eh2*(param1resol*param1resol) + Eh2*Eh2*(param2resol*param2resol) )  * (PtB2/Eh2);
     double Mean   = (Eh2*param0resp + param1resp) * (PtB2/Eh2) ;
 
     tf6 = 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 )  ;  
@@ -4631,12 +4703,15 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
 	
 	double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
 	double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+	double param2resol = (jetParam_.find("param2resol"+flavor+bin))->second;
 	double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
 	double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
 	
-	double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	//double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	//double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
+	double Width  = TMath::Sqrt( (param0resol*param0resol) + jets_[j].E()*(param1resol*param1resol) + jets_[j].E()*jets_[j].E()*(param2resol*param2resol) ) * TMath::Sin( jets_[j].Theta() );
 	double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
-	
+
 	AccPart *= (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
       }
 
@@ -4661,12 +4736,15 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
 	
 	double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
 	double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+	double param2resol = (jetParam_.find("param2resol"+flavor+bin))->second;
 	double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
 	double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
 	
-	double Width  =  jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	//double Width  =  jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	//double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;	
+	double Width  = TMath::Sqrt( (param0resol*param0resol) + jets_[j].E()*(param1resol*param1resol) + jets_[j].E()*jets_[j].E()*(param2resol*param2resol) ) * TMath::Sin( jets_[j].Theta() );
 	double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
-	
+
 	AccPart *= (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
       }
 
@@ -4693,12 +4771,15 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
 	
 	double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
 	double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+	double param2resol = (jetParam_.find("param2resol"+flavor+bin))->second;
 	double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
 	double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
 	
-	double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	//double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	//double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
+	double Width  = TMath::Sqrt( (param0resol*param0resol) + jets_[j].E()*(param1resol*param1resol) + jets_[j].E()*jets_[j].E()*(param2resol*param2resol) ) * TMath::Sin( jets_[j].Theta() );
 	double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
-	
+
 	if(j!=3 && j!=4)
 	  AccPart *= (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
 	else{
@@ -4739,10 +4820,13 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
 	
 	double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
 	double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+	double param2resol = (jetParam_.find("param2resol"+flavor+bin))->second;
 	double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
 	double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
 	
-	double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	//double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	//double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
+	double Width  = TMath::Sqrt( (param0resol*param0resol) + jets_[j].E()*(param1resol*param1resol) + jets_[j].E()*jets_[j].E()*(param2resol*param2resol) ) * TMath::Sin( jets_[j].Theta() );
 	double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
 
 	if(j!=5)	
@@ -4776,10 +4860,13 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
 	
 	double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
 	double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+	double param2resol = (jetParam_.find("param2resol"+flavor+bin))->second;
 	double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
 	double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
 	
-	double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	//double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	//double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
+	double Width  = TMath::Sqrt( (param0resol*param0resol) + jets_[j].E()*(param1resol*param1resol) + jets_[j].E()*jets_[j].E()*(param2resol*param2resol) ) * TMath::Sin( jets_[j].Theta() );
 	double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
 
 	if(j!=2)	
@@ -4814,12 +4901,15 @@ double MEIntegratorNew::probabilitySLUnconstrained(const double* x, int acceptan
 	
 	double param0resol = (jetParam_.find("param0resol"+flavor+bin))->second;
 	double param1resol = (jetParam_.find("param1resol"+flavor+bin))->second;
+	double param2resol = (jetParam_.find("param2resol"+flavor+bin))->second;
 	double param0resp  = (jetParam_.find("param0resp" +flavor+bin))->second;
 	double param1resp  = (jetParam_.find("param1resp" +flavor+bin))->second;
 	
-	double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	//double Width  = jets_[j].E()*TMath::Sqrt( param0resol*param0resol/jets_[j].E() + param1resol*param1resol/jets_[j].E()/jets_[j].E()) * TMath::Sin( jets_[j].Theta() );
+	//double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
+	double Width  = TMath::Sqrt( (param0resol*param0resol) + jets_[j].E()*(param1resol*param1resol) + jets_[j].E()*jets_[j].E()*(param2resol*param2resol) ) * TMath::Sin( jets_[j].Theta() );
 	double Mean   = (jets_[j].E()*param0resp + param1resp) * TMath::Sin( jets_[j].Theta() ) ;
-	
+
 	if(j!=6 && j!=7)
 	  AccPart *= (1 - 0.5*(TMath::Erf( (30. - Mean)/Width ) + 1 ));
 	else{
