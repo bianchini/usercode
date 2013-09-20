@@ -30,6 +30,9 @@
 #include "TGraphAsymmErrors.h"
 #include "TGraphPainter.h"
 #include "TMultiGraph.h"
+#include "TArrayF.h"
+#include "TLine.h"
+
 
 
 void bbb( TH1F* hin, TH1F* hout_Down, TH1F* hout_Up, int bin){
@@ -50,11 +53,49 @@ void bbb( TH1F* hin, TH1F* hout_Down, TH1F* hout_Up, int bin){
 }
 
 
+void draw(vector<float> param, TTree* t = 0, TString var = "", TH1F* h = 0, TCut cut = ""){
+
+  h->Reset();
+  if(param.size()==0){
+    t->Draw(var+">>"+TString(h->GetName()),   "weight"*cut );
+    return;
+  }
+  else{
+    if( param.size()!=2 ){
+      cout << "Error in draw()" << endl;
+      return;
+    }
+
+    float cutval = h->GetBinLowEdge( 3 );
+    TCut    cut1( Form("%s<%f", var.Data(), cutval) );    
+    TString var2(Form("p_125_all_b_ttbb/((p_125_all_b_ttbb+%f*p_125_all_b_ttjj))",    param[0]));
+
+    TCut    cut2(Form("p_125_all_b_ttbb/((p_125_all_b_ttbb+%f*p_125_all_b_ttjj))<%f", param[0],param[1]));    
+    t->Draw(var2+">>"+TString(h->GetName()),   "weight"*(cut&&cut1&&cut2) );
+    float binL    = h->Integral();
+    float binLErr = h->GetEntries()>0 ? sqrt(h->GetEntries())*h->Integral()/h->GetEntries() : 0.;
+    h->Reset();
+    t->Draw(var2+">>"+TString(h->GetName()),   "weight"*(cut&&cut1&&(!cut2)) );
+    float binH    = h->Integral();
+    float binHErr = h->GetEntries()>0 ? sqrt(h->GetEntries())*h->Integral()/h->GetEntries() : 0.;
+    h->Reset();
+
+    t->Draw(var+">>"+TString(h->GetName()),   "weight"*cut );
+    h->SetBinContent(1, binL);  h->SetBinError(1, binLErr);
+    h->SetBinContent(2, binH);  h->SetBinError(2, binHErr);
+  }
+
+  return;
+}
+
+
+
+
 void produce( TString fname = "SL_VType2", string cut = "type==0", TString category = "cat0", float fact1 = 0.02, float fact2 = 0., float lumiScale = 20./12.1,
-	      int newvar = 1, int nBins=6){
+	      int newvar = 1, int nBins=6, int splitFirstBin=0){
 
 
-  string version = "_v5";
+  string version = (string(fname.Data())).find("SL")!=string::npos ? "_v6" : "_v5";
   //string version = "";
 
   cout << "Doing version " << version << " and category " << category << endl;
@@ -63,11 +104,35 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   float scaleTTJetsLF = 1.0;
   float scaleTTJetsHF = 1.0;
 
+  vector<float> param;
+  param.clear();
+  if(splitFirstBin){
+    param.push_back(1.0);
+    param.push_back(0.5);
+  }
+
   TFile* fout = new TFile(fname+".root","UPDATE");
   TDirectory* dir =  fout->GetDirectory( fname+"_"+category); 
   if( !dir) dir = fout->mkdir( fname+"_"+category ) ;
 
-  TH1F* h = new TH1F("h","Simulation #sqrt{s}=8 TeV, "+fname+"; S/(S+B); units", nBins, 0,1 );
+  TArrayF bins (nBins+1);
+  TArrayF bins2(nBins+2);
+  cout << "Making histograms with " << nBins << " bins:" << endl;
+  if( param.size()==0){
+    for(int b = 0; b < nBins+1; b++)
+      bins[b] = b*1.0/nBins;
+  }
+  else{
+    for(int b = 0; b < nBins+2; b++){
+      if(b<=2) bins2[b] = b*0.5/(nBins);
+      else     bins2[b] = (b-1)*1.0/(nBins);
+      cout <<  bins2[b] << ", ";
+    }
+    cout << endl;
+  }
+
+
+  TH1F* h = new TH1F("h","Simulation #sqrt{s}=8 TeV, "+fname+"; S/(S+B); units",  param.size()==0 ? nBins : nBins+1 ,  param.size()==0 ? bins.GetArray() : bins2.GetArray());
  
   TString var("");
   if(newvar)
@@ -86,7 +151,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTH125 = (TH1F*)h->Clone("h_TTH125");
   h_TTH125->Reset();
   h_TTH125->Sumw2();
-  t_TTH125->Draw(var+">>h_TTH125",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTH125, var, h_TTH125, TCut(cut.c_str()));
+  //t_TTH125->Draw(var+">>h_TTH125",   "weight"*TCut(cut.c_str()) );
   h_TTH125->Scale(lumiScale*scaleTTH);
   dir->cd();
   h_TTH125->Write("TTH125", TObject::kOverwrite);
@@ -109,7 +175,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTH125_JECUp = (TH1F*)h->Clone("h_TTH125_JECUp");
   h_TTH125_JECUp->Reset();
   h_TTH125_JECUp->Sumw2();
-  t_TTH125_JECUp->Draw(var+">>h_TTH125_JECUp",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTH125_JECUp, var, h_TTH125_JECUp, TCut(cut.c_str()));
+  //t_TTH125_JECUp->Draw(var+">>h_TTH125_JECUp",   "weight"*TCut(cut.c_str()) );
   h_TTH125_JECUp->Scale(lumiScale*scaleTTH);
   dir->cd();
   h_TTH125_JECUp->Write("TTH125_JECUp", TObject::kOverwrite);
@@ -120,7 +187,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTH125_JECDown = (TH1F*)h->Clone("h_TTH125_JECDown");
   h_TTH125_JECDown->Reset();
   h_TTH125_JECDown->Sumw2();
-  t_TTH125_JECDown->Draw(var+">>h_TTH125_JECDown",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTH125_JECDown, var, h_TTH125_JECDown, TCut(cut.c_str()));
+  //t_TTH125_JECDown->Draw(var+">>h_TTH125_JECDown",   "weight"*TCut(cut.c_str()) );
   h_TTH125_JECDown->Scale(lumiScale*scaleTTH);
   dir->cd();
   h_TTH125_JECDown->Write("TTH125_JECDown", TObject::kOverwrite);
@@ -131,7 +199,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTH125_csvUp = (TH1F*)h->Clone("h_TTH125_csvUp");
   h_TTH125_csvUp->Reset();
   h_TTH125_csvUp->Sumw2();
-  t_TTH125_csvUp->Draw(var+">>h_TTH125_csvUp",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTH125_csvUp, var, h_TTH125_csvUp, TCut(cut.c_str()));
+  //t_TTH125_csvUp->Draw(var+">>h_TTH125_csvUp",   "weight"*TCut(cut.c_str()) );
   h_TTH125_csvUp->Scale(lumiScale*scaleTTH);
   dir->cd();
   h_TTH125_csvUp->Write("TTH125_csvUp", TObject::kOverwrite);
@@ -142,7 +211,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTH125_csvDown = (TH1F*)h->Clone("h_TTH125_csvDown");
   h_TTH125_csvDown->Reset();
   h_TTH125_csvDown->Sumw2();
-  t_TTH125_csvDown->Draw(var+">>h_TTH125_csvDown",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTH125_csvDown, var, h_TTH125_csvDown, TCut(cut.c_str()));
+  //t_TTH125_csvDown->Draw(var+">>h_TTH125_csvDown",   "weight"*TCut(cut.c_str()) );
   h_TTH125_csvDown->Scale(lumiScale*scaleTTH);
   dir->cd();
   h_TTH125_csvDown->Write("TTH125_csvDown", TObject::kOverwrite);
@@ -157,7 +227,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTJetsSemiLept_HF = (TH1F*)h->Clone("h_TTJetsSemiLept_HF");
   h_TTJetsSemiLept_HF->Reset();
   h_TTJetsSemiLept_HF->Sumw2();
-  t_TTJetsSemiLept_HF->Draw(var+">>h_TTJetsSemiLept_HF",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTJetsSemiLept_HF, var, h_TTJetsSemiLept_HF, TCut(cut.c_str()));
+  //t_TTJetsSemiLept_HF->Draw(var+">>h_TTJetsSemiLept_HF",   "weight"*TCut(cut.c_str()) );
   h_TTJetsSemiLept_HF->Scale(lumiScale*scaleTTJetsHF);
   dir->cd();
   h_TTJetsSemiLept_HF->Write("TTJetsHF", TObject::kOverwrite);
@@ -180,7 +251,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTJetsSemiLept_HF_JECUp = (TH1F*)h->Clone("h_TTJetsSemiLept_HF_JECUp");
   h_TTJetsSemiLept_HF_JECUp->Reset();
   h_TTJetsSemiLept_HF_JECUp->Sumw2();
-  t_TTJetsSemiLept_HF_JECUp->Draw(var+">>h_TTJetsSemiLept_HF_JECUp",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTJetsSemiLept_HF_JECUp , var, h_TTJetsSemiLept_HF_JECUp, TCut(cut.c_str()));
+  //t_TTJetsSemiLept_HF_JECUp->Draw(var+">>h_TTJetsSemiLept_HF_JECUp",   "weight"*TCut(cut.c_str()) );
   h_TTJetsSemiLept_HF_JECUp->Scale(lumiScale*scaleTTJetsHF);
   dir->cd();
   h_TTJetsSemiLept_HF_JECUp->Write("TTJetsHF_JECUp", TObject::kOverwrite);
@@ -191,7 +263,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTJetsSemiLept_HF_JECDown = (TH1F*)h->Clone("h_TTJetsSemiLept_HF_JECDown");
   h_TTJetsSemiLept_HF_JECDown->Reset();
   h_TTJetsSemiLept_HF_JECDown->Sumw2();
-  t_TTJetsSemiLept_HF_JECDown->Draw(var+">>h_TTJetsSemiLept_HF_JECDown",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTJetsSemiLept_HF_JECDown, var, h_TTJetsSemiLept_HF_JECDown, TCut(cut.c_str()));
+  //t_TTJetsSemiLept_HF_JECDown->Draw(var+">>h_TTJetsSemiLept_HF_JECDown",   "weight"*TCut(cut.c_str()) );
   h_TTJetsSemiLept_HF_JECDown->Scale(lumiScale*scaleTTJetsHF);
   dir->cd();
   h_TTJetsSemiLept_HF_JECDown->Write("TTJetsHF_JECDown", TObject::kOverwrite);
@@ -202,7 +275,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTJetsSemiLept_HF_csvUp = (TH1F*)h->Clone("h_TTJetsSemiLept_HF_csvUp");
   h_TTJetsSemiLept_HF_csvUp->Reset();
   h_TTJetsSemiLept_HF_csvUp->Sumw2();
-  t_TTJetsSemiLept_HF_csvUp->Draw(var+">>h_TTJetsSemiLept_HF_csvUp",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTJetsSemiLept_HF_csvUp, var, h_TTJetsSemiLept_HF_csvUp, TCut(cut.c_str()));
+  //t_TTJetsSemiLept_HF_csvUp->Draw(var+">>h_TTJetsSemiLept_HF_csvUp",   "weight"*TCut(cut.c_str()) );
   h_TTJetsSemiLept_HF_csvUp->Scale(lumiScale*scaleTTJetsHF);
   dir->cd();
   h_TTJetsSemiLept_HF_csvUp->Write("TTJetsHF_csvUp", TObject::kOverwrite);
@@ -213,7 +287,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTJetsSemiLept_HF_csvDown = (TH1F*)h->Clone("h_TTJetsSemiLept_HF_csvDown");
   h_TTJetsSemiLept_HF_csvDown->Reset();
   h_TTJetsSemiLept_HF_csvDown->Sumw2();
-  t_TTJetsSemiLept_HF_csvDown->Draw(var+">>h_TTJetsSemiLept_HF_csvDown",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTJetsSemiLept_HF_csvDown, var, h_TTJetsSemiLept_HF_csvDown, TCut(cut.c_str()));
+  //t_TTJetsSemiLept_HF_csvDown->Draw(var+">>h_TTJetsSemiLept_HF_csvDown",   "weight"*TCut(cut.c_str()) );
   h_TTJetsSemiLept_HF_csvDown->Scale(lumiScale*scaleTTJetsHF);
   dir->cd();
   h_TTJetsSemiLept_HF_csvDown->Write("TTJetsHF_csvDown", TObject::kOverwrite);
@@ -229,7 +304,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTJetsSemiLept_LF = (TH1F*)h->Clone("h_TTJetsSemiLept_LF");
   h_TTJetsSemiLept_LF->Reset();
   h_TTJetsSemiLept_LF->Sumw2();
-  t_TTJetsSemiLept_LF->Draw(var+">>h_TTJetsSemiLept_LF",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTJetsSemiLept_LF, var, h_TTJetsSemiLept_LF, TCut(cut.c_str()));
+  //t_TTJetsSemiLept_LF->Draw(var+">>h_TTJetsSemiLept_LF",   "weight"*TCut(cut.c_str()) );
   h_TTJetsSemiLept_LF->Scale(lumiScale*scaleTTJetsLF);
   dir->cd();
   h_TTJetsSemiLept_LF->Write("TTJetsLF", TObject::kOverwrite);
@@ -252,7 +328,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTJetsSemiLept_LF_JECUp = (TH1F*)h->Clone("h_TTJetsSemiLept_LF_JECUp");
   h_TTJetsSemiLept_LF_JECUp->Reset();
   h_TTJetsSemiLept_LF_JECUp->Sumw2();
-  t_TTJetsSemiLept_LF_JECUp->Draw(var+">>h_TTJetsSemiLept_LF_JECUp",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTJetsSemiLept_LF_JECUp, var, h_TTJetsSemiLept_LF_JECUp, TCut(cut.c_str()));
+  //t_TTJetsSemiLept_LF_JECUp->Draw(var+">>h_TTJetsSemiLept_LF_JECUp",   "weight"*TCut(cut.c_str()) );
   h_TTJetsSemiLept_LF_JECUp->Scale(lumiScale*scaleTTJetsLF);
   dir->cd();
   h_TTJetsSemiLept_LF_JECUp->Write("TTJetsLF_JECUp", TObject::kOverwrite);
@@ -263,7 +340,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTJetsSemiLept_LF_JECDown = (TH1F*)h->Clone("h_TTJetsSemiLept_LF_JECDown");
   h_TTJetsSemiLept_LF_JECDown->Reset();
   h_TTJetsSemiLept_LF_JECDown->Sumw2();
-  t_TTJetsSemiLept_LF_JECDown->Draw(var+">>h_TTJetsSemiLept_LF_JECDown",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTJetsSemiLept_LF_JECDown , var, h_TTJetsSemiLept_LF_JECDown, TCut(cut.c_str()));
+  //t_TTJetsSemiLept_LF_JECDown->Draw(var+">>h_TTJetsSemiLept_LF_JECDown",   "weight"*TCut(cut.c_str()) );
   h_TTJetsSemiLept_LF_JECDown->Scale(lumiScale*scaleTTJetsLF);
   dir->cd();
   h_TTJetsSemiLept_LF_JECDown->Write("TTJetsLF_JECDown", TObject::kOverwrite);
@@ -274,7 +352,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTJetsSemiLept_LF_csvUp = (TH1F*)h->Clone("h_TTJetsSemiLept_LF_csvUp");
   h_TTJetsSemiLept_LF_csvUp->Reset();
   h_TTJetsSemiLept_LF_csvUp->Sumw2();
-  t_TTJetsSemiLept_LF_csvUp->Draw(var+">>h_TTJetsSemiLept_LF_csvUp",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTJetsSemiLept_LF_csvUp, var, h_TTJetsSemiLept_LF_csvUp, TCut(cut.c_str()));
+  //t_TTJetsSemiLept_LF_csvUp->Draw(var+">>h_TTJetsSemiLept_LF_csvUp",   "weight"*TCut(cut.c_str()) );
   h_TTJetsSemiLept_LF_csvUp->Scale(lumiScale*scaleTTJetsLF);
   dir->cd();
   h_TTJetsSemiLept_LF_csvUp->Write("TTJetsLF_csvUp", TObject::kOverwrite);
@@ -285,7 +364,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTJetsSemiLept_LF_csvDown = (TH1F*)h->Clone("h_TTJetsSemiLept_LF_csvDown");
   h_TTJetsSemiLept_LF_csvDown->Reset();
   h_TTJetsSemiLept_LF_csvDown->Sumw2();
-  t_TTJetsSemiLept_LF_csvDown->Draw(var+">>h_TTJetsSemiLept_LF_csvDown",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTJetsSemiLept_LF_csvDown, var, h_TTJetsSemiLept_LF_csvDown, TCut(cut.c_str()));
+  //t_TTJetsSemiLept_LF_csvDown->Draw(var+">>h_TTJetsSemiLept_LF_csvDown",   "weight"*TCut(cut.c_str()) );
   h_TTJetsSemiLept_LF_csvDown->Scale(lumiScale*scaleTTJetsLF);
   dir->cd();
   h_TTJetsSemiLept_LF_csvDown->Write("TTJetsLF_csvDown", TObject::kOverwrite);
@@ -301,7 +381,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_DiBoson = (TH1F*)h->Clone("h_DiBoson");
   h_DiBoson->Reset();
   h_DiBoson->Sumw2();
-  t_DiBoson->Draw(var+">>h_DiBoson",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_DiBoson , var, h_DiBoson, TCut(cut.c_str()));
+  //t_DiBoson->Draw(var+">>h_DiBoson",   "weight"*TCut(cut.c_str()) );
   h_DiBoson->Scale(lumiScale);
   dir->cd();
   h_DiBoson->Write("DiBoson", TObject::kOverwrite);
@@ -327,7 +408,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_SingleT = (TH1F*)h->Clone("h_SingleT");
   h_SingleT->Reset();
   h_SingleT->Sumw2();
-  t_SingleT->Draw(var+">>h_SingleT",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_SingleT , var, h_SingleT, TCut(cut.c_str()));
+  //t_SingleT->Draw(var+">>h_SingleT",   "weight"*TCut(cut.c_str()) );
   h_SingleT->Scale(lumiScale);
   dir->cd();
   h_SingleT->Write("SingleT", TObject::kOverwrite);
@@ -350,7 +432,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_TTV = (TH1F*)h->Clone("h_TTV");
   h_TTV->Reset();
   h_TTV->Sumw2();
-  t_TTV->Draw(var+">>h_TTV",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_TTV , var, h_TTV, TCut(cut.c_str()));
+  //t_TTV->Draw(var+">>h_TTV",   "weight"*TCut(cut.c_str()) );
   h_TTV->Scale(lumiScale);
   dir->cd();
   h_TTV->Write("TTV", TObject::kOverwrite);
@@ -373,7 +456,8 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   TH1F* h_EWK = (TH1F*)h->Clone("h_EWK");
   h_EWK->Reset();
   h_EWK->Sumw2();
-  t_EWK->Draw(var+">>h_EWK",   "weight"*TCut(cut.c_str()) );
+  draw( param, t_EWK, var, h_EWK, TCut(cut.c_str()));
+  //t_EWK->Draw(var+">>h_EWK",   "weight"*TCut(cut.c_str()) );
   h_EWK->Scale(lumiScale);
   dir->cd();
   h_EWK->Write("EWK", TObject::kOverwrite);
@@ -432,7 +516,12 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   out.precision(8);
   string longspace  = "              ";
   string shortspace = "          ";
-  string null = "";
+
+
+  //string null(category.Data());
+  string null("");
+
+
   string line1("imax 1"); out << line1 << endl;
   string line2("jmax *"); out << line2 << endl;
   string line3("kmax *"); out << line3 << endl;
@@ -637,13 +726,24 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
 
 void produceAll( float LumiScale = 19.5/12.1){
 
-  produce("SL", "type==0",  "cat1",                    0.02, 0.50, LumiScale ,   1, 8);
-  produce("SL", "type==1",  "cat2",                    0.02, 0.7,  LumiScale ,   1, 8);
-  produce("SL", "type==2 && flag_type2>0",  "cat3",    0.02, 0.8,  LumiScale ,   1, 8);
-  produce("SL", "type==2 && flag_type2<0",  "cat4",    0.02, 0.7,  LumiScale ,   1, 8);
-  produce("SL", "type==3",  "cat5",                    0.02, 0.5,  LumiScale ,   1, 8);  
-  produce("DL", "type==6",  "cat6",                    0.02, 0.,   LumiScale*2 , 0, 6);
-  produce("DL", "type==7",  "cat7",                    0.02, 0.,   LumiScale*2 , 0, 6);
+  //produce("SL", "type==0",  "cat1",                    0.02, 0.50, LumiScale ,   1, 7);
+  //produce("SL", "type==1",  "cat2",                    0.02, 0.7,  LumiScale ,   1, 7);
+  //produce("SL", "type==2 && flag_type2>0",  "cat3",    0.02, 0.8,  LumiScale ,   1, 7);
+  //produce("SL", "type==2 && flag_type2<0",  "cat4",    0.02, 0.7,  LumiScale ,   1, 7);
+  //produce("SL", "type==3",  "cat5",                    0.02, 0.5,  LumiScale ,   1, 7);  
+  //produce("DL", "type==6",  "cat6",                    0.02, 0.,   LumiScale*2 , 0, 6);
+  //produce("DL", "type==7",  "cat7",                    0.02, 0.,   LumiScale*2 , 0, 6);
+
+  produce("SL", "type==0",  "cat1",                       0.02, 0.50, LumiScale ,   1, 4, 1);
+  produce("SL", "type==1",  "cat2",                       0.02, 0.7,  LumiScale ,   1, 5, 1);
+  produce("SL", "type==2 && flag_type2>0",   "cat3",      0.02, 0.8,  LumiScale ,   1, 5, 1);
+  produce("SL", "type==2 && flag_type2<=0",  "cat4",      0.02, 0.7,  LumiScale ,   1, 5, 1);
+  produce("SL", "type==3",  "cat5",                       0.02, 0.5,  LumiScale ,   1, 5, 1);  
+  produce("DL", "type==6",  "cat6",                       0.02, 0.,   LumiScale*2 , 0, 4, 0);
+  produce("DL", "type==7",  "cat7",                       0.02, 0.,   LumiScale*2 , 0, 6, 0);
+
+
+  //produce("SL", "type==3",  "cat5",                    0.02, 0.5,  LumiScale ,   1, 8);  
 
 }
 
@@ -681,6 +781,8 @@ void produceAll( float LumiScale = 19.5/12.1){
 
 void makePlot(){
 
+  gStyle->SetPaintTextFormat("g");
+
   TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
   c1->SetGrid(0,0);
   c1->SetFillStyle(4000);
@@ -689,7 +791,7 @@ void makePlot(){
   c1->SetObjectStat(0);
   c1->SetLogy(1);
   
-  TLegend* leg = new TLegend(0.665635,0.73951,0.866873,0.88986,NULL,"brNDC");
+  TLegend* leg = new TLegend(0.120743,0.153846,0.321981, 0.26049, NULL,"brNDC");
   leg->SetBorderSize(0);
   leg->SetTextSize(0.04);
   leg->SetFillColor(0);
@@ -712,9 +814,9 @@ void makePlot(){
   categories.push_back("SL_cat3");
   categories.push_back("SL_cat4");
   categories.push_back("SL_cat5");
+  categories.push_back("SL");
   categories.push_back("DL_cat6");
   categories.push_back("DL_cat7");
-  categories.push_back("SL");
   categories.push_back("DL");
   categories.push_back("COMB");
 
@@ -770,7 +872,7 @@ void makePlot(){
 
   expected->SetMarkerColor(kBlack);
   expected->SetMarkerStyle(kOpenCircle);
-  expected->SetMarkerSize(1.5);
+  expected->SetMarkerSize(1.0);
   expected->SetLineColor(kBlack);
   expected->SetLineWidth(2);
  
@@ -778,14 +880,16 @@ void makePlot(){
   mg->Add(oneSigma);
   mg->Add(expected);
 
-  mg->Draw("a2");
-  //mg->Draw("p");
-  
+  mg->Draw("a2");  
   expected->Draw("pSAME");
-  //twoSigma->Draw("a2");
-  //oneSigma->Draw("a2SAME");
-  //expected->Draw("pSAME");
 
+  TH1F* hT = new TH1F("hT", "", 10, 0, 10);
+  for(int k = 1; k <= hT->GetNbinsX(); k++){
+    int approx = int(expY[k-1]*10);
+    hT->SetBinContent(k, approx/10.   );
+  }
+  hT->SetMarkerSize(2.);
+  hT->Draw("TEXT0SAME");
 
   TF1 *line = new TF1("line","1",0,10);
   line->SetLineColor(kRed);
@@ -819,7 +923,7 @@ void makePlot(){
 
   mg->GetYaxis()->SetTitleOffset(0.97);
   mg->SetMinimum(0.8);
-  mg->SetMaximum( 40);
+  mg->SetMaximum( 50);
   mg->GetXaxis()->SetTitle("");
   mg->GetYaxis()->SetTitle("95% CL upper limit on #mu = #sigma/#sigma_{SM}");
 
@@ -837,10 +941,35 @@ void makePlot(){
   pt->AddText(Form("(SL: #mu < %.1f)", expY[categories.size()-3]))->SetTextColor(kBlack);
   pt->AddText(Form("(DL: #mu < %.1f)", expY[categories.size()-2]))->SetTextColor(kBlack);
 
-  pt->Draw();
+  //pt->Draw();
 
   //c1->Modified();
   //c1->Draw();
+
+  TLine* del = new TLine(6., 50., 6., 0. );
+  del->SetLineWidth(3);
+  del->SetLineStyle(kSolid);
+  del->SetLineColor(kBlack);
+  del->Draw("SAME");
+
+  TLine* del_ = new TLine(5., 50., 5., 0. );
+  del_->SetLineWidth(2);
+  del_->SetLineStyle(kDotted);
+  del_->SetLineColor(kBlack);
+  del_->Draw("SAME");
+
+  TLine* del2 = new TLine(9., 50., 9., 0. );
+  del2->SetLineWidth(3);
+  del2->SetLineStyle(kSolid);
+  del2->SetLineColor(kBlack);
+  del2->Draw("SAME");
+
+  TLine* del2_ = new TLine(8., 50., 8., 0. );
+  del2_->SetLineWidth(2);
+  del2_->SetLineStyle(kDotted);
+  del2_->SetLineColor(kBlack);
+  del2_->Draw("SAME");
+
   c1->SaveAs("Limits.png");
 
 }
