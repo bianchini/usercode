@@ -137,9 +137,11 @@ int main(int argc, const char* argv[])
 
   AutoLibraryLoader::enable();
 
-  fwlite::TFileService fs = fwlite::TFileService("./root/treeProducer_new.root");
+  fwlite::TFileService fs = fwlite::TFileService("./root/treeProducer_ttjets_new.root");
   TTree* genTree          = fs.make<TTree>("genTree","event tree");
   TTree* genJetLightTree  = fs.make<TTree>("genJetLightTree","event tree");
+  TTree* genJetGluonTree  = fs.make<TTree>("genJetGluonTree","event tree");
+  
   TTree* genEventTree     = fs.make<TTree>("genEventTree","event tree");
   TTree* genJetHeavyTree  = fs.make<TTree>("genJetHeavyTree","event tree");
 
@@ -175,6 +177,20 @@ int main(int argc, const char* argv[])
   float phiLight;
   float massRecoLight;
   int flavor;
+  int nSvsLight;
+  float mindRLight;
+  float maxdRLight;
+  float massSvLight;
+
+  float ptRecoGluon;
+  float phiRecoGluon;
+  float etaRecoGluon;
+  float csvRecoGluon;
+  float massRecoGluon;
+  int   nSvsGluon;
+  float mindRGluon;
+  float maxdRGluon;
+
 
   float sumEt;
   float et;
@@ -196,7 +212,10 @@ int main(int argc, const char* argv[])
   float etaHeavy;
   float phiHeavy;
   float massRecoHeavy;
-
+  int nSvsHeavy;
+  float mindRHeavy;
+  float maxdRHeavy;
+  float massSvHeavy;
 
   genTree->Branch("X1",       &X1,     "X1/F");
   genTree->Branch("X2",       &X2,     "X2/F");
@@ -233,6 +252,21 @@ int main(int argc, const char* argv[])
   genJetLightTree->Branch("phi",      &phiLight,    "phi/F");
   genJetLightTree->Branch("massReco", &massRecoLight,   "massReco/F");
   genJetLightTree->Branch("flavor",   &flavor,   "flavor/I");
+  genJetLightTree->Branch("nSvs",         &nSvsLight,    "nSvs/I");
+  genJetLightTree->Branch("mindR",   &mindRLight,   "mindR/F");
+  genJetLightTree->Branch("maxdR",   &maxdRLight,   "maxdR/F");
+  genJetLightTree->Branch("massSv",   &massSvLight,   "massSv/F");
+  
+
+
+  genJetGluonTree->Branch("ptReco",   &ptRecoGluon, "ptReco/F");
+  genJetGluonTree->Branch("etaReco",  &etaRecoGluon, "etaReco/F");
+  genJetGluonTree->Branch("phiReco",  &phiRecoGluon, "phiReco/F");
+  genJetGluonTree->Branch("csvReco",  &csvRecoGluon, "csvReco/F");
+  genJetGluonTree->Branch("massReco", &massRecoGluon,   "massReco/F");
+  genJetGluonTree->Branch("nSvs",     &nSvsGluon,    "nSvs/I");
+  genJetGluonTree->Branch("mindR",    &mindRGluon,   "mindR/F");
+  genJetGluonTree->Branch("maxdR",    &maxdRGluon,   "maxdR/F");
 
 
   genEventTree->Branch("sumEt",    &sumEt,   "sumEt/F");
@@ -248,7 +282,6 @@ int main(int argc, const char* argv[])
   genEventTree->Branch("py",       &py,    "py/F");
   genEventTree->Branch("pyReco",   &pyReco,"pyReco/F");
   genEventTree->Branch("puWeight", &puWeight,"puWeight/F");
-
   genEventTree->Branch("recoilPx",       &recoilPx,     "recoilPx/F");
   genEventTree->Branch("recoilRecoPx",   &recoilRecoPx, "recoilRecoPx/F");
   genEventTree->Branch("recoilPy",       &recoilPy,     "recoilPy/F");
@@ -263,7 +296,10 @@ int main(int argc, const char* argv[])
   genJetHeavyTree->Branch("eta",      &etaHeavy,    "eta/F");
   genJetHeavyTree->Branch("phi",      &phiHeavy,    "phi/F");
   genJetHeavyTree->Branch("massReco",     &massRecoHeavy,   "massReco/F");
-
+  genJetHeavyTree->Branch("nSvs",         &nSvsHeavy,    "nSvs/I");
+  genJetHeavyTree->Branch("mindR",   &mindRHeavy,   "mindR/F");
+  genJetHeavyTree->Branch("maxdR",   &maxdRHeavy,   "maxdR/F");
+  genJetHeavyTree->Branch("massSv",   &massSvHeavy,   "massSv/F");
 
   PythonProcessDesc builder(argv[1]);
  
@@ -320,6 +356,13 @@ int main(int argc, const char* argv[])
     float aJetsgenphi[999];
     float hJetscsvnominal[999];
     float aJetscsvnominal[999];
+
+    int nSvs;
+    float Sv_massSv[999];
+    float Sv_pt[999];
+    float Sv_eta[999];
+    float Sv_phi[999];
+    
     
     JetByPt jet1, jet2, jet3, jet4, jet5, jet6, jet7, jet8, jet9, jet10;
     genParticleInfo genB, genBbar;
@@ -351,6 +394,12 @@ int main(int argc, const char* argv[])
     currentTree->SetBranchAddress("PUweight", &PUweight);
     currentTree->SetBranchAddress("hJet_csv_nominal", hJetscsvnominal);
     currentTree->SetBranchAddress("aJet_csv_nominal", aJetscsvnominal);
+
+    currentTree->SetBranchAddress("nSvs",&nSvs);
+    currentTree->SetBranchAddress("Sv_massSv", Sv_massSv);
+    currentTree->SetBranchAddress("Sv_pt", Sv_pt);
+    currentTree->SetBranchAddress("Sv_eta", Sv_eta);
+    currentTree->SetBranchAddress("Sv_phi", Sv_phi);
 
     int printed = 0;
     Long64_t nentries = currentTree->GetEntries();
@@ -530,7 +579,7 @@ int main(int argc, const char* argv[])
 	//bool isBbar = genBbarLV.Pt()>0 ? deltaR( myJetsFilt[k], genBbarLV) < 0.3 && TMath::Abs(myJetsFilt[k].Pt()-genBbarLV.Pt())/genBbarLV.Pt()<0.30  : false;      
       }
 
-      if( myJetsFilt.size()<4 /*|| numJets30<6 || numJets30BtagM<4*/) continue;
+      if( myJetsFilt.size()<4 /*|| numJets30<6 || numJets30BtagM<4*/ ) continue;  /// <------ HERE
 
 
       if(  !((abs(genTop.wdau1id)<6 &&  abs(genTbar.wdau1id)>6) ||  
@@ -548,6 +597,20 @@ int main(int argc, const char* argv[])
       etaLight=-99;
       phiLight=-99;
       massRecoLight=-99;
+      nSvsLight = -99;
+      mindRLight=-99; 
+      maxdRLight=-99; 
+      massSvLight=-99;
+
+      ptRecoGluon=-99;
+      etaRecoGluon=-99;
+      phiRecoGluon=-99;
+      csvRecoGluon=-99;
+      massRecoGluon=-99;
+      nSvsGluon = -99;
+      mindRGluon=-99; 
+      maxdRGluon=-99; 
+
       ptRecoHeavy=-99;
       etaRecoHeavy=-99;
       phiRecoHeavy=-99;
@@ -556,6 +619,12 @@ int main(int argc, const char* argv[])
       etaHeavy=-99;
       phiHeavy=-99;
       massRecoHeavy=-99;
+      nSvsHeavy = -99;
+      mindRHeavy=-99; 
+      maxdRHeavy=-99; 
+      massSvHeavy=-99;
+
+
       recoilPx=-999;
       recoilRecoPx=-999;
       recoilPy=-999;
@@ -740,6 +809,7 @@ int main(int argc, const char* argv[])
       unsigned int indexH2   = 999;
       unsigned int indexW1   = 999;
       unsigned int indexW2   = 999;
+      unsigned int indexG    = 999;
 
       int whichTopHad = abs(genTop.wdau1id)<6 ? 0 : 1;
       TLorentzVector wCand1 = whichTopHad==0 ? topW1LV : atopW1LV;
@@ -758,6 +828,7 @@ int main(int argc, const char* argv[])
 	  indexW1 = k;
 	if(deltaR(myJetsFilt[k],wCand2)<0.3)
 	  indexW2 = k;
+	if( indexG==999 && mapFilt[k].flavor==21 ) indexG=k;
       }
 
 
@@ -789,6 +860,37 @@ int main(int argc, const char* argv[])
 	TVector3 shift( dPx, dPy , 0.0);
 	recoMEt  -= shift;
 	impSumEt += (topBLV.E()-myJetsFilt[indexB].E());
+
+
+	vector<unsigned int> ind_vtx;
+	for(int l = 0; l < nSvs; l++){
+	  TLorentzVector vertex(1,0,0,1);
+	  vertex.SetPtEtaPhiM( Sv_pt[l], Sv_eta[l], Sv_phi[l], Sv_massSv[l]);
+	  if(deltaR(vertex,  myJetsFilt[indexB])<0.5){
+	    ind_vtx.push_back(l);
+	  }
+	}
+	nSvsHeavy = ind_vtx.size();
+	massSvHeavy = ind_vtx.size()>0 ?  Sv_massSv[ ind_vtx[0] ] : -99;
+
+	if(nSvsHeavy>=2){
+	  float min =  999;
+	  float max = -999;
+	  TLorentzVector vertex1(1,0,0,1);
+	  TLorentzVector vertex2(1,0,0,1);
+	  for(unsigned int v1 = 0; v1 <  ind_vtx.size()-1; v1++){
+	    vertex1.SetPtEtaPhiM( Sv_pt[ind_vtx[v1]], Sv_eta[ind_vtx[v1]], Sv_phi[ind_vtx[v1]], Sv_massSv[ind_vtx[v1]]);	      
+	    for(unsigned int v2 = v1+1; v2 <  ind_vtx.size(); v2++){
+	      vertex2.SetPtEtaPhiM( Sv_pt[ind_vtx[v2]], Sv_eta[ind_vtx[v2]], Sv_phi[ind_vtx[v2]], Sv_massSv[ind_vtx[v2]]);
+	      if( deltaR(vertex1, vertex2)< min ) min = deltaR(vertex1, vertex2);
+	      if( deltaR(vertex1, vertex2)> max ) max = deltaR(vertex1, vertex2);
+	    }
+	  }
+	  mindRHeavy = min;
+	  maxdRHeavy = max;
+	}
+
+
 	
       }else{ 
 	ptRecoHeavy=-99;
@@ -796,6 +898,9 @@ int main(int argc, const char* argv[])
 	phiRecoHeavy=-99;
 	csvRecoHeavy=-99;
 	massRecoHeavy=-99;
+	nSvsHeavy = -99;
+	mindRHeavy=-99;
+	maxdRHeavy=-99;
       }
       ptHeavy       = topBLV.E();
       etaHeavy      = topBLV.Eta();
@@ -828,6 +933,34 @@ int main(int argc, const char* argv[])
 
 	TVector3 shift( dPx , dPy , 0.0);
 
+	vector<unsigned int> ind_vtx;
+	for(int l = 0; l < nSvs; l++){
+	  TLorentzVector vertex(1,0,0,1);
+	  vertex.SetPtEtaPhiM( Sv_pt[l], Sv_eta[l], Sv_phi[l], Sv_massSv[l]);
+	  if(deltaR(vertex,  myJetsFilt[indexBbar])<0.5){
+	    ind_vtx.push_back(l);
+	  }
+	}
+	nSvsHeavy = ind_vtx.size();
+	massSvHeavy = ind_vtx.size()>0 ?  Sv_massSv[ ind_vtx[0] ] : -99;
+	if(nSvsHeavy>=2){
+	  float min =  999;
+	  float max = -999;
+	  TLorentzVector vertex1(1,0,0,1);
+	  TLorentzVector vertex2(1,0,0,1);
+	  for(unsigned int v1 = 0; v1 <  ind_vtx.size()-1; v1++){
+	    vertex1.SetPtEtaPhiM( Sv_pt[ind_vtx[v1]], Sv_eta[ind_vtx[v1]], Sv_phi[ind_vtx[v1]], Sv_massSv[ind_vtx[v1]]);	      
+	    for(unsigned int v2 = v1+1; v2 <  ind_vtx.size(); v2++){
+	      vertex2.SetPtEtaPhiM( Sv_pt[ind_vtx[v2]], Sv_eta[ind_vtx[v2]], Sv_phi[ind_vtx[v2]], Sv_massSv[ind_vtx[v2]]);
+	      if( deltaR(vertex1, vertex2)< min ) min = deltaR(vertex1, vertex2);
+	      if( deltaR(vertex1, vertex2)> max ) max = deltaR(vertex1, vertex2);
+	    }
+	  }
+	  mindRHeavy = min;
+	  maxdRHeavy = max;
+	}
+
+
 	if(indexB!=indexBbar) {
 	  recoMEt  -= shift;
 	  impSumEt += (atopBLV.E()-myJetsFilt[indexBbar].E());
@@ -839,6 +972,9 @@ int main(int argc, const char* argv[])
 	massRecoHeavy=-99;
 	etaRecoHeavy=-99;
 	phiRecoHeavy=-99;
+	nSvsHeavy = -99;
+	mindRHeavy=-99;
+	maxdRHeavy=-99;
       }
       ptHeavy       = atopBLV.E();
       etaHeavy      = atopBLV.Eta();
@@ -877,6 +1013,34 @@ int main(int argc, const char* argv[])
 	  impSumEt += (genBLV.E()-myJetsFilt[indexH1].E());
 	}
 	
+	vector<unsigned int> ind_vtx;
+	for(int l = 0; l < nSvs; l++){
+	  TLorentzVector vertex(1,0,0,1);
+	  vertex.SetPtEtaPhiM( Sv_pt[l], Sv_eta[l], Sv_phi[l], Sv_massSv[l]);
+	  if(deltaR(vertex,  myJetsFilt[indexH1])<0.5){
+	    ind_vtx.push_back(l);
+	  }
+	}
+	nSvsHeavy = ind_vtx.size();
+	massSvHeavy = ind_vtx.size()>0 ?  Sv_massSv[ ind_vtx[0] ] : -99;
+	if(nSvsHeavy>=2){
+	  float min =  999;
+	  float max = -999;
+	  TLorentzVector vertex1(1,0,0,1);
+	  TLorentzVector vertex2(1,0,0,1);
+	  for(unsigned int v1 = 0; v1 <  ind_vtx.size()-1; v1++){
+	    vertex1.SetPtEtaPhiM( Sv_pt[ind_vtx[v1]], Sv_eta[ind_vtx[v1]], Sv_phi[ind_vtx[v1]], Sv_massSv[ind_vtx[v1]]);	      
+	    for(unsigned int v2 = v1+1; v2 <  ind_vtx.size(); v2++){
+	      vertex2.SetPtEtaPhiM( Sv_pt[ind_vtx[v2]], Sv_eta[ind_vtx[v2]], Sv_phi[ind_vtx[v2]], Sv_massSv[ind_vtx[v2]]);
+	      if( deltaR(vertex1, vertex2)< min ) min = deltaR(vertex1, vertex2);
+	      if( deltaR(vertex1, vertex2)> max ) max = deltaR(vertex1, vertex2);
+	    }
+	  }
+	  mindRHeavy = min;
+	  maxdRHeavy = max;
+	}
+
+	
       }
       else{
 	  ptRecoHeavy=-99;
@@ -884,6 +1048,9 @@ int main(int argc, const char* argv[])
 	  massRecoHeavy=-99;
 	  etaRecoHeavy=-99;
 	  phiRecoHeavy=-99;
+	  nSvsHeavy = -99;
+	  mindRHeavy=-99;
+	  maxdRHeavy=-99;
 	}
       ptHeavy       = genBLV.E()>0 ? genBLV.E() : -999;
       etaHeavy      = genBLV.E()>0 ? genBLV.Eta(): -999;
@@ -915,6 +1082,34 @@ int main(int argc, const char* argv[])
 
 	TVector3 shift( dPx, dPy, 0.0);
 
+	vector<unsigned int> ind_vtx;
+	for(int l = 0; l < nSvs; l++){
+	  TLorentzVector vertex(1,0,0,1);
+	  vertex.SetPtEtaPhiM( Sv_pt[l], Sv_eta[l], Sv_phi[l], Sv_massSv[l]);
+	  if(deltaR(vertex,  myJetsFilt[indexH2])<0.5){
+	    ind_vtx.push_back(l);
+	  }
+	}
+	nSvsHeavy = ind_vtx.size();
+	massSvHeavy = ind_vtx.size()>0 ?  Sv_massSv[ ind_vtx[0] ] : -99;
+	if(nSvsHeavy>=2){
+	  float min =  999;
+	  float max = -999;
+	  TLorentzVector vertex1(1,0,0,1);
+	  TLorentzVector vertex2(1,0,0,1);
+	  for(unsigned int v1 = 0; v1 <  ind_vtx.size()-1; v1++){
+	    vertex1.SetPtEtaPhiM( Sv_pt[ind_vtx[v1]], Sv_eta[ind_vtx[v1]], Sv_phi[ind_vtx[v1]], Sv_massSv[ind_vtx[v1]]);	      
+	    for(unsigned int v2 = v1+1; v2 <  ind_vtx.size(); v2++){
+	      vertex2.SetPtEtaPhiM( Sv_pt[ind_vtx[v2]], Sv_eta[ind_vtx[v2]], Sv_phi[ind_vtx[v2]], Sv_massSv[ind_vtx[v2]]);
+	      if( deltaR(vertex1, vertex2)< min ) min = deltaR(vertex1, vertex2);
+	      if( deltaR(vertex1, vertex2)> max ) max = deltaR(vertex1, vertex2);
+	    }
+	  }
+	  mindRHeavy = min;
+	  maxdRHeavy = max;
+	}
+
+
 	if(indexH2!=indexBbar && indexH2!=indexB && indexH2!=indexH1) {
 	  recoMEt  -= shift;
 	  impSumEt += (genBbarLV.E()-myJetsFilt[indexH2].E());
@@ -927,6 +1122,9 @@ int main(int argc, const char* argv[])
 	massRecoHeavy=-99;
 	etaRecoHeavy=-99;
 	phiRecoHeavy=-99;
+	nSvsHeavy = -99;
+	mindRHeavy=-99;
+	maxdRHeavy=-99;
       }
       ptHeavy       = genBbarLV.E()>0 ? genBbarLV.E()  : -999;
       etaHeavy      = genBbarLV.E()>0 ? genBbarLV.Eta(): -999;
@@ -963,6 +1161,34 @@ int main(int argc, const char* argv[])
 
 	TVector3 shift(dPx ,dPy , 0.0);
 	
+	vector<unsigned int> ind_vtx;
+	for(int l = 0; l < nSvs; l++){
+	  TLorentzVector vertex(1,0,0,1);
+	  vertex.SetPtEtaPhiM( Sv_pt[l], Sv_eta[l], Sv_phi[l], Sv_massSv[l]);
+	  if(deltaR(vertex,  myJetsFilt[indexW1])<0.5){
+	    ind_vtx.push_back(l);
+	  }
+	}
+	nSvsLight = ind_vtx.size();
+	massSvLight = ind_vtx.size()>0 ?  Sv_massSv[ ind_vtx[0] ] : -99;
+	if(nSvsLight>=2){
+	  float min =  999;
+	  float max = -999;
+	  TLorentzVector vertex1(1,0,0,1);
+	  TLorentzVector vertex2(1,0,0,1);
+	  for(unsigned int v1 = 0; v1 <  ind_vtx.size()-1; v1++){
+	    vertex1.SetPtEtaPhiM( Sv_pt[ind_vtx[v1]], Sv_eta[ind_vtx[v1]], Sv_phi[ind_vtx[v1]], Sv_massSv[ind_vtx[v1]]);	      
+	    for(unsigned int v2 = v1+1; v2 <  ind_vtx.size(); v2++){
+	      vertex2.SetPtEtaPhiM( Sv_pt[ind_vtx[v2]], Sv_eta[ind_vtx[v2]], Sv_phi[ind_vtx[v2]], Sv_massSv[ind_vtx[v2]]);
+	      if( deltaR(vertex1, vertex2)< min ) min = deltaR(vertex1, vertex2);
+	      if( deltaR(vertex1, vertex2)> max ) max = deltaR(vertex1, vertex2);
+	    }
+	  }
+	  mindRLight = min;
+	  maxdRLight = max;
+	}
+
+
 	if(indexW1!=indexBbar && indexW1!=indexB && indexW1!=indexH1 &&  indexW1!=indexH2) {
 	  recoMEt  -= shift;
 	  impSumEt += (wCand1.E()-myJetsFilt[indexW1].E());
@@ -977,6 +1203,9 @@ int main(int argc, const char* argv[])
 	etaRecoLight=-99;
 	phiRecoLight=-99;
 	flavor=-99;
+	nSvsLight = -99;
+	mindRLight=-99;
+	maxdRLight=-99;
       }
       ptLight       = wCand1.E();
       etaLight      = wCand1.Eta();
@@ -1009,6 +1238,33 @@ int main(int argc, const char* argv[])
 
 	  TVector3 shift( dPx, dPy, 0.0);
 
+	  vector<unsigned int> ind_vtx;
+	  for(int l = 0; l < nSvs; l++){
+	    TLorentzVector vertex(1,0,0,1);
+	    vertex.SetPtEtaPhiM( Sv_pt[l], Sv_eta[l], Sv_phi[l], Sv_massSv[l]);
+	    if(deltaR(vertex,  myJetsFilt[indexW2])<0.5){
+	      ind_vtx.push_back(l);
+	    }
+	  }
+	  nSvsLight = ind_vtx.size();
+	  massSvLight = ind_vtx.size()>0 ?  Sv_massSv[ ind_vtx[0] ] : -99;
+	  if(nSvsLight>=2){
+	    float min =  999;
+	    float max = -999;
+	    TLorentzVector vertex1(1,0,0,1);
+	    TLorentzVector vertex2(1,0,0,1);
+	    for(unsigned int v1 = 0; v1 <  ind_vtx.size()-1; v1++){
+	      vertex1.SetPtEtaPhiM( Sv_pt[ind_vtx[v1]], Sv_eta[ind_vtx[v1]], Sv_phi[ind_vtx[v1]], Sv_massSv[ind_vtx[v1]]);	      
+	      for(unsigned int v2 = v1+1; v2 <  ind_vtx.size(); v2++){
+		vertex2.SetPtEtaPhiM( Sv_pt[ind_vtx[v2]], Sv_eta[ind_vtx[v2]], Sv_phi[ind_vtx[v2]], Sv_massSv[ind_vtx[v2]]);
+		if( deltaR(vertex1, vertex2)< min ) min = deltaR(vertex1, vertex2);
+		if( deltaR(vertex1, vertex2)> max ) max = deltaR(vertex1, vertex2);
+	      }
+	    }
+	    mindRLight = min;
+	    maxdRLight = max;
+	  }
+
 	  if(indexW2!=indexBbar && indexW2!=indexB && indexW2!=indexH2 &&  indexW2!=indexH1 &&  indexW2!=indexW1) {
 	    recoMEt  -= shift;
 	    impSumEt += (wCand2.E()-myJetsFilt[indexW2].E());
@@ -1021,12 +1277,58 @@ int main(int argc, const char* argv[])
 	  etaRecoLight=-99;
 	  phiRecoLight=-99;
 	  flavor = -99;
+	  nSvsLight = -99;
+	  mindRLight=-99;
+	  maxdRLight=-99;	  
 	}	
 	ptLight       = wCand2.E();
 	etaLight      = wCand2.Eta();
 	phiLight      = wCand2.Phi();
 	if(wCand2.E()>0) genJetLightTree->Fill();
 	
+	///////////////////////////////////////////////////
+	// Gluon
+	///////////////////////////////////////////////////   
+
+	if( indexG!=999 && indexG!=indexB && indexG!=indexBbar && indexG!=indexH1 && indexG!=indexH2 && indexG!=indexW1 && indexG!=indexW2){
+	  ptRecoGluon    = myJetsFilt[indexG].E();
+	  massRecoGluon  = myJetsFilt[indexG].M();
+	  etaRecoGluon   = myJetsFilt[indexG].Eta();
+	  phiRecoGluon   = myJetsFilt[indexG].Phi();
+	  csvRecoGluon   = mapFilt[indexG].index>0 ?  hJetscsvnominal[mapFilt[indexG].index]  : aJetscsvnominal[-mapFilt[indexG].index-1];
+
+	  vector<unsigned int> ind_vtx;
+	  for(int l = 0; l < nSvs; l++){
+	    TLorentzVector vertex(1,0,0,1);
+	    vertex.SetPtEtaPhiM( Sv_pt[l], Sv_eta[l], Sv_phi[l], Sv_massSv[l]);
+	    if(deltaR(vertex,  myJetsFilt[indexG])<0.5){
+	      ind_vtx.push_back(l);
+	    }
+	  }
+	  nSvsGluon = ind_vtx.size();
+	  if(nSvsGluon>=2){
+	    float min =  999;
+	    float max = -999;
+	    TLorentzVector vertex1(1,0,0,1);
+	    TLorentzVector vertex2(1,0,0,1);
+	    for(unsigned int v1 = 0; v1 <  ind_vtx.size()-1; v1++){
+	      vertex1.SetPtEtaPhiM( Sv_pt[ind_vtx[v1]], Sv_eta[ind_vtx[v1]], Sv_phi[ind_vtx[v1]], Sv_massSv[ind_vtx[v1]]);	      
+	      for(unsigned int v2 = v1+1; v2 <  ind_vtx.size(); v2++){
+		vertex2.SetPtEtaPhiM( Sv_pt[ind_vtx[v2]], Sv_eta[ind_vtx[v2]], Sv_phi[ind_vtx[v2]], Sv_massSv[ind_vtx[v2]]);
+		if( deltaR(vertex1, vertex2)< min ) min = deltaR(vertex1, vertex2);
+		if( deltaR(vertex1, vertex2)> max ) max = deltaR(vertex1, vertex2);
+	      }
+	    }
+	    mindRGluon = min;
+	    maxdRGluon = max;
+	  }
+	  genJetGluonTree->Fill();
+	}
+
+
+
+
+
       
 	impEtReco  = recoMEt.Pt();
 	impPhiReco = recoMEt.Phi();

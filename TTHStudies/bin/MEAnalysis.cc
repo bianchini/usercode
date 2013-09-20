@@ -271,6 +271,8 @@ int main(int argc, const char* argv[])
   ran->SetSeed(4321);
 
   TFile* fCP = TFile::Open(pathToCP.c_str(),"READ");
+
+  double svs[4] = {0.27, 0.73, 0.93, 0.07};
   map<string,TH1F*> btagger; 
   if( useBtag && fCP!=0 ){
     btagger["b_Bin0"] = fCP->Get("csv_b_Bin0__csvReco")!=0 ? (TH1F*)fCP->Get("csv_b_Bin0__csvReco") : 0;
@@ -560,6 +562,12 @@ int main(int argc, const char* argv[])
     Float_t aJet_csv_downL[999];
     Float_t aJet_JECUnc[999];
 
+    int nSvs;
+    float SvmassSv[999];
+    float Svpt    [999];
+    float Sveta   [999];
+    float Svphi   [999];
+
     currentTree->SetBranchAddress("jet1",   &jet1);
     currentTree->SetBranchAddress("jet2",   &jet2);
     currentTree->SetBranchAddress("jet3",   &jet3);
@@ -604,6 +612,12 @@ int main(int argc, const char* argv[])
     currentTree->SetBranchAddress("nvlep",   &nvlep);
     currentTree->SetBranchAddress("nC",      &nC);
     currentTree->SetBranchAddress("nCTop",   &nCTop);
+
+    currentTree->SetBranchAddress("nSvs",      &nSvs);
+    currentTree->SetBranchAddress("Sv_massSv", SvmassSv);
+    currentTree->SetBranchAddress("Sv_pt",     Svpt);
+    currentTree->SetBranchAddress("Sv_eta",    Sveta);
+    currentTree->SetBranchAddress("Sv_phi",    Svphi);
 
     
     int counter = 0;
@@ -996,6 +1010,8 @@ int main(int argc, const char* argv[])
       unsigned int w1=999;
       unsigned int w2=999;
       unsigned int w3=999;
+      unsigned int w4=999;
+      unsigned int w5=999;
       unsigned int b1=999;
       unsigned int b2=999;
       unsigned int b3=999;
@@ -1043,9 +1059,11 @@ int main(int argc, const char* argv[])
 	else if(  btag_M && b1!=999 && b2==999 && b3==999 && b4==999) b2 = k;	    
 	else if(  btag_M && b1!=999 && b2!=999 && b3==999 && b4==999) b3 = k;	    
 	else if(  btag_M && b1!=999 && b2!=999 && b3!=999 && b4==999) b4 = k;	    
-	else if( !btag_M && w1==999 && w2==999) w1 = k;
-	else if( !btag_M && w1!=999 && w2==999) w2 = k; 
-	else if( !btag_M && w1!=999 && w2!=999) w3 = k; 
+	else if( !btag_M && w1==999 && w2==999 && w3==999 && w4==999 && w5==999) w1 = k;
+	else if( !btag_M && w1!=999 && w2==999 && w3==999 && w4==999 && w5==999) w2 = k; 
+	else if( !btag_M && w1!=999 && w2!=999 && w3==999 && w4==999 && w5==999) w3 = k; 
+	else if( !btag_M && w1!=999 && w2!=999 && w3!=999 && w4==999 && w5==999) w4 = k; 
+	else if( !btag_M && w1!=999 && w2!=999 && w3!=999 && w4!=999 && w5==999) w5 = k; 
 	else{}
       }
 
@@ -1248,6 +1266,119 @@ int main(int argc, const char* argv[])
 	    meIntegrator->setIntType( MEIntegratorNew::SL1wj );
 	  }
 	  
+	  /////////////////////////////////////////////////////////////
+	  int index_bLep          =  mapFilt[b1].index;
+	  float csv_bLep_nominal  =  index_bLep>=0 ? hJet_csv_nominal[index_bLep]  : aJet_csv_nominal[-index_bLep-1];
+	  float csv_bLep_upBC     =  index_bLep>=0 ? hJet_csv_upBC   [index_bLep]  : aJet_csv_upBC   [-index_bLep-1];
+	  float csv_bLep_downBC   =  index_bLep>=0 ? hJet_csv_downBC [index_bLep]  : aJet_csv_downBC [-index_bLep-1];
+	  float csv_bLep_upL      =  index_bLep>=0 ? hJet_csv_upL    [index_bLep]  : aJet_csv_upL    [-index_bLep-1];
+	  float csv_bLep_downL    =  index_bLep>=0 ? hJet_csv_downL  [index_bLep]  : aJet_csv_downL  [-index_bLep-1];
+	  float csv_bLep = csv_bLep_nominal;
+	  if( doCSVup )   csv_bLep = TMath::Max(csv_bLep_upBC,   csv_bLep_upL);
+	  if( doCSVdown ) csv_bLep = TMath::Min(csv_bLep_downBC, csv_bLep_downL);   
+
+	  if     ( csv_bLep< 1.1 ){
+	    float m1    = (meIntegrator->jetAt(2)+meIntegrator->jetAt(3)).M();
+	    float m2    = (meIntegrator->jetAt(2)+meIntegrator->jetAt(4)).M();
+	    if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 0 ){
+	      flag_type0_ = 0; 
+	      if( csv_bLep<0.95 ) flag_type0_ = 1; 
+	      if( csv_bLep<0.90 ) flag_type0_ = 2; 
+	      if( csv_bLep<0.85 ) flag_type0_ = 3;
+	      if( csv_bLep<0.80 ) flag_type0_ = 4;  
+	    }
+	    if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 1 ){
+	      flag_type1_ = 0; 
+	      if( csv_bLep<0.95 ) flag_type1_ = 1; 
+	      if( csv_bLep<0.90 ) flag_type1_ = 2; 
+	      if( csv_bLep<0.85 ) flag_type1_ = 3;
+	      if( csv_bLep<0.80 ) flag_type1_ = 4;  
+	    }
+	  }
+	  int index_bHad          =  mapFilt[b2].index;
+	  float csv_bHad_nominal  =  index_bHad>=0 ? hJet_csv_nominal[index_bHad]  : aJet_csv_nominal[-index_bHad-1];
+	  float csv_bHad_upBC     =  index_bHad>=0 ? hJet_csv_upBC   [index_bHad]  : aJet_csv_upBC   [-index_bHad-1];
+	  float csv_bHad_downBC   =  index_bHad>=0 ? hJet_csv_downBC [index_bHad]  : aJet_csv_downBC [-index_bHad-1];
+	  float csv_bHad_upL      =  index_bHad>=0 ? hJet_csv_upL    [index_bHad]  : aJet_csv_upL    [-index_bHad-1];
+	  float csv_bHad_downL    =  index_bHad>=0 ? hJet_csv_downL  [index_bHad]  : aJet_csv_downL  [-index_bHad-1];	  
+	  float csv_bHad = csv_bHad_nominal;
+	  if( doCSVup )   csv_bHad = TMath::Max(csv_bHad_upBC,   csv_bHad_upL);
+	  if( doCSVdown ) csv_bHad = TMath::Min(csv_bHad_downBC, csv_bHad_downL);
+	  if     ( csv_bHad< 1.1 ){
+	    float m1    = (meIntegrator->jetAt(5)+meIntegrator->jetAt(3)).M();
+	    float m2    = (meIntegrator->jetAt(5)+meIntegrator->jetAt(4)).M();
+	    if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 0 ){
+	      flag_type0_ = 0; 
+	      if( csv_bHad<0.95 ) flag_type0_ = 1; 
+	      if( csv_bHad<0.90 ) flag_type0_ = 2; 
+	      if( csv_bHad<0.85 ) flag_type0_ = 3;
+	      if( csv_bHad<0.80 ) flag_type0_ = 4;  
+	    }
+	    if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 1 ){
+	      flag_type1_ = 0; 
+	      if( csv_bHad<0.95 ) flag_type1_ = 1; 
+	      if( csv_bHad<0.90 ) flag_type1_ = 2; 
+	      if( csv_bHad<0.85 ) flag_type1_ = 3;
+	      if( csv_bHad<0.80 ) flag_type1_ = 4;  
+	    }
+	  }
+	  int index_b1          =  mapFilt[b3].index;
+	  float csv_b1_nominal  =  index_b1>=0 ? hJet_csv_nominal[index_b1]  : aJet_csv_nominal[-index_b1-1];
+	  float csv_b1_upBC     =  index_b1>=0 ? hJet_csv_upBC   [index_b1]  : aJet_csv_upBC   [-index_b1-1];
+	  float csv_b1_downBC   =  index_b1>=0 ? hJet_csv_downBC [index_b1]  : aJet_csv_downBC [-index_b1-1];
+	  float csv_b1_upL      =  index_b1>=0 ? hJet_csv_upL    [index_b1]  : aJet_csv_upL    [-index_b1-1];
+	  float csv_b1_downL    =  index_b1>=0 ? hJet_csv_downL  [index_b1]  : aJet_csv_downL  [-index_b1-1];
+	  float csv_b1 = csv_b1_nominal;
+	  if( doCSVup )   csv_b1 = TMath::Max(csv_b1_upBC,   csv_b1_upL);
+	  if( doCSVdown ) csv_b1 = TMath::Min(csv_b1_downBC, csv_b1_downL);	   
+	  if     ( csv_b1< 1.1 ){
+	    float m1    = (meIntegrator->jetAt(6)+meIntegrator->jetAt(3)).M();
+	    float m2    = (meIntegrator->jetAt(6)+meIntegrator->jetAt(4)).M();
+	    if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 0 ){
+	      flag_type0_ = 0; 
+	      if( csv_b1<0.95 ) flag_type0_ = 1; 
+	      if( csv_b1<0.90 ) flag_type0_ = 2; 
+	      if( csv_b1<0.85 ) flag_type0_ = 3;
+	      if( csv_b1<0.80 ) flag_type0_ = 4; 
+	    }
+	    if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 1 ){
+	      flag_type1_ = 0; 
+	      if( csv_b1<0.95 ) flag_type1_ = 1; 
+	      if( csv_b1<0.90 ) flag_type1_ = 2; 
+	      if( csv_b1<0.85 ) flag_type1_ = 3;
+	      if( csv_b1<0.80 ) flag_type1_ = 4;  	
+	    }
+	  }
+	  int index_b2          =  mapFilt[b4].index;
+	  float csv_b2_nominal  =  index_b2>=0 ? hJet_csv_nominal[index_b2]  : aJet_csv_nominal[-index_b2-1];
+	  float csv_b2_upBC     =  index_b2>=0 ? hJet_csv_upBC   [index_b2]  : aJet_csv_upBC   [-index_b2-1];
+	  float csv_b2_downBC   =  index_b2>=0 ? hJet_csv_downBC [index_b2]  : aJet_csv_downBC [-index_b2-1];
+	  float csv_b2_upL      =  index_b2>=0 ? hJet_csv_upL    [index_b2]  : aJet_csv_upL    [-index_b2-1];
+	  float csv_b2_downL    =  index_b2>=0 ? hJet_csv_downL  [index_b2]  : aJet_csv_downL  [-index_b2-1];
+	  float csv_b2 = csv_b2_nominal;
+	  if( doCSVup )   csv_b2 = TMath::Max(csv_b2_upBC,   csv_b2_upL);
+	  if( doCSVdown ) csv_b2 = TMath::Min(csv_b2_downBC, csv_b2_downL);	  
+	  if     ( csv_b2< 1.1 ){
+	    float m1    = (meIntegrator->jetAt(7)+meIntegrator->jetAt(3)).M();
+	    float m2    = (meIntegrator->jetAt(7)+meIntegrator->jetAt(4)).M();
+	    if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 0 ){
+	      flag_type0_ = 0; 
+	      if( csv_b2<0.95 ) flag_type0_ = 1; 
+	      if( csv_b2<0.90 ) flag_type0_ = 2; 
+	      if( csv_b2<0.85 ) flag_type0_ = 3;
+	      if( csv_b2<0.80 ) flag_type0_ = 4; 
+	    }
+	    if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 1 ){
+	      flag_type1_ = 0; 
+	      if( csv_b2<0.95 ) flag_type1_ = 1; 
+	      if( csv_b2<0.90 ) flag_type1_ = 2; 
+	      if( csv_b2<0.85 ) flag_type1_ = 3;
+	      if( csv_b2<0.80 ) flag_type1_ = 4; 
+	    }
+	  }
+	  /////////////////////////////////////////////////////////////
+
+
 	  meIntegrator->setSumEt( METtype1p2corr.sumet );
 	  meIntegrator->setMEtCov(-99,-99,0);
 	  meIntegrator->setTopFlags( vLepton_charge[0]==1 ? +1 : -1 , vLepton_charge[0]==1 ? -1 : +1 );
@@ -1392,7 +1523,7 @@ int main(int argc, const char* argv[])
 		      float csv_bLep_downBC   =  index_bLep>=0 ? hJet_csv_downBC [index_bLep]  : aJet_csv_downBC [-index_bLep-1];
 		      float csv_bLep_upL      =  index_bLep>=0 ? hJet_csv_upL    [index_bLep]  : aJet_csv_upL    [-index_bLep-1];
 		      float csv_bLep_downL    =  index_bLep>=0 ? hJet_csv_downL  [index_bLep]  : aJet_csv_downL  [-index_bLep-1];
-		      float csv_bLep = csv_bLep_nominal;
+		      double csv_bLep = csv_bLep_nominal;
 		      if( doCSVup )   csv_bLep = TMath::Max(csv_bLep_upBC,   csv_bLep_upL);
 		      if( doCSVdown ) csv_bLep = TMath::Min(csv_bLep_downBC, csv_bLep_downL);
 
@@ -1404,7 +1535,7 @@ int main(int argc, const char* argv[])
 		      float csv_bHad_downBC   =  index_bHad>=0 ? hJet_csv_downBC [index_bHad]  : aJet_csv_downBC [-index_bHad-1];
 		      float csv_bHad_upL      =  index_bHad>=0 ? hJet_csv_upL    [index_bHad]  : aJet_csv_upL    [-index_bHad-1];
 		      float csv_bHad_downL    =  index_bHad>=0 ? hJet_csv_downL  [index_bHad]  : aJet_csv_downL  [-index_bHad-1];
-		      float csv_bHad = csv_bHad_nominal;
+		      double csv_bHad = csv_bHad_nominal;
 		      if( doCSVup )   csv_bHad = TMath::Max(csv_bHad_upBC,   csv_bHad_upL);
 		      if( doCSVdown ) csv_bHad = TMath::Min(csv_bHad_downBC, csv_bHad_downL);
 
@@ -1416,7 +1547,7 @@ int main(int argc, const char* argv[])
 		      float csv_b1_downBC   =  index_b1>=0 ? hJet_csv_downBC [index_b1]  : aJet_csv_downBC [-index_b1-1];
 		      float csv_b1_upL      =  index_b1>=0 ? hJet_csv_upL    [index_b1]  : aJet_csv_upL    [-index_b1-1];
 		      float csv_b1_downL    =  index_b1>=0 ? hJet_csv_downL  [index_b1]  : aJet_csv_downL  [-index_b1-1];
-		      float csv_b1 = csv_b1_nominal;
+		      double csv_b1 = csv_b1_nominal;
 		      if( doCSVup )   csv_b1 = TMath::Max(csv_b1_upBC,   csv_b1_upL);
 		      if( doCSVdown ) csv_b1 = TMath::Min(csv_b1_downBC, csv_b1_downL);
 
@@ -1428,43 +1559,59 @@ int main(int argc, const char* argv[])
 		      float csv_b2_downBC   =  index_b2>=0 ? hJet_csv_downBC [index_b2]  : aJet_csv_downBC [-index_b2-1];
 		      float csv_b2_upL      =  index_b2>=0 ? hJet_csv_upL    [index_b2]  : aJet_csv_upL    [-index_b2-1];
 		      float csv_b2_downL    =  index_b2>=0 ? hJet_csv_downL  [index_b2]  : aJet_csv_downL  [-index_b2-1];
-		      float csv_b2 = csv_b2_nominal;
+		      double csv_b2 = csv_b2_nominal;
 		      if( doCSVup )   csv_b2 = TMath::Max(csv_b2_upBC,   csv_b2_upL);
 		      if( doCSVdown ) csv_b2 = TMath::Min(csv_b2_downBC, csv_b2_downL);
 
 		      
 		      string bin_bLep = TMath::Abs( (meIntegrator->jetAt(2)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
-		      double p_b_bLep =  btagger["b_"+bin_bLep]!=0 ?  btagger["b_"+bin_bLep]->GetBinContent( btagger["b_"+bin_bLep]->FindBin( csv_bLep ) ) : 1.;
+		      double p_b_bLep =  btagger["b_"+bin_bLep]!=0 ?  btagger["b_"+bin_bLep]->GetBinContent( btagger["b_"+bin_bLep]->FindBin( TMath::Min(csv_bLep, 0.999999) ) ) : 1.;
 		      
 		      string bin_bHad = TMath::Abs( (meIntegrator->jetAt(5)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
-		      double p_b_bHad =  btagger["b_"+bin_bHad]!=0 ?  btagger["b_"+bin_bHad]->GetBinContent( btagger["b_"+bin_bHad]->FindBin( csv_bHad ) ) : 1.;
+		      double p_b_bHad =  btagger["b_"+bin_bHad]!=0 ?  btagger["b_"+bin_bHad]->GetBinContent( btagger["b_"+bin_bHad]->FindBin( TMath::Min(csv_bHad, 0.999999) ) ) : 1.;
 
 		      string bin_b1   = TMath::Abs( (meIntegrator->jetAt(6)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
-		      double p_b_b1   =  btagger["b_"+bin_b1]!=0 ?  btagger["b_"+bin_b1]->GetBinContent( btagger["b_"+bin_b1]->FindBin( csv_b1 ) ) : 1.;
-		      double p_j_b1   =  btagger["l_"+bin_b1]!=0 ?  btagger["l_"+bin_b1]->GetBinContent( btagger["l_"+bin_b1]->FindBin( csv_b1 ) ) : 1.;
+		      double p_b_b1   =  btagger["b_"+bin_b1]!=0 ?  btagger["b_"+bin_b1]->GetBinContent( btagger["b_"+bin_b1]->FindBin( TMath::Min(csv_b1, 0.999999) ) ) : 1.;
+		      double p_j_b1   =  btagger["l_"+bin_b1]!=0 ?  btagger["l_"+bin_b1]->GetBinContent( btagger["l_"+bin_b1]->FindBin( TMath::Min(csv_b1, 0.999999) ) ) : 1.;
 
 		      string bin_b2   = TMath::Abs( (meIntegrator->jetAt(7)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
-		      double p_b_b2   =  btagger["b_"+bin_b2]!=0 ?  btagger["b_"+bin_b2]->GetBinContent( btagger["b_"+bin_b2]->FindBin( csv_b2 ) ) : 1.;
-		      double p_j_b2   =  btagger["l_"+bin_b2]!=0 ?  btagger["l_"+bin_b2]->GetBinContent( btagger["l_"+bin_b2]->FindBin( csv_b2 ) ) : 1.;
+		      double p_b_b2   =  btagger["b_"+bin_b2]!=0 ?  btagger["b_"+bin_b2]->GetBinContent( btagger["b_"+bin_b2]->FindBin( TMath::Min(csv_b2, 0.999999) ) ) : 1.;
+		      double p_j_b2   =  btagger["l_"+bin_b2]!=0 ?  btagger["l_"+bin_b2]->GetBinContent( btagger["l_"+bin_b2]->FindBin( TMath::Min(csv_b2, 0.999999) ) ) : 1.;
 		      
-		      //cout << "bLep_pos " << bLep_pos << " -- correspond to " << index_bLep << " with csv="<< csv_bLep << ": prob under b hyp: " << p_b_bLep << endl;
-		      //cout << "bHad_pos " << bHad_pos << " -- correspond to " << index_bHad << " with csv="<< csv_bHad << ": prob under b hyp: " << p_b_bHad <<  endl;
-		      //cout << "b1_pos " << b1_pos << " -- correspond to " << index_b1 << " with csv="<< csv_b1         << ": prob under b hyp: " << p_b_b1 << ", under j hyp: " << p_j_b1 <<  endl;
-		      //cout << "b2_pos " << b2_pos << " -- correspond to " << index_b2 << " with csv="<< csv_b2         << ": prob under b hyp: " << p_b_b2 << ", under j hyp: " << p_j_b2 << endl;		      
+		      cout << "bLep_pos " << bLep_pos << " -- correspond to " << index_bLep << " with csv="<< csv_bLep << ": prob under b hyp: " << p_b_bLep << endl;
+		      cout << "bHad_pos " << bHad_pos << " -- correspond to " << index_bHad << " with csv="<< csv_bHad << ": prob under b hyp: " << p_b_bHad <<  endl;
+		      cout << "b1_pos " << b1_pos << " -- correspond to " << index_b1 << " with csv="<< csv_b1         << ": prob under b hyp: " << p_b_b1 << ", under j hyp: " << p_j_b1 <<  endl;
+		      cout << "b2_pos " << b2_pos << " -- correspond to " << index_b2 << " with csv="<< csv_b2         << ": prob under b hyp: " << p_b_b2 << ", under j hyp: " << p_j_b2 << endl;		      
+
+		      /*
+		      int sv_bLep = 0;
+		      int sv_bHad = 0;
+		      int sv_b1   = 0;
+		      int sv_b2   = 0;
+		      for(int l = 0; l < nSvs; l++){
+			TLorentzVector vertex(1,0,0,1);
+			vertex.SetPtEtaPhiM( Svpt[l], Sveta[l], Svphi[l], SvmassSv[l]);
+			if(deltaR(vertex, meIntegrator->jetAt(2) )<0.5)      sv_bLep = 1;
+			else if(deltaR(vertex, meIntegrator->jetAt(5) )<0.5) sv_bHad = 1;
+			else if(deltaR(vertex, meIntegrator->jetAt(6) )<0.5) sv_b1   = 1;
+			else if(deltaR(vertex, meIntegrator->jetAt(7) )<0.5) sv_b2   = 1;
+			else{}
+		      }
+		      double p_b_sv = svs[sv_bLep]*svs[sv_bHad]*svs[sv_b1]  *svs[sv_b2];
+		      double p_j_sv = svs[sv_bLep]*svs[sv_bHad]*svs[2+sv_b1]*svs[2+sv_b2];
+		      */
 
 		      if( mH[m]<met+0.5 && mH[m]>met-0.5){
 			if(hyp==0){
-			  probAtSgn_ttbb_         += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2);
+			  probAtSgn_ttbb_         += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2 /**  p_b_sv*/);
 			}
 			else{
-			  probAtSgn_alt_ttbb_     += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2);
-			  probAtSgn_alt_ttjj_     += ( p * p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2);
+			  probAtSgn_alt_ttbb_     += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2 /**  p_b_sv*/);
+			  probAtSgn_alt_ttjj_     += ( p * p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2 /**  p_j_sv*/);
 			}
 		      }
 		      
 		    }
-
-
 
 
 		    if( p>= maxP_s && hyp==0 ){
@@ -1527,7 +1674,7 @@ int main(int argc, const char* argv[])
 	  clock->Reset();	    
 	  
 	}
-	else if(numJets30UntagM==3 && doType3){
+	else if(numJets30UntagM>=3 && doType3){
 	  
 	  //continue;
 
@@ -1541,25 +1688,26 @@ int main(int argc, const char* argv[])
 	    continue;
 	  }
 
+	  /*
 	  float WMass12 = (myJetsFilt[w1]+myJetsFilt[w2]).M();
 	  float WMass13 = (myJetsFilt[w1]+myJetsFilt[w3]).M();
 	  float WMass23 = (myJetsFilt[w2]+myJetsFilt[w3]).M();
-
+	  
 	  unsigned int ind1 = 999;
 	  unsigned int ind2 = 999;
-	  if( TMath::Abs(WMass12-80.1) < TMath::Abs(WMass13-80.1) &&  
+	  if( TMath::Abs(WMass12-80.1) < TMath::Abs(WMass13-80.1) &&
 	      TMath::Abs(WMass12-80.1) < TMath::Abs(WMass23-80.1)){
 	    ind1 = w1;
 	    ind2 = w2;
 	    cout << "Best W mass: " << WMass12 << endl;
 	  }
-	  else if( TMath::Abs(WMass13-80.1) < TMath::Abs(WMass12-80.1) &&  
+	  else if( TMath::Abs(WMass13-80.1) < TMath::Abs(WMass12-80.1) &&
 		   TMath::Abs(WMass13-80.1) < TMath::Abs(WMass23-80.1) ){
 	    ind1 = w1;
 	    ind2 = w3;
 	    cout << "Best W mass: " << WMass13 << endl;
 	  }
-	  else if( TMath::Abs(WMass23-80.1) < TMath::Abs(WMass12-80.1) &&  
+	  else if( TMath::Abs(WMass23-80.1) < TMath::Abs(WMass12-80.1) &&
 		   TMath::Abs(WMass23-80.1) < TMath::Abs(WMass13-80.1) ){
 	    ind1 = w2;
 	    ind2 = w3;
@@ -1569,7 +1717,43 @@ int main(int argc, const char* argv[])
 	    cout << "Inconsistency found in numJets30UntagM==3... continue" << endl;
 	    continue;
 	  }
+	  */
+
+
 	  
+	  vector<unsigned int> untaggedjets;
+	  if( w1!=999 ) untaggedjets.push_back(w1);
+	  if( w2!=999 ) untaggedjets.push_back(w2);
+	  if( w3!=999 ) untaggedjets.push_back(w3);
+	  if( w4!=999 ) untaggedjets.push_back(w4);
+	  if( w5!=999 ) untaggedjets.push_back(w5);
+
+	  unsigned int ind1 = 999;
+	  unsigned int ind2 = 999;
+	  float minDiff     = 9999.;
+	  for(unsigned int uj1 = 0; uj1<untaggedjets.size()-1; uj1++){
+	    for(unsigned int uj2 = uj1+1; uj2<untaggedjets.size(); uj2++){
+	      float WMass12 = (myJetsFilt[ untaggedjets[uj1] ]+myJetsFilt[ untaggedjets[uj2] ]).M();
+	      if( TMath::Abs(WMass12-80.1)<minDiff ){
+		minDiff = TMath::Abs(WMass12-80.1);
+		ind1 = untaggedjets[uj1];
+		ind2 = untaggedjets[uj2];
+	      }
+	    }
+	  }
+	  bool wtag = ind1!=999 && ind2!=999;
+	  if(wtag){
+	    float WMass = (myJetsFilt[ ind1 ]+myJetsFilt[ ind2 ]).M();
+	    cout << "Best W mass: " << WMass << endl;
+	    if( WMass>MwL && WMass<MwH ) 
+	      wtag = true;
+	    else 
+	      wtag = false;
+	  }
+	  if(  wtag  ) flag_type3_ = 1;
+	  
+
+
 
 	  jets.clear();
 	  jets.push_back( leptonLV  );  
@@ -1696,7 +1880,7 @@ int main(int argc, const char* argv[])
 		    float csv_bLep_downBC   =  index_bLep>=0 ? hJet_csv_downBC [index_bLep]  : aJet_csv_downBC [-index_bLep-1];
 		    float csv_bLep_upL      =  index_bLep>=0 ? hJet_csv_upL    [index_bLep]  : aJet_csv_upL    [-index_bLep-1];
 		    float csv_bLep_downL    =  index_bLep>=0 ? hJet_csv_downL  [index_bLep]  : aJet_csv_downL  [-index_bLep-1];
-		    float csv_bLep = csv_bLep_nominal;
+		    double csv_bLep = csv_bLep_nominal;
 		    if( doCSVup )   csv_bLep = TMath::Max(csv_bLep_upBC,   csv_bLep_upL);
 		    if( doCSVdown ) csv_bLep = TMath::Min(csv_bLep_downBC, csv_bLep_downL);
 		    
@@ -1708,7 +1892,7 @@ int main(int argc, const char* argv[])
 		    float csv_bHad_downBC   =  index_bHad>=0 ? hJet_csv_downBC [index_bHad]  : aJet_csv_downBC [-index_bHad-1];
 		    float csv_bHad_upL      =  index_bHad>=0 ? hJet_csv_upL    [index_bHad]  : aJet_csv_upL    [-index_bHad-1];
 		    float csv_bHad_downL    =  index_bHad>=0 ? hJet_csv_downL  [index_bHad]  : aJet_csv_downL  [-index_bHad-1];
-		    float csv_bHad = csv_bHad_nominal;
+		    double csv_bHad = csv_bHad_nominal;
 		    if( doCSVup )   csv_bHad = TMath::Max(csv_bHad_upBC,   csv_bHad_upL);
 		    if( doCSVdown ) csv_bHad = TMath::Min(csv_bHad_downBC, csv_bHad_downL);
 		    
@@ -1720,7 +1904,7 @@ int main(int argc, const char* argv[])
 		    float csv_b1_downBC   =  index_b1>=0 ? hJet_csv_downBC [index_b1]  : aJet_csv_downBC [-index_b1-1];
 		    float csv_b1_upL      =  index_b1>=0 ? hJet_csv_upL    [index_b1]  : aJet_csv_upL    [-index_b1-1];
 		    float csv_b1_downL    =  index_b1>=0 ? hJet_csv_downL  [index_b1]  : aJet_csv_downL  [-index_b1-1];
-		    float csv_b1 = csv_b1_nominal;
+		    double csv_b1 = csv_b1_nominal;
 		    if( doCSVup )   csv_b1 = TMath::Max(csv_b1_upBC,   csv_b1_upL);
 		    if( doCSVdown ) csv_b1 = TMath::Min(csv_b1_downBC, csv_b1_downL);
 		    
@@ -1732,39 +1916,58 @@ int main(int argc, const char* argv[])
 		    float csv_b2_downBC   =  index_b2>=0 ? hJet_csv_downBC [index_b2]  : aJet_csv_downBC [-index_b2-1];
 		    float csv_b2_upL      =  index_b2>=0 ? hJet_csv_upL    [index_b2]  : aJet_csv_upL    [-index_b2-1];
 		    float csv_b2_downL    =  index_b2>=0 ? hJet_csv_downL  [index_b2]  : aJet_csv_downL  [-index_b2-1];
-		    float csv_b2 = csv_b2_nominal;
+		    double csv_b2 = csv_b2_nominal;
 		    if( doCSVup )   csv_b2 = TMath::Max(csv_b2_upBC,   csv_b2_upL);
 		    if( doCSVdown ) csv_b2 = TMath::Min(csv_b2_downBC, csv_b2_downL);
 	    
 
 		    string bin_bLep = TMath::Abs( (meIntegrator->jetAt(2)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
-		    double p_b_bLep =  btagger["b_"+bin_bLep]!=0 ?  btagger["b_"+bin_bLep]->GetBinContent( btagger["b_"+bin_bLep]->FindBin( csv_bLep ) ) : 1.;		    
+		    double p_b_bLep =  btagger["b_"+bin_bLep]!=0 ?  btagger["b_"+bin_bLep]->GetBinContent( btagger["b_"+bin_bLep]->FindBin( TMath::Min(csv_bLep, 0.999999) ) ) : 1.;
 		    
 		    string bin_bHad = TMath::Abs( (meIntegrator->jetAt(5)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
-		    double p_b_bHad =  btagger["b_"+bin_bHad]!=0 ?  btagger["b_"+bin_bHad]->GetBinContent( btagger["b_"+bin_bHad]->FindBin( csv_bHad ) ) : 1.;
+		    double p_b_bHad =  btagger["b_"+bin_bHad]!=0 ?  btagger["b_"+bin_bHad]->GetBinContent( btagger["b_"+bin_bHad]->FindBin( TMath::Min(csv_bHad, 0.999999) ) ) : 1.;
 		    
 		    string bin_b1   = TMath::Abs( (meIntegrator->jetAt(6)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
-		    double p_b_b1   =  btagger["b_"+bin_b1]!=0 ?  btagger["b_"+bin_b1]->GetBinContent( btagger["b_"+bin_b1]->FindBin( csv_b1 ) ) : 1.;
-		    double p_j_b1   =  btagger["l_"+bin_b1]!=0 ?  btagger["l_"+bin_b1]->GetBinContent( btagger["l_"+bin_b1]->FindBin( csv_b1 ) ) : 1.;
+		    double p_b_b1   =  btagger["b_"+bin_b1]!=0 ?  btagger["b_"+bin_b1]->GetBinContent( btagger["b_"+bin_b1]->FindBin( TMath::Min(csv_b1, 0.999999) ) ) : 1.;
+		    double p_j_b1   =  btagger["l_"+bin_b1]!=0 ?  btagger["l_"+bin_b1]->GetBinContent( btagger["l_"+bin_b1]->FindBin( TMath::Min(csv_b1, 0.999999) ) ) : 1.;
 		    
 		    string bin_b2   = TMath::Abs( (meIntegrator->jetAt(7)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
-		    double p_b_b2   =  btagger["b_"+bin_b2]!=0 ?  btagger["b_"+bin_b2]->GetBinContent( btagger["b_"+bin_b2]->FindBin( csv_b2 ) ) : 1.;
-		    double p_j_b2   =  btagger["l_"+bin_b2]!=0 ?  btagger["l_"+bin_b2]->GetBinContent( btagger["l_"+bin_b2]->FindBin( csv_b2 ) ) : 1.;
-		    
+		    double p_b_b2   =  btagger["b_"+bin_b2]!=0 ?  btagger["b_"+bin_b2]->GetBinContent( btagger["b_"+bin_b2]->FindBin( TMath::Min(csv_b2, 0.999999) ) ) : 1.;
+		    double p_j_b2   =  btagger["l_"+bin_b2]!=0 ?  btagger["l_"+bin_b2]->GetBinContent( btagger["l_"+bin_b2]->FindBin( TMath::Min(csv_b2, 0.999999) ) ) : 1.;
+		   
+		     
 		    //cout << "bLep_pos " << bLep_pos << " -- correspond to " << index_bLep << " with csv="<< csv_bLep << ": prob under b hyp: " << p_b_bLep << endl;
 		    //cout << "bHad_pos " << bHad_pos << " -- correspond to " << index_bHad << " with csv="<< csv_bHad << ": prob under b hyp: " << p_b_bHad <<  endl;
 		    //cout << "b1_pos " << b1_pos << " -- correspond to " << index_b1 << " with csv="<< csv_b1         << ": prob under b hyp: " << p_b_b1 << ", under j hyp: " << p_j_b1 <<  endl;
 		    //cout << "b2_pos " << b2_pos << " -- correspond to " << index_b2 << " with csv="<< csv_b2         << ": prob under b hyp: " << p_b_b2 << ", under j hyp: " << p_j_b2 << endl;		      
 
+		    /*
+		    int sv_bLep = 0;
+		    int sv_bHad = 0;
+		    int sv_b1   = 0;
+		    int sv_b2   = 0;
+		    for(int l = 0; l < nSvs; l++){
+		      TLorentzVector vertex(1,0,0,1);
+		      vertex.SetPtEtaPhiM( Svpt[l], Sveta[l], Svphi[l], SvmassSv[l]);
+		      if(deltaR(vertex, meIntegrator->jetAt(2) )<0.5)      sv_bLep = 1;
+		      else if(deltaR(vertex, meIntegrator->jetAt(5) )<0.5) sv_bHad = 1;
+		      else if(deltaR(vertex, meIntegrator->jetAt(6) )<0.5) sv_b1   = 1;
+		      else if(deltaR(vertex, meIntegrator->jetAt(7) )<0.5) sv_b2   = 1;
+		      else{}
+		    }
+		    double p_b_sv = svs[sv_bLep]*svs[sv_bHad]*svs[sv_b1]  *svs[sv_b2];
+		    double p_j_sv = svs[sv_bLep]*svs[sv_bHad]*svs[2+sv_b1]*svs[2+sv_b2];
+		    */
+
 		    if( mH[m]<met+0.5 && mH[m]>met-0.5){
 		      if(hyp==0){
-			probAtSgn_ttbb_         += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2);
+			probAtSgn_ttbb_         += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2 /**  p_b_sv*/);
 		      }
 		      else{
-			probAtSgn_alt_ttbb_     += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2);
-			probAtSgn_alt_ttjj_     += ( p * p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2);
+			probAtSgn_alt_ttbb_     += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2 /**  p_b_sv*/);
+			probAtSgn_alt_ttjj_     += ( p * p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2 /**  p_j_sv*/);
 		      }
-		      }		    
+		    }		    
 		  }
 
 		  
@@ -1835,7 +2038,7 @@ int main(int argc, const char* argv[])
 	  continue;
 	}
 
-
+	/*
 	float WMass1 = (myJetsFilt[w1]+myJetsFilt[b1]).M();
 	float WMass2 = (myJetsFilt[w1]+myJetsFilt[b2]).M();
 	float WMass3 = (myJetsFilt[w1]+myJetsFilt[b3]).M();
@@ -1849,7 +2052,7 @@ int main(int argc, const char* argv[])
 	
 	
 	if(  wtag  ) flag_type2_ = 1;
-	
+	*/
 
 
 	int hMatches = 0;
@@ -1959,6 +2162,88 @@ int main(int argc, const char* argv[])
 	type_ = 2;
 	meIntegrator->setIntType( MEIntegratorNew::SL1wj );
 
+
+	/////////////////////////////////////////////////////////////
+	int index_bLep          =  mapFilt[b1].index;
+	float csv_bLep_nominal  =  index_bLep>=0 ? hJet_csv_nominal[index_bLep]  : aJet_csv_nominal[-index_bLep-1];
+	float csv_bLep_upBC     =  index_bLep>=0 ? hJet_csv_upBC   [index_bLep]  : aJet_csv_upBC   [-index_bLep-1];
+	float csv_bLep_downBC   =  index_bLep>=0 ? hJet_csv_downBC [index_bLep]  : aJet_csv_downBC [-index_bLep-1];
+	float csv_bLep_upL      =  index_bLep>=0 ? hJet_csv_upL    [index_bLep]  : aJet_csv_upL    [-index_bLep-1];
+	float csv_bLep_downL    =  index_bLep>=0 ? hJet_csv_downL  [index_bLep]  : aJet_csv_downL  [-index_bLep-1];
+	double csv_bLep = csv_bLep_nominal;
+	if( doCSVup )   csv_bLep = TMath::Max(csv_bLep_upBC,   csv_bLep_upL);
+	if( doCSVdown ) csv_bLep = TMath::Min(csv_bLep_downBC, csv_bLep_downL);   
+	
+	if     ( csv_bLep< 1.1 ){
+	  float m1    = (meIntegrator->jetAt(2)+meIntegrator->jetAt(3)).M();
+	  if(  m1>(MwL+5) && m1<(MwH-5) ){
+	    flag_type2_ = 0; 
+	    if( csv_bLep<0.95 ) flag_type2_ = 1; 
+	    if( csv_bLep<0.90 ) flag_type2_ = 2; 
+	    if( csv_bLep<0.85 ) flag_type2_ = 3;
+	    if( csv_bLep<0.80 ) flag_type2_ = 4;  
+	  }
+	}
+	int index_bHad          =  mapFilt[b2].index;
+	float csv_bHad_nominal  =  index_bHad>=0 ? hJet_csv_nominal[index_bHad]  : aJet_csv_nominal[-index_bHad-1];
+	float csv_bHad_upBC     =  index_bHad>=0 ? hJet_csv_upBC   [index_bHad]  : aJet_csv_upBC   [-index_bHad-1];
+	float csv_bHad_downBC   =  index_bHad>=0 ? hJet_csv_downBC [index_bHad]  : aJet_csv_downBC [-index_bHad-1];
+	float csv_bHad_upL      =  index_bHad>=0 ? hJet_csv_upL    [index_bHad]  : aJet_csv_upL    [-index_bHad-1];
+	float csv_bHad_downL    =  index_bHad>=0 ? hJet_csv_downL  [index_bHad]  : aJet_csv_downL  [-index_bHad-1];	  
+	double csv_bHad = csv_bHad_nominal;
+	if( doCSVup )   csv_bHad = TMath::Max(csv_bHad_upBC,   csv_bHad_upL);
+	if( doCSVdown ) csv_bHad = TMath::Min(csv_bHad_downBC, csv_bHad_downL);
+	if     ( csv_bHad< 1.1 ){
+	  float m1    = (meIntegrator->jetAt(5)+meIntegrator->jetAt(3)).M();
+	  if( m1>(MwL+5) && m1<(MwH-5) ){
+	    flag_type2_ = 0; 
+	    if( csv_bHad<0.95 ) flag_type2_ = 1; 
+	    if( csv_bHad<0.90 ) flag_type2_ = 2; 
+	    if( csv_bHad<0.85 ) flag_type2_ = 3;
+	    if( csv_bHad<0.80 ) flag_type2_ = 4;  
+	  }	
+	}
+	int index_b1          =  mapFilt[b3].index;
+	float csv_b1_nominal  =  index_b1>=0 ? hJet_csv_nominal[index_b1]  : aJet_csv_nominal[-index_b1-1];
+	float csv_b1_upBC     =  index_b1>=0 ? hJet_csv_upBC   [index_b1]  : aJet_csv_upBC   [-index_b1-1];
+	float csv_b1_downBC   =  index_b1>=0 ? hJet_csv_downBC [index_b1]  : aJet_csv_downBC [-index_b1-1];
+	float csv_b1_upL      =  index_b1>=0 ? hJet_csv_upL    [index_b1]  : aJet_csv_upL    [-index_b1-1];
+	float csv_b1_downL    =  index_b1>=0 ? hJet_csv_downL  [index_b1]  : aJet_csv_downL  [-index_b1-1];
+	double csv_b1 = csv_b1_nominal;
+	if( doCSVup )   csv_b1 = TMath::Max(csv_b1_upBC,   csv_b1_upL);
+	if( doCSVdown ) csv_b1 = TMath::Min(csv_b1_downBC, csv_b1_downL);	   
+	if     ( csv_b1< 1.1 ){
+	  float m1    = (meIntegrator->jetAt(6)+meIntegrator->jetAt(3)).M();
+	  if( m1>(MwL+5) && m1<(MwH-5)){
+	    flag_type2_ = 0; 
+	    if( csv_b1<0.95 ) flag_type2_ = 1; 
+	    if( csv_b1<0.90 ) flag_type2_ = 2; 
+	    if( csv_b1<0.85 ) flag_type2_ = 3;
+	    if( csv_b1<0.80 ) flag_type2_ = 4; 
+	  }
+	}
+	int index_b2          =  mapFilt[b4].index;
+	float csv_b2_nominal  =  index_b2>=0 ? hJet_csv_nominal[index_b2]  : aJet_csv_nominal[-index_b2-1];
+	float csv_b2_upBC     =  index_b2>=0 ? hJet_csv_upBC   [index_b2]  : aJet_csv_upBC   [-index_b2-1];
+	float csv_b2_downBC   =  index_b2>=0 ? hJet_csv_downBC [index_b2]  : aJet_csv_downBC [-index_b2-1];
+	float csv_b2_upL      =  index_b2>=0 ? hJet_csv_upL    [index_b2]  : aJet_csv_upL    [-index_b2-1];
+	float csv_b2_downL    =  index_b2>=0 ? hJet_csv_downL  [index_b2]  : aJet_csv_downL  [-index_b2-1];
+	double csv_b2 = csv_b2_nominal;
+	if( doCSVup )   csv_b2 = TMath::Max(csv_b2_upBC,   csv_b2_upL);
+	if( doCSVdown ) csv_b2 = TMath::Min(csv_b2_downBC, csv_b2_downL);	  
+	if     ( csv_b2< 1.1 ){
+	  float m1    = (meIntegrator->jetAt(7)+meIntegrator->jetAt(3)).M();
+	  if( m1>(MwL+5) && m1<(MwH-5) ){
+	    flag_type2_ = 0; 
+	    if( csv_b2<0.95 ) flag_type2_ = 1; 
+	    if( csv_b2<0.90 ) flag_type2_ = 2; 
+	    if( csv_b2<0.85 ) flag_type2_ = 3;
+	    if( csv_b2<0.80 ) flag_type2_ = 4; 
+	  }
+	}
+	/////////////////////////////////////////////////////////////
+
+
 	meIntegrator->setSumEt( METtype1p2corr.sumet );
 	meIntegrator->setMEtCov(-99,-99,0);
 	meIntegrator->setTopFlags( vLepton_charge[0]==1 ? +1 : -1 , vLepton_charge[0]==1 ? -1 : +1 );
@@ -2058,7 +2343,7 @@ int main(int argc, const char* argv[])
 		  float csv_bLep_downBC   =  index_bLep>=0 ? hJet_csv_downBC [index_bLep]  : aJet_csv_downBC [-index_bLep-1];
 		  float csv_bLep_upL      =  index_bLep>=0 ? hJet_csv_upL    [index_bLep]  : aJet_csv_upL    [-index_bLep-1];
 		  float csv_bLep_downL    =  index_bLep>=0 ? hJet_csv_downL  [index_bLep]  : aJet_csv_downL  [-index_bLep-1];
-		  float csv_bLep = csv_bLep_nominal;
+		  double csv_bLep = csv_bLep_nominal;
 		  if( doCSVup )   csv_bLep = TMath::Max(csv_bLep_upBC,   csv_bLep_upL);
 		  if( doCSVdown ) csv_bLep = TMath::Min(csv_bLep_downBC, csv_bLep_downL);
 		      
@@ -2070,7 +2355,7 @@ int main(int argc, const char* argv[])
 		  float csv_bHad_downBC   =  index_bHad>=0 ? hJet_csv_downBC [index_bHad]  : aJet_csv_downBC [-index_bHad-1];
 		  float csv_bHad_upL      =  index_bHad>=0 ? hJet_csv_upL    [index_bHad]  : aJet_csv_upL    [-index_bHad-1];
 		  float csv_bHad_downL    =  index_bHad>=0 ? hJet_csv_downL  [index_bHad]  : aJet_csv_downL  [-index_bHad-1];
-		  float csv_bHad = csv_bHad_nominal;
+		  double csv_bHad = csv_bHad_nominal;
 		  if( doCSVup )   csv_bHad = TMath::Max(csv_bHad_upBC,   csv_bHad_upL);
 		  if( doCSVdown ) csv_bHad = TMath::Min(csv_bHad_downBC, csv_bHad_downL);
 		  
@@ -2082,7 +2367,7 @@ int main(int argc, const char* argv[])
 		  float csv_b1_downBC   =  index_b1>=0 ? hJet_csv_downBC [index_b1]  : aJet_csv_downBC [-index_b1-1];
 		  float csv_b1_upL      =  index_b1>=0 ? hJet_csv_upL    [index_b1]  : aJet_csv_upL    [-index_b1-1];
 		  float csv_b1_downL    =  index_b1>=0 ? hJet_csv_downL  [index_b1]  : aJet_csv_downL  [-index_b1-1];
-		  float csv_b1 = csv_b1_nominal;
+		  double csv_b1 = csv_b1_nominal;
 		  if( doCSVup )   csv_b1 = TMath::Max(csv_b1_upBC,   csv_b1_upL);
 		  if( doCSVdown ) csv_b1 = TMath::Min(csv_b1_downBC, csv_b1_downL);
 		  
@@ -2094,37 +2379,56 @@ int main(int argc, const char* argv[])
 		  float csv_b2_downBC   =  index_b2>=0 ? hJet_csv_downBC [index_b2]  : aJet_csv_downBC [-index_b2-1];
 		  float csv_b2_upL      =  index_b2>=0 ? hJet_csv_upL    [index_b2]  : aJet_csv_upL    [-index_b2-1];
 		  float csv_b2_downL    =  index_b2>=0 ? hJet_csv_downL  [index_b2]  : aJet_csv_downL  [-index_b2-1];
-		  float csv_b2 = csv_b2_nominal;
+		  double csv_b2 = csv_b2_nominal;
 		  if( doCSVup )   csv_b2 = TMath::Max(csv_b2_upBC,   csv_b2_upL);
 		  if( doCSVdown ) csv_b2 = TMath::Min(csv_b2_downBC, csv_b2_downL);
 		  		  
 		  
 		  string bin_bLep = TMath::Abs( (meIntegrator->jetAt(2)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
-		  double p_b_bLep =  btagger["b_"+bin_bLep]!=0 ?  btagger["b_"+bin_bLep]->GetBinContent( btagger["b_"+bin_bLep]->FindBin( csv_bLep ) ) : 1.;		  
+		  double p_b_bLep =  btagger["b_"+bin_bLep]!=0 ?  btagger["b_"+bin_bLep]->GetBinContent( btagger["b_"+bin_bLep]->FindBin( TMath::Min(csv_bLep, 0.999999) ) ) : 1.;
 		  
 		  string bin_bHad = TMath::Abs( (meIntegrator->jetAt(5)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
-		  double p_b_bHad =  btagger["b_"+bin_bHad]!=0 ?  btagger["b_"+bin_bHad]->GetBinContent( btagger["b_"+bin_bHad]->FindBin( csv_bHad ) ) : 1.;
+		  double p_b_bHad =  btagger["b_"+bin_bHad]!=0 ?  btagger["b_"+bin_bHad]->GetBinContent( btagger["b_"+bin_bHad]->FindBin( TMath::Min(csv_bHad, 0.999999) ) ) : 1.;
 		  
 		  string bin_b1   = TMath::Abs( (meIntegrator->jetAt(6)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
-		  double p_b_b1   =  btagger["b_"+bin_b1]!=0 ?  btagger["b_"+bin_b1]->GetBinContent( btagger["b_"+bin_b1]->FindBin( csv_b1 ) ) : 1.;
-		  double p_j_b1   =  btagger["l_"+bin_b1]!=0 ?  btagger["l_"+bin_b1]->GetBinContent( btagger["l_"+bin_b1]->FindBin( csv_b1 ) ) : 1.;
+		  double p_b_b1   =  btagger["b_"+bin_b1]!=0 ?  btagger["b_"+bin_b1]->GetBinContent( btagger["b_"+bin_b1]->FindBin( TMath::Min(csv_b1, 0.999999) ) ) : 1.;
+		  double p_j_b1   =  btagger["l_"+bin_b1]!=0 ?  btagger["l_"+bin_b1]->GetBinContent( btagger["l_"+bin_b1]->FindBin( TMath::Min(csv_b1, 0.999999) ) ) : 1.;
 		  
 		  string bin_b2   = TMath::Abs( (meIntegrator->jetAt(7)).Eta() )<1.0 ? "Bin0" : "Bin1"; 
-		  double p_b_b2   =  btagger["b_"+bin_b2]!=0 ?  btagger["b_"+bin_b2]->GetBinContent( btagger["b_"+bin_b2]->FindBin( csv_b2 ) ) : 1.;
-		  double p_j_b2   =  btagger["l_"+bin_b2]!=0 ?  btagger["l_"+bin_b2]->GetBinContent( btagger["l_"+bin_b2]->FindBin( csv_b2 ) ) : 1.;
+		  double p_b_b2   =  btagger["b_"+bin_b2]!=0 ?  btagger["b_"+bin_b2]->GetBinContent( btagger["b_"+bin_b2]->FindBin( TMath::Min(csv_b2, 0.999999) ) ) : 1.;
+		  double p_j_b2   =  btagger["l_"+bin_b2]!=0 ?  btagger["l_"+bin_b2]->GetBinContent( btagger["l_"+bin_b2]->FindBin( TMath::Min(csv_b2, 0.999999) ) ) : 1.;
+		 
 		  
 		  //cout << "bLep_pos " << bLep_pos << " -- correspond to " << index_bLep << " with csv="<< csv_bLep << ": prob under b hyp: " << p_b_bLep << endl;
 		  //cout << "bHad_pos " << bHad_pos << " -- correspond to " << index_bHad << " with csv="<< csv_bHad << ": prob under b hyp: " << p_b_bHad <<  endl;
 		  //cout << "b1_pos " << b1_pos << " -- correspond to " << index_b1 << " with csv="<< csv_b1         << ": prob under b hyp: " << p_b_b1 << ", under j hyp: " << p_j_b1 <<  endl;
 		  //cout << "b2_pos " << b2_pos << " -- correspond to " << index_b2 << " with csv="<< csv_b2         << ": prob under b hyp: " << p_b_b2 << ", under j hyp: " << p_j_b2 << endl;		      
 		  
+		  /*
+		  int sv_bLep = 0;
+		  int sv_bHad = 0;
+		  int sv_b1   = 0;
+		  int sv_b2   = 0;
+		  for(int l = 0; l < nSvs; l++){
+		    TLorentzVector vertex(1,0,0,1);
+		    vertex.SetPtEtaPhiM( Svpt[l], Sveta[l], Svphi[l], SvmassSv[l]);
+		    if(deltaR(vertex, meIntegrator->jetAt(2) )<0.5)      sv_bLep = 1;
+		    else if(deltaR(vertex, meIntegrator->jetAt(5) )<0.5) sv_bHad = 1;
+		    else if(deltaR(vertex, meIntegrator->jetAt(6) )<0.5) sv_b1   = 1;
+		    else if(deltaR(vertex, meIntegrator->jetAt(7) )<0.5) sv_b2   = 1;
+		    else{}
+		  }
+		  double p_b_sv = svs[sv_bLep]*svs[sv_bHad]*svs[sv_b1]  *svs[sv_b2];
+		  double p_j_sv = svs[sv_bLep]*svs[sv_bHad]*svs[2+sv_b1]*svs[2+sv_b2];
+		  */
+
 		  if( mH[m]<met+0.5 && mH[m]>met-0.5){
 		    if(hyp==0){
-		      probAtSgn_ttbb_         += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2);
+		      probAtSgn_ttbb_         += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2 /**  p_b_sv*/);
 		    }
 		    else{
-			  probAtSgn_alt_ttbb_     += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2);
-			  probAtSgn_alt_ttjj_     += ( p * p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2);
+		      probAtSgn_alt_ttbb_     += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2 /**  p_b_sv*/);
+		      probAtSgn_alt_ttjj_     += ( p * p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2 /**  p_j_sv*/);
 		    }
 		  }
 		  
@@ -3216,3 +3520,48 @@ int main(int argc, const char* argv[])
   return 0;
 }
 
+
+
+
+
+/*
+/////////////////////////////////////////////////////////////
+float sv_bLep = -99;
+float sv_bHad = -99;
+float sv_b1   = -99;
+float sv_b2   = -99;
+for(int l = 0; l < nSvs; l++){
+TLorentzVector vertex(1,0,0,1);
+vertex.SetPtEtaPhiM( Svpt[l], Sveta[l], Svphi[l], SvmassSv[l]);
+if     (sv_bLep<0 && deltaR(vertex, meIntegrator->jetAt(2) )<0.5) sv_bLep = SvmassSv[l] ;
+else if(sv_bHad<0 && deltaR(vertex, meIntegrator->jetAt(5) )<0.5) sv_bHad = SvmassSv[l];
+else if(sv_b1<0   && deltaR(vertex, meIntegrator->jetAt(6) )<0.5) sv_b1   = SvmassSv[l];
+else if(sv_b2<0   && deltaR(vertex, meIntegrator->jetAt(7) )<0.5) sv_b2   = SvmassSv[l];
+else{}
+}
+if( sv_bLep<0 || (sv_bLep<1.8) ){
+float m1    = (meIntegrator->jetAt(2)+meIntegrator->jetAt(3)).M();
+float m2    = (meIntegrator->jetAt(2)+meIntegrator->jetAt(4)).M();
+if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 0 ) flag_type0_ = 1; 
+if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 1 ) flag_type1_ = 1; 
+}
+if( sv_bHad<0 || (sv_bHad<1.8) ){
+float m1 = (meIntegrator->jetAt(5)+meIntegrator->jetAt(3)).M();
+float m2 = (meIntegrator->jetAt(5)+meIntegrator->jetAt(4)).M();
+if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 0 ) flag_type0_ = 1; 
+if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 1 ) flag_type1_ = 1; 
+}
+if( sv_b1<0 || (sv_b1<1.8) ){
+float m1 = (meIntegrator->jetAt(6)+meIntegrator->jetAt(3)).M();
+float m2 = (meIntegrator->jetAt(6)+meIntegrator->jetAt(4)).M();
+if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 0 ) flag_type0_ = 1; 
+if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 1 ) flag_type1_ = 1; 
+}
+if( sv_b2<0 || (sv_b2<1.8) ){
+float m1 = (meIntegrator->jetAt(7)+meIntegrator->jetAt(3)).M();
+float m2 = (meIntegrator->jetAt(7)+meIntegrator->jetAt(4)).M();
+if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 0 ) flag_type0_ = 1; 
+if( ((m1>(MwL+5) && m1<(MwH-5)) || (m2>(MwL+5) && m2<(MwH-5))) && type_== 1 ) flag_type1_ = 1; 
+}
+/////////////////////////////////////////////////////////////
+*/

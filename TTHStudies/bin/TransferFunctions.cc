@@ -821,9 +821,9 @@ int main(int argc, const char* argv[])
   RooRealVar flavor("flavor","csv", -6, 6);
   RooRealVar eta   ("eta","eta",    -3, 3);
 
-  RooRealVar csvRecoLight("csvReco","csv", 0.6, 1.0);
+  RooRealVar csvRecoLight("csvReco","csv", 0.6, 1.0);  //0.6
   csvRecoLight.setBins(10);
-  RooDataSet datasetBtagLight_Bin0("datasetBtagLight_Bin0","dataset", RooArgSet(csvRecoLight,flavor,eta), Import( *treeJetsLight ), Cut("abs(flavor)!=4 && abs(flavor)!=5 && TMath::Abs(eta)<1.0 && csvReco>0.6") );
+  RooDataSet datasetBtagLight_Bin0("datasetBtagLight_Bin0","dataset", RooArgSet(csvRecoLight,flavor,eta), Import( *treeJetsLight ), Cut("abs(flavor)!=4 && abs(flavor)!=5 && TMath::Abs(eta)<1.0 && csvReco>0.6") ); //0.6
   RooDataSet datasetBtagLight_Bin1("datasetBtagLight_Bin1","dataset", RooArgSet(csvRecoLight,flavor,eta), Import( *treeJetsLight ), Cut("abs(flavor)!=4 && abs(flavor)!=5 && TMath::Abs(eta)>1.0 && TMath::Abs(eta)<2.5 && csvReco>0.6") );
 
   /*
@@ -854,9 +854,9 @@ int main(int argc, const char* argv[])
   w->import( pdfCsvLight_Bin1 );
   
 
-  RooRealVar csvRecoHeavy("csvReco","csv", 0.679, 1.0);
+  RooRealVar csvRecoHeavy("csvReco","csv", 0.679, 1.0); //0.679
   csvRecoHeavy.setBins(30);
-  RooDataSet datasetBtagHeavy_Bin0("datasetBtagHeavy_Bin0","dataset", RooArgSet(csvRecoHeavy,flavor,eta), Import( *treeJetsHeavy ), Cut("TMath::Abs(eta)<1.0 && csvReco>0.679") );
+  RooDataSet datasetBtagHeavy_Bin0("datasetBtagHeavy_Bin0","dataset", RooArgSet(csvRecoHeavy,flavor,eta), Import( *treeJetsHeavy ), Cut("TMath::Abs(eta)<1.0 && csvReco>0.679") ); //0.679
   RooDataSet datasetBtagHeavy_Bin1("datasetBtagHeavy_Bin1","dataset", RooArgSet(csvRecoHeavy,flavor,eta), Import( *treeJetsHeavy ), Cut("TMath::Abs(eta)>1.0 && TMath::Abs(eta)<2.5 && csvReco>0.679") );
   //RooKeysPdf pdfCsvHeavy_Bin0("pdfCsvHeavy_Bin0","", csvRecoHeavy, datasetBtagHeavy_Bin0);
   //RooKeysPdf pdfCsvHeavy_Bin1("pdfCsvHeavy_Bin1","", csvRecoHeavy, datasetBtagHeavy_Bin1);
@@ -872,7 +872,7 @@ int main(int argc, const char* argv[])
   w->import( pdfCsvHeavy_Bin1 );
 
  
-  TH1F* csv_b_Bin0 = (TH1F*)pdfCsvHeavy_Bin0.createHistogram("csv_b_Bin0", csvRecoHeavy, Binning(30,0.679, 1.0 ));
+  TH1F* csv_b_Bin0 = (TH1F*)pdfCsvHeavy_Bin0.createHistogram("csv_b_Bin0", csvRecoHeavy, Binning(30,0.679, 1.0 )); //Binning(30,0.679, 1.0 )
   csv_b_Bin0->Scale( 1./csv_b_Bin0->Integral()/csv_b_Bin0->GetBinWidth(1));
   TH1F* csv_b_Bin1 = (TH1F*)pdfCsvHeavy_Bin1.createHistogram("csv_b_Bin1", csvRecoHeavy, Binning(30,0.679, 1.0 ));
   csv_b_Bin1->Scale( 1./csv_b_Bin1->Integral()/csv_b_Bin1->GetBinWidth(1));
