@@ -378,6 +378,7 @@ int main(int argc, const char* argv[])
   int overlapHeavy_;
   int type_;
   int nSimBs_, nC_, nCTop_;
+  int nMatchSimBs_;
 
   int flag_type0_;
   int flag_type1_;
@@ -419,6 +420,7 @@ int main(int argc, const char* argv[])
 
   tree->Branch("type",     &type_,    "type/I");
   tree->Branch("nSimBs",   &nSimBs_,  "nSimBs/I");
+  tree->Branch("nMatchSimBs",   &nMatchSimBs_,  "nMatchSimBs/I");
   tree->Branch("nC",       &nC_,      "nC/I");
   tree->Branch("nCTop",    &nCTop_,   "nCTop/I");
 
@@ -538,7 +540,7 @@ int main(int argc, const char* argv[])
     genTopInfo genTop, genTbar;
     metInfo METtype1p2corr;
     JetByPt jet1, jet2, jet3, jet4, jet5, jet6, jet7, jet8, jet9, jet10;
-    int nvlep, nSimBs, nC, nCTop;
+    int nvlep, nSimBs, nC, nCTop, nhJets, naJets;
     Float_t vLepton_mass[999];
     Float_t vLepton_pt  [999];
     Float_t vLepton_eta [999];
@@ -555,6 +557,10 @@ int main(int argc, const char* argv[])
     Float_t hJet_csv_downL[999];
     Float_t hJet_JECUnc[999];
 
+    Float_t hJet_genPt [999];
+    Float_t hJet_genEta[999];
+    Float_t hJet_genPhi[999];
+
     Float_t aJet_csv_nominal[999];
     Float_t aJet_csv_upBC[999];
     Float_t aJet_csv_downBC[999];
@@ -562,11 +568,20 @@ int main(int argc, const char* argv[])
     Float_t aJet_csv_downL[999];
     Float_t aJet_JECUnc[999];
 
+    Float_t aJet_genPt [999];
+    Float_t aJet_genEta[999];
+    Float_t aJet_genPhi[999];
+
     int nSvs;
     float SvmassSv[999];
     float Svpt    [999];
     float Sveta   [999];
     float Svphi   [999];
+
+    float SimBsmass[999];
+    float SimBspt  [999];
+    float SimBseta [999];
+    float SimBsphi [999];
 
     currentTree->SetBranchAddress("jet1",   &jet1);
     currentTree->SetBranchAddress("jet2",   &jet2);
@@ -600,13 +615,22 @@ int main(int argc, const char* argv[])
     currentTree->SetBranchAddress("hJet_csv_upL",     hJet_csv_upL);
     currentTree->SetBranchAddress("hJet_csv_downL",   hJet_csv_downL);
     currentTree->SetBranchAddress("hJet_JECUnc",      hJet_JECUnc);
+    currentTree->SetBranchAddress("hJet_genPt",       hJet_genPt);
+    currentTree->SetBranchAddress("hJet_genEta",      hJet_genEta);
+    currentTree->SetBranchAddress("hJet_genPhi",      hJet_genPhi);
+
     currentTree->SetBranchAddress("aJet_csv_nominal", aJet_csv_nominal);
     currentTree->SetBranchAddress("aJet_csv_upBC",    aJet_csv_upBC);
     currentTree->SetBranchAddress("aJet_csv_downBC",  aJet_csv_downBC);
     currentTree->SetBranchAddress("aJet_csv_upL",     aJet_csv_upL);
     currentTree->SetBranchAddress("aJet_csv_downL",   aJet_csv_downL);
     currentTree->SetBranchAddress("aJet_JECUnc",      aJet_JECUnc);
+    currentTree->SetBranchAddress("aJet_genPt",       aJet_genPt);
+    currentTree->SetBranchAddress("aJet_genEta",      aJet_genEta);
+    currentTree->SetBranchAddress("aJet_genPhi",      aJet_genPhi);
 
+    currentTree->SetBranchAddress("nhJets",      &nhJets);
+    currentTree->SetBranchAddress("naJets",      &naJets);
 
     currentTree->SetBranchAddress("nSimBs",  &nSimBs);
     currentTree->SetBranchAddress("nvlep",   &nvlep);
@@ -618,6 +642,11 @@ int main(int argc, const char* argv[])
     currentTree->SetBranchAddress("Sv_pt",     Svpt);
     currentTree->SetBranchAddress("Sv_eta",    Sveta);
     currentTree->SetBranchAddress("Sv_phi",    Svphi);
+
+    currentTree->SetBranchAddress("SimBs_mass",   SimBsmass);
+    currentTree->SetBranchAddress("SimBs_pt",     SimBspt);
+    currentTree->SetBranchAddress("SimBs_eta",    SimBseta);
+    currentTree->SetBranchAddress("SimBs_phi",    SimBsphi);
 
     
     int counter = 0;
@@ -997,6 +1026,7 @@ int main(int argc, const char* argv[])
       flag_type4_ = -99;
       flag_type6_ = -99;
       nSimBs_     = -99;
+      nMatchSimBs_= -99;
       nC_         = -99;
       nCTop_      = -99;
 
@@ -1209,6 +1239,7 @@ int main(int argc, const char* argv[])
 	      if( deltaR(genHeavy[k], genHeavy[l])<0.5 ) overlapH++;
 	    }	    
 	  }
+
 	  overlapHeavy_ = overlapH;
 	  vector<TLorentzVector> genLight;
 	  genLight.push_back( TOPHADW1);
@@ -1252,6 +1283,51 @@ int main(int argc, const char* argv[])
 	  pos_to_index[5] = b2;
 	  pos_to_index[6] = b3;
 	  pos_to_index[7] = b4;
+
+	  nMatchSimBs_ = 0;
+	  for(int l = 0; l<nSimBs; l++){
+	    TLorentzVector Bs(1,0,0,1);
+	    Bs.SetPtEtaPhiM( SimBspt[l], SimBseta[l], SimBsphi[l], SimBsmass[l]);	    
+
+	    if( topBLV.Pt()>10 && deltaR(topBLV,  Bs)<0.5 ) continue;
+	    if(atopBLV.Pt()>10 && deltaR(atopBLV, Bs)<0.5 ) continue;
+
+	    for(int hj = 0; hj<nhJets; hj++){
+	      TLorentzVector hJLV(1,0,0,1);
+	      if(hJet_genPt[hj]>10) 
+		hJLV.SetPtEtaPhiM( hJet_genPt[hj], hJet_genEta[hj], hJet_genPhi[hj], 0.0);
+	      if( hJLV.Pt()>20 && TMath::Abs(hJLV.Eta())<5 && deltaR(Bs, hJLV)<0.5 ) nMatchSimBs_++;
+	    }
+	    for(int aj = 0; aj<naJets; aj++){
+	      TLorentzVector aJLV(1,0,0,1);
+	      if(aJet_genPt[aj]>10) 
+		aJLV.SetPtEtaPhiM( aJet_genPt[aj], aJet_genEta[aj], aJet_genPhi[aj], 0.0);
+	      if( aJLV.Pt()>20 && TMath::Abs(aJLV.Eta())<5 && deltaR(Bs, aJLV)<0.5 ) nMatchSimBs_++;
+	    }
+
+	    //if( Bs.Pt()>20 && TMath::Abs(Bs.Eta())<2.5 ) nMatchSimBs_++;
+	    //if     ( deltaR( Bs , myJetsFilt[b1] )<0.2 ) nMatchSimBs_++;
+	    //else if( deltaR( Bs , myJetsFilt[b2] )<0.2 ) nMatchSimBs_++;
+	    //else if( deltaR( Bs , myJetsFilt[b3] )<0.2 ) nMatchSimBs_++;
+	    //else if( deltaR( Bs , myJetsFilt[b4] )<0.2 ) nMatchSimBs_++;
+	    //else if( deltaR( Bs , myJetsFilt[w1] )<0.2 ) nMatchSimBs_++;
+	    //else if( deltaR( Bs , myJetsFilt[w2] )<0.2 ) nMatchSimBs_++;
+	  }
+	  if( nSimBs>=2){
+	    for(int l = 0; l<nSimBs-1; l++){
+	      TLorentzVector Bs1(1,0,0,1);
+	      Bs1.SetPtEtaPhiM( SimBspt[l], SimBseta[l], SimBsphi[l], SimBsmass[l]);	    
+	      if( topBLV.Pt()>10 && deltaR(topBLV,  Bs1)<0.5 ) continue;
+	      if(atopBLV.Pt()>10 && deltaR(atopBLV, Bs1)<0.5 ) continue;
+	      for(int m = l+1; m<nSimBs; m++){
+		TLorentzVector Bs2(1,0,0,1);
+		Bs2.SetPtEtaPhiM( SimBspt[m], SimBseta[m], SimBsphi[m], SimBsmass[m]);	    	    
+		if( topBLV.Pt()>10 && deltaR(topBLV,  Bs2)<0.5 ) continue;
+		if(atopBLV.Pt()>10 && deltaR(atopBLV, Bs2)<0.5 ) continue;
+		if( deltaR(Bs1,Bs2)<0.50 ) nMatchSimBs_--;
+	      }
+	    }
+	  }
 
 	  meIntegrator->setJets(&jets);
 
@@ -1578,10 +1654,10 @@ int main(int argc, const char* argv[])
 		      double p_b_b2   =  btagger["b_"+bin_b2]!=0 ?  btagger["b_"+bin_b2]->GetBinContent( btagger["b_"+bin_b2]->FindBin( TMath::Min(csv_b2, 0.999999) ) ) : 1.;
 		      double p_j_b2   =  btagger["l_"+bin_b2]!=0 ?  btagger["l_"+bin_b2]->GetBinContent( btagger["l_"+bin_b2]->FindBin( TMath::Min(csv_b2, 0.999999) ) ) : 1.;
 		      
-		      cout << "bLep_pos " << bLep_pos << " -- correspond to " << index_bLep << " with csv="<< csv_bLep << ": prob under b hyp: " << p_b_bLep << endl;
-		      cout << "bHad_pos " << bHad_pos << " -- correspond to " << index_bHad << " with csv="<< csv_bHad << ": prob under b hyp: " << p_b_bHad <<  endl;
-		      cout << "b1_pos " << b1_pos << " -- correspond to " << index_b1 << " with csv="<< csv_b1         << ": prob under b hyp: " << p_b_b1 << ", under j hyp: " << p_j_b1 <<  endl;
-		      cout << "b2_pos " << b2_pos << " -- correspond to " << index_b2 << " with csv="<< csv_b2         << ": prob under b hyp: " << p_b_b2 << ", under j hyp: " << p_j_b2 << endl;		      
+		      //cout << "bLep_pos " << bLep_pos << " -- correspond to " << index_bLep << " with csv="<< csv_bLep << ": prob under b hyp: " << p_b_bLep << endl;
+		      //cout << "bHad_pos " << bHad_pos << " -- correspond to " << index_bHad << " with csv="<< csv_bHad << ": prob under b hyp: " << p_b_bHad <<  endl;
+		      //cout << "b1_pos " << b1_pos << " -- correspond to " << index_b1 << " with csv="<< csv_b1         << ": prob under b hyp: " << p_b_b1 << ", under j hyp: " << p_j_b1 <<  endl;
+		      //cout << "b2_pos " << b2_pos << " -- correspond to " << index_b2 << " with csv="<< csv_b2         << ": prob under b hyp: " << p_b_b2 << ", under j hyp: " << p_j_b2 << endl;		      
 
 		      /*
 		      int sv_bLep = 0;
@@ -1772,7 +1848,56 @@ int main(int argc, const char* argv[])
 	  pos_to_index[5] = b2;
 	  pos_to_index[6] = b3;
 	  pos_to_index[7] = b4;
-	
+
+	  nMatchSimBs_ = 0;
+	  for(int l = 0; l<nSimBs; l++){
+	    TLorentzVector Bs(1,0,0,1);
+	    Bs.SetPtEtaPhiM( SimBspt[l], SimBseta[l], SimBsphi[l], SimBsmass[l]);	    
+
+	    if( topBLV.Pt()>10 && deltaR(topBLV,  Bs)<0.5 ) continue;
+	    if(atopBLV.Pt()>10 && deltaR(atopBLV, Bs)<0.5 ) continue;
+
+	    for(int hj = 0; hj<nhJets; hj++){
+	      TLorentzVector hJLV(1,0,0,1);
+	      if(hJet_genPt[hj]>10) 
+		hJLV.SetPtEtaPhiM( hJet_genPt[hj], hJet_genEta[hj], hJet_genPhi[hj], 0.0);
+	      if( hJLV.Pt()>20 && TMath::Abs(hJLV.Eta())<5 && deltaR(Bs, hJLV)<0.5 ) nMatchSimBs_++;
+	    }
+	    for(int aj = 0; aj<naJets; aj++){
+	      TLorentzVector aJLV(1,0,0,1);
+	      if(aJet_genPt[aj]>10) 
+		aJLV.SetPtEtaPhiM( aJet_genPt[aj], aJet_genEta[aj], aJet_genPhi[aj], 0.0);
+	      if( aJLV.Pt()>20 && TMath::Abs(aJLV.Eta())<5 && deltaR(Bs, aJLV)<0.5 ) nMatchSimBs_++;
+	    }
+
+
+	    //if( Bs.Pt()>20 && TMath::Abs(Bs.Eta())<2.5 ) nMatchSimBs_++;
+	    //if     ( deltaR( Bs , myJetsFilt[b1] )<0.2 ) nMatchSimBs_++;
+	    //else if( deltaR( Bs , myJetsFilt[b2] )<0.2 ) nMatchSimBs_++;
+	    //else if( deltaR( Bs , myJetsFilt[b3] )<0.2 ) nMatchSimBs_++;
+	    //else if( deltaR( Bs , myJetsFilt[b4] )<0.2 ) nMatchSimBs_++;
+	    //else{
+	    //for(unsigned int uj = 0; uj<untaggedjets.size(); uj++){
+	    //if ( deltaR( Bs , myJetsFilt[ untaggedjets[uj] ] )<0.2 ) nMatchSimBs_++;
+	    //}
+	    //}
+	  }
+	  if( nSimBs>=2){
+	    for(int l = 0; l<nSimBs-1; l++){
+	      TLorentzVector Bs1(1,0,0,1);
+	      Bs1.SetPtEtaPhiM( SimBspt[l], SimBseta[l], SimBsphi[l], SimBsmass[l]);	    
+	      if( topBLV.Pt()>10 && deltaR(topBLV,  Bs1)<0.5 ) continue;
+	      if(atopBLV.Pt()>10 && deltaR(atopBLV, Bs1)<0.5 ) continue;	    
+	      for(int m = l+1; m<nSimBs; m++){
+		TLorentzVector Bs2(1,0,0,1);
+		Bs2.SetPtEtaPhiM( SimBspt[m], SimBseta[m], SimBsphi[m], SimBsmass[m]);	    	    
+		if( topBLV.Pt()>10 && deltaR(topBLV,  Bs2)<0.5 ) continue;
+		if(atopBLV.Pt()>10 && deltaR(atopBLV, Bs2)<0.5 ) continue;	
+		if( deltaR(Bs1,Bs2)<0.50 ) nMatchSimBs_--;
+	      }
+	    }
+	  }
+
 	  meIntegrator->setJets(&jets);
 
 	  type_ = 3;
@@ -2159,7 +2284,52 @@ int main(int argc, const char* argv[])
 	  
 	meIntegrator->setJets(&jets);
 
+	nMatchSimBs_ = 0;
+	for(int l = 0; l<nSimBs; l++){
+	  TLorentzVector Bs(1,0,0,1);
+	  Bs.SetPtEtaPhiM( SimBspt[l], SimBseta[l], SimBsphi[l], SimBsmass[l]);	    
+
+	  if( topBLV.Pt()>10 && deltaR(topBLV,  Bs)<0.5 ) continue;
+	  if(atopBLV.Pt()>10 && deltaR(atopBLV, Bs)<0.5 ) continue;
+
+	  for(int hj = 0; hj<nhJets; hj++){
+	    TLorentzVector hJLV(1,0,0,1);
+	    if(hJet_genPt[hj]>10) 
+	      hJLV.SetPtEtaPhiM( hJet_genPt[hj], hJet_genEta[hj], hJet_genPhi[hj], 0.0);
+	    if( hJLV.Pt()>20 && TMath::Abs(hJLV.Eta())<5 && deltaR(Bs, hJLV)<0.5 ) nMatchSimBs_++;
+	  }
+	  for(int aj = 0; aj<naJets; aj++){
+	    TLorentzVector aJLV(1,0,0,1);
+	    if(aJet_genPt[aj]>10) 	      
+	      aJLV.SetPtEtaPhiM( aJet_genPt[aj], aJet_genEta[aj], aJet_genPhi[aj], 0.0);
+	    if( aJLV.Pt()>20 && TMath::Abs(aJLV.Eta())<5 && deltaR(Bs, aJLV)<0.5 ) nMatchSimBs_++;
+	  }
+
+	  //if( Bs.Pt()>20 && TMath::Abs(Bs.Eta())<2.5 ) nMatchSimBs_++;
+	  //if     ( deltaR( Bs , myJetsFilt[b1] )<0.2 ) nMatchSimBs_++;
+	  //else if( deltaR( Bs , myJetsFilt[b2] )<0.2 ) nMatchSimBs_++;
+	  //else if( deltaR( Bs , myJetsFilt[b3] )<0.2 ) nMatchSimBs_++;
+	  //else if( deltaR( Bs , myJetsFilt[b4] )<0.2 ) nMatchSimBs_++;
+	  //else if( deltaR( Bs , myJetsFilt[w1] )<0.2 ) nMatchSimBs_++;
+	}
+	if( nSimBs>=2){
+	  for(int l = 0; l<nSimBs-1; l++){
+	    TLorentzVector Bs1(1,0,0,1);
+	    Bs1.SetPtEtaPhiM( SimBspt[l], SimBseta[l], SimBsphi[l], SimBsmass[l]);	    
+	    if( topBLV.Pt()>10 && deltaR(topBLV,  Bs1)<0.5 ) continue;
+	    if(atopBLV.Pt()>10 && deltaR(atopBLV, Bs1)<0.5 ) continue;	   
+	    for(int m = l+1; m<nSimBs; m++){
+	      TLorentzVector Bs2(1,0,0,1);
+	      Bs2.SetPtEtaPhiM( SimBspt[m], SimBseta[m], SimBsphi[m], SimBsmass[m]);	    	    
+	      if( topBLV.Pt()>10 && deltaR(topBLV,  Bs2)<0.5 ) continue;
+	      if(atopBLV.Pt()>10 && deltaR(atopBLV, Bs2)<0.5 ) continue;	
+	      if( deltaR(Bs1,Bs2)<0.50 ) nMatchSimBs_--;
+	    }
+	  }
+	}
+	
 	type_ = 2;
+
 	meIntegrator->setIntType( MEIntegratorNew::SL1wj );
 
 
@@ -3228,6 +3398,50 @@ int main(int argc, const char* argv[])
 	  jets.push_back( myJetsFilt[b3]   );
 	  jets.push_back( myJetsFilt[b4]   );
 	  type_ = 6;
+
+	  nMatchSimBs_ = 0;
+	  for(int l = 0; l<nSimBs; l++){
+	    TLorentzVector Bs(1,0,0,1);
+	    Bs.SetPtEtaPhiM( SimBspt[l], SimBseta[l], SimBsphi[l], SimBsmass[l]);	    
+
+	    if( topBLV.Pt()>10 && deltaR(topBLV,  Bs)<0.5 ) continue;
+	    if(atopBLV.Pt()>10 && deltaR(atopBLV, Bs)<0.5 ) continue;
+
+	    for(int hj = 0; hj<nhJets; hj++){
+	      TLorentzVector hJLV(1,0,0,1);
+	      if(hJet_genPt[hj]>10) 
+		hJLV.SetPtEtaPhiM( hJet_genPt[hj], hJet_genEta[hj], hJet_genPhi[hj], 0.0);
+	      if( hJLV.Pt()>20 && TMath::Abs(hJLV.Eta())<5 && deltaR(Bs, hJLV)<0.5 ) nMatchSimBs_++;
+	    }
+	    for(int aj = 0; aj<naJets; aj++){
+	      TLorentzVector aJLV(1,0,0,1);
+	      if(aJet_genPt[aj]>10) 		
+		aJLV.SetPtEtaPhiM( aJet_genPt[aj], aJet_genEta[aj], aJet_genPhi[aj], 0.0);
+	      if( aJLV.Pt()>20 && TMath::Abs(aJLV.Eta())<5 && deltaR(Bs, aJLV)<0.5 ) nMatchSimBs_++;
+	    }
+
+	    //if( Bs.Pt()>20 && TMath::Abs(Bs.Eta())<2.5 ) nMatchSimBs_++;
+	    //if     ( deltaR( Bs , myJetsFilt[b1] )<0.2 ) nMatchSimBs_++;
+	    //else if( deltaR( Bs , myJetsFilt[b2] )<0.2 ) nMatchSimBs_++;
+	    //else if( deltaR( Bs , myJetsFilt[b3] )<0.2 ) nMatchSimBs_++;
+	    //else if( deltaR( Bs , myJetsFilt[b4] )<0.2 ) nMatchSimBs_++;
+	  }
+	  if( nSimBs>=2){
+	    for(int l = 0; l<nSimBs-1; l++){
+	      TLorentzVector Bs1(1,0,0,1);
+	      Bs1.SetPtEtaPhiM( SimBspt[l], SimBseta[l], SimBsphi[l], SimBsmass[l]);	    
+	      if( topBLV.Pt()>10 && deltaR(topBLV,  Bs1)<0.5 ) continue;
+	      if(atopBLV.Pt()>10 && deltaR(atopBLV, Bs1)<0.5 ) continue;	  
+	      for(int m = l+1; m<nSimBs; m++){
+		TLorentzVector Bs2(1,0,0,1);
+		Bs2.SetPtEtaPhiM( SimBspt[m], SimBseta[m], SimBsphi[m], SimBsmass[m]);	    	    
+		if( topBLV.Pt()>10 && deltaR(topBLV,  Bs2)<0.5 ) continue;
+		if(atopBLV.Pt()>10 && deltaR(atopBLV, Bs2)<0.5 ) continue;	
+		if( deltaR(Bs1,Bs2)<0.50 ) nMatchSimBs_--;
+	      }
+	    }
+	  }
+
 	}
 	else if( numJets30BtagM==3 && numJets30BtagL==4){
 	  jets.clear();
@@ -3240,6 +3454,49 @@ int main(int argc, const char* argv[])
 	  jets.push_back( myJetsFilt[bL3]   );
 	  jets.push_back( myJetsFilt[bL4]   );
 	  type_ = 7;
+
+	  nMatchSimBs_ = 0;
+	  for(int l = 0; l<nSimBs; l++){
+	    TLorentzVector Bs(1,0,0,1);
+	    Bs.SetPtEtaPhiM( SimBspt[l], SimBseta[l], SimBsphi[l], SimBsmass[l]);	    
+	    if( topBLV.Pt()>10 && deltaR(topBLV,  Bs)<0.5 ) continue;
+	    if(atopBLV.Pt()>10 && deltaR(atopBLV, Bs)<0.5 ) continue;
+
+	    for(int hj = 0; hj<nhJets; hj++){
+	      TLorentzVector hJLV(1,0,0,1);
+	      if(hJet_genPt[hj]>10) 
+		hJLV.SetPtEtaPhiM( hJet_genPt[hj], hJet_genEta[hj], hJet_genPhi[hj], 0.0);
+	      if( hJLV.Pt()>20 && TMath::Abs(hJLV.Eta())<5 && deltaR(Bs, hJLV)<0.5 ) nMatchSimBs_++;
+	    }
+	    for(int aj = 0; aj<naJets; aj++){
+	      TLorentzVector aJLV(1,0,0,1);
+	      if(aJet_genPt[aj]>10) 
+		aJLV.SetPtEtaPhiM( aJet_genPt[aj], aJet_genEta[aj], aJet_genPhi[aj], 0.0);
+	      if( aJLV.Pt()>20 && TMath::Abs(aJLV.Eta())<5 && deltaR(Bs, aJLV)<0.5 ) nMatchSimBs_++;
+	    }	    
+
+	    //if( Bs.Pt()>20 && TMath::Abs(Bs.Eta())<2.5 ) nMatchSimBs_++;
+	    //if     ( deltaR( Bs , myJetsFilt[bL1] )<0.2 ) nMatchSimBs_++;
+	    //else if( deltaR( Bs , myJetsFilt[bL2] )<0.2 ) nMatchSimBs_++;
+	    //else if( deltaR( Bs , myJetsFilt[bL3] )<0.2 ) nMatchSimBs_++;
+	    //else if( deltaR( Bs , myJetsFilt[bL4] )<0.2 ) nMatchSimBs_++;
+	  }
+	  if( nSimBs>=2){
+	    for(int l = 0; l<nSimBs-1; l++){
+	      TLorentzVector Bs1(1,0,0,1);
+	      Bs1.SetPtEtaPhiM( SimBspt[l], SimBseta[l], SimBsphi[l], SimBsmass[l]);	    
+	      if( topBLV.Pt()>10 && deltaR(topBLV,  Bs1)<0.5 ) continue;
+	      if(atopBLV.Pt()>10 && deltaR(atopBLV, Bs1)<0.5 ) continue;	
+	      for(int m = l+1; m<nSimBs; m++){
+		TLorentzVector Bs2(1,0,0,1);
+		Bs2.SetPtEtaPhiM( SimBspt[m], SimBseta[m], SimBsphi[m], SimBsmass[m]);	    	    
+		if( topBLV.Pt()>10 && deltaR(topBLV,  Bs2)<0.5 ) continue;
+		if(atopBLV.Pt()>10 && deltaR(atopBLV, Bs2)<0.5 ) continue;
+		if( deltaR(Bs1,Bs2)<0.50 ) nMatchSimBs_--;
+	      }
+	    }
+	  }
+
 	}
 	else if( numJets30BtagM==2 && numJets30BtagL==4){
 	  jets.clear();
