@@ -45,6 +45,9 @@
 #define MAX_REEVAL_TRIES 3
 #define VERBOSE  false
 #define PI TMath::Pi()
+#define NMAXPERMUT 30
+#define NMAXMASS   20
+#define NMAXJETS   10
 
 using namespace std;
 
@@ -109,146 +112,6 @@ typedef struct
   float momid;
 } genParticleInfo;
 
-pair<double,double> getMaxValue( TH1F* hMassProb){
-
-  float est  = -99;
-  float prob = -99;
-  float a = -99;
-  float b = -99;
-  float c = -99;
-  
-  int maxBin = hMassProb->GetMaximumBin();
-  
-  if( maxBin<  hMassProb->GetNbinsX() && maxBin>1 ){
-    
-    double xD =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin()-1);
-    double xC =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin());
-    double xU =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin()+1);
-    double yD =  hMassProb->GetBinContent(hMassProb->GetMaximumBin()-1);
-    double yC =  hMassProb->GetBinContent(hMassProb->GetMaximumBin());
-    double yU =  hMassProb->GetBinContent(hMassProb->GetMaximumBin()+1);
-    
-    TMatrixD A(3,3);
-    const double elements[9] = 
-      { 1, xD,  xD*xD,
-	1, xC,  xC*xC,
-	1, xU,  xU*xU 
-      };
-    A.SetMatrixArray(elements, "C");
-    TMatrixD AInv(3,3);
-    double det;
-    AInv = A.Invert(&det);
-    
-    TMatrixD Y(3,1);
-    const double yPos[3] = 
-      { yD, yC, yU
-      };
-    Y.SetMatrixArray(yPos, "C");
-    
-    TMatrixD C(3,1);
-    const double dummy[3] = 
-      { 1., 1., 1.
-      };
-    C.SetMatrixArray(dummy,"C");
-    C.Mult(AInv,Y);
-    
-    a = C(2,0);
-    b = C(1,0);
-    c = C(0,0);
-
-    est  = -b/2/a ;
-    prob = a*est*est + b*est + c;
-  }
-  else if(maxBin== hMassProb->GetNbinsX()){
-    
-    double xD =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin()-2);
-    double xC =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin()-1);
-    double xU =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin());
-    double yD =  hMassProb->GetBinContent(hMassProb->GetMaximumBin()-2);
-    double yC =  hMassProb->GetBinContent(hMassProb->GetMaximumBin()-1);
-    double yU =  hMassProb->GetBinContent(hMassProb->GetMaximumBin());
-    
-    TMatrixD A(3,3);
-    const double elements[9] = 
-	    { 1, xD,  xD*xD,
-	      1, xC,  xC*xC,
-	      1, xU,  xU*xU 
-	    };
-    A.SetMatrixArray(elements, "C");
-    TMatrixD AInv(3,3);
-    double det;
-    AInv = A.Invert(&det);
-    
-    TMatrixD Y(3,1);
-    const double yPos[3] = 
-      { yD, yC, yU
-      };
-    Y.SetMatrixArray(yPos, "C");
-    
-    TMatrixD C(3,1);
-    const double dummy[3] = 
-      { 1., 1., 1.
-      };
-    C.SetMatrixArray(dummy,"C");
-    C.Mult(AInv,Y);
-    
-    a = C(2,0);
-    b = C(1,0);
-    c = C(0,0);
-
-    est = -b/2/a ;
-    prob = a*est*est + b*est + c;	  
-  }
-  else if(maxBin==1){
-    
-    double xD =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin());
-    double xC =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin()+1);
-    double xU =  hMassProb->GetBinCenter (hMassProb->GetMaximumBin()+2);
-    double yD =  hMassProb->GetBinContent(hMassProb->GetMaximumBin());
-    double yC =  hMassProb->GetBinContent(hMassProb->GetMaximumBin()+1);
-    double yU =  hMassProb->GetBinContent(hMassProb->GetMaximumBin()+2);
-    
-    TMatrixD A(3,3);
-    const double elements[9] = 
-      { 1, xD,  xD*xD,
-	1, xC,  xC*xC,
-	1, xU,  xU*xU 
-	    };
-    A.SetMatrixArray(elements, "C");
-    TMatrixD AInv(3,3);
-    double det;
-    AInv = A.Invert(&det);
-    
-    TMatrixD Y(3,1);
-    const double yPos[3] = 
-      { yD, yC, yU
-      };
-    Y.SetMatrixArray(yPos, "C");
-    
-    TMatrixD C(3,1);
-    const double dummy[3] = 
-      { 1., 1., 1.
-      };
-    C.SetMatrixArray(dummy,"C");
-    C.Mult(AInv,Y);
-    
-    a = C(2,0);
-    b = C(1,0);
-    c = C(0,0);
-
-    est = -b/2/a ;
-    prob = a*est*est + b*est + c;
-  }
-  else{
-    est  =  hMassProb->GetBinCenter  (hMassProb->GetMaximumBin());
-    prob =  hMassProb->GetBinContent (hMassProb->GetMaximumBin());
-  }
-
-  return make_pair(est, prob);
-
-}
-
-
 
 
 
@@ -259,7 +122,7 @@ int main(int argc, const char* argv[])
   /* @@@@@@@@@@@@@@@@@@@@@@@@ FWLITE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  */
 
  
-  std::cout << "MEAnalysis" << std::endl;
+  std::cout << "MEAnalysisNew" << std::endl;
   gROOT->SetBatch(true);
  
   gSystem->Load("libFWCoreFWLite");
@@ -356,8 +219,8 @@ int main(int argc, const char* argv[])
   }
 
   // Higgs mass values for scan
-  const int nMassPoints  = massesH.size();
-  double mH[nMassPoints];
+  const int nHiggsMassPoints  = massesH.size();
+  double mH[nHiggsMassPoints];
   for( unsigned int m = 0; m < massesH.size() ; m++)
     mH[m] = massesH[m];
 
@@ -366,6 +229,17 @@ int main(int argc, const char* argv[])
   double mT[nTopMassPoints]; 
   for( unsigned int m = 0; m < massesT.size() ; m++)
     mT[m] = massesT[m];
+
+
+  // not supported...
+  if( nHiggsMassPoints>1 && nTopMassPoints>1){
+    cout << "Cannot handle two mass scans at the same time... return." << endl;
+    return 1;
+  }
+  if( nHiggsMassPoints>NMAXMASS || nTopMassPoints>NMAXMASS){
+    cout << "Too many mass points required... return" << endl;
+    return 1;
+  }
 
 
   int permutations_SL2wj[12] =  
@@ -384,6 +258,21 @@ int main(int argc, const char* argv[])
      234765, 734265,     // ONE WRONG
      634572, 534672,     // ONE WRONG
      234675, 634275      // ONE WRONG
+    };
+
+  int permutations_SL1wj_2j[24] =  
+    {234567, 534267,     // CORRECT 
+     634725, 734625,     // ALL WRONG
+     534762, 734562,     // ONE WRONG
+     234765, 734265,     // ONE WRONG
+     634572, 534672,     // ONE WRONG
+     234675, 634275,     // ONE WRONG
+     243567, 543267,     // CORRECT 
+     643725, 743625,     // ALL WRONG
+     543762, 743562,     // ONE WRONG
+     243765, 743265,     // ONE WRONG
+     643572, 543672,     // ONE WRONG
+     243675, 643275      // ONE WRONG
     };
 
   int permutations_DL[12] =  
@@ -455,14 +344,6 @@ int main(int argc, const char* argv[])
   TH1F*  hcounter = new TH1F("hcounter","",1,0,1);
   int events_     = 0;
   
-  // per-event probability vs mass
-  TH1F*  h_prob_vs_higgs_mass     = new TH1F("h_prob_vs_higgs_mass",   "", nMassPoints,    mH[0]-2.5, mH[nMassPoints-1]+2.5);
-  TH1F*  h_prob_vs_top_mass       = new TH1F("h_prob_vs_top_mass",     "", nTopMassPoints, mT[0]-2.5, mT[nTopMassPoints-1]+2.5);
-  TH1F*  h_prob_vs_top_mass_ttbb  = new TH1F("h_prob_vs_top_mass_ttbb","", nTopMassPoints, mT[0]-2.5, mT[nTopMassPoints-1]+2.5);
-  TH1F*  h_prob_vs_top_mass_ttbj  = new TH1F("h_prob_vs_top_mass_ttbj","", nTopMassPoints, mT[0]-2.5, mT[nTopMassPoints-1]+2.5);
-  TH1F*  h_prob_vs_top_mass_ttcc  = new TH1F("h_prob_vs_top_mass_ttcc","", nTopMassPoints, mT[0]-2.5, mT[nTopMassPoints-1]+2.5);
-  TH1F*  h_prob_vs_top_mass_ttjj  = new TH1F("h_prob_vs_top_mass_ttjj","", nTopMassPoints, mT[0]-2.5, mT[nTopMassPoints-1]+2.5);
-
   // output tree
   TTree* tree  = new TTree("tree","");
 
@@ -470,10 +351,10 @@ int main(int argc, const char* argv[])
   int counter_;
   // number of jet-quark permutations
   int nPermut_;
-  // number of event interpretations
-  int nInter_;
-  // total number of jet-quark permutations (nPermut*nInter)
-  int nTotPermut_;
+  // number of (Higgs/Top) mass points
+  int nMassPoints_;
+  // total number integration per event (nPermut*nMassPoints)
+  int nTotInteg_;
   // number of matches to higgs quarks among tagged jets
   int matchesH_;
   // number of matches to W quarks among un-tagged jets
@@ -493,7 +374,7 @@ int main(int argc, const char* argv[])
   // integration type
   int type_;
   // num. of b-hadrons and c-quarks
-  int nSimBs_, nC_, nCTop_;
+  int nSimBs_; //, nC_, nCTop_;
   // num of b-hadrons inside jets
   int nMatchSimBs_;
   // type-dependent flags
@@ -503,6 +384,7 @@ int main(int argc, const char* argv[])
   int flag_type3_;
   int flag_type4_;
   int flag_type6_;
+
   // event-wise probability (summed over permutations)
   float probAtSgn_;
   float probAtSgn_alt_;
@@ -511,31 +393,60 @@ int main(int argc, const char* argv[])
   float probAtSgn_alt_ttjj_;
   float probAtSgn_alt_ttbj_;
   float probAtSgn_alt_ttcc_;
-  // best mass (from likelihood scan)
-  float bestMH_;
-  float bestMT_;
-  float bestMTbb_;
-  float bestMTbj_;
-  float bestMTcc_;
-  float bestMTjj_;
+
   // per-permutation probability
-  float probAtSgn_permut_[999];
-  float probAtSgn_alt_permut_[999];
-  float probAtSgn_bb_permut_[999];
-  float probAtSgn_bj_permut_[999];
-  float probAtSgn_cc_permut_[999];
-  float probAtSgn_jj_permut_[999];
+  float probAtSgn_permut_       [NMAXPERMUT*NMAXMASS];
+  float probAtSgn_alt_permut_   [NMAXPERMUT*NMAXMASS];
+  float probAtSgnErr_permut_    [NMAXPERMUT*NMAXMASS];
+  float probAtSgnErr_alt_permut_[NMAXPERMUT*NMAXMASS];
+  float probAtSgn_bb_permut_[NMAXPERMUT];
+  float probAtSgn_bj_permut_[NMAXPERMUT];
+  float probAtSgn_cc_permut_[NMAXPERMUT];
+  float probAtSgn_jj_permut_[NMAXPERMUT];
+  // masses to be scanned
+  float mH_scan_[NMAXMASS];
+  float mT_scan_[NMAXMASS];
+
   // event-dependent weight (for normalization)
   float weight_;
   // cpu time
   float time_;
   // event information
   EventInfo EVENT_;
+  // num of PVs
+  int nPVs_;
+
+  // lepton kinematic (at most two leptons)
+  int nLep_;
+  float lepton_pt_    [2];
+  float lepton_eta_   [2];
+  float lepton_phi_   [2];
+  float lepton_m_     [2];
+  float lepton_charge_[2];
+  float lepton_rIso_  [2];
+
+  // met kinematic
+  float MET_pt_;
+  float MET_phi_;
+  float MET_sumEt_;
+
+  // jet kinematics
+  int nJet_;
+  float jet_pt_  [NMAXJETS];
+  float jet_eta_ [NMAXJETS];
+  float jet_phi_ [NMAXJETS];
+  float jet_m_   [NMAXJETS];
+  float jet_csv_ [NMAXJETS];
+
+  // permutation -> jets association
+  int   perm_to_jet_[NMAXPERMUT];
+  // permutation -> gen association
+  int   perm_to_gen_[NMAXPERMUT];
 
   tree->Branch("counter",      &counter_,       "counter/I");
   tree->Branch("nPermut",      &nPermut_,       "nPermut/I");
-  tree->Branch("nTotPermut",   &nTotPermut_,    "nTotPermut/I");
-  tree->Branch("nInter",       &nInter_,        "nInter/I");  
+  tree->Branch("nMassPoints",  &nMassPoints_,   "nMassPoints/I");  
+  tree->Branch("nTotInteg",    &nTotInteg_,     "nTotInteg/I");  
   tree->Branch("matchesH",     &matchesH_,      "matchesH/I");
   tree->Branch("matchesW",     &matchesW_,      "matchesW/I");
   tree->Branch("matchesT",     &matchesT_,      "matchesT/I");
@@ -547,8 +458,8 @@ int main(int argc, const char* argv[])
   tree->Branch("type",         &type_,          "type/I");
   tree->Branch("nSimBs",       &nSimBs_,        "nSimBs/I");
   tree->Branch("nMatchSimBs",  &nMatchSimBs_,   "nMatchSimBs/I");
-  tree->Branch("nC",           &nC_,            "nC/I");
-  tree->Branch("nCTop",        &nCTop_,         "nCTop/I");
+  //tree->Branch("nC",           &nC_,            "nC/I");
+  //tree->Branch("nCTop",        &nCTop_,         "nCTop/I");
   tree->Branch("weight",       &weight_,        "weight/F");
   tree->Branch("time",         &time_,          "time/F");
   tree->Branch("flag_type0",   &flag_type0_,    "flag_type0/I");
@@ -557,14 +468,10 @@ int main(int argc, const char* argv[])
   tree->Branch("flag_type3",   &flag_type3_,    "flag_type3/I");
   tree->Branch("flag_type4",   &flag_type4_,    "flag_type4/I");
   tree->Branch("flag_type6",   &flag_type6_,    "flag_type6/I");
-  tree->Branch("bestMH",       &bestMH_,        "bestMH/F");
-  tree->Branch("bestMT",       &bestMT_,        "bestMT/F");
-  tree->Branch("bestMTbb",     &bestMTbb_,      "bestMTbb/F");
-  tree->Branch("bestMTbj",     &bestMTbj_,      "bestMTbj/F");
-  tree->Branch("bestMTcc",     &bestMTcc_,      "bestMTcc/F");
-  tree->Branch("bestMTjj",     &bestMTjj_,      "bestMTjj/F");
   tree->Branch("EVENT",        &EVENT_,         "run/I:lumi/I:event/I:json/I");
+  tree->Branch("nPVs",         &nPVs_,          "nPVs/I");
 
+  // marginalized over permutations (all <=> Sum_{p=0}^{nTotPermut}( mH=MH, mT=MT ) )
   tree->Branch(Form("p_%d_all_s",     int(MH)),   &probAtSgn_,           Form("p_%d_all_s/F",              int(MH)) );
   tree->Branch(Form("p_%d_all_b",     int(MH)),   &probAtSgn_alt_,       Form("p_%d_all_b/F",              int(MH)) );
   tree->Branch(Form("p_%d_all_s_ttbb",int(MH)),   &probAtSgn_ttbb_,      Form("p_%d_all_s_ttbb/F",         int(MH)) );
@@ -572,12 +479,58 @@ int main(int argc, const char* argv[])
   tree->Branch(Form("p_%d_all_b_ttjj",int(MH)),   &probAtSgn_alt_ttjj_,  Form("p_%d_all_b_ttjj/F",         int(MH)) );
   tree->Branch(Form("p_%d_all_b_ttbj",int(MH)),   &probAtSgn_alt_ttbj_,  Form("p_%d_all_b_ttbj/F",         int(MH)) );
   tree->Branch(Form("p_%d_all_b_ttcc",int(MH)),   &probAtSgn_alt_ttcc_,  Form("p_%d_all_b_ttcc/F",         int(MH)) );
-  tree->Branch(Form("p_%d_s",         int(MH)),   probAtSgn_permut_,     Form("p_%d_s[nTotPermut]/F",  int(MH)) );
-  tree->Branch(Form("p_%d_b",         int(MH)),   probAtSgn_alt_permut_, Form("p_%d_b[nTotPermut]/F",  int(MH)) );
-  tree->Branch(Form("p_%d_bb",        int(MH)),   probAtSgn_bb_permut_,  Form("p_%d_bb[nTotPermut]/F", int(MH)) );
-  tree->Branch(Form("p_%d_bj",        int(MH)),   probAtSgn_bj_permut_,  Form("p_%d_bj[nTotPermut]/F", int(MH)) );
-  tree->Branch(Form("p_%d_cc",        int(MH)),   probAtSgn_cc_permut_,  Form("p_%d_cc[nTotPermut]/F", int(MH)) );
-  tree->Branch(Form("p_%d_jj",        int(MH)),   probAtSgn_jj_permut_,  Form("p_%d_jj[nTotPermut]/F", int(MH)) );
+
+  // differential in permutations and mass value. E.g.:
+  //  p_vsMH_s[0],          ..., p_vsMH_s[  nPermut-1] => prob. per-permutation and for mH = masses[0]
+  //  p_vsMH_s[nPermut], ...,    p_vsMH_s[2*nPermut-1] => prob. per-permutation and for mH = masses[1]
+  //  ....
+  tree->Branch("p_vsMH_s",     probAtSgn_permut_,       "p_vsMH_s[nTotInteg]/F" );
+  tree->Branch("p_vsMT_b",     probAtSgn_alt_permut_,   "p_vsMT_b[nTotInteg]/F");
+  tree->Branch("p_vsMH_Err_s", probAtSgnErr_permut_,    "p_vsMH_Err_s[nTotInteg]/F" );
+  tree->Branch("p_msMT_Err_b", probAtSgnErr_alt_permut_,"p_vsMT_Err_b[nTotInteg]/F" );
+
+  // differential in permutation
+  tree->Branch("p_tt_bb",      probAtSgn_bb_permut_,    "p_tt_bb[nPermut]/F");
+  tree->Branch("p_tt_bj",      probAtSgn_bj_permut_,    "p_tt_bj[nPermut]/F");
+  tree->Branch("p_tt_cc",      probAtSgn_cc_permut_,    "p_tt_cc[nPermut]/F");
+  tree->Branch("p_tt_jj",      probAtSgn_jj_permut_,    "p_tt_jj[nPermut]/F");
+  
+  // # of mass points scanned
+  tree->Branch("mH_scan",       mH_scan_,          "mH_scan[nMassPoints]/F");
+  tree->Branch("mT_scan",       mT_scan_,          "mT_scan[nMassPoints]/F");
+ 
+  // lepton kinematics
+  tree->Branch("nLep",                    &nLep_,        "nLep/I");
+  tree->Branch("lepton_pt",               lepton_pt_,    "lepton_pt[nLep]/F");
+  tree->Branch("lepton_eta",              lepton_eta_,   "lepton_eta[nLep]/F");
+  tree->Branch("lepton_phi",              lepton_phi_,   "lepton_phi[nLep]/F");
+  tree->Branch("lepton_m",                lepton_m_,     "lepton_m[nLep]/F");
+  tree->Branch("lepton_charge",           lepton_charge_,"lepton_charge[nLep]/F");
+  tree->Branch("lepton_rIso",             lepton_rIso_,  "lepton_rIso[nLep]/F");
+
+  // MET kinematics
+  tree->Branch("MET_pt",                  &MET_pt_,    "MET_pt/F");
+  tree->Branch("MET_phi",                 &MET_phi_,   "MET_phi/F");
+  tree->Branch("MET_sumEt",               &MET_sumEt_, "MET_sumEt/F");
+
+  // jet kinematics
+  tree->Branch("nJet",                    &nJet_,      "nJet/I");
+  tree->Branch("jet_pt",                  jet_pt_,     "jet_pt[nJet]/F");
+  tree->Branch("jet_eta",                 jet_eta_,    "jet_eta[nJet]/F");
+  tree->Branch("jet_phi",                 jet_phi_,    "jet_phi[nJet]/F");
+  tree->Branch("jet_m",                   jet_m_,      "jet_m[nJet]/F");
+  tree->Branch("jet_csv",                 jet_csv_,    "jet_csv[nJet]/F");
+
+  // a map that associates to each permutation [p=0...nTotPermut] to the corresponding jet,
+  // indexed according to the order in the jet_* collection
+  //  E.g.: perm_to_jets[0] = 234567 <==> the first permutation (element '0' of p_vsMH_s/p_vsMT_b )
+  //        associates element '2' of jets_* to the bLep, element '3' to W1Had, '4' to 'W2Had', '5' to bHad, and '6','7'
+  //        to non-top radiation
+  tree->Branch("perm_to_jet",             perm_to_jet_,"perm_to_jet[nPermut]/I");
+  tree->Branch("perm_to_gen" ,            perm_to_gen_,"perm_to_gen[nPermut]/I");
+
+
+  //tree->Branch("",                        _,  "[]/F");
 
   /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  */
   /* @@@@@@@@@@@@@@@@@@@@@@@@@ OPEN FILES @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  */
@@ -624,7 +577,7 @@ int main(int argc, const char* argv[])
     genTopInfo      genTop, genTbar;
     metInfo         METtype1p2corr;
     EventInfo       EVENT;
-    int             nvlep, nSimBs, nC, nCTop, nhJets, naJets;
+    int             nvlep, nSimBs, /*nC, nCTop,*/ nhJets, naJets, nPVs;
     Int_t   vLepton_type      [999];
     Float_t vLepton_mass      [999];
     Float_t vLepton_pt        [999];
@@ -675,8 +628,9 @@ int main(int argc, const char* argv[])
     currentTree->SetBranchAddress("naJets",      &naJets);
     currentTree->SetBranchAddress("nSimBs",      &nSimBs);
     currentTree->SetBranchAddress("nvlep",       &nvlep);
-    currentTree->SetBranchAddress("nC",          &nC);
-    currentTree->SetBranchAddress("nCTop",       &nCTop);
+    currentTree->SetBranchAddress("nPVs",        &nPVs);
+    //currentTree->SetBranchAddress("nC",          &nC);
+    //currentTree->SetBranchAddress("nCTop",       &nCTop);
     currentTree->SetBranchAddress("genB",            &genB);
     currentTree->SetBranchAddress("genBbar",         &genBbar);
     currentTree->SetBranchAddress("genTop",          &genTop);
@@ -708,7 +662,7 @@ int main(int argc, const char* argv[])
     currentTree->SetBranchAddress("aJet_eta",         aJet_eta);    
     currentTree->SetBranchAddress("aJet_phi",         aJet_phi);    
     currentTree->SetBranchAddress("aJet_e",           aJet_e);    
-    currentTree->SetBranchAddress("aJet_puJetIdL",    hJet_puJetIdL);
+    currentTree->SetBranchAddress("aJet_puJetIdL",    aJet_puJetIdL);
     currentTree->SetBranchAddress("aJet_csv_nominal", aJet_csv_nominal);
     currentTree->SetBranchAddress("aJet_csv_upBC",    aJet_csv_upBC);
     currentTree->SetBranchAddress("aJet_csv_downBC",  aJet_csv_downBC);
@@ -759,12 +713,6 @@ int main(int argc, const char* argv[])
       probAtSgn_alt_ttbj_ =  0.;
       probAtSgn_alt_ttcc_ =  0.;
       probAtSgn_alt_ttjj_ =  0.;
-      bestMH_             = -99;
-      bestMT_             = -99;
-      bestMTbb_           = -99;
-      bestMTbj_           = -99;
-      bestMTcc_           = -99;
-      bestMTjj_           = -99;
       matchesH_           = -99;
       matchesW_           = -99;
       matchesT_           = -99;
@@ -775,8 +723,8 @@ int main(int argc, const char* argv[])
       overlapLight_       = -99;
       type_               = -99;
       nPermut_            = +99;
-      nTotPermut_         = +99;
-      nInter_             =   1;
+      nTotInteg_          = +99;
+      nMassPoints_        = TMath::Max(nHiggsMassPoints,nTopMassPoints);
       flag_type0_         = -99;
       flag_type1_         = -99;
       flag_type2_         = -99;
@@ -785,15 +733,40 @@ int main(int argc, const char* argv[])
       flag_type6_         = -99;
       nSimBs_             = -99;
       nMatchSimBs_        = -99;
-      nC_                 = -99;
-      nCTop_              = -99;
+      //nC_                 = -99;
+      //nCTop_              = -99;
       time_               = -99;
+      nPVs_               = -99;
 
+      nLep_               = -99;
+      for( int k = 0; k < 2; k++){
+	lepton_pt_[k] = -99; lepton_eta_[k] = -99; lepton_phi_[k] = -99; lepton_m_[k] = -99; lepton_charge_[k] = -99; lepton_rIso_[k] = -99;
+      }
+      MET_pt_   = -99;
+      MET_phi_  = -99;
+      MET_sumEt_= -99;
+      nLep_               = -99;
+      for( int k = 0; k < NMAXJETS; k++){
+	jet_pt_[k] = -99; jet_eta_[k] = -99; jet_phi_[k] = -99; jet_m_[k] = -99;  jet_csv_[k] = -99;
+      }
+      for( int k = 0; k < NMAXPERMUT; k++){
+	perm_to_jet_[k] = -99;
+	perm_to_gen_[k] = -99;
+      }
 
+      // save the values into the tree (save mH[0] in case no scan is required)
+      for( unsigned int m = 0; m < (unsigned int)nHiggsMassPoints ; m++){
+	mH_scan_[m] = mH[m];
+      }
+      for( unsigned int t = 0; t < (unsigned int)nTopMassPoints ; t++){
+	mT_scan_[t] = mT[t];
+      }
+      
+      
       /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  */
       /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ GEN PARTICLES @@@@@@@@@@@@@@@@@@@@@@@@@@  */
 
-      // define top decay products;      
+      // read top decay products from input files   
       TLorentzVector topBLV   (1,0,0,1);
       TLorentzVector topW1LV  (1,0,0,1); 
       TLorentzVector topW2LV  (1,0,0,1);
@@ -821,16 +794,6 @@ int main(int argc, const char* argv[])
 	genBbarLV.SetPtEtaPhiM(genBbar.pt,genBbar.eta ,genBbar.phi, genBbar.mass );
       }
   
-      // define LV for the 8 particles in TTH events
-      TLorentzVector TOPLEP  (1,0,0,1);
-      TLorentzVector TOPHAD  (1,0,0,1);
-      TLorentzVector TOPHADW1(1,0,0,1);
-      TLorentzVector TOPHADW2(1,0,0,1);
-      TLorentzVector TOPHADB (1,0,0,1);
-      TLorentzVector TOPLEPW1(1,0,0,1);
-      TLorentzVector TOPLEPW2(1,0,0,1);
-      TLorentzVector TOPLEPB (1,0,0,1);
-
       // dummy cut (for the moment)
       bool properEventSL = (genBLV.Pt()>0 && genBbarLV.Pt()>0 && topBLV.Pt()>0 && topW1LV.Pt()>0 && topW2LV.Pt()>0 && atopBLV.Pt()>0 && atopW1LV.Pt()>0 && atopW2LV.Pt()>0);
       bool properEventDL = (genBLV.Pt()>0 && genBbarLV.Pt()>0 && topBLV.Pt()>0 && topW1LV.Pt()>0 && topW2LV.Pt()>0 && atopBLV.Pt()>0 && atopW1LV.Pt()>0 && atopW2LV.Pt()>0);
@@ -840,57 +803,64 @@ int main(int argc, const char* argv[])
 	continue;
       }
 
+      // define LV for the 6 (8) particles in ttbb (ttH) events
+      TLorentzVector TOPHADW1(1,0,0,1);
+      TLorentzVector TOPHADW2(1,0,0,1);
+      TLorentzVector TOPHADB (1,0,0,1);
+      TLorentzVector TOPLEPW1(1,0,0,1);
+      TLorentzVector TOPLEPW2(1,0,0,1);
+      TLorentzVector TOPLEPB (1,0,0,1);
+      TLorentzVector HIGGSB1 (1,0,0,1);
+      TLorentzVector HIGGSB2 (1,0,0,1);
+
+      HIGGSB1.SetPtEtaPhiM( genBLV.Pt(),    genBLV.Eta(),    genBLV.Phi(),    genBLV.M());
+      HIGGSB2.SetPtEtaPhiM( genBbarLV.Pt(), genBbarLV.Eta(), genBbarLV.Phi(), genBbarLV.M());
+
       if( abs(genTop.wdau1id)>6 && abs(genTbar.wdau1id)<6){
-	TOPLEP.SetPxPyPzE( (topBLV+topW1LV+topW2LV).Px(), (topBLV+topW1LV+topW2LV).Py(), (topBLV+topW1LV+topW2LV).Pz(), (topBLV+topW1LV+topW2LV).E() );
-	TOPHAD.SetPxPyPzE( (atopBLV+atopW1LV+atopW2LV).Px(), (atopBLV+atopW1LV+atopW2LV).Py(), (atopBLV+atopW1LV+atopW2LV).Pz(), (atopBLV+atopW1LV+atopW2LV).E() );
 	TOPHADW1.SetPxPyPzE( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
 	TOPHADW2.SetPxPyPzE( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
 	TOPHADB.SetPxPyPzE( atopBLV.Px(),  atopBLV.Py(),   atopBLV.Pz(),  atopBLV.E());
 	if( abs(genTop.wdau1id)==11 || abs(genTop.wdau1id)==13 || abs(genTop.wdau1id)==15 ){
 	  TOPLEPW1.SetPxPyPzE  ( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
-	  TOPLEPW2.SetPtEtaPhiM( topW2LV.Pt(), 0.0, topW2LV.Phi(), 0.0);
+	  TOPLEPW2.SetPxPyPzE  ( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
 	}
 	else{
-	  TOPLEPW2.SetPtEtaPhiM( topW1LV.Pt(), 0.0, topW1LV.Phi(), 0.0);
 	  TOPLEPW1.SetPxPyPzE  ( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
+	  TOPLEPW2.SetPxPyPzE  ( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
 	}
 	TOPLEPB.SetPxPyPzE(  topBLV.Px(),  topBLV.Py(),   topBLV.Pz(), topBLV.E());
       }
       else if(abs(genTop.wdau1id)<6 && abs(genTbar.wdau1id)>6){
-	TOPHAD.SetPxPyPzE( (topBLV+topW1LV+topW2LV).Px(), (topBLV+topW1LV+topW2LV).Py(), (topBLV+topW1LV+topW2LV).Pz(), (topBLV+topW1LV+topW2LV).E() );
-	TOPLEP.SetPxPyPzE( (atopBLV+atopW1LV+atopW2LV).Px(), (atopBLV+atopW1LV+atopW2LV).Py(), (atopBLV+atopW1LV+atopW2LV).Pz(), (atopBLV+atopW1LV+atopW2LV).E() );
 	TOPHADW1.SetPxPyPzE( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
 	TOPHADW2.SetPxPyPzE( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
 	TOPHADB.SetPxPyPzE( topBLV.Px(),  topBLV.Py(),   topBLV.Pz(),  topBLV.E());
 	if( abs(genTbar.wdau1id)==11 || abs(genTbar.wdau1id)==13 || abs(genTbar.wdau1id)==15 ){
 	  TOPLEPW1.SetPxPyPzE  ( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
-	  TOPLEPW2.SetPtEtaPhiM( atopW2LV.Pt(), 0.0, atopW2LV.Phi(), 0.0);
+	  TOPLEPW2.SetPxPyPzE  ( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
 	}
 	else{
-	  TOPLEPW2.SetPtEtaPhiM( atopW1LV.Pt(), 0.0, atopW1LV.Phi(), 0.0);
 	  TOPLEPW1.SetPxPyPzE  ( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
+	  TOPLEPW2.SetPxPyPzE  ( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
 	}
 	TOPLEPB.SetPxPyPzE( atopBLV.Px(),  atopBLV.Py(),   atopBLV.Pz(),  atopBLV.E());
       }      
       else if(abs(genTop.wdau1id)>6 && abs(genTbar.wdau1id)>6){
-	TOPHAD.SetPxPyPzE( (topBLV+topW1LV+topW2LV).Px(), (topBLV+topW1LV+topW2LV).Py(), (topBLV+topW1LV+topW2LV).Pz(), (topBLV+topW1LV+topW2LV).E() );
-	TOPLEP.SetPxPyPzE( (atopBLV+atopW1LV+atopW2LV).Px(), (atopBLV+atopW1LV+atopW2LV).Py(), (atopBLV+atopW1LV+atopW2LV).Pz(), (atopBLV+atopW1LV+atopW2LV).E() );
 	if( abs(genTop.wdau1id)==11 || abs(genTop.wdau1id)==13 || abs(genTop.wdau1id)==15 ){
 	  TOPHADW1.SetPxPyPzE  ( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
-	  TOPHADW2.SetPtEtaPhiM( topW2LV.Pt(), 0.0, topW2LV.Phi(), 0.0);
+	  TOPHADW2.SetPxPyPzE  ( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
 	}
 	else{
-	  TOPHADW2.SetPtEtaPhiM( topW1LV.Pt(), 0.0, topW1LV.Phi(), 0.0);
 	  TOPHADW1.SetPxPyPzE  ( topW2LV.Px(), topW2LV.Py(), topW2LV.Pz(), topW2LV.E());
+	  TOPHADW2.SetPxPyPzE  ( topW1LV.Px(), topW1LV.Py(), topW1LV.Pz(), topW1LV.E());
 	}
 	TOPHADB.SetPxPyPzE( topBLV.Px(),  topBLV.Py(),   topBLV.Pz(),  topBLV.E());
 	if( abs(genTbar.wdau1id)==11 || abs(genTbar.wdau1id)==13 || abs(genTbar.wdau1id)==15 ){
 	  TOPLEPW1.SetPxPyPzE  ( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
-	  TOPLEPW2.SetPtEtaPhiM( atopW2LV.Pt(), 0.0, atopW2LV.Phi(), 0.0);
+	  TOPLEPW2.SetPxPyPzE  ( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
 	}
 	else{
-	  TOPLEPW2.SetPtEtaPhiM( atopW1LV.Pt(), 0.0, atopW1LV.Phi(), 0.0);
 	  TOPLEPW1.SetPxPyPzE  ( atopW2LV.Px(), atopW2LV.Py(), atopW2LV.Pz(), atopW2LV.E());
+	  TOPLEPW2.SetPxPyPzE  ( atopW1LV.Px(), atopW1LV.Py(), atopW1LV.Pz(), atopW1LV.E());
 	}
 	TOPLEPB.SetPxPyPzE( atopBLV.Px(),  atopBLV.Py(),   atopBLV.Pz(),  atopBLV.E());
       }      
@@ -962,6 +932,16 @@ int main(int argc, const char* argv[])
 	  (vLepton_type[0]==13 && leptonLV.Pt()>30 && TMath::Abs(leptonLV.Eta())<2.1 && vLepton_pfCorrIso[0]<0.10) ||
 	  (vLepton_type[0]==11 && leptonLV.Pt()>30 && TMath::Abs(leptonLV.Eta())<2.5 && !(TMath::Abs(leptonLV.Eta())>1.442 &&  TMath::Abs(leptonLV.Eta())<1.566) && vLepton_pfCorrIso[0]<0.10) ;	
 
+	// save lepton kinematics...
+	nLep_ = 1;
+
+	lepton_pt_     [0] = leptonLV.Pt();
+	lepton_eta_    [0] = leptonLV.Eta();
+	lepton_phi_    [0] = leptonLV.Phi();
+	lepton_m_      [0] = leptonLV.M();
+	lepton_charge_ [0] = vLepton_charge   [0];
+	lepton_rIso_   [0] = vLepton_pfCorrIso[0];
+
       }
 
 
@@ -993,6 +973,26 @@ int main(int argc, const char* argv[])
 			   )
 			 )
 	  &&  vLepton_charge[0]*vLepton_charge[1]<0 ;
+
+	// save lepton(s) kinematics into the tree...
+	nLep_ = 2;
+
+	// lep 1...
+	lepton_pt_     [0] = leptonLV.Pt();
+	lepton_eta_    [0] = leptonLV.Eta();
+	lepton_phi_    [0] = leptonLV.Phi();
+	lepton_m_      [0] = leptonLV.M();
+	lepton_charge_ [0] = vLepton_charge   [0];
+	lepton_rIso_   [0] = vLepton_pfCorrIso[0];
+
+	// lep 2...
+	lepton_pt_     [1] = leptonLV2.Pt();
+	lepton_eta_    [1] = leptonLV2.Eta();
+	lepton_phi_    [1] = leptonLV2.Phi();
+	lepton_m_      [1] = leptonLV2.M();
+	lepton_charge_ [1] = vLepton_charge   [1];
+	lepton_rIso_   [1] = vLepton_pfCorrIso[1];
+
       }
 
       ////////////////////////////////////////////////////////////////////////
@@ -1002,6 +1002,11 @@ int main(int argc, const char* argv[])
       float nuPy = METtype1p2corr.et*TMath::Sin(METtype1p2corr.phi);
       float nuE  = TMath::Sqrt(nuPx*nuPx+nuPy*nuPy);
       neutrinoLV.SetPxPyPzE(nuPx,nuPy,0. ,nuE);
+
+      // save MET kinematics into the tree...
+      MET_pt_    = neutrinoLV.Pt();
+      MET_phi_   = neutrinoLV.Phi();
+      MET_sumEt_ = METtype1p2corr.sumet; 
 
       // continue if leptons do not satisfy cuts
       if( !(properEventSL || properEventDL) ) continue;
@@ -1028,6 +1033,7 @@ int main(int argc, const char* argv[])
 	  if(m2<0) m2 = 0.; 
 	  float m      = TMath::Sqrt( m2 ); 
 
+	  // This is filled only for hJets
 	  int id       = (coll==0) ? hJet_puJetIdL[hj] : aJet_puJetIdL[hj];
 	  float JECUnc = (coll==0) ? hJet_JECUnc  [hj] : aJet_JECUnc  [hj];
 
@@ -1039,13 +1045,12 @@ int main(int argc, const char* argv[])
 	  pt *= shift;
 	  m  *= shift;
 
-	  //cout << "Jet #" << coll << "-" << hj << " => (" << pt << "," << eta << "," << phi << "," << m << "), ID=" <<
-	  //id << endl;
-
 	  // only jets in acceptance...
 	  if( TMath::Abs(eta)> 2.5 ) continue;
+
 	  // only jets passing ID...
-	  //if( id < 0.5 ) continue;	
+	  if( id < 0.5 ) continue;	
+
 	  // only jets above pt cut...
 	  if( pt < 30  ) continue;	  
 
@@ -1070,6 +1075,10 @@ int main(int argc, const char* argv[])
 	  
 	  // use pt to order jet collection
 	  jet_map[ p4.Pt() ] = myJet;
+
+	  // DEBUG
+	  //cout << "Jet #" << coll << "-" << hj << " => (" << pt << "," << eta << "," << phi << "," << m << "), ID=" <<
+	  //id << endl;
 	  
 	}
       }
@@ -1085,12 +1094,11 @@ int main(int argc, const char* argv[])
 
       for( jet_map_it = jet_map.begin() ; jet_map_it != jet_map.end(); jet_map_it++){
 
-	//cout << "Map: " << ((jet_map_it->second).p4).Pt() << "," << (jet_map_it->second).csv << endl;
-
+	// the four-vector
 	TLorentzVector p4 = (jet_map_it->second).p4;
-	float csv         = (jet_map_it->second).csv;
-	// (Min needed because in csvUp, csv can exceed 1...)
-	csv               =  TMath::Min( csv, float(0.999999) );
+
+	// the b-tagger output (Min needed because in csvUp, csv can exceed 1...)
+	float csv         =  TMath::Min( (jet_map_it->second).csv, float(0.999999) );
 
 	// count jets above 40 GeV
 	if( p4.Pt()>40 ) jetsAboveCut++;
@@ -1113,12 +1121,12 @@ int main(int argc, const char* argv[])
 	jets_csv_prob_j.push_back( btagger["l_"+bin]!=0 ? btagger["l_"+bin]->GetBinContent( btagger["l_"+bin]->FindBin( csv ) ) : 1.);
 
       }
+
       // continue if not enough jets
       if( jetsAboveCut<4 ){
 	//cout << "Less then 4 jets.. continue" << endl;
 	continue;
       }
-
       
       // jet multiplicity
       int numJets30UntagM = 0; 
@@ -1245,13 +1253,14 @@ int main(int argc, const char* argv[])
 
       for( unsigned int w = 0; w<btag_indices.size(); w++){
 
-	if     (  genBLV.Py()>0    && deltaR(jets_p4[ btag_indices[w] ],genBLV)   <GENJETDR ) hMatches++;
-	else if(  genBbarLV.Py()>0 && deltaR(jets_p4[ btag_indices[w] ],genBbarLV)<GENJETDR)  hMatches++;    
-	if     (  TOPHADB.Py()>0   && deltaR(jets_p4[ btag_indices[w] ],TOPHADB)  <GENJETDR ) tMatches++;
-	else if(  TOPLEPB.Py()>0   && deltaR(jets_p4[ btag_indices[w] ],TOPLEPB)  <GENJETDR)  tMatches++;
-	if     (  TOPHADW1.Py()>0  && deltaR(jets_p4[ btag_indices[w] ],TOPHADW1) <GENJETDR ) wMatches++;
-	else if(  TOPHADW2.Py()>0  && deltaR(jets_p4[ btag_indices[w] ],TOPHADW2) <GENJETDR)  wMatches++;
-    
+	// use the Py() component to assess if the gen particle is present in the original tree
+	// (it is 0.0 otherwise)
+	if     (  TMath::Abs(HIGGSB1.Py()) >0  && deltaR(jets_p4[ btag_indices[w] ],HIGGSB1)  < GENJETDR ) hMatches++;
+	else if(  TMath::Abs(HIGGSB2.Py()) >0  && deltaR(jets_p4[ btag_indices[w] ],HIGGSB2)  < GENJETDR ) hMatches++;    
+	if     (  TMath::Abs(TOPHADB.Py()) >0  && deltaR(jets_p4[ btag_indices[w] ],TOPHADB)  < GENJETDR ) tMatches++;
+	else if(  TMath::Abs(TOPLEPB.Py()) >0  && deltaR(jets_p4[ btag_indices[w] ],TOPLEPB)  < GENJETDR ) tMatches++;
+	if     (  TMath::Abs(TOPHADW1.Py())>0  && deltaR(jets_p4[ btag_indices[w] ],TOPHADW1) < GENJETDR ) wMatches++;
+	else if(  TMath::Abs(TOPHADW2.Py())>0  && deltaR(jets_p4[ btag_indices[w] ],TOPHADW2) < GENJETDR ) wMatches++;    
       }
       matchesH_    = hMatches;
       matchesHAll_ = hMatches;
@@ -1262,23 +1271,24 @@ int main(int argc, const char* argv[])
 
       for( unsigned int w = 0; w<buntag_indices.size(); w++){
 
-	if     (  genBLV.Py()>0    && deltaR(jets_p4[ buntag_indices[w] ],genBLV)   <GENJETDR ) matchesHAll_++;
-	else if(  genBbarLV.Py()>0 && deltaR(jets_p4[ buntag_indices[w] ],genBbarLV)<GENJETDR ) matchesHAll_++;
-	if     (  TOPHADB.Py()>0   && deltaR(jets_p4[ buntag_indices[w] ],TOPHADB)  <GENJETDR ) matchesTAll_++;
-	else if(  TOPLEPB.Py()>0   && deltaR(jets_p4[ buntag_indices[w] ],TOPLEPB)  <GENJETDR)  matchesTAll_++;
-	if     (  TOPHADW1.Py()>0  && deltaR(jets_p4[ buntag_indices[w] ],TOPHADW1) <GENJETDR ) wMatches++;
-	else if(  TOPHADW2.Py()>0  && deltaR(jets_p4[ buntag_indices[w] ],TOPHADW2) <GENJETDR)  wMatches++;
-    
+	// use the Py() component to assess if the gen particle is present in the original tree
+	// (it is 0.0 otherwise)	
+	if     (   TMath::Abs(HIGGSB1.Py())>0    && deltaR(jets_p4[ buntag_indices[w] ],HIGGSB1)  < GENJETDR ) matchesHAll_++;
+	else if(   TMath::Abs(HIGGSB2.Py())>0    && deltaR(jets_p4[ buntag_indices[w] ],HIGGSB2)  < GENJETDR ) matchesHAll_++;
+	if     (   TMath::Abs(TOPHADB.Py())>0    && deltaR(jets_p4[ buntag_indices[w] ],TOPHADB)  < GENJETDR ) matchesTAll_++;
+	else if(   TMath::Abs(TOPLEPB.Py())>0    && deltaR(jets_p4[ buntag_indices[w] ],TOPLEPB)  < GENJETDR ) matchesTAll_++;
+	if     (   TMath::Abs(TOPHADW1.Py())>0   && deltaR(jets_p4[ buntag_indices[w] ],TOPHADW1) < GENJETDR ) wMatches++;
+	else if(   TMath::Abs(TOPHADW2.Py())>0   && deltaR(jets_p4[ buntag_indices[w] ],TOPHADW2) < GENJETDR ) wMatches++;    
       }
       matchesW_    =  wMatches; 
       matchesWAll_ += wMatches;
 
       // gen level overlap
       vector<TLorentzVector> genHeavy;
-      if(genBLV.Py()>0)    genHeavy.push_back( genBLV);
-      if(genBbarLV.Py()>0) genHeavy.push_back( genBbarLV);
-      if(TOPHADB.Py()>0)   genHeavy.push_back( TOPHADB);
-      if(TOPLEPB.Py()>0)   genHeavy.push_back( TOPLEPB);
+      if( TMath::Abs(HIGGSB1.Py()>0)) genHeavy.push_back( HIGGSB1);
+      if( TMath::Abs(HIGGSB2.Py()>0)) genHeavy.push_back( HIGGSB2);
+      if( TMath::Abs(TOPHADB.Py()>0)) genHeavy.push_back( TOPHADB);
+      if( TMath::Abs(TOPLEPB.Py()>0)) genHeavy.push_back( TOPLEPB);
       int overlapH = 0;
       if(genHeavy.size()>1){
 	for(unsigned int k = 0; k < genHeavy.size()-1; k++){  
@@ -1289,8 +1299,8 @@ int main(int argc, const char* argv[])
       }
       overlapHeavy_ = overlapH;
       vector<TLorentzVector> genLight;
-      if( TOPHADW1.Py()>0) genLight.push_back( TOPHADW1);
-      if( TOPHADW2.Py()>0) genLight.push_back( TOPHADW2);
+      if(  TMath::Abs(TOPHADW1.Py())>0) genLight.push_back( TOPHADW1);
+      if(  TMath::Abs(TOPHADW2.Py())>0) genLight.push_back( TOPHADW2);
       int overlapL = 0;
       for(unsigned int k = 0; k < genLight.size(); k++){  
 	for(unsigned int l = 0; l < genHeavy.size(); l++){  
@@ -1350,8 +1360,6 @@ int main(int argc, const char* argv[])
 	    /////////////////////////////////////////////////////	      
 	    type_       =  0;
 	    nPermut_    = 12;
-	    nInter_     =  1;
-	    nTotPermut_ = 12;
 	    meIntegrator->setIntType( MEIntegratorNew::SL2wj );	    
 	    /////////////////////////////////////////////////////
 	  }
@@ -1363,9 +1371,7 @@ int main(int argc, const char* argv[])
 	    
 	    /////////////////////////////////////////////////////	  
 	    type_       =  1;
-	    nPermut_    = 12;
-	    nInter_     =  2;
-	    nTotPermut_ = 24;
+	    nPermut_    = 24;
 	    meIntegrator->setIntType( MEIntegratorNew::SL1wj );
 	    /////////////////////////////////////////////////////
 	  }
@@ -1391,8 +1397,6 @@ int main(int argc, const char* argv[])
 	  /////////////////////////////////////////////////////
 	  type_       =  2;
 	  nPermut_    = 12;
-	  nInter_     =  1;
-	  nTotPermut_ = 12;
 	  meIntegrator->setIntType( MEIntegratorNew::SL1wj );
 	  /////////////////////////////////////////////////////
 	}
@@ -1425,8 +1429,6 @@ int main(int argc, const char* argv[])
 	  /////////////////////////////////////////////////////
 	  type_       =  3;
 	  nPermut_    = 12;
-	  nInter_     =  1;
-	  nTotPermut_ = 12;
 	  meIntegrator->setIntType( MEIntegratorNew::SL2wj );
 	  /////////////////////////////////////////////////////	  
 	}
@@ -1439,8 +1441,6 @@ int main(int argc, const char* argv[])
 	  /////////////////////////////////////////////////////
 	  type_       =  6;
 	  nPermut_    = 12;
-	  nInter_     =  1;
-	  nTotPermut_ = 12;
 	  meIntegrator->setIntType( MEIntegratorNew::DL );
 	  /////////////////////////////////////////////////////	  
 
@@ -1454,8 +1454,6 @@ int main(int argc, const char* argv[])
 	  /////////////////////////////////////////////////////
 	  type_       =  7;
 	  nPermut_    = 12;
-	  nInter_     =  1;
-	  nTotPermut_ = 12;
 	  meIntegrator->setIntType( MEIntegratorNew::DL );
 	  /////////////////////////////////////////////////////	  
 
@@ -1471,7 +1469,18 @@ int main(int argc, const char* argv[])
 	  cout << "Inconsistency found: ind1 or ind2 are not set...continue." << endl;
 	  continue;
 	}
-	
+
+	// choose which permutations to consider;
+	int* permutList = 0;
+	if     ( type_== 0 ) permutList = permutations_SL2wj;
+	else if( type_== 1 ) permutList = permutations_SL1wj_2j;
+	else if( type_== 2 ) permutList = permutations_SL1wj;
+	else if( type_== 3 ) permutList = permutations_SL2wj;
+	else if( type_>= 6 ) permutList = permutations_DL;
+	else{ cout << "No permutations found...continue." << endl; continue; }
+
+	// total number of integrations
+	nTotInteg_  = nPermut_*nMassPoints_;
 	
 	// setup jet collection
 	jets.clear();
@@ -1495,7 +1504,7 @@ int main(int argc, const char* argv[])
 	  pos_to_index[4] = ind2;
 	  pos_to_index[5] = b2;
 	  pos_to_index[6] = b3;
-	  pos_to_index[7] = b4;
+	  pos_to_index[7] = b4;	 
 	}
 	else if( type_==6 ){
 	  jets.push_back( leptonLV    );  
@@ -1517,19 +1526,42 @@ int main(int argc, const char* argv[])
 	  jets.push_back( jets_p4[bL3] );
 	  jets.push_back( jets_p4[bL4] );
 	}
+	else{ /* ... */ }
 	
-	// init particle momenta...
-	meIntegrator->setJets(&jets);
-	
+	// save jet kinematics into the tree...
+	nJet_ = 8;
+	for(int q = 0; q < nJet_ ; q++ ){
+	  // kinematics
+	  jet_pt_ [q] = jets[q].Pt(); 
+	  jet_eta_[q] = jets[q].Eta(); 
+	  jet_phi_[q] = jets[q].Phi(); 	    
+	  jet_m_  [q] = jets[q].M(); 
+	  // b-tagging
+	  if     ( type_<=6 && q == 2 )  jet_csv_  [q] = jets_csv[b1];
+	  else if( type_==7 && q == 2 )  jet_csv_  [q] = jets_csv[bL1];
+	  else if( type_<=3 && q == 3 )  jet_csv_  [q] = jets_csv[ind1];
+	  else if( type_<=3 && q == 4 )  jet_csv_  [q] = jets_csv[ind2];
+	  else if( type_<=6 && q == 5 )  jet_csv_  [q] = jets_csv[b2];
+	  else if( type_==7 && q == 5 )  jet_csv_  [q] = jets_csv[bL2];	  
+	  else if( type_<=6 && q == 6 )  jet_csv_  [q] = jets_csv[b3];
+	  else if( type_==7 && q == 6 )  jet_csv_  [q] = jets_csv[bL3];
+	  else if( type_<=6 && q == 7 )  jet_csv_  [q] = jets_csv[b4];
+	  else if( type_==7 && q == 7 )  jet_csv_  [q] = jets_csv[bL4];	  
+	  else  jet_csv_[q] = -99.;
+	}
 	
 	// set all prob. to 0.0;
-	for(int v = 0 ; v < nTotPermut_; v++){
-	  probAtSgn_permut_    [v] = 0.;
-	  probAtSgn_alt_permut_[v] = 0.;
-	  probAtSgn_bb_permut_ [v] = 0.;
-	  probAtSgn_bj_permut_ [v] = 0.;
-	  probAtSgn_cc_permut_ [v] = 0.;
-	  probAtSgn_jj_permut_ [v] = 0.;
+	for(int p = 0 ; p < nTotInteg_; p++){
+	  probAtSgn_permut_       [p] = 0.;
+	  probAtSgn_alt_permut_   [p] = 0.;
+	  probAtSgnErr_permut_    [p] = 0.;
+	  probAtSgnErr_alt_permut_[p] = 0.;
+	}
+	for(int p = 0 ; p < nPermut_; p++){
+	  probAtSgn_bb_permut_ [p] = 0.;
+	  probAtSgn_bj_permut_ [p] = 0.;
+	  probAtSgn_cc_permut_ [p] = 0.;
+	  probAtSgn_jj_permut_ [p] = 0.;
 	}
 	
 	/////////////////////////////////////////////////////////////
@@ -1576,375 +1608,363 @@ int main(int argc, const char* argv[])
 	
 	/////////////////////////////////////////////////////////////
 	
+	// init reco particles
+	meIntegrator->setJets(&jets);	
+
 	// init MET stuff
 	meIntegrator->setSumEt( METtype1p2corr.sumet );
 	meIntegrator->setMEtCov(-99,-99,0);
 	
 	// specify if topLep has pdgid +6 or -6
 	meIntegrator->setTopFlags( vLepton_charge[0]==1 ? +1 : -1 , vLepton_charge[0]==1 ? -1 : +1 );
-	
-	// type1 has two iterations: 
-	//  > iter0 := treat w1 as W jet and w2 as a gluon
-	//  > iter1 := treat w2 as W jet and w1 as a gluon	  
-	
-	for(int iter=0; iter<nInter_; iter++){
-	  	  
-	  // if type1, swap the light jets
-	  if( type_ == 1 && iter==1){
-	    jets.clear();
-	    jets.push_back( leptonLV      );  
-	    jets.push_back( neutrinoLV    );  
-	    jets.push_back( jets_p4[b1]   );
-	    jets.push_back( jets_p4[ind2] ); // <-- here
-	    jets.push_back( jets_p4[ind1] ); // <-- here 
-	    jets.push_back( jets_p4[b2]   );
-	    jets.push_back( jets_p4[b3]   );
-	    jets.push_back( jets_p4[b4]   );
-	    
-	    // update the map
-	    pos_to_index.clear();
-	    pos_to_index[2] = b1;
-	    pos_to_index[3] = ind2;  // <-- here
-	    pos_to_index[4] = ind1;  // <-- here
-	    pos_to_index[5] = b2;
-	    pos_to_index[6] = b3;
-	    pos_to_index[7] = b4;
-	    
-	    // reset the jets
-	    meIntegrator->setJets(&jets);	
-	  }
+
 	  
-	  // for each event, clean the histograms
-	  h_prob_vs_higgs_mass   ->Reset();
-	  h_prob_vs_top_mass     ->Reset();
-	  h_prob_vs_top_mass_ttbb->Reset();
-	  h_prob_vs_top_mass_ttbj->Reset();
-	  h_prob_vs_top_mass_ttcc->Reset();
-	  h_prob_vs_top_mass_ttjj->Reset();
-	    
-	  // start the clock...	  
-	  clock->Start();
+	// start the clock...	  
+	clock->Start();
+	
+	// loop over Higgs mass values...
+	for(int m = 0; m < nHiggsMassPoints ; m++){
+	  meIntegrator->setMass( mH[m] );
 	  
-	  // loop over Higgs mass values...
-	  for(int m = 0; m < nMassPoints ; m++){
-	    meIntegrator->setMass( mH[m] );
+	  // loop over Top mass values...
+	  for(int t = 0; t < nTopMassPoints ; t++){
+	    meIntegrator->setTopMass( mT[t] , MW );
 	    
-	    // loop over Top mass values...
-	    for(int t = 0; t < nTopMassPoints ; t++){
-	      meIntegrator->setTopMass( mT[t] , MW );
+	    // these are used for bookkeeping
+	    double maxP_s = 0.;
+	    double maxP_b = 0.;
+	    
+	    // loop over permutations
+	    for(unsigned int pos = 0; pos < (unsigned int)nPermut_ ; pos++){
 	      
-	      // these are used for bookkeeping
-	      double maxP_s = 0.;
-	      double maxP_b = 0.;
-		
-	      // loop over permutations
-	      for(unsigned int pos = 0; pos < (unsigned int)nPermut_ ; pos++){
-		
-		// consider permutation #pos
-		if( type_==0 || type_==3)
-		  meIntegrator->initVersors( permutations_SL2wj[pos] );
-		if( type_==1 || type_==2)
-		  meIntegrator->initVersors( permutations_SL1wj[pos] );
-		if( type_>=6 )
-		  meIntegrator->initVersors( permutations_DL[pos] );
+	      // consider permutation #pos & save permutation-to-jet mas into the tree...
+	      meIntegrator->initVersors( permutList[pos] );
+	      perm_to_jet_[pos] =  permutList[pos];
 
-		// check invariant mass of jet system:
-		double mass, massLow, massHigh;
-		bool skip        = !( meIntegrator->compatibilityCheck    (0.95, /*printP4*/ 0, mass, massLow, massHigh ) );
-		bool skip_WHad   = false;
-		bool skip_TopHad = false;
-		if((type_==0 || type_==3)){
-		  skip_WHad   = !( meIntegrator->compatibilityCheck_WHad  (0.98, /*printP4*/ 0, mass, massLow, massHigh ) );
-		  skip_TopHad = !( meIntegrator->compatibilityCheck_TopHad(0.98, /*printP4*/ 0, mass, massLow, massHigh ) );
-		}
+	      // index of the four jets associated to b-quarks or W->qq
+	      int bLep_pos = (permutList[pos])%1000000/100000;
+	      int w1_pos   = (permutList[pos])%100000/10000;
+	      int w2_pos   = (permutList[pos])%10000/1000;
+	      int bHad_pos = (permutList[pos])%1000/100;
+	      int b1_pos   = (permutList[pos])%100/10;
+	      int b2_pos   = (permutList[pos])%10/1;       
+	   	      
+	      // find if this particular permutation matches the expectation
+	      int bLep_match = 0;
+	      if(TMath::Abs(TOPLEPB.Py())>0 && deltaR( jets_p4[ pos_to_index[bLep_pos] ], TOPLEPB ) < GENJETDR){
+		bLep_match = 1;
+	      }
+	      int w1_match = 0;  
+	      int w2_match = 0;
+	      if( (TMath::Abs(TOPHADW1.Py())>0 && deltaR( jets_p4[ pos_to_index[w1_pos] ], TOPHADW1 ) < GENJETDR) || 
+		  (TMath::Abs(TOPHADW2.Py())>0 && deltaR( jets_p4[ pos_to_index[w1_pos] ], TOPHADW2 ) < GENJETDR)){
+		w1_match = 1;
+	      }
+	      if( (TMath::Abs(TOPHADW1.Py())>0 && deltaR( jets_p4[ pos_to_index[w2_pos] ], TOPHADW1 ) < GENJETDR) || 
+		  (TMath::Abs(TOPHADW2.Py())>0 && deltaR( jets_p4[ pos_to_index[w2_pos] ], TOPHADW2 ) < GENJETDR)){
+		w2_match = 1;
+	      }
+	      int bHad_match = 0;
+	      if(TMath::Abs(TOPHADB.Py())>0 && deltaR( jets_p4[ pos_to_index[bHad_pos] ], TOPHADB ) < GENJETDR){
+		bHad_match = 1;
+	      }
+	      int b1_match = 0;  
+	      int b2_match = 0;
+	      if( (TMath::Abs(HIGGSB1.Py())>0 && deltaR( jets_p4[ pos_to_index[b1_pos] ], HIGGSB1 ) < GENJETDR) || 
+		  (TMath::Abs(HIGGSB2.Py())>0 && deltaR( jets_p4[ pos_to_index[b1_pos] ], HIGGSB2 ) < GENJETDR)){
+		b1_match = 1;
+	      }
+	      if( (TMath::Abs(HIGGSB1.Py())>0 && deltaR( jets_p4[ pos_to_index[b2_pos] ], HIGGSB1 ) < GENJETDR) || 
+		  (TMath::Abs(HIGGSB2.Py())>0 && deltaR( jets_p4[ pos_to_index[b2_pos] ], HIGGSB2 ) < GENJETDR)){
+		b2_match = 1;
+	      }
 
-		// if type 0/3 and incompatible with MW or MT (and we are not scanning vs MT) continue
-		// ( this applies to both hypothesis )
-		if( nTopMassPoints==1 && (skip_WHad || skip_TopHad) ){
-		  cout << "Skip                                 Perm. #" << pos << endl;
-		  continue;
-		}
-		
-		// retrieve intergration boundaries from meIntegrator
-		pair<double, double> range_x0 = (meIntegrator->getW1JetEnergyCI(0.95));
-		pair<double, double> range_x1 =  make_pair(-1,1);
-		pair<double, double> range_x2 =  make_pair(-PI,PI);	    
-		pair<double, double> range_x3 =  make_pair(-1,1);
-		pair<double, double> range_x4 =  useMET ? (meIntegrator->getNuPhiCI(0.95)) : make_pair(-PI,PI);
-		pair<double, double> range_x5 = (meIntegrator->getB1EnergyCI(0.95));
-		pair<double, double> range_x6 = (meIntegrator->getB2EnergyCI(0.95));
-		
-		double x0L = range_x0.first; double x0U = range_x0.second;
-		double x1L = range_x1.first; double x1U = range_x1.second;
-		double x2L = range_x2.first; double x2U = range_x2.second;
-		double x3L = range_x3.first; double x3U = range_x3.second;
-		double x4L = range_x4.first; double x4U = range_x4.second;
-		double x5L = range_x5.first; double x5U = range_x5.second;
-		double x6L = range_x6.first; double x6U = range_x6.second;
-		
-		// these hold for the sgn integration and type0...
-		double xLmode0_s[4] = {x0L, x3L, x4L, x5L};
-		double xUmode0_s[4] = {x0U, x3U, x4U, x5U};
-		// these hold for the bkg integration and type0...
-		double xLmode0_b[5] = {x0L, x3L, x4L, x5L, x6L};
-		double xUmode0_b[5] = {x0U, x3U, x4U, x5U, x6U};		 
-		
-		// these hold for the sgn integration and type1...
-		double xLmode1_s[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
-		double xUmode1_s[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
-		// these hold for the bkg integration and type1...
-		double xLmode1_b[7] = {x0L, x1L, x2L, x3L, x4L, x5L, x6L};
-		double xUmode1_b[7] = {x0U, x1U, x2U, x3U, x4U, x5U, x6U};
-		
-		// these hold for the sgn integration and type2...
-		double xLmode2_s[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
-		double xUmode2_s[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
-		// these hold for the bkg integration and type2...	      
-		double xLmode2_b[7] = {x0L, x1L, x2L, x3L, x4L, x5L, x6L};
-		double xUmode2_b[7] = {x0U, x1U, x2U, x3U, x4U, x5U, x6U};	     	     	   	       
-		
-		// these hold for the sgn integration and type3...
-		double xLmode3_s[4] = {x0L, x3L, x4L, x5L};
-		double xUmode3_s[4] = {x0U, x3U, x4U, x5U};
-		// these hold for the bkg integration and type3...
-		double xLmode3_b[5] = {x0L, x3L, x4L, x5L, x6L};
-		double xUmode3_b[5] = {x0U, x3U, x4U, x5U, x6U};
-		
-		// these hold for the sgn integration and type6...
-		double xLmode6_s[5] = {x1L, x2L, x1L, x2L, x5L};
-		double xUmode6_s[5] = {x1U, x2U, x1U, x2U, x5U};
-		// these hold for the bkg integration and type6...
-		double xLmode6_b[6] = {x1L, x2L, x1L, x2L, x5L, x6L};
-		double xUmode6_b[6] = {x1U, x2U, x1U, x2U, x5U, x6U};
+	      // save an integer with this convention:
+	      perm_to_gen_[pos] = 100000*bLep_match + 10000*w1_match + 1000*w2_match + 100*bHad_match + 10*b1_match + 1*b2_match;
 
-		// these hold for the sgn integration and type7...
-		double xLmode7_s[5] = {x1L, x2L, x1L, x2L, x5L};
-		double xUmode7_s[5] = {x1U, x2U, x1U, x2U, x5U};
-		// these hold for the bkg integration and type7...
-		double xLmode7_b[6] = {x1L, x2L, x1L, x2L, x5L, x6L};
-		double xUmode7_b[6] = {x1U, x2U, x1U, x2U, x5U, x6U};
 
-		// number of integration variables (TTH hypothesis)
-		int nParam;
-		if     ( type_==0 )  nParam = 4;
-		else if( type_==1 )  nParam = 6;
-		else if( type_==2 )  nParam = 6;
-		else if( type_==3 )  nParam = 4;
-		else if( type_==6 )  nParam = 5;
-		else if( type_==7 )  nParam = 5;
-		else{
-		  cout << "No type match...contine." << endl;
-		  continue;
-		}
+	      // check invariant mass of jet system:
+	      double mass, massLow, massHigh;
+	      bool skip        = !( meIntegrator->compatibilityCheck    (0.95, /*printP4*/ 0, mass, massLow, massHigh ) );
+	      bool skip_WHad   = false;
+	      bool skip_TopHad = false;
+	      if((type_==0 || type_==3)){
+		skip_WHad   = !( meIntegrator->compatibilityCheck_WHad  (0.98, /*printP4*/ 0, mass, massLow, massHigh ) );
+		skip_TopHad = !( meIntegrator->compatibilityCheck_TopHad(0.98, /*printP4*/ 0, mass, massLow, massHigh ) );
+	      }
+	      
+	    
+	      // if use btag, multiply p by b-tag probability density
+	      if( useBtag ){	       			
+		double p_b_bLep =  jets_csv_prob_b[ pos_to_index[bLep_pos] ];
+		double p_b_bHad =  jets_csv_prob_b[ pos_to_index[bHad_pos] ];
+		double p_b_b1   =  jets_csv_prob_b[ pos_to_index[b1_pos] ];
+		double p_c_b1   =  jets_csv_prob_c[ pos_to_index[b1_pos] ];
+		double p_j_b1   =  jets_csv_prob_j[ pos_to_index[b1_pos] ];
+		double p_b_b2   =  jets_csv_prob_b[ pos_to_index[b2_pos] ];
+		double p_c_b2   =  jets_csv_prob_c[ pos_to_index[b2_pos] ];
+		double p_j_b2   =  jets_csv_prob_j[ pos_to_index[b2_pos] ];
 		
-		// the per-permutation probability...
-		double p = 0.;	       	
-		  
-		// loop over hypothesis [ TTH, TTbb ]
-		for(int hyp = 0 ; hyp<2;  hyp++){
-		  
-		  // if doing higgs mass scan, don't consider bkg hypo
-		  if( nMassPoints>1 && hyp==1 ) continue;
+		probAtSgn_bb_permut_[pos] =  p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2;
+		probAtSgn_bj_permut_[pos] =  p_b_bLep * p_b_bHad * (p_b_b1 * p_j_b2 + p_j_b1 * p_b_b2 )*0.5;
+		probAtSgn_cc_permut_[pos] =  p_b_bLep * p_b_bHad * p_c_b1 * p_c_b2;
+		probAtSgn_jj_permut_[pos] =  p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2;		  
+	      }
 
-		  // if doing top mass scan, don't consider sgn hypo
-		  if( nTopMassPoints>1 && hyp==0 ) continue;
-
-		  // if consider only one hypothesis (SoB=0) 
-		  // and the current hypo is not the desired one, continue...
-		  if( SoB==0 && hyp!=hypo) continue;
-
-		  // if current hypo is TTH, but M(b1b2) incompatible with 125
-		  // (and we are not scanning vs MH) continue...
-		  if( hyp==0 && nMassPoints==1 && skip){
-		    cout << "Skip    hypo " << (hyp==0 ? "ttH " : "ttbb") 
-			 << ", MH=" << mH[m] << ", MT=" << mT[t]
-			 << ". Perm. #" << pos;
-		    if(type_==1) 
-		      cout << " (inter. " << iter << ")";
-		    cout << " => p=" << p << endl;
-		    continue;
-		  }
+	      
+	      // if type 0/3 and incompatible with MW or MT (and we are not scanning vs MT) continue
+	      // ( this applies to both hypotheses )
+	      if( nTopMassPoints==1 && (skip_WHad || skip_TopHad) ){
+		cout << "Skip                                 Perm. #" << pos << endl;
+		continue;
+	      }	      
+	      
+	      // retrieve intergration boundaries from meIntegrator
+	      pair<double, double> range_x0 = (meIntegrator->getW1JetEnergyCI(0.95));
+	      pair<double, double> range_x1 =  make_pair(-1,1);
+	      pair<double, double> range_x2 =  make_pair(-PI,PI);	    
+	      pair<double, double> range_x3 =  make_pair(-1,1);
+	      pair<double, double> range_x4 =  useMET ? (meIntegrator->getNuPhiCI(0.95)) : make_pair(-PI,PI);
+	      pair<double, double> range_x5 = (meIntegrator->getB1EnergyCI(0.95));
+	      pair<double, double> range_x6 = (meIntegrator->getB2EnergyCI(0.95));
+	      
+	      // boundaries
+	      double x0L = range_x0.first; double x0U = range_x0.second;
+	      double x1L = range_x1.first; double x1U = range_x1.second;
+	      double x2L = range_x2.first; double x2U = range_x2.second;
+	      double x3L = range_x3.first; double x3U = range_x3.second;
+	      double x4L = range_x4.first; double x4U = range_x4.second;
+	      double x5L = range_x5.first; double x5U = range_x5.second;
+	      double x6L = range_x6.first; double x6U = range_x6.second;
+	      
+	      // these hold for the sgn integration and type0...
+	      double xLmode0_s[4] = {x0L, x3L, x4L, x5L};
+	      double xUmode0_s[4] = {x0U, x3U, x4U, x5U};
+	      // these hold for the bkg integration and type0...
+	      double xLmode0_b[5] = {x0L, x3L, x4L, x5L, x6L};
+	      double xUmode0_b[5] = {x0U, x3U, x4U, x5U, x6U};		 
+	      
+	      // these hold for the sgn integration and type1...
+	      double xLmode1_s[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+	      double xUmode1_s[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+	      // these hold for the bkg integration and type1...
+	      double xLmode1_b[7] = {x0L, x1L, x2L, x3L, x4L, x5L, x6L};
+	      double xUmode1_b[7] = {x0U, x1U, x2U, x3U, x4U, x5U, x6U};
+	      
+	      // these hold for the sgn integration and type2...
+	      double xLmode2_s[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+	      double xUmode2_s[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+	      // these hold for the bkg integration and type2...	      
+	      double xLmode2_b[7] = {x0L, x1L, x2L, x3L, x4L, x5L, x6L};
+	      double xUmode2_b[7] = {x0U, x1U, x2U, x3U, x4U, x5U, x6U};	     	     	   	       
+	      
+	      // these hold for the sgn integration and type3...
+	      double xLmode3_s[4] = {x0L, x3L, x4L, x5L};
+	      double xUmode3_s[4] = {x0U, x3U, x4U, x5U};
+	      // these hold for the bkg integration and type3...
+	      double xLmode3_b[5] = {x0L, x3L, x4L, x5L, x6L};
+	      double xUmode3_b[5] = {x0U, x3U, x4U, x5U, x6U};
+	      
+	      // these hold for the sgn integration and type6...
+	      double xLmode6_s[5] = {x1L, x2L, x1L, x2L, x5L};
+	      double xUmode6_s[5] = {x1U, x2U, x1U, x2U, x5U};
+	      // these hold for the bkg integration and type6...
+	      double xLmode6_b[6] = {x1L, x2L, x1L, x2L, x5L, x6L};
+	      double xUmode6_b[6] = {x1U, x2U, x1U, x2U, x5U, x6U};
+	      
+	      // these hold for the sgn integration and type7...
+	      double xLmode7_s[5] = {x1L, x2L, x1L, x2L, x5L};
+	      double xUmode7_s[5] = {x1U, x2U, x1U, x2U, x5U};
+	      // these hold for the bkg integration and type7...
+	      double xLmode7_b[6] = {x1L, x2L, x1L, x2L, x5L, x6L};
+	      double xUmode7_b[6] = {x1U, x2U, x1U, x2U, x5U, x6U};
+	      
+	      // number of integration variables (TTH hypothesis)
+	      int nParam;
+	      if     ( type_==0 )  nParam = 4; // Eq, eta_nu, phi_nu, Eb
+	      else if( type_==1 )  nParam = 6; // Eq, eta_q', phi_q', eta_nu, phi_nu, Eb
+	      else if( type_==2 )  nParam = 6; // Eq, eta_q', phi_q', eta_nu, phi_nu, Eb
+	      else if( type_==3 )  nParam = 4; // Eq, eta_nu, phi_nu, Eb
+	      else if( type_==6 )  nParam = 5; // eta_nu, phi_nu, eta_nu', phi_nu', Eb
+	      else if( type_==7 )  nParam = 5; // eta_nu, phi_nu, eta_nu', phi_nu', Eb
+	      else{
+		cout << "No type match...contine." << endl;
+		continue;
+	      }
+	      
+	      // the per-permutation probability...
+	      double p    = 0.;	
+	      // the per-permutation probability error...
+	      double pErr = 0.;	       	
 		  
-		  // setup hypothesis
-		  cout << "Testing hypo " << (hyp==0 ? "ttH " : "ttbb") 
-		       << ", MH=" << mH[m] << ", MT=" << mT[t]
-		       << ". Perm. #" << pos;
-		  if(type_==1) 
-		    cout << " (inter. " << iter << ")";
-		    
-		  meIntegrator->setHypo(hyp);
+	      // loop over hypothesis [ TTH, TTbb ]
+	      for(int hyp = 0 ; hyp<2;  hyp++){
 		  
-		  // initial number of function calles
-		  int intPoints = 4000;
-		  if( type_==0 )  intPoints =  2000;
-		  if( type_==1 )  intPoints =  4000;
-		  if( type_==2 )  intPoints =  4000;
-		  if( type_==3 )  intPoints =  2000;
-		  if( type_==6 )  intPoints = 10000;
-		  if( type_==7 )  intPoints = 10000;
-		  
-		  // count how many time the integration is rerun per permutation
-		  int ntries = 0;
-		  
-		  // skip ME calculation... for debugging
-		  if(speedup==0){
-		    
-		    // refinement: redo integration if it returned a bad chi2
-		    while( ntries < MAX_REEVAL_TRIES){
-		      
-		      // integrand
-		      ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, nParam+hyp);
-		      // VEGAS integrator
-		      ROOT::Math::GSLMCIntegrator ig2( ROOT::Math::IntegrationMultiDim::kVEGAS , 1.e-12, 1.e-5, intPoints);
-		      ig2.SetFunction(toIntegrate);
-		      // setup # of parameters
-		      meIntegrator->SetPar( nParam+hyp );	 
-		      
-		      // the integration ranges depend on hyp and type
-		      if     ( type_==0 ){
-			p = (hyp==0 ? ig2.Integral(xLmode0_s, xUmode0_s) : ig2.Integral(xLmode0_b, xUmode0_b));
-		      }
-		      else if( type_==1 ){
-			p = (hyp==0 ? ig2.Integral(xLmode1_s, xUmode1_s) : ig2.Integral(xLmode1_b, xUmode1_b));
-		      }
-		      else if( type_==2 ){
-			p = (hyp==0 ? ig2.Integral(xLmode2_s, xUmode2_s) : ig2.Integral(xLmode2_b, xUmode2_b));
-		      }
-		      else if( type_==3 ){
-			p = (hyp==0 ? ig2.Integral(xLmode3_s, xUmode3_s) : ig2.Integral(xLmode3_b, xUmode3_b));
-		      }
-		      else if( type_==6 ){
-			p = (hyp==0 ? ig2.Integral(xLmode6_s, xUmode6_s) : ig2.Integral(xLmode6_b, xUmode6_b));
-		      }
-		      else if( type_==7 ){
-			p = (hyp==0 ? ig2.Integral(xLmode7_s, xUmode7_s) : ig2.Integral(xLmode7_b, xUmode7_b));
-		      }
-		      else{ /* ... */ }		    
-		      
-		      // chi2 of the integration
-		      double chi2 =  ig2.ChiSqr();
-		      
-		      // check if the actual permutation returned a small or large number...
-		      // if the value is less than 10% of the largest found that far, skip 
-		      // the improvement
-		      if( hyp==0 ){
-			if( p>maxP_s ) maxP_s = p;		  
-			else if( p<0.1*maxP_s) ntries = MAX_REEVAL_TRIES+1;
-		      }
-		      else{
-			if( p>maxP_b ) maxP_b = p;		  
-			else if( p<0.1*maxP_b) ntries = MAX_REEVAL_TRIES+1;	
-		      }
-		      
-		      // if the chi2 is bad, increse # of points and repeat the integration
-		      if( chi2 > maxChi2_ ){
-			ntries++;
-			intPoints *= 1.5;
-		      }
-		      // otherwise, just go to the next permutation...
-		      else 
-			ntries = MAX_REEVAL_TRIES+1;			
-		    }	
-		  }
-		  else{
-		    // can still be interested in b-tagging, so set p=1...
-		    p = 1.;
-		  }
-		  
-		  // to avoid problems
-		  if( TMath::IsNaN(p) ) p = 0.;
+		// if doing higgs mass scan, don't consider bkg hypo
+		if( nHiggsMassPoints>1 && hyp==1 ) continue;
+		
+		// if doing top mass scan, don't consider sgn hypo
+		if( nTopMassPoints>1 && hyp==0 ) continue;
+		
+		// if consider only one hypothesis (SoB=0) 
+		// and the current hypo is not the desired one, continue...
+		if( SoB==0 && hyp!=hypo) continue;
+		
+		// if current hypo is TTH, but M(b1b2) incompatible with 125
+		// (and we are not scanning vs MH) continue...
+		if( hyp==0 && nHiggsMassPoints==1 && skip){
+		  cout << "Skip    hypo " << (hyp==0 ? "ttH " : "ttbb") 
+		       << " [MH=" << mH[m] << ", MT=" << mT[t]
+		       << "] Perm. #" << pos;
 		  cout << " => p=" << p << endl;
+		  continue;
+		}
+		
+		// setup hypothesis
+		cout << "Testing hypo " << (hyp==0 ? "ttH " : "ttbb") 
+		     << " [MH=" << mH[m] << ", MT=" << mT[t]
+		     << "] Perm. #" << pos;	       
+		meIntegrator->setHypo(hyp);
 		  
-		  /////////////////////////////////////////////////////////////
+		// initial number of function calles
+		int intPoints = 4000;
+		if( type_==0 )  intPoints =  2000;
+		if( type_==1 )  intPoints =  4000;
+		if( type_==2 )  intPoints =  4000;
+		if( type_==3 )  intPoints =  2000;
+		if( type_==6 )  intPoints = 10000;
+		if( type_==7 )  intPoints = 10000;
+		
+		  // count how many time the integration is rerun per permutation
+		int ntries = 0;
+		
+		// skip ME calculation... for debugging
+		if(speedup==0){
 		  
-		  if( useBtag ){
+		  // refinement: redo integration if it returned a bad chi2
+		  while( ntries < MAX_REEVAL_TRIES){
 		    
-		    int bLep_pos      = (type_==0 || type_==3 || type_>=6) ? (permutations_SL2wj[pos])/100000   : (permutations_SL1wj[pos])/100000;
-		    int bHad_pos      = (type_==0 || type_==3 || type_>=6) ? (permutations_SL2wj[pos])%1000/100 : (permutations_SL1wj[pos])%1000/100;
-		    int b1_pos        = (type_==0 || type_==3 || type_>=6) ? (permutations_SL2wj[pos])%100/10   : (permutations_SL1wj[pos])%100/10;
-		    int b2_pos        = (type_==0 || type_==3 || type_>=6) ? (permutations_SL2wj[pos])%10       : (permutations_SL1wj[pos])%10;
+		    // integrand
+		    ROOT::Math::Functor toIntegrate(meIntegrator, &MEIntegratorNew::Eval, nParam+hyp);
+		    // VEGAS integrator
+		    ROOT::Math::GSLMCIntegrator ig2( ROOT::Math::IntegrationMultiDim::kVEGAS , 1.e-12, 1.e-5, intPoints);
+		    ig2.SetFunction(toIntegrate);
+		    // setup # of parameters
+		    meIntegrator->SetPar( nParam+hyp );	 
 		    
-		    double p_b_bLep =  jets_csv_prob_b[ pos_to_index[bLep_pos] ];
-		    double p_b_bHad =  jets_csv_prob_b[ pos_to_index[bHad_pos] ];
-		    double p_b_b1   =  jets_csv_prob_b[ pos_to_index[b1_pos] ];
-		    double p_c_b1   =  jets_csv_prob_c[ pos_to_index[b1_pos] ];
-		    double p_j_b1   =  jets_csv_prob_j[ pos_to_index[b1_pos] ];
-		    double p_b_b2   =  jets_csv_prob_b[ pos_to_index[b2_pos] ];
-		    double p_c_b2   =  jets_csv_prob_c[ pos_to_index[b2_pos] ];
-		    double p_j_b2   =  jets_csv_prob_j[ pos_to_index[b2_pos] ];
-		      
-		    // total and per-permutation ME*btag probability for nominal MH and MT
-		    if( mH[m]<MH+0.5 && mH[m]>MH-0.5 && mT[t]<MT+0.5 && mT[t]>MT-0.5){
-		      if(hyp==0){
-			probAtSgn_ttbb_         += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2 );
-		      }
-		      else{
-			probAtSgn_alt_ttbb_     += ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2 );
-			probAtSgn_alt_ttbj_     += ( p * p_b_bLep * p_b_bHad * (p_b_b1 * p_j_b2 + p_j_b1 * p_b_b2 )*0.5 );
-			probAtSgn_alt_ttcc_     += ( p * p_b_bLep * p_b_bHad * p_c_b1 * p_c_b2 );
-			probAtSgn_alt_ttjj_     += ( p * p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2 );
-		      }
-		      probAtSgn_bb_permut_[(unsigned int)(pos+iter*12)] =  p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2;
-		      probAtSgn_bj_permut_[(unsigned int)(pos+iter*12)] =  p_b_bLep * p_b_bHad * (p_b_b1 * p_j_b2 + p_j_b1 * p_b_b2 )*0.5;
-		      probAtSgn_cc_permut_[(unsigned int)(pos+iter*12)] =  p_b_bLep * p_b_bHad * p_c_b1 * p_c_b2;
-		      probAtSgn_jj_permut_[(unsigned int)(pos+iter*12)] =  p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2;
+		    // the integration ranges depend on hyp and type
+		    if     ( type_==0 ){
+		      p = (hyp==0 ? ig2.Integral(xLmode0_s, xUmode0_s) : ig2.Integral(xLmode0_b, xUmode0_b));
 		    }
-		      
-		    // total ME probability vs MT*btag for nominal MH under B hypo
-		    if( hyp>0 && mH[m]<MH+0.5 && mH[m]>MH-0.5){
-		      h_prob_vs_top_mass_ttbb->Fill( mT[t], ( p * p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2 ) );
-		      h_prob_vs_top_mass_ttbj->Fill( mT[t], ( p * p_b_bLep * p_b_bHad * (p_b_b1 * p_j_b2 + p_j_b1 * p_b_b2 )*0.5 ));
-		      h_prob_vs_top_mass_ttcc->Fill( mT[t], ( p * p_b_bLep * p_b_bHad * p_c_b1 * p_c_b2 ) );
-		      h_prob_vs_top_mass_ttjj->Fill( mT[t], ( p * p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2 ) );
-		    }			
+		    else if( type_==1 ){
+		      p = (hyp==0 ? ig2.Integral(xLmode1_s, xUmode1_s) : ig2.Integral(xLmode1_b, xUmode1_b));
+		    }
+		    else if( type_==2 ){
+		      p = (hyp==0 ? ig2.Integral(xLmode2_s, xUmode2_s) : ig2.Integral(xLmode2_b, xUmode2_b));
+		    }
+		    else if( type_==3 ){
+		      p = (hyp==0 ? ig2.Integral(xLmode3_s, xUmode3_s) : ig2.Integral(xLmode3_b, xUmode3_b));
+		    }
+		    else if( type_==6 ){
+		      p = (hyp==0 ? ig2.Integral(xLmode6_s, xUmode6_s) : ig2.Integral(xLmode6_b, xUmode6_b));
+		    }
+		    else if( type_==7 ){
+		      p = (hyp==0 ? ig2.Integral(xLmode7_s, xUmode7_s) : ig2.Integral(xLmode7_b, xUmode7_b));
+		    }
+		      else{ /* ... */ }		    
 		    
-		  }
-
-		  /////////////////////////////////////////////////////////////
+		    // chi2 of the integration
+		    double chi2 =  ig2.ChiSqr();
 		    
-		  
-		  // total and per-permutation ME probability for nominal MH and MT
-		  if( mH[m]<MH+0.5 && mH[m]>MH-0.5&& mT[t]<MT+0.5 &&  mT[t]>MT-0.5){
-		    if(hyp==0){
-		      probAtSgn_     += p;
-			probAtSgn_permut_[(unsigned int)(pos+iter*nPermut_)]      = p;
+		    // error from the last VEGAS iteration
+		    pErr =  ig2.Error();
+		    
+		    // check if the actual permutation returned a small or large number...
+		    // if the value is less than 10% of the largest found that far, skip 
+		    // the improvement
+		    if( hyp==0 ){
+		      if( p>maxP_s ) maxP_s = p;		  
+		      else if( p<0.1*maxP_s) ntries = MAX_REEVAL_TRIES+1;
 		    }
 		    else{
-		      probAtSgn_alt_ += p;
-		      probAtSgn_alt_permut_[(unsigned int)(pos+iter*nPermut_)]  = p;
+		      if( p>maxP_b ) maxP_b = p;		  
+		      else if( p<0.1*maxP_b) ntries = MAX_REEVAL_TRIES+1;	
 		    }
+		    
+		    // if the chi2 is bad, increse # of points and repeat the integration
+		    if( chi2 > maxChi2_ ){
+		      ntries++;
+		      intPoints *= 1.5;
+		    }
+		    // otherwise, just go to the next permutation...
+		    else 
+		      ntries = MAX_REEVAL_TRIES+1;			
+		  }	
+		}
+		else{
+		  // can still be interested in b-tagging, so set p=1...
+		  p = 1.;
+		}
+		  
+		// to avoid problems
+		if( TMath::IsNaN(p) )    p    = 0.;
+		if( TMath::IsNaN(pErr) ) pErr = 0.;
+		cout << " => p=(" << p << " +/- " << pErr << ")" << endl;
+		
+		/////////////////////////////////////////////////////////////
+		  
+		if( useBtag ){
+		  
+		  // total ME*btag probability for nominal MH and MT, sgn hypo
+		  if( hyp==0 && mH[m]<MH+0.5 && mH[m]>MH-0.5 && mT[t]<MT+0.5 && mT[t]>MT-0.5){
+		    probAtSgn_ttbb_         += ( p * probAtSgn_bb_permut_[pos] );
 		  }
 		  
-		  // total ME probability vs MH for nominal MT under S hypo
-		  if( hyp==0 && mT[t]<MT+0.5 && mT[t]>MT-0.5){
-		    h_prob_vs_higgs_mass->Fill( mH[m], p );
+		  // total ME*btag probability for nominal MH and MT, bkg hypo
+		  if( hyp>0 && mH[m]<MH+0.5 && mH[m]>MH-0.5 && mT[t]<MT+0.5 && mT[t]>MT-0.5){
+		    probAtSgn_alt_ttbb_     += ( p * probAtSgn_bb_permut_[pos] );
+		    probAtSgn_alt_ttbj_     += ( p * probAtSgn_bj_permut_[pos] );
+		    probAtSgn_alt_ttcc_     += ( p * probAtSgn_cc_permut_[pos] );
+		    probAtSgn_alt_ttjj_     += ( p * probAtSgn_jj_permut_[pos] );		      
+		  }		      		      
+		}
+		
+		/////////////////////////////////////////////////////////////
+		
+		// save TTH prob. per permutation AND mH
+		if( hyp==0 && mT[t]<MT+0.5 &&  mT[t]>MT-0.5){
+		  probAtSgn_permut_   [(unsigned int)(pos+m*nPermut_)] = p;
+		  probAtSgnErr_permut_[(unsigned int)(pos+m*nPermut_)] = pErr;
+		}
+		// save TTbb prob. per permutation AND mT
+		if( hyp==1 && mH[m]<MH+0.5 &&  mH[m]>MH-0.5 ){
+		  probAtSgn_alt_permut_   [(unsigned int)(pos+t*nPermut_)] = p;
+		  probAtSgnErr_alt_permut_[(unsigned int)(pos+t*nPermut_)] = pErr;
+		}
+		
+		// total and per-permutation ME probability for nominal MH and MT
+		if( mH[m]<MH+0.5 && mH[m]>MH-0.5 && mT[t]<MT+0.5 &&  mT[t]>MT-0.5){
+		  if(hyp==0){
+		    probAtSgn_     += p;
 		  }
-		  // total ME probability vs MT for nominal MH under B hypo
-		  if( hyp>0 && mH[m]<MH+0.5 && mH[m]>MH-0.5){
-		    h_prob_vs_top_mass->Fill( mT[t],   p );
+		  else{
+		    probAtSgn_alt_ += p;
 		  }
+		}
+		
+		/////////////////////////////////////////////////////////////
 		  
-		  /////////////////////////////////////////////////////////////
-		  
-		}  // hypothesis		  
-	      }  // permutations
-	    }  // nTopMAssPoints
-	  }  // nMassPoints	    
-	}  // iterations
-	
-	// get best mass value by quadratic interpolation of the mass histograms
-	bestMH_   = (getMaxValue(h_prob_vs_higgs_mass))   .first;
-	bestMT_   = (getMaxValue(h_prob_vs_top_mass))     .first;
-	bestMTbb_ = (getMaxValue(h_prob_vs_top_mass_ttbb)).first;
-	bestMTbj_ = (getMaxValue(h_prob_vs_top_mass_ttbj)).first;
-	bestMTcc_ = (getMaxValue(h_prob_vs_top_mass_ttcc)).first;
-	bestMTjj_ = (getMaxValue(h_prob_vs_top_mass_ttjj)).first;
+	      }  // hypothesis		  
+	    }  // permutations
+	  }  // nTopMassPoints
+	}  // nHiggsMassPoints	    
 	
 	// stop clock and reset
 	clock->Stop();
 	time_ = clock->RealTime();
 	clock->Reset();	    
 	
+	cout << "Done in " << time_ << " sec" << endl;
       }
 
       ///////////////////////////////////////////////////
@@ -1957,9 +1977,10 @@ int main(int argc, const char* argv[])
       
       counter_   = counter;
       nSimBs_    = nSimBs;
-      nC_        = nC;
-      nCTop_     = nCTop;
+      //nC_        = nC;
+      //nCTop_     = nCTop;
       weight_    = scaleFactor;
+      nPVs_      = nPVs;
 
       EVENT_.run   = EVENT.run;
       EVENT_.lumi  = EVENT.lumi;
@@ -1978,13 +1999,7 @@ int main(int argc, const char* argv[])
 
   fout_tmp->cd();
 
-  hcounter->Write               ("",TObject::kOverwrite );
-  h_prob_vs_higgs_mass->Write   ("",TObject::kOverwrite );
-  h_prob_vs_top_mass->Write     ("",TObject::kOverwrite );
-  h_prob_vs_top_mass_ttbb->Write("",TObject::kOverwrite );
-  h_prob_vs_top_mass_ttbj->Write("",TObject::kOverwrite );
-  h_prob_vs_top_mass_ttcc->Write("",TObject::kOverwrite );
-  h_prob_vs_top_mass_ttjj->Write("",TObject::kOverwrite );
+  hcounter->Write("",TObject::kOverwrite );
 
   tree->Write("",TObject::kOverwrite );
   fout_tmp->Close();
