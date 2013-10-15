@@ -113,6 +113,51 @@ typedef struct
 } genParticleInfo;
 
 
+//https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetResolution
+float resolutionBias(float eta, int shift)
+{
+  if(eta < 0.5){
+    // bias 1s up
+    if(shift ==+1) return 0.058;
+    // nominal bias
+    if(shift == 0) return 0.052;  
+    // bias 1s down
+    if(shift ==-1) return 0.048;
+  }
+  if(eta < 1.1){
+    // bias 1s up
+    if(shift ==+1) return 0.063;
+    // nominal bias
+    if(shift == 0) return 0.057;    
+    // bias 1s down
+    if(shift ==-1) return 0.051;
+  }
+  if(eta < 1.7){
+    // bias 1s up
+    if(shift ==+1) return 0.102;
+    // nominal bias
+    if(shift == 0) return 0.096;    
+    // bias 1s down
+    if(shift ==-1) return 0.090;
+  }
+  if(eta < 2.3){
+    // bias 1s up
+    if(shift ==+1) return 0.224;
+    // nominal bias
+    if(shift == 0) return 0.134;    
+    // bias 1s down
+    if(shift ==-1) return 0.044;
+  }
+  if(eta < 5.0){
+    // bias 1s up
+    if(shift ==+1) return 0.488;
+    // nominal bias
+    if(shift == 0) return 0.288;    
+    // bias 1s down
+    if(shift ==-1) return 0.088;
+  }
+  return 0;
+}
 
 
 int main(int argc, const char* argv[])
@@ -154,8 +199,6 @@ int main(int argc, const char* argv[])
   float  MW              ( in.getUntrackedParameter<double> ("MW",    80.19));
   float  MwL             ( in.getUntrackedParameter<double> ("MwL",      60));
   float  MwH             ( in.getUntrackedParameter<double> ("MwH",     100));
-  //float  MhL             ( in.getUntrackedParameter<double> ("MhL",     100));
-  //float  MhH             ( in.getUntrackedParameter<double> ("MhH",     140));
   double maxChi2_        ( in.getUntrackedParameter<double> ("maxChi2", 2.5));
   vector<double> massesH ( in.getParameter<vector<double> > ("massesH"));
   vector<double> massesT ( in.getParameter<vector<double> > ("massesT"));
@@ -169,7 +212,6 @@ int main(int argc, const char* argv[])
   int   doType1          ( in.getUntrackedParameter<int>    ("doType1", 0));
   int   doType2          ( in.getUntrackedParameter<int>    ("doType2", 0));
   int   doType3          ( in.getUntrackedParameter<int>    ("doType3", 0));
-  //int   doType4          ( in.getUntrackedParameter<int>    ("doType4", 0));
   int   doType6          ( in.getUntrackedParameter<int>    ("doType6", 0));
   int   doType7          ( in.getUntrackedParameter<int>    ("doType7", 0));
   int   useME            ( in.getParameter<int>             ("useME")     );
@@ -177,22 +219,29 @@ int main(int argc, const char* argv[])
   int   useMET           ( in.getParameter<int>             ("useMET")    );
   int   useTF            ( in.getParameter<int>             ("useTF")     );
   int   usePDF           ( in.getParameter<int>             ("usePDF")    );
-  //int   printP4          ( in.getParameter<int>             ("printP4")   );
   int   norm             ( in.getUntrackedParameter<int>    ("norm",      0));
   int   hypo             ( in.getUntrackedParameter<int>    ("hypo",      0));
   int   SoB              ( in.getUntrackedParameter<int>    ("SoB",       1));
+  int   doJERbias        ( in.getUntrackedParameter<int>    ("doJERbias", 0));
+
   int   doCSVup          ( in.getUntrackedParameter<int>    ("doCSVup",   0));
   int   doCSVdown        ( in.getUntrackedParameter<int>    ("doCSVdown", 0));
   int   doJECup          ( in.getUntrackedParameter<int>    ("doJECup",   0));
   int   doJECdown        ( in.getUntrackedParameter<int>    ("doJECdown", 0));
+  int   doJERup          ( in.getUntrackedParameter<int>    ("doJERup",   0));
+  int   doJERdown        ( in.getUntrackedParameter<int>    ("doJERdown", 0));
   int   fixNumEvJob      ( in.getUntrackedParameter<int>    ("fixNumEvJob",1));
   vector<string> functions( in.getParameter<vector<string> >("functions"));
-  vector<int>    evLimits( in.getParameter<vector<int> >   ("evLimits"));
+  vector<int>    evLimits ( in.getParameter<vector<int> >   ("evLimits"));
 
+  //int   printP4          ( in.getParameter<int>             ("printP4")   );
 
 
   /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  */
   /* @@@@@@@@@@@@@@@@@@@@@@@@@ INITIALIZE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  */
+
+  // flag to discriminate data/MC
+  bool isMC = true;
 
   // upper and lower bounds to be processed
   int evLow  = evLimits[0];
@@ -565,6 +614,8 @@ int main(int argc, const char* argv[])
   for(unsigned int sample = 0 ; sample < mySampleFiles.size(); sample++){
     
     string currentName       = mySampleFiles[sample];
+
+    if(currentName.find("Data")!=string::npos) isMC = false;
 
     mySamples->OpenFile( currentName );
     cout << "Opening file " << currentName << endl;
@@ -1025,6 +1076,10 @@ int main(int argc, const char* argv[])
 	// loop over jets
 	for(int hj = 0; hj < (coll==0 ? nhJets : naJets); hj++){
 
+	  float ptGen = -99.;
+	  if(coll==0 && hJet_genPt[hj]>0.) ptGen = hJet_genPt[hj];
+	  if(coll==1 && aJet_genPt[hj]>0.) ptGen = aJet_genPt[hj];
+
 	  float pt     = (coll==0) ? hJet_pt [hj]  : aJet_pt [hj];
 	  float eta    = (coll==0) ? hJet_eta[hj]  : aJet_eta[hj];
 	  float phi    = (coll==0) ? hJet_phi[hj]  : aJet_phi[hj];
@@ -1033,15 +1088,22 @@ int main(int argc, const char* argv[])
 	  if(m2<0) m2 = 0.; 
 	  float m      = TMath::Sqrt( m2 ); 
 
-	  // This is filled only for hJets
 	  int id       = (coll==0) ? hJet_puJetIdL[hj] : aJet_puJetIdL[hj];
 	  float JECUnc = (coll==0) ? hJet_JECUnc  [hj] : aJet_JECUnc  [hj];
 
-	  // for JEC systematics
+	  // for JEC/JER systematics
 	  float shift     = 1.0;
 	  if     ( doJECup   )  shift *= (1+JECUnc);
 	  else if( doJECdown )  shift *= (1-JECUnc);
+	  else if( doJERup   )  shift *= (ptGen>0. ?  1+resolutionBias(TMath::Abs(eta), +1)*(1-ptGen/pt)   : 1.0);
+	  else if( doJERdown )  shift *= (ptGen>0. ?  1+resolutionBias(TMath::Abs(eta), -1)*(1-ptGen/pt)   : 1.0);
 	  else{}
+
+	  // if correct for bias in jet resolution (for sanity, enforce isMC)
+	  if( isMC && doJERbias && !doJERup && !doJERdown) 
+	    shift *= (ptGen>0. ?  1+resolutionBias(TMath::Abs(eta), 0)*(1-ptGen/pt)   : 1.0);
+
+	  // change energy/mass by shift
 	  pt *= shift;
 	  m  *= shift;
 
@@ -1285,10 +1347,10 @@ int main(int argc, const char* argv[])
 
       // gen level overlap
       vector<TLorentzVector> genHeavy;
-      if( TMath::Abs(HIGGSB1.Py()>0)) genHeavy.push_back( HIGGSB1);
-      if( TMath::Abs(HIGGSB2.Py()>0)) genHeavy.push_back( HIGGSB2);
-      if( TMath::Abs(TOPHADB.Py()>0)) genHeavy.push_back( TOPHADB);
-      if( TMath::Abs(TOPLEPB.Py()>0)) genHeavy.push_back( TOPLEPB);
+      if( TMath::Abs(HIGGSB1.Py())>0) genHeavy.push_back( HIGGSB1);
+      if( TMath::Abs(HIGGSB2.Py())>0) genHeavy.push_back( HIGGSB2);
+      if( TMath::Abs(TOPHADB.Py())>0) genHeavy.push_back( TOPHADB);
+      if( TMath::Abs(TOPLEPB.Py())>0) genHeavy.push_back( TOPLEPB);
       int overlapH = 0;
       if(genHeavy.size()>1){
 	for(unsigned int k = 0; k < genHeavy.size()-1; k++){  
@@ -1680,6 +1742,10 @@ int main(int argc, const char* argv[])
 	      }
 
 	      // save an integer with this convention:
+	      //  > 1st digit = 1/0 if bLep candidate is correct/wrong
+	      //  > 2nd digit = 1/0 if matched/not matched to W-quark
+	      //  > ... 
+
 	      perm_to_gen_[pos] = 100000*bLep_match + 10000*w1_match + 1000*w2_match + 100*bHad_match + 10*b1_match + 1*b2_match;
 
 
