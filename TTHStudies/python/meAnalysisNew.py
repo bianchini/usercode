@@ -229,9 +229,9 @@ process.fwliteInput = cms.PSet(
     switchoffOL   = cms.untracked.int32(0), ###### CHECK HERE
     speedup       = cms.untracked.int32(0), ###### CHECK HERE
 
-    doType0       = cms.untracked.int32(1),  #SL(4,2)  W-tag
-    doType1       = cms.untracked.int32(0),  #SL(4,2)  no W-tag
-    doType2       = cms.untracked.int32(0),  #SL(4,1): two flags, W-tag OR no W-tag
+    doType0       = cms.untracked.int32(1),  #SL(4,2)  w/  W-tag
+    doType1       = cms.untracked.int32(0),  #SL(4,2)  w/o W-tag
+    doType2       = cms.untracked.int32(0),  #SL(4,1)
     doType3       = cms.untracked.int32(0),  #SL(4,3) 
     doType4       = cms.untracked.int32(0),  #SL(3,2)
     doType6       = cms.untracked.int32(0),  #DL(4,X)
@@ -265,11 +265,15 @@ process.fwliteInput = cms.PSet(
     #massesT      = cms.vdouble(145, 155, 165, 174, 185, 195, 205),
 
     fixNumEvJob    = cms.untracked.int32(1),
-    evLimits       = cms.vint32(0,2),
+    evLimits       = cms.vint32(0,1),
 
+    doJERbias  = cms.untracked.int32(0),
+    
     doCSVup    = cms.untracked.int32(0),
     doCSVdown  = cms.untracked.int32(0),
     doJECup    = cms.untracked.int32(0),
     doJECdown  = cms.untracked.int32(0),
+    doJERup    = cms.untracked.int32(0),
+    doJERdown  = cms.untracked.int32(0),
 
     )
