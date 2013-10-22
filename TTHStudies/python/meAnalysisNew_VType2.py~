@@ -259,7 +259,7 @@ process.fwliteInput = cms.PSet(
     useBtag          = cms.untracked.int32(1),
     selectByBTagShape= cms.untracked.int32(1),
     
-    printout     = cms.int32(1),
+    printout     = cms.int32(0),
     debug        = cms.int32(0),   
     verbose      = cms.bool(False),
 
@@ -281,8 +281,8 @@ process.fwliteInput = cms.PSet(
     massesT      = cms.vdouble(174.3),
     #massesT      = cms.vdouble(145, 155, 165, 174, 185, 195, 205),
 
-    fixNumEvJob    = cms.untracked.int32(1),
-    evLimits       = cms.vint32(0,5),
+    fixNumEvJob    = cms.untracked.int32(0),
+    evLimits       = cms.vint32(0,-1),
 
     doJERbias  = cms.untracked.int32(0),   
     doCSVup    = cms.untracked.int32(0),

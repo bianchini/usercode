@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Types  as CfgTypes
 import FWCore.ParameterSet.Config as cms
 
-VType     = "_VType2"
+VType     = "_VType1"
 
 xsecTT_SL = 103.0
 xsecTT_FL = 24.8
@@ -242,11 +242,11 @@ process.fwliteInput = cms.PSet(
     doType6       = cms.untracked.int32(0),  #DL(4,X)
     doType7       = cms.untracked.int32(0),  #DL(3M+1L,X)
 
-    doType0ByBTagShape = cms.untracked.int32(1),
+    doType0ByBTagShape = cms.untracked.int32(0),
     doType1ByBTagShape = cms.untracked.int32(0),
     doType2ByBTagShape = cms.untracked.int32(0),
     doType3ByBTagShape = cms.untracked.int32(0),
-    doType6ByBTagShape = cms.untracked.int32(0),
+    doType6ByBTagShape = cms.untracked.int32(1),
 
     useME         = cms.int32(1),
     useJac        = cms.int32(1),
@@ -259,7 +259,7 @@ process.fwliteInput = cms.PSet(
     useBtag          = cms.untracked.int32(1),
     selectByBTagShape= cms.untracked.int32(1),
     
-    printout     = cms.int32(1),
+    printout     = cms.int32(0),
     debug        = cms.int32(0),   
     verbose      = cms.bool(False),
 
@@ -281,8 +281,8 @@ process.fwliteInput = cms.PSet(
     massesT      = cms.vdouble(174.3),
     #massesT      = cms.vdouble(145, 155, 165, 174, 185, 195, 205),
 
-    fixNumEvJob    = cms.untracked.int32(1),
-    evLimits       = cms.vint32(0,5),
+    fixNumEvJob    = cms.untracked.int32(0),
+    evLimits       = cms.vint32(0,-1),
 
     doJERbias  = cms.untracked.int32(0),   
     doCSVup    = cms.untracked.int32(0),

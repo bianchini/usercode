@@ -5,6 +5,7 @@
 #include <fstream>
 #include <map>
 #include <string>
+#include <algorithm>
 
 #include "TSystem.h"
 #include "TCanvas.h"
@@ -39,13 +40,13 @@
 #include "DataFormats/Luminosity/interface/LumiSummary.h"
 #include "Bianchi/TTHStudies/interface/MEIntegratorNew.h"
 #include "Bianchi/TTHStudies/interface/Samples.h"
+#include "Bianchi/TTHStudies/interface/MECombination.h"
 
  
 #define GENJETDR  0.3
 #define MAX_REEVAL_TRIES 3
-#define VERBOSE  false
 #define PI TMath::Pi()
-#define NMAXPERMUT 30
+#define NMAXPERMUT 15
 #define NMAXMASS   20
 #define NMAXJETS   10
 
@@ -70,9 +71,9 @@ typedef struct
 } EventInfo;
  
 
-struct sorterByPt {
-  bool operator() (float i,float j) const { return (i>j);}
-};
+//struct sorterByPt {
+//bool operator() (float i,float j) const { return (i>j);}
+//};
 
 
 typedef struct
@@ -80,6 +81,20 @@ typedef struct
   TLorentzVector p4;
   float csv;
 } JetObservable;
+
+struct JetObservableListerByPt
+{
+  bool operator()( const JetObservable &lx, const JetObservable& rx ) const {
+    return (lx.p4).Pt() > (rx.p4).Pt();
+  }
+};
+
+struct JetObservableListerByCSV
+{
+  bool operator()( const JetObservable &lx, const JetObservable& rx ) const {
+    return (lx.csv) > (rx.csv);
+  }
+};
 
 
 typedef struct
@@ -188,32 +203,44 @@ int main(int argc, const char* argv[])
   std::string outFileName( in.getParameter<std::string>  ("outFileName" ) );
   std::string pathToFile ( in.getParameter<std::string>  ("pathToFile" ) );
   std::string ordering   ( in.getParameter<std::string>  ("ordering" ) );
-  std::string pathToTF   ( in.getParameter<std::string>  ("pathToTF"   ) );
-  std::string pathToCP   ( in.getParameter<std::string>  ("pathToCP"   ) );
-  bool   verbose         ( in.getParameter<bool>  ("verbose") );
+  std::string pathToTF   ( in.getParameter<std::string>  ("pathToTF") );
+  std::string pathToCP   ( in.getParameter<std::string>  ("pathToCP") );
+  bool   verbose         ( in.getParameter<bool>         ("verbose" ) );
   
   // PARAMETERS
-  double lumi            ( in.getParameter<double>("lumi") );
-  float  MH              ( in.getUntrackedParameter<double> ("MH",     125.));
-  float  MT              ( in.getUntrackedParameter<double> ("MT",    174.3));
-  float  MW              ( in.getUntrackedParameter<double> ("MW",    80.19));
-  float  MwL             ( in.getUntrackedParameter<double> ("MwL",      60));
-  float  MwH             ( in.getUntrackedParameter<double> ("MwH",     100));
-  double maxChi2_        ( in.getUntrackedParameter<double> ("maxChi2", 2.5));
-  vector<double> massesH ( in.getParameter<vector<double> > ("massesH"));
-  vector<double> massesT ( in.getParameter<vector<double> > ("massesT"));
+  double lumi               ( in.getParameter<double>("lumi") );
+  float  MH                 ( in.getUntrackedParameter<double> ("MH",     125.));
+  float  MT                 ( in.getUntrackedParameter<double> ("MT",    174.3));
+  float  MW                 ( in.getUntrackedParameter<double> ("MW",    80.19));
+  float  MwL                ( in.getUntrackedParameter<double> ("MwL",      60));
+  float  MwH                ( in.getUntrackedParameter<double> ("MwH",     100));
+  float  btag_prob_cut_6jets( in.getUntrackedParameter<double> ("btag_prob_cut_6jets",    0.));
+  float  btag_prob_cut_5jets( in.getUntrackedParameter<double> ("btag_prob_cut_5jets",    0.));
+  float  btag_prob_cut_4jets( in.getUntrackedParameter<double> ("btag_prob_cut_4jets",    0.));
+  double maxChi2_           ( in.getUntrackedParameter<double> ("maxChi2", 2.5));
+  vector<double> massesH    ( in.getParameter<vector<double> > ("massesH"));
+  vector<double> massesT    ( in.getParameter<vector<double> > ("massesT"));
 
   // FLAGS
   int   switchoffOL      ( in.getUntrackedParameter<int>    ("switchoffOL",     0));
   int   speedup          ( in.getUntrackedParameter<int>    ("speedup",         0));
   int   doubleGaussianB  ( in.getUntrackedParameter<int>    ("doubleGaussianB", 1));
   int   useBtag          ( in.getUntrackedParameter<int>    ("useBtag",         0));
+  int   selectByBTagShape( in.getUntrackedParameter<int>    ("selectByBTagShape",0));
+  int   doTypeBTag4      ( in.getUntrackedParameter<int>    ("doTypeBTag4", 0));
+  int   doTypeBTag5      ( in.getUntrackedParameter<int>    ("doTypeBTag5", 0));
+  int   doTypeBTag6      ( in.getUntrackedParameter<int>    ("doTypeBTag6", 0));
   int   doType0          ( in.getUntrackedParameter<int>    ("doType0", 0));
   int   doType1          ( in.getUntrackedParameter<int>    ("doType1", 0));
   int   doType2          ( in.getUntrackedParameter<int>    ("doType2", 0));
   int   doType3          ( in.getUntrackedParameter<int>    ("doType3", 0));
   int   doType6          ( in.getUntrackedParameter<int>    ("doType6", 0));
   int   doType7          ( in.getUntrackedParameter<int>    ("doType7", 0));
+  int   doType0ByBTagShape(in.getUntrackedParameter<int>    ("doType0ByBTagShape", 0));
+  int   doType1ByBTagShape(in.getUntrackedParameter<int>    ("doType1ByBTagShape", 0));
+  int   doType2ByBTagShape(in.getUntrackedParameter<int>    ("doType2ByBTagShape", 0));
+  int   doType3ByBTagShape(in.getUntrackedParameter<int>    ("doType3ByBTagShape", 0));
+  int   doType6ByBTagShape(in.getUntrackedParameter<int>    ("doType6ByBTagShape", 0));
   int   useME            ( in.getParameter<int>             ("useME")     );
   int   useJac           ( in.getParameter<int>             ("useJac")    );
   int   useMET           ( in.getParameter<int>             ("useMET")    );
@@ -231,10 +258,11 @@ int main(int argc, const char* argv[])
   int   doJERup          ( in.getUntrackedParameter<int>    ("doJERup",   0));
   int   doJERdown        ( in.getUntrackedParameter<int>    ("doJERdown", 0));
   int   fixNumEvJob      ( in.getUntrackedParameter<int>    ("fixNumEvJob",1));
-  vector<string> functions( in.getParameter<vector<string> >("functions"));
-  vector<int>    evLimits ( in.getParameter<vector<int> >   ("evLimits"));
+  vector<string> functions(in.getParameter<vector<string> > ("functions"));
+  vector<int>    evLimits (in.getParameter<vector<int> >    ("evLimits"));
 
-  //int   printP4          ( in.getParameter<int>             ("printP4")   );
+  int   print            ( in.getParameter<int>             ("printout")   );
+  int   debug            ( in.getParameter<int>             ("debug")      );
 
 
   /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  */
@@ -290,49 +318,6 @@ int main(int argc, const char* argv[])
     return 1;
   }
 
-
-  int permutations_SL2wj[12] =  
-    {234567, 534267,     // CORRECT 
-     634725, 734625,     // ALL WRONG
-     534762, 734562,     // ONE WRONG
-     234765, 734265,     // ONE WRONG
-     634572, 534672,     // ONE WRONG
-     234675, 634275      // ONE WRONG
-    };
-
-  int permutations_SL1wj[12] =  
-    {234567, 534267,     // CORRECT 
-     634725, 734625,     // ALL WRONG
-     534762, 734562,     // ONE WRONG
-     234765, 734265,     // ONE WRONG
-     634572, 534672,     // ONE WRONG
-     234675, 634275      // ONE WRONG
-    };
-
-  int permutations_SL1wj_2j[24] =  
-    {234567, 534267,     // CORRECT 
-     634725, 734625,     // ALL WRONG
-     534762, 734562,     // ONE WRONG
-     234765, 734265,     // ONE WRONG
-     634572, 534672,     // ONE WRONG
-     234675, 634275,     // ONE WRONG
-     243567, 543267,     // CORRECT 
-     643725, 743625,     // ALL WRONG
-     543762, 743562,     // ONE WRONG
-     243765, 743265,     // ONE WRONG
-     643572, 543672,     // ONE WRONG
-     243675, 643275      // ONE WRONG
-    };
-
-  int permutations_DL[12] =  
-    {234567, 534267,     // CORRECT 
-     634725, 734625,     // ALL WRONG
-     534762, 734562,     // ONE WRONG
-     234765, 734265,     // ONE WRONG
-     634572, 534672,     // ONE WRONG
-     234675, 634275      // ONE WRONG
-    };
-  
 
   // configure MEIntegrator
   MEIntegratorNew* meIntegrator = new MEIntegratorNew( pathToTF , 4 , int(verbose));
@@ -398,12 +383,12 @@ int main(int argc, const char* argv[])
 
   // counts how many events have been analyzed (to have fixed-size jobs)
   int counter_;
-  // number of jet-quark permutations
-  int nPermut_;
+  // number of jet-quark permutations (for signal and bkg hypotheses)
+  int nPermut_, nPermut_alt_;
   // number of (Higgs/Top) mass points
   int nMassPoints_;
   // total number integration per event (nPermut*nMassPoints)
-  int nTotInteg_;
+  int nTotInteg_,nTotInteg_alt_;
   // number of matches to higgs quarks among tagged jets
   int matchesH_;
   // number of matches to W quarks among un-tagged jets
@@ -434,24 +419,33 @@ int main(int argc, const char* argv[])
   int flag_type4_;
   int flag_type6_;
 
-  // event-wise probability (summed over permutations)
+  // event-wise **ME** probability (summed over permutations)
+  // ...for ttH...
   float probAtSgn_;
+  // ...for ttbb...
   float probAtSgn_alt_;
+
+  // event-wise **ME X btag** probability (summed over permutations)
+  // ...for ttH...
   float probAtSgn_ttbb_;
+  // ...for tt(bb,jj,bj,cc)...
   float probAtSgn_alt_ttbb_;
   float probAtSgn_alt_ttjj_;
   float probAtSgn_alt_ttbj_;
   float probAtSgn_alt_ttcc_;
 
-  // per-permutation probability
+  // per-permutation and mass value **ME** probability
   float probAtSgn_permut_       [NMAXPERMUT*NMAXMASS];
   float probAtSgn_alt_permut_   [NMAXPERMUT*NMAXMASS];
   float probAtSgnErr_permut_    [NMAXPERMUT*NMAXMASS];
   float probAtSgnErr_alt_permut_[NMAXPERMUT*NMAXMASS];
+
+  // per-permutation **btag** probability
   float probAtSgn_bb_permut_[NMAXPERMUT];
   float probAtSgn_bj_permut_[NMAXPERMUT];
   float probAtSgn_cc_permut_[NMAXPERMUT];
   float probAtSgn_jj_permut_[NMAXPERMUT];
+
   // masses to be scanned
   float mH_scan_[NMAXMASS];
   float mT_scan_[NMAXMASS];
@@ -464,6 +458,10 @@ int main(int argc, const char* argv[])
   EventInfo EVENT_;
   // num of PVs
   int nPVs_;
+  // pu reweighting
+  float PUweight_, PUweightP_, PUweightM_;
+  // number of gen jets
+  float lheNj_;
 
   // lepton kinematic (at most two leptons)
   int nLep_;
@@ -479,7 +477,7 @@ int main(int argc, const char* argv[])
   float MET_phi_;
   float MET_sumEt_;
 
-  // jet kinematics
+  // jet kinematics (as passed via **jets** collection)
   int nJet_;
   float jet_pt_  [NMAXJETS];
   float jet_eta_ [NMAXJETS];
@@ -487,15 +485,26 @@ int main(int argc, const char* argv[])
   float jet_m_   [NMAXJETS];
   float jet_csv_ [NMAXJETS];
 
+  // number of selected jets passing CSV L,M,T
+  int numBTagL_, numBTagM_, numBTagT_;
+  // nummber of selected jets
+  int numJets_;
+  // btag likelihood ratio
+  float btag_LR_;
+
   // permutation -> jets association
-  int   perm_to_jet_[NMAXPERMUT];
+  int   perm_to_jet_    [NMAXPERMUT];
+  int   perm_to_jet_alt_[NMAXPERMUT];
   // permutation -> gen association
-  int   perm_to_gen_[NMAXPERMUT];
+  int   perm_to_gen_     [NMAXPERMUT];
+  int   perm_to_gen_alt_ [NMAXPERMUT];
 
   tree->Branch("counter",      &counter_,       "counter/I");
-  tree->Branch("nPermut",      &nPermut_,       "nPermut/I");
+  tree->Branch("nPermut_s",    &nPermut_,       "nPermut_s/I");
+  tree->Branch("nPermut_b",    &nPermut_alt_,   "nPermut_b/I");
   tree->Branch("nMassPoints",  &nMassPoints_,   "nMassPoints/I");  
-  tree->Branch("nTotInteg",    &nTotInteg_,     "nTotInteg/I");  
+  tree->Branch("nTotInteg_s",  &nTotInteg_,     "nTotInteg_s/I");  
+  tree->Branch("nTotInteg_b",  &nTotInteg_alt_, "nTotInteg_b/I");  
   tree->Branch("matchesH",     &matchesH_,      "matchesH/I");
   tree->Branch("matchesW",     &matchesW_,      "matchesW/I");
   tree->Branch("matchesT",     &matchesT_,      "matchesT/I");
@@ -519,6 +528,11 @@ int main(int argc, const char* argv[])
   tree->Branch("flag_type6",   &flag_type6_,    "flag_type6/I");
   tree->Branch("EVENT",        &EVENT_,         "run/I:lumi/I:event/I:json/I");
   tree->Branch("nPVs",         &nPVs_,          "nPVs/I");
+  tree->Branch("PUweight",     &PUweight_,      "PUweight/F");
+  tree->Branch("PUweightP",    &PUweightP_,     "PUweightP/F");
+  tree->Branch("PUweightM",    &PUweightM_,     "PUweightM/F");
+  tree->Branch("lheNj",        &lheNj_,         "lheNj/F");
+
 
   // marginalized over permutations (all <=> Sum_{p=0}^{nTotPermut}( mH=MH, mT=MT ) )
   tree->Branch(Form("p_%d_all_s",     int(MH)),   &probAtSgn_,           Form("p_%d_all_s/F",              int(MH)) );
@@ -533,16 +547,16 @@ int main(int argc, const char* argv[])
   //  p_vsMH_s[0],          ..., p_vsMH_s[  nPermut-1] => prob. per-permutation and for mH = masses[0]
   //  p_vsMH_s[nPermut], ...,    p_vsMH_s[2*nPermut-1] => prob. per-permutation and for mH = masses[1]
   //  ....
-  tree->Branch("p_vsMH_s",     probAtSgn_permut_,       "p_vsMH_s[nTotInteg]/F" );
-  tree->Branch("p_vsMT_b",     probAtSgn_alt_permut_,   "p_vsMT_b[nTotInteg]/F");
-  tree->Branch("p_vsMH_Err_s", probAtSgnErr_permut_,    "p_vsMH_Err_s[nTotInteg]/F" );
-  tree->Branch("p_msMT_Err_b", probAtSgnErr_alt_permut_,"p_vsMT_Err_b[nTotInteg]/F" );
+  tree->Branch("p_vsMH_s",     probAtSgn_permut_,       "p_vsMH_s[nTotInteg_s]/F" );
+  tree->Branch("p_vsMT_b",     probAtSgn_alt_permut_,   "p_vsMT_b[nTotInteg_b]/F");
+  tree->Branch("p_vsMH_Err_s", probAtSgnErr_permut_,    "p_vsMH_Err_s[nTotInteg_s]/F" );
+  tree->Branch("p_msMT_Err_b", probAtSgnErr_alt_permut_,"p_vsMT_Err_b[nTotInteg_b]/F" );
 
   // differential in permutation
-  tree->Branch("p_tt_bb",      probAtSgn_bb_permut_,    "p_tt_bb[nPermut]/F");
-  tree->Branch("p_tt_bj",      probAtSgn_bj_permut_,    "p_tt_bj[nPermut]/F");
-  tree->Branch("p_tt_cc",      probAtSgn_cc_permut_,    "p_tt_cc[nPermut]/F");
-  tree->Branch("p_tt_jj",      probAtSgn_jj_permut_,    "p_tt_jj[nPermut]/F");
+  tree->Branch("p_tt_bb",      probAtSgn_bb_permut_,    "p_tt_bb[nPermut_s]/F");
+  tree->Branch("p_tt_bj",      probAtSgn_bj_permut_,    "p_tt_bj[nPermut_b]/F");
+  tree->Branch("p_tt_cc",      probAtSgn_cc_permut_,    "p_tt_cc[nPermut_b]/F");
+  tree->Branch("p_tt_jj",      probAtSgn_jj_permut_,    "p_tt_jj[nPermut_b]/F");
   
   // # of mass points scanned
   tree->Branch("mH_scan",       mH_scan_,          "mH_scan[nMassPoints]/F");
@@ -570,13 +584,22 @@ int main(int argc, const char* argv[])
   tree->Branch("jet_m",                   jet_m_,      "jet_m[nJet]/F");
   tree->Branch("jet_csv",                 jet_csv_,    "jet_csv[nJet]/F");
 
+  // Jet multiplicity
+  tree->Branch("numBTagL",                &numBTagL_,    "numBTagL/I");
+  tree->Branch("numBTagM",                &numBTagM_,    "numBTagM/I");
+  tree->Branch("numBTagT",                &numBTagT_,    "numBTagT/I");
+  tree->Branch("numJets",                 &numJets_,     "numJets/I");
+  tree->Branch("btag_LR",                 &btag_LR_,     "btag_LR/F");
+
   // a map that associates to each permutation [p=0...nTotPermut] to the corresponding jet,
   // indexed according to the order in the jet_* collection
   //  E.g.: perm_to_jets[0] = 234567 <==> the first permutation (element '0' of p_vsMH_s/p_vsMT_b )
   //        associates element '2' of jets_* to the bLep, element '3' to W1Had, '4' to 'W2Had', '5' to bHad, and '6','7'
   //        to non-top radiation
-  tree->Branch("perm_to_jet",             perm_to_jet_,"perm_to_jet[nPermut]/I");
-  tree->Branch("perm_to_gen" ,            perm_to_gen_,"perm_to_gen[nPermut]/I");
+  tree->Branch("perm_to_jet_s",             perm_to_jet_,    "perm_to_jet[nPermut_s]/I");
+  tree->Branch("perm_to_gen_s" ,            perm_to_gen_,    "perm_to_gen[nPermut_s]/I");
+  tree->Branch("perm_to_jet_b",             perm_to_jet_alt_,"perm_to_jet[nPermut_b]/I");
+  tree->Branch("perm_to_gen_b" ,            perm_to_gen_alt_,"perm_to_gen[nPermut_b]/I");
 
 
   //tree->Branch("",                        _,  "[]/F");
@@ -629,6 +652,8 @@ int main(int argc, const char* argv[])
     metInfo         METtype1p2corr;
     EventInfo       EVENT;
     int             nvlep, nSimBs, /*nC, nCTop,*/ nhJets, naJets, nPVs;
+    float           PUweight, PUweightP, PUweightM;
+    float           lheNj;
     Int_t   vLepton_type      [999];
     Float_t vLepton_mass      [999];
     Float_t vLepton_pt        [999];
@@ -674,19 +699,21 @@ int main(int argc, const char* argv[])
     //float Sveta    [999];
     //float Svphi    [999];
   
-    currentTree->SetBranchAddress("EVENT",       &EVENT);
-    currentTree->SetBranchAddress("nhJets",      &nhJets);
-    currentTree->SetBranchAddress("naJets",      &naJets);
-    currentTree->SetBranchAddress("nSimBs",      &nSimBs);
-    currentTree->SetBranchAddress("nvlep",       &nvlep);
-    currentTree->SetBranchAddress("nPVs",        &nPVs);
-    //currentTree->SetBranchAddress("nC",          &nC);
-    //currentTree->SetBranchAddress("nCTop",       &nCTop);
-    currentTree->SetBranchAddress("genB",            &genB);
-    currentTree->SetBranchAddress("genBbar",         &genBbar);
-    currentTree->SetBranchAddress("genTop",          &genTop);
-    currentTree->SetBranchAddress("genTbar",         &genTbar);
-    currentTree->SetBranchAddress("METtype1p2corr",  &METtype1p2corr);
+    currentTree->SetBranchAddress("EVENT",            &EVENT);
+    currentTree->SetBranchAddress("PUweight",         &PUweight);
+    currentTree->SetBranchAddress("PUweightP",        &PUweightP);
+    currentTree->SetBranchAddress("PUweightM",        &PUweightM);
+    currentTree->SetBranchAddress("lheNj",            &lheNj);    
+    currentTree->SetBranchAddress("nhJets",           &nhJets);
+    currentTree->SetBranchAddress("naJets",           &naJets);
+    currentTree->SetBranchAddress("nSimBs",           &nSimBs);
+    currentTree->SetBranchAddress("nvlep",            &nvlep);
+    currentTree->SetBranchAddress("nPVs",             &nPVs);
+    currentTree->SetBranchAddress("genB",             &genB);
+    currentTree->SetBranchAddress("genBbar",          &genBbar);
+    currentTree->SetBranchAddress("genTop",           &genTop);
+    currentTree->SetBranchAddress("genTbar",          &genTbar);
+    currentTree->SetBranchAddress("METtype1p2corr",   &METtype1p2corr);
     currentTree->SetBranchAddress("vLepton_charge",   vLepton_charge);
     currentTree->SetBranchAddress("vLepton_mass"  ,   vLepton_mass);
     currentTree->SetBranchAddress("vLepton_pt"    ,   vLepton_pt);
@@ -764,17 +791,7 @@ int main(int argc, const char* argv[])
       probAtSgn_alt_ttbj_ =  0.;
       probAtSgn_alt_ttcc_ =  0.;
       probAtSgn_alt_ttjj_ =  0.;
-      matchesH_           = -99;
-      matchesW_           = -99;
-      matchesT_           = -99;
-      matchesHAll_        = -99;
-      matchesWAll_        = -99;
-      matchesTAll_        = -99;
-      overlapHeavy_       = -99;
-      overlapLight_       = -99;
-      type_               = -99;
-      nPermut_            = +99;
-      nTotInteg_          = +99;
+
       nMassPoints_        = TMath::Max(nHiggsMassPoints,nTopMassPoints);
       flag_type0_         = -99;
       flag_type1_         = -99;
@@ -782,27 +799,20 @@ int main(int argc, const char* argv[])
       flag_type3_         = -99;
       flag_type4_         = -99;
       flag_type6_         = -99;
-      nSimBs_             = -99;
-      nMatchSimBs_        = -99;
-      //nC_                 = -99;
-      //nCTop_              = -99;
-      time_               = -99;
-      nPVs_               = -99;
 
-      nLep_               = -99;
+      btag_LR_            = -99;
+
       for( int k = 0; k < 2; k++){
 	lepton_pt_[k] = -99; lepton_eta_[k] = -99; lepton_phi_[k] = -99; lepton_m_[k] = -99; lepton_charge_[k] = -99; lepton_rIso_[k] = -99;
       }
-      MET_pt_   = -99;
-      MET_phi_  = -99;
-      MET_sumEt_= -99;
-      nLep_               = -99;
       for( int k = 0; k < NMAXJETS; k++){
 	jet_pt_[k] = -99; jet_eta_[k] = -99; jet_phi_[k] = -99; jet_m_[k] = -99;  jet_csv_[k] = -99;
       }
       for( int k = 0; k < NMAXPERMUT; k++){
-	perm_to_jet_[k] = -99;
-	perm_to_gen_[k] = -99;
+	perm_to_jet_    [k] = -99;
+	perm_to_gen_    [k] = -99;
+	perm_to_jet_alt_[k] = -99;
+	perm_to_gen_alt_[k] = -99;
       }
 
       // save the values into the tree (save mH[0] in case no scan is required)
@@ -1066,9 +1076,8 @@ int main(int argc, const char* argv[])
       /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  */
       /* @@@@@@@@@@@@@@@@@@@@@@@@ JET SELECTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  */
 
-      // this container orders the jets by decreasing pt
-      std::map<double, JetObservable , sorterByPt> jet_map;
-      std::map<double, JetObservable >::iterator   jet_map_it;
+      // this container will hold the jets
+      std::vector<JetObservable> jet_map;
 
       // loop over jet collections
       for(int coll = 0 ; coll < 2 ; coll++){
@@ -1130,20 +1139,35 @@ int main(int argc, const char* argv[])
 	  else if( doCSVdown) csv =  TMath::Min(csv_downBC, csv_downL);
 	  else{}
 
+	  // the b-tagger output 
+	  //  ==> Min needed because in csvUp, csv can exceed 1..., 
+	  //      Max needed because we crunch  [-inf,0[ -> {0.}
+	  csv         =  TMath::Min( TMath::Max( csv, float(0.)), float(0.999999) );
+
 	  // the jet observables (p4 and csv)
 	  JetObservable myJet;
 	  myJet.p4  = p4;
 	  myJet.csv = csv; 
 	  
 	  // use pt to order jet collection
-	  jet_map[ p4.Pt() ] = myJet;
+	  //jet_map[ p4.Pt() ] = myJet;
+	  jet_map.push_back( myJet );
 
-	  // DEBUG
-	  //cout << "Jet #" << coll << "-" << hj << " => (" << pt << "," << eta << "," << phi << "," << m << "), ID=" <<
-	  //id << endl;
+	  //if( debug )
+	  //cout << "Jet #" << coll << "-" << hj << " => (" << pt << "," << eta << "," << phi << "," << m << "), ID=" << id << endl;
 	  
 	}
       }
+
+
+      // order jet list by Pt
+      std::sort( jet_map.begin(), jet_map.end(), JetObservableListerByPt() );
+      
+      // if use btag shape, order by decreasing CSV 
+      //       <=> when considering only a subset of the jets, this ensures that the combination
+      //           obtained from CSVM only jets is among those considered
+      if( selectByBTagShape ) 
+	std::sort( jet_map.begin(), jet_map.end(), JetObservableListerByCSV() );
 
    
       // fill arrays of jets
@@ -1154,17 +1178,18 @@ int main(int argc, const char* argv[])
       std::vector<double>          jets_csv_prob_j;
       int jetsAboveCut = 0;
 
-      for( jet_map_it = jet_map.begin() ; jet_map_it != jet_map.end(); jet_map_it++){
-
+      //for( jet_map_it = jet_map.begin() ; jet_map_it != jet_map.end(); jet_map_it++){
+      for(unsigned int jj = 0; jj < jet_map.size() ; jj++ ){
+	
 	// the four-vector
-	TLorentzVector p4 = (jet_map_it->second).p4;
-
-	// the b-tagger output (Min needed because in csvUp, csv can exceed 1...)
-	float csv         =  TMath::Min( (jet_map_it->second).csv, float(0.999999) );
+	TLorentzVector p4 = jet_map[jj].p4; //(jet_map_it->second).p4;
+	
+	// the csv value
+	float csv = jet_map[jj].csv;
 
 	// count jets above 40 GeV
 	if( p4.Pt()>40 ) jetsAboveCut++;
-
+	
 	// store jet p4...
 	jets_p4.push_back ( p4  );
 	// store csv
@@ -1190,6 +1215,9 @@ int main(int argc, const char* argv[])
 	continue;
       }
       
+
+      /* @@@@@@@@@@@@@@@@@@@@@@@@ JET ORDERING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  */
+
       // jet multiplicity
       int numJets30UntagM = 0; 
       int numJets30UntagL = 0; 
@@ -1197,28 +1225,18 @@ int main(int argc, const char* argv[])
       int numJets30BtagM  = 0; 
       int numJets30BtagT  = 0;
 
-      // indices of jets_p4 for the first five un-tagged jets (CSVM)
-      unsigned int w1=999;
-      unsigned int w2=999;
-      unsigned int w3=999;
-      unsigned int w4=999;
-      unsigned int w5=999;
-      // indices of jets_p4 for the first four tagged jets (CSVM)
-      unsigned int b1=999;
-      unsigned int b2=999;
-      unsigned int b3=999;
-      unsigned int b4=999;
-      // indices of jets_p4 for the first five un-tagged jets (CSVL)
-      unsigned int wL1=999;
-      unsigned int wL2=999;
-      unsigned int wL3=999;
-      unsigned int wL4=999;
-      unsigned int wL5=999;
-      // indices of jets_p4 for the first four tagged jets (CSVL)
-      unsigned int bL1=999;
-      unsigned int bL2=999;
-      unsigned int bL3=999;
-      unsigned int bL4=999;
+      // this vector contains the indices of up to 6 jets passing the CSVM(L) b-tag selection... 
+      // (type 7 uses two working points)
+      vector<unsigned int> btag_indices;
+      vector<unsigned int> btagLoose_indices;
+
+      // this vector contains the indices of up to 6 jets failing the CSVM(L) b-tag selection... 
+      vector<unsigned int> buntag_indices;
+      vector<unsigned int> buntagLoose_indices;
+
+      // this vector contains the indices of up to 12 jets passing ANY b-tag selection... 
+      vector<unsigned int> banytag_indices;  
+    
 
       for(unsigned int k = 0; k < jets_p4.size(); k++){  
 
@@ -1232,35 +1250,229 @@ int main(int argc, const char* argv[])
 	// passes CSVT...
 	int btag_T = csv_k>0.898 ;	
 
-	if( pt_k>30 &&  btag_L )  numJets30BtagL ++;
-	if( pt_k>30 &&  btag_M )  numJets30BtagM ++;
-	if( pt_k>30 &&  btag_T )  numJets30BtagT ++;
-	if( pt_k>30 && !btag_M )  numJets30UntagM++;
-	if( pt_k>30 && !btag_L )  numJets30UntagL++;
+	// any btag value...
+	if( pt_k>30 ) banytag_indices.push_back( k );
 
-	if     (  btag_M && b1==999 && b2==999 && b3==999 && b4==999)            b1 = k;	   
-	else if(  btag_M && b1!=999 && b2==999 && b3==999 && b4==999)            b2 = k;	    
-	else if(  btag_M && b1!=999 && b2!=999 && b3==999 && b4==999)            b3 = k;	    
-	else if(  btag_M && b1!=999 && b2!=999 && b3!=999 && b4==999)            b4 = k;	    
-	else if( !btag_M && w1==999 && w2==999 && w3==999 && w4==999 && w5==999) w1 = k;
-	else if( !btag_M && w1!=999 && w2==999 && w3==999 && w4==999 && w5==999) w2 = k; 
-	else if( !btag_M && w1!=999 && w2!=999 && w3==999 && w4==999 && w5==999) w3 = k; 
-	else if( !btag_M && w1!=999 && w2!=999 && w3!=999 && w4==999 && w5==999) w4 = k; 
-	else if( !btag_M && w1!=999 && w2!=999 && w3!=999 && w4!=999 && w5==999) w5 = k; 
-	else{}
+	// passing at least CSVL...
+	if( pt_k>30 &&  btag_L ){
+	  numJets30BtagL ++;
+	  btagLoose_indices.push_back( k );
+	}
+	// passing at least CSVM...
+	if( pt_k>30 &&  btag_M ){
+	  numJets30BtagM ++;
+	  btag_indices.push_back( k );
+	}
+	// passing at least CSVT...
+	if( pt_k>30 &&  btag_T ){
+	  numJets30BtagT ++;
+	}
 
-	if     (  btag_L && bL1==999 && bL2==999 && bL3==999 && bL4==999)             bL1 = k;	    
-	else if(  btag_L && bL1!=999 && bL2==999 && bL3==999 && bL4==999)             bL2 = k;	    
-	else if(  btag_L && bL1!=999 && bL2!=999 && bL3==999 && bL4==999)             bL3 = k;	    
-	else if(  btag_L && bL1!=999 && bL2!=999 && bL3!=999 && bL4==999)             bL4 = k;	    
-	else if( !btag_L && wL1==999 && wL2==999 && wL3==999 && wL4==999 && wL5==999) wL1 = k;
-	else if( !btag_L && wL1!=999 && wL2==999 && wL3==999 && wL4==999 && wL5==999) wL2 = k; 
-	else if( !btag_L && wL1!=999 && wL2!=999 && wL3==999 && wL4==999 && wL5==999) wL3 = k; 
-	else if( !btag_L && wL1!=999 && wL2!=999 && wL3!=999 && wL4==999 && wL5==999) wL4 = k; 
-	else if( !btag_L && wL1!=999 && wL2!=999 && wL3!=999 && wL4!=999 && wL5==999) wL5 = k; 
-	else{}
+	// failing at most CSVL...
+	if( pt_k>30 && !btag_L ){
+	  numJets30UntagL++;
+	  buntagLoose_indices.push_back( k );
+	}
+	// failing at most CSVM...
+	if( pt_k>30 && !btag_M ){
+	  numJets30UntagM++;
+	  buntag_indices.push_back( k );
+	}
 
       }
+
+      numBTagL_ = numJets30BtagL;
+      numBTagM_ = numJets30BtagM;
+      numBTagT_ = numJets30BtagT;
+      numJets_  = ( numJets30BtagM + numJets30UntagM);
+
+
+      /* @@@@@@@@@@@@@@@@@@@@@@@@ JET RE-ORDERING BY CSV PROB @@@@@@@@@@@@@@@@@@@@@@@@@@  */      
+
+      // in case the jet collections is reshuffled using the b-probability, keep a copy of old selection
+      // (for debugging purposes)
+      vector<unsigned int> btag_indices_backup   = btag_indices;
+      vector<unsigned int> buntag_indices_backup = buntag_indices;
+
+      // variable that flags events passing or failing the b-probability cut
+      int passes_btagshape = 0;
+
+      if( selectByBTagShape && useBtag &&                    // run this only if specified AND...
+	  ((properEventSL && banytag_indices.size()>=5) ||   // [ run this only if SL and at least 5 jets OR...
+	   (properEventDL && banytag_indices.size()>=4)) ){  //   run this only if DL and at least 4 jets ]
+	
+	// map that transforms the indices into the permutation convention
+	std::map< unsigned int, unsigned int> btag_map;
+	btag_map.clear();
+	
+	// number of inequivalent permutations
+	int nS, nB;
+	
+	// sum of the b-tag probability over all permutations
+	float p_bb     =  0.;
+	float p_jj     =  0.;
+
+	// permutation with the largest probability 
+	float max_p_bb = -1;
+	unsigned int selected_comb = 999;
+	
+	// a flag to keep track of the jet multiplicity
+	int btag_flag = -999;
+	
+	// if numJets>6, the first six jets ordered by decreasing pt, and
+	// then by decreasing csv are considered...
+	if( properEventSL && banytag_indices.size()>=6 ){
+	  btag_map[2] = banytag_indices[0]; 
+	  btag_map[3] = banytag_indices[1]; 
+	  btag_map[4] = banytag_indices[2];
+	  btag_map[5] = banytag_indices[3]; 
+	  btag_map[6] = banytag_indices[4]; 
+	  btag_map[7] = banytag_indices[5];
+	  nS = 15; 
+	  nB = 15;
+	  btag_flag = 0;
+	}
+	else if( properEventSL && banytag_indices.size()==5 ){
+	  btag_map[2] = banytag_indices[0]; 
+	  btag_map[3] = banytag_indices[1]; 
+	  btag_map[4] = banytag_indices[1];
+	  btag_map[5] = banytag_indices[2]; 
+	  btag_map[6] = banytag_indices[3]; 
+	  btag_map[7] = banytag_indices[4];
+	  nS =  5; 
+	  nB = 10;
+	  btag_flag = 1;
+	}
+	// if numJets>4, the first four jets ordered by decreasing pt, and
+	// then by decreasing csv are considered...
+	else if( properEventDL && banytag_indices.size()>=4 ){
+	  btag_map[2] = banytag_indices[0]; 
+	  btag_map[3] = banytag_indices[0]; 
+	  btag_map[4] = banytag_indices[0];
+	  btag_map[5] = banytag_indices[1]; 
+	  btag_map[6] = banytag_indices[2]; 
+	  btag_map[7] = banytag_indices[3];
+	  nS = 1; 
+	  nB = 6;
+	  btag_flag = 2;
+	}
+	else{ 
+	  cout << "Inconsistency in selectByBTagShape... continue" << endl;
+	  continue;
+	}		
+
+	// loop over hypothesis [ TTH, TTbb ]
+	for(int hyp = 0 ; hyp<2;  hyp++){
+	  
+	  // list of permutations
+	  int* permutList = 0;	   
+	  if( btag_flag == 0 ) permutList = hyp==0 ?  permutations_6J_S : permutations_6J_B;	    
+	  if( btag_flag == 1 ) permutList = hyp==0 ?  permutations_5J_S : permutations_5J_B;
+	  if( btag_flag == 2 ) permutList = hyp==0 ?  permutations_4J_S : permutations_4J_B;
+	  
+	  // loop over permutations
+	  for(unsigned int pos = 0; pos < (unsigned int)( hyp==0 ? nS : nB ) ; pos++){
+	    
+	    // index of the four jets associated to b-quarks or W->qq
+	    int bLep_pos = (permutList[pos])%1000000/100000;
+	    int w1_pos   = (permutList[pos])%100000/10000;
+	    int w2_pos   = (permutList[pos])%10000/1000;
+	    int bHad_pos = (permutList[pos])%1000/100;
+	    int b1_pos   = (permutList[pos])%100/10;
+	    int b2_pos   = (permutList[pos])%10/1; 
+	    
+	    double p_b_bLep =  jets_csv_prob_b[  btag_map[bLep_pos] ];
+	    double p_b_bHad =  jets_csv_prob_b[  btag_map[bHad_pos] ];
+	    double p_b_b1   =  jets_csv_prob_b[  btag_map[b1_pos]   ];
+	    double p_j_b1   =  jets_csv_prob_j[  btag_map[b1_pos]   ];
+	    double p_b_b2   =  jets_csv_prob_b[  btag_map[b2_pos]   ];
+	    double p_j_b2   =  jets_csv_prob_j[  btag_map[b2_pos]   ];
+	    double p_j_w1   =  jets_csv_prob_j[  btag_map[w1_pos]   ];
+	    double p_j_w2   =  jets_csv_prob_j[  btag_map[w2_pos]   ];
+	    
+	    // the total probability
+	    float p_pos = 0.;
+
+	    // if sgn (ttbb)
+	    if( hyp==0 ){
+	      p_pos =  p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2 * p_j_w1 * p_j_w2; 
+	      p_bb += p_pos;
+
+	      // look for a maximum
+	      if(  p_pos > max_p_bb ){
+		max_p_bb      = p_pos;
+		selected_comb = pos;
+	      }
+	    }
+
+	    // if bkg (ttjj)
+	    if( hyp==1 ){
+	      p_pos =  p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2 * p_j_w1 * p_j_w2;
+	      p_jj += p_pos;
+	    }
+	    
+	  }
+	  
+	} // end loop over hypothesis
+
+	// normalize the probabilities...
+	p_bb /= nS;
+	p_jj /= nB;
+
+	// LR of ttbb vs ttjj hypotheses as variable to select events
+	btag_LR_ = (p_bb+p_jj)>0 ? p_bb/(p_bb+p_jj) : 0. ;
+
+	// depending on event type, check if the event passes the cut:
+	// if it does, check which combination yields the **largest** ttbb probability
+	int* permutListS = 0;	   	 
+	switch( btag_flag ){
+	case 0:
+	  passes_btagshape = ( btag_LR_ >= btag_prob_cut_6jets && selected_comb!=999);
+	  permutListS      = permutations_6J_S;
+	  break;
+	case 1:
+	  passes_btagshape = ( btag_LR_ >= btag_prob_cut_5jets && selected_comb!=999);
+	  permutListS      = permutations_5J_S;
+	  break;
+	case 2:
+	  passes_btagshape = ( btag_LR_ >= btag_prob_cut_4jets && selected_comb!=999);
+	  permutListS      = permutations_4J_S;
+	  break;
+	default:
+	  break;
+	}
+
+	// if the event passes the cut, reshuffle jets into btag/buntag vectors
+	// N.B. ==> jets will be sorted by descending btag probaility!!!
+	if( passes_btagshape ){
+
+	  // reset old vector
+	  btag_indices.clear();
+
+	  // these are the four jets that are most compatible with four b-quarks
+	  btag_indices.push_back(  btag_map[(permutListS[selected_comb])%1000000/100000] );
+	  btag_indices.push_back(  btag_map[(permutListS[selected_comb])%1000/100]       );
+	  btag_indices.push_back(  btag_map[(permutListS[selected_comb])%100/10]         );
+	  btag_indices.push_back(  btag_map[(permutListS[selected_comb])%10/1]           );
+	  
+	  // all other jets go into this collection
+	  buntag_indices.clear();
+	  for( unsigned int jj = 0 ; jj<banytag_indices.size(); jj++){
+
+	    // check for a match among the b-tagged jets
+	    int isTagged = 0;
+	    for( unsigned int bb = 0 ; bb<btag_indices.size(); bb++ ) 
+	      if( banytag_indices[jj]==btag_indices[bb] ) isTagged = 1;
+
+	    // if not matches, push back
+	    if( isTagged == 0) 
+	      buntag_indices.push_back( banytag_indices[jj] );	    
+	  }
+
+	}
+	
+      } 
+     
 
 
       /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  */
@@ -1268,47 +1480,35 @@ int main(int argc, const char* argv[])
 
 
       ////////////////////////////////////////////////////
-      // SEMILEPTONIC EVENTS WITH ==4 BTAG && >=1 UNTAG //
-      // FULLLEPTONIC EVENTS WITH ==4 BTAG              //
+      // SEMILEPTONIC EVENTS                            //
+      //        FULLLEPTONIC EVENTS                     //
       ////////////////////////////////////////////////////
 
-      //cout << "Recap: numJets30BtagM=" << numJets30BtagM << ", numJets30UntagM=" << numJets30UntagM << endl;
+      // categories defined by jet and btagged jet multiplicity (Nj,Nb)
+      bool analyze_type0       = properEventSL && numJets30BtagM==4 && numJets30UntagM==2  && doType0;
+      bool analyze_type1       = properEventSL && numJets30BtagM==4 && numJets30UntagM==2  && doType1;
+      bool analyze_type2       = properEventSL && numJets30BtagM==4 && numJets30UntagM==1  && doType2;
+      bool analyze_type3       = properEventSL && numJets30BtagM==4 && numJets30UntagM >2  && doType3;
+      bool analyze_type6       = properEventDL && numJets30BtagM==4                        && doType6;
+      bool analyze_type7       = properEventDL && numJets30BtagM==3 && numJets30BtagL==4   && doType7;
 
-      bool analyze_type0 = properEventSL && numJets30BtagM==4 && numJets30UntagM==2 && doType0;
-      bool analyze_type1 = properEventSL && numJets30BtagM==4 && numJets30UntagM==2 && doType1;
-      bool analyze_type2 = properEventSL && numJets30BtagM==4 && numJets30UntagM==1 && doType2;
-      bool analyze_type3 = properEventSL && numJets30BtagM==4 && numJets30UntagM >2 && doType3;
-      bool analyze_type6 = properEventDL && numJets30BtagM==4 && doType6;
-      bool analyze_type7 = properEventDL && numJets30BtagM==3 && numJets30BtagL==4  && doType7;
+      // categories defined by jet multiplicity (Nj)
+      bool analyze_typeBTag6   = properEventSL && (numJets_==6)                            && doTypeBTag6;
+      bool analyze_typeBTag5   = properEventSL && (numJets_==5)                            && doTypeBTag5;
+      bool analyze_typeBTag4   = properEventDL && (numJets_==4)                            && doTypeBTag4;
+
+      // categories defined by jet multiplicity (Nj), but passing a minimum cut on the btag likelihood
+      bool analyze_type0_BTag  = properEventSL && (numJets_==6)                            && doType0ByBTagShape && passes_btagshape;
+      bool analyze_type1_BTag  = properEventSL && (numJets_==6)                            && doType1ByBTagShape && passes_btagshape;
+      bool analyze_type2_BTag  = properEventSL && (numJets_==5)                            && doType2ByBTagShape && passes_btagshape;
+      bool analyze_type3_BTag  = properEventSL && (numJets_ >6)                            && doType3ByBTagShape && passes_btagshape;
+      bool analyze_type6_BTag  = properEventDL && (numJets_>=4)                            && doType6ByBTagShape && passes_btagshape;
 
 
       /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  */
       /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@ GEN MATCH @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  */
 
-
-      vector<unsigned int> btag_indices;
-      if( analyze_type0 || analyze_type1 || analyze_type2 || analyze_type3 || analyze_type6){
-	if(b1!=999) btag_indices.push_back( b1 );
-	if(b2!=999) btag_indices.push_back( b2 );
-	if(b3!=999) btag_indices.push_back( b3 );
-	if(b4!=999) btag_indices.push_back( b4 );
-      }
-      else if(analyze_type7){
-	if(bL1!=999) btag_indices.push_back( bL1 );
-	if(bL2!=999) btag_indices.push_back( bL2 );
-	if(bL3!=999) btag_indices.push_back( bL3 );
-	if(bL4!=999) btag_indices.push_back( bL4 );
-      }
-      vector<unsigned int> buntag_indices;
-      if( analyze_type0 || analyze_type1 || analyze_type2 || analyze_type3){
-	if(w1!=999) buntag_indices.push_back( w1 );
-	if(w2!=999) buntag_indices.push_back( w2 );
-	if(w3!=999) buntag_indices.push_back( w3 );
-	if(w4!=999) buntag_indices.push_back( w4 );
-	if(w5!=999) buntag_indices.push_back( w5 );
-      }
-      
-      // temporary variables
+      // temporary variables to count num. of matches
       int hMatches = 0;
       int tMatches = 0;
       int wMatches = 0;
@@ -1384,106 +1584,146 @@ int main(int argc, const char* argv[])
       // internal map: [ position in "jets" ] -> [ position in "jets_p4" ]
       std::map< unsigned int, unsigned int> pos_to_index;
 
-
-      if( analyze_type0 || analyze_type1 || analyze_type2 || analyze_type3 || analyze_type6 || analyze_type7){	
-	
-	vector<unsigned int> untaggedjets;
-	if( w1!=999 ) untaggedjets.push_back(w1);
-	if( w2!=999 ) untaggedjets.push_back(w2);
-	if( w3!=999 ) untaggedjets.push_back(w3);
-	if( w4!=999 ) untaggedjets.push_back(w4);
-	if( w5!=999 ) untaggedjets.push_back(w5);
+      // consider th event only if of the desired type
+      if( analyze_typeBTag6  || analyze_typeBTag5  || analyze_typeBTag4  || 
+	  analyze_type0      || analyze_type1      || analyze_type2      || analyze_type3      || analyze_type6       || analyze_type7 ||
+	  analyze_type0_BTag || analyze_type1_BTag || analyze_type2_BTag || analyze_type3_BTag || analyze_type6_BTag){	
 	
 	// find out which two untagged jets come from W->qq'
 	unsigned int ind1 = 999;
 	unsigned int ind2 = 999;
 	
-	if( (analyze_type0 || analyze_type1) ){
+	if( analyze_typeBTag4 ){
+	  
+	  counter++;      
+	  if(fixNumEvJob && !(counter>=evLow && counter<=evHigh) ) continue;
+	  if(print) cout << "Processing event # " << counter << " (TYPE DL-4 JETS)." << " Event ID " << EVENT.event << endl;	   
+
+	  /////////////////////////////////////////////////////
+	  type_       = -3;
+	  nPermut_    =  1;
+	  nPermut_alt_=  6;
+	  meIntegrator->setIntType( MEIntegratorNew::DL );
+	  /////////////////////////////////////////////////////	  
+
+	}
+	else if( analyze_typeBTag5 ){
+	  
+	  counter++;      
+	  if(fixNumEvJob && !(counter>=evLow && counter<=evHigh) ) continue;
+	  if(print) cout << "Processing event # " << counter << " (TYPE SL-5 JETS)." << " Event ID " << EVENT.event << endl;	   
+
+	  /////////////////////////////////////////////////////
+	  type_       = -1;
+	  nPermut_    =  5;
+	  nPermut_alt_= 10;
+	  meIntegrator->setIntType( MEIntegratorNew::SL1wj );
+	  /////////////////////////////////////////////////////	  
+
+	}
+	else if( analyze_typeBTag6 ){
+	  
+	  counter++;      
+	  if(fixNumEvJob && !(counter>=evLow && counter<=evHigh) ) continue;
+	  if(print) cout << "Processing event # " << counter << " (TYPE SL6 JETS)." << " Event ID " << EVENT.event << endl;	   
+
+	  /////////////////////////////////////////////////////
+	  type_       =  -2;
+	  nPermut_    =  15;
+	  nPermut_alt_=  15;	  
+	  meIntegrator->setIntType( MEIntegratorNew::SL2wj );
+	  /////////////////////////////////////////////////////	  
+
+	}
+	else if( (analyze_type0 || analyze_type1 || analyze_type0_BTag || analyze_type1_BTag) ){
 	  
 	  // sanity check:
-	  if(untaggedjets.size() != 2){
+	  if(buntag_indices.size() != 2){
 	    cout << "Inconsistency found for (analyze_type0 || analyze_type1)... continue" << endl;
 	    continue;
 	  }
 
 	  // use untagged mass to assign to type 0 OR type 1
-	  float WMass = (jets_p4[w1]+jets_p4[w2]).M();
+	  float WMass = (jets_p4[ buntag_indices[0] ]+jets_p4[  buntag_indices[1] ]).M();
 	  
 	  // set index for untagged jets
-	  ind1 = w1;
-	  ind2 = w2;
+	  ind1 = buntag_indices[0];
+	  ind2 = buntag_indices[1];
 	  
-	  if( (WMass>MwL && WMass<MwH)  && analyze_type0 ){
+	  if( (WMass>MwL && WMass<MwH)  && (analyze_type0 || analyze_type0_BTag) ){
 	    
 	    counter++;      
 	    if( fixNumEvJob && !(counter>=evLow && counter<=evHigh) ) continue;
-	    cout << "Processing event # " << counter << " (TYPE 0), mW=" << WMass << " GeV." << " Event ID " << EVENT.event << endl;
+	    if(print) cout << "Processing event # " << counter << " (TYPE 0), mW=" << WMass << " GeV." << " Event ID " << EVENT.event << endl;
 	    
 	    /////////////////////////////////////////////////////	      
 	    type_       =  0;
 	    nPermut_    = 12;
+	    nPermut_alt_= 12;
 	    meIntegrator->setIntType( MEIntegratorNew::SL2wj );	    
 	    /////////////////////////////////////////////////////
 	  }
-	  else if( !( WMass>MwL && WMass<MwH) && analyze_type1){
+	  else if( !( WMass>MwL && WMass<MwH) && (analyze_type1 || analyze_type1_BTag)){
 	    
 	    counter++;      
 	    if( fixNumEvJob && !(counter>=evLow && counter<=evHigh)  ) continue;
-	    cout << "Processing event # " << counter << " (TYPE 1), mW=" << WMass << " GeV." << " Event ID " << EVENT.event << endl;	   
+	    if(print) cout << "Processing event # " << counter << " (TYPE 1), mW=" << WMass << " GeV." << " Event ID " << EVENT.event << endl;	   
 	    
 	    /////////////////////////////////////////////////////	  
 	    type_       =  1;
 	    nPermut_    = 24;
+	    nPermut_alt_= 24;
 	    meIntegrator->setIntType( MEIntegratorNew::SL1wj );
 	    /////////////////////////////////////////////////////
 	  }
 	  else{ continue; }
 
 	}
-	else if( analyze_type2 ){	   
+	else if( analyze_type2 || analyze_type2_BTag ){	   
 	  
 	  // sanity check:
-	  if(untaggedjets.size() != 1){
+	  if(buntag_indices.size() != 1){
 	    cout << "Inconsistency found for analyze_type2... continue" << endl;
 	    continue;
 	  }
 
 	  counter++;
 	  if(fixNumEvJob && !(counter>=evLow && counter<=evHigh) ) continue;
-	  cout << "Processing event # " << counter << " (TYPE 1)." << " Event ID " << EVENT.event << endl;
+	  if(print) cout << "Processing event # " << counter << " (TYPE 1)." << " Event ID " << EVENT.event << endl;
 	  
 	  // set index for untagged jet
-	  ind1 = w1;
-	  ind2 = w1;
+	  ind1 = buntag_indices[0];
+	  ind2 = buntag_indices[0];
 	  
 	  /////////////////////////////////////////////////////
 	  type_       =  2;
 	  nPermut_    = 12;
+	  nPermut_alt_= 12;
 	  meIntegrator->setIntType( MEIntegratorNew::SL1wj );
 	  /////////////////////////////////////////////////////
 	}
-	else if( analyze_type3 ){
+	else if( analyze_type3 || analyze_type3_BTag ){
 	  
 	  // sanity check:
-	  if(untaggedjets.size() <= 2 ){
+	  if(buntag_indices.size() <= 2 ){
 	    cout << "Inconsistency found for analyze_type3... continue" << endl;
 	    continue;
 	  }
 
 	  counter++;      
 	  if(fixNumEvJob && !(counter>=evLow && counter<=evHigh) ) continue;
-	  cout << "Processing event # " << counter << " (TYPE 3)." << " Event ID " << EVENT.event << endl;	   
+	  if(print) cout << "Processing event # " << counter << " (TYPE 3)." << " Event ID " << EVENT.event << endl;	   
 	  
 	  // find out which are ind1 and ind2...
 	  float minDiff     = 99999.;
-	  for(unsigned int uj1 = 0; uj1<untaggedjets.size()-1; uj1++){
-	    for(unsigned int uj2 = uj1+1; uj2<untaggedjets.size(); uj2++){
+	  for(unsigned int uj1 = 0; uj1<buntag_indices.size()-1; uj1++){
+	    for(unsigned int uj2 = uj1+1; uj2<buntag_indices.size(); uj2++){
 	      
-	      float WMass12 = (jets_p4[ untaggedjets[uj1] ]+jets_p4[ untaggedjets[uj2] ]).M();
+	      float WMass12 = (jets_p4[ buntag_indices[uj1] ]+jets_p4[ buntag_indices[uj2] ]).M();
 	      if( TMath::Abs(WMass12-80.1)<minDiff ){
 		minDiff = TMath::Abs(WMass12-MW);
-		ind1 = untaggedjets[uj1];
-		ind2 = untaggedjets[uj2];
+		ind1 = buntag_indices[uj1];
+		ind2 = buntag_indices[uj2];
 	      }
 	      
 	    }
@@ -1491,18 +1731,20 @@ int main(int argc, const char* argv[])
 	  /////////////////////////////////////////////////////
 	  type_       =  3;
 	  nPermut_    = 12;
+	  nPermut_alt_= 12;
 	  meIntegrator->setIntType( MEIntegratorNew::SL2wj );
 	  /////////////////////////////////////////////////////	  
 	}
-	else if( analyze_type6 ){
+	else if( analyze_type6 || analyze_type6_BTag ){
 	  
 	  counter++;      
 	  if(fixNumEvJob && !(counter>=evLow && counter<=evHigh) ) continue;
-	  cout << "Processing event # " << counter << " (TYPE 6)." << " Event ID " << EVENT.event << endl;	   
+	  if(print) cout << "Processing event # " << counter << " (TYPE 6)." << " Event ID " << EVENT.event << endl;	   
 
 	  /////////////////////////////////////////////////////
 	  type_       =  6;
 	  nPermut_    = 12;
+	  nPermut_alt_= 12;
 	  meIntegrator->setIntType( MEIntegratorNew::DL );
 	  /////////////////////////////////////////////////////	  
 
@@ -1511,11 +1753,12 @@ int main(int argc, const char* argv[])
 	  
 	  counter++;      
 	  if(fixNumEvJob && !(counter>=evLow && counter<=evHigh) ) continue;
-	  cout << "Processing event # " << counter << " (TYPE 7)." << " Event ID " << EVENT.event << endl;	   
+	  if(print) cout << "Processing event # " << counter << " (TYPE 7)." << " Event ID " << EVENT.event << endl;	   
 	  
 	  /////////////////////////////////////////////////////
 	  type_       =  7;
 	  nPermut_    = 12;
+	  nPermut_alt_= 12;
 	  meIntegrator->setIntType( MEIntegratorNew::DL );
 	  /////////////////////////////////////////////////////	  
 
@@ -1527,69 +1770,158 @@ int main(int argc, const char* argv[])
 
 
 	// sanity-check
-	if(type_<=3 && (ind1==999 || ind2==999)){
+	if(type_>=0 && type_<=3 && (ind1==999 || ind2==999)){
 	  cout << "Inconsistency found: ind1 or ind2 are not set...continue." << endl;
 	  continue;
 	}
 
-	// choose which permutations to consider;
-	int* permutList = 0;
-	if     ( type_== 0 ) permutList = permutations_SL2wj;
-	else if( type_== 1 ) permutList = permutations_SL1wj_2j;
-	else if( type_== 2 ) permutList = permutations_SL1wj;
-	else if( type_== 3 ) permutList = permutations_SL2wj;
-	else if( type_>= 6 ) permutList = permutations_DL;
-	else{ cout << "No permutations found...continue." << endl; continue; }
+	// DEBUG
+	if(debug){
+	  cout << "*** Event ID " << EVENT.event << " *** " << endl;
+	  cout << " ==> SL=" << int(properEventSL) << ", DL=" << properEventDL << endl;
+	  cout << "     NJets " << numJets_ << " (" << numBTagM_ << " tagged)" << endl;
+	  cout << "     b-tagged: " << endl;
+	  for( unsigned int jj = 0; jj<btag_indices_backup.size(); jj++)
+	    cout << "     (" 
+		 << jets_p4[ btag_indices_backup[jj] ].Pt() << "," 
+		 << jets_p4[ btag_indices_backup[jj] ].Eta() << ","
+		 << jets_p4[ btag_indices_backup[jj] ].Phi() << "," 
+		 << jets_p4[ btag_indices_backup[jj] ].M() << "), CSV= " 
+		 << jets_csv[btag_indices_backup[jj] ] << endl;
+	  cout << "     b-untagged: " << endl;
+	  for( unsigned int jj = 0; jj<buntag_indices_backup.size(); jj++)
+	    cout << "     (" 
+		 << jets_p4[ buntag_indices_backup[jj] ].Pt() << "," 
+		 << jets_p4[ buntag_indices_backup[jj] ].Eta() << ","
+		 << jets_p4[ buntag_indices_backup[jj] ].Phi() << "," 
+		 << jets_p4[ buntag_indices_backup[jj] ].M() << "), CSV= " 
+		 << jets_csv[buntag_indices_backup[jj] ] << endl;
+	  cout << "     btag probability is " << btag_LR_ << endl;
+	  if(passes_btagshape){
+	    cout << "     @@@@@ the jet collection has been re-ordered according to btag probability @@@@@@" << endl;
+	    cout << "     b-tagged: " << endl;
+	    for( unsigned int jj = 0; jj < btag_indices.size(); jj++)
+	      cout << "     (" << jets_p4[ btag_indices[jj] ].Pt() << "," << jets_p4[ btag_indices[jj] ].Eta() << ","
+		   << jets_p4[ btag_indices[jj] ].Phi() << "," << jets_p4[ btag_indices[jj] ].M() << "), CSV= " << jets_csv[ btag_indices[jj] ] << endl;
+	    cout << "     b-untagged: " << endl;
+	    for( unsigned int jj = 0; jj<buntag_indices.size(); jj++)
+	      cout << "     (" << jets_p4[ buntag_indices[jj] ].Pt() << "," << jets_p4[ buntag_indices[jj] ].Eta() << ","
+		   << jets_p4[ buntag_indices[jj] ].Phi() << "," << jets_p4[ buntag_indices[jj] ].M() << "), CSV= " << jets_csv[buntag_indices[jj] ] << endl;
+	  }	
+	  
+	}
+	
+	
 
 	// total number of integrations
-	nTotInteg_  = nPermut_*nMassPoints_;
+	nTotInteg_      = nPermut_    * nMassPoints_;
+	nTotInteg_alt_  = nPermut_alt_* nMassPoints_;
+	
 	
 	// setup jet collection
 	jets.clear();
+	jets.push_back( leptonLV     );  
+	jets.push_back( neutrinoLV   );  
 
 	// b1,...,w1,w2 are indices for jets_p4 collection;
 	// This is a map between the internal ordering bLep=2, W1Had=3, ..., higgs2 = 7, and jets_p4
 	pos_to_index.clear();
-
-	if( type_<=3 ){
-	  jets.push_back( leptonLV     );  
-	  jets.push_back( neutrinoLV   );  
-	  jets.push_back( jets_p4[b1]  );
-	  jets.push_back( jets_p4[ind1]);  
-	  jets.push_back( jets_p4[ind2]);  
-	  jets.push_back( jets_p4[b2]  );
-	  jets.push_back( jets_p4[b3]  );
-	  jets.push_back( jets_p4[b4]  );
 	  
-	  pos_to_index[2] = b1;
+	if( type_==-3){	  
+	  jets.push_back( jets_p4[ banytag_indices[0] ]);
+	  jets.push_back( leptonLV2    ); 
+	  jets.push_back( neutrinoLV   );       // dummy 
+	  jets.push_back( jets_p4[ banytag_indices[1] ]);
+	  jets.push_back( jets_p4[ banytag_indices[2] ]);
+	  jets.push_back( jets_p4[ banytag_indices[3] ]);
+	  
+	  pos_to_index[2] = banytag_indices[0];
+	  pos_to_index[3] = banytag_indices[0]; // dummy
+	  pos_to_index[4] = banytag_indices[0]; // dummy
+	  pos_to_index[5] = banytag_indices[1];
+	  pos_to_index[6] = banytag_indices[2];
+	  pos_to_index[7] = banytag_indices[3];	 
+	}
+	else if( type_==-2){
+	  jets.push_back( jets_p4[ banytag_indices[0] ]);
+	  jets.push_back( jets_p4[ banytag_indices[1] ]);  
+	  jets.push_back( jets_p4[ banytag_indices[2] ]);  
+	  jets.push_back( jets_p4[ banytag_indices[3] ]);
+	  jets.push_back( jets_p4[ banytag_indices[4] ]);
+	  jets.push_back( jets_p4[ banytag_indices[5] ]);
+	  
+	  pos_to_index[2] = banytag_indices[0];
+	  pos_to_index[3] = banytag_indices[1];
+	  pos_to_index[4] = banytag_indices[2];
+	  pos_to_index[5] = banytag_indices[3];
+	  pos_to_index[6] = banytag_indices[4];
+	  pos_to_index[7] = banytag_indices[5];	 
+	}
+	else if( type_==-1){
+	  jets.push_back( jets_p4[ banytag_indices[0] ]);
+	  jets.push_back( jets_p4[ banytag_indices[1] ]);  
+	  jets.push_back( jets_p4[ banytag_indices[1] ]); // dummy 
+	  jets.push_back( jets_p4[ banytag_indices[2] ]);
+	  jets.push_back( jets_p4[ banytag_indices[3] ]);
+	  jets.push_back( jets_p4[ banytag_indices[4] ]);
+	  
+	  pos_to_index[2] = banytag_indices[0];
+	  pos_to_index[3] = banytag_indices[1];
+	  pos_to_index[4] = banytag_indices[1];           // dummy 
+	  pos_to_index[5] = banytag_indices[2];
+	  pos_to_index[6] = banytag_indices[3];
+	  pos_to_index[7] = banytag_indices[4];	 
+	}
+	else if( type_<=3 && type_>=0){
+	  jets.push_back( jets_p4[ btag_indices[0] ]  );
+	  jets.push_back( jets_p4[ ind1 ]);  
+	  jets.push_back( jets_p4[ ind2 ]);  
+	  jets.push_back( jets_p4[ btag_indices[1] ]  );
+	  jets.push_back( jets_p4[ btag_indices[2] ]  );
+	  jets.push_back( jets_p4[ btag_indices[3] ]  );
+	  
+	  pos_to_index[2] = btag_indices[0];
 	  pos_to_index[3] = ind1;
 	  pos_to_index[4] = ind2;
-	  pos_to_index[5] = b2;
-	  pos_to_index[6] = b3;
-	  pos_to_index[7] = b4;	 
+	  pos_to_index[5] = btag_indices[1];
+	  pos_to_index[6] = btag_indices[2];
+	  pos_to_index[7] = btag_indices[3];	 
 	}
 	else if( type_==6 ){
-	  jets.push_back( leptonLV    );  
-	  jets.push_back( neutrinoLV  );  
-	  jets.push_back( jets_p4[b1] );
+	  jets.push_back( jets_p4[ btag_indices[0] ] );
 	  jets.push_back( leptonLV2   );  
-	  jets.push_back( neutrinoLV  ); // dummy  
-	  jets.push_back( jets_p4[b2] );
-	  jets.push_back( jets_p4[b3] );
-	  jets.push_back( jets_p4[b4] );
+	  jets.push_back( neutrinoLV  );      // dummy  
+	  jets.push_back( jets_p4[ btag_indices[1] ] );
+	  jets.push_back( jets_p4[ btag_indices[2] ] );
+	  jets.push_back( jets_p4[ btag_indices[3] ] );
+
+	  pos_to_index[2] = btag_indices[0];
+	  pos_to_index[3] = btag_indices[0];  // dummy
+	  pos_to_index[4] = btag_indices[0];  // dummy
+	  pos_to_index[5] = btag_indices[1];
+	  pos_to_index[6] = btag_indices[2];
+	  pos_to_index[7] = btag_indices[3];
 	}
 	else if( type_==7 ){
-	  jets.push_back( leptonLV    );  
-	  jets.push_back( neutrinoLV  );  
-	  jets.push_back( jets_p4[bL1] );
+	  jets.push_back( jets_p4[ btagLoose_indices[0] ] );
 	  jets.push_back( leptonLV2   );  
-	  jets.push_back( neutrinoLV  ); // dummy  
-	  jets.push_back( jets_p4[bL2] );
-	  jets.push_back( jets_p4[bL3] );
-	  jets.push_back( jets_p4[bL4] );
+	  jets.push_back( neutrinoLV  );           // dummy  
+	  jets.push_back( jets_p4[ btagLoose_indices[1] ] );
+	  jets.push_back( jets_p4[ btagLoose_indices[2] ] );
+	  jets.push_back( jets_p4[ btagLoose_indices[3] ] );
+
+	  pos_to_index[2] = btagLoose_indices[0];
+	  pos_to_index[3] = btagLoose_indices[0];  // dummy
+	  pos_to_index[4] = btagLoose_indices[0];  // dummy
+	  pos_to_index[5] = btagLoose_indices[1];
+	  pos_to_index[6] = btagLoose_indices[2];
+	  pos_to_index[7] = btagLoose_indices[3];
 	}
 	else{ /* ... */ }
 	
+
+
+
 	// save jet kinematics into the tree...
 	nJet_ = 8;
 	for(int q = 0; q < nJet_ ; q++ ){
@@ -1598,29 +1930,22 @@ int main(int argc, const char* argv[])
 	  jet_eta_[q] = jets[q].Eta(); 
 	  jet_phi_[q] = jets[q].Phi(); 	    
 	  jet_m_  [q] = jets[q].M(); 
-	  // b-tagging
-	  if     ( type_<=6 && q == 2 )  jet_csv_  [q] = jets_csv[b1];
-	  else if( type_==7 && q == 2 )  jet_csv_  [q] = jets_csv[bL1];
-	  else if( type_<=3 && q == 3 )  jet_csv_  [q] = jets_csv[ind1];
-	  else if( type_<=3 && q == 4 )  jet_csv_  [q] = jets_csv[ind2];
-	  else if( type_<=6 && q == 5 )  jet_csv_  [q] = jets_csv[b2];
-	  else if( type_==7 && q == 5 )  jet_csv_  [q] = jets_csv[bL2];	  
-	  else if( type_<=6 && q == 6 )  jet_csv_  [q] = jets_csv[b3];
-	  else if( type_==7 && q == 6 )  jet_csv_  [q] = jets_csv[bL3];
-	  else if( type_<=6 && q == 7 )  jet_csv_  [q] = jets_csv[b4];
-	  else if( type_==7 && q == 7 )  jet_csv_  [q] = jets_csv[bL4];	  
-	  else  jet_csv_[q] = -99.;
+	  jet_csv_[q] = q>1 ? jets_csv[ pos_to_index[q] ] : -99.;
 	}
 	
 	// set all prob. to 0.0;
 	for(int p = 0 ; p < nTotInteg_; p++){
 	  probAtSgn_permut_       [p] = 0.;
-	  probAtSgn_alt_permut_   [p] = 0.;
 	  probAtSgnErr_permut_    [p] = 0.;
-	  probAtSgnErr_alt_permut_[p] = 0.;
 	}
 	for(int p = 0 ; p < nPermut_; p++){
 	  probAtSgn_bb_permut_ [p] = 0.;
+	}
+	for(int p = 0 ; p < nTotInteg_alt_; p++){
+	  probAtSgn_alt_permut_   [p] = 0.;
+	  probAtSgnErr_alt_permut_[p] = 0.;
+	}
+	for(int p = 0 ; p < nPermut_alt_; p++){
 	  probAtSgn_bj_permut_ [p] = 0.;
 	  probAtSgn_cc_permut_ [p] = 0.;
 	  probAtSgn_jj_permut_ [p] = 0.;
@@ -1629,13 +1954,6 @@ int main(int argc, const char* argv[])
 	/////////////////////////////////////////////////////////////
 	
 	// check if there is a tag-untag pair that satisfies the "cs-tag" 
-	vector<unsigned int> btag_indices;
-	if( type_<6 ){
-	  btag_indices.push_back( b1 );
-	  btag_indices.push_back( b2 );
-	  btag_indices.push_back( b3 );
-	  btag_indices.push_back( b4 );
-	}
 	for( unsigned int w = 0; w<btag_indices.size(); w++){
 	  
 	  float m1 = ( jets_p4[btag_indices[w]] + jets_p4[ind1] ).M();
@@ -1679,7 +1997,6 @@ int main(int argc, const char* argv[])
 	
 	// specify if topLep has pdgid +6 or -6
 	meIntegrator->setTopFlags( vLepton_charge[0]==1 ? +1 : -1 , vLepton_charge[0]==1 ? -1 : +1 );
-
 	  
 	// start the clock...	  
 	clock->Start();
@@ -1696,176 +2013,239 @@ int main(int argc, const char* argv[])
 	    double maxP_s = 0.;
 	    double maxP_b = 0.;
 	    
-	    // loop over permutations
-	    for(unsigned int pos = 0; pos < (unsigned int)nPermut_ ; pos++){
-	      
-	      // consider permutation #pos & save permutation-to-jet mas into the tree...
-	      meIntegrator->initVersors( permutList[pos] );
-	      perm_to_jet_[pos] =  permutList[pos];
+	    // number of permutations for which p has been calculated
+	    int num_s = 0;
+	    int num_b = 0;
 
-	      // index of the four jets associated to b-quarks or W->qq
-	      int bLep_pos = (permutList[pos])%1000000/100000;
-	      int w1_pos   = (permutList[pos])%100000/10000;
-	      int w2_pos   = (permutList[pos])%10000/1000;
-	      int bHad_pos = (permutList[pos])%1000/100;
-	      int b1_pos   = (permutList[pos])%100/10;
-	      int b2_pos   = (permutList[pos])%10/1;       
-	   	      
-	      // find if this particular permutation matches the expectation
-	      int bLep_match = 0;
-	      if(TMath::Abs(TOPLEPB.Py())>0 && deltaR( jets_p4[ pos_to_index[bLep_pos] ], TOPLEPB ) < GENJETDR){
-		bLep_match = 1;
-	      }
-	      int w1_match = 0;  
-	      int w2_match = 0;
-	      if( (TMath::Abs(TOPHADW1.Py())>0 && deltaR( jets_p4[ pos_to_index[w1_pos] ], TOPHADW1 ) < GENJETDR) || 
-		  (TMath::Abs(TOPHADW2.Py())>0 && deltaR( jets_p4[ pos_to_index[w1_pos] ], TOPHADW2 ) < GENJETDR)){
-		w1_match = 1;
-	      }
-	      if( (TMath::Abs(TOPHADW1.Py())>0 && deltaR( jets_p4[ pos_to_index[w2_pos] ], TOPHADW1 ) < GENJETDR) || 
-		  (TMath::Abs(TOPHADW2.Py())>0 && deltaR( jets_p4[ pos_to_index[w2_pos] ], TOPHADW2 ) < GENJETDR)){
-		w2_match = 1;
-	      }
-	      int bHad_match = 0;
-	      if(TMath::Abs(TOPHADB.Py())>0 && deltaR( jets_p4[ pos_to_index[bHad_pos] ], TOPHADB ) < GENJETDR){
-		bHad_match = 1;
-	      }
-	      int b1_match = 0;  
-	      int b2_match = 0;
-	      if( (TMath::Abs(HIGGSB1.Py())>0 && deltaR( jets_p4[ pos_to_index[b1_pos] ], HIGGSB1 ) < GENJETDR) || 
-		  (TMath::Abs(HIGGSB2.Py())>0 && deltaR( jets_p4[ pos_to_index[b1_pos] ], HIGGSB2 ) < GENJETDR)){
-		b1_match = 1;
-	      }
-	      if( (TMath::Abs(HIGGSB1.Py())>0 && deltaR( jets_p4[ pos_to_index[b2_pos] ], HIGGSB1 ) < GENJETDR) || 
-		  (TMath::Abs(HIGGSB2.Py())>0 && deltaR( jets_p4[ pos_to_index[b2_pos] ], HIGGSB2 ) < GENJETDR)){
-		b2_match = 1;
-	      }
-
-	      // save an integer with this convention:
-	      //  > 1st digit = 1/0 if bLep candidate is correct/wrong
-	      //  > 2nd digit = 1/0 if matched/not matched to W-quark
-	      //  > ... 
-
-	      perm_to_gen_[pos] = 100000*bLep_match + 10000*w1_match + 1000*w2_match + 100*bHad_match + 10*b1_match + 1*b2_match;
-
-
-	      // check invariant mass of jet system:
-	      double mass, massLow, massHigh;
-	      bool skip        = !( meIntegrator->compatibilityCheck    (0.95, /*printP4*/ 0, mass, massLow, massHigh ) );
-	      bool skip_WHad   = false;
-	      bool skip_TopHad = false;
-	      if((type_==0 || type_==3)){
-		skip_WHad   = !( meIntegrator->compatibilityCheck_WHad  (0.98, /*printP4*/ 0, mass, massLow, massHigh ) );
-		skip_TopHad = !( meIntegrator->compatibilityCheck_TopHad(0.98, /*printP4*/ 0, mass, massLow, massHigh ) );
+	    // loop over hypothesis [ TTH, TTbb ]
+	    for(int hyp = 0 ; hyp<2;  hyp++){
+		    
+	      // choose which permutations to consider;
+	      int* permutList = 0;
+	      if     ( type_ == -3 ) permutList = hyp==0 ?  permutations_4J_S      : permutations_4J_B;
+	      else if( type_ == -2 ) permutList = hyp==0 ?  permutations_6J_S      : permutations_6J_B;
+	      else if( type_ == -1 ) permutList = hyp==0 ?  permutations_5J_S      : permutations_5J_B;
+	      else if( type_ ==  0 ) permutList = hyp==0 ?  permutations_TYPE0_S   : permutations_TYPE0_B;
+	      else if( type_ ==  1 ) permutList = hyp==0 ?  permutations_TYPE1_S   : permutations_TYPE1_B;
+	      else if( type_ ==  2 ) permutList = hyp==0 ?  permutations_TYPE2_S   : permutations_TYPE2_B;
+	      else if( type_ ==  3 ) permutList = hyp==0 ?  permutations_TYPE0_S   : permutations_TYPE0_B;
+	      else if( type_ >=  6 ) permutList = hyp==0 ?  permutations_TYPE6_S   : permutations_TYPE6_B;
+	      else{ 
+		cout << "No permutations found...continue." << endl; 
+		continue; 
 	      }
 	      
-	    
-	      // if use btag, multiply p by b-tag probability density
-	      if( useBtag ){	       			
-		double p_b_bLep =  jets_csv_prob_b[ pos_to_index[bLep_pos] ];
-		double p_b_bHad =  jets_csv_prob_b[ pos_to_index[bHad_pos] ];
-		double p_b_b1   =  jets_csv_prob_b[ pos_to_index[b1_pos] ];
-		double p_c_b1   =  jets_csv_prob_c[ pos_to_index[b1_pos] ];
-		double p_j_b1   =  jets_csv_prob_j[ pos_to_index[b1_pos] ];
-		double p_b_b2   =  jets_csv_prob_b[ pos_to_index[b2_pos] ];
-		double p_c_b2   =  jets_csv_prob_c[ pos_to_index[b2_pos] ];
-		double p_j_b2   =  jets_csv_prob_j[ pos_to_index[b2_pos] ];
+
+	      // loop over permutations
+	      for(unsigned int pos = 0; pos < (unsigned int)( hyp==0 ? nPermut_ : nPermut_alt_ ) ; pos++){
 		
-		probAtSgn_bb_permut_[pos] =  p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2;
-		probAtSgn_bj_permut_[pos] =  p_b_bLep * p_b_bHad * (p_b_b1 * p_j_b2 + p_j_b1 * p_b_b2 )*0.5;
-		probAtSgn_cc_permut_[pos] =  p_b_bLep * p_b_bHad * p_c_b1 * p_c_b2;
-		probAtSgn_jj_permut_[pos] =  p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2;		  
-	      }
+		// consider permutation #pos & save permutation-to-jet mas into the tree...
+		meIntegrator->initVersors( permutList[pos] );
+		if( hyp==0 ) perm_to_jet_    [pos] =  permutList[pos];
+		if( hyp==1 ) perm_to_jet_alt_[pos] =  permutList[pos];
+		
+		// index of the four jets associated to b-quarks or W->qq
+		int bLep_pos = (permutList[pos])%1000000/100000;
+		int w1_pos   = (permutList[pos])%100000/10000;
+		int w2_pos   = (permutList[pos])%10000/1000;
+		int bHad_pos = (permutList[pos])%1000/100;
+		int b1_pos   = (permutList[pos])%100/10;
+		int b2_pos   = (permutList[pos])%10/1;       
+		
+		// find if this particular permutation matches the expectation
+		int bLep_match = 0;
+		if(TMath::Abs(TOPLEPB.Py())>0 && deltaR( jets_p4[ pos_to_index[bLep_pos] ], TOPLEPB ) < GENJETDR){
+		  bLep_match = 1;
+		}
+		int w1_match = 0;  
+		int w2_match = 0;
+		if( (TMath::Abs(TOPHADW1.Py())>0 && deltaR( jets_p4[ pos_to_index[w1_pos] ], TOPHADW1 ) < GENJETDR) || 
+		    (TMath::Abs(TOPHADW2.Py())>0 && deltaR( jets_p4[ pos_to_index[w1_pos] ], TOPHADW2 ) < GENJETDR)){
+		  w1_match = 1;
+		}
+		if( (TMath::Abs(TOPHADW1.Py())>0 && deltaR( jets_p4[ pos_to_index[w2_pos] ], TOPHADW1 ) < GENJETDR) || 
+		    (TMath::Abs(TOPHADW2.Py())>0 && deltaR( jets_p4[ pos_to_index[w2_pos] ], TOPHADW2 ) < GENJETDR)){
+		  w2_match = 1;
+		}
+		int bHad_match = 0;
+		if(TMath::Abs(TOPHADB.Py())>0 && deltaR( jets_p4[ pos_to_index[bHad_pos] ], TOPHADB ) < GENJETDR){
+		  bHad_match = 1;
+		}
+		int b1_match = 0;  
+		int b2_match = 0;
+		if( (TMath::Abs(HIGGSB1.Py())>0 && deltaR( jets_p4[ pos_to_index[b1_pos] ], HIGGSB1 ) < GENJETDR) || 
+		    (TMath::Abs(HIGGSB2.Py())>0 && deltaR( jets_p4[ pos_to_index[b1_pos] ], HIGGSB2 ) < GENJETDR)){
+		  b1_match = 1;
+		}
+		if( (TMath::Abs(HIGGSB1.Py())>0 && deltaR( jets_p4[ pos_to_index[b2_pos] ], HIGGSB1 ) < GENJETDR) || 
+		    (TMath::Abs(HIGGSB2.Py())>0 && deltaR( jets_p4[ pos_to_index[b2_pos] ], HIGGSB2 ) < GENJETDR)){
+		  b2_match = 1;
+		}
+		
+		// save an integer with this convention:
+		//  > 1st digit = 1/0 if bLep candidate is correct/wrong
+		//  > 2nd digit = 1/0 if matched/not matched to W-quark
+		//  > ... 
+		if( hyp==0 ) perm_to_gen_    [pos] = 100000*bLep_match + 10000*w1_match + 1000*w2_match + 100*bHad_match + 10*b1_match + 1*b2_match;
+		if( hyp==1 ) perm_to_gen_alt_[pos] = 100000*bLep_match + 10000*w1_match + 1000*w2_match + 100*bHad_match + 10*b1_match + 1*b2_match;
+		
+		
+		// check invariant mass of jet system:
+		double mass, massLow, massHigh;
+		bool skip        = !( meIntegrator->compatibilityCheck    (0.95, /*print*/ 0, mass, massLow, massHigh ) );
+		bool skip_WHad   = false;
+		bool skip_TopHad = false;
+		if( type_==0 || type_==3 ){
+		  skip_WHad   = !( meIntegrator->compatibilityCheck_WHad  (0.98, /*print*/ 0, mass, massLow, massHigh ) );
+		  skip_TopHad = !( meIntegrator->compatibilityCheck_TopHad(0.98, /*print*/ 0, mass, massLow, massHigh ) );
+		}
+		
+		
+		// if use btag, determine the b-tag probability density
+		if( useBtag ){	       			
+		  double p_b_bLep =  jets_csv_prob_b[ pos_to_index[bLep_pos] ];
+		  double p_b_bHad =  jets_csv_prob_b[ pos_to_index[bHad_pos] ];
+		  double p_b_b1   =  jets_csv_prob_b[ pos_to_index[b1_pos] ];
+		  double p_c_b1   =  jets_csv_prob_c[ pos_to_index[b1_pos] ];
+		  double p_j_b1   =  jets_csv_prob_j[ pos_to_index[b1_pos] ];
+		  double p_b_b2   =  jets_csv_prob_b[ pos_to_index[b2_pos] ];
+		  double p_c_b2   =  jets_csv_prob_c[ pos_to_index[b2_pos] ];
+		  double p_j_b2   =  jets_csv_prob_j[ pos_to_index[b2_pos] ];
+		  double p_j_w1   =  1.0;
+		  double p_j_w2   =  1.0;
+		  
+		  // the b-tag probability for the two untagged jets...
+		  if( type_==0 || type_==3 || type_==-2){
+		    p_j_w1 = jets_csv_prob_j[ pos_to_index[w1_pos] ];
+		    p_j_w2 = jets_csv_prob_j[ pos_to_index[w2_pos] ];
+		  }
+		  // the b-tag probability for the one untagged jet...
+		  else if( type_==1 || type_==2 || type_==-1){
+		    p_j_w1 = jets_csv_prob_j[ pos_to_index[w1_pos] ];
+		    p_j_w2 = 1.0;
+		  }
+		  // there are untagged jets...
+		  else{
+		    p_j_w1 = 1.0;
+		    p_j_w2 = 1.0;
+		  }
+		  
+		  // DEBUG
+		  if( debug && 0 ){
+		    cout << "Hyp=" << hyp <<"  [BTag M="   << numBTagM_ << "]" << endl;
+		    cout << " bLep: p_b("   << jets_csv[pos_to_index[bLep_pos]] << ")=" << p_b_bLep;
+		    cout << " bHad: p_b("   << jets_csv[pos_to_index[bHad_pos]] << ")=" << p_b_bHad;
+		    cout << " b1  : p_b("   << jets_csv[pos_to_index[b1_pos]]   << ")=" << p_b_b1;
+		    cout << " b2  : p_b("   << jets_csv[pos_to_index[b2_pos]]   << ")=" << p_b_b2;
+		    if(!(type_>=6 || type_==-3)) 
+		      cout << " w1  : p_j(" << jets_csv[pos_to_index[w1_pos]]   << ")=" << p_j_w1;
+		    if(!(type_>=6 || type_==-3 || type_==1 || type_==2)) 
+		      cout << " w2  : p_j(" << jets_csv[pos_to_index[w2_pos]]   << ")=" << p_j_w2 << endl;
+		    cout << " P = "         <<  p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2 * p_j_w1 * p_j_w2 << endl;
+		  }
+		  
+		  // fill arrays with per-permutation probability
+		  if(hyp==0){
+		    probAtSgn_bb_permut_[pos] =  p_b_bLep * p_b_bHad * p_b_b1 * p_b_b2 * p_j_w1 * p_j_w2;
+		  }
+		  if(hyp==1){
+		    probAtSgn_bj_permut_[pos] =  p_b_bLep * p_b_bHad * (p_b_b1 * p_j_b2 + p_j_b1 * p_b_b2 )*0.5 * p_j_w1 * p_j_w2;
+		    probAtSgn_cc_permut_[pos] =  p_b_bLep * p_b_bHad * p_c_b1 * p_c_b2 * p_j_w1 * p_j_w2;
+		    probAtSgn_jj_permut_[pos] =  p_b_bLep * p_b_bHad * p_j_b1 * p_j_b2 * p_j_w1 * p_j_w2;		  
+		  }
 
+		}
+		
+		// if doing scan over b-tag only, don't need amplitude...
+		if( type_<0  ) continue;
+		
+		
+		// if type 0/3 and incompatible with MW or MT (and we are not scanning vs MT) continue
+		// ( this applies to both hypotheses )
+		if( nTopMassPoints==1 && (skip_WHad || skip_TopHad) ){    
+		  if(print) cout << "Skip (THad check failed)...          Perm. #" << pos << endl;
+		  continue;
+		}	      
+		
+		// retrieve intergration boundaries from meIntegrator
+		pair<double, double> range_x0 = (meIntegrator->getW1JetEnergyCI(0.95));
+		pair<double, double> range_x1 =  make_pair(-1,1);
+		pair<double, double> range_x2 =  make_pair(-PI,PI);	    
+		pair<double, double> range_x3 =  make_pair(-1,1);
+		pair<double, double> range_x4 =  useMET ? (meIntegrator->getNuPhiCI(0.95)) : make_pair(-PI,PI);
+		pair<double, double> range_x5 = (meIntegrator->getB1EnergyCI(0.95));
+		pair<double, double> range_x6 = (meIntegrator->getB2EnergyCI(0.95));
 	      
-	      // if type 0/3 and incompatible with MW or MT (and we are not scanning vs MT) continue
-	      // ( this applies to both hypotheses )
-	      if( nTopMassPoints==1 && (skip_WHad || skip_TopHad) ){
-		cout << "Skip                                 Perm. #" << pos << endl;
-		continue;
-	      }	      
+		// boundaries
+		double x0L = range_x0.first; double x0U = range_x0.second;
+		double x1L = range_x1.first; double x1U = range_x1.second;
+		double x2L = range_x2.first; double x2U = range_x2.second;
+		double x3L = range_x3.first; double x3U = range_x3.second;
+		double x4L = range_x4.first; double x4U = range_x4.second;
+		double x5L = range_x5.first; double x5U = range_x5.second;
+		double x6L = range_x6.first; double x6U = range_x6.second;
 	      
-	      // retrieve intergration boundaries from meIntegrator
-	      pair<double, double> range_x0 = (meIntegrator->getW1JetEnergyCI(0.95));
-	      pair<double, double> range_x1 =  make_pair(-1,1);
-	      pair<double, double> range_x2 =  make_pair(-PI,PI);	    
-	      pair<double, double> range_x3 =  make_pair(-1,1);
-	      pair<double, double> range_x4 =  useMET ? (meIntegrator->getNuPhiCI(0.95)) : make_pair(-PI,PI);
-	      pair<double, double> range_x5 = (meIntegrator->getB1EnergyCI(0.95));
-	      pair<double, double> range_x6 = (meIntegrator->getB2EnergyCI(0.95));
+		// these hold for the sgn integration and type0...
+		double xLmode0_s[4] = {x0L, x3L, x4L, x5L};
+		double xUmode0_s[4] = {x0U, x3U, x4U, x5U};
+		// these hold for the bkg integration and type0...
+		double xLmode0_b[5] = {x0L, x3L, x4L, x5L, x6L};
+		double xUmode0_b[5] = {x0U, x3U, x4U, x5U, x6U};		 
+		
+		// these hold for the sgn integration and type1...
+		double xLmode1_s[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+		double xUmode1_s[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+		// these hold for the bkg integration and type1...
+		double xLmode1_b[7] = {x0L, x1L, x2L, x3L, x4L, x5L, x6L};
+		double xUmode1_b[7] = {x0U, x1U, x2U, x3U, x4U, x5U, x6U};
+		
+		// these hold for the sgn integration and type2...
+		double xLmode2_s[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
+		double xUmode2_s[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
+		// these hold for the bkg integration and type2...	      
+		double xLmode2_b[7] = {x0L, x1L, x2L, x3L, x4L, x5L, x6L};
+		double xUmode2_b[7] = {x0U, x1U, x2U, x3U, x4U, x5U, x6U};	     	     	   	       
+		
+		// these hold for the sgn integration and type3...
+		double xLmode3_s[4] = {x0L, x3L, x4L, x5L};
+		double xUmode3_s[4] = {x0U, x3U, x4U, x5U};
+		// these hold for the bkg integration and type3...
+		double xLmode3_b[5] = {x0L, x3L, x4L, x5L, x6L};
+		double xUmode3_b[5] = {x0U, x3U, x4U, x5U, x6U};
 	      
-	      // boundaries
-	      double x0L = range_x0.first; double x0U = range_x0.second;
-	      double x1L = range_x1.first; double x1U = range_x1.second;
-	      double x2L = range_x2.first; double x2U = range_x2.second;
-	      double x3L = range_x3.first; double x3U = range_x3.second;
-	      double x4L = range_x4.first; double x4U = range_x4.second;
-	      double x5L = range_x5.first; double x5U = range_x5.second;
-	      double x6L = range_x6.first; double x6U = range_x6.second;
+		// these hold for the sgn integration and type6...
+		double xLmode6_s[5] = {x1L, x2L, x1L, x2L, x5L};
+		double xUmode6_s[5] = {x1U, x2U, x1U, x2U, x5U};
+		// these hold for the bkg integration and type6...
+		double xLmode6_b[6] = {x1L, x2L, x1L, x2L, x5L, x6L};
+		double xUmode6_b[6] = {x1U, x2U, x1U, x2U, x5U, x6U};
 	      
-	      // these hold for the sgn integration and type0...
-	      double xLmode0_s[4] = {x0L, x3L, x4L, x5L};
-	      double xUmode0_s[4] = {x0U, x3U, x4U, x5U};
-	      // these hold for the bkg integration and type0...
-	      double xLmode0_b[5] = {x0L, x3L, x4L, x5L, x6L};
-	      double xUmode0_b[5] = {x0U, x3U, x4U, x5U, x6U};		 
+		// these hold for the sgn integration and type7...
+		double xLmode7_s[5] = {x1L, x2L, x1L, x2L, x5L};
+		double xUmode7_s[5] = {x1U, x2U, x1U, x2U, x5U};
+		// these hold for the bkg integration and type7...
+		double xLmode7_b[6] = {x1L, x2L, x1L, x2L, x5L, x6L};
+		double xUmode7_b[6] = {x1U, x2U, x1U, x2U, x5U, x6U};
 	      
-	      // these hold for the sgn integration and type1...
-	      double xLmode1_s[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
-	      double xUmode1_s[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
-	      // these hold for the bkg integration and type1...
-	      double xLmode1_b[7] = {x0L, x1L, x2L, x3L, x4L, x5L, x6L};
-	      double xUmode1_b[7] = {x0U, x1U, x2U, x3U, x4U, x5U, x6U};
-	      
-	      // these hold for the sgn integration and type2...
-	      double xLmode2_s[6] = {x0L, x1L, x2L, x3L, x4L, x5L};
-	      double xUmode2_s[6] = {x0U, x1U, x2U, x3U, x4U, x5U};
-	      // these hold for the bkg integration and type2...	      
-	      double xLmode2_b[7] = {x0L, x1L, x2L, x3L, x4L, x5L, x6L};
-	      double xUmode2_b[7] = {x0U, x1U, x2U, x3U, x4U, x5U, x6U};	     	     	   	       
-	      
-	      // these hold for the sgn integration and type3...
-	      double xLmode3_s[4] = {x0L, x3L, x4L, x5L};
-	      double xUmode3_s[4] = {x0U, x3U, x4U, x5U};
-	      // these hold for the bkg integration and type3...
-	      double xLmode3_b[5] = {x0L, x3L, x4L, x5L, x6L};
-	      double xUmode3_b[5] = {x0U, x3U, x4U, x5U, x6U};
-	      
-	      // these hold for the sgn integration and type6...
-	      double xLmode6_s[5] = {x1L, x2L, x1L, x2L, x5L};
-	      double xUmode6_s[5] = {x1U, x2U, x1U, x2U, x5U};
-	      // these hold for the bkg integration and type6...
-	      double xLmode6_b[6] = {x1L, x2L, x1L, x2L, x5L, x6L};
-	      double xUmode6_b[6] = {x1U, x2U, x1U, x2U, x5U, x6U};
-	      
-	      // these hold for the sgn integration and type7...
-	      double xLmode7_s[5] = {x1L, x2L, x1L, x2L, x5L};
-	      double xUmode7_s[5] = {x1U, x2U, x1U, x2U, x5U};
-	      // these hold for the bkg integration and type7...
-	      double xLmode7_b[6] = {x1L, x2L, x1L, x2L, x5L, x6L};
-	      double xUmode7_b[6] = {x1U, x2U, x1U, x2U, x5U, x6U};
-	      
-	      // number of integration variables (TTH hypothesis)
-	      int nParam;
-	      if     ( type_==0 )  nParam = 4; // Eq, eta_nu, phi_nu, Eb
-	      else if( type_==1 )  nParam = 6; // Eq, eta_q', phi_q', eta_nu, phi_nu, Eb
-	      else if( type_==2 )  nParam = 6; // Eq, eta_q', phi_q', eta_nu, phi_nu, Eb
-	      else if( type_==3 )  nParam = 4; // Eq, eta_nu, phi_nu, Eb
-	      else if( type_==6 )  nParam = 5; // eta_nu, phi_nu, eta_nu', phi_nu', Eb
-	      else if( type_==7 )  nParam = 5; // eta_nu, phi_nu, eta_nu', phi_nu', Eb
-	      else{
-		cout << "No type match...contine." << endl;
-		continue;
-	      }
-	      
-	      // the per-permutation probability...
-	      double p    = 0.;	
-	      // the per-permutation probability error...
-	      double pErr = 0.;	       	
-		  
-	      // loop over hypothesis [ TTH, TTbb ]
-	      for(int hyp = 0 ; hyp<2;  hyp++){
-		  
+		// number of integration variables (TTH hypothesis)
+		int nParam;
+		if     ( type_==0 )  nParam = 4; // Eq, eta_nu, phi_nu, Eb
+		else if( type_==1 )  nParam = 6; // Eq, eta_q', phi_q', eta_nu, phi_nu, Eb
+		else if( type_==2 )  nParam = 6; // Eq, eta_q', phi_q', eta_nu, phi_nu, Eb
+		else if( type_==3 )  nParam = 4; // Eq, eta_nu, phi_nu, Eb
+		else if( type_==6 )  nParam = 5; // eta_nu, phi_nu, eta_nu', phi_nu', Eb
+		else if( type_==7 )  nParam = 5; // eta_nu, phi_nu, eta_nu', phi_nu', Eb
+		else{
+		  cout << "No type match...contine." << endl;
+		  continue;
+		}
+		
+		// the per-permutation probability...
+		double p    = 0.;	
+		// the per-permutation probability error...
+		double pErr = 0.;	       	
+		
+	     	  	
 		// if doing higgs mass scan, don't consider bkg hypo
 		if( nHiggsMassPoints>1 && hyp==1 ) continue;
 		
@@ -1879,17 +2259,35 @@ int main(int argc, const char* argv[])
 		// if current hypo is TTH, but M(b1b2) incompatible with 125
 		// (and we are not scanning vs MH) continue...
 		if( hyp==0 && nHiggsMassPoints==1 && skip){
-		  cout << "Skip    hypo " << (hyp==0 ? "ttH " : "ttbb") 
-		       << " [MH=" << mH[m] << ", MT=" << mT[t]
-		       << "] Perm. #" << pos;
-		  cout << " => p=" << p << endl;
+		  if(print){
+		    cout << "Skip    hypo " << (hyp==0 ? "ttH " : "ttbb") 
+			 << " [MH=" << mH[m] << ", MT=" << mT[t]
+			 << "] Perm. #" << pos;
+		    cout << " => p=" << p << endl;
+		  }
 		  continue;
 		}
 		
+		// increment counters
+		if(hyp==0) num_s++;
+		if(hyp==1) num_b++;
+
+		// if NOT doing top mass scan, and hyp==1
+		// and no permutations for hyp==0 accepted, continue (the weight will be 0 anyway)
+		if( nTopMassPoints==1 && hyp==1 && num_s==0){
+		  if(print){
+		    cout << "Skip    hypo " << (hyp==0 ? "ttH " : "ttbb") 
+			 << " because no valid ttH permutations found" << endl;
+		  }
+		  continue;
+		}
+
 		// setup hypothesis
-		cout << "Testing hypo " << (hyp==0 ? "ttH " : "ttbb") 
-		     << " [MH=" << mH[m] << ", MT=" << mT[t]
-		     << "] Perm. #" << pos;	       
+		if(print){
+		  cout << "Testing hypo " << (hyp==0 ? "ttH " : "ttbb") 
+		       << " [MH=" << mH[m] << ", MT=" << mT[t]
+		       << "] Perm. #" << pos;	       
+		}
 		meIntegrator->setHypo(hyp);
 		  
 		// initial number of function calles
@@ -1975,19 +2373,19 @@ int main(int argc, const char* argv[])
 		// to avoid problems
 		if( TMath::IsNaN(p) )    p    = 0.;
 		if( TMath::IsNaN(pErr) ) pErr = 0.;
-		cout << " => p=(" << p << " +/- " << pErr << ")" << endl;
+		if(print) cout << " => p=(" << p << " +/- " << pErr << ")" << endl;
 		
 		/////////////////////////////////////////////////////////////
 		  
 		if( useBtag ){
 		  
 		  // total ME*btag probability for nominal MH and MT, sgn hypo
-		  if( hyp==0 && mH[m]<MH+0.5 && mH[m]>MH-0.5 && mT[t]<MT+0.5 && mT[t]>MT-0.5){
+		  if( hyp==0 && mH[m]<MH+1.5 && mH[m]>MH-1.5 && mT[t]<MT+1.5 && mT[t]>MT-1.5){
 		    probAtSgn_ttbb_         += ( p * probAtSgn_bb_permut_[pos] );
 		  }
 		  
 		  // total ME*btag probability for nominal MH and MT, bkg hypo
-		  if( hyp>0 && mH[m]<MH+0.5 && mH[m]>MH-0.5 && mT[t]<MT+0.5 && mT[t]>MT-0.5){
+		  if( hyp==1 && mH[m]<MH+1.5 && mH[m]>MH-1.5 && mT[t]<MT+1.5 && mT[t]>MT-1.5){
 		    probAtSgn_alt_ttbb_     += ( p * probAtSgn_bb_permut_[pos] );
 		    probAtSgn_alt_ttbj_     += ( p * probAtSgn_bj_permut_[pos] );
 		    probAtSgn_alt_ttcc_     += ( p * probAtSgn_cc_permut_[pos] );
@@ -1998,18 +2396,18 @@ int main(int argc, const char* argv[])
 		/////////////////////////////////////////////////////////////
 		
 		// save TTH prob. per permutation AND mH
-		if( hyp==0 && mT[t]<MT+0.5 &&  mT[t]>MT-0.5){
+		if( hyp==0 && mT[t]<MT+1.5 && mT[t]>MT-1.5){
 		  probAtSgn_permut_   [(unsigned int)(pos+m*nPermut_)] = p;
 		  probAtSgnErr_permut_[(unsigned int)(pos+m*nPermut_)] = pErr;
 		}
 		// save TTbb prob. per permutation AND mT
-		if( hyp==1 && mH[m]<MH+0.5 &&  mH[m]>MH-0.5 ){
-		  probAtSgn_alt_permut_   [(unsigned int)(pos+t*nPermut_)] = p;
-		  probAtSgnErr_alt_permut_[(unsigned int)(pos+t*nPermut_)] = pErr;
+		if( hyp==1 && mH[m]<MH+1.5 && mH[m]>MH-1.5 ){
+		  probAtSgn_alt_permut_   [(unsigned int)(pos+t*nPermut_alt_)] = p;
+		  probAtSgnErr_alt_permut_[(unsigned int)(pos+t*nPermut_alt_)] = pErr;
 		}
 		
 		// total and per-permutation ME probability for nominal MH and MT
-		if( mH[m]<MH+0.5 && mH[m]>MH-0.5 && mT[t]<MT+0.5 &&  mT[t]>MT-0.5){
+		if( mH[m]<MH+1.5 && mH[m]>MH-1.5 && mT[t]<MT+1.5 && mT[t]>MT-1.5){
 		  if(hyp==0){
 		    probAtSgn_     += p;
 		  }
@@ -2030,7 +2428,8 @@ int main(int argc, const char* argv[])
 	time_ = clock->RealTime();
 	clock->Reset();	    
 	
-	cout << "Done in " << time_ << " sec" << endl;
+	// this time is integrated over all hypotheses, permutations, and mass scan values
+	if(print) cout << "Done in " << time_ << " sec" << endl;
       }
 
       ///////////////////////////////////////////////////
@@ -2041,39 +2440,46 @@ int main(int argc, const char* argv[])
 	continue;
       }
       
-      counter_   = counter;
-      nSimBs_    = nSimBs;
-      //nC_        = nC;
-      //nCTop_     = nCTop;
-      weight_    = scaleFactor;
-      nPVs_      = nPVs;
+      counter_     = counter;
+      nSimBs_      = nSimBs;
+      weight_      = scaleFactor;
+      nPVs_        = nPVs;
 
       EVENT_.run   = EVENT.run;
       EVENT_.lumi  = EVENT.lumi;
       EVENT_.event = EVENT.event;
       EVENT_.json  = EVENT.json;
+
+      PUweight_    = PUweight;
+      PUweightP_   = PUweightP;
+      PUweightM_   = PUweightM;
+
+      lheNj_       = lheNj;
       
+      // fill the tree...
       tree->Fill();      
 
     } // nentries
 
+    // this histogram keeps track of the fraction of analyzed events per sample
     hcounter->SetBinContent(1,float(events_)/nentries);    
 
   } // samples
 
 
 
+  // save the tree and the counting histo in the ROOT file
   fout_tmp->cd();
-
   hcounter->Write("",TObject::kOverwrite );
-
   tree->Write("",TObject::kOverwrite );
   fout_tmp->Close();
 
+  // delete MEIntegrator and other allocated objects
   cout << "Delete meIntegrator..." << endl;
   delete meIntegrator;
   delete clock;
   cout << "Finished!!!" << endl;
   
+  // Done!!!
   return 0;
 }
