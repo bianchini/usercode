@@ -6,6 +6,8 @@
 #include <vector>
 
 #include "TMath.h"
+#include "TMatrixT.h"
+#include "TMatrixTBase.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TString.h"
@@ -16,6 +18,7 @@
 #include "TH2F.h"
 #include "TF1.h"
 #include "TF2.h"
+
 
 #include "TPaveText.h"
 #include "TCanvas.h"
@@ -33,6 +36,7 @@
 #include "TArrayF.h"
 #include "TLine.h"
 
+typedef TMatrixT<double> TMatrixD;
 
 
 void bbb( TH1F* hin, TH1F* hout_Down, TH1F* hout_Up, int bin){
@@ -90,6 +94,134 @@ void draw(vector<float> param, TTree* t = 0, TString var = "", TH1F* h = 0, TCut
 
 
 
+pair<double,double> getMaxValue( TH1F* hMassProb){
+ 
+  float est  = -99;
+  float prob = -99;
+  float a = -99;
+  float b = -99;
+  float c = -99;
+
+  if( hMassProb->GetEntries()==0 ){
+    est  =  0.;
+    prob =  0.;
+    return make_pair(est, prob);
+  }
+
+  
+  int maxBin = hMassProb->GetMaximumBin();
+  int bD = -999;
+  int bC = -999;
+  int bU = -999;
+
+  int isRightMostBin = 1;
+  for(int k=1; k<=hMassProb->GetNbinsX(); k++){
+    if( hMassProb->GetBinContent(maxBin+k)>0 ) isRightMostBin=0;
+  }
+  int isLeftMostBin = 1;
+  for(int k=1; k<=hMassProb->GetNbinsX(); k++){
+    if( hMassProb->GetBinContent(maxBin-k)>0 ) isLeftMostBin=0;
+  }
+
+  if( (maxBin < hMassProb->GetNbinsX() && maxBin > 1) && !isRightMostBin && !isLeftMostBin ){
+    //cout << "Center" << endl;
+    bC = maxBin;
+    for(int k=1; k<=hMassProb->GetNbinsX() && bD==-999; k++){
+      if( hMassProb->GetBinContent(maxBin-k)>0 ){
+	bD = maxBin-k;	
+	////cout << "Found bin " << bD << " with " <<  hMassProb->GetBinContent(bD) << endl;
+      }
+    }
+    for(int k=1; k<=hMassProb->GetNbinsX() && bU==-999; k++){
+      if( hMassProb->GetBinContent(maxBin+k)>0 ){
+	bU = maxBin+k;	
+	////cout << "Found bin " << bU << " with " <<  hMassProb->GetBinContent(bU) << endl;	
+      }
+    }   
+  }
+  else if( (maxBin == hMassProb->GetNbinsX()) || isRightMostBin){
+    //cout << "Right" << endl;
+    bU = maxBin; 
+    for(int k=1; k<=hMassProb->GetNbinsX() && bC==-999; k++){
+      if( hMassProb->GetBinContent(maxBin-k)>0 ) bC = maxBin-k;	
+    }
+    for(int k=1; k<=hMassProb->GetNbinsX() && bD==-999; k++){
+      if( hMassProb->GetBinContent(bC-k)>0 ) bD = bC-k;	
+    }
+  }
+  else if( (maxBin == 1) || isLeftMostBin){
+    //cout << "Left" << endl;
+    bD = maxBin; 
+    for(int k=1; k<=hMassProb->GetNbinsX() && bC==-999; k++){
+      if( hMassProb->GetBinContent(maxBin+k)>0 ) bC = maxBin+k;	
+    }
+    for(int k=1; k<=hMassProb->GetNbinsX() && bU==-999; k++){
+      if( hMassProb->GetBinContent(bC+k)>0 ) bU = bU+k;	
+    }
+  }
+  else{
+    //cout << "Unknown" << endl;
+    est  =  hMassProb->GetBinCenter  (hMassProb->GetMaximumBin());
+    prob =  hMassProb->GetBinContent (hMassProb->GetMaximumBin());
+    //cout << "M=" << est << endl;
+    return make_pair(est, prob);
+  }
+
+  if( bD==-999 || bU==-999 || bC==-999){
+    //cout << "Problems" << endl;   
+    //cout << bD << "," << bC << "," << bU << endl;
+    est  =  hMassProb->GetBinCenter  (hMassProb->GetMaximumBin());
+    prob =  hMassProb->GetBinContent (hMassProb->GetMaximumBin());
+    //cout << "M=" << est << endl;
+    return make_pair(est, prob);
+  }
+
+  double xD =  hMassProb->GetBinCenter (bD);
+  double xC =  hMassProb->GetBinCenter (bC);
+  double xU =  hMassProb->GetBinCenter (bU);
+  double yD =  hMassProb->GetBinContent(bD);
+  double yC =  hMassProb->GetBinContent(bC);
+  double yU =  hMassProb->GetBinContent(bU);
+  
+  TMatrixD A(3,3);
+  const double elements[9] = 
+    { 1, xD,  xD*xD,
+      1, xC,  xC*xC,
+      1, xU,  xU*xU 
+    };
+  A.SetMatrixArray(elements, "C");
+  TMatrixD AInv(3,3);
+  double det;
+  AInv = A.Invert(&det);
+  
+  TMatrixD Y(3,1);
+  const double yPos[3] = 
+    { yD, yC, yU
+    };
+  Y.SetMatrixArray(yPos, "C");
+  
+  TMatrixD C(3,1);
+  const double dummy[3] = 
+    { 1., 1., 1.
+    };
+  C.SetMatrixArray(dummy,"C");
+  C.Mult(AInv,Y);
+  
+  a = C(2,0);
+  b = C(1,0);
+  c = C(0,0);
+  
+  est  = -b/2/a ;
+  prob = a*est*est + b*est + c;
+  
+  //cout << "xD" << xD << " => " <<  yD << endl;
+  //cout << "xC" << xC << " => " <<  yC << endl;
+  //cout << "xU" << xU << " => " <<  yU << endl;
+  //cout << "M=" << est << endl;
+  
+  return make_pair(est, prob);
+  
+}
 
 
 
@@ -881,231 +1013,29 @@ void produce( TString fname = "SL",
 
 void produceAll( float LumiScale = 19.5/12.1){
 
-  produce("SL", "type==0",  "cat1",                       0.55, 1, 1.0,  LumiScale ,   6, 1);
-
-  //produce("SL", "type==1",  "cat2",                       0.02, 1, 0.50,   LumiScale ,  6, 1);
-
-  //produce("SL", "type==2 && flag_type2>0 && btag_LR>=0.9975",   "cat3",      0.02, 0.8,  LumiScale ,   6, 1);
-  //produce("SL", "type==2 && flag_type2<=0 && btag_LR>=0.9975",  "cat4",      0.02, 0.7,  LumiScale ,   6, 1);
-  //produce("SL", "type==3 && btag_LR>=0.9975",  "cat5",                       0.02, 0.5,  LumiScale ,   6, 1);  
-  //produce("DL", "type==6 && btag_LR>=0.9975",  "cat6",                       0.02, 0.,   LumiScale*2 , 6, 1);
-
-  //produce("DL", "type==7",  "cat7",                       0.02, 0.,   LumiScale*2 , 6, 0);
+  produce("SL", "type==0",                                  "cat1", 1.0, 0.0, 0.2 , LumiScale   , 6,  1);
+  produce("SL", "type==1",                                  "cat2", 1.7, 0.0, 0.5 , LumiScale   , 6,  1);
+  produce("SL", "type==2 && flag_type2>0",                  "cat3", 2.2, 0.0, 0.5 , LumiScale   , 6,  1);
+  produce("SL", "type==2 && flag_type2<=0",                 "cat4", 2.0, 0.0, 0.5 , LumiScale   , 6,  1);
+  produce("SL", "type==3 && flag_type3>0 && p_125_all_s>0", "cat5", 5.5, 0.0, 0.5 , LumiScale   , 7,  1);
+  produce("DL", "type==6",                                  "cat6", 1.5, 0.0, 0.1 , LumiScale*2 , 5,  1);
 
 }
 
 
-
-void makePlot(){
-
-  gStyle->SetPaintTextFormat("g");
-
-  TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
-  c1->SetGrid(0,0);
-  c1->SetFillStyle(4000);
-  c1->SetFillColor(10);
-  c1->SetTicky();
-  c1->SetObjectStat(0);
-  c1->SetLogy(1);
+void massPlot( TString fname = "SL", 
+	       string cut = "type==0", 
+	       TString category = "cat0",
+	       int plotShapes = 0,
+	       float lumiScale = 20./12.1,
+	       int nBins =20, float xLow=50, float xHigh=250,
+	       int useBTag=0,
+	       int normXSec=1,
+	       float fact1 = 5,
+	       int match1 = 111111, int match2 = 111111, int match3 = 11, int match4 = 11
+	       ){
   
-  TLegend* leg = new TLegend(0.120743,0.153846,0.321981, 0.26049, NULL,"brNDC");
-  leg->SetBorderSize(0);
-  leg->SetTextSize(0.04);
-  leg->SetFillColor(0);
-
-
-  float X[]        = {0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5 };
-  float expY[]     = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-  float expY1sL[]  = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-  float expY1sH[]  = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-  float expY2sL[]  = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-  float expY2sH[]  = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-
-  float expXs[]  = {0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5};
-  float expYs[]  = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-
-
-  vector<string> categories;
-  categories.push_back("SL_cat1");
-  categories.push_back("SL_cat2");
-  categories.push_back("SL_cat3");
-  categories.push_back("SL_cat4");
-  categories.push_back("SL_cat5");
-  categories.push_back("SL");
-  categories.push_back("DL_cat6");
-  categories.push_back("DL_cat7");
-  categories.push_back("DL");
-  categories.push_back("COMB");
-
-  int nBins = categories.size();
-
-  for( int b = 0; b < nBins; b++){
-
-    TFile* f = TFile::Open(("higgsCombine"+categories[b]+".Asymptotic.mH120.root").c_str());
-    if( f==0 ) continue;
-    
-    Double_t r;
-    TTree* limit = (TTree*)f->Get("limit");
-    limit->SetBranchAddress("limit",&r);
-
-    for(int k = 0 ; k< limit->GetEntries() ; k++){
-      limit->GetEntry(k);
-      if(k==0) expY2sL[b] = r;
-      if(k==1) expY1sL[b] = r;
-      if(k==2) expY[b]    = r;
-      if(k==3) expY1sH[b] = r;
-      if(k==4) expY2sH[b] = r;
-    }
-
-
-    cout << categories[b] << ": r<" <<  expY[b] << " @ 95% CL" << endl;
-
-    expY1sH[b] = TMath::Abs(expY1sH[b]-expY[b]);
-    expY1sL[b] = TMath::Abs(expY1sL[b]-expY[b]);
-    expY2sH[b] = TMath::Abs(expY2sH[b]-expY[b]);
-    expY2sL[b] = TMath::Abs(expY2sL[b]-expY[b]);
-
-
-  }
-
-
-  TMultiGraph *mg = new TMultiGraph();
-  mg->SetTitle("Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}");
-
-  TGraphAsymmErrors* expected = new TGraphAsymmErrors(10, X, expY, expXs ,expXs,  expYs,   expYs);
-  TGraphAsymmErrors* oneSigma = new TGraphAsymmErrors(10, X, expY, expXs, expXs,  expY1sL, expY1sH);
-  TGraphAsymmErrors* twoSigma = new TGraphAsymmErrors(10, X, expY, expXs, expXs,  expY2sL, expY2sH);
-
-
-  oneSigma->SetMarkerColor(kBlack);
-  oneSigma->SetMarkerStyle(kOpenCircle);
-  oneSigma->SetFillColor(kGreen);
-  oneSigma->SetFillStyle(1001);
-
-  twoSigma->SetMarkerColor(kBlack);
-  twoSigma->SetMarkerStyle(kOpenCircle);
-  twoSigma->SetFillColor(kYellow);
-  twoSigma->SetFillStyle(1001);
-
-  expected->SetMarkerColor(kBlack);
-  expected->SetMarkerStyle(kOpenCircle);
-  expected->SetMarkerSize(1.0);
-  expected->SetLineColor(kBlack);
-  expected->SetLineWidth(2);
  
-  mg->Add(twoSigma);
-  mg->Add(oneSigma);
-  mg->Add(expected);
-
-  mg->Draw("a2");  
-  expected->Draw("pSAME");
-
-  TH1F* hT = new TH1F("hT", "", 10, 0, 10);
-  for(int k = 1; k <= hT->GetNbinsX(); k++){
-    int approx = int(expY[k-1]*10);
-    hT->SetBinContent(k, approx/10.   );
-  }
-  hT->SetMarkerSize(2.);
-  hT->Draw("TEXT0SAME");
-
-  TF1 *line = new TF1("line","1",0,10);
-  line->SetLineColor(kRed);
-  line->SetLineWidth(2);
-
-  line->Draw("SAME");
-
-  TF1 *lineML = new TF1("lineML","2.4",0,10);
-  lineML->SetLineColor(kBlue);
-  lineML->SetLineStyle(kDashed);
-  lineML->SetLineWidth(3);
-
-  lineML->Draw("SAME");
-
-  TF1 *lineTTH = new TF1("lineTTH","4.1",0,10);
-  lineTTH->SetLineColor(kMagenta);
-  lineTTH->SetLineStyle(kDashed);
-  lineTTH->SetLineWidth(3);
-
-  lineTTH->Draw("SAME");
-
-  c1->cd();
-  gPad->Modified();
-  mg->GetXaxis()->Set(10,0,10);
-
-  //mg->GetXaxis()->SetRange(-1,11);
-
-  for( int b = 0; b < nBins; b++){
-    mg->GetXaxis()->SetBinLabel(b+1, categories[b].c_str() );
-  }
-
-  mg->GetYaxis()->SetTitleOffset(0.97);
-  mg->SetMinimum(0.8);
-  mg->SetMaximum( 50);
-  mg->GetXaxis()->SetTitle("");
-  mg->GetYaxis()->SetTitle("95% CL upper limit on #mu = #sigma/#sigma_{SM}");
-
-  leg->AddEntry( lineTTH, "HIG-13-019", "L");
-  leg->AddEntry( lineML,  "HIG-13-020", "L");
-  leg->Draw();
-
-  TPaveText *pt = new TPaveText(0.106811,0.155594,0.407121,0.286713,"brNDC");
-  pt->SetFillStyle(0);
-  pt->SetBorderSize(0);
-  pt->SetFillColor(10);
-  pt->SetTextSize(0.04);
-  pt->SetTextAlign(11);
-  pt->AddText(Form("Comb: #mu < %.1f at 95%% CL", expY[categories.size()-1]))->SetTextColor(kRed);
-  pt->AddText(Form("(SL: #mu < %.1f)", expY[categories.size()-3]))->SetTextColor(kBlack);
-  pt->AddText(Form("(DL: #mu < %.1f)", expY[categories.size()-2]))->SetTextColor(kBlack);
-
-  //pt->Draw();
-
-  //c1->Modified();
-  //c1->Draw();
-
-  TLine* del = new TLine(6., 50., 6., 0. );
-  del->SetLineWidth(3);
-  del->SetLineStyle(kSolid);
-  del->SetLineColor(kBlack);
-  del->Draw("SAME");
-
-  TLine* del_ = new TLine(5., 50., 5., 0. );
-  del_->SetLineWidth(2);
-  del_->SetLineStyle(kDotted);
-  del_->SetLineColor(kBlack);
-  del_->Draw("SAME");
-
-  TLine* del2 = new TLine(9., 50., 9., 0. );
-  del2->SetLineWidth(3);
-  del2->SetLineStyle(kSolid);
-  del2->SetLineColor(kBlack);
-  del2->Draw("SAME");
-
-  TLine* del2_ = new TLine(8., 50., 8., 0. );
-  del2_->SetLineWidth(2);
-  del2_->SetLineStyle(kDotted);
-  del2_->SetLineColor(kBlack);
-  del2_->Draw("SAME");
-
-  if(1){
-    c1->SaveAs("Limits.png");
-    c1->SaveAs("Limits.pdf");
-  }
-
-}
-
-
-
-
-
-
-
-void plot_category(string type = "SL", 
-		   string cat  = "cat1",
-		   string header = "Cat 1",
-		   string fname  = ""
-		   ){
-  
   gStyle->SetOptStat(0);
   gStyle->SetTitleFillColor(0);
   gStyle->SetCanvasBorderMode(0);
@@ -1119,7 +1049,6 @@ void plot_category(string type = "SL",
   gStyle->SetTitleStyle(0);
   gStyle->SetTitleOffset(1.3,"y");
 
-
   TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
   c1->SetGrid(0,0);
   c1->SetFillStyle(4000);
@@ -1127,419 +1056,291 @@ void plot_category(string type = "SL",
   c1->SetTicky();
   c1->SetObjectStat(0);
 
-  TLegend* leg = new TLegend(0.52,0.50,0.77,0.88,NULL,"brNDC");
+
+  TLegend* leg = new TLegend(0.52,0.44,0.77,0.90,NULL,"brNDC");
   leg->SetFillStyle(0);
   leg->SetBorderSize(0);
   leg->SetFillColor(10);
   leg->SetTextSize(0.04); 
+  leg->SetHeader(category);
 
-  THStack* aStack = new THStack("aStack","Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1};  L_{S}/(L_{S}+L_{B}) ; events ");
+  //TF1* xsec6J = new TF1("xsec6J",Form("TMath::Landau(x,%f*7.61581e+01 ,%f*1.89245e+01)", fact1, fact2), 20, 500);
+  //TF1* xsec5J = new TF1("xsec5J",Form("TMath::Landau(x,%f*7.40196e+01 ,%f*1.80142e+01)", fact1, fact2), 20, 500); 
+  //TF1* xsec = 
+  //( (string(category.Data())).find("cat2")!=string::npos || 
+  //  (string(category.Data())).find("cat3")!=string::npos ||
+  //  (string(category.Data())).find("cat4")!=string::npos ) ?  xsec5J : xsec6J;
+  
+  TF1* xsec = new TF1("xsec",Form("x^(-%f)", fact1 ), 20, 500);
+
+  string version = (string(fname.Data())).find("SL")!=string::npos ? "_v1" : "_v1";
+  cout << "Doing version " << version << " and category " << category << endl;
+
+  THStack* aStack = new THStack("aStack","Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events");
+  TH1F* hMass     = new TH1F   ("hMass", "Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
+  TH1F* hTTH      = new TH1F("hTTH","Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
+  TH1F* hTTV      = new TH1F("hTTV","Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
+  TH1F* hTT       = new TH1F("hTT", "Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
+  TH1F* hTmp      = new TH1F("hTmp", "", 500,0,500);
+
+  TH1F* hErr      = 0;
 
   vector<string> samples;
-  if( type.find("SL")!=string::npos ){
-    samples.push_back("SingleT");
-    samples.push_back("TTV");
-    samples.push_back("TTJetsHFbb");
-    samples.push_back("TTJetsHFb");
-    samples.push_back("TTJetsLF");
-    samples.push_back("TTH125");
-  }
-  if( type.find("DL")!=string::npos ){
-    samples.push_back("SingleT");
-    samples.push_back("TTV");
-    samples.push_back("TTJetsHFbb");
-    samples.push_back("TTJetsHFb");
-    samples.push_back("TTJetsLF");
-    samples.push_back("TTH125");
-  }
-
-  TH1F* hS = 0;
-  TH1F* hErr = 0;
-
-  TFile* f = TFile::Open((type+"_New.root").c_str());
-  if(f==0 || f->IsZombie() ) return;
-
-  for(unsigned int sample = 0; sample < samples.size(); sample++){
-
-    cout << "Doing " << samples[sample] << endl;
-
+  samples.push_back("TTJetsBB");
+  samples.push_back("TTJetsBJ");
+  samples.push_back("TTJetsJJ");
+  samples.push_back("TTV");
+  samples.push_back("SingleT");
+  samples.push_back("DiBoson");
+  samples.push_back("EWK");
+  samples.push_back("TTH125");
   
-    TH1F* h = (TH1F*)f->Get((type+"_"+cat+"/"+samples[sample]).c_str());
-    if( h==0 ){
-      cout << (type+"_"+cat+"/"+samples[sample]) << " not found" << endl;
+
+  for( unsigned int s = 0 ; s < samples.size(); s++){
+
+    string sample = samples[s];
+
+    TCut sample_cut(cut.c_str());
+    
+    int color;
+    if( sample.find("TTJetsBB")!=string::npos ){
+      sample = "TTJets";
+      sample_cut = sample_cut && TCut("nSimBs>2 && nMatchSimBs>=2");
+      color = 16;
+    }
+    if( sample.find("TTJetsBJ")!=string::npos ){
+      sample = "TTJets";
+      sample_cut = sample_cut && TCut("nSimBs>2 && nMatchSimBs<2");
+      color = 17;
+    }
+    if( sample.find("TTJetsJJ")!=string::npos ){
+      sample = "TTJets";
+      sample_cut = sample_cut && TCut("nSimBs==2");
+      color = 18;
+    }
+
+    TFile* f = TFile::Open(("MEAnalysisNew_MHscan_"+string(fname.Data())+"_nominal"+version+"_"+sample+".root").c_str());
+    //TFile* f = TFile::Open("../bin/root/MEAnalysisNew.root");
+    if(f==0 || f->IsZombie()){
+      cout << "Missing " << sample << " file" << endl;
       continue;
     }
-    cout << "Events = $" << h->Integral() << " \\pm " << (h->GetEntries()>0 ? sqrt(h->GetEntries())*h->Integral()/h->GetEntries() : 0.0 ) << " $" << endl;
+    else{
+      cout << "Doing sample " << sample << endl;
+    }
 
-    if(samples[sample].find("TTH125") == string::npos){
-      if( hErr==0 ){
-	hErr = (TH1F*)h->Clone("hErr");
-	hErr->Reset();
-	leg->AddEntry(hErr, "MC unc. (stat.)", "L");
+    TH1F* hMass_s = (TH1F*)hMass->Clone(("hMass_"+sample).c_str());
+    hMass_s->Reset();
+    hMass_s->Sumw2();
+
+    TTree* tFull = (TTree*)f->Get("tree");
+    TFile* dummy = new TFile("dummy.root","RECREATE");
+    TTree* t = (TTree*)tFull->CopyTree( sample_cut );
+
+    float p_vsMH_s[999];
+    float p_tt_bb [999];
+    int nPermut_s;
+    int nTotInteg_s;
+    int nMassPoints;
+    float mH_scan[999];
+    int perm_to_gen_s[999];
+    float weight;
+
+    t->SetBranchAddress("p_vsMH_s",     p_vsMH_s);
+    t->SetBranchAddress("p_tt_bb",      p_tt_bb);
+    t->SetBranchAddress("nPermut_s",    &nPermut_s);
+    t->SetBranchAddress("nTotInteg_s",  &nTotInteg_s);
+    t->SetBranchAddress("nMassPoints",  &nMassPoints);
+    t->SetBranchAddress("mH_scan",      mH_scan);
+    t->SetBranchAddress("weight",       &weight);
+    t->SetBranchAddress("perm_to_gen_s",perm_to_gen_s);
+    
+    Long64_t nentries = t->GetEntries(); 
+    cout << "Total entries: " << nentries << endl;
+
+    int counter       = 0;
+    int counterQuarks = 0;
+    int counterMatch  = 0;
+
+    for (Long64_t i = 0; i < nentries ; i++){
+
+      t->GetEntry(i);
+      counter++;
+
+      hTmp->Reset();
+
+      float perm_prob [nPermut_s];
+      float perm_match[nPermut_s];      
+      for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){
+	perm_prob [perm_it] = 0.;
+	perm_match[perm_it] = 0;
       }
-      hErr->Add( h, 1.0);
-    }
-   
-    if( samples[sample].find("TTH125") != string::npos ){
-      hS = (TH1F*)h->Clone("hS");
-      hS->Reset();
-      hS->Add(h,5.0);
-      hS->SetLineWidth(3);
-      hS->SetLineStyle(kDashed);
-      hS->SetLineColor(kRed);
 
-      h->SetLineColor( kRed );
-      h->SetFillColor( kRed );
-      h->SetFillStyle( 3002 );
-      leg->AddEntry(h, "t#bar{t}H", "F");
-    }
-    if( samples[sample].find("TTJetsHFbb") != string::npos ){
-      leg->AddEntry(h, "t#bar{t} + bb", "F");
-      h->SetLineColor( 16 );
-      h->SetFillColor( 16 );
-    }
-    else if( samples[sample].find("TTJetsHFb") != string::npos ){
-      leg->AddEntry(h, "t#bar{t} + b", "F");
-      h->SetLineColor( 17 );
-      h->SetFillColor( 17 );
-    }
-    if( samples[sample].find("TTJetsLF") != string::npos ){
-      leg->AddEntry(h, "t#bar{t} + jj", "F");
-      h->SetLineColor( 18 );
-      h->SetFillColor( 18 );
-    }    
-    if( samples[sample].find("SingleT") != string::npos ){
-      h->SetLineColor( kMagenta );
-      h->SetFillColor( kMagenta );
-      leg->AddEntry(h, "Single top", "F");
-    }
-    if( samples[sample].find("EWK") != string::npos ){
-      h->SetLineColor( kGreen );
-      h->SetFillColor( kGreen );
-      leg->AddEntry(h, "V+jets", "F");
-    }
-    if( samples[sample].find("DiBoson") != string::npos ){
-      h->SetLineColor( kYellow );
-      h->SetFillColor( kYellow );
-      leg->AddEntry(h, "VV", "F");
-    }
-    if( samples[sample].find("TTV") != string::npos ){
-      h->SetLineColor( 30 );
-      h->SetFillColor( 30 );
-      leg->AddEntry(h, "t#bar{t}V", "F");
+      int quarks = 0;
+      for(int mH_it = 0; mH_it<nMassPoints; mH_it++){
+	float mH =  mH_scan[mH_it];
+	for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){
+	  float ME_prob = p_vsMH_s[mH_it*nPermut_s + perm_it];
+	  float bb_prob = useBTag ? p_tt_bb[perm_it] : 1.0;
+	  float norm    = normXSec ? 1./xsec->Eval( mH ) : 1.0;
+	  int match     = perm_to_gen_s[perm_it];
+
+	  double p =  ME_prob*bb_prob*norm;
+
+	  perm_prob [perm_it] += p;
+	  perm_match[perm_it] = match;
+	  
+	  if( match == match1 || match == match2 ) quarks++;
+
+	  hTmp->Fill( mH, p );
+	}
+      }
+
+      pair<double,double> bestMass = getMaxValue(hTmp);
+      double mass = bestMass.first;
+      //cout << "Ev." << i << " => mass=" << mass << endl;
+
+      float maxP = 0.;
+      int   maxM = 0;
+      for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){
+	if(perm_prob [perm_it] > maxP ){
+	  maxP = perm_prob [perm_it];
+	  maxM = perm_match[perm_it];
+	}
+      }
+      
+      if(quarks>0){
+	counterQuarks++;
+	if( maxM%100 == match3 || maxM == match4 ){
+	  counterMatch++;
+	  //hMass_s->Fill(mass, weight*lumiScale);
+	}
+	//else
+	  //hMass_s->Fill(mass, weight*lumiScale);
+      }
+
+      hMass_s->Fill(mass, weight*lumiScale);
     }
 
+    cout << "Total: " << counter << endl;
+    cout << "All quarks in acceptance: " << counterQuarks << endl;
+    cout << "Max permutation is correct: " << counterMatch << endl;
+    cout << " ==> acc. = " << (counter>0 ? float(counterQuarks)/float(counter) : 0.) << endl;
+    cout << " ==> eff. = " << (counterQuarks>0 ? float(counterMatch)/float(counterQuarks) : 0. ) << endl;
 
-    aStack->Add( h );
+    if( hErr==0 ){
+      hErr = (TH1F*)hMass_s->Clone("hErr");
+      hErr->Reset();
+      leg->AddEntry(hErr, "MC unc. (stat.)", "L");
+    }
+    if( sample.find("TTH")==string::npos ) hErr->Add( hMass_s, 1.0);
+
+    if( sample.find("TTJets")!=string::npos ){
+      hMass_s->SetFillColor(color);
+      if(color==16)
+	leg->AddEntry(hMass_s, "t#bar{t} + bb", "F");
+      if(color==17)
+	leg->AddEntry(hMass_s, "t#bar{t} + b", "F");
+      if(color==18)
+	leg->AddEntry(hMass_s, "t#bar{t} + jj", "F");
+      hTT->Add(hMass_s, 1.0);
+    }
+    if( sample.find("TTH")!=string::npos ){
+      hMass_s->SetFillColor(kRed);
+      hTTH->Add(hMass_s, 1.0);
+      leg->AddEntry(hMass_s, "t#bar{t}H", "F");
+    }
+    if( sample.find("TTV")!=string::npos ){
+      hMass_s->SetFillColor(kBlue);
+      hTTV->Add(hMass_s, 1.0);
+      leg->AddEntry(hMass_s, "t#bar{t}V", "F");
+    }
+    if( sample.find("SingleT")!=string::npos ){
+      hMass_s->SetFillColor(kMagenta);
+      leg->AddEntry(hMass_s, "Single top", "F");
+    }
+    if( sample.find("DiBoson")!=string::npos ){
+      hMass_s->SetFillColor(kYellow);
+      leg->AddEntry(hMass_s, "VV", "F");
+    }
+    if( sample.find("EWK")!=string::npos ){
+      hMass_s->SetFillColor(kGreen);
+      leg->AddEntry(hMass_s, "V+jets", "F");
+    }
+
+    cout << "Adding " << hMass_s->Integral() << " weighted events to the stack" << endl;
+    aStack->Add( hMass_s );
+
   }
 
-  if(hErr==0 || hS==0) return;
-
   hErr->GetYaxis()->SetTitle("Events");
-  if(type.find("SL")!=string::npos) 
-    //hErr->GetXaxis()->SetTitle("f_{ttH} / ( f_{ttH} + f_{ttbb} + f_{ttjj} )");
-    hErr->GetXaxis()->SetTitle("P_{s/b}(y)");
-  else
-    //hErr->GetXaxis()->SetTitle("f_{ttH} / ( f_{ttH} + f_{ttbb} )");
-    hErr->GetXaxis()->SetTitle("P_{s/b}(y)");
+  hErr->GetXaxis()->SetTitle("M_{H} estimator [GeV]");
   hErr->SetTitle("Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}");
   hErr->SetTitleSize  (0.04,"X");
   hErr->SetTitleOffset(0.95,"X");
-  float max =  hErr->GetMaximum()*1.35;
+  float max =  hErr->GetMaximum()*1.45;
   hErr->GetYaxis()->SetRangeUser(0., max );
   hErr->SetLineColor(kBlack);
   hErr->Draw("HISTE1");
+
   aStack->Draw("HISTSAME");
-  leg->SetHeader( header.c_str() );
-  leg->AddEntry(hS, "signal x 5", "L");
-  hS->Draw("HISTSAME");
+
+  hTTH->SetLineWidth(3);
+  hTTH->SetLineColor(kRed);
+  hTTH->SetLineStyle(kDashed);
+  hTTH->SetFillColor(kRed);
+  hTTH->SetFillStyle(3004);
+  hTTH->Scale(5.0);
+  hTTH->Draw("HISTSAME");
+  hTTV->SetLineWidth(3);
+  hTTV->SetLineColor(kBlue);
+  hTTV->SetLineStyle(kDashed);
+  hTTV->SetFillColor(kBlue);
+  hTTV->SetFillStyle(3005);
+  hTTV->Scale(5.0);
+  hTTV->Draw("HISTSAME");
   hErr->Draw("HISTE1SAME");
-  leg->Draw();
 
-  TLine* line = new TLine(hErr->GetBinLowEdge(3), max , hErr->GetBinLowEdge(3), 0.);
-  line->SetLineWidth(4);
-  line->SetLineStyle(kSolid);
-  line->SetLineColor(kBlack);
-  //if(type.find("SL")!=string::npos) 
-  line->Draw("SAME");
+  leg->AddEntry(hTTH, "t#bar{t}H x 5", "L");
+  leg->AddEntry(hTTV, "t#bar{t}V x 5", "L");
 
-  TPaveText *pt1 = new TPaveText(0.101, 0.839161, 0.198142, 0.895105,"brNDC");
-  pt1->SetFillStyle(1001);
-  pt1->SetBorderSize(0);
-  pt1->SetFillColor(kWhite);
-  pt1->SetTextSize(0.03); 
-  pt1->AddText("P_{b/j}<0.5");
+  if(plotShapes){
+    hTT->SetLineWidth(3);
+    hTT->SetLineColor(kBlack);
+    hTT->SetLineStyle(kSolid);
+    //hTT->SetFillColor(16);
+    //hTT->SetFillStyle(3005);
 
-  TPaveText *pt2 = new TPaveText(0.191, 0.839161, 0.294118, 0.895105,"brNDC");
-  pt2->SetFillStyle(1001);
-  pt2->SetBorderSize(0);
-  pt2->SetFillColor(kWhite);
-  pt2->SetTextSize(0.03); 
-  pt2->AddText("P_{b/j}>0.5");
- 
-  //if(   type.find("SL")!=string::npos ){
-  pt1->Draw();
-  pt2->Draw();
-  //}
+    hTTH->Scale(1./hTTH->Integral());
+    hTTV->Scale(1./hTTV->Integral());
+    hTT ->Scale(1./hTT ->Integral());
 
-  cout << "Signal = " << hS->Integral()/5. << endl;
-
-  if(0){
-    c1->SaveAs(  (fname+"_AN"+"_New.png").c_str() );
-    c1->SaveAs(  (fname+"_AN"+"_New.pdf").c_str() );
-  }
-
-}
-
-
-void plotAll(){
-
-
-  
-  plot_category( "SL", 
-		   "cat1",
-		   "Cat1 (4b2j W-tag)",
-		   "Plot_SL_Cat1"
-		   );
-  
-  
-  plot_category( "SL", 
-		   "cat2",
-		   "Cat2 (4b2j !W-tag)",
-		   "Plot_SL_Cat2"
-		   );
-  
-
-  plot_category( "SL", 
-		   "cat3",
-		   "Cat3 (4b1j cs-tag)",
-		   "Plot_SL_Cat3"
-		   );
-  
-
-  plot_category( "SL", 
-		   "cat4",
-		   "Cat4 (4b1j !cs-tag)",
-		   "Plot_SL_Cat4"
-		   );
-  
-
-  plot_category( "SL", 
-		   "cat5",
-		   "Cat5 (4b3j)",
-		   "Plot_SL_Cat5"
-		   );
-  
-  
-  plot_category( "DL", 
-		   "cat6",
-		   "Cat6 (4b), tight",
-		   "Plot_DL_Cat6"
-		   );
-  
-  plot_category( "DL", 
-		   "cat7",	
-		   "Cat7 (4b), loose",
-		   "Plot_DL_Cat7"
-		   );
-    
-  
-
-}
-
-
-
-
-
-void plot_syst(string type = "SL",
-	       string cat  = "cat1",
-	       string proc = "TTH125",
-	       string syst = "csv",
-	       string header = "Cat 1",
-	       string fname  = ""
-	       ){
-  
-  gStyle->SetOptStat(0);
-  gStyle->SetTitleFillColor(0);
-  gStyle->SetCanvasBorderMode(0);
-  gStyle->SetCanvasColor(0);
-  gStyle->SetPadBorderMode(0);
-  gStyle->SetPadColor(0);
-  gStyle->SetTitleFillColor(0);
-  gStyle->SetTitleBorderSize(0);
-  gStyle->SetTitleH(0.07);
-  gStyle->SetTitleFontSize(0.1);
-  gStyle->SetTitleStyle(0);
-  gStyle->SetTitleOffset(1.3,"y");
-
-  TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
-  c1->SetGrid(0,0);
-  c1->SetFillStyle(4000);
-  c1->SetFillColor(10);
-  c1->SetTicky();
-  c1->SetObjectStat(0);
-
-  TLegend* leg = new TLegend(0.35913,0.695804,0.609907,0.884615,NULL,"brNDC");
-  leg->SetFillStyle(0);
-  leg->SetBorderSize(0);
-  leg->SetFillColor(10);
-  leg->SetTextSize(0.04); 
-
-  vector<string> samples;
-  samples.push_back( proc );
-
-  TH1F* hN = 0;
-  TH1F* hU = 0;
-  TH1F* hD = 0;
-
-  TFile* f = TFile::Open((type+".root").c_str());
-  if(f==0 || f->IsZombie() ) return;
-
-  for(unsigned int sample = 0; sample < samples.size(); sample++){
-
-    cout << "Doing " << samples[sample] << endl;
-
-  
-    hN = (TH1F*)((TH1F*)f->Get((type+"_"+cat+"/"+samples[sample]).c_str()))->Clone("hN");
-    if( hN==0 ){
-      cout << (type+"_"+cat+"/"+samples[sample]) << " not found" << endl;
-      continue;
-    }
-    else{
-      cout << hN->Integral() << endl;
-    }
-
-    hU = (TH1F*)((TH1F*)f->Get((type+"_"+cat+"/"+samples[sample]+"_"+syst+"Up").c_str()))->Clone("hU");
-    if( hU==0 ){
-      cout << (type+"_"+cat+"/"+samples[sample]+"_"+syst+"Up") << " not found" << endl;
-      continue;
-    }
-    else{
-      cout << hU->Integral() << endl;
-    }
-
-    hD = (TH1F*)((TH1F*)f->Get((type+"_"+cat+"/"+samples[sample]+"_"+syst+"Down").c_str()))->Clone("hD");
-    if( hD==0 ){
-      cout << (type+"_"+cat+"/"+samples[sample]+"_"+syst+"Down") << " not found" << endl;
-      continue;
-    }
-    else{
-      cout << hD->Integral() << endl;
-    }
-
-  }
-
-  if(hN==0 || hU==0 || hD==0){
-    cout << "Return!" << endl;
-    return;
-  }
-
-  hN->SetLineWidth(3);
-  hN->SetLineColor(kBlack);
-  hN->SetLineStyle(kSolid);
-
-  hU->SetLineWidth(3);
-  hU->SetLineColor(kRed);
-  hU->SetLineStyle(kDashed);
-
-  hD->SetLineWidth(3);
-  hD->SetLineColor(kBlue);
-  hD->SetLineStyle(kDashed);
-
-
-  if(hU->GetMaximum()>hD->GetMaximum()){
-    hU->SetMinimum(0.0);
-    hU->GetYaxis()->SetTitle("Events");
-    if(type.find("SL")!=string::npos) 
-      hU->GetXaxis()->SetTitle("P_{s/b}(y)");
-    else
-      hU->GetXaxis()->SetTitle("P_{s/b}(y)");
-    hU->SetTitle("Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}");
-    hU->SetTitleSize  (0.04,"X");
-    hU->SetTitleOffset(0.95,"X");
-    hU->Draw("HISTE");
-    hN->Draw("HISTSAME");
-    hD->Draw("HISTESAME");
+    hTTH->GetYaxis()->SetRangeUser(0., hTTH->GetMaximum()*1.45);
+    hTTH->Draw("HIST");
+    hTTV->Draw("HISTSAME");
+    hTT->Draw("HISTSAME");
+    leg->Clear();
+    leg->AddEntry(hTTH, "t#bar{t}H",     "F");
+    leg->AddEntry(hTTV, "t#bar{t}V",     "F");
+    leg->AddEntry(hTT,  "t#bar{t}+jets", "F");
+    leg->Draw();
   }
   else{
-    hD->SetMinimum(0.0);
-    hD->GetYaxis()->SetTitle("Events");
-    if(type.find("SL")!=string::npos) 
-      hD->GetXaxis()->SetTitle("P_{s/b}(y)");
+    leg->Draw();
+  }
+
+  //hTmp->Draw();
+
+
+
+  if(0){
+    if(plotShapes)
+      c1->SaveAs("mass_estimator_shapes_"+fname+".png");
     else
-      hD->GetXaxis()->SetTitle("P_{s/b}(y)");
-    hD->SetTitle("Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}");
-    hD->SetTitleSize  (0.04,"X");
-    hD->SetTitleOffset(0.95,"X");
-    hD->Draw("HISTE");
-    hN->Draw("HISTSAME");
-    hU->Draw("HISTESAME");
+      c1->SaveAs("mass_estimator_spectrum_"+fname+".png");
   }
 
-  leg->SetHeader(header.c_str());
-  leg->AddEntry( hN, (syst+" nominal").c_str(), "L");
-  leg->AddEntry( hU, (syst+" up").c_str(),      "L");
-  leg->AddEntry( hD, (syst+" down").c_str(),    "L");
-
-  leg->Draw();
-
-  if(1){
-    c1->SaveAs(  ("Plots/"+fname+"_AN"+".png").c_str() );
-    c1->SaveAs(  ("Plots/"+fname+"_AN"+".pdf").c_str() );
-  }
-
-}
-
-
-
-void plot_systAll(){
-
-  plot_syst("SL", "cat1", "TTH125", "csv", "Cat 1, ttH", "Plots_SL_Cat1_TTH_csv");
-  plot_syst("SL", "cat2", "TTH125", "csv", "Cat 2, ttH", "Plots_SL_Cat2_TTH_csv");
-  plot_syst("SL", "cat3", "TTH125", "csv", "Cat 3, ttH", "Plots_SL_Cat3_TTH_csv");
-  plot_syst("SL", "cat4", "TTH125", "csv", "Cat 4, ttH", "Plots_SL_Cat4_TTH_csv");
-  plot_syst("SL", "cat5", "TTH125", "csv", "Cat 5, ttH", "Plots_SL_Cat5_TTH_csv");
-  plot_syst("DL", "cat6", "TTH125", "csv", "Cat 6, ttH", "Plots_DL_Cat6_TTH_csv");
-  plot_syst("DL", "cat7", "TTH125", "csv", "Cat 7, ttH", "Plots_DL_Cat7_TTH_csv");
-
-  plot_syst("SL", "cat1", "TTJetsHF", "csv", "Cat 1, ttbb", "Plots_SL_Cat1_TTJetsHF_csv");
-  plot_syst("SL", "cat2", "TTJetsHF", "csv", "Cat 2, ttbb", "Plots_SL_Cat2_TTJetsHF_csv");
-  plot_syst("SL", "cat3", "TTJetsHF", "csv", "Cat 3, ttbb", "Plots_SL_Cat3_TTJetsHF_csv");
-  plot_syst("SL", "cat4", "TTJetsHF", "csv", "Cat 4, ttbb", "Plots_SL_Cat4_TTJetsHF_csv");
-  plot_syst("SL", "cat5", "TTJetsHF", "csv", "Cat 5, ttbb", "Plots_SL_Cat5_TTJetsHF_csv");
-  plot_syst("DL", "cat6", "TTJetsHF", "csv", "Cat 6, ttbb", "Plots_DL_Cat6_TTJetsHF_csv");
-  plot_syst("DL", "cat7", "TTJetsHF", "csv", "Cat 7, ttbb", "Plots_DL_Cat7_TTJetsHF_csv");
-
-  plot_syst("SL", "cat1", "TTJetsLF", "csv", "Cat 1, ttjj", "Plots_SL_Cat1_TTJetsLF_csv");
-  plot_syst("SL", "cat2", "TTJetsLF", "csv", "Cat 2, ttjj", "Plots_SL_Cat2_TTJetsLF_csv");
-  plot_syst("SL", "cat3", "TTJetsLF", "csv", "Cat 3, ttjj", "Plots_SL_Cat3_TTJetsLF_csv");
-  plot_syst("SL", "cat4", "TTJetsLF", "csv", "Cat 4, ttjj", "Plots_SL_Cat4_TTJetsLF_csv");
-  plot_syst("SL", "cat5", "TTJetsLF", "csv", "Cat 5, ttjj", "Plots_SL_Cat5_TTJetsLF_csv");
-  plot_syst("DL", "cat6", "TTJetsLF", "csv", "Cat 6, ttjj", "Plots_DL_Cat6_TTJetsLF_csv");
-  plot_syst("DL", "cat7", "TTJetsLF", "csv", "Cat 7, ttjj", "Plots_DL_Cat7_TTJetsLF_csv");
-
-  plot_syst("SL", "cat1", "TTH125", "JEC", "Cat 1, ttH", "Plots_SL_Cat1_TTH_JEC");
-  plot_syst("SL", "cat2", "TTH125", "JEC", "Cat 2, ttH", "Plots_SL_Cat2_TTH_JEC");
-  plot_syst("SL", "cat3", "TTH125", "JEC", "Cat 3, ttH", "Plots_SL_Cat3_TTH_JEC");
-  plot_syst("SL", "cat4", "TTH125", "JEC", "Cat 4, ttH", "Plots_SL_Cat4_TTH_JEC");
-  plot_syst("SL", "cat5", "TTH125", "JEC", "Cat 5, ttH", "Plots_SL_Cat5_TTH_JEC");
-  plot_syst("DL", "cat6", "TTH125", "JEC", "Cat 6, ttH", "Plots_DL_Cat6_TTH_JEC");
-  plot_syst("DL", "cat7", "TTH125", "JEC", "Cat 7, ttH", "Plots_DL_Cat7_TTH_JEC");
-
-  plot_syst("SL", "cat1", "TTJetsHF", "JEC", "Cat 1, ttbb", "Plots_SL_Cat1_TTJetsHF_JEC");
-  plot_syst("SL", "cat2", "TTJetsHF", "JEC", "Cat 2, ttbb", "Plots_SL_Cat2_TTJetsHF_JEC");
-  plot_syst("SL", "cat3", "TTJetsHF", "JEC", "Cat 3, ttbb", "Plots_SL_Cat3_TTJetsHF_JEC");
-  plot_syst("SL", "cat4", "TTJetsHF", "JEC", "Cat 4, ttbb", "Plots_SL_Cat4_TTJetsHF_JEC");
-  plot_syst("SL", "cat5", "TTJetsHF", "JEC", "Cat 5, ttbb", "Plots_SL_Cat5_TTJetsHF_JEC");
-  plot_syst("DL", "cat6", "TTJetsHF", "JEC", "Cat 6, ttbb", "Plots_DL_Cat6_TTJetsHF_JEC");
-  plot_syst("DL", "cat7", "TTJetsHF", "JEC", "Cat 7, ttbb", "Plots_DL_Cat7_TTJetsHF_JEC");
-
-  plot_syst("SL", "cat1", "TTJetsLF", "JEC", "Cat 1, ttjj", "Plots_SL_Cat1_TTJetsLF_JEC");
-  plot_syst("SL", "cat2", "TTJetsLF", "JEC", "Cat 2, ttjj", "Plots_SL_Cat2_TTJetsLF_JEC");
-  plot_syst("SL", "cat3", "TTJetsLF", "JEC", "Cat 3, ttjj", "Plots_SL_Cat3_TTJetsLF_JEC");
-  plot_syst("SL", "cat4", "TTJetsLF", "JEC", "Cat 4, ttjj", "Plots_SL_Cat4_TTJetsLF_JEC");
-  plot_syst("SL", "cat5", "TTJetsLF", "JEC", "Cat 5, ttjj", "Plots_SL_Cat5_TTJetsLF_JEC");
-  plot_syst("DL", "cat6", "TTJetsLF", "JEC", "Cat 6, ttjj", "Plots_DL_Cat6_TTJetsLF_JEC");
-  plot_syst("DL", "cat7", "TTJetsLF", "JEC", "Cat 7, ttjj", "Plots_DL_Cat7_TTJetsLF_JEC");
-
+  cout << "Remove dummy file" << endl;
+  gSystem->Exec("rm dummy.root");
+  return;
 }

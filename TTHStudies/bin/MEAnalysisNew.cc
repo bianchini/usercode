@@ -46,7 +46,7 @@
 #define GENJETDR  0.3
 #define MAX_REEVAL_TRIES 3
 #define PI TMath::Pi()
-#define NMAXPERMUT 15
+#define NMAXPERMUT 30
 #define NMAXMASS   20
 #define NMAXJETS   10
 

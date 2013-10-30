@@ -1,0 +1,1338 @@
+#include <cstdlib>
+#include <iostream> 
+#include <fstream>
+#include <map>
+#include <string>
+#include <vector>
+
+#include "TMath.h"
+#include "TFile.h"
+#include "TTree.h"
+#include "TString.h"
+#include "TSystem.h"
+#include "TROOT.h"
+
+#include "TH1F.h"
+#include "TH2F.h"
+#include "TF1.h"
+#include "TF2.h"
+
+#include "TPaveText.h"
+#include "TCanvas.h"
+#include "TStyle.h"
+#include "TPad.h"
+#include "TList.h"
+#include "TCollection.h"
+#include "TObject.h"
+#include "TLegend.h"
+#include "THStack.h"
+#include "TCut.h"
+#include "TGraphAsymmErrors.h"
+#include "TGraphPainter.h"
+#include "TMultiGraph.h"
+#include "TArrayF.h"
+#include "TLine.h"
+
+
+
+
+void plot_category(string type = "SL", 
+		   string cat  = "cat1",
+		   string header = "Cat 1",
+		   string fname  = ""
+		   ){
+  
+  gStyle->SetOptStat(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetCanvasBorderMode(0);
+  gStyle->SetCanvasColor(0);
+  gStyle->SetPadBorderMode(0);
+  gStyle->SetPadColor(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetTitleBorderSize(0);
+  gStyle->SetTitleH(0.07);
+  gStyle->SetTitleFontSize(0.1);
+  gStyle->SetTitleStyle(0);
+  gStyle->SetTitleOffset(1.3,"y");
+
+
+  TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
+  c1->SetGrid(0,0);
+  c1->SetFillStyle(4000);
+  c1->SetFillColor(10);
+  c1->SetTicky();
+  c1->SetObjectStat(0);
+
+  TLegend* leg = new TLegend(0.52,0.50,0.77,0.88,NULL,"brNDC");
+  leg->SetFillStyle(0);
+  leg->SetBorderSize(0);
+  leg->SetFillColor(10);
+  leg->SetTextSize(0.04); 
+
+  THStack* aStack = new THStack("aStack","Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1};  L_{S}/(L_{S}+L_{B}) ; events ");
+
+  vector<string> samples;
+  if( type.find("SL")!=string::npos ){
+    samples.push_back("SingleT");
+    samples.push_back("TTV");
+    samples.push_back("TTJetsHFbb");
+    samples.push_back("TTJetsHFb");
+    samples.push_back("TTJetsLF");
+    samples.push_back("TTH125");
+  }
+  if( type.find("DL")!=string::npos ){
+    samples.push_back("SingleT");
+    samples.push_back("TTV");
+    samples.push_back("TTJetsHFbb");
+    samples.push_back("TTJetsHFb");
+    samples.push_back("TTJetsLF");
+    samples.push_back("TTH125");
+  }
+
+  TH1F* hS = 0;
+  TH1F* hErr = 0;
+
+  TFile* f = TFile::Open((type+"_New.root").c_str());
+  if(f==0 || f->IsZombie() ) return;
+
+  for(unsigned int sample = 0; sample < samples.size(); sample++){
+
+    cout << "Doing " << samples[sample] << endl;
+
+  
+    TH1F* h = (TH1F*)f->Get((type+"_"+cat+"/"+samples[sample]).c_str());
+    if( h==0 ){
+      cout << (type+"_"+cat+"/"+samples[sample]) << " not found" << endl;
+      continue;
+    }
+    cout << "Events = $" << h->Integral() << " \\pm " << (h->GetEntries()>0 ? sqrt(h->GetEntries())*h->Integral()/h->GetEntries() : 0.0 ) << " $" << endl;
+
+    if(samples[sample].find("TTH125") == string::npos){
+      if( hErr==0 ){
+	hErr = (TH1F*)h->Clone("hErr");
+	hErr->Reset();
+	leg->AddEntry(hErr, "MC unc. (stat.)", "L");
+      }
+      hErr->Add( h, 1.0);
+    }
+   
+    if( samples[sample].find("TTH125") != string::npos ){
+      hS = (TH1F*)h->Clone("hS");
+      hS->Reset();
+      hS->Add(h,5.0);
+      hS->SetLineWidth(3);
+      hS->SetLineStyle(kDashed);
+      hS->SetLineColor(kRed);
+
+      h->SetLineColor( kRed );
+      h->SetFillColor( kRed );
+      h->SetFillStyle( 3002 );
+      leg->AddEntry(h, "t#bar{t}H", "F");
+    }
+    if( samples[sample].find("TTJetsHFbb") != string::npos ){
+      leg->AddEntry(h, "t#bar{t} + bb", "F");
+      h->SetLineColor( 16 );
+      h->SetFillColor( 16 );
+    }
+    else if( samples[sample].find("TTJetsHFb") != string::npos ){
+      leg->AddEntry(h, "t#bar{t} + b", "F");
+      h->SetLineColor( 17 );
+      h->SetFillColor( 17 );
+    }
+    if( samples[sample].find("TTJetsLF") != string::npos ){
+      leg->AddEntry(h, "t#bar{t} + jj", "F");
+      h->SetLineColor( 18 );
+      h->SetFillColor( 18 );
+    }    
+    if( samples[sample].find("SingleT") != string::npos ){
+      h->SetLineColor( kMagenta );
+      h->SetFillColor( kMagenta );
+      leg->AddEntry(h, "Single top", "F");
+    }
+    if( samples[sample].find("EWK") != string::npos ){
+      h->SetLineColor( kGreen );
+      h->SetFillColor( kGreen );
+      leg->AddEntry(h, "V+jets", "F");
+    }
+    if( samples[sample].find("DiBoson") != string::npos ){
+      h->SetLineColor( kYellow );
+      h->SetFillColor( kYellow );
+      leg->AddEntry(h, "VV", "F");
+    }
+    if( samples[sample].find("TTV") != string::npos ){
+      h->SetLineColor( 30 );
+      h->SetFillColor( 30 );
+      leg->AddEntry(h, "t#bar{t}V", "F");
+    }
+
+
+    aStack->Add( h );
+  }
+
+  if(hErr==0 || hS==0) return;
+
+  hErr->GetYaxis()->SetTitle("Events");
+  if(type.find("SL")!=string::npos) 
+    //hErr->GetXaxis()->SetTitle("f_{ttH} / ( f_{ttH} + f_{ttbb} + f_{ttjj} )");
+    hErr->GetXaxis()->SetTitle("P_{s/b}(y)");
+  else
+    //hErr->GetXaxis()->SetTitle("f_{ttH} / ( f_{ttH} + f_{ttbb} )");
+    hErr->GetXaxis()->SetTitle("P_{s/b}(y)");
+  hErr->SetTitle("Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}");
+  hErr->SetTitleSize  (0.04,"X");
+  hErr->SetTitleOffset(0.95,"X");
+  float max =  hErr->GetMaximum()*1.35;
+  hErr->GetYaxis()->SetRangeUser(0., max );
+  hErr->SetLineColor(kBlack);
+  hErr->Draw("HISTE1");
+  aStack->Draw("HISTSAME");
+  leg->SetHeader( header.c_str() );
+  leg->AddEntry(hS, "signal x 5", "L");
+  hS->Draw("HISTSAME");
+  hErr->Draw("HISTE1SAME");
+  leg->Draw();
+
+  TLine* line = new TLine(hErr->GetBinLowEdge(3), max , hErr->GetBinLowEdge(3), 0.);
+  line->SetLineWidth(4);
+  line->SetLineStyle(kSolid);
+  line->SetLineColor(kBlack);
+  //if(type.find("SL")!=string::npos) 
+  line->Draw("SAME");
+
+  TPaveText *pt1 = new TPaveText(0.101, 0.839161, 0.198142, 0.895105,"brNDC");
+  pt1->SetFillStyle(1001);
+  pt1->SetBorderSize(0);
+  pt1->SetFillColor(kWhite);
+  pt1->SetTextSize(0.03); 
+  pt1->AddText("P_{b/j}<0.5");
+
+  TPaveText *pt2 = new TPaveText(0.191, 0.839161, 0.294118, 0.895105,"brNDC");
+  pt2->SetFillStyle(1001);
+  pt2->SetBorderSize(0);
+  pt2->SetFillColor(kWhite);
+  pt2->SetTextSize(0.03); 
+  pt2->AddText("P_{b/j}>0.5");
+ 
+  //if(   type.find("SL")!=string::npos ){
+  pt1->Draw();
+  pt2->Draw();
+  //}
+
+  cout << "Signal = " << hS->Integral()/5. << endl;
+
+  if(1){
+    c1->SaveAs(  (fname+"_AN"+"_New.png").c_str() );
+    c1->SaveAs(  (fname+"_AN"+"_New.pdf").c_str() );
+  }
+
+}
+
+
+void plotAll(){
+
+
+  
+  plot_category( "SL", 
+		   "cat1",
+		   "Cat1 (4b2j W-tag)",
+		   "Plot_SL_Cat1"
+		   );
+  
+  
+  plot_category( "SL", 
+		   "cat2",
+		   "Cat2 (4b2j !W-tag)",
+		   "Plot_SL_Cat2"
+		   );
+  
+
+  plot_category( "SL", 
+		   "cat3",
+		   "Cat3 (4b1j cs-tag)",
+		   "Plot_SL_Cat3"
+		   );
+  
+
+  plot_category( "SL", 
+		   "cat4",
+		   "Cat4 (4b1j !cs-tag)",
+		   "Plot_SL_Cat4"
+		   );
+  
+
+  plot_category( "SL", 
+		   "cat5",
+		   "Cat5 (4b3j)",
+		   "Plot_SL_Cat5"
+		   );
+  
+  
+  plot_category( "DL", 
+		   "cat6",
+		   "Cat6 (4b)",
+		   "Plot_DL_Cat6"
+		   );  
+
+}
+
+
+
+
+void plot_limit(){
+
+  gStyle->SetPaintTextFormat("g");
+
+  TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
+  c1->SetGrid(0,0);
+  c1->SetFillStyle(4000);
+  c1->SetFillColor(10);
+  c1->SetTicky();
+  c1->SetObjectStat(0);
+  c1->SetLogy(1);
+  
+  TLegend* leg = new TLegend(0.120743,0.153846,0.321981, 0.26049, NULL,"brNDC");
+  leg->SetBorderSize(0);
+  leg->SetTextSize(0.04);
+  leg->SetFillColor(0);
+
+
+  float X[]        = {0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5 };
+  float expY[]     = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  float expY1sL[]  = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  float expY1sH[]  = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  float expY2sL[]  = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  float expY2sH[]  = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+
+  float expXs[]  = {0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5};
+  float expYs[]  = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+
+
+  vector<string> categories;        vector<string> names;
+  categories.push_back("SL_cat1");  names.push_back("Cat 1");
+  categories.push_back("SL_cat2");  names.push_back("Cat 2");
+  categories.push_back("SL_cat3");  names.push_back("Cat 3");
+  categories.push_back("SL_cat4");  names.push_back("Cat 4");
+  categories.push_back("SL_cat5");  names.push_back("Cat 5");
+  categories.push_back("DL_cat6");  names.push_back("Cat 6"); 
+  categories.push_back("SL");       names.push_back("SL comb.");
+  //categories.push_back("DL_cat7");names.push_back();
+  categories.push_back("DL");       names.push_back("DL comb."); 
+  categories.push_back("COMB");     names.push_back("All comb.");
+
+  int nBins = categories.size();
+
+  for( int b = 0; b < nBins; b++){
+
+    TFile* f = TFile::Open(("higgsCombine"+categories[b]+".Asymptotic.mH120.root").c_str());
+    if( f==0 ) continue;
+    
+    Double_t r;
+    TTree* limit = (TTree*)f->Get("limit");
+    limit->SetBranchAddress("limit",&r);
+
+    for(int k = 0 ; k< limit->GetEntries() ; k++){
+      limit->GetEntry(k);
+      if(k==0) expY2sL[b] = r;
+      if(k==1) expY1sL[b] = r;
+      if(k==2) expY[b]    = r;
+      if(k==3) expY1sH[b] = r;
+      if(k==4) expY2sH[b] = r;
+    }
+
+
+    cout << categories[b] << ": r<" <<  expY[b] << " @ 95% CL" << endl;
+
+    expY1sH[b] = TMath::Abs(expY1sH[b]-expY[b]);
+    expY1sL[b] = TMath::Abs(expY1sL[b]-expY[b]);
+    expY2sH[b] = TMath::Abs(expY2sH[b]-expY[b]);
+    expY2sL[b] = TMath::Abs(expY2sL[b]-expY[b]);
+
+
+  }
+
+
+  TMultiGraph *mg = new TMultiGraph();
+  mg->SetTitle("Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}");
+
+  TGraphAsymmErrors* expected = new TGraphAsymmErrors(10, X, expY, expXs ,expXs,  expYs,   expYs);
+  TGraphAsymmErrors* oneSigma = new TGraphAsymmErrors(10, X, expY, expXs, expXs,  expY1sL, expY1sH);
+  TGraphAsymmErrors* twoSigma = new TGraphAsymmErrors(10, X, expY, expXs, expXs,  expY2sL, expY2sH);
+
+
+  oneSigma->SetMarkerColor(kBlack);
+  oneSigma->SetMarkerStyle(kOpenCircle);
+  oneSigma->SetFillColor(kGreen);
+  oneSigma->SetFillStyle(1001);
+
+  twoSigma->SetMarkerColor(kBlack);
+  twoSigma->SetMarkerStyle(kOpenCircle);
+  twoSigma->SetFillColor(kYellow);
+  twoSigma->SetFillStyle(1001);
+
+  expected->SetMarkerColor(kBlack);
+  expected->SetMarkerStyle(kOpenCircle);
+  expected->SetMarkerSize(1.0);
+  expected->SetLineColor(kBlack);
+  expected->SetLineWidth(2);
+ 
+  mg->Add(twoSigma);
+  mg->Add(oneSigma);
+  mg->Add(expected);
+
+  mg->Draw("a2");  
+  expected->Draw("pSAME");
+
+  TH1F* hT = new TH1F("hT", "", nBins, 0, nBins);
+  for(int k = 1; k <= hT->GetNbinsX(); k++){
+    int approx = int(expY[k-1]*10);
+    hT->SetBinContent(k, approx/10.   );
+  }
+  hT->SetMarkerSize(2.);
+  hT->Draw("TEXT0SAME");
+
+  TF1 *line = new TF1("line","1",0,nBins);
+  line->SetLineColor(kRed);
+  line->SetLineWidth(2);
+
+  line->Draw("SAME");
+
+  TF1 *lineML = new TF1("lineML","2.4",0,nBins);
+  lineML->SetLineColor(kBlue);
+  lineML->SetLineStyle(kDashed);
+  lineML->SetLineWidth(3);
+
+  lineML->Draw("SAME");
+
+  TF1 *lineTTH = new TF1("lineTTH","4.1",0,nBins);
+  lineTTH->SetLineColor(kMagenta);
+  lineTTH->SetLineStyle(kDashed);
+  lineTTH->SetLineWidth(3);
+
+  lineTTH->Draw("SAME");
+
+  c1->cd();
+  gPad->Modified();
+  mg->GetXaxis()->Set(nBins,0,nBins);
+
+  //mg->GetXaxis()->SetRange(-1,11);
+
+  for( int b = 0; b < nBins; b++){
+    mg->GetXaxis()->SetBinLabel(b+1, names[b].c_str() );
+  }
+
+  float maxY = 40;
+
+  mg->GetYaxis()->SetTitleOffset(0.97);
+  mg->SetMinimum(0.8);
+  mg->SetMaximum( maxY );
+  mg->GetXaxis()->SetTitle("");
+  mg->GetYaxis()->SetTitle("95% CL upper limit on #mu = #sigma/#sigma_{SM}");
+
+  leg->AddEntry( lineTTH, "HIG-13-019 (post-fit)", "L");
+  leg->AddEntry( lineML,  "HIG-13-020 (post-fit)", "L");
+  leg->Draw();
+
+  TPaveText *pt = new TPaveText(0.106811,0.155594,0.407121,0.286713,"brNDC");
+  pt->SetFillStyle(0);
+  pt->SetBorderSize(0);
+  pt->SetFillColor(10);
+  pt->SetTextSize(0.04);
+  pt->SetTextAlign(11);
+  pt->AddText(Form("Comb: #mu < %.1f at 95%% CL", expY[categories.size()-1]))->SetTextColor(kRed);
+  pt->AddText(Form("(SL: #mu < %.1f)", expY[categories.size()-3]))->SetTextColor(kBlack);
+  pt->AddText(Form("(DL: #mu < %.1f)", expY[categories.size()-2]))->SetTextColor(kBlack);
+
+  //pt->Draw();
+
+  //c1->Modified();
+  //c1->Draw();
+
+  TLine* del = new TLine(6., maxY, 6., 0. );
+  del->SetLineWidth(3);
+  del->SetLineStyle(kSolid);
+  del->SetLineColor(kBlack);
+  del->Draw("SAME");
+
+  TLine* del_ = new TLine(5., maxY, 5., 0. );
+  del_->SetLineWidth(2);
+  del_->SetLineStyle(kDotted);
+  del_->SetLineColor(kBlack);
+  //del_->Draw("SAME");
+
+  TLine* del2 = new TLine(8., maxY, 8., 0. );
+  del2->SetLineWidth(3);
+  del2->SetLineStyle(kSolid);
+  del2->SetLineColor(kBlack);
+  del2->Draw("SAME");
+
+  TLine* del2_ = new TLine(7., maxY, 7., 0. );
+  del2_->SetLineWidth(2);
+  del2_->SetLineStyle(kDotted);
+  del2_->SetLineColor(kBlack);
+  //del2_->Draw("SAME");
+
+  if(1){
+    c1->SaveAs("Limits.png");
+    c1->SaveAs("Limits.pdf");
+  }
+
+}
+
+
+void plot_syst(string type = "SL",
+	       string cat  = "cat1",
+	       string proc = "TTH125",
+	       string syst = "csv",
+	       string header = "Cat 1",
+	       string fname  = ""
+	       ){
+  
+  gStyle->SetOptStat(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetCanvasBorderMode(0);
+  gStyle->SetCanvasColor(0);
+  gStyle->SetPadBorderMode(0);
+  gStyle->SetPadColor(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetTitleBorderSize(0);
+  gStyle->SetTitleH(0.07);
+  gStyle->SetTitleFontSize(0.1);
+  gStyle->SetTitleStyle(0);
+  gStyle->SetTitleOffset(1.3,"y");
+
+  TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
+  c1->SetGrid(0,0);
+  c1->SetFillStyle(4000);
+  c1->SetFillColor(10);
+  c1->SetTicky();
+  c1->SetObjectStat(0);
+
+  TLegend* leg = new TLegend(0.35913,0.695804,0.609907,0.884615,NULL,"brNDC");
+  leg->SetFillStyle(0);
+  leg->SetBorderSize(0);
+  leg->SetFillColor(10);
+  leg->SetTextSize(0.04); 
+
+  vector<string> samples;
+  samples.push_back( proc );
+
+  TH1F* hN = 0;
+  TH1F* hU = 0;
+  TH1F* hD = 0;
+
+  TFile* f = TFile::Open((type+".root").c_str());
+  if(f==0 || f->IsZombie() ) return;
+
+  for(unsigned int sample = 0; sample < samples.size(); sample++){
+
+    cout << "Doing " << samples[sample] << endl;
+
+  
+    hN = (TH1F*)((TH1F*)f->Get((type+"_"+cat+"/"+samples[sample]).c_str()))->Clone("hN");
+    if( hN==0 ){
+      cout << (type+"_"+cat+"/"+samples[sample]) << " not found" << endl;
+      continue;
+    }
+    else{
+      cout << hN->Integral() << endl;
+    }
+
+    hU = (TH1F*)((TH1F*)f->Get((type+"_"+cat+"/"+samples[sample]+"_"+syst+"Up").c_str()))->Clone("hU");
+    if( hU==0 ){
+      cout << (type+"_"+cat+"/"+samples[sample]+"_"+syst+"Up") << " not found" << endl;
+      continue;
+    }
+    else{
+      cout << hU->Integral() << endl;
+    }
+
+    hD = (TH1F*)((TH1F*)f->Get((type+"_"+cat+"/"+samples[sample]+"_"+syst+"Down").c_str()))->Clone("hD");
+    if( hD==0 ){
+      cout << (type+"_"+cat+"/"+samples[sample]+"_"+syst+"Down") << " not found" << endl;
+      continue;
+    }
+    else{
+      cout << hD->Integral() << endl;
+    }
+
+  }
+
+  if(hN==0 || hU==0 || hD==0){
+    cout << "Return!" << endl;
+    return;
+  }
+
+  hN->SetLineWidth(3);
+  hN->SetLineColor(kBlack);
+  hN->SetLineStyle(kSolid);
+
+  hU->SetLineWidth(3);
+  hU->SetLineColor(kRed);
+  hU->SetLineStyle(kDashed);
+
+  hD->SetLineWidth(3);
+  hD->SetLineColor(kBlue);
+  hD->SetLineStyle(kDashed);
+
+
+  if(hU->GetMaximum()>hD->GetMaximum()){
+    hU->SetMinimum(0.0);
+    hU->GetYaxis()->SetTitle("Events");
+    if(type.find("SL")!=string::npos) 
+      hU->GetXaxis()->SetTitle("P_{s/b}(y)");
+    else
+      hU->GetXaxis()->SetTitle("P_{s/b}(y)");
+    hU->SetTitle("Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}");
+    hU->SetTitleSize  (0.04,"X");
+    hU->SetTitleOffset(0.95,"X");
+    hU->Draw("HISTE");
+    hN->Draw("HISTSAME");
+    hD->Draw("HISTESAME");
+  }
+  else{
+    hD->SetMinimum(0.0);
+    hD->GetYaxis()->SetTitle("Events");
+    if(type.find("SL")!=string::npos) 
+      hD->GetXaxis()->SetTitle("P_{s/b}(y)");
+    else
+      hD->GetXaxis()->SetTitle("P_{s/b}(y)");
+    hD->SetTitle("Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}");
+    hD->SetTitleSize  (0.04,"X");
+    hD->SetTitleOffset(0.95,"X");
+    hD->Draw("HISTE");
+    hN->Draw("HISTSAME");
+    hU->Draw("HISTESAME");
+  }
+
+  leg->SetHeader(header.c_str());
+  leg->AddEntry( hN, (syst+" nominal").c_str(), "L");
+  leg->AddEntry( hU, (syst+" up").c_str(),      "L");
+  leg->AddEntry( hD, (syst+" down").c_str(),    "L");
+
+  leg->Draw();
+
+  if(1){
+    c1->SaveAs(  ("Plots/"+fname+"_AN"+".png").c_str() );
+    c1->SaveAs(  ("Plots/"+fname+"_AN"+".pdf").c_str() );
+  }
+
+}
+
+
+
+void plot_systAll(){
+
+  plot_syst("SL", "cat1", "TTH125", "csv", "Cat 1, ttH", "Plots_SL_Cat1_TTH_csv");
+  plot_syst("SL", "cat2", "TTH125", "csv", "Cat 2, ttH", "Plots_SL_Cat2_TTH_csv");
+  plot_syst("SL", "cat3", "TTH125", "csv", "Cat 3, ttH", "Plots_SL_Cat3_TTH_csv");
+  plot_syst("SL", "cat4", "TTH125", "csv", "Cat 4, ttH", "Plots_SL_Cat4_TTH_csv");
+  plot_syst("SL", "cat5", "TTH125", "csv", "Cat 5, ttH", "Plots_SL_Cat5_TTH_csv");
+  plot_syst("DL", "cat6", "TTH125", "csv", "Cat 6, ttH", "Plots_DL_Cat6_TTH_csv");
+  plot_syst("DL", "cat7", "TTH125", "csv", "Cat 7, ttH", "Plots_DL_Cat7_TTH_csv");
+
+  plot_syst("SL", "cat1", "TTJetsHF", "csv", "Cat 1, ttbb", "Plots_SL_Cat1_TTJetsHF_csv");
+  plot_syst("SL", "cat2", "TTJetsHF", "csv", "Cat 2, ttbb", "Plots_SL_Cat2_TTJetsHF_csv");
+  plot_syst("SL", "cat3", "TTJetsHF", "csv", "Cat 3, ttbb", "Plots_SL_Cat3_TTJetsHF_csv");
+  plot_syst("SL", "cat4", "TTJetsHF", "csv", "Cat 4, ttbb", "Plots_SL_Cat4_TTJetsHF_csv");
+  plot_syst("SL", "cat5", "TTJetsHF", "csv", "Cat 5, ttbb", "Plots_SL_Cat5_TTJetsHF_csv");
+  plot_syst("DL", "cat6", "TTJetsHF", "csv", "Cat 6, ttbb", "Plots_DL_Cat6_TTJetsHF_csv");
+  plot_syst("DL", "cat7", "TTJetsHF", "csv", "Cat 7, ttbb", "Plots_DL_Cat7_TTJetsHF_csv");
+
+  plot_syst("SL", "cat1", "TTJetsLF", "csv", "Cat 1, ttjj", "Plots_SL_Cat1_TTJetsLF_csv");
+  plot_syst("SL", "cat2", "TTJetsLF", "csv", "Cat 2, ttjj", "Plots_SL_Cat2_TTJetsLF_csv");
+  plot_syst("SL", "cat3", "TTJetsLF", "csv", "Cat 3, ttjj", "Plots_SL_Cat3_TTJetsLF_csv");
+  plot_syst("SL", "cat4", "TTJetsLF", "csv", "Cat 4, ttjj", "Plots_SL_Cat4_TTJetsLF_csv");
+  plot_syst("SL", "cat5", "TTJetsLF", "csv", "Cat 5, ttjj", "Plots_SL_Cat5_TTJetsLF_csv");
+  plot_syst("DL", "cat6", "TTJetsLF", "csv", "Cat 6, ttjj", "Plots_DL_Cat6_TTJetsLF_csv");
+  plot_syst("DL", "cat7", "TTJetsLF", "csv", "Cat 7, ttjj", "Plots_DL_Cat7_TTJetsLF_csv");
+
+  plot_syst("SL", "cat1", "TTH125", "JEC", "Cat 1, ttH", "Plots_SL_Cat1_TTH_JEC");
+  plot_syst("SL", "cat2", "TTH125", "JEC", "Cat 2, ttH", "Plots_SL_Cat2_TTH_JEC");
+  plot_syst("SL", "cat3", "TTH125", "JEC", "Cat 3, ttH", "Plots_SL_Cat3_TTH_JEC");
+  plot_syst("SL", "cat4", "TTH125", "JEC", "Cat 4, ttH", "Plots_SL_Cat4_TTH_JEC");
+  plot_syst("SL", "cat5", "TTH125", "JEC", "Cat 5, ttH", "Plots_SL_Cat5_TTH_JEC");
+  plot_syst("DL", "cat6", "TTH125", "JEC", "Cat 6, ttH", "Plots_DL_Cat6_TTH_JEC");
+  plot_syst("DL", "cat7", "TTH125", "JEC", "Cat 7, ttH", "Plots_DL_Cat7_TTH_JEC");
+
+  plot_syst("SL", "cat1", "TTJetsHF", "JEC", "Cat 1, ttbb", "Plots_SL_Cat1_TTJetsHF_JEC");
+  plot_syst("SL", "cat2", "TTJetsHF", "JEC", "Cat 2, ttbb", "Plots_SL_Cat2_TTJetsHF_JEC");
+  plot_syst("SL", "cat3", "TTJetsHF", "JEC", "Cat 3, ttbb", "Plots_SL_Cat3_TTJetsHF_JEC");
+  plot_syst("SL", "cat4", "TTJetsHF", "JEC", "Cat 4, ttbb", "Plots_SL_Cat4_TTJetsHF_JEC");
+  plot_syst("SL", "cat5", "TTJetsHF", "JEC", "Cat 5, ttbb", "Plots_SL_Cat5_TTJetsHF_JEC");
+  plot_syst("DL", "cat6", "TTJetsHF", "JEC", "Cat 6, ttbb", "Plots_DL_Cat6_TTJetsHF_JEC");
+  plot_syst("DL", "cat7", "TTJetsHF", "JEC", "Cat 7, ttbb", "Plots_DL_Cat7_TTJetsHF_JEC");
+
+  plot_syst("SL", "cat1", "TTJetsLF", "JEC", "Cat 1, ttjj", "Plots_SL_Cat1_TTJetsLF_JEC");
+  plot_syst("SL", "cat2", "TTJetsLF", "JEC", "Cat 2, ttjj", "Plots_SL_Cat2_TTJetsLF_JEC");
+  plot_syst("SL", "cat3", "TTJetsLF", "JEC", "Cat 3, ttjj", "Plots_SL_Cat3_TTJetsLF_JEC");
+  plot_syst("SL", "cat4", "TTJetsLF", "JEC", "Cat 4, ttjj", "Plots_SL_Cat4_TTJetsLF_JEC");
+  plot_syst("SL", "cat5", "TTJetsLF", "JEC", "Cat 5, ttjj", "Plots_SL_Cat5_TTJetsLF_JEC");
+  plot_syst("DL", "cat6", "TTJetsLF", "JEC", "Cat 6, ttjj", "Plots_DL_Cat6_TTJetsLF_JEC");
+  plot_syst("DL", "cat7", "TTJetsLF", "JEC", "Cat 7, ttjj", "Plots_DL_Cat7_TTJetsLF_JEC");
+
+}
+
+
+void plot_BTag( TString extraname = "",	       
+	       int flag = 0,
+	       int plotDistr = 0){
+
+  int nmax = 2000;
+  if(flag>=6) nmax = 10000;
+
+  if(plotDistr==1){
+    nmax = 100;
+  }
+
+  gStyle->SetOptStat(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetCanvasBorderMode(0);
+  gStyle->SetCanvasColor(0);
+  gStyle->SetPadBorderMode(0);
+  gStyle->SetPadColor(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetTitleBorderSize(0);
+  gStyle->SetTitleH(0.07);
+  gStyle->SetTitleFontSize(0.1);
+  gStyle->SetTitleStyle(0);
+  gStyle->SetTitleOffset(1.3,"y");
+
+  TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
+  if(plotDistr==1) c1->SetGrid(0,0);
+  else  c1->SetGrid(1,1);
+  c1->SetFillStyle(4000);
+  c1->SetFillColor(10);
+  c1->SetTicky();
+  c1->SetObjectStat(0);
+  if(plotDistr==0) c1->SetLogy(1);
+
+  TLegend* leg = new TLegend(0.14,0.69,0.36,0.87,NULL,"brNDC");
+  leg->SetFillStyle(0);
+  leg->SetBorderSize(0);
+  leg->SetFillColor(10);
+  leg->SetTextSize(0.04); 
+  if(flag<3) 
+    leg->SetHeader("SL: N_{jet}=6, N_{CSVM}#geq2");
+  else if(flag>=3 && flag<6)   
+    leg->SetHeader("SL: N_{jet}=5, N_{CSVM}#geq2");
+  else if(flag>=6 && flag<9)   
+    leg->SetHeader("DL: N_{jet}=4, N_{CSVM}#geq2");
+
+  float kappa1 = 1;
+
+  float min_bb = 0; 
+
+  TString titleDistr("Simulation #sqrt{s}=8 TeV; likelihood ratio; units");
+
+  TH1F* hS = new TH1F("hS",titleDistr, nmax, 0, 1); hS->SetLineColor(kRed) ; hS->SetLineWidth(2); hS->SetFillStyle(3004); hS->SetFillColor(kRed); 
+  TH1F* hB = new TH1F("hB",titleDistr, nmax, 0, 1); hB->SetLineColor(kBlue); hB->SetLineWidth(2); hB->SetFillStyle(3005); hB->SetFillColor(kBlue); 
+  
+  float xM[3], yM[3];
+
+  vector<string> files;
+  if(flag<3){
+    files.push_back("../bin/root/MEAnalysisNew_TTH_6J.root");
+    files.push_back("../bin/root/MEAnalysisNew_TTJETS_6J.root");
+  }
+  else if(flag>=3 && flag<6){
+    files.push_back("../bin/root/MEAnalysisNew_TTH_5J.root");
+    files.push_back("../bin/root/MEAnalysisNew_TTJETS_5J.root");
+  }
+  else if(flag>=6 && flag<9){
+    files.push_back("../bin/root/MEAnalysisNew_TTH_4J.root");
+    files.push_back("../bin/root/MEAnalysisNew_TTJETS_4J.root");
+  }
+
+  for(int j = 0; j<files.size(); j++){
+
+    TFile *f = TFile::Open( files[j].c_str(), "READ");
+    TTree* t = (TTree*)f->Get("tree");    
+
+    float p_tt_bb[999];
+    float p_tt_jj[999];
+    float p_tt_bj[999];
+    int nPermut_s;
+    int nPermut_b;
+    int numBTagM,numBTagL,numBTagT;
+    int nSimBs;
+
+    t->SetBranchAddress("p_tt_bb", p_tt_bb);
+    t->SetBranchAddress("p_tt_jj", p_tt_jj);
+    t->SetBranchAddress("p_tt_bj", p_tt_bj);
+    t->SetBranchAddress("nPermut_s", &nPermut_s);
+    t->SetBranchAddress("nPermut_b", &nPermut_b);
+    t->SetBranchAddress("numBTagM",&numBTagM);
+    t->SetBranchAddress("numBTagT",&numBTagT);
+    t->SetBranchAddress("numBTagL",&numBTagL);
+    t->SetBranchAddress("nSimBs",  &nSimBs);
+    
+    int counter2M = 0;
+    int counter3M = 0;
+    int counter4M = 0;
+
+    Long64_t nentries = t->GetEntries(); 
+    int counter = 0;
+
+    for (Long64_t i = 0; i < nentries ; i++){
+
+      t->GetEntry(i);
+      
+      if(j==1 && (flag==0 || flag==3 || flag==6) && nSimBs==0) continue;
+      if(j==1 && (flag==1 || flag==4 || flag==7) && nSimBs >2) continue;
+      if(j==1 && (flag==2 || flag==5 || flag==8) && nSimBs==2) continue;
+
+      counter++;
+
+      float max_p_bb = -1;
+      float max_p_jj = -1;
+
+      float next_to_max_p_bb = -1;
+
+      float p_bb = 0.0;
+      for(int m = 0 ; m<nPermut_s; m++){
+	p_bb += p_tt_bb[m];
+	if( p_tt_bb[m]>max_p_bb ) max_p_bb = p_tt_bb[m];
+	if( p_tt_bb[m]>next_to_max_p_bb &&  p_tt_bb[m]< max_p_bb ) next_to_max_p_bb = p_tt_bb[m];
+      }
+      float p_jj = 0.0;
+      for(int m = 0 ; m<nPermut_b; m++){
+	p_jj += p_tt_jj[m];
+	if( p_tt_jj[m]>max_p_jj ) max_p_jj = p_tt_jj[m];
+      }
+      float p_bj = 0.0;
+      for(int m = 0 ; m<nPermut_b; m++){
+	p_bj += p_tt_bj[m];
+      }
+      
+      p_bb /= nPermut_s;
+      p_jj /= nPermut_b;
+      
+      if(numBTagL>=4 && numBTagM>=3) counter2M++;
+      if(numBTagM>=4 && numBTagT>1) counter3M++;
+      if(numBTagM>=4) counter4M++;
+     
+      if(j==0) hS->Fill( p_bb>min_bb ? p_bb/(p_bb+kappa1*p_jj) : 0. );
+      if(j==1) hB->Fill( p_bb>min_bb ? p_bb/(p_bb+kappa1*p_jj) : 0. );
+
+    }
+
+    //cout << "File " << j << endl;
+    //cout << counter2M << endl;
+    //cout << counter3M << endl;
+    //cout << counter4M << endl;
+
+    if( j==0 ){
+      xM[0] =  float(counter2M)/float(counter);
+      xM[1] =  float(counter3M)/float(counter);
+      xM[2] =  float(counter4M)/float(counter);
+    }
+    if( j==1 ){
+      yM[0] =  float(counter2M)/float(counter);
+      yM[1] =  float(counter3M)/float(counter);
+      yM[2] =  float(counter4M)/float(counter);
+    }
+    
+
+  }
+  
+  float x[nmax+1], y[nmax+1];
+
+  for(int b = 1; b <= hS->GetNbinsX(); b++ ){
+    float intS = hS->Integral(b,hS->GetNbinsX())/hS->Integral();
+    float intB = hB->Integral(b,hS->GetNbinsX())/hB->Integral();
+    x[b-1] = intS;
+    y[b-1] = intB;				
+    cout << "At x>" << hS->GetBinCenter(b) << " => Eff.=" << intS << " -- vs -- FkR.=" << intB << endl;
+  }
+  x[nmax]=0.00;
+  y[nmax]=0.00;
+  cout << "Eff.=" << x[nmax] << " -- vs -- FkR.=" << y[nmax] << endl;
+
+
+  ///////////////////////////////////////
+
+  TString title("Simulation #sqrt{s}=8 TeV; selection efficiency in t#bar{t}H; selection efficiency in t#bar{t}+jets");
+  if( flag == 0 || flag == 3 || flag==6) title = "Simulation #sqrt{s}=8 TeV; selection efficiency in t#bar{t}H; selection efficiency in t#bar{t}+jets";
+  if( flag == 1 || flag == 4 || flag==7) title = "Simulation #sqrt{s}=8 TeV; selection efficiency in t#bar{t}H; selection efficiency in t#bar{t}+jj";
+  if( flag == 2 || flag == 5 || flag==8) title = "Simulation #sqrt{s}=8 TeV; selection efficiency in t#bar{t}H; selection efficiency in t#bar{t}+b#bar{b}";
+
+  TH1F* h = new TH1F("h",title, 100, 0.0, 0.3);  
+  if(flag==0){
+    h->SetMinimum(0.001);
+    h->SetMaximum(0.10);
+  }
+  if(flag==1){
+    h->SetMinimum(0.0005);
+    h->SetMaximum(0.10);
+  }
+  if(flag==2){
+    h->SetMinimum(0.01);
+    h->SetMaximum(0.20);
+  }
+  if(flag==3){
+    h->SetMinimum(0.001);
+    h->SetMaximum(0.20);
+  }
+  if(flag==4){
+    h->SetMinimum(0.0002);
+    h->SetMaximum(0.10);
+  }
+ if(flag==5){
+    h->SetMinimum(0.005);
+    h->SetMaximum(0.20);
+  }
+ if(flag==6){
+    h->SetMinimum(0.001);
+    h->SetMaximum(0.05);
+  }
+ if(flag==7){
+    h->SetMinimum(0.0001);
+    h->SetMaximum(0.05);
+  }
+ if(flag==8){
+    h->SetMinimum(0.01);
+    h->SetMaximum(0.20);
+  }
+  h->Draw();
+  TGraph* hROC = new TGraph(nmax+1, x, y);
+  hROC->SetLineWidth(2);
+  hROC->SetLineColor(kRed);
+  hROC->Draw();
+
+  ///////////////////////////////////////
+ 
+  TGraph* hROCM = new TGraph(3, xM, yM);
+  hROCM->SetMarkerStyle(kFullCircle);
+  hROCM->SetMarkerColor(kBlue);
+  hROCM->Draw("PSAME");
+
+  cout << "2CSVM:" << xM[0] << "-" << yM[0] << "  ";
+  cout << "3CSVM:" << xM[1] << "-" << yM[1] << "  ";
+  cout << "4CSVM:" << xM[2] << "-" << yM[2] << endl;
+
+  if(plotDistr==0){
+   leg->AddEntry(hROCM, "cut-and-count","P");
+   leg->AddEntry(hROC, "LIkelihood ratio","L");
+   leg->Draw();
+  }
+
+  if(plotDistr==1){
+    leg->AddEntry(hS, "t#bar{t}H","F");
+    if(flag==0 || flag==3 || flag==6)
+      leg->AddEntry(hB, "t#bar{t}+jets","F");
+    if(flag==1 || flag==4 || flag==7)
+      leg->AddEntry(hB, "t#bar{t}+jj","F");
+    if(flag==2 || flag==5 || flag==8)
+      leg->AddEntry(hB, "t#bar{t}+b#bar{b}","F");
+
+    hS->Sumw2(); 
+    hB->Sumw2();
+    hS->DrawNormalized("HISTE");
+    hB->DrawNormalized("HISTESAME");
+    leg->Draw();
+  }
+ 
+  float pos1[4] = {0.,0.,0.,0.};
+  float pos2[4] = {0.,0.,0.,0.};
+  float pos3[4] = {0.,0.,0.,0.};
+  if( flag==0 ){
+    pos1[0] = 0.61;  
+    pos1[1] = 0.70;  
+    pos1[2] = 0.83;  
+    pos1[3] = 0.78;
+
+    pos2[0] = 0.10;  
+    pos2[1] = 0.31;  
+    pos2[2] = 0.41;  
+    pos2[3] = 0.43;
+
+    pos3[0] = 0.31;  
+    pos3[1] = 0.40;  
+    pos3[2] = 0.48;  
+    pos3[3] = 0.47;
+  }
+  if( flag==1 ){
+    pos1[0] = 0.61;  
+    pos1[1] = 0.70;  
+    pos1[2] = 0.83;  
+    pos1[3] = 0.78;
+
+    pos2[0] = 0.10;  
+    pos2[1] = 0.31;  
+    pos2[2] = 0.41;  
+    pos2[3] = 0.43;
+
+    pos3[0] = 0.31;  
+    pos3[1] = 0.40;  
+    pos3[2] = 0.48;  
+    pos3[3] = 0.47;
+  }
+  if( flag==2 ){
+    pos1[0] = 0.61;  
+    pos1[1] = 0.70;  
+    pos1[2] = 0.83;  
+    pos1[3] = 0.78;
+
+    pos2[0] = 0.10;  
+    pos2[1] = 0.31;  
+    pos2[2] = 0.41;  
+    pos2[3] = 0.43;
+
+    pos3[0] = 0.31;  
+    pos3[1] = 0.40;  
+    pos3[2] = 0.48;  
+    pos3[3] = 0.47;
+  }
+  if( flag==3 ){
+    pos1[0] = 0.49;  
+    pos1[1] = 0.55;  
+    pos1[2] = 0.71;  
+    pos1[3] = 0.63;
+
+    pos2[0] = 0.32;  
+    pos2[1] = 0.09;  
+    pos2[2] = 0.63;  
+    pos2[3] = 0.20;
+
+    pos3[0] = 0.19;  
+    pos3[1] = 0.22;  
+    pos3[2] = 0.36;  
+    pos3[3] = 0.29;
+  }
+  if( flag==4 ){
+    pos1[0] = 0.50;  
+    pos1[1] = 0.64;  
+    pos1[2] = 0.73;  
+    pos1[3] = 0.72;
+
+    pos2[0] = 0.33;  
+    pos2[1] = 0.18;  
+    pos2[2] = 0.64;  
+    pos2[3] = 0.29;
+
+    pos3[0] = 0.21;  
+    pos3[1] = 0.34;  
+    pos3[2] = 0.38;  
+    pos3[3] = 0.41;
+  }
+  if( flag==5 ){
+    pos1[0] = 0.50;  
+    pos1[1] = 0.64;  
+    pos1[2] = 0.73;  
+    pos1[3] = 0.72;
+
+    pos2[0] = 0.33;  
+    pos2[1] = 0.18;  
+    pos2[2] = 0.64;  
+    pos2[3] = 0.29;
+
+    pos3[0] = 0.21;  
+    pos3[1] = 0.34;  
+    pos3[2] = 0.38;  
+    pos3[3] = 0.41;
+  }
+  if( flag==6 ){
+    pos1[0] = 0.50;  
+    pos1[1] = 0.64;  
+    pos1[2] = 0.73;  
+    pos1[3] = 0.72;
+
+    pos2[0] = 0.33;  
+    pos2[1] = 0.18;  
+    pos2[2] = 0.64;  
+    pos2[3] = 0.29;
+
+    pos3[0] = 0.21;  
+    pos3[1] = 0.34;  
+    pos3[2] = 0.38;  
+    pos3[3] = 0.41;
+  }
+  if( flag==7 ){
+    pos1[0] = 0.50;  
+    pos1[1] = 0.64;  
+    pos1[2] = 0.73;  
+    pos1[3] = 0.72;
+
+    pos2[0] = 0.33;  
+    pos2[1] = 0.18;  
+    pos2[2] = 0.64;  
+    pos2[3] = 0.29;
+
+    pos3[0] = 0.21;  
+    pos3[1] = 0.34;  
+    pos3[2] = 0.38;  
+    pos3[3] = 0.41;
+  }
+ if( flag==8 ){
+    pos1[0] = 0.37;  
+    pos1[1] = 0.59;  
+    pos1[2] = 0.60;  
+    pos1[3] = 0.67;
+
+    pos2[0] = 0.33;  
+    pos2[1] = 0.18;  
+    pos2[2] = 0.64;  
+    pos2[3] = 0.29;
+
+    pos3[0] = 0.21;  
+    pos3[1] = 0.34;  
+    pos3[2] = 0.38;  
+    pos3[3] = 0.41;
+  }
+
+
+  TPaveText *pt = new TPaveText(pos1[0], pos1[1], pos1[2], pos1[3],"brNDC");
+  pt->SetFillStyle(0);
+  pt->SetBorderSize(0);
+  pt->SetFillColor(10);
+  pt->SetTextSize(0.04);
+  pt->SetTextAlign(11);
+  pt->AddText("N_{CSVL}#geq4, N_{CSVM}#geq3")->SetTextColor(kBlue);
+  if(plotDistr==0) pt->Draw();
+
+  TPaveText *pt2 = new TPaveText(pos2[0], pos2[1], pos2[2], pos2[3],"brNDC");
+  pt2->SetFillStyle(0);
+  pt2->SetBorderSize(0);
+  pt2->SetFillColor(10);
+  pt2->SetTextSize(0.04);
+  pt2->SetTextAlign(11);
+  pt2->AddText("N_{CSVM}#geq4, N_{CSVT}#geq2")->SetTextColor(kBlue);
+   if(plotDistr==0) pt2->Draw();
+
+  TPaveText *pt3 = new TPaveText(pos3[0], pos3[1], pos3[2], pos3[3],"brNDC");
+  pt3->SetFillStyle(0);
+  pt3->SetBorderSize(0);
+  pt3->SetFillColor(10);
+  pt3->SetTextSize(0.04);
+  pt3->SetTextAlign(11);
+  pt3->AddText("N_{CSVM}#geq4")->SetTextColor(kBlue);
+   if(plotDistr==0) pt3->Draw();
+
+  if(0){
+    c1->SaveAs("Plots/Plot_BTag_ROC_"+extraname+".png");
+  }
+
+}
+
+void plot_BTagAll(){
+  
+  for(int a = 0; a<9; a++){
+    for(int b = 0; b<2; b++){
+      plot_BTag(TString(Form("%d_%d",a,b)),a,b);
+    }
+  }
+  return;
+}
+
+
+void plot_match( TString fname = "SL", 
+		string cut = "type==0", 
+		TString category = "cat0",
+		string header = "",
+		int doSgn = 1){
+  
+
+  string version = (string(fname.Data())).find("SL")!=string::npos ? "_v1" : "_v1";
+
+  cout << "Doing version " << version << " and category " << category << endl;
+
+  string basecut = cut;
+  TString ttjets = (string(fname.Data())).find("SL")!=string::npos ? "_TTJets" : "_TTJets";
+
+
+  gStyle->SetOptStat(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetCanvasBorderMode(0);
+  gStyle->SetCanvasColor(0);
+  gStyle->SetPadBorderMode(0);
+  gStyle->SetPadColor(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetTitleBorderSize(0);
+  gStyle->SetTitleH(0.07);
+  gStyle->SetTitleFontSize(0.1);
+  gStyle->SetTitleStyle(0);
+  gStyle->SetTitleOffset(1.3,"y");
+
+
+  TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
+  c1->SetGrid(1,1);
+  c1->SetFillStyle(4000);
+  c1->SetFillColor(10);
+  c1->SetTicky();
+  c1->SetObjectStat(0);
+
+  TLegend* leg = new TLegend(0.15,0.75,0.40,0.89,NULL,"brNDC");
+  leg->SetFillStyle(0);
+  leg->SetBorderSize(0);
+  leg->SetFillColor(10);
+  leg->SetTextSize(0.04); 
+  leg->SetHeader(header.c_str());
+
+  TFile* f_B = TFile::Open("MEAnalysisNew_"+fname+"_nominal"+version+ttjets+".root");
+  TTree* tB = (TTree*)f_B->Get("tree");
+  TFile* f_S = TFile::Open("MEAnalysisNew_"+fname+"_nominal"+version+"_TTH125.root");
+  TTree* tS = (TTree*)f_S->Get("tree");
+
+  TTree* tree = doSgn ? tS : tB;
+  int nmax    = doSgn ? 5 : 5;
+
+  float all         = tree->GetEntries(TCut(cut.c_str()));
+  float matchesT    = tree->GetEntries(TCut("matchesT==2")&&TCut(cut.c_str()));
+  float matchesW    = tree->GetEntries(TCut("matchesW==2")&&TCut(cut.c_str()));
+  float matchesTop  = tree->GetEntries(TCut("matchesW==2 && matchesT==2")&&TCut(cut.c_str()));
+  float matchesW1   = tree->GetEntries(TCut("matchesW==1")&&TCut(cut.c_str()));
+  float matchesTop1 = tree->GetEntries(TCut("matchesW==1 && matchesT==2")&&TCut(cut.c_str()));
+  float matchesH    = tree->GetEntries(TCut("matchesH==2")&&TCut(cut.c_str()));
+  float matchesAll  = tree->GetEntries(TCut("matchesH==2 && matchesW==2 && matchesT==2")&&TCut(cut.c_str()));
+  float matchesAll1 = tree->GetEntries(TCut("matchesH==2 && matchesW==1 && matchesT==2")&&TCut(cut.c_str()));
+  float matchesAll2 = tree->GetEntries(TCut("matchesH==2 && matchesT==2")&&TCut(cut.c_str()));
+
+  TString titleDistr("Simulation #sqrt{s}=8 TeV; ; efficiency");
+  TH1F* hS = new TH1F("hS",titleDistr, nmax, 0, 1);
+  hS->Sumw2();
+
+  hS->SetBinContent(1, matchesT/all);  
+  hS->SetBinError(1, sqrt(matchesT/all*(1-matchesT/all)/all));    
+  hS->GetXaxis()->SetBinLabel(1, "b's from top");
+
+  if((string(category.Data())).find("cat1")!=string::npos || 
+     (string(category.Data())).find("cat5")!=string::npos){
+
+    hS->SetBinContent(2, matchesW/all);   
+    hS->SetBinError  (2, sqrt(matchesW/all*(1-matchesW/all))/all); 
+    hS->GetXaxis()->SetBinLabel(2, "q's from top");
+
+    hS->SetBinContent(3, matchesTop/all); 
+    hS->SetBinError  (3, sqrt(matchesTop/all*(1-matchesTop/all))/all); 
+    hS->GetXaxis()->SetBinLabel(3, "top's");
+
+    if(doSgn){
+      hS->SetBinContent(5, matchesAll/all); 
+      hS->SetBinError  (5, sqrt(matchesAll/all*(1-matchesAll/all))/all); 
+      hS->GetXaxis()->SetBinLabel(5, "top+higgs");
+    }
+    else{
+      hS->SetBinContent(5,0.); 
+      hS->SetBinError  (5,0.); 
+      hS->GetXaxis()->SetBinLabel(5, "top+higgs");
+    }
+  }
+  else if((string(category.Data())).find("cat2")!=string::npos || 
+	  (string(category.Data())).find("cat3")!=string::npos ||
+	  (string(category.Data())).find("cat4")!=string::npos){
+
+    hS->SetBinContent(2, matchesW1/all);   
+    hS->SetBinError  (2, sqrt(matchesW1/all*(1-matchesW1/all))/all); 
+    hS->GetXaxis()->SetBinLabel(2, "q from top");
+
+    hS->SetBinContent(3, matchesTop1/all); 
+    hS->SetBinError  (3, sqrt(matchesTop1/all*(1-matchesTop1/all))/all); 
+    hS->GetXaxis()->SetBinLabel(3, "top's");
+
+    if(doSgn){
+      hS->SetBinContent(5, matchesAll1/all); 
+      hS->SetBinError  (5, sqrt(matchesAll1/all*(1-matchesAll1/all))/all); 
+      hS->GetXaxis()->SetBinLabel(5, "top+higgs");
+    }
+    else{
+      hS->SetBinContent(5,0.); 
+      hS->SetBinError  (5,0.); 
+      hS->GetXaxis()->SetBinLabel(5, "top+higgs");
+    }
+
+  }
+  else if((string(category.Data())).find("cat6")!=string::npos ){
+    
+    hS->SetBinContent(2, 0.);   
+    hS->SetBinError  (2, 0.);
+    hS->GetXaxis()->SetBinLabel(2, "q's from top");
+
+    hS->SetBinContent(3, 0.); 
+    hS->SetBinError  (3, 0.); 
+    hS->GetXaxis()->SetBinLabel(3, "top's");
+
+    if(doSgn){
+      hS->SetBinContent(5, matchesAll2/all); 
+      hS->SetBinError  (5, sqrt(matchesAll2/all*(1-matchesAll2/all))/all); 
+      hS->GetXaxis()->SetBinLabel(5, "top+higgs");
+    }
+    else{
+      hS->SetBinContent(5,0.); 
+      hS->SetBinError  (5,0.); 
+      hS->GetXaxis()->SetBinLabel(5, "top+higgs");
+    }
+  }
+    hS->SetBinContent(4, matchesH/all); 
+    hS->SetBinError  (4, sqrt(matchesH/all*(1-matchesH/all))/all); 
+    hS->GetXaxis()->SetBinLabel(4, "b's from higgs");
+  
+
+  hS->SetMarkerStyle(kFullCircle);
+  hS->SetMarkerColor(kRed);
+  hS->SetMarkerSize(1.8);
+  hS->SetMinimum(0.);
+  hS->SetMaximum(1.3);
+  hS->Draw("PE");
+
+  TF1* line = new TF1("line","1",0,1);
+  line->SetLineWidth(3);
+  line->SetLineStyle(kDashed);
+  line->SetLineColor(kBlue);
+  line->Draw("SAME");
+
+  TLine* line2 = new TLine(hS->GetBinLowEdge(nmax), 1.3  , hS->GetBinLowEdge(nmax), 0.);
+  line2->SetLineWidth(4);
+  line2->SetLineStyle(kSolid);
+  line2->SetLineColor(kBlack);
+  line2->Draw("SAME");
+
+  //leg->AddEntry(hS, "MC matching efficiency","P");
+  leg->Draw();
+
+  if(1){
+    c1->SaveAs("Plots/Plot_Match_"+category+".png");
+  }
+
+}
+
+void plot_atchAll(){
+
+  plot_match("SL", "type==0", "cat1_s", "Cat 1, t#bar{t}H",     1);
+  plot_match("SL", "type==0", "cat1_b", "Cat 1, t#bar{t}+jets", 0);
+
+  plot_match("SL", "type==1", "cat2_s", "Cat 2, t#bar{t}H",     1);
+  plot_match("SL", "type==1", "cat2_b", "Cat 2, t#bar{t}+jets", 0);
+
+  plot_match("SL", "type==2 && flag_type2>0", "cat3_s", "Cat 3, t#bar{t}H",     1);
+  plot_match("SL", "type==2 && flag_type2>0", "cat3_b", "Cat 3, t#bar{t}+jets", 0);
+
+  plot_match("SL", "type==2 && flag_type2<=0", "cat4_s", "Cat 4, t#bar{t}H",     1);
+  plot_match("SL", "type==2 && flag_type2<=0", "cat4_b", "Cat 4, t#bar{t}+jets", 0);
+
+  plot_match("SL", "type==3 && flag_type3>0 && p_125_all_s>0", "cat5_s", "Cat 5, t#bar{t}H",     1);
+  plot_match("SL", "type==3 && flag_type3>0 && p_125_all_s>0", "cat5_b", "Cat 5, t#bar{t}+jets", 0);
+
+  plot_match("DL", "type==6", "cat6_s", "Cat 6, t#bar{t}H",     1);
+  plot_match("DL", "type==6", "cat6_b", "Cat 6, t#bar{t}+jets", 0);
+
+
+  // btagM == 4
+
+  plot_match("SL", "type==0 && numBTagM==4", "cat1_s_4BTag", "Cat 1, t#bar{t}H",     1);
+  plot_match("SL", "type==0 && numBTagM==4", "cat1_b_4BTag", "Cat 1, t#bar{t}+jets", 0);
+
+  plot_match("SL", "type==1 && numBTagM==4", "cat2_s_4BTag", "Cat 2, t#bar{t}H",     1);
+  plot_match("SL", "type==1 && numBTagM==4", "cat2_b_4BTag", "Cat 2, t#bar{t}+jets", 0);
+
+  plot_match("SL", "type==2 && flag_type2>0 && numBTagM==4", "cat3_s_4BTag", "Cat 3, t#bar{t}H",     1);
+  plot_match("SL", "type==2 && flag_type2>0 && numBTagM==4", "cat3_b_4BTag", "Cat 3, t#bar{t}+jets", 0);
+
+  plot_match("SL", "type==2 && flag_type2<=0 && numBTagM==4", "cat4_s_4BTag", "Cat 4, t#bar{t}H",     1);
+  plot_match("SL", "type==2 && flag_type2<=0 && numBTagM==4", "cat4_b_4BTag", "Cat 4, t#bar{t}+jets", 0);
+
+  plot_match("SL", "type==3 && flag_type3>0 && p_125_all_s>0 && numBTagM==4", "cat5_s_4BTag", "Cat 5, t#bar{t}H",     1);
+  plot_match("SL", "type==3 && flag_type3>0 && p_125_all_s>0 && numBTagM==4", "cat5_b_4BTag", "Cat 5, t#bar{t}+jets", 0);
+
+  plot_match("DL", "type==6 && numBTagM==4", "cat6_s_4BTag", "Cat 6, t#bar{t}H",     1);
+  plot_match("DL", "type==6 && numBTagM==4", "cat6_b_4BTag", "Cat 6, t#bar{t}+jets", 0);
+}
