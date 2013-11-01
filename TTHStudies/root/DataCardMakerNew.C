@@ -50,7 +50,7 @@ pair<double,double> getMaxValue( TH1F* hMassProb){
   // the probability at the maximum
   float prob = -99;
 
-  // parameters of the interpolating parabola
+  // parameters of the interpolating parabola y = a*x^2 + b*x + c
   float a    = -99;
   float b    = -99;
   float c    = -99;
@@ -206,15 +206,22 @@ pair<double,double> getMaxValue( TH1F* hMassProb){
 
 void bbb( TH1F* hin, TH1F* hout_Down, TH1F* hout_Up, int bin){
 
+  // get the bin content shifted down and up by 1sigma
   float bin_down = hin->GetBinContent( bin ) - hin->GetBinError( bin );
   float bin_up   = hin->GetBinContent( bin ) + hin->GetBinError( bin );
 
+  // just copy the nominal histogram...
   hout_Down->Reset();
   hout_Down->Add(hin,1.0);
+
+  // ... and then shift down the bin content by -1sigma
   hout_Down->SetBinContent(bin, TMath::Max(bin_down,0.01));
 
+  // just copy the nominal histogram...
   hout_Up->Reset();
   hout_Up->Add(hin,1.0);
+
+  // ... and then shift up the bin content by +1sigma
   hout_Up->SetBinContent  (bin, TMath::Max(bin_up,0.01));
 
   return;
@@ -261,20 +268,32 @@ void draw(vector<float> param, TTree* t = 0, TString var = "", TH1F* h = 0, TCut
 
 void fill(  TTree* tFull = 0, TH1F* h = 0, TCut cut = "" , int analysis = 0, vector<float>* param = 0, TF1* xsec = 0){
 
+  // needed as usual to copy a tree
   TFile* dummy = new TFile("dummy.root","RECREATE");
+
+  // tree of events in the category
   TTree* t = (TTree*)tFull->CopyTree( cut );
-  
+
+  // ME probability  
   float p_vsMH_s[999];
   float p_vsMT_b[999];
+
+  // b-tagging probability
   float p_tt_bb [999];
   float p_tt_jj [999];
+
+  // # of permutations
   int nPermut_s;
   int nPermut_b;
-  int nTotInteg_s;
-  int nTotInteg_b;
+
+  // num of mass points scanned
   int nMassPoints;
+
+  // value of the mass scan grid
   float mH_scan[999];
   float mT_scan[999];
+
+  // the event-dependent weight
   float weight;
   
   t->SetBranchAddress("p_vsMH_s",     p_vsMH_s);
@@ -283,8 +302,6 @@ void fill(  TTree* tFull = 0, TH1F* h = 0, TCut cut = "" , int analysis = 0, vec
   t->SetBranchAddress("p_tt_jj",      p_tt_jj);
   t->SetBranchAddress("nPermut_s",    &nPermut_s);
   t->SetBranchAddress("nPermut_b",    &nPermut_b);
-  t->SetBranchAddress("nTotInteg_s",  &nTotInteg_s);
-  t->SetBranchAddress("nTotInteg_b",  &nTotInteg_b);
   t->SetBranchAddress("nMassPoints",  &nMassPoints);
   t->SetBranchAddress("mH_scan",      mH_scan);
   t->SetBranchAddress("mT_scan",      mT_scan);
@@ -293,67 +310,105 @@ void fill(  TTree* tFull = 0, TH1F* h = 0, TCut cut = "" , int analysis = 0, vec
   Long64_t nentries = t->GetEntries(); 
   cout << "Total entries: " << nentries << endl;
   
+  // a temporary histogram that contains the prob. vs mass
   TH1F* hTmp      = new TH1F("hTmp", "", 500,0,500);
 
+  // loop over tree entries
   for (Long64_t i = 0; i < nentries ; i++){
 
     t->GetEntry(i);
     
+    // reset (needed because hTmp is filled with Fill()
     hTmp->Reset();
 
+    // if doing a mass analysis
     if( analysis==0 ){
 
+      // reset the per-permutation mass-integrated probability
       float perm_prob [nPermut_s];
       for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){
 	perm_prob [perm_it] = 0.;
       }
       
+      // start the scan over the Higgs mass
       for(int mH_it = 0; mH_it<nMassPoints; mH_it++){
+
 	float mH =  mH_scan[mH_it];
+
+	// given mH, scan over the permutations
 	for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){	
+
+	  // ME probability (undet ttH hypothesis)
 	  float ME_prob = p_vsMH_s[mH_it*nPermut_s + perm_it];
+
+	  // b-tagging prob. (under ttbb hypothesis)
 	  float bb_prob =  p_tt_bb[perm_it] ;
+
+	  // nornalize weights (only if xsec is provided)
 	  float norm    = xsec!=0 ? 1./xsec->Eval( mH ) : 1.0;	
+
+	  // total probability
 	  double p =  ME_prob*bb_prob*norm;	
+
+	  // add...
 	  perm_prob [perm_it] += p;	  
 	}
       }
       
-      float maxP = 0.;
-      int   maxM = 0;
+      // now we search for the permutation with the largest integrated probability
+      float maxP   = 0.;
+      int   maxM    = 0;
       int   maxPerm = 0;
-      for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){
+
+      // loop over the permutations
+      for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){	
 	if(perm_prob [perm_it] > maxP ){
 	  maxP    = perm_prob [perm_it];
 	  maxPerm = perm_it;
 	}
       }
       
+      // now that we found the best permutation (maxPerm),
+      // we get its mass scan...
       for(int mH_it = 0; mH_it<nMassPoints; mH_it++){
-	float mH =  mH_scan[mH_it];
+	
+	float mH      =  mH_scan[mH_it];
 	float ME_prob = p_vsMH_s[mH_it*nPermut_s + maxPerm];
 	float bb_prob =  p_tt_bb[maxPerm] ;
 	float norm    = xsec!=0 ? 1./xsec->Eval( mH ) : 1.0;	
 	double p =  ME_prob*bb_prob*norm;       
+
+	// fill the histogram
 	hTmp->Fill( mH, p );
       }
       
+      // now that the histogram is filled, find the global maximum
       pair<double,double> bestMass = getMaxValue(hTmp);
+
+      // this comes from a quadratic interpolation around the maximum
       double mass = bestMass.first;
+
+      // fill the output histo with the interpolated mass value
       h->Fill(mass, weight);
 
     }
+
+    // if doing a ME analysis...
     else if( analysis==1 ){
 
-
+      // this number are the total probability under the ttH, ttbb, and ttjj hypotheses
       double p_125_all_s_ttbb = 0.;
       double p_125_all_b_ttbb = 0.;
       double p_125_all_b_ttjj = 0.;
 
+      // consider only the mass scan at the nominal Higgs mass
       for(int mH_it = 0; mH_it<nMassPoints; mH_it++){	
+
+	// skip other mass values...
 	float mH =  mH_scan[mH_it];
 	if(mH>126 || mH<124) continue;
 	
+	// once we got the good Higgs mass, loop over permutations...
 	for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){	
 	  float ME_prob     = p_vsMH_s[mH_it*nPermut_s + perm_it];
 	  float bb_prob     = p_tt_bb[perm_it] ;
@@ -361,10 +416,14 @@ void fill(  TTree* tFull = 0, TH1F* h = 0, TCut cut = "" , int analysis = 0, vec
 	}
       }
 
+      // consider only the mass scan at the nominal top mass
       for(int mT_it = 0; mT_it<nMassPoints; mT_it++){
+
+	// skip other mass values...
 	float mT =  mT_scan[mT_it];
 	if(mT>175 || mT<173) continue;
 
+	// once we got the good Top mass, loop over permutations...
 	for( int perm_it = 0 ; perm_it<nPermut_b ; perm_it++){	
 	  float ME_prob     = p_vsMT_b[mT_it*nPermut_b + perm_it];
 	  float bb_prob     = p_tt_bb[perm_it] ;
@@ -374,44 +433,52 @@ void fill(  TTree* tFull = 0, TH1F* h = 0, TCut cut = "" , int analysis = 0, vec
 	}
       }
 
-
+      // prepare the sb likelihood ratio ingredients
       double wDen = p_125_all_s_ttbb + (*param)[0]*( (*param)[1]*p_125_all_b_ttbb + (*param)[2]*p_125_all_b_ttjj );
       double wNum = p_125_all_s_ttbb;
       
+      // the sb likelihood ratio
       double w = wDen>0 ? wNum/wDen : 0.;
       
+      // if not splitting the first bin, just fill with the weight
       if( param->size()==3 ) h->Fill( w, weight);
       
       else{
 	
+	// sanity check
 	if( param->size()!= 5 ){
 	  cout << "Problem in fill..." << endl;
 	  return;
 	}
 	
+	// if w<cutval, do a 2D analyses LR_sb vs LR_bj
 	float cutval = h->GetBinLowEdge( 3 );
 	
+	// prepare the bj likelihood ratio ingredients
 	double wbjDen = p_125_all_b_ttbb + (*param)[3]*p_125_all_b_ttjj;
 	double wbjNum = p_125_all_b_ttbb ;
 	
+	// the bj likelihood ratio
 	double wbj = wbjDen>0 ? wbjNum/wbjDen : 0.;
 	
+	// is above the cut for 2D analysis, just do 1D analysis
 	if( w >= cutval )  h->Fill( w, weight);
+
+	// else fill out two bins...
 	else{
+	  // if LR_bj is below the cut value param[4], fill the first bin...
 	  if( wbj <= (*param)[4] )  h->Fill(   cutval/4. , weight);
+	  // if LR_bj is above the cut value param[4], fill the second first...
 	  if( wbj >  (*param)[4] )  h->Fill( 3*cutval/4. , weight);
-	}
-	
-	
-	
-	
+	}       		
       }
       
     }
-    else{}
+    else{ /* NOT IMPLEMENTED */ }
 
-    //cout << mass << endl;
- }
+  } // entries
+
+  return;
 
 }
 
@@ -587,7 +654,7 @@ void produceNew(// secondary name of the input trees
   // master histogram (all other histograms are a clone of this one)
   TH1F* h = new TH1F("h","Simulation #sqrt{s}=8 TeV, "+fname+"; S/(S+B); units",  param.size()==3 ? nBins : nBins+1 ,  param.size()==3 ? bins.GetArray() : bins2.GetArray());
  
-  // the observable when doing the ME analysis
+  // the observable when doing the ME analysis for cat2 (workaround)
   TString var("");
   var = TString(Form("p_125_all_s_ttbb/(p_125_all_s_ttbb+%f*(%f*p_125_all_b_ttbb+%f*p_125_all_b_ttjj))", fact1, (1-fact2)*S_bb/B_bb*(Int_B_bb/(Int_B_bb+Int_B_jj)), (1+fact2)*S_bb/B_jj*(Int_B_jj/(Int_B_bb+Int_B_jj)) ));
 
@@ -694,17 +761,14 @@ void produceNew(// secondary name of the input trees
       h_tmp->Reset();
       h_tmp->Sumw2();
 
-      // if doing ME analysis, use the 'draw' function
-      if(doMEM){
 
-	// workaround due to bug in the trees
+      if(doMEM){
+	// workaround due to bug in the trees on cat. 2
 	if( (string(category.Data())).find("cat2") != string::npos )
 	  draw( param, tree, var, h_tmp, sample_cut );
 	else
 	  fill( tree, h_tmp, sample_cut, 1, &param, xsec);
       }
-
-      // else, use the 'fill' function
       else{
 	fill( tree, h_tmp, sample_cut, 0, &param, xsec);
 
@@ -732,7 +796,7 @@ void produceNew(// secondary name of the input trees
 	h_tmp->Write(datacard_name.c_str(), TObject::kOverwrite);
       }
 
-      // if doing systematic analysis, save histogram with label and continue
+      // if doing systematic analysis, save histogram with correct label and continue
       else{
 	h_tmp->Write((datacard_name+"_"+sys).c_str(), TObject::kOverwrite);
 	continue;      
@@ -745,7 +809,7 @@ void produceNew(// secondary name of the input trees
 	TH1F* h_tmp_b_up   = (TH1F*)h->Clone(Form("h_tmp_%d_Up",bin));
 	TH1F* h_tmp_b_down = (TH1F*)h->Clone(Form("h_tmp_%d_Down",bin));
 
-	// the actual function that produces the shidted templates
+	// the actual function that produces the shifted templates
 	bbb( h_tmp, h_tmp_b_up, h_tmp_b_down, bin);      
 	dir->cd();
 
@@ -856,6 +920,7 @@ void produceNew(// secondary name of the input trees
   //////////////////////////////////////////////////////////////////////////////////
   // systematics
 
+  // LUMINOSITY
   line = "lumi                  lnN  ";
   if( aMap["TTH125"]->Integral()>0 )     line += "1.022      ";
   if( aMap["TTJetsHFbb"]->Integral()>0 ) line += "1.022      ";
@@ -865,6 +930,8 @@ void produceNew(// secondary name of the input trees
   if( aMap["SingleT"]->Integral()>0 )    line += "1.022      ";
   out<<line;
   out<<endl;
+
+  // BTAGGING
   line = "csv                   shape  ";                              
   if( aMap["TTH125"]->Integral()>0 )     line += "1.0        ";       
   if( aMap["TTJetsHFbb"]->Integral()>0 ) line += "1.0        ";       
@@ -874,6 +941,8 @@ void produceNew(// secondary name of the input trees
   if( aMap["SingleT"]->Integral()>0 )    line += " -         ";
   out<<line;
   out<<endl;
+
+  // JET ENERGY SCALE
   line = "JEC                   shape  ";                             
   if( aMap["TTH125"]->Integral()>0 )     line += "1.0        ";
   if( aMap["TTJetsHFbb"]->Integral()>0 ) line += "1.0        ";
@@ -884,6 +953,7 @@ void produceNew(// secondary name of the input trees
   out<<line;
   out<<endl;
 
+  // TTBB CROSS-SECTION
   line = "Norm_TTbb             lnN    ";
   if( aMap["TTH125"]->Integral()>0 )     line += " -         ";
   if( aMap["TTJetsHFbb"]->Integral()>0 ) line += "1.50       ";
@@ -894,6 +964,7 @@ void produceNew(// secondary name of the input trees
   out<<line;
   out<<endl;
 
+  // TTB CROSS-SECTION
   line = "Norm_TTb              lnN    ";
   if( aMap["TTH125"]->Integral()>0 )     line += " -         ";
   if( aMap["TTJetsHFbb"]->Integral()>0 ) line += " -       ";
@@ -904,6 +975,7 @@ void produceNew(// secondary name of the input trees
   out<<line;
   out<<endl;
 
+  // TTV CROSS-SECTION
   line = "Norm_TTV              lnN    ";
   if( aMap["TTH125"]->Integral()>0 )     line += " -         ";
   if( aMap["TTJetsHFbb"]->Integral()>0 ) line += " -         ";
@@ -914,6 +986,7 @@ void produceNew(// secondary name of the input trees
   out<<line;
   out<<endl;
 
+  // SINGLE-TOP CROSS-SECTION
   line = "Norm_SingleT          lnN    ";
   if( aMap["TTH125"]->Integral()>0 )     line += " -         ";
   if( aMap["TTJetsHFbb"]->Integral()>0 ) line += " -         ";
@@ -924,6 +997,7 @@ void produceNew(// secondary name of the input trees
   out<<line;
   out<<endl;
 
+  // QCD SCALE UNC. ON TTH
   line = "QCDscale_TTH          lnN    ";
   if( aMap["TTH125"]->Integral()>0 )     line += "1.12       ";
   if( aMap["TTJetsHFbb"]->Integral()>0 ) line += " -         ";
@@ -934,6 +1008,7 @@ void produceNew(// secondary name of the input trees
   out<<line;
   out<<endl;
 
+  // QCD SCALE UNC. ON TT+HF
   line = string(Form("QCDscale%s_TTJetsHF     lnN    ", null.c_str()));
   if( aMap["TTH125"]->Integral()>0 )     line += " -         ";
   if( aMap["TTJetsHFbb"]->Integral()>0 ) line += "1.35       ";
@@ -944,6 +1019,7 @@ void produceNew(// secondary name of the input trees
   out<<line;
   out<<endl;
 
+ // QCD SCALE UNC. ON TT+LF
   line = string(Form("QCDscale%s_TTJetsLF     lnN    ", null.c_str()));
   if( aMap["TTH125"]->Integral()>0 )     line += " -         ";
   if( aMap["TTJetsHFbb"]->Integral()>0 ) line += " -         ";
@@ -954,6 +1030,7 @@ void produceNew(// secondary name of the input trees
   out<<line;
   out<<endl;
 
+  // PDFs
   line = "pdf_gg                lnN    ";
   if( aMap["TTH125"]->Integral()>0 )     line += "1.03       ";
   if( aMap["TTJetsHFbb"]->Integral()>0 ) line += "1.03       ";
@@ -1056,7 +1133,7 @@ void produceNew(// secondary name of the input trees
   // close the output file
   fout->Close();
 
-  // a reminder
+  // a reminder...
   cout << "Have you checked the systematics ??? " << endl;
 
 }
