@@ -6,6 +6,8 @@
 #include <vector>
 
 #include "TMath.h"
+#include "TMatrixT.h"
+#include "TMatrixTBase.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TString.h"
@@ -32,6 +34,142 @@
 #include "TMultiGraph.h"
 #include "TArrayF.h"
 #include "TLine.h"
+
+typedef TMatrixT<double> TMatrixD;
+
+
+
+pair<double,double> getMaxValue( TH1F* hMassProb){
+ 
+  float est  = -99;
+  float prob = -99;
+  float a = -99;
+  float b = -99;
+  float c = -99;
+
+  if( hMassProb->GetEntries()==0 ){
+    est  =  0.;
+    prob =  0.;
+    return make_pair(est, prob);
+  }
+
+  
+  int maxBin = hMassProb->GetMaximumBin();
+  int bD = -999;
+  int bC = -999;
+  int bU = -999;
+
+  int isRightMostBin = 1;
+  for(int k=1; k<=hMassProb->GetNbinsX(); k++){
+    if( hMassProb->GetBinContent(maxBin+k)>0 ) isRightMostBin=0;
+  }
+  int isLeftMostBin = 1;
+  for(int k=1; k<=hMassProb->GetNbinsX(); k++){
+    if( hMassProb->GetBinContent(maxBin-k)>0 ) isLeftMostBin=0;
+  }
+
+  if( (maxBin < hMassProb->GetNbinsX() && maxBin > 1) && !isRightMostBin && !isLeftMostBin ){
+    //cout << "Center" << endl;
+    bC = maxBin;
+    for(int k=1; k<=hMassProb->GetNbinsX() && bD==-999; k++){
+      if( hMassProb->GetBinContent(maxBin-k)>0 ){
+	bD = maxBin-k;	
+	////cout << "Found bin " << bD << " with " <<  hMassProb->GetBinContent(bD) << endl;
+      }
+    }
+    for(int k=1; k<=hMassProb->GetNbinsX() && bU==-999; k++){
+      if( hMassProb->GetBinContent(maxBin+k)>0 ){
+	bU = maxBin+k;	
+	////cout << "Found bin " << bU << " with " <<  hMassProb->GetBinContent(bU) << endl;	
+      }
+    }   
+  }
+  else if( (maxBin == hMassProb->GetNbinsX()) || isRightMostBin){
+    //cout << "Right" << endl;
+    bU = maxBin; 
+    for(int k=1; k<=hMassProb->GetNbinsX() && bC==-999; k++){
+      if( hMassProb->GetBinContent(maxBin-k)>0 ) bC = maxBin-k;	
+    }
+    for(int k=1; k<=hMassProb->GetNbinsX() && bD==-999; k++){
+      if( hMassProb->GetBinContent(bC-k)>0 ) bD = bC-k;	
+    }
+  }
+  else if( (maxBin == 1) || isLeftMostBin){
+    //cout << "Left" << endl;
+    bD = maxBin; 
+    for(int k=1; k<=hMassProb->GetNbinsX() && bC==-999; k++){
+      if( hMassProb->GetBinContent(maxBin+k)>0 ) bC = maxBin+k;	
+    }
+    for(int k=1; k<=hMassProb->GetNbinsX() && bU==-999; k++){
+      if( hMassProb->GetBinContent(bC+k)>0 ) bU = bC+k;	
+    }
+  }
+  else{
+    //cout << "Unknown" << endl;
+    est  =  hMassProb->GetBinCenter  (hMassProb->GetMaximumBin());
+    prob =  hMassProb->GetBinContent (hMassProb->GetMaximumBin());
+    //cout << "M=" << est << endl;
+    return make_pair(est, prob);
+  }
+
+  if( bD==-999 || bU==-999 || bC==-999){
+    //cout << "Problems" << endl;   
+    //cout << bD << "," << bC << "," << bU << endl;
+    est  =  hMassProb->GetBinCenter  (hMassProb->GetMaximumBin());
+    prob =  hMassProb->GetBinContent (hMassProb->GetMaximumBin());
+    //cout << "M=" << est << endl;
+    return make_pair(est, prob);
+  }
+
+  double xD =  hMassProb->GetBinCenter (bD);
+  double xC =  hMassProb->GetBinCenter (bC);
+  double xU =  hMassProb->GetBinCenter (bU);
+  double yD =  hMassProb->GetBinContent(bD);
+  double yC =  hMassProb->GetBinContent(bC);
+  double yU =  hMassProb->GetBinContent(bU);
+  
+  TMatrixD A(3,3);
+  const double elements[9] = 
+    { 1, xD,  xD*xD,
+      1, xC,  xC*xC,
+      1, xU,  xU*xU 
+    };
+  A.SetMatrixArray(elements, "C");
+  TMatrixD AInv(3,3);
+  double det;
+  AInv = A.Invert(&det);
+  
+  TMatrixD Y(3,1);
+  const double yPos[3] = 
+    { yD, yC, yU
+    };
+  Y.SetMatrixArray(yPos, "C");
+  
+  TMatrixD C(3,1);
+  const double dummy[3] = 
+    { 1., 1., 1.
+    };
+  C.SetMatrixArray(dummy,"C");
+  C.Mult(AInv,Y);
+  
+  a = C(2,0);
+  b = C(1,0);
+  c = C(0,0);
+  
+  est  = -b/2/a ;
+  prob = a*est*est + b*est + c;
+
+  if(est<0){
+    est  =  hMassProb->GetBinCenter  (hMassProb->GetMaximumBin());
+    prob =  hMassProb->GetBinContent (hMassProb->GetMaximumBin());
+    return make_pair(est, prob);  
+  }
+  
+  return make_pair(est, prob);
+  
+}
+
+
 
 
 
@@ -220,7 +358,7 @@ void plot_category(string type = "SL",
 
   cout << "Signal = " << hS->Integral()/5. << endl;
 
-  if(1){
+  if(0){
     c1->SaveAs(  (fname+"_AN"+"_New.png").c_str() );
     c1->SaveAs(  (fname+"_AN"+"_New.pdf").c_str() );
   }
@@ -1295,7 +1433,7 @@ void plot_match( TString fname = "SL",
 
 }
 
-void plot_atchAll(){
+void plot_matchAll(){
 
   plot_match("SL", "type==0", "cat1_s", "Cat 1, t#bar{t}H",     1);
   plot_match("SL", "type==0", "cat1_b", "Cat 1, t#bar{t}+jets", 0);
@@ -1336,3 +1474,460 @@ void plot_atchAll(){
   plot_match("DL", "type==6 && numBTagM==4", "cat6_s_4BTag", "Cat 6, t#bar{t}H",     1);
   plot_match("DL", "type==6 && numBTagM==4", "cat6_b_4BTag", "Cat 6, t#bar{t}+jets", 0);
 }
+
+
+
+void massPlot( TString fname = "SL", 
+	       string cut = "type==0", 
+	       TString category = "cat0",
+	       TString plotname = "SL6jets",
+	       int plotShapes = 0,
+	       float lumiScale = 20./12.1,
+	       int nBins =20, float xLow=50, float xHigh=250,
+	       int normXSec=1, float fact1 = 5,
+	       int matchPattern = 111111, int matchPattern2 = 999999
+	       ){
+  
+ 
+  gStyle->SetOptStat(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetCanvasBorderMode(0);
+  gStyle->SetCanvasColor(0);
+  gStyle->SetPadBorderMode(0);
+  gStyle->SetPadColor(0);
+  gStyle->SetTitleFillColor(0);
+  gStyle->SetTitleBorderSize(0);
+  gStyle->SetTitleH(0.07);
+  gStyle->SetTitleFontSize(0.1);
+  gStyle->SetTitleStyle(0);
+  gStyle->SetTitleOffset(1.3,"y");
+
+  TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
+  c1->SetGrid(0,0);
+  c1->SetFillStyle(4000);
+  c1->SetFillColor(10);
+  c1->SetTicky();
+  c1->SetObjectStat(0);
+
+
+  TLegend* leg = new TLegend(0.59,0.44,0.84,0.90,NULL,"brNDC");
+  leg->SetFillStyle(0);
+  leg->SetBorderSize(0);
+  leg->SetFillColor(10);
+  leg->SetTextSize(0.04); 
+  leg->SetHeader(category);
+
+  int counterH         = 0;
+  int counterHQuarks   = 0;
+  int counterHMatch    = 0;
+  int counterHMatchAny = 0;
+
+  //TF1* xsec6J = new TF1("xsec6J",Form("TMath::Landau(x,%f*7.61581e+01 ,%f*1.89245e+01)", fact1, fact2), 20, 500);
+  //TF1* xsec5J = new TF1("xsec5J",Form("TMath::Landau(x,%f*7.40196e+01 ,%f*1.80142e+01)", fact1, fact2), 20, 500); 
+  //TF1* xsec = 
+  //( (string(category.Data())).find("cat2")!=string::npos || 
+  //  (string(category.Data())).find("cat3")!=string::npos ||
+  //  (string(category.Data())).find("cat4")!=string::npos ) ?  xsec5J : xsec6J;
+  
+  TF1* xsec = new TF1("xsec",Form("x^(-%f)", fact1 ), 20, 500);
+
+  string version =  "_v2" ;
+  cout << "Doing version " << version << " and category " << category << endl;
+
+  THStack* aStack = new THStack("aStack","Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events");
+  TH1F* hMass     = new TH1F   ("hMass", "Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
+  TH1F* hTTH      = new TH1F("hTTH","Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
+  TH1F* hTTV      = new TH1F("hTTV","Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
+  TH1F* hTT       = new TH1F("hTT", "Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
+  TH1F* hTTbb     = new TH1F("hTTbb", "Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
+  TH1F* hTTbj     = new TH1F("hTTbj", "Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
+  TH1F* hTTjj     = new TH1F("hTTjj", "Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
+
+  TH1F* hTmp      = new TH1F("hTmp", "", 500,0,500);
+
+  TH1F* hErr      = 0;
+
+  hTTbb->Sumw2();
+  hTTbj->Sumw2();
+  hTTjj->Sumw2();
+  hTTH->Sumw2();
+  hTTV->Sumw2();
+
+  vector<string> samples;
+  samples.push_back("TTV");
+  samples.push_back("SingleT");
+  samples.push_back("DiBoson");
+  samples.push_back("TTJetsBB");
+  samples.push_back("TTJetsBJ");
+  samples.push_back("TTJetsJJ");
+  //samples.push_back("EWK");
+  samples.push_back("TTH125");
+  
+
+  for( unsigned int s = 0 ; s < samples.size(); s++){
+
+    string sample = samples[s];
+
+    TCut sample_cut(cut.c_str());
+    
+    int color;
+    if( sample.find("TTJetsBB")!=string::npos ){
+      sample = "TTJets";
+      sample_cut = sample_cut && TCut("nSimBs>2 && nMatchSimBs>=2");
+      color = 16;
+    }
+    if( sample.find("TTJetsBJ")!=string::npos ){
+      sample = "TTJets";
+      sample_cut = sample_cut && TCut("nSimBs>2 && nMatchSimBs<2");
+      color = 17;
+    }
+    if( sample.find("TTJetsJJ")!=string::npos ){
+      sample = "TTJets";
+      sample_cut = sample_cut && TCut("nSimBs==2");
+      color = 18;
+    }
+
+    TFile* f = TFile::Open(("MEAnalysisNew_MHscan_"+string(fname.Data())+"_nominal"+version+"_"+sample+".root").c_str());
+    //TFile* f = TFile::Open("../bin/root/MEAnalysisNew.root");
+    if(f==0 || f->IsZombie()){
+      cout << "Missing " << sample << " file" << endl;
+      continue;
+    }
+    else{
+      cout << "Doing sample " << sample << endl;
+    }
+
+    TH1F* hMass_s = (TH1F*)hMass->Clone(("hMass_"+sample).c_str());
+    hMass_s->Reset();
+    hMass_s->Sumw2();
+
+    TTree* tFull = (TTree*)f->Get("tree");
+    TFile* dummy = new TFile("dummy.root","RECREATE");
+    TTree* t = (TTree*)tFull->CopyTree( sample_cut );
+
+    float p_vsMH_s[999];
+    float p_tt_bb [999];
+    int nPermut_s;
+    int nTotInteg_s;
+    int nMassPoints;
+    float mH_scan[999];
+    int perm_to_gen_s[999];
+    float weight;
+
+    t->SetBranchAddress("p_vsMH_s",     p_vsMH_s);
+    t->SetBranchAddress("p_tt_bb",      p_tt_bb);
+    t->SetBranchAddress("nPermut_s",    &nPermut_s);
+    t->SetBranchAddress("nTotInteg_s",  &nTotInteg_s);
+    t->SetBranchAddress("nMassPoints",  &nMassPoints);
+    t->SetBranchAddress("mH_scan",      mH_scan);
+    t->SetBranchAddress("weight",       &weight);
+    t->SetBranchAddress("perm_to_gen_s",perm_to_gen_s);
+    
+    Long64_t nentries = t->GetEntries(); 
+    cout << "Total entries: " << nentries << endl;
+
+    int counter         = 0;
+    int counterQuarks   = 0;
+    int counterMatch    = 0;
+    int counterMatchAny = 0;
+
+    for (Long64_t i = 0; i < nentries ; i++){
+
+      t->GetEntry(i);
+      counter++;
+
+      hTmp->Reset();
+
+      float perm_prob [nPermut_s];
+      float perm_match[nPermut_s];      
+      for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){
+	perm_prob [perm_it] = 0.;
+	perm_match[perm_it] = 0;
+      }
+
+      int quarks = 0;
+      for(int mH_it = 0; mH_it<nMassPoints; mH_it++){
+	float mH =  mH_scan[mH_it];
+
+	if( mH<0 || mH>300) continue;
+
+	for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){
+
+	  float ME_prob = p_vsMH_s[mH_it*nPermut_s + perm_it];
+	  float bb_prob =  p_tt_bb[perm_it] ;
+	  float norm    = normXSec ? 1./xsec->Eval( mH ) : 1.0;
+	  int match     = perm_to_gen_s[perm_it];
+
+	  double p =  ME_prob*bb_prob*norm;
+
+	  perm_prob [perm_it] += p;
+	  perm_match[perm_it] = match;
+	  
+	  if( match == matchPattern ) quarks++;
+
+	  //hTmp->Fill( mH, p );
+	}
+      }
+    
+      float maxP = 0.;
+      int   maxM = 0;
+      int   maxPerm = 0;
+      for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){
+	if(perm_prob [perm_it] > maxP ){
+	  maxP    = perm_prob [perm_it];
+	  maxM    = perm_match[perm_it];
+	  maxPerm = perm_it;
+	}
+      }
+      
+      for(int mH_it = 0; mH_it<nMassPoints; mH_it++){
+
+	float mH =  mH_scan[mH_it];
+
+	if( mH<0 || mH>300) continue;
+
+	float ME_prob = p_vsMH_s[mH_it*nPermut_s + maxPerm];
+	float bb_prob =  p_tt_bb[maxPerm] ;
+	float norm    = normXSec ? 1./xsec->Eval( mH ) : 1.0;	
+	double p =  ME_prob*bb_prob*norm;       
+	hTmp->Fill( mH, p );
+      }
+
+      pair<double,double> bestMass = getMaxValue(hTmp);
+      double mass = bestMass.first;
+      double prob = bestMass.second;
+      //cout << "Ev." << i << " => mass=" << mass << endl;
+
+      //if(mass<0){
+      //hTmp->Draw();
+      //cout << mass << endl;
+      //return;
+      //}
+      
+      if(quarks>0){
+	counterQuarks++;
+	if( maxM == matchPattern || maxM == matchPattern2)  counterMatch++;	
+      }
+
+      if( maxM%100 == 11 )  counterMatchAny++;	
+
+      //if(-TMath::Log(prob)<16) 
+      hMass_s->Fill(mass, weight*lumiScale);
+    }
+
+    int firstBin              =  1;
+    float firstBinContent     =  hMass_s->GetBinContent( firstBin ); 
+    float underflowBinContent =  hMass_s->GetBinContent( firstBin-1 ); 
+    hMass_s->SetBinContent( firstBin, firstBinContent+underflowBinContent); 
+
+    int lastBin              =  hMass_s->GetNbinsX();
+    float lastBinContent     =  hMass_s->GetBinContent( lastBin ); 
+    float overflowBinContent =  hMass_s->GetBinContent( lastBin+1 ); 
+    hMass_s->SetBinContent( lastBin, lastBinContent+overflowBinContent /*+ firstBinContent+underflowBinContent*/ );    
+
+    cout << "Total: " << counter << endl;
+    cout << "All quarks in acceptance: " << counterQuarks << endl;
+    cout << "Max permutation is correct: " << counterMatch << endl;
+    cout << " ==> eff.      = "      << (counter>0 ? float(counterMatchAny)/float(counter) : 0. ) << endl;
+    cout << " ==> acc.      = " << (counter>0 ? float(counterQuarks)/float(counter) : 0.) << endl;
+    cout << " ==> eff.| acc = " << (counterQuarks>0 ? float(counterMatch)/float(counterQuarks) : 0. ) << endl;
+    cout << "Overflow="  << overflowBinContent << endl;
+    cout << "Underflow=" << underflowBinContent << endl;
+    
+    if( sample.find("TTH")!=string::npos ){
+       counterH         = counter;
+       counterHQuarks   = counterQuarks;
+       counterHMatch    = counterMatch;
+       counterHMatchAny = counterMatchAny;
+    }
+    
+
+    if( hErr==0 ){
+      hErr = (TH1F*)hMass_s->Clone("hErr");
+      hErr->Reset();
+      leg->AddEntry(hErr, "MC unc. (stat.)", "L");
+    }
+    if( sample.find("TTH")==string::npos ) hErr->Add( hMass_s, 1.0);
+
+    if( sample.find("TTJets")!=string::npos ){
+      hMass_s->SetFillColor(color);
+      if(color==16){
+	leg->AddEntry(hMass_s, "t#bar{t} + bb", "F");
+	hTTbb->Add(hMass_s, 1.0);
+      }
+      if(color==17){
+	leg->AddEntry(hMass_s, "t#bar{t} + b", "F");
+	hTTbj->Add(hMass_s, 1.0);
+      }
+      if(color==18){
+	leg->AddEntry(hMass_s, "t#bar{t} + jj", "F");
+	hTTjj->Add(hMass_s, 1.0);
+      }
+      hTT->Add(hMass_s, 1.0);
+    }
+    if( sample.find("TTH")!=string::npos ){
+      hMass_s->SetFillColor(kRed);
+      hTTH->Add(hMass_s, 1.0);
+      leg->AddEntry(hMass_s, "t#bar{t}H", "F");
+    }
+    if( sample.find("TTV")!=string::npos ){
+      hMass_s->SetFillColor(kBlue);
+      hTTV->Add(hMass_s, 1.0);
+      leg->AddEntry(hMass_s, "t#bar{t}V", "F");
+    }
+    if( sample.find("SingleT")!=string::npos ){
+      hMass_s->SetFillColor(kMagenta);
+      leg->AddEntry(hMass_s, "Single top", "F");
+    }
+    if( sample.find("DiBoson")!=string::npos ){
+      hMass_s->SetFillColor(kYellow);
+      leg->AddEntry(hMass_s, "VV", "F");
+    }
+    if( sample.find("EWK")!=string::npos ){
+      hMass_s->SetFillColor(kGreen);
+      leg->AddEntry(hMass_s, "V+jets", "F");
+    }
+
+    cout << "Adding " << hMass_s->Integral() << " weighted events to the stack" << endl;
+    aStack->Add( hMass_s );
+
+  }
+
+  hErr->GetYaxis()->SetTitle("Events");
+  hErr->GetXaxis()->SetTitle("M_{H} estimator [GeV]");
+  hErr->SetTitle("Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}");
+  hErr->SetTitleSize  (0.04,"X");
+  hErr->SetTitleOffset(0.95,"X");
+  float max =  hErr->GetMaximum()*1.45;
+  hErr->GetYaxis()->SetRangeUser(0., max );
+  hErr->SetLineColor(kBlack);
+  hErr->Draw("HISTE1");
+
+  aStack->Draw("HISTSAME");
+
+  hTTH->SetLineWidth(3);
+  hTTH->SetLineColor(kRed);
+  hTTH->SetLineStyle(kDashed);
+  hTTH->SetFillColor(kRed);
+  hTTH->SetFillStyle(3004);
+  hTTH->Scale(5.0);
+  hTTH->Draw("HISTSAME");
+  hTTV->SetLineWidth(3);
+  hTTV->SetLineColor(kBlue);
+  hTTV->SetLineStyle(kDashed);
+  hTTV->SetFillColor(kBlue);
+  hTTV->SetFillStyle(3005);
+  hTTV->Scale(5.0);
+  hTTV->Draw("HISTSAME");
+  hErr->Draw("HISTE1SAME");
+
+  leg->AddEntry(hTTH, "t#bar{t}H x 5", "L");
+  leg->AddEntry(hTTV, "t#bar{t}V x 5", "L");
+
+  TPaveText *pt = new TPaveText(0.11,0.76,0.41,0.89,"brNDC");
+  pt->SetFillStyle(0);
+  pt->SetBorderSize(0);
+  pt->SetFillColor(10);
+  pt->SetTextSize(0.03);
+  pt->SetTextAlign(11);
+  pt->AddText(Form("All quarks in acc.: %.0f%%", (counterH>0 ? float(counterHQuarks)/float(counterH)*100 : 0.) ))->SetTextColor(kBlack);
+  pt->AddText(Form("(of which %.0f%% perfect match)",      (counterHQuarks>0 ? float(counterHMatch)/float(counterHQuarks)*100 : 0. )))->SetTextColor(kRed);
+  pt->AddText(Form("Higgs-b's matched : %.0f%%", (counterH>0 ? float(counterHMatchAny)/float(counterH)*100 : 0. )))->SetTextColor(kBlue);
+  pt->Draw();
+
+  if(plotShapes==1){
+    hTT->SetLineWidth(3);
+    hTT->SetLineColor(kBlack);
+    hTT->SetLineStyle(kSolid);
+    //hTT->SetFillColor(16);
+    //hTT->SetFillStyle(3005);
+
+    hTTH->Scale(1./hTTH->Integral());
+    hTTV->Scale(1./hTTV->Integral());
+    hTT ->Scale(1./hTT ->Integral());
+
+    hTTH->GetYaxis()->SetRangeUser(0., hTTH->GetMaximum()*1.45);
+    hTTH->Draw("HISTE");
+    hTTV->Draw("HISTESAME");
+    hTT->Draw("HISTSAME");
+    leg->Clear();
+    leg->SetHeader(category);
+    leg->AddEntry(hTTH, "t#bar{t}H",     "F");
+    leg->AddEntry(hTTV, "t#bar{t}V",     "F");
+    leg->AddEntry(hTT,  "t#bar{t}+jets", "L");
+    leg->Draw();
+  }
+  else if(plotShapes==2){
+
+    hTTbb->SetLineWidth(3);
+    hTTbb->SetLineColor(kRed);
+    hTTbb->SetLineStyle(kSolid);
+
+    hTTbj->SetLineWidth(3);
+    hTTbj->SetLineColor(kBlue);
+    hTTbj->SetLineStyle(kSolid);
+    
+    hTTjj->SetLineWidth(3);
+    hTTjj->SetLineColor(kMagenta);
+    hTTjj->SetLineStyle(kSolid);
+
+    hTTbb->Scale(1./hTTbb->Integral());
+    hTTbj->Scale(1./hTTbj->Integral());
+    hTTjj->Scale(1./hTTjj->Integral());
+
+    hTTbb->GetYaxis()->SetRangeUser(0., hTTbb->GetMaximum()*1.45);
+    hTTbb->Draw("HISTE");
+    hTTbj->Draw("HISTESAME");
+    hTTjj->Draw("HISTESAME");
+    leg->Clear();
+    leg->SetHeader(category);
+    leg->AddEntry(hTTbb, "t#bar{t}+bb", "F");
+    leg->AddEntry(hTTbj, "t#bar{t}+b",  "F");
+    leg->AddEntry(hTTjj, "t#bar{t}+jj", "F");
+    leg->Draw();
+  }
+  else{
+    leg->Draw();
+  }
+
+  //hTmp->Draw();
+
+
+
+  if(1){
+    if(plotShapes==1)
+      c1->SaveAs("Mass_estimator_shapes_ttH_"+fname+"_"+plotname+".png");
+    else if(plotShapes==2)
+      c1->SaveAs("Mass_estimator_shapes_ttjets_"+fname+"_"+plotname+".png");
+    else
+      c1->SaveAs("Mass_estimator_spectrum_"+fname+"_"+plotname+".png");
+  }
+
+  cout << "Remove dummy file" << endl;
+  gSystem->Exec("rm dummy.root");
+  return;
+}
+
+
+void massPlotAll( ){
+  for(int i = 0; i < 3; i++){
+    if(i==0)
+      massPlot("SL", "type==0", "SL + 6 jets", "SL6jets", i, 19.5/12.1 ,   8 , 55, 245, 0, 1, 111111 , 111111);
+    else
+      massPlot("SL", "type==0", "SL + 6 jets", "SL6jets", i, 19.5/12.1 ,   8 , 55, 245, 0, 1, 111111 , 111111);
+    if(i==0)
+      massPlot("SL", "type==2", "SL + 5 jets", "SL5jets", i, 19.5/12.1 ,   8 , 55, 245, 0, 1, 111111 , 111111);
+    else
+      massPlot("SL", "type==2", "SL + 5 jets", "SL5jets", i, 19.5/12.1 ,   8 , 55, 245, 0, 1, 111111 , 111111);
+    if(i==0)
+      massPlot("SL", "type==3", "SL + >6 jets","SL7jets", i, 19.5/12.1 ,   8 , 55, 245, 0, 1, 111111 , 111111);
+    else
+      massPlot("SL", "type==3", "SL + >6 jets","SL7jets", i, 19.5/12.1 ,   8 , 55, 245, 0, 1, 111111 , 111111);
+    if(i==0)
+      massPlot("DL", "type==6", "DL + 4 jets", "DL4jets", i, 2*19.5/12.1 , 8 , 55, 245, 0, 1, 100111 , 11);
+    else
+      massPlot("DL", "type==6", "DL + 4 jets", "DL4jets", i, 2*19.5/12.1 ,  8 , 55, 245, 0, 1, 100111 , 11);
+  }
+}
+
+
