@@ -1,6 +1,7 @@
 #! /bin/sh
 
+NAME=New_MHscan
 
-ls MEAnalysis_$1_p*.root
-hadd -f MEAnalysis_$1.root MEAnalysis_$1_p*.root 
-rm  MEAnalysis_$1_p*.root
+ls MEAnalysis${NAME}_$1_p*.root
+hadd -f MEAnalysis${NAME}_$1.root MEAnalysis${NAME}_$1_p*.root 
+rm  MEAnalysis${NAME}_$1_p*.root

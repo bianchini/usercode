@@ -100,6 +100,9 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
 
   cout << "Doing version " << version << " and category " << category << endl;
 
+  // input files path
+  TString inputpath = "gsidcap://t3se01.psi.ch:22128//pnfs/psi.ch/cms/trivcat/store/user/bianchi/Trees/MEM/Oct04_2013/";
+
 
 
 
@@ -156,7 +159,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   ////////////////////////////// TTH
   
   // NOMINAL
-  TFile* f_TTH125 = TFile::Open("MEAnalysis_"+fname+"_nominal"+version+"_TTH125.root");
+  TFile* f_TTH125 = TFile::Open(inputpath+"MEAnalysis_"+fname+"_nominal"+version+"_TTH125.root");
   TTree* t_TTH125 = (TTree*)f_TTH125->Get("tree");
   TH1F* h_TTH125 = (TH1F*)h->Clone("h_TTH125");
   h_TTH125->Reset();
@@ -180,7 +183,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   }
 
   // JEC UP
-  TFile* f_TTH125_JECUp = TFile::Open("MEAnalysis_"+fname+"_JECUp"+version+"_TTH125.root");
+  TFile* f_TTH125_JECUp = TFile::Open(inputpath+"MEAnalysis_"+fname+"_JECUp"+version+"_TTH125.root");
   TTree* t_TTH125_JECUp = (TTree*)f_TTH125_JECUp->Get("tree");
   TH1F* h_TTH125_JECUp = (TH1F*)h->Clone("h_TTH125_JECUp");
   h_TTH125_JECUp->Reset();
@@ -192,7 +195,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   h_TTH125_JECUp->Write("TTH125_JECUp", TObject::kOverwrite);
 
   // JEC DOWN
-  TFile* f_TTH125_JECDown = TFile::Open("MEAnalysis_"+fname+"_JECDown"+version+"_TTH125.root");
+  TFile* f_TTH125_JECDown = TFile::Open(inputpath+"MEAnalysis_"+fname+"_JECDown"+version+"_TTH125.root");
   TTree* t_TTH125_JECDown = (TTree*)f_TTH125_JECDown->Get("tree");
   TH1F* h_TTH125_JECDown = (TH1F*)h->Clone("h_TTH125_JECDown");
   h_TTH125_JECDown->Reset();
@@ -204,7 +207,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   h_TTH125_JECDown->Write("TTH125_JECDown", TObject::kOverwrite);
 
   // csv UP
-  TFile* f_TTH125_csvUp = TFile::Open("MEAnalysis_"+fname+"_csvUp"+version+"_TTH125.root");
+  TFile* f_TTH125_csvUp = TFile::Open(inputpath+"MEAnalysis_"+fname+"_csvUp"+version+"_TTH125.root");
   TTree* t_TTH125_csvUp = (TTree*)f_TTH125_csvUp->Get("tree");
   TH1F* h_TTH125_csvUp = (TH1F*)h->Clone("h_TTH125_csvUp");
   h_TTH125_csvUp->Reset();
@@ -216,7 +219,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   h_TTH125_csvUp->Write("TTH125_csvUp", TObject::kOverwrite);
 
   // csv DOWN
-  TFile* f_TTH125_csvDown = TFile::Open("MEAnalysis_"+fname+"_csvDown"+version+"_TTH125.root");
+  TFile* f_TTH125_csvDown = TFile::Open(inputpath+"MEAnalysis_"+fname+"_csvDown"+version+"_TTH125.root");
   TTree* t_TTH125_csvDown = (TTree*)f_TTH125_csvDown->Get("tree");
   TH1F* h_TTH125_csvDown = (TH1F*)h->Clone("h_TTH125_csvDown");
   h_TTH125_csvDown->Reset();
@@ -232,7 +235,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   cut = basecut+"&&nSimBs>2";
 
   // NOMINAL"+VERSION+"
-  TFile* f_TTJetsSemiLept_HF = TFile::Open("MEAnalysis_"+fname+"_nominal"+version+"_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_HF = TFile::Open(inputpath+"MEAnalysis_"+fname+"_nominal"+version+"_"+ttjets+".root");
   TTree* t_TTJetsSemiLept_HF = (TTree*)f_TTJetsSemiLept_HF->Get("tree");
   TH1F* h_TTJetsSemiLept_HF = (TH1F*)h->Clone("h_TTJetsSemiLept_HF");
   h_TTJetsSemiLept_HF->Reset();
@@ -256,7 +259,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   }
 
   // JEC UP
-  TFile* f_TTJetsSemiLept_HF_JECUp = TFile::Open("MEAnalysis_"+fname+"_JECUp"+version+"_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_HF_JECUp = TFile::Open(inputpath+"MEAnalysis_"+fname+"_JECUp"+version+"_"+ttjets+".root");
   TTree* t_TTJetsSemiLept_HF_JECUp = (TTree*)f_TTJetsSemiLept_HF_JECUp->Get("tree");
   TH1F* h_TTJetsSemiLept_HF_JECUp = (TH1F*)h->Clone("h_TTJetsSemiLept_HF_JECUp");
   h_TTJetsSemiLept_HF_JECUp->Reset();
@@ -268,7 +271,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   h_TTJetsSemiLept_HF_JECUp->Write("TTJetsHF_JECUp", TObject::kOverwrite);
 
   // JEC DOWN
-  TFile* f_TTJetsSemiLept_HF_JECDown = TFile::Open("MEAnalysis_"+fname+"_JECDown"+version+"_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_HF_JECDown = TFile::Open(inputpath+"MEAnalysis_"+fname+"_JECDown"+version+"_"+ttjets+".root");
   TTree* t_TTJetsSemiLept_HF_JECDown = (TTree*)f_TTJetsSemiLept_HF_JECDown->Get("tree");
   TH1F* h_TTJetsSemiLept_HF_JECDown = (TH1F*)h->Clone("h_TTJetsSemiLept_HF_JECDown");
   h_TTJetsSemiLept_HF_JECDown->Reset();
@@ -280,7 +283,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   h_TTJetsSemiLept_HF_JECDown->Write("TTJetsHF_JECDown", TObject::kOverwrite);
 
   // csv UP
-  TFile* f_TTJetsSemiLept_HF_csvUp = TFile::Open("MEAnalysis_"+fname+"_csvUp"+version+"_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_HF_csvUp = TFile::Open(inputpath+"MEAnalysis_"+fname+"_csvUp"+version+"_"+ttjets+".root");
   TTree* t_TTJetsSemiLept_HF_csvUp = (TTree*)f_TTJetsSemiLept_HF_csvUp->Get("tree");
   TH1F* h_TTJetsSemiLept_HF_csvUp = (TH1F*)h->Clone("h_TTJetsSemiLept_HF_csvUp");
   h_TTJetsSemiLept_HF_csvUp->Reset();
@@ -292,7 +295,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   h_TTJetsSemiLept_HF_csvUp->Write("TTJetsHF_csvUp", TObject::kOverwrite);
 
   // csv DOWN
-  TFile* f_TTJetsSemiLept_HF_csvDown = TFile::Open("MEAnalysis_"+fname+"_csvDown"+version+"_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_HF_csvDown = TFile::Open(inputpath+"MEAnalysis_"+fname+"_csvDown"+version+"_"+ttjets+".root");
   TTree* t_TTJetsSemiLept_HF_csvDown = (TTree*)f_TTJetsSemiLept_HF_csvDown->Get("tree");
   TH1F* h_TTJetsSemiLept_HF_csvDown = (TH1F*)h->Clone("h_TTJetsSemiLept_HF_csvDown");
   h_TTJetsSemiLept_HF_csvDown->Reset();
@@ -309,7 +312,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   cut = basecut+"&&nSimBs==2";
 
   // NOMINAL"+VERSION+"
-  TFile* f_TTJetsSemiLept_LF = TFile::Open("MEAnalysis_"+fname+"_nominal"+version+"_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_LF = TFile::Open(inputpath+"MEAnalysis_"+fname+"_nominal"+version+"_"+ttjets+".root");
   TTree* t_TTJetsSemiLept_LF = (TTree*)f_TTJetsSemiLept_LF->Get("tree");
   TH1F* h_TTJetsSemiLept_LF = (TH1F*)h->Clone("h_TTJetsSemiLept_LF");
   h_TTJetsSemiLept_LF->Reset();
@@ -333,7 +336,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   }
 
   // JEC UP
-  TFile* f_TTJetsSemiLept_LF_JECUp = TFile::Open("MEAnalysis_"+fname+"_JECUp"+version+"_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_LF_JECUp = TFile::Open(inputpath+"MEAnalysis_"+fname+"_JECUp"+version+"_"+ttjets+".root");
   TTree* t_TTJetsSemiLept_LF_JECUp = (TTree*)f_TTJetsSemiLept_LF_JECUp->Get("tree");
   TH1F* h_TTJetsSemiLept_LF_JECUp = (TH1F*)h->Clone("h_TTJetsSemiLept_LF_JECUp");
   h_TTJetsSemiLept_LF_JECUp->Reset();
@@ -345,7 +348,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   h_TTJetsSemiLept_LF_JECUp->Write("TTJetsLF_JECUp", TObject::kOverwrite);
 
   // JEC DOWN
-  TFile* f_TTJetsSemiLept_LF_JECDown = TFile::Open("MEAnalysis_"+fname+"_JECDown"+version+"_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_LF_JECDown = TFile::Open(inputpath+"MEAnalysis_"+fname+"_JECDown"+version+"_"+ttjets+".root");
   TTree* t_TTJetsSemiLept_LF_JECDown = (TTree*)f_TTJetsSemiLept_LF_JECDown->Get("tree");
   TH1F* h_TTJetsSemiLept_LF_JECDown = (TH1F*)h->Clone("h_TTJetsSemiLept_LF_JECDown");
   h_TTJetsSemiLept_LF_JECDown->Reset();
@@ -357,7 +360,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   h_TTJetsSemiLept_LF_JECDown->Write("TTJetsLF_JECDown", TObject::kOverwrite);
 
   // csv UP
-  TFile* f_TTJetsSemiLept_LF_csvUp = TFile::Open("MEAnalysis_"+fname+"_csvUp"+version+"_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_LF_csvUp = TFile::Open(inputpath+"MEAnalysis_"+fname+"_csvUp"+version+"_"+ttjets+".root");
   TTree* t_TTJetsSemiLept_LF_csvUp = (TTree*)f_TTJetsSemiLept_LF_csvUp->Get("tree");
   TH1F* h_TTJetsSemiLept_LF_csvUp = (TH1F*)h->Clone("h_TTJetsSemiLept_LF_csvUp");
   h_TTJetsSemiLept_LF_csvUp->Reset();
@@ -369,7 +372,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   h_TTJetsSemiLept_LF_csvUp->Write("TTJetsLF_csvUp", TObject::kOverwrite);
 
   // csv DOWN
-  TFile* f_TTJetsSemiLept_LF_csvDown = TFile::Open("MEAnalysis_"+fname+"_csvDown"+version+"_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_LF_csvDown = TFile::Open(inputpath+"MEAnalysis_"+fname+"_csvDown"+version+"_"+ttjets+".root");
   TTree* t_TTJetsSemiLept_LF_csvDown = (TTree*)f_TTJetsSemiLept_LF_csvDown->Get("tree");
   TH1F* h_TTJetsSemiLept_LF_csvDown = (TH1F*)h->Clone("h_TTJetsSemiLept_LF_csvDown");
   h_TTJetsSemiLept_LF_csvDown->Reset();
@@ -386,7 +389,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   cut = basecut;
   
   // NOMINAL
-  TFile* f_DiBoson = TFile::Open("MEAnalysis_"+fname+"_nominal"+version+"_DiBoson.root");
+  TFile* f_DiBoson = TFile::Open(inputpath+"MEAnalysis_"+fname+"_nominal"+version+"_DiBoson.root");
   TTree* t_DiBoson = (TTree*)f_DiBoson->Get("tree");
   TH1F* h_DiBoson = (TH1F*)h->Clone("h_DiBoson");
   h_DiBoson->Reset();
@@ -413,7 +416,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   ////////////////////////////// SINGLE T
   
   // NOMINAL
-  TFile* f_SingleT = TFile::Open("MEAnalysis_"+fname+"_nominal"+version+"_SingleT.root");
+  TFile* f_SingleT = TFile::Open(inputpath+"MEAnalysis_"+fname+"_nominal"+version+"_SingleT.root");
   TTree* t_SingleT = (TTree*)f_SingleT->Get("tree");
   TH1F* h_SingleT = (TH1F*)h->Clone("h_SingleT");
   h_SingleT->Reset();
@@ -437,7 +440,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   }
 
   // NOMINAL
-  TFile* f_TTV = TFile::Open("MEAnalysis_"+fname+"_nominal"+version+"_TTV.root");
+  TFile* f_TTV = TFile::Open(inputpath+"MEAnalysis_"+fname+"_nominal"+version+"_TTV.root");
   TTree* t_TTV = (TTree*)f_TTV->Get("tree");
   TH1F* h_TTV = (TH1F*)h->Clone("h_TTV");
   h_TTV->Reset();
@@ -461,7 +464,7 @@ void produce( TString fname = "SL_VType2", string cut = "type==0", TString categ
   }
 
   // NOMINAL
-  TFile* f_EWK = TFile::Open("MEAnalysis_"+fname+"_nominal"+version+"_EWK.root");
+  TFile* f_EWK = TFile::Open(inputpath+"MEAnalysis_"+fname+"_nominal"+version+"_EWK.root");
   TTree* t_EWK = (TTree*)f_EWK->Get("tree");
   TH1F* h_EWK = (TH1F*)h->Clone("h_EWK");
   h_EWK->Reset();
@@ -770,9 +773,13 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   string version = (string(fname.Data())).find("SL")!=string::npos ? "_v6" : "_v5";
   //string version = "";
 
+  string  versionTTJets  = (string(fname.Data())).find("SL")!=string::npos ? "_v7_" : "_v7_";
+
   cout << "Doing version " << version << " and category " << category << endl;
 
 
+  // input files path
+  TString inputpath = "gsidcap://t3se01.psi.ch:22128//pnfs/psi.ch/cms/trivcat/store/user/bianchi/Trees/MEM/Oct04_2013/";
 
 
   float scaleTTH      = 1.0;//4.7;
@@ -823,12 +830,12 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
     var = TString(Form("p_125_all_s/(p_125_all_s+p_125_all_b*%f)", fact1));
 
   string basecut = cut;
-  TString ttjets = (string(fname.Data())).find("SL")!=string::npos ? "TTJets" : "TTJetsFullLept";
+  TString ttjets = (string(fname.Data())).find("SL")!=string::npos ? "TTJets" : "TTJets";
 
   ////////////////////////////// TTH
   
   // NOMINAL
-  TFile* f_TTH125 = TFile::Open("MEAnalysis_"+fname+"_nominal"+version+"_TTH125.root");
+  TFile* f_TTH125 = TFile::Open(inputpath+"MEAnalysis_"+fname+"_nominal"+version+"_TTH125.root");
   TTree* t_TTH125 = (TTree*)f_TTH125->Get("tree");
   TH1F* h_TTH125 = (TH1F*)h->Clone("h_TTH125");
   h_TTH125->Reset();
@@ -852,7 +859,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   }
 
   // JEC UP
-  TFile* f_TTH125_JECUp = TFile::Open("MEAnalysis_"+fname+"_JECUp"+version+"_TTH125.root");
+  TFile* f_TTH125_JECUp = TFile::Open(inputpath+"MEAnalysis_"+fname+"_JECUp"+version+"_TTH125.root");
   TTree* t_TTH125_JECUp = (TTree*)f_TTH125_JECUp->Get("tree");
   TH1F* h_TTH125_JECUp = (TH1F*)h->Clone("h_TTH125_JECUp");
   h_TTH125_JECUp->Reset();
@@ -864,7 +871,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   h_TTH125_JECUp->Write("TTH125_JECUp", TObject::kOverwrite);
 
   // JEC DOWN
-  TFile* f_TTH125_JECDown = TFile::Open("MEAnalysis_"+fname+"_JECDown"+version+"_TTH125.root");
+  TFile* f_TTH125_JECDown = TFile::Open(inputpath+"MEAnalysis_"+fname+"_JECDown"+version+"_TTH125.root");
   TTree* t_TTH125_JECDown = (TTree*)f_TTH125_JECDown->Get("tree");
   TH1F* h_TTH125_JECDown = (TH1F*)h->Clone("h_TTH125_JECDown");
   h_TTH125_JECDown->Reset();
@@ -876,7 +883,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   h_TTH125_JECDown->Write("TTH125_JECDown", TObject::kOverwrite);
 
   // csv UP
-  TFile* f_TTH125_csvUp = TFile::Open("MEAnalysis_"+fname+"_csvUp"+version+"_TTH125.root");
+  TFile* f_TTH125_csvUp = TFile::Open(inputpath+"MEAnalysis_"+fname+"_csvUp"+version+"_TTH125.root");
   TTree* t_TTH125_csvUp = (TTree*)f_TTH125_csvUp->Get("tree");
   TH1F* h_TTH125_csvUp = (TH1F*)h->Clone("h_TTH125_csvUp");
   h_TTH125_csvUp->Reset();
@@ -888,7 +895,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   h_TTH125_csvUp->Write("TTH125_csvUp", TObject::kOverwrite);
 
   // csv DOWN
-  TFile* f_TTH125_csvDown = TFile::Open("MEAnalysis_"+fname+"_csvDown"+version+"_TTH125.root");
+  TFile* f_TTH125_csvDown = TFile::Open(inputpath+"MEAnalysis_"+fname+"_csvDown"+version+"_TTH125.root");
   TTree* t_TTH125_csvDown = (TTree*)f_TTH125_csvDown->Get("tree");
   TH1F* h_TTH125_csvDown = (TH1F*)h->Clone("h_TTH125_csvDown");
   h_TTH125_csvDown->Reset();
@@ -908,7 +915,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   cut = basecut+"&&nSimBs>2 && nMatchSimBs>=2";
 
   // NOMINAL"+VERSION+"
-  TFile* f_TTJetsSemiLept_HFbb = TFile::Open("MEAnalysis_"+fname+"_nominal_v7_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_HFbb = TFile::Open(inputpath+"MEAnalysis_"+fname+"_nominal"+versionTTJets+ttjets+".root");
   TTree* t_TTJetsSemiLept_HFbb = (TTree*)f_TTJetsSemiLept_HFbb->Get("tree");
   TH1F* h_TTJetsSemiLept_HFbb = (TH1F*)h->Clone("h_TTJetsSemiLept_HFbb");
   h_TTJetsSemiLept_HFbb->Reset();
@@ -932,7 +939,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   }
 
   // JEC UP
-  TFile* f_TTJetsSemiLept_HFbb_JECUp = TFile::Open("MEAnalysis_"+fname+"_JECUp_v7_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_HFbb_JECUp = TFile::Open(inputpath+"MEAnalysis_"+fname+"_JECUp"+versionTTJets+ttjets+".root");
   TTree* t_TTJetsSemiLept_HFbb_JECUp = (TTree*)f_TTJetsSemiLept_HFbb_JECUp->Get("tree");
   TH1F* h_TTJetsSemiLept_HFbb_JECUp = (TH1F*)h->Clone("h_TTJetsSemiLept_HFbb_JECUp");
   h_TTJetsSemiLept_HFbb_JECUp->Reset();
@@ -944,7 +951,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   h_TTJetsSemiLept_HFbb_JECUp->Write("TTJetsHFbb_JECUp", TObject::kOverwrite);
 
   // JEC DOWN
-  TFile* f_TTJetsSemiLept_HFbb_JECDown = TFile::Open("MEAnalysis_"+fname+"_JECDown_v7_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_HFbb_JECDown = TFile::Open(inputpath+"MEAnalysis_"+fname+"_JECDown"+versionTTJets+ttjets+".root");
   TTree* t_TTJetsSemiLept_HFbb_JECDown = (TTree*)f_TTJetsSemiLept_HFbb_JECDown->Get("tree");
   TH1F* h_TTJetsSemiLept_HFbb_JECDown = (TH1F*)h->Clone("h_TTJetsSemiLept_HFbb_JECDown");
   h_TTJetsSemiLept_HFbb_JECDown->Reset();
@@ -956,7 +963,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   h_TTJetsSemiLept_HFbb_JECDown->Write("TTJetsHFbb_JECDown", TObject::kOverwrite);
 
   // csv UP
-  TFile* f_TTJetsSemiLept_HFbb_csvUp = TFile::Open("MEAnalysis_"+fname+"_csvUp_v7_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_HFbb_csvUp = TFile::Open(inputpath+"MEAnalysis_"+fname+"_csvUp"+versionTTJets+ttjets+".root");
   TTree* t_TTJetsSemiLept_HFbb_csvUp = (TTree*)f_TTJetsSemiLept_HFbb_csvUp->Get("tree");
   TH1F* h_TTJetsSemiLept_HFbb_csvUp = (TH1F*)h->Clone("h_TTJetsSemiLept_HFbb_csvUp");
   h_TTJetsSemiLept_HFbb_csvUp->Reset();
@@ -968,7 +975,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   h_TTJetsSemiLept_HFbb_csvUp->Write("TTJetsHFbb_csvUp", TObject::kOverwrite);
 
   // csv DOWN
-  TFile* f_TTJetsSemiLept_HFbb_csvDown = TFile::Open("MEAnalysis_"+fname+"_csvDown_v7_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_HFbb_csvDown = TFile::Open(inputpath+"MEAnalysis_"+fname+"_csvDown"+versionTTJets+ttjets+".root");
   TTree* t_TTJetsSemiLept_HFbb_csvDown = (TTree*)f_TTJetsSemiLept_HFbb_csvDown->Get("tree");
   TH1F* h_TTJetsSemiLept_HFbb_csvDown = (TH1F*)h->Clone("h_TTJetsSemiLept_HFbb_csvDown");
   h_TTJetsSemiLept_HFbb_csvDown->Reset();
@@ -988,7 +995,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   cut = basecut+"&&nSimBs>2 && nMatchSimBs<2";
 
   // NOMINAL"+VERSION+"
-  TFile* f_TTJetsSemiLept_HFb = TFile::Open("MEAnalysis_"+fname+"_nominal_v7_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_HFb = TFile::Open(inputpath+"MEAnalysis_"+fname+"_nominal"+versionTTJets+ttjets+".root");
   TTree* t_TTJetsSemiLept_HFb = (TTree*)f_TTJetsSemiLept_HFb->Get("tree");
   TH1F* h_TTJetsSemiLept_HFb = (TH1F*)h->Clone("h_TTJetsSemiLept_HFb");
   h_TTJetsSemiLept_HFb->Reset();
@@ -1012,7 +1019,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   }
 
   // JEC UP
-  TFile* f_TTJetsSemiLept_HFb_JECUp = TFile::Open("MEAnalysis_"+fname+"_JECUp_v7_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_HFb_JECUp = TFile::Open(inputpath+"MEAnalysis_"+fname+"_JECUp"+versionTTJets+ttjets+".root");
   TTree* t_TTJetsSemiLept_HFb_JECUp = (TTree*)f_TTJetsSemiLept_HFb_JECUp->Get("tree");
   TH1F* h_TTJetsSemiLept_HFb_JECUp = (TH1F*)h->Clone("h_TTJetsSemiLept_HFb_JECUp");
   h_TTJetsSemiLept_HFb_JECUp->Reset();
@@ -1024,7 +1031,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   h_TTJetsSemiLept_HFb_JECUp->Write("TTJetsHFb_JECUp", TObject::kOverwrite);
 
   // JEC DOWN
-  TFile* f_TTJetsSemiLept_HFb_JECDown = TFile::Open("MEAnalysis_"+fname+"_JECDown_v7_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_HFb_JECDown = TFile::Open(inputpath+"MEAnalysis_"+fname+"_JECDown"+versionTTJets+ttjets+".root");
   TTree* t_TTJetsSemiLept_HFb_JECDown = (TTree*)f_TTJetsSemiLept_HFb_JECDown->Get("tree");
   TH1F* h_TTJetsSemiLept_HFb_JECDown = (TH1F*)h->Clone("h_TTJetsSemiLept_HFb_JECDown");
   h_TTJetsSemiLept_HFb_JECDown->Reset();
@@ -1036,7 +1043,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   h_TTJetsSemiLept_HFb_JECDown->Write("TTJetsHFb_JECDown", TObject::kOverwrite);
 
   // csv UP
-  TFile* f_TTJetsSemiLept_HFb_csvUp = TFile::Open("MEAnalysis_"+fname+"_csvUp_v7_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_HFb_csvUp = TFile::Open(inputpath+"MEAnalysis_"+fname+"_csvUp"+versionTTJets+ttjets+".root");
   TTree* t_TTJetsSemiLept_HFb_csvUp = (TTree*)f_TTJetsSemiLept_HFb_csvUp->Get("tree");
   TH1F* h_TTJetsSemiLept_HFb_csvUp = (TH1F*)h->Clone("h_TTJetsSemiLept_HFb_csvUp");
   h_TTJetsSemiLept_HFb_csvUp->Reset();
@@ -1048,7 +1055,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   h_TTJetsSemiLept_HFb_csvUp->Write("TTJetsHFb_csvUp", TObject::kOverwrite);
 
   // csv DOWN
-  TFile* f_TTJetsSemiLept_HFb_csvDown = TFile::Open("MEAnalysis_"+fname+"_csvDown_v7_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_HFb_csvDown = TFile::Open(inputpath+"MEAnalysis_"+fname+"_csvDown"+versionTTJets+ttjets+".root");
   TTree* t_TTJetsSemiLept_HFb_csvDown = (TTree*)f_TTJetsSemiLept_HFb_csvDown->Get("tree");
   TH1F* h_TTJetsSemiLept_HFb_csvDown = (TH1F*)h->Clone("h_TTJetsSemiLept_HFb_csvDown");
   h_TTJetsSemiLept_HFb_csvDown->Reset();
@@ -1066,7 +1073,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   cut = basecut+"&&nSimBs==2";
 
   // NOMINAL"+VERSION+"
-  TFile* f_TTJetsSemiLept_LF = TFile::Open("MEAnalysis_"+fname+"_nominal"+version+"_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_LF = TFile::Open(inputpath+"MEAnalysis_"+fname+"_nominal"+versionTTJets+ttjets+".root");
   TTree* t_TTJetsSemiLept_LF = (TTree*)f_TTJetsSemiLept_LF->Get("tree");
   TH1F* h_TTJetsSemiLept_LF = (TH1F*)h->Clone("h_TTJetsSemiLept_LF");
   h_TTJetsSemiLept_LF->Reset();
@@ -1090,7 +1097,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   }
 
   // JEC UP
-  TFile* f_TTJetsSemiLept_LF_JECUp = TFile::Open("MEAnalysis_"+fname+"_JECUp"+version+"_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_LF_JECUp = TFile::Open(inputpath+"MEAnalysis_"+fname+"_JECUp"+versionTTJets+ttjets+".root");
   TTree* t_TTJetsSemiLept_LF_JECUp = (TTree*)f_TTJetsSemiLept_LF_JECUp->Get("tree");
   TH1F* h_TTJetsSemiLept_LF_JECUp = (TH1F*)h->Clone("h_TTJetsSemiLept_LF_JECUp");
   h_TTJetsSemiLept_LF_JECUp->Reset();
@@ -1102,7 +1109,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   h_TTJetsSemiLept_LF_JECUp->Write("TTJetsLF_JECUp", TObject::kOverwrite);
 
   // JEC DOWN
-  TFile* f_TTJetsSemiLept_LF_JECDown = TFile::Open("MEAnalysis_"+fname+"_JECDown"+version+"_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_LF_JECDown = TFile::Open(inputpath+"MEAnalysis_"+fname+"_JECDown"+versionTTJets+ttjets+".root");
   TTree* t_TTJetsSemiLept_LF_JECDown = (TTree*)f_TTJetsSemiLept_LF_JECDown->Get("tree");
   TH1F* h_TTJetsSemiLept_LF_JECDown = (TH1F*)h->Clone("h_TTJetsSemiLept_LF_JECDown");
   h_TTJetsSemiLept_LF_JECDown->Reset();
@@ -1114,7 +1121,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   h_TTJetsSemiLept_LF_JECDown->Write("TTJetsLF_JECDown", TObject::kOverwrite);
 
   // csv UP
-  TFile* f_TTJetsSemiLept_LF_csvUp = TFile::Open("MEAnalysis_"+fname+"_csvUp"+version+"_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_LF_csvUp = TFile::Open(inputpath+"MEAnalysis_"+fname+"_csvUp"+versionTTJets+ttjets+".root");
   TTree* t_TTJetsSemiLept_LF_csvUp = (TTree*)f_TTJetsSemiLept_LF_csvUp->Get("tree");
   TH1F* h_TTJetsSemiLept_LF_csvUp = (TH1F*)h->Clone("h_TTJetsSemiLept_LF_csvUp");
   h_TTJetsSemiLept_LF_csvUp->Reset();
@@ -1126,7 +1133,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   h_TTJetsSemiLept_LF_csvUp->Write("TTJetsLF_csvUp", TObject::kOverwrite);
 
   // csv DOWN
-  TFile* f_TTJetsSemiLept_LF_csvDown = TFile::Open("MEAnalysis_"+fname+"_csvDown"+version+"_"+ttjets+".root");
+  TFile* f_TTJetsSemiLept_LF_csvDown = TFile::Open(inputpath+"MEAnalysis_"+fname+"_csvDown"+versionTTJets+ttjets+".root");
   TTree* t_TTJetsSemiLept_LF_csvDown = (TTree*)f_TTJetsSemiLept_LF_csvDown->Get("tree");
   TH1F* h_TTJetsSemiLept_LF_csvDown = (TH1F*)h->Clone("h_TTJetsSemiLept_LF_csvDown");
   h_TTJetsSemiLept_LF_csvDown->Reset();
@@ -1143,7 +1150,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   cut = basecut;
   
   // NOMINAL
-  TFile* f_DiBoson = TFile::Open("MEAnalysis_"+fname+"_nominal"+version+"_DiBoson.root");
+  TFile* f_DiBoson = TFile::Open(inputpath+"MEAnalysis_"+fname+"_nominal"+version+"_DiBoson.root");
   TTree* t_DiBoson = (TTree*)f_DiBoson->Get("tree");
   TH1F* h_DiBoson = (TH1F*)h->Clone("h_DiBoson");
   h_DiBoson->Reset();
@@ -1170,7 +1177,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   ////////////////////////////// SINGLE T
   
   // NOMINAL
-  TFile* f_SingleT = TFile::Open("MEAnalysis_"+fname+"_nominal"+version+"_SingleT.root");
+  TFile* f_SingleT = TFile::Open(inputpath+"MEAnalysis_"+fname+"_nominal"+version+"_SingleT.root");
   TTree* t_SingleT = (TTree*)f_SingleT->Get("tree");
   TH1F* h_SingleT = (TH1F*)h->Clone("h_SingleT");
   h_SingleT->Reset();
@@ -1194,7 +1201,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   }
 
   // NOMINAL
-  TFile* f_TTV = TFile::Open("MEAnalysis_"+fname+"_nominal"+version+"_TTV.root");
+  TFile* f_TTV = TFile::Open(inputpath+"MEAnalysis_"+fname+"_nominal"+version+"_TTV.root");
   TTree* t_TTV = (TTree*)f_TTV->Get("tree");
   TH1F* h_TTV = (TH1F*)h->Clone("h_TTV");
   h_TTV->Reset();
@@ -1218,7 +1225,7 @@ void produce_2( TString fname = "SL_VType2", string cut = "type==0", TString cat
   }
 
   // NOMINAL
-  TFile* f_EWK = TFile::Open("MEAnalysis_"+fname+"_nominal"+version+"_EWK.root");
+  TFile* f_EWK = TFile::Open(inputpath+"MEAnalysis_"+fname+"_nominal"+version+"_EWK.root");
   TTree* t_EWK = (TTree*)f_EWK->Get("tree");
   TH1F* h_EWK = (TH1F*)h->Clone("h_EWK");
   h_EWK->Reset();
@@ -2206,7 +2213,7 @@ void plot_category_2(string type = "SL",
 
   cout << "Signal = " << hS->Integral()/5. << endl;
 
-  if(1){
+  if(0){
     c1->SaveAs(  (fname+"_AN"+"_2.png").c_str() );
     c1->SaveAs(  (fname+"_AN"+"_2.pdf").c_str() );
   }

@@ -3,7 +3,8 @@
   Class that integrates over the tth/ttbb phase-space
   
   Create libraries for OpenLoops processes:
-   1) gfortran -shared -fPIC -o libpphttxcallme2born.so pphttxcallme2born.f -O2 -L../../../../lib/slc5_amd64_gcc462/  -lopenloops_ppHtt_1tL -lopenloops -lbar -lcoli
+   1) gfortran -shared -fPIC -o libpphttxcallme2born.so pphttxcallme2born.f -O2 -L../../../../lib/slc5_amd64_gcc462/  -lopenloops_ppHtt_1tL -lopenloops -lb
+ar -lcoli
   Compile with OpenLoops library:
    2) scram b -j 6 USER_CXXFLAGS="-lopenloops\ -lbar\ -lcoli\ -lpphttxcallme2born\ -lppttxbbxcallme2born"
 */
@@ -38,6 +39,9 @@
 #include "Math/GenVector/LorentzVector.h"
 #include "TLorentzVector.h"
 #include "RooWorkspace.h"
+#include "RooRealVar.h"
+#include "RooArgSet.h"
+#include "RooAbsPdf.h"
 #include "TH1.h"
 #include "TH1F.h"
 #include "TH2F.h"

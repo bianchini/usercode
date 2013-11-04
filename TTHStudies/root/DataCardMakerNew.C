@@ -493,31 +493,44 @@ void fill(  TTree* tFull = 0, TH1F* h = 0, TCut cut = "" , int analysis = 0, vec
 
 void produceNew(// secondary name of the input trees
 		TString fname = "SL", 
+
 		// selection cut
 		string cut = "type==0", 
+
 		// a header for the output file name
 		TString category = "cat0", 
+
 		// if 1, run the ME analysis, if 0 run the mass analysis
 		int doMEM = 1,
+
 		// factors that modify the likelihood ratio 
 		float fact1 = 0.02, float fact2 = 0., float factbb = 0.5,
+
 		// luminosity normalization (if 1, samples normalized to 12.1 fb-1)
 		float lumiScale = 20./12.1,
+
 		// number of bins in the plot
 		int nBins = 6 , 
+
 		// wheteher to split the first bin into ttbb/ttjj dominated sidebands
 		int splitFirstBin=0, 
+
 		// vector of bin edges
 		vector<float>* binvec = 0,
+
 		// TF1 to normalize to xsec
-		TF1* xsec = 0){
+		TF1* xsec = 0
+		){
 
   // main name of the trees
-  string name = "New";
+  string name = "New_MHscan";
 
   // version of the input trees
-  string version = "_v1";
+  string version = "_v2";
   cout << "Use trees " << name << " (version " << version << "): category " << category << endl;
+
+  // input files path
+  TString inputpath = "gsidcap://t3se01.psi.ch:22128//pnfs/psi.ch/cms/trivcat/store/user/bianchi/Trees/MEM/Nov04_2013/mhscan/";
 
   // selection cut
   string basecut = cut;
@@ -557,14 +570,14 @@ void produceNew(// secondary name of the input trees
   
   if(doMEM){
 
-    TFile* f_B = TFile::Open("MEAnalysisNew_"+fname+"_nominal"+version+ttjets+".root");
+    TFile* f_B = TFile::Open(inputpath+"MEAnalysis"+name+"_"+fname+"_nominal"+version+ttjets+".root", "OPEN");
     if( f_B==0 || f_B->IsZombie() ){
       cout << "Could not find f_B" << endl;
       return;
     }
     TTree* tB = (TTree*)f_B->Get("tree");
 
-    TFile* f_S = TFile::Open("MEAnalysisNew_"+fname+"_nominal"+version+"_TTH125.root");
+    TFile* f_S = TFile::Open(inputpath+"MEAnalysis"+name+"_"+fname+"_nominal"+version+"_TTH125.root");
     if( f_S==0 || f_S->IsZombie() ){
       cout << "Could not find f_S" << endl;
       return;
@@ -610,6 +623,9 @@ void produceNew(// secondary name of the input trees
     param.clear();
   }
 
+  // if true, read binning from input, or just take unformly distributed bins [0,1]
+  bool normalbinning = ( param.size()==3 || doMEM==0 );
+
   // output file with shapes
   TFile* fout = new TFile(fname+"_New.root","UPDATE");
 
@@ -623,7 +639,7 @@ void produceNew(// secondary name of the input trees
   cout << "Making histograms with " << nBins << " bins:" << endl;
 
   // if do not split, then...
-  if( param.size()==3){
+  if( normalbinning ){
 
     // if ME analysis, just take nBins fix-size bins in [0,1]
     if(doMEM){
@@ -652,7 +668,7 @@ void produceNew(// secondary name of the input trees
   }
 
   // master histogram (all other histograms are a clone of this one)
-  TH1F* h = new TH1F("h","Simulation #sqrt{s}=8 TeV, "+fname+"; S/(S+B); units",  param.size()==3 ? nBins : nBins+1 ,  param.size()==3 ? bins.GetArray() : bins2.GetArray());
+  TH1F* h = new TH1F("h","Simulation #sqrt{s}=8 TeV, "+fname+"; S/(S+B); units", normalbinning ? nBins : nBins+1 ,  normalbinning ? bins.GetArray() : bins2.GetArray());
  
   // the observable when doing the ME analysis for cat2 (workaround)
   TString var("");
@@ -742,7 +758,7 @@ void produceNew(// secondary name of the input trees
       string sys = systematics[sy];
 
       // input file
-      string inputfilename = "MEAnalysis"+name+"_"+string(fname.Data())+"_"+sys+""+version+"_"+sample+".root";
+      string inputfilename = string(inputpath.Data())+"MEAnalysis"+name+"_"+string(fname.Data())+"_"+sys+""+version+"_"+sample+".root";
       TFile* f = TFile::Open(inputfilename.c_str());
       
       if(f==0 || f->IsZombie()){
@@ -834,12 +850,35 @@ void produceNew(// secondary name of the input trees
 
   // observation is the sum of all processes yields
   float observation = 0.;
+
+  // keep track of missing files
+  int errFlag = 0 ;
+
+  cout << "************************" << endl;
   for( unsigned int s = 0 ; s < datacard_samples.size(); s++){
+
+    // get the histogram
     TH1F* h_tmp = (TH1F*)fout->Get(fname+"_"+category+"/"+datacard_samples[s]);
+    if(  h_tmp==0 ){
+      errFlag++;
+      continue;
+    }
     cout << string(datacard_samples[s].Data()) << ": " << h_tmp->Integral() << endl;
+
+    // add the histogram to the map
     aMap[datacard_samples[s]] = h_tmp;
+
+    // add the histogram to the asymov dataset
     h_data->Add( h_tmp );
+
+    // add the histogram yield to the asymov dataset
     observation +=  h_tmp->Integral();
+  }
+  cout << "************************" << endl;
+
+  if(errFlag>0){
+    cout << "Missing histogram for a process. Return." << endl;
+    return;
   }
 
   // approximate to integer precision
@@ -1128,14 +1167,22 @@ void produceNew(// secondary name of the input trees
   out<< "-----------------------------------------------------------------" << endl;
 
   //////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////// 
+
+  // a reminder...
+  cout << "Recap: " << endl;
+  cout << " > Tag = " << name << endl;
+  cout << " > Version = " <<  version << endl;
+  cout << " > Inputpath = " << string(inputpath.Data()) << endl;
+  cout << " > Category = " << category << endl;
+  cout << " > Cut = (" << cut  << ")" << endl;
+  cout << " > Histo = h(" << h->GetNbinsX() << "," << h->GetXaxis()->GetXmin() << "," <<  h->GetXaxis()->GetXmax() << ")" << endl;
+  cout << " > Lumi = " << lumiScale*12.1 << " fb-1" << endl << endl;
 
   // close the output file
   fout->Close();
 
-  // a reminder...
-  cout << "Have you checked the systematics ??? " << endl;
-
+  return;
 }
 
 
@@ -1163,7 +1210,7 @@ void produceAllNew( float LumiScale = 19.5/12.1, int doMEM = 1 ){
     produceNew("DL", "type==6",                                  "cat6", doMEM, 1.5, 0.0, 0.1 , LumiScale*2 , 5,  1);
   }
   else{
-    produceNew("SL", "type==0",                                  "cat1", doMEM, 0.0, 0.0, 0.0 , LumiScale   , binvec.size()-1,  0, &binvec, xsec);
+    produceNew("SL", "type==0",                                  "cat1", doMEM, 0.0, 0.0, 0.0 , LumiScale   , binvec.size()-1,  0, &binvec);
     produceNew("SL", "type==2",                                  "cat2", doMEM, 0.0, 0.0, 0.0 , LumiScale   , binvec.size()-1,  0, &binvec);
     produceNew("SL", "type==3 && flag_type3>0 && p_125_all_s>0", "cat3", doMEM, 0.0, 0.0, 0.0 , LumiScale   , binvec.size()-1,  0, &binvec);
     produceNew("DL", "type==6",                                  "cat4", doMEM, 0.0, 0.0, 0.0 , LumiScale*2 , binvec.size()-1,  0, &binvec);
