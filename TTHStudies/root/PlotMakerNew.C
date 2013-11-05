@@ -35,6 +35,8 @@
 #include "TArrayF.h"
 #include "TLine.h"
 
+#include "TRandom3.h"
+
 typedef TMatrixT<double> TMatrixD;
 
 
@@ -1477,18 +1479,45 @@ void plot_matchAll(){
 
 
 
-void massPlot( TString fname = "SL", 
+void plot_mass(// secondary name of the input trees 
+	       TString fname = "SL", 
+
+	       // selection cut
 	       string cut = "type==0", 
+	       
+	       // a header for the output file name
 	       TString category = "cat0",
+	       
+	       // a name tag to save the plot 
 	       TString plotname = "SL6jets",
+	       
+	       // 0 = stack ; 1 = ttH/ttV/ttjets ; 2 = ttbb/ttb/ttjj 
 	       int plotShapes = 0,
+
+	       // luminosity normalization (if 1, samples normalized to 12.1 fb-1)
 	       float lumiScale = 20./12.1,
+	       
+	       // histo binning
 	       int nBins =20, float xLow=50, float xHigh=250,
+	       
+	       // normalize weights ? If 1, xec = M^{-fact1}
 	       int normXSec=1, float fact1 = 5,
-	       int matchPattern = 111111, int matchPattern2 = 999999
+
+	       // which matching pattern is a full match ? Take the OR of two patterns
+	       int matchPattern = 111111, int matchPattern2 = 999999,
+
+	       // choose which perm to use (LO, NLO, NNLO, NNNLO)
+	       int choosePerm = 999,
+
+	       // 0 = mass scan ; 1 = MEM
+	       int analysis = 0,
+
+	       // parameters for the ME weight
+	       float p0 = 1., float p1 = 1., float p2 = 1.
 	       ){
   
  
+  // setup the style
   gStyle->SetOptStat(0);
   gStyle->SetTitleFillColor(0);
   gStyle->SetCanvasBorderMode(0);
@@ -1502,6 +1531,7 @@ void massPlot( TString fname = "SL",
   gStyle->SetTitleStyle(0);
   gStyle->SetTitleOffset(1.3,"y");
 
+  // canvas
   TCanvas *c1 = new TCanvas("c1","",5,30,650,600);
   c1->SetGrid(0,0);
   c1->SetFillStyle(4000);
@@ -1509,7 +1539,7 @@ void massPlot( TString fname = "SL",
   c1->SetTicky();
   c1->SetObjectStat(0);
 
-
+  // legend
   TLegend* leg = new TLegend(0.59,0.44,0.84,0.90,NULL,"brNDC");
   leg->SetFillStyle(0);
   leg->SetBorderSize(0);
@@ -1517,42 +1547,54 @@ void massPlot( TString fname = "SL",
   leg->SetTextSize(0.04); 
   leg->SetHeader(category);
 
-  int counterH         = 0;
-  int counterHQuarks   = 0;
-  int counterHMatch    = 0;
-  int counterHMatchAny = 0;
 
-  //TF1* xsec6J = new TF1("xsec6J",Form("TMath::Landau(x,%f*7.61581e+01 ,%f*1.89245e+01)", fact1, fact2), 20, 500);
-  //TF1* xsec5J = new TF1("xsec5J",Form("TMath::Landau(x,%f*7.40196e+01 ,%f*1.80142e+01)", fact1, fact2), 20, 500); 
-  //TF1* xsec = 
-  //( (string(category.Data())).find("cat2")!=string::npos || 
-  //  (string(category.Data())).find("cat3")!=string::npos ||
-  //  (string(category.Data())).find("cat4")!=string::npos ) ?  xsec5J : xsec6J;
+  TRandom3* ran = new TRandom3();
+
+
+  // inclusive counter (for ttH)
+  int counterH         = 0;
+
+  // counter incr. if all quarks in acceptance (for ttH)
+  int counterHQuarks   = 0;
+
+  // counter incr. if all quarks in acceptanc & best comb. is matched (for ttH)
+  int counterHMatch    = 0;
+
+  // counter incr. if best comb. has the higgs's b's matched (for ttH)
+  int counterHMatchAny = 0;
   
+  // cross-section norm. (a simple power law)
   TF1* xsec = new TF1("xsec",Form("x^(-%f)", fact1 ), 20, 500);
 
-  string version =  "_v2" ;
-  cout << "Doing version " << version << " and category " << category << endl;
+  // histo labels
+  TString histolabel = "Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events";
 
-  THStack* aStack = new THStack("aStack","Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events");
-  TH1F* hMass     = new TH1F   ("hMass", "Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
-  TH1F* hTTH      = new TH1F("hTTH","Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
-  TH1F* hTTV      = new TH1F("hTTV","Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
-  TH1F* hTT       = new TH1F("hTT", "Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
-  TH1F* hTTbb     = new TH1F("hTTbb", "Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
-  TH1F* hTTbj     = new TH1F("hTTbj", "Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
-  TH1F* hTTjj     = new TH1F("hTTjj", "Simulation #sqrt{s}=8 TeV, L=19.5 fb^{-1}; M_{H} estimator [GeV] ; events",nBins, xLow, xHigh);
-
-  TH1F* hTmp      = new TH1F("hTmp", "", 500,0,500);
-
+  // the stack and its MC stat. error plot
+  THStack* aStack = new THStack("aStack",histolabel);
   TH1F* hErr      = 0;
 
+  // the parent histogram
+  TH1F* hMass     = new TH1F("hMass", histolabel,nBins, xLow, xHigh);
+
+  // histograms for sepcific processes
+  TH1F* hTTH      = new TH1F("hTTH",  histolabel,nBins, xLow, xHigh);
+  TH1F* hTTV      = new TH1F("hTTV",  histolabel,nBins, xLow, xHigh);
+  TH1F* hTT       = new TH1F("hTT",   histolabel,nBins, xLow, xHigh);
+  TH1F* hTTbb     = new TH1F("hTTbb", histolabel,nBins, xLow, xHigh);
+  TH1F* hTTbj     = new TH1F("hTTbj", histolabel,nBins, xLow, xHigh);
+  TH1F* hTTjj     = new TH1F("hTTjj", histolabel,nBins, xLow, xHigh);
+
+  // histogram filled ev-by-ev with mass-dependent probability
+  TH1F* hTmp      = new TH1F("hTmp", "", 500,0,500);
+  
+  // create structure for errors
   hTTbb->Sumw2();
   hTTbj->Sumw2();
   hTTjj->Sumw2();
   hTTH->Sumw2();
   hTTV->Sumw2();
 
+  // the input samples
   vector<string> samples;
   samples.push_back("TTV");
   samples.push_back("SingleT");
@@ -1560,16 +1602,34 @@ void massPlot( TString fname = "SL",
   samples.push_back("TTJetsBB");
   samples.push_back("TTJetsBJ");
   samples.push_back("TTJetsJJ");
-  //samples.push_back("EWK");
   samples.push_back("TTH125");
-  
+  //samples.push_back("EWK");
 
+  // main name of the trees
+  string name = "New";
+  
+  // version
+  string version =  "_v1" ;
+  cout << "Doing version " << version << " and category " << category << endl;
+ 
+  // input files path
+  string inputpath = "gsidcap://t3se01.psi.ch:22128//pnfs/psi.ch/cms/trivcat/store/user/bianchi/Trees/MEM/Nov04_2013/mem/";
+
+
+  // loop over the samples...
   for( unsigned int s = 0 ; s < samples.size(); s++){
 
     string sample = samples[s];
 
+    // cut for the plot
     TCut sample_cut(cut.c_str());
+
+    // get a temporary histogram for the process under study
+    TH1F* hMass_s = (TH1F*)hMass->Clone(("hMass_"+sample).c_str());
+    hMass_s->Reset();
+    hMass_s->Sumw2();
     
+    // split TTJets into final states
     int color;
     if( sample.find("TTJetsBB")!=string::npos ){
       sample = "TTJets";
@@ -1587,144 +1647,437 @@ void massPlot( TString fname = "SL",
       color = 18;
     }
 
-    TFile* f = TFile::Open(("MEAnalysisNew_MHscan_"+string(fname.Data())+"_nominal"+version+"_"+sample+".root").c_str());
-    //TFile* f = TFile::Open("../bin/root/MEAnalysisNew.root");
+    // open the file
+    TFile* f = TFile::Open((inputpath+"MEAnalysis"+name+"_"+string(fname.Data())+"_nominal"+version+"_"+sample+".root").c_str());
+
     if(f==0 || f->IsZombie()){
       cout << "Missing " << sample << " file" << endl;
-      continue;
+      return;
     }
     else{
       cout << "Doing sample " << sample << endl;
-    }
+    }   
 
-    TH1F* hMass_s = (TH1F*)hMass->Clone(("hMass_"+sample).c_str());
-    hMass_s->Reset();
-    hMass_s->Sumw2();
-
+    // copy the events form the tree passing the selection cut
     TTree* tFull = (TTree*)f->Get("tree");
     TFile* dummy = new TFile("dummy.root","RECREATE");
     TTree* t = (TTree*)tFull->CopyTree( sample_cut );
 
+    // permutation ME probability vs Higgs mass
     float p_vsMH_s[999];
+    float p_vsMT_b[999];
+
+    // permutation btag probability
     float p_tt_bb [999];
-    int nPermut_s;
-    int nTotInteg_s;
+    float p_tt_jj [999];
+
+    // num. of permutations
+    int nPermut_s;   
+    int nPermut_b;
+
+    // num. of mass points scanned
     int nMassPoints;
+
+    // Higgs mass points scanned
     float mH_scan[999];
+    float mT_scan[999];
+  
+    // total number of integrations ( nPermut_s*nMassPoints)
+    int nTotInteg_s;
+
+    // matching of each permutation
     int perm_to_gen_s[999];
+
+    // the normalization weight
     float weight;
 
     t->SetBranchAddress("p_vsMH_s",     p_vsMH_s);
+    t->SetBranchAddress("p_vsMT_b",     p_vsMT_b);
     t->SetBranchAddress("p_tt_bb",      p_tt_bb);
+    t->SetBranchAddress("p_tt_jj",      p_tt_jj);
     t->SetBranchAddress("nPermut_s",    &nPermut_s);
+    t->SetBranchAddress("nPermut_b",    &nPermut_b);
     t->SetBranchAddress("nTotInteg_s",  &nTotInteg_s);
     t->SetBranchAddress("nMassPoints",  &nMassPoints);
     t->SetBranchAddress("mH_scan",      mH_scan);
+    t->SetBranchAddress("mT_scan",      mT_scan);
     t->SetBranchAddress("weight",       &weight);
     t->SetBranchAddress("perm_to_gen_s",perm_to_gen_s);
     
+    // total tree entries
     Long64_t nentries = t->GetEntries(); 
     cout << "Total entries: " << nentries << endl;
 
+    // inclusive counter 
     int counter         = 0;
+    
+    // counter incr. if all quarks in acceptance
     int counterQuarks   = 0;
+    
+    // counter incr. if all quarks in acceptanc & best comb. is matched
     int counterMatch    = 0;
+    
+    // counter incr. if best comb. has the higgs's b's matched
     int counterMatchAny = 0;
 
+    // loop over the events...
     for (Long64_t i = 0; i < nentries ; i++){
 
+      // read the event...
       t->GetEntry(i);
+
+      // increment the inclusive counter
       counter++;
 
-      hTmp->Reset();
+      // which permutations to consider for the ME analysis
+      vector<int> whichpermut;
+      int stop    = 0;
+      int numiter = 0;
+      while(stop!=1 && choosePerm<0){
+	
+	// take a random permutation
+	int newpermut =  int(ran->Uniform(-0.5, nPermut_s+0.5));
 
-      float perm_prob [nPermut_s];
-      float perm_match[nPermut_s];      
-      for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){
-	perm_prob [perm_it] = 0.;
-	perm_match[perm_it] = 0;
+	// if empty, fill the vector with the first permutation and stop if only 1 is needed
+	if( whichpermut.size()==0 ){
+	  whichpermut.push_back( newpermut );
+	  if( whichpermut.size() == abs(choosePerm) ) stop = 1;
+	}
+
+	// the vector is already filled, check for replicas
+	else{
+	  int isThere = 0;
+	  for(int ppp = 0 ; ppp < whichpermut.size() ; ppp++)
+	    if( newpermut == whichpermut[ppp] ) isThere=1;
+
+	  // is the permutation is new, push it back
+	  if(isThere==0){
+	    whichpermut.push_back( newpermut );
+	    if( whichpermut.size() == abs(choosePerm) ) stop = 1;
+	  }
+	}
+
+	// count how many iterations have been done (protetion agains infinite loop)
+	numiter++;
+	if(numiter>2000){
+	  cout << "Exceeded max number of tries... exit" << endl;
+	  stop = 1;
+	}
       }
 
-      int quarks = 0;
-      for(int mH_it = 0; mH_it<nMassPoints; mH_it++){
-	float mH =  mH_scan[mH_it];
+      //cout << whichpermut.size() << endl;
+      //if( whichpermut.size()>0 )  cout << " p = " << whichpermut[0] << endl;
 
-	if( mH<0 || mH>300) continue;
+      // mass scan analysis
+      if(analysis==0){
 
-	for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){
+	// reset the temporary histogram
+	hTmp->Reset();
+	
+	// reset the per-permutation total probability (summed over MH)
+	float perm_prob [nPermut_s];
+	float perm_match[nPermut_s];      
+	for( int perm_it = 0 ; perm_it < nPermut_s ; perm_it++){
+	  perm_prob [perm_it] = 0.;
+	  perm_match[perm_it] = 0;
+	}
 
-	  float ME_prob = p_vsMH_s[mH_it*nPermut_s + perm_it];
-	  float bb_prob =  p_tt_bb[perm_it] ;
-	  float norm    = normXSec ? 1./xsec->Eval( mH ) : 1.0;
-	  int match     = perm_to_gen_s[perm_it];
-
-	  double p =  ME_prob*bb_prob*norm;
-
-	  perm_prob [perm_it] += p;
-	  perm_match[perm_it] = match;
+	// a flag for events with all quarks in the acceptance
+	int quarks = 0;
+	
+	// loop over the Higgs mass grid
+	for(int mH_it = 0; mH_it<nMassPoints; mH_it++){
 	  
-	  if( match == matchPattern ) quarks++;
+	  float mH =  mH_scan[mH_it];
+	  
+	  // change values here to retsrict the search range
+	  if( mH<0 || mH>300) continue;
+	  
+	  // for each mass point, loop over pewrmutations
+	  for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){
+	    
+	    // the ME probability 
+	    float ME_prob = p_vsMH_s[mH_it*nPermut_s + perm_it];
+	    
+	    // the btag probability
+	    float bb_prob =  p_tt_bb[perm_it] ;
+	    
+	    // normalize the weights
+	    float norm    = normXSec ? 1./xsec->Eval( mH ) : 1.0;
+	    
+	    // matching status of this particular permutation
+	    int match     = perm_to_gen_s[perm_it];
 
+	    // the total probability
+	    double p =  ME_prob * bb_prob * norm;
+	    
+	    // add this into the per-permutation probability
+	    perm_prob [perm_it] += p;
+	    perm_match[perm_it] = match;
+	    
+	    // flag events where at least one permutation matches the pattern
+	    if( match == matchPattern ) quarks++;
+	  
 	  //hTmp->Fill( mH, p );
+	  }
 	}
-      }
     
-      float maxP = 0.;
-      int   maxM = 0;
-      int   maxPerm = 0;
-      for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){
-	if(perm_prob [perm_it] > maxP ){
-	  maxP    = perm_prob [perm_it];
-	  maxM    = perm_match[perm_it];
-	  maxPerm = perm_it;
+	// MAX, NMAX, NNMAX, NNNMAX permutations ranked by prob. 
+	double maxP       = 0.;
+	double nmaxP      = 0.;
+	double nnmaxP     = 0.;
+	double nnnmaxP    = 0.;
+	
+	int   maxM       = 0;
+	int   nmaxM      = 0;
+	int   nnmaxM     = 0;
+	int   nnnmaxM    = 0;
+	
+	int   maxPerm    = -99;
+	int   nmaxPerm   = -99;
+	int   nnmaxPerm  = -99;
+	int   nnnmaxPerm = -99;
+
+      
+	// loop over the mass integrated probability and rank the permutations
+	for( int perm_it = 0 ; perm_it < nPermut_s ; perm_it++){
+	  
+	  // LO
+	  if(perm_prob [perm_it] > maxP ){
+	    maxP    = perm_prob [perm_it];
+	    maxM    = perm_match[perm_it];
+	    maxPerm = perm_it;
+	  }
+	  // NLO
+	  if(perm_prob [perm_it] > nmaxP && perm_prob [perm_it]< maxP){
+	    nmaxP    = perm_prob [perm_it];
+	    nmaxM    = perm_match[perm_it];
+	    nmaxPerm = perm_it;
+	  }
+	  // NNLO
+	  if(perm_prob [perm_it] > nnmaxP && perm_prob [perm_it]< nmaxP){
+	    nnmaxP    = perm_prob [perm_it];
+	    nnmaxM    = perm_match[perm_it];
+	    nnmaxPerm = perm_it;
+	  }
+	  // NNNLO
+	  if(perm_prob [perm_it] > nnnmaxP && perm_prob [perm_it]< nnmaxP){
+	    nnnmaxP    = perm_prob [perm_it];
+	    nnnmaxM    = perm_match[perm_it];
+	    nnnmaxPerm = perm_it;
+	  }
 	}
+	
+	// choose which permutation to plot (default is maxPerm)
+	if( (choosePerm==0 || choosePerm==999) && maxPerm != -99 ){
+	  /*  do not do anything ... */
+	}
+
+	// if no permutation with prob>0 exist, take the first
+	// (it will give 0 prob, and getMaxValue() will return M=0)
+	else if( (choosePerm==0 || choosePerm==999) && maxPerm == -99 ){
+	  maxPerm = 0;
+	}
+
+	
+	else if(choosePerm==1){
+	  if( nmaxPerm != -99 ){
+	    maxPerm = nmaxPerm;
+	    maxM    = nmaxM;
+	  }
+	  else{
+	    /*  do not do anything ... */
+	  }
+	}
+	if(choosePerm==2){
+	  if( nnmaxPerm != -99 ){
+	    maxPerm = nnmaxPerm;
+	    maxM    = nnmaxM;
+	  }
+	  else if( nmaxPerm != -99 ){
+	    maxPerm = nmaxPerm;
+	    maxM    = nmaxM;
+	  }
+	  else{
+	    /*  do not do anything ... */
+	  }
+	}
+	if(choosePerm==3){
+	  if( nnnmaxPerm != -99 ){
+	    maxPerm = nnnmaxPerm;
+	    maxM    = nnnmaxM;
+	  }
+	  else if( nnmaxPerm != -99 ){
+	    maxPerm = nnmaxPerm;
+	    maxM    = nnmaxM;
+	  }
+	  else if( nmaxPerm != -99 ){
+	    maxPerm = nmaxPerm;
+	    maxM    = nmaxM;
+	  }
+	  else{
+	    /*  do not do anything ... */
+	  }
+	}
+
+	// loop over the mass points and fill hTmp with the mass dependent probability for maxPerm ...
+	for(int mH_it = 0; mH_it<nMassPoints; mH_it++){
+	  
+	  // the mass point value
+	  float mH =  mH_scan[mH_it];
+	  
+	  if( mH<0 || mH>300) continue;
+	  
+	  // again, get the probability, this time for maxPerm
+	  float ME_prob =  p_vsMH_s[mH_it*nPermut_s + maxPerm];
+	  float bb_prob =  p_tt_bb[maxPerm] ;
+	  float norm    = normXSec ? 1./xsec->Eval( mH ) : 1.0;	
+	  
+	  // probability for maxPerm under mH hypothesis
+	  double p =  ME_prob * bb_prob * norm;       
+
+	  // fill hTmp at mH
+	  hTmp->Fill( mH, p );
+	}
+	
+	// get the maximum of hTmp by quadratic interpolation
+	pair<double,double> bestMass = getMaxValue(hTmp);
+
+	// the observables
+	double mass = bestMass.first;
+	double prob = bestMass.second;
+	
+	// if there is at leats one permutation matched, increment the counters
+	if(quarks>0){
+	  
+	  // at least one permutation matched
+	  counterQuarks++;
+	  
+	  // the best permutation matched the pattern ( OR between two )
+	  if( maxM == matchPattern || maxM == matchPattern2)  counterMatch++;	
+	}
+	
+	// if the matched permutation assigns correctly at least the Higgs b-quarks...
+	if( maxM%100 == 11 )  counterMatchAny++;	
+	
+	// fill the histogram with the mass     
+	hMass_s->Fill(mass, weight*lumiScale);
       }
-      
-      for(int mH_it = 0; mH_it<nMassPoints; mH_it++){
+	
+      // ME analysis
+      else{
+	
+	// this number are the total probability under the ttH, ttbb, and ttjj hypotheses
+	double p_125_all_s_ttbb = 0.;
+	double p_125_all_b_ttbb = 0.;
+	double p_125_all_b_ttjj = 0.;
+	
+	// consider only the mass scan at the nominal Higgs mass
+	for(int mH_it = 0; mH_it<nMassPoints; mH_it++){	
+	  
+	  // skip other mass values...
+	  float mH =  mH_scan[mH_it];
+	  if(mH>126 || mH<124) continue;	  
+	  
+	  // once we got the good Higgs mass, loop over permutations...
+	  for( int perm_it = 0 ; perm_it<nPermut_s ; perm_it++){	
+	    float ME_prob     = p_vsMH_s[mH_it*nPermut_s + perm_it];
+	    float bb_prob     = p_tt_bb[perm_it] ;
 
-	float mH =  mH_scan[mH_it];
+	    // if choosePerm<0, choose randomly abs(choosePerm) permutations
+	    if( choosePerm<0 ){
 
-	if( mH<0 || mH>300) continue;
+	      // check if perm_it is among those selected
+	      int isThere = 0;
+	      for(int pp = 0 ; pp < whichpermut.size(); pp++){
+		if(perm_it == whichpermut[pp]) isThere++;
+	      }
 
-	float ME_prob = p_vsMH_s[mH_it*nPermut_s + maxPerm];
-	float bb_prob =  p_tt_bb[maxPerm] ;
-	float norm    = normXSec ? 1./xsec->Eval( mH ) : 1.0;	
-	double p =  ME_prob*bb_prob*norm;       
-	hTmp->Fill( mH, p );
+	      // if not, skip it
+	      if(isThere==0) continue;
+	    }
+
+	    // if choosePerm is positive but not 999, choose exacrtly the choosePerm'th permutation
+	    else if( choosePerm!=999 ){
+	      if(perm_it != choosePerm ) continue;
+	    }
+
+	    // else choosePerm==999, so consider perm_it anyway
+	    else{}
+
+	    // add to the total probability...
+	    p_125_all_s_ttbb += ME_prob*bb_prob;
+
+	  }
+	}
+	
+	// consider only the mass scan at the nominal top mass
+	for(int mT_it = 0; mT_it<nMassPoints; mT_it++){
+	  
+	  // skip other mass values...
+	  float mT =  mT_scan[mT_it];
+	  if(mT>175 || mT<173) continue;
+	  
+	  // once we got the good Top mass, loop over permutations...
+	  for( int perm_it = 0 ; perm_it<nPermut_b ; perm_it++){	
+	    float ME_prob     = p_vsMT_b[mT_it*nPermut_b + perm_it];
+	    float bb_prob     = p_tt_bb[perm_it] ;
+	    float jj_prob     = p_tt_jj[perm_it] ;
+
+	    // if choosePerm<0, choose randomly abs(choosePerm) permutations
+	    if( choosePerm<0 ){
+
+	      // check if perm_it is among those selected
+	      int isThere = 0;
+	      for(int pp = 0 ; pp < whichpermut.size(); pp++){
+		if(perm_it == whichpermut[pp]) isThere++;
+	      }
+
+	      // if not, skip it
+	      if(isThere==0) continue;
+	    } 
+
+	    // if choosePerm is positive but not 999, choose exacrtly the choosePerm'th permutation	    
+	    else if( choosePerm!=999 ){
+	      if(perm_it != choosePerm ) continue;
+	    }
+
+	    // else choosePerm==999, so consider perm_it anyway	    
+	    else{}
+
+	    // add to the total probability...	    
+	    p_125_all_b_ttbb += ME_prob*bb_prob;
+	    p_125_all_b_ttjj += ME_prob*jj_prob;
+
+	  }
+	}
+
+	// prepare the sb likelihood ratio ingredients
+	double wDen = p_125_all_s_ttbb + p0*( p1*p_125_all_b_ttbb + p2*p_125_all_b_ttjj );
+	double wNum = p_125_all_s_ttbb;
+	
+	// the sb likelihood ratio
+	double w = wDen>0 ? wNum/wDen : 0.;
+	
+	// fill the histogram     
+	hMass_s->Fill( w, weight);	
+
       }
-
-      pair<double,double> bestMass = getMaxValue(hTmp);
-      double mass = bestMass.first;
-      double prob = bestMass.second;
-      //cout << "Ev." << i << " => mass=" << mass << endl;
-
-      //if(mass<0){
-      //hTmp->Draw();
-      //cout << mass << endl;
-      //return;
-      //}
-      
-      if(quarks>0){
-	counterQuarks++;
-	if( maxM == matchPattern || maxM == matchPattern2)  counterMatch++;	
-      }
-
-      if( maxM%100 == 11 )  counterMatchAny++;	
-
-      //if(-TMath::Log(prob)<16) 
-      hMass_s->Fill(mass, weight*lumiScale);
     }
 
+    // underflow bin added to the first bin
     int firstBin              =  1;
     float firstBinContent     =  hMass_s->GetBinContent( firstBin ); 
     float underflowBinContent =  hMass_s->GetBinContent( firstBin-1 ); 
     hMass_s->SetBinContent( firstBin, firstBinContent+underflowBinContent); 
 
+    // overflow bin added to the last bin
     int lastBin              =  hMass_s->GetNbinsX();
     float lastBinContent     =  hMass_s->GetBinContent( lastBin ); 
     float overflowBinContent =  hMass_s->GetBinContent( lastBin+1 ); 
-    hMass_s->SetBinContent( lastBin, lastBinContent+overflowBinContent /*+ firstBinContent+underflowBinContent*/ );    
+    hMass_s->SetBinContent( lastBin, lastBinContent+overflowBinContent );    
 
+    // a recapitulation...
     cout << "Total: " << counter << endl;
     cout << "All quarks in acceptance: " << counterQuarks << endl;
     cout << "Max permutation is correct: " << counterMatch << endl;
@@ -1734,6 +2087,7 @@ void massPlot( TString fname = "SL",
     cout << "Overflow="  << overflowBinContent << endl;
     cout << "Underflow=" << underflowBinContent << endl;
     
+    // save a snapshot of the matching status for ttH
     if( sample.find("TTH")!=string::npos ){
        counterH         = counter;
        counterHQuarks   = counterQuarks;
@@ -1741,7 +2095,7 @@ void massPlot( TString fname = "SL",
        counterHMatchAny = counterMatchAny;
     }
     
-
+    // fill hErr with all the MC but signal
     if( hErr==0 ){
       hErr = (TH1F*)hMass_s->Clone("hErr");
       hErr->Reset();
@@ -1749,6 +2103,7 @@ void massPlot( TString fname = "SL",
     }
     if( sample.find("TTH")==string::npos ) hErr->Add( hMass_s, 1.0);
 
+    // deal with tt+jets
     if( sample.find("TTJets")!=string::npos ){
       hMass_s->SetFillColor(color);
       if(color==16){
@@ -1765,33 +2120,52 @@ void massPlot( TString fname = "SL",
       }
       hTT->Add(hMass_s, 1.0);
     }
+
+    // deal with ttH
     if( sample.find("TTH")!=string::npos ){
       hMass_s->SetFillColor(kRed);
       hTTH->Add(hMass_s, 1.0);
       leg->AddEntry(hMass_s, "t#bar{t}H", "F");
     }
+
+    // deal with ttV
     if( sample.find("TTV")!=string::npos ){
       hMass_s->SetFillColor(kBlue);
       hTTV->Add(hMass_s, 1.0);
       leg->AddEntry(hMass_s, "t#bar{t}V", "F");
     }
+
+    // deal with single top 
     if( sample.find("SingleT")!=string::npos ){
       hMass_s->SetFillColor(kMagenta);
       leg->AddEntry(hMass_s, "Single top", "F");
     }
+
+    // deal with VV
     if( sample.find("DiBoson")!=string::npos ){
       hMass_s->SetFillColor(kYellow);
       leg->AddEntry(hMass_s, "VV", "F");
     }
+
+    // deal with EWK
     if( sample.find("EWK")!=string::npos ){
       hMass_s->SetFillColor(kGreen);
       leg->AddEntry(hMass_s, "V+jets", "F");
     }
 
+    // add to the stack
     cout << "Adding " << hMass_s->Integral() << " weighted events to the stack" << endl;
     aStack->Add( hMass_s );
 
+    // close the file
+    f->Close();
+
   }
+
+
+  ///////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////
+  // drawing options 
 
   hErr->GetYaxis()->SetTitle("Events");
   hErr->GetXaxis()->SetTitle("M_{H} estimator [GeV]");
@@ -1802,9 +2176,7 @@ void massPlot( TString fname = "SL",
   hErr->GetYaxis()->SetRangeUser(0., max );
   hErr->SetLineColor(kBlack);
   hErr->Draw("HISTE1");
-
   aStack->Draw("HISTSAME");
-
   hTTH->SetLineWidth(3);
   hTTH->SetLineColor(kRed);
   hTTH->SetLineStyle(kDashed);
@@ -1820,7 +2192,6 @@ void massPlot( TString fname = "SL",
   hTTV->Scale(5.0);
   hTTV->Draw("HISTSAME");
   hErr->Draw("HISTE1SAME");
-
   leg->AddEntry(hTTH, "t#bar{t}H x 5", "L");
   leg->AddEntry(hTTV, "t#bar{t}V x 5", "L");
 
@@ -1830,26 +2201,30 @@ void massPlot( TString fname = "SL",
   pt->SetFillColor(10);
   pt->SetTextSize(0.03);
   pt->SetTextAlign(11);
-  pt->AddText(Form("All quarks in acc.: %.0f%%", (counterH>0 ? float(counterHQuarks)/float(counterH)*100 : 0.) ))->SetTextColor(kBlack);
+  pt->AddText(Form("All quarks in acc.: %.0f%%",           (counterH>0 ? float(counterHQuarks)/float(counterH)*100 : 0.) ))->SetTextColor(kBlack);
   pt->AddText(Form("(of which %.0f%% perfect match)",      (counterHQuarks>0 ? float(counterHMatch)/float(counterHQuarks)*100 : 0. )))->SetTextColor(kRed);
-  pt->AddText(Form("Higgs-b's matched : %.0f%%", (counterH>0 ? float(counterHMatchAny)/float(counterH)*100 : 0. )))->SetTextColor(kBlue);
-  pt->Draw();
+  pt->AddText(Form("Higgs-b's matched : %.0f%%",           (counterH>0 ? float(counterHMatchAny)/float(counterH)*100 : 0. )))->SetTextColor(kBlue);
 
+  if(analysis==0)  pt->Draw();
+
+  ///////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////
+
+  // if 1, then plot the normalized shapes of tt+jest, tt, and ttH
   if(plotShapes==1){
+
     hTT->SetLineWidth(3);
     hTT->SetLineColor(kBlack);
     hTT->SetLineStyle(kSolid);
-    //hTT->SetFillColor(16);
-    //hTT->SetFillStyle(3005);
 
     hTTH->Scale(1./hTTH->Integral());
     hTTV->Scale(1./hTTV->Integral());
     hTT ->Scale(1./hTT ->Integral());
 
-    hTTH->GetYaxis()->SetRangeUser(0., hTTH->GetMaximum()*1.45);
+    hTTH->GetYaxis()->SetRangeUser(0., TMath::Max(hTT->GetMaximum(), hTTH->GetMaximum())*1.45);
     hTTH->Draw("HISTE");
     hTTV->Draw("HISTESAME");
-    hTT->Draw("HISTSAME");
+    hTT->Draw("HISTESAME");
     leg->Clear();
     leg->SetHeader(category);
     leg->AddEntry(hTTH, "t#bar{t}H",     "F");
@@ -1857,6 +2232,7 @@ void massPlot( TString fname = "SL",
     leg->AddEntry(hTT,  "t#bar{t}+jets", "L");
     leg->Draw();
   }
+  // if 2, then plot the normalized shapes of tt+bb, tt+b, and tt+jj
   else if(plotShapes==2){
 
     hTTbb->SetLineWidth(3);
@@ -1875,7 +2251,7 @@ void massPlot( TString fname = "SL",
     hTTbj->Scale(1./hTTbj->Integral());
     hTTjj->Scale(1./hTTjj->Integral());
 
-    hTTbb->GetYaxis()->SetRangeUser(0., hTTbb->GetMaximum()*1.45);
+    hTTbb->GetYaxis()->SetRangeUser(0., TMath::Max( hTTbb->GetMaximum(), hTTjj->GetMaximum())*1.45);
     hTTbb->Draw("HISTE");
     hTTbj->Draw("HISTESAME");
     hTTjj->Draw("HISTESAME");
@@ -1890,44 +2266,107 @@ void massPlot( TString fname = "SL",
     leg->Draw();
   }
 
-  //hTmp->Draw();
-
-
-
+  // save the plots
   if(1){
-    if(plotShapes==1)
-      c1->SaveAs("Mass_estimator_shapes_ttH_"+fname+"_"+plotname+".png");
-    else if(plotShapes==2)
-      c1->SaveAs("Mass_estimator_shapes_ttjets_"+fname+"_"+plotname+".png");
-    else
-      c1->SaveAs("Mass_estimator_spectrum_"+fname+"_"+plotname+".png");
+
+    TString whichVar;
+    if     (analysis==0) whichVar = "Mass_"; 
+    else if(analysis==1) whichVar = "MEM_"; 
+    else                 whichVar = "UNKNOW_"; 
+    
+    TString whichPlot;
+    if     (plotShapes==0) whichPlot = "Spectrum_"; 
+    else if(plotShapes==1) whichPlot = "Shapes_ttH_"; 
+    else if(plotShapes==2) whichPlot = "Shapes_ttjets_"; 
+    else                   whichPlot = "UNKNOW_";
+
+    TString whichPerm;
+    if     ( choosePerm == 999 ) whichPerm = "AllPerm_";
+    else if( choosePerm < 0   )  whichPerm = Form("%dRandom_", abs(choosePerm));
+    else                         whichPerm = Form("%dthPerm_",  choosePerm );
+    
+    c1->SaveAs("Plots/Plot_"+whichVar+whichPlot+whichPerm+fname+"_"+plotname+".png");
   }
 
+  // delete stuff
+  delete ran;
+
+  // remove the dummy file and return
   cout << "Remove dummy file" << endl;
   gSystem->Exec("rm dummy.root");
   return;
 }
 
 
-void massPlotAll( ){
-  for(int i = 0; i < 3; i++){
-    if(i==0)
-      massPlot("SL", "type==0", "SL + 6 jets", "SL6jets", i, 19.5/12.1 ,   8 , 55, 245, 0, 1, 111111 , 111111);
-    else
-      massPlot("SL", "type==0", "SL + 6 jets", "SL6jets", i, 19.5/12.1 ,   8 , 55, 245, 0, 1, 111111 , 111111);
-    if(i==0)
-      massPlot("SL", "type==2", "SL + 5 jets", "SL5jets", i, 19.5/12.1 ,   8 , 55, 245, 0, 1, 111111 , 111111);
-    else
-      massPlot("SL", "type==2", "SL + 5 jets", "SL5jets", i, 19.5/12.1 ,   8 , 55, 245, 0, 1, 111111 , 111111);
-    if(i==0)
-      massPlot("SL", "type==3", "SL + >6 jets","SL7jets", i, 19.5/12.1 ,   8 , 55, 245, 0, 1, 111111 , 111111);
-    else
-      massPlot("SL", "type==3", "SL + >6 jets","SL7jets", i, 19.5/12.1 ,   8 , 55, 245, 0, 1, 111111 , 111111);
-    if(i==0)
-      massPlot("DL", "type==6", "DL + 4 jets", "DL4jets", i, 2*19.5/12.1 , 8 , 55, 245, 0, 1, 100111 , 11);
-    else
-      massPlot("DL", "type==6", "DL + 4 jets", "DL4jets", i, 2*19.5/12.1 ,  8 , 55, 245, 0, 1, 100111 , 11);
+void plot_massAll( int analysis = 0 ){
+
+  if( analysis == 0 ){
+
+    // the mass analysis => shapes and specta for the 1st rank
+    for(int i = 0; i < 3; i++){
+      plot_mass("SL", "type==0", "SL + 6 jets", "SL6jets", i, 19.5/12.1 ,   9 , 55, 250, 0, 1, 111111 , 111111,  999, 0);
+      plot_mass("SL", "type==2", "SL + 5 jets", "SL5jets", i, 19.5/12.1 ,   9 , 55, 250, 0, 1, 111111 , 111111,  999, 0);
+      plot_mass("SL", "type==3", "SL + >6 jets","SL7jets", i, 19.5/12.1 ,   9 , 55, 250, 0, 1, 111111 , 111111,  999, 0);
+      plot_mass("DL", "type==6", "DL + 4 jets", "DL4jets", i, 2*19.5/12.1 , 9 , 55, 250, 0, 1, 100111 , 11,      999, 0);
+    }
+    
+    // the mass analysis => shapes and specta for the 2nd rank
+    for(int i = 0; i < 3; i++){
+      plot_mass("SL", "type==0", "SL + 6 jets", "SL6jets", i, 19.5/12.1 ,   9 , 55, 250, 0, 1, 111111 , 111111,  1, 0);
+      plot_mass("SL", "type==2", "SL + 5 jets", "SL5jets", i, 19.5/12.1 ,   9 , 55, 250, 0, 1, 111111 , 111111,  1, 0);
+      plot_mass("SL", "type==3", "SL + >6 jets","SL7jets", i, 19.5/12.1 ,   9 , 55, 250, 0, 1, 111111 , 111111,  1, 0);
+      plot_mass("DL", "type==6", "DL + 4 jets", "DL4jets", i, 2*19.5/12.1 , 9 , 55, 250, 0, 1, 100111 , 11,      1, 0);
+    }
+    
+    // the mass analysis => shapes and specta for the 3rd rank
+    for(int i = 0; i < 3; i++){
+      plot_mass("SL", "type==0", "SL + 6 jets", "SL6jets", i, 19.5/12.1 ,   9 , 55, 250, 0, 1, 111111 , 111111,  2, 0);
+      plot_mass("SL", "type==2", "SL + 5 jets", "SL5jets", i, 19.5/12.1 ,   9 , 55, 250, 0, 1, 111111 , 111111,  2, 0);
+      plot_mass("SL", "type==3", "SL + >6 jets","SL7jets", i, 19.5/12.1 ,   9 , 55, 250, 0, 1, 111111 , 111111,  2, 0);
+      plot_mass("DL", "type==6", "DL + 4 jets", "DL4jets", i, 2*19.5/12.1 , 9 , 55, 250, 0, 1, 100111 , 11,      2, 0);
+    }
+    
+    // the mass analysis => shapes and specta for the 4th rank
+    for(int i = 0; i < 3; i++){
+      plot_mass("SL", "type==0", "SL + 6 jets", "SL6jets", i, 19.5/12.1 ,   9 , 55, 250, 0, 1, 111111 , 111111,  3, 0);
+      plot_mass("SL", "type==2", "SL + 5 jets", "SL5jets", i, 19.5/12.1 ,   9 , 55, 250, 0, 1, 111111 , 111111,  3, 0);
+      plot_mass("SL", "type==3", "SL + >6 jets","SL7jets", i, 19.5/12.1 ,   9 , 55, 250, 0, 1, 111111 , 111111,  3, 0);
+      plot_mass("DL", "type==6", "DL + 4 jets", "DL4jets", i, 2*19.5/12.1 , 9 , 55, 250, 0, 1, 100111 , 11,      3, 0);
+    }
+
   }
+
+ if( analysis == 1 ){
+
+   /*
+   // the mass analysis => shapes and specta for sum over permutations
+   for(int i = 0; i < 3; i++){
+     plot_mass("SL", "type==0", "Cat. 1", "cat1",                                   i,  19.5/12.1 ,   8 , 0,  1,  0, 1, 111111 , 111111,  999, 1, 1.0, 0.00611416, 45.1513);
+     //plot_mass("SL", "type==1", "Cat. 2", "cat2",                                 i,  19.5/12.1 ,   8 , 0,  1,  0, 1, 111111 , 111111,  999, 1, 1.7, 0.00633982, 7.12076);
+     plot_mass("SL", "type==2 && flag_type2>0",  "Cat. 3", "cat3",                  i,  19.5/12.1 ,   8 , 0,  1,  0, 1, 111111 , 111111,  999, 1, 2.2, 0.00203578, 6.99398);
+     plot_mass("SL", "type==2 && flag_type2<=0", "Cat. 4", "cat4",                  i,  19.5/12.1 ,   8 , 0,  1,  0, 1, 111111 , 111111,  999, 1, 2.0, 0.00346887, 8.96759);
+     plot_mass("SL", "type==3 && flag_type3>0 && p_125_all_s>0", "Cat. 5", "cat5",  i,  19.5/12.1 ,   8 , 0,  1,  0, 1, 111111 , 111111,  999, 1, 5.5, 0.00163639, 6.92078);
+     plot_mass("DL", "type==6", "Cat. 6", "cat6",                                   i,2*19.5/12.1 ,   8 , 0,  1,  0, 1, 111111 , 111111,  999, 1, 1.5, 0.00398151, 5.95277);
+   }
+   */
+
+   // the mass analysis => shapes and specta for sum over permutations
+   for(int d = -4; d<-3 ; d++){
+     for(int i = 0; i < 3; i++){
+       plot_mass("SL", "type==0", "Cat. 1", "cat1",                                   i,  19.5/12.1 ,   8 , 0,  1,  0, 1, 111111 , 111111,  d, 1, 1.0, 0.00611416, 45.1513);
+       //plot_mass("SL", "type==1", "Cat. 2", "cat2",                                 i,  19.5/12.1 ,   8 , 0,  1,  0, 1, 111111 , 111111,  d, 1, 1.7, 0.00633982, 7.12076);
+       plot_mass("SL", "type==2 && flag_type2>0",  "Cat. 3", "cat3",                  i,  19.5/12.1 ,   8 , 0,  1,  0, 1, 111111 , 111111,  d, 1, 2.2, 0.00203578, 6.99398);
+       plot_mass("SL", "type==2 && flag_type2<=0", "Cat. 4", "cat4",                  i,  19.5/12.1 ,   8 , 0,  1,  0, 1, 111111 , 111111,  d, 1, 2.0, 0.00346887, 8.96759);
+       plot_mass("SL", "type==3 && flag_type3>0 && p_125_all_s>0", "Cat. 5", "cat5",  i,  19.5/12.1 ,   8 , 0,  1,  0, 1, 111111 , 111111,  d, 1, 5.5, 0.00163639, 6.92078);
+       plot_mass("DL", "type==6", "Cat. 6", "cat6",                                   i,2*19.5/12.1 ,   8 , 0,  1,  0, 1, 111111 , 111111,  d, 1, 1.5, 0.00398151, 5.95277);
+     }
+   }
+
+
+ }
+
+
+
 }
 
 
